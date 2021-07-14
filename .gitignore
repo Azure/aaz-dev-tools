@@ -102,3 +102,21 @@ dist
 
 # TernJS port file
 .tern-port
+
+# pycharm
+.idea/
+
+# VS code
+.vscode/
+
+# autorest default folder
+/generated
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
