@@ -1,1 +1,2 @@
+schematics~=2.1.0
 pyyaml~=5.4.0
