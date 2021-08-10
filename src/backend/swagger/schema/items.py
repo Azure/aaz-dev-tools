@@ -1,6 +1,7 @@
 from schematics.models import Model
 from schematics.types import BaseType, StringType, FloatType, ModelType, BooleanType, IntType, ListType
 from .types import DataTypeFormatEnum, RegularExpressionType
+from .x_ms_enum import XmsEnumType
 
 
 class Items(Model):
@@ -22,6 +23,7 @@ class Items(Model):
     default = BaseType(serialize_when_none=False) # This keyword can be used to supply a default JSON value associated with a particular schema.  It is RECOMMENDED that a default value be valid against the associated schema.
 
     enum = ListType(BaseType(), serialize_when_none=False)
+    x_ms_enum = XmsEnumType(serialize_when_none=False)
 
     # Validation keywords for numeric instances (number and integer)
     multipleOf = FloatType(min_value=0, serialize_when_none=False)  # The value of "multipleOf" MUST be a JSON number.  This number MUST be strictly greater than 0.

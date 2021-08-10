@@ -1,5 +1,5 @@
 from schematics.models import Model
-from schematics.types import StringType, ModelType
+from schematics.types import StringType, ModelType, DictType, PolyModelType, BooleanType
 from .contact import Contact
 from .license import License
 

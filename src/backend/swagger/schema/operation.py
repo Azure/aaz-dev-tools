@@ -3,8 +3,11 @@ from schematics.types import StringType, ModelType, ListType, DictType, BooleanT
 from .external_documentation import ExternalDocumentation
 from .parameter import ParameterType
 from .response import Response
-from .security_requirement import SecurityRequirementType
-from .types import MimeType
+from .security_scheme import SecuritySchemeType
+from .types import MimeType, XmsRequestIdType
+from .x_ms_pageable import XmsPageable
+from .x_ms_long_running_operation import XmsLongRunningOperationType, XmsLongRunningOperationOptionsType
+from .x_ms_odata import XmsODataType
 
 
 class Operation(Model):
@@ -21,4 +24,11 @@ class Operation(Model):
     responses = DictType(ModelType(Response), required=True)  # The list of possible responses as they are returned from executing this operation.
     schemes = ListType(StringType(choices=("http", "https", "ws", "wss")), serialize_when_none=False)  # The transfer protocol for the operation. Values MUST be from the list: "http", "https", "ws", "wss". The value overrides the Swagger Object schemes definition.
     deprecated = BooleanType(serialize_when_none=False, default=False)  # Declares this operation to be deprecated. Usage of the declared operation should be refrained. Default value is false.
-    security = ListType(SecurityRequirementType(), serialize_when_none=False)  # A declaration of which security schemes are applied for this operation. The list of values describes alternative security schemes that can be used (that is, there is a logical OR between the security requirements). This definition overrides any declared top-level security. To remove a top-level security declaration, an empty array can be used.
+    security = ListType(SecuritySchemeType(), serialize_when_none=False)  # A declaration of which security schemes are applied for this operation. The list of values describes alternative security schemes that can be used (that is, there is a logical OR between the security requirements). This definition overrides any declared top-level security. To remove a top-level security declaration, an empty array can be used.
+
+    x_ms_pageable = ModelType(XmsPageable, serialize_when_none=False)
+    x_ms_long_running_operation = XmsLongRunningOperationType(default=False, serialize_when_none=False)
+    x_ms_long_running_operation_options = XmsLongRunningOperationOptionsType(serialize_when_none=False)
+    x_ms_odata = XmsODataType(serialize_when_none=False)  # indicates the operation includes one or more OData query parameters.
+
+    x_ms_request_id = XmsRequestIdType(serialize_when_none=False)

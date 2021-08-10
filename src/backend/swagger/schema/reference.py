@@ -5,7 +5,11 @@ from schematics.types import StringType
 class ReferenceType(StringType):
 
     def __init__(self, **kwargs):
-        super(ReferenceType, self).__init__(serialized_name="$ref", deserialize_from="$ref", **kwargs)
+        super(ReferenceType, self).__init__(
+            serialized_name="$ref",
+            deserialize_from="$ref",
+            **kwargs
+        )
 
 
 class Reference(Model):

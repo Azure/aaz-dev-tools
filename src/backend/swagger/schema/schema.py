@@ -1,9 +1,10 @@
 from schematics.models import Model
 from schematics.types import ListType, BaseType, DictType, ModelType, BooleanType, FloatType, IntType, StringType, PolyModelType
 from .reference import ReferenceType
-from .types import DataTypeFormatEnum, RegularExpressionType
+from .types import DataTypeFormatEnum, RegularExpressionType, XmsClientNameType, XmsExternal, XmsDiscriminatorValue, XmsClientFlatten, XmsMutabilityType, XmsClientDefaultType, XNullableType, XmsAzureResourceType
 from .xml import XML
 from .external_documentation import ExternalDocumentation
+from .x_ms_enum import XmsEnumType
 
 
 class Schema(Model):
@@ -56,6 +57,7 @@ class Schema(Model):
 
     # Validation keywords for any instance type
     enum = ListType(BaseType(), serialize_when_none=False)
+    x_ms_enum = XmsEnumType(serialize_when_none=False)
     type = StringType(
         choices=["array", "boolean", "integer", "number", "null", "object", "string"],  # https://datatracker.ietf.org/doc/html/draft-zyp-json-schema-04#section-3.5
         required=True
@@ -70,3 +72,13 @@ class Schema(Model):
     externalDocs = ModelType(ExternalDocumentation, serialize_when_none=False)  # Additional external documentation for this schema.
     example = BaseType(serialize_when_none=False)  # A free-form property to include an example of an instance for this schema.
 
+    x_ms_client_name = XmsClientNameType(serialize_when_none=False)
+    x_ms_external = XmsExternal(serialize_when_none=False)
+    x_ms_discriminator_value = XmsDiscriminatorValue(serialize_when_none=False)
+    x_ms_client_flatten = XmsClientFlatten(serialize_when_none=False)
+    x_ms_mutability = XmsMutabilityType(serialize_when_none=False)
+    x_ms_client_default = XmsClientDefaultType(serialize_when_none=False)
+
+    x_ms_azure_resource = XmsAzureResourceType(serialize_when_none=False) # indicates that the Definition Schema Object is a resource as defined by the Resource Manager API
+
+    x_nullable = XNullableType(default=False, serialize_when_none=False)  # when true, specifies that null is a valid value for the associated schema

@@ -1,5 +1,5 @@
 from schematics.models import Model
-from schematics.types import ModelType, ListType
+from schematics.types import ModelType, ListType, DictType
 from .reference import ReferenceType
 from .operation import Operation
 from .parameter import ParameterType
@@ -17,3 +17,32 @@ class PathItem(Model):
     head = ModelType(Operation, serialize_when_none=False)  # A definition of a HEAD operation on this path.
     patch = ModelType(Operation, serialize_when_none=False)  # A definition of a PATCH operation on this path.
     parameters = ListType(ParameterType(support_reference=True), serialize_when_none=False)  # A list of parameters that are applicable for all the operations described under this path. These parameters can be overridden at the operation level, but cannot be removed there. The list MUST NOT include duplicated parameters. A unique parameter is defined by a combination of a name and location. The list can use the Reference Object to link to parameters that are defined at the Swagger Object's parameters. There can be one "body" parameter at most.
+
+
+class PathsType(DictType):
+
+    def __init__(self, **kwargs):
+        super(PathsType, self).__init__(
+            ModelType(PathItem),
+            **kwargs
+        )
+
+
+class XmsPathsType(DictType):
+
+    """
+    OpenAPI 2.0 has a built-in limitation on paths. Only one operation can be mapped to a path and http method. There are some APIs, however, where multiple distinct operations are mapped to the same path and same http method. For example GET /mypath/query-drive?op=file and GET /mypath/query-drive?op=folder may return two different model types (stream in the first example and JSON model representing Folder in the second). Since OpenAPI does not treat query parameters as part of the path the above 2 operations may not co-exist in the standard "paths" element.
+
+    To overcome this limitation an "x-ms-paths" extension was introduced parallel to "paths". URLs under "x-ms-paths" are allowed to have query parameters for disambiguation, however they are not actually used.
+
+    https://github.com/Azure/autorest/tree/main/docs/extensions#x-ms-paths
+    """
+
+    def __init__(self, **kwargs):
+        super(XmsPathsType, self).__init__(
+            ModelType(PathItem),
+            serialized_name="x-ms-paths",
+            deserialize_from="x-ms-paths",
+            **kwargs
+        )
+

@@ -2,7 +2,7 @@ from schematics.models import Model
 from schematics.types import StringType, ModelType, ListType, DictType
 from schematics.exceptions import ValidationError
 from .info import Info
-from .path_item import PathItem
+from .path_item import PathsType, XmsPathsType
 from .schema import Schema
 from .parameter import ParameterType
 from .response import Response
@@ -10,6 +10,7 @@ from .tag import Tag
 from .external_documentation import ExternalDocumentation
 from .security_scheme import SecuritySchemeType
 from .types import SecurityRequirementType, MimeType
+from .x_ms_parameterized_host import XmsParameterizedHostType
 
 
 def _swagger_version_validator(v):
@@ -27,7 +28,7 @@ class Swagger(Model):
     schemes = ListType(StringType(choices=("http", "https", "ws", "wss")), serialize_when_none=False)  # The transfer protocol of the API. Values MUST be from the list: "http", "https", "ws", "wss". If the schemes is not included, the default scheme to be used is the one used to access the Swagger definition itself.
     consumes = ListType(MimeType(), serialize_when_none=False)  # A list of MIME types the APIs can consume. This is global to all APIs but can be overridden on specific API calls. Value MUST be as described under Mime Types.
     produces = ListType(MimeType(), serialize_when_none=False)  # A list of MIME types the APIs can produce. This is global to all APIs but can be overridden on specific API calls. Value MUST be as described under Mime Types.
-    paths = DictType(ModelType(PathItem), required=True)  # The available paths and operations for the API.
+    paths = PathsType(required=True)  # The available paths and operations for the API.
     definitions = DictType(ModelType(Schema), serialize_when_none=False)  # An object to hold data types produced and consumed by operations.
     parameters = ListType(ParameterType(support_reference=False), serialize_when_none=False)  # An object to hold parameters that can be used across operations. This property does not define global parameters for all operations.
     responses = DictType(ModelType(Response), serialize_when_none=False)  # An object to hold responses that can be used across operations. This property does not define global responses for all operations.
@@ -35,3 +36,6 @@ class Swagger(Model):
     security = ListType(SecurityRequirementType(), serialize_when_none=False)  # A declaration of which security schemes are applied for the API as a whole. The list of values describes alternative security schemes that can be used (that is, there is a logical OR between the security requirements). Individual operations can override this definition.
     tags = ListType(ModelType(Tag), serialize_when_none=False)  # A list of tags used by the specification with additional metadata. The order of the tags can be used to reflect on their order by the parsing tools. Not all tags that are used by the Operation Object must be declared. The tags that are not declared may be organized randomly or based on the tools' logic. Each tag name in the list MUST be unique.
     externalDocs = ModelType(ExternalDocumentation, serialize_when_none=False)  # Additional external documentation.
+
+    x_ms_paths = XmsPathsType(serialize_when_none=False)  # alternative to Paths Object that allows Path Item Object to have query parameters for non pure REST APIs
+    x_ms_parameterized_host = XmsParameterizedHostType(serialize_when_none=False)
