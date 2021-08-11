@@ -11,5 +11,3 @@ def map_path_2_repo(path):
     ems = ems[idx:]
     return '/'.join(['https://github.com/Azure/azure-rest-api-specs/tree/master', *ems])
 
-
-

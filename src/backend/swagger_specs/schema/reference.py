@@ -4,10 +4,11 @@ from schematics.types import StringType
 
 class ReferenceType(StringType):
 
-    def __init__(self, **kwargs):
+    def __init__(self, serialized_name="$ref", deserialize_from="$ref", **kwargs):
+
         super(ReferenceType, self).__init__(
-            serialized_name="$ref",
-            deserialize_from="$ref",
+            serialized_name=serialized_name,
+            deserialize_from=deserialize_from,
             **kwargs
         )
 

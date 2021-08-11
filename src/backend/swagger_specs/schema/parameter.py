@@ -18,15 +18,15 @@ class _ParameterBase(Model):
 
     IN_VALUE = None
     name = StringType(required=True)    # The name of the parameter. Parameter names are case sensitive. If in is "path", the name field MUST correspond to the associated path segment from the path field in the Paths Object. See Path Templating for further information. For all other cases, the name corresponds to the parameter name used based on the in property.
-    description = StringType(serialize_when_none=False)  # A brief description of the parameter. This could contain examples of use.
-    required = BooleanType(serialize_when_none=False, default=False)  # Determines whether this parameter is mandatory. If the parameter is in "path", this property is required and its value MUST be true. Otherwise, the property MAY be included and its default value is false.
+    description = StringType()  # A brief description of the parameter. This could contain examples of use.
+    required = BooleanType(default=False)  # Determines whether this parameter is mandatory. If the parameter is in "path", this property is required and its value MUST be true. Otherwise, the property MAY be included and its default value is false.
     _in = StringType(serialized_name="in", required=True)   # The location of the parameter. Possible values are "query", "header", "path", "formData" or "body".
 
-    x_ms_parameter_grouping = XmsParameterGroupingType(serialize_when_none=False)
-    x_ms_parameter_location = XmsParameterLocationType(serialize_when_none=False)
-    x_ms_client_name = XmsClientNameType(serialize_when_none=False)
-    x_ms_client_flatten = XmsClientFlatten(serialize_when_none=False)
-    x_ms_client_default = XmsClientDefaultType(serialize_when_none=False)
+    x_ms_parameter_grouping = XmsParameterGroupingType()
+    x_ms_parameter_location = XmsParameterLocationType()
+    x_ms_client_name = XmsClientNameType()
+    x_ms_client_flatten = XmsClientFlatten()
+    x_ms_client_default = XmsClientDefaultType()
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -38,11 +38,11 @@ class QueryParameter(Items, _ParameterBase):
     """Parameters that are appended to the URL. For example, in /items?id=###, the query parameter is id."""
 
     IN_VALUE = "query"
-    allowEmptyValue = BooleanType(serialize_when_none=False, default=False)  # Sets the ability to pass empty-valued parameters. This is valid only for either query or formData parameters and allows you to send a parameter with a name only or an empty value. Default value is false.
+    allowEmptyValue = BooleanType(default=False)  # Sets the ability to pass empty-valued parameters. This is valid only for either query or formData parameters and allows you to send a parameter with a name only or an empty value. Default value is false.
     collectionFormat = StringType(
         choices=("csv", "ssv", "tsv", "pipes", "multi"),
         default="csv",
-        serialize_when_none=False
+
     )  # multi - corresponds to multiple parameter instances instead of multiple values for a single instance foo=bar&foo=baz.
 
 
@@ -50,8 +50,8 @@ class HeaderParameter(Items, _ParameterBase):
     """Custom headers that are expected as part of the request."""
     IN_VALUE = "header"
 
-    x_ms_header_collection_prefix = XmsHeaderCollectionPrefixType(serialize_when_none=False)  # Handle collections of arbitrary headers by distinguishing them with a specified prefix.
-    x_ms_client_request_id = XmsClientRequestIdType(serialize_when_none=False)
+    x_ms_header_collection_prefix = XmsHeaderCollectionPrefixType()  # Handle collections of arbitrary headers by distinguishing them with a specified prefix.
+    x_ms_client_request_id = XmsClientRequestIdType()
 
 
 class PathParameter(Items, _ParameterBase):
@@ -60,7 +60,7 @@ class PathParameter(Items, _ParameterBase):
     IN_VALUE = "path"
     required = BooleanType(required=True, default=True)
 
-    x_ms_skip_url_encoding = XmsSkipURLEncodingType(serialize_when_none=False)
+    x_ms_skip_url_encoding = XmsSkipURLEncodingType()
 
 
 class FormDataParameter(Items, _ParameterBase):
@@ -74,11 +74,11 @@ class FormDataParameter(Items, _ParameterBase):
         choices=("string", "number", "integer", "boolean", "array", "file"),
         required=True
     )   #  If type is "file", the consumes MUST be either "multipart/form-data", " application/x-www-form-urlencoded" or both
-    allowEmptyValue = BooleanType(serialize_when_none=False, default=False)  # Sets the ability to pass empty-valued parameters. This is valid only for either query or formData parameters and allows you to send a parameter with a name only or an empty value. Default value is false.
+    allowEmptyValue = BooleanType(default=False)  # Sets the ability to pass empty-valued parameters. This is valid only for either query or formData parameters and allows you to send a parameter with a name only or an empty value. Default value is false.
     collectionFormat = StringType(
         choices=("csv", "ssv", "tsv", "pipes", "multi"),
         default="csv",
-        serialize_when_none=False
+
     ) # multi - corresponds to multiple parameter instances instead of multiple values for a single instance foo=bar&foo=baz.
 
 

@@ -13,17 +13,23 @@ class ResourceVersion:
         Stable = 'stable'
 
     def __init__(self, version):
-        pieces = version.split('-')
-        suffix = pieces[3:]
-        if len(suffix) == 0:
-            readiness = self.Readiness.Stable
-        elif len(suffix) == 1 and suffix[0].lower() in ('beta', 'preview', 'privatepreview'):
-            readiness = self.Readiness.Preview
-        else:
-            raise ValueError(f"Invalid Version '{version}'")
+        readiness = self.Readiness.Stable
+        for keyword in ('beta', 'preview', 'privatepreview'):
+            if keyword in version.lower():
+                readiness = self.Readiness.Preview
+
         self.version = version
         self.readiness = readiness
-        self.date = datetime.date.fromisoformat('-'.join(pieces[:3]))
+
+        self.date = datetime.date.min
+
+        date_piece = version.split('.')[0]  # date is always the prefix of version
+        if '-' in date_piece:
+            pieces = date_piece.replace('_', '-').split('-')
+            try:
+                self.date = datetime.date.fromisoformat('-'.join(pieces[:3]))
+            except ValueError as err:
+                logger.warning(f'ParseVersionDateError: Version={version} : {err}')
 
     def __str__(self):
         return self.version

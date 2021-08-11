@@ -9,7 +9,7 @@ class _SecuritySchemeBase(Model):
     TYPE_VALUE = None
 
     type = StringType(choices=("basic", "apiKey", "oauth2"), required=True)  #
-    description = StringType(serialize_when_none=False)
+    description = StringType()
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -37,9 +37,9 @@ class OAuth2SecurityScheme(_SecuritySchemeBase):
     TYPE_VALUE = "oauth2"
 
     flow = StringType(choices=("implicit", "password", "application", "accessCode"), required=True)  # The flow used by the OAuth2 security scheme.
-    authorizationUrl = URLType(serialize_when_none=False)  # The authorization URL to be used for this flow. oauth2 ("implicit", "accessCode")
-    tokenUrl = URLType(serialize_when_none=False)  # The token URL to be used for this flow. oauth2 ("password", "application", "accessCode")
-    scopes = ScopesType(serialize_when_none=False)  # The available scopes for the OAuth2 security scheme.
+    authorizationUrl = URLType()  # The authorization URL to be used for this flow. oauth2 ("implicit", "accessCode")
+    tokenUrl = URLType()  # The token URL to be used for this flow. oauth2 ("password", "application", "accessCode")
+    scopes = ScopesType()  # The available scopes for the OAuth2 security scheme.
 
 
 class SecuritySchemeType(PolyModelType):

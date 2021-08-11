@@ -8,14 +8,13 @@ class XmsParameterGrouping(Model):
     https://github.com/Azure/autorest/tree/main/docs/extensions#x-ms-parameter-grouping
     """
 
-    name = StringType(serialize_when_none=False)  # When set, specifies the name for the composite type.
-    postfix = StringType(serialize_when_none=False)  # Alternative to name parameter. If specified the name of the composite type will be generated as follows {MethodGroup}{Method}{Postfix}
+    name = StringType()  # When set, specifies the name for the composite type.
+    postfix = StringType()  # Alternative to name parameter. If specified the name of the composite type will be generated as follows {MethodGroup}{Method}{Postfix}
 
 
 class XmsParameterGroupingType(ModelType):
 
     def __init__(self, **kwargs):
-
         super(XmsParameterGroupingType, self).__init__(
             XmsParameterGrouping,
             serialized_name="x-ms-parameter-grouping",

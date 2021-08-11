@@ -14,9 +14,21 @@ logger = logging.getLogger('backend')
 
 class ResourceProviderTag:
 
-    def __init__(self, tag):
+    def __init__(self, tag, resource_provider):
         self._tag = tag
-        self.date = self.parse_tag_date()
+        self.date = None
+
+        if self._tag is not None:
+            dt_re = re.compile(r'([0-9]{4})([-_]([0-9]{1,2})([-_]([0-9]{1,2}))?)?')
+            try:
+                pieces = next(dt_re.finditer(self._tag))
+                year = int(pieces[1])
+                month = int(pieces[3]) if pieces[3] else 1
+                day = int(pieces[5]) if pieces[5] else 1
+                self.date = datetime.date(year, month, day)
+            except (StopIteration, ValueError):
+                logger.warning(f'ParseTagDateError: {resource_provider} : {self._tag}')
+                self.date = datetime.date.min
 
     def __str__(self):
         return self._tag
@@ -30,20 +42,6 @@ class ResourceProviderTag:
     def __ne__(self, other):
         return str(self) != str(other)
 
-    def parse_tag_date(self):
-        if self._tag is None:
-            return None
-        dt_re = re.compile(r'([0-9]{4})([-_]([0-9]{1,2})([-_]([0-9]{1,2}))?)?')
-        try:
-            pieces = next(dt_re.finditer(self._tag))
-            year = int(pieces[1])
-            month = int(pieces[3]) if pieces[3] else 1
-            day = int(pieces[5]) if pieces[5] else 1
-            return datetime.date(year, month, day)
-        except (StopIteration, ValueError):
-            logger.warning(f'ParseTagDateError: {self._tag}')
-            return datetime.date.min
-
 
 class ResourceProvider:
 
@@ -54,10 +52,14 @@ class ResourceProvider:
         self._swagger_module = swagger_module
 
         if readme_path is None:
-            logger.warning(f"MissReadmeFile: {self._swagger_module}/{self._name}: {map_path_2_repo(file_path)}")
+            logger.warning(f"MissReadmeFile: {self} : {map_path_2_repo(file_path)}")
         self._tags = None
 
+        # FIXME For Develop only
         self.get_resource_map()
+
+    def __str__(self):
+        return f'{self._swagger_module}/{self._name}'
 
     @property
     def tags(self):
@@ -85,7 +87,7 @@ class ResourceProvider:
             try:
                 body = yaml.safe_load(yaml_body)
             except yaml.YAMLError as err:
-                logger.error(f'ParseYamlFailed: {self._readme_path} {flags}: {err}')
+                logger.error(f'ParseYamlFailed: {self} : {self._readme_path} {flags}: {err}')
                 continue
 
             files = []
@@ -93,7 +95,7 @@ class ResourceProvider:
                 file_path = file_path.replace('$(this-folder)/', '')
                 file_path = os.path.join(os.path.dirname(self._readme_path), *file_path.split('/'))
                 if not os.path.isfile(file_path):
-                    logger.warning(f'FileNotExist: {file_path}')
+                    logger.warning(f'FileNotExist: {self} : {file_path}')
                     continue
                 files.append(file_path)
 
@@ -101,7 +103,7 @@ class ResourceProvider:
                 tag = piece[2]
                 if tag is None:
                     tag = ''
-                tag = ResourceProviderTag(tag.strip())
+                tag = ResourceProviderTag(tag.strip(), self)
                 if tag not in tags:
                     tags[tag] = set()
                 tags[tag] = tags[tag].union(files)
@@ -152,10 +154,11 @@ class ResourceProvider:
             return False
 
         # resource's file path with larger date has higher priority
-        if curr_resource.file_path_version.date < resource.file_path_version.date:
-            return True
-        elif curr_resource.file_path_version.date > resource.file_path_version.date:
-            return False
+        if curr_resource.file_path_version.date is not None and resource.file_path_version.date is not None:
+            if curr_resource.file_path_version.date < resource.file_path_version.date:
+                return True
+            elif curr_resource.file_path_version.date > resource.file_path_version.date:
+                return False
 
         # resource's file path in stable has higher priority
         if curr_resource.file_path_version.readiness != resource.file_path_version.readiness:
@@ -171,7 +174,7 @@ class ResourceProvider:
             elif curr_rs_tag.date > rs_tag.date:
                 return False
 
-        logger.warning(f'DuplicatedResource: In files {map_path_2_repo(curr_resource.file_path)} {map_path_2_repo(resource.file_path)} ; Resource Path {resource.path}')
+        logger.warning(f'DuplicatedResource: {self} : In files {map_path_2_repo(curr_resource.file_path)} {map_path_2_repo(resource.file_path)} ; Resource Path {resource.path}')
         return False
 
     def _parse_resources_in_file(self, file_path):
@@ -183,16 +186,22 @@ class ResourceProvider:
         # check swagger version
         swagger_version = body.get('swagger', None)
         if swagger_version != '2.0':
-            logger.error(f'InvalidSwaggerFile: invalid swagger version {swagger_version} in file {file_path}')
+            logger.error(f'InvalidSwaggerFile: {self} : invalid swagger version {swagger_version} in file {file_path}')
             return resources
 
         # fetch api-version
         info = body.get('info', {})
         version = info.get('version', None)
         if not version:
-            logger.error(f'InvalidSwaggerFile: invalid info version {version} in file {file_path}')
+            logger.error(f'InvalidSwaggerFile: {self} : invalid info version {version} in file {file_path}')
 
         for path in body.get('paths', {}):
+            resource = Resource(path=path, version=version, file_path=file_path, resource_provider=self)
+            resources.append(resource)
+
+        # x-ms-paths:
+        #   alternative to Paths Object that allows Path Item Object to have query parameters for non pure REST APIs
+        for path in body.get('x-ms-paths', {}):
             resource = Resource(path=path, version=version, file_path=file_path, resource_provider=self)
             resources.append(resource)
 

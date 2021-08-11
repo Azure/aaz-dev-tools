@@ -2,7 +2,7 @@ import os
 from ._swagger_module import MgmtPlanModule, DataPlanModule
 
 
-class Swagger:
+class SwaggerSpecs:
 
     def __init__(self, folder_path):
         # TODO: check folder structures

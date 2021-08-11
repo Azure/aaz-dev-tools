@@ -11,6 +11,6 @@ class XmsPageable(Model):
     https://github.com/Azure/autorest/blob/main/docs/extensions/readme.md#x-ms-pageable
     """
 
-    itemName = StringType(default='value', serialize_when_none=False)  # Optional (default: value). Specifies the name of the property that provides the collection of pageable items.
+    itemName = StringType(default='value')  # Optional (default: value). Specifies the name of the property that provides the collection of pageable items.
     nextLinkName = StringType(required=True)  # Specifies the name of the property that provides the next link (common: nextLink). If the model does not have a next link property then specify null. This is useful for services that return an object that has an array referenced by itemName. The object is then flattened in a way that the array is directly returned, no paging is used. This provides a better client side API to the end user.
-    operationName = StringType(serialize_when_none=False)  # Optional (default: <operationName>Next). Specifies the name of the operation for retrieving the next page.
+    operationName = StringType()  # Optional (default: <operationName>Next). Specifies the name of the operation for retrieving the next page.

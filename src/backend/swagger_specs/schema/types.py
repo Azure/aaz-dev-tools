@@ -62,11 +62,26 @@ class ScopesType(DictType):
         super(ScopesType, self).__init__(field=StringType(), **kwargs)
 
 
+class XmsCodeGenerationSettingsType(BaseType):
+    """
+    x-ms-code-generation-settings extension on info element enables passing code generation settings via the OpenAPI definition.
+
+    https://github.com/Azure/autorest/tree/main/docs/extensions#x-ms-code-generation-settings
+    """
+    def __init__(self, **kwargs):
+        super(XmsCodeGenerationSettingsType, self).__init__(
+            default=False,
+            serialized_name="x-ms-code-generation-settings",
+            deserialize_from="x-ms-code-generation-settings",
+            **kwargs
+        )
+
+
 class XmsSkipURLEncodingType(BooleanType):
     """
     skips URL encoding for path and query parameters.
 
-    https://github.com/Azure/autorest/tree/main/docs/extensions#x-ms-code-generation-settings
+    https://github.com/Azure/autorest/tree/main/docs/extensions#x-ms-skip-url-encoding
     """
 
     def __init__(self, **kwargs):
