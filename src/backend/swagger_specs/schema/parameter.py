@@ -1,13 +1,13 @@
 from schematics.models import Model
-from schematics.types import StringType, BooleanType, ModelType, PolyModelType
+from schematics.types import StringType, BooleanType, ModelType, PolyModelType, BaseType
 from .schema import Schema
 from .items import Items
 from .reference import Reference
 from .x_ms_parameter_grouping import XmsParameterGroupingType
-from .types import XmsSkipURLEncodingType
-from .types import XmsParameterLocationType
+from .types import XmsSkipURLEncodingType, XAccessibilityType
+from .types import XmsParameterLocationType, XmsApiVersionType, XmsSkipUrlEncodingType
 from .types import XmsClientNameType, XmsClientFlatten, XmsClientDefaultType, XmsHeaderCollectionPrefixType
-from .types import XmsClientRequestIdType
+from .types import XmsClientRequestIdType, XNullableType, XPublishType, XRequiredType, XClientNameType, XNewPatternType, XPreviousPatternType, XCommentType
 
 
 class _ParameterBase(Model):
@@ -28,10 +28,24 @@ class _ParameterBase(Model):
     x_ms_client_flatten = XmsClientFlatten()
     x_ms_client_default = XmsClientDefaultType()
 
+    # specific properties
+    _x_accessibility = XAccessibilityType()   # only used in ContainerRegistry Data plane
+    _x_required = XRequiredType()  # only used in ContainerRegistry Data plane
+    _x_publish = XPublishType()  # only used in Maps Data Plane
+    _x_example = BaseType(serialized_name='x-example', deserialize_from='x-example')  # deprecated
+    _x_examples = BaseType(serialized_name='x-examples', deserialize_from='x-examples')  # deprecated
+    _x_client_name = XClientNameType()  # Only used in Maps Data Plane
+    _x_new_pattern = XNewPatternType()  # Only used in FrontDoor Mgmt Plane
+    _x_previous_pattern = XPreviousPatternType()  # Only used in FrontDoor Mgmt Plane
+    _x_comment = XCommentType()  # Only used in IoTCenter Mgmt Plane
+
     @classmethod
     def _claim_polymorphic(cls, data):
-        in_value = data.get('in', None)
-        return in_value is not None and in_value == cls.IN_VALUE
+        if isinstance(data, dict):
+            in_value = data.get('in', None)
+            return in_value is not None and in_value == cls.IN_VALUE
+        else:
+            return False
 
 
 class QueryParameter(Items, _ParameterBase):
@@ -42,8 +56,10 @@ class QueryParameter(Items, _ParameterBase):
     collectionFormat = StringType(
         choices=("csv", "ssv", "tsv", "pipes", "multi"),
         default="csv",
-
     )  # multi - corresponds to multiple parameter instances instead of multiple values for a single instance foo=bar&foo=baz.
+
+    x_ms_api_version = XmsApiVersionType()
+    x_ms_skip_url_encoding = XmsSkipUrlEncodingType()
 
 
 class HeaderParameter(Items, _ParameterBase):
@@ -88,6 +104,8 @@ class BodyParameter(_ParameterBase):
     IN_VALUE = "body"
     schema = ModelType(Schema, required=True)  # The schema defining the type used for the body parameter.
 
+    x_nullable = XNullableType(default=False)  # when true, specifies that null is a valid value for the associated schema
+
 
 class ParameterType(PolyModelType):
 
@@ -98,4 +116,3 @@ class ParameterType(PolyModelType):
         if support_reference:
             model_spec.append(Reference)
         super(ParameterType, self).__init__(model_spec=model_spec, **kwargs)
-

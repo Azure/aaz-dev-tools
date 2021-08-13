@@ -1,4 +1,4 @@
-from schematics.models import Model
+from schematics.models import Model, BaseType
 from schematics.types import StringType, URLType, PolyModelType
 from .types import ScopesType
 
@@ -13,8 +13,11 @@ class _SecuritySchemeBase(Model):
 
     @classmethod
     def _claim_polymorphic(cls, data):
-        type_value = data.get('type', None)
-        return type_value is not None and type_value == cls.TYPE_VALUE
+        if isinstance(data, dict):
+            type_value = data.get('type', None)
+            return type_value is not None and type_value == cls.TYPE_VALUE
+        else:
+            return False
 
 
 class BasicSecurityScheme(_SecuritySchemeBase):

@@ -28,11 +28,15 @@ class XmsLongRunningOperationOptions(Model):
     It will keep on polling at regular intervals till the request reaches one of the terminal states: Succeeded, Failed, or Canceled.
     """
 
-    final_state_via = StringType(choices=(
-        'azure-async-operation',    # (default if not specified) poll until terminal state, the final response will be available at the uri pointed to by the header Azure-AsyncOperation
-        'location',  # poll until terminal state, the final response will be available at the uri pointed to by the header Location
-        'original-uri'  # poll until terminal state, the final response will be available via GET at the original resource URI. Very common for PUT operations.
-    ), default='azure-async-operation')
+    final_state_via = StringType(
+        choices=(
+            'azure-async-operation',  # (default if not specified) poll until terminal state, the final response will be available at the uri pointed to by the header Azure-AsyncOperation
+            'location',  # poll until terminal state, the final response will be available at the uri pointed to by the header Location
+            'original-uri'  # poll until terminal state, the final response will be available via GET at the original resource URI. Very common for PUT operations.
+        ), default='azure-async-operation',
+        serialized_name='final-state-via',
+        deserialize_from='final-state-via',
+    )
 
 
 class XmsLongRunningOperationOptionsType(ModelType):
@@ -40,8 +44,7 @@ class XmsLongRunningOperationOptionsType(ModelType):
     def __init__(self, **kwargs):
         super(XmsLongRunningOperationOptionsType, self).__init__(
             XmsLongRunningOperationOptions,
-            serialized_name='',
-            deserialize_from='',
+            serialized_name='x-ms-long-running-operation-options',
+            deserialize_from='x-ms-long-running-operation-options',
             **kwargs
         )
-

@@ -2,26 +2,6 @@ import os
 from ._resource_provider import ResourceProvider
 
 
-def search_readme_md_path(path, search_parent=False):
-    if search_parent:
-        readme_path = os.path.join(os.path.dirname(path), 'readme.md')
-        if os.path.exists(readme_path):
-            return readme_path
-
-    readme_path = os.path.join(path, 'readme.md')
-    if os.path.exists(readme_path):
-        return readme_path
-
-    # find in sub directory
-    for name in os.listdir(path):
-        sub_path = os.path.join(path, name)
-        if os.path.isdir(sub_path):
-            readme_path = search_readme_md_path(sub_path)
-            if readme_path is not None:
-                return readme_path
-    return None
-
-
 class SwaggerModule:
 
     def __init__(self, name, path, parent=None):
@@ -36,13 +16,13 @@ class SwaggerModule:
             return f"{self.name}"
 
 
-class MgmtPlanModule(SwaggerModule):
+class MgmtPlaneModule(SwaggerModule):
 
     def __str__(self):
         if self._parent is None:
-            return f'(MgmtPlan)/{super().__str__()}'
+            return f'(MgmtPlane)/{super().__str__()}'
         else:
-            return super(MgmtPlanModule, self).__str__()
+            return super(MgmtPlaneModule, self).__str__()
 
     def get_resource_providers(self):
         rp = []
@@ -55,18 +35,18 @@ class MgmtPlanModule(SwaggerModule):
                     rp.append(ResourceProvider(name, path, readme_path, swagger_module=self))
                 elif name.lower() != 'common':
                     # azsadmin module only
-                    sub_module = MgmtPlanModule(name, path, parent=self)
+                    sub_module = MgmtPlaneModule(name, path, parent=self)
                     rp.extend(sub_module.get_resource_providers())
         return rp
 
 
-class DataPlanModule(SwaggerModule):
+class DataPlaneModule(SwaggerModule):
 
     def __str__(self):
         if self._parent is None:
-            return f'(DataPlan)/{super().__str__()}'
+            return f'(DataPlane)/{super().__str__()}'
         else:
-            return super(DataPlanModule, self).__str__()
+            return super(DataPlaneModule, self).__str__()
 
     def get_resource_providers(self):
         rp = []
@@ -89,9 +69,29 @@ class DataPlanModule(SwaggerModule):
                             has_sub_module = False
                             break
                     if has_sub_module:
-                        sub_module = DataPlanModule(name, path, parent=self)
+                        sub_module = DataPlaneModule(name, path, parent=self)
                         rp.extend(sub_module.get_resource_providers())
                     else:
                         readme_path = search_readme_md_path(path, search_parent=True)
                         rp.append(ResourceProvider(name, path, readme_path, swagger_module=self))
         return rp
+
+
+def search_readme_md_path(path, search_parent=False):
+    if search_parent:
+        readme_path = os.path.join(os.path.dirname(path), 'readme.md')
+        if os.path.exists(readme_path):
+            return readme_path
+
+    readme_path = os.path.join(path, 'readme.md')
+    if os.path.exists(readme_path):
+        return readme_path
+
+    # find in sub directory
+    for name in os.listdir(path):
+        sub_path = os.path.join(path, name)
+        if os.path.isdir(sub_path):
+            readme_path = search_readme_md_path(sub_path)
+            if readme_path is not None:
+                return readme_path
+    return None

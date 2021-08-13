@@ -1,8 +1,8 @@
 from schematics.models import Model
-from schematics.types import BaseType, StringType, ModelType, DictType
+from schematics.types import BaseType, StringType, ModelType, DictType, PolyModelType
 from .schema import Schema
 from .header import Header
-from .types import XmsExamplesType, XmsErrorResponseType
+from .types import XmsExamplesType, XmsErrorResponseType, XNullableType
 
 
 class Response(Model):
@@ -15,3 +15,9 @@ class Response(Model):
 
     x_ms_examples = XmsExamplesType()
     x_ms_error_response = XmsErrorResponseType()
+
+    x_nullable = XNullableType(default=False)  # when true, specifies that null is a valid value for the associated schema
+
+    @classmethod
+    def _claim_polymorphic(cls, data):
+        return isinstance(data, dict) and 'description' in data

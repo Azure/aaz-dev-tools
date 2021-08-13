@@ -19,7 +19,9 @@ def _swagger_version_validator(v):
 
 
 class Swagger(Model):
-    """This is the root document object for the API specification. It combines what previously was the Resource Listing and API Declaration (version 1.2 and earlier) together into one document."""
+    """
+    This is the root document object for the API specification. It combines what previously was the Resource Listing and API Declaration (version 1.2 and earlier) together into one document.
+    """
 
     swagger = StringType(validators=[_swagger_version_validator], default="2.0", required=True)  # Specifies the Swagger Specification version being used. It can be used by the Swagger UI and other clients to interpret the API listing. The value MUST be "2.0".
     info = ModelType(Info, required=True)  # Provides metadata about the API. The metadata can be used by the clients if needed.
@@ -30,7 +32,7 @@ class Swagger(Model):
     produces = ListType(MimeType())  # A list of MIME types the APIs can produce. This is global to all APIs but can be overridden on specific API calls. Value MUST be as described under Mime Types.
     paths = PathsType(required=True)  # The available paths and operations for the API.
     definitions = DictType(ModelType(Schema))  # An object to hold data types produced and consumed by operations.
-    parameters = ListType(ParameterType(support_reference=False))  # An object to hold parameters that can be used across operations. This property does not define global parameters for all operations.
+    parameters = DictType(ParameterType(support_reference=False))  # An object to hold parameters that can be used across operations. This property does not define global parameters for all operations.
     responses = DictType(ModelType(Response))  # An object to hold responses that can be used across operations. This property does not define global responses for all operations.
     securityDefinitions = DictType(SecuritySchemeType())  # Security scheme definitions that can be used across the specification.
     security = ListType(SecurityRequirementType())  # A declaration of which security schemes are applied for the API as a whole. The list of values describes alternative security schemes that can be used (that is, there is a logical OR between the security requirements). Individual operations can override this definition.
@@ -39,3 +41,4 @@ class Swagger(Model):
 
     x_ms_paths = XmsPathsType()  # alternative to Paths Object that allows Path Item Object to have query parameters for non pure REST APIs
     x_ms_parameterized_host = XmsParameterizedHostType()
+

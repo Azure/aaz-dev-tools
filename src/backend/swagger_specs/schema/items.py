@@ -1,6 +1,6 @@
 from schematics.models import Model
 from schematics.types import BaseType, StringType, FloatType, ModelType, BooleanType, IntType, ListType
-from .types import DataTypeFormatEnum, RegularExpressionType
+from .types import DataTypeFormatEnum, RegularExpressionType, XNullableType
 from .x_ms_enum import XmsEnumType
 
 
@@ -23,7 +23,6 @@ class Items(Model):
     default = BaseType() # This keyword can be used to supply a default JSON value associated with a particular schema.  It is RECOMMENDED that a default value be valid against the associated schema.
 
     enum = ListType(BaseType())
-    x_ms_enum = XmsEnumType()
 
     # Validation keywords for numeric instances (number and integer)
     multipleOf = FloatType(min_value=0)  # The value of "multipleOf" MUST be a JSON number.  This number MUST be strictly greater than 0.
@@ -42,3 +41,6 @@ class Items(Model):
     maxItems = IntType(min_value=0)
     minItems = IntType(min_value=0)
     uniqueItems = BooleanType()
+
+    x_ms_enum = XmsEnumType()
+    x_nullable = XNullableType(default=False)  # when true, specifies that null is a valid value for the associated schema

@@ -8,7 +8,7 @@ class XmsEnumValue(Model):
     """
 
     value = BaseType(required=True)  # Property value is mandatory and corresponds to the value one would also have specified using enum.
-    description = StringType()  #  Property value is mandatory and corresponds to the value one would also have specified using enum
+    description = StringType()  # Property value is mandatory and corresponds to the value one would also have specified using enum
     name = StringType()  # allows overriding the name of the enum value that would usually be derived from the value.
 
 
@@ -21,6 +21,8 @@ class XmsEnum(Model):
     name = StringType(required=True)  # Specifies the name for the Enum.
     modelAsString = BooleanType(default=False)  # When set to true the enum will be modeled as a string. No validation will happen. When set to false, it will be modeled as an enum if that language supports enums. Validation will happen, irrespective of support of enums in that language.
     values = ListType(ModelType(XmsEnumValue))
+
+    modelAsExtensible = BooleanType()
 
 
 class XmsEnumType(ModelType):

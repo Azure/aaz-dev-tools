@@ -5,6 +5,25 @@ from .types import DataTypeFormatEnum, RegularExpressionType, XmsClientNameType,
 from .xml import XML
 from .external_documentation import ExternalDocumentation
 from .x_ms_enum import XmsEnumType
+from .types import XmsSecretType, XAccessibilityType, XAzSearchDeprecatedType, XSfClientLibType, XApimCodeNillableType, XCommentType, XAbstractType, XClientNameType
+
+
+def _additionalProperties_claim_function(_, data):
+    if isinstance(data, bool):
+        return bool
+    elif isinstance(data, dict):
+        return Schema
+    else:
+        return None
+
+
+def _items_claim_function(_, data):
+    if isinstance(data, dict):
+        return Schema
+    elif isinstance(data, list):
+        return ListType(ModelType(Schema))
+    else:
+        return None
 
 
 class Schema(Model):
@@ -33,7 +52,8 @@ class Schema(Model):
 
     # Validation keywords for arrays
     items = PolyModelType(
-        ["Schema", ListType(ModelType("Schema"))],
+        [ModelType("Schema"), ListType(ModelType("Schema"))],
+        claim_function=_items_claim_function,
     )
     maxItems = IntType(min_value=0)
     minItems = IntType(min_value=0)
@@ -47,8 +67,8 @@ class Schema(Model):
         ModelType("Schema"),
     )
     additionalProperties = PolyModelType(
-        [BooleanType(), "Schema"],
-        default=True
+        [bool, ModelType("Schema")],
+        claim_function=_additionalProperties_claim_function,
     )
     discriminator = StringType()  # Adds support for polymorphism. The discriminator is the schema property name that is used to differentiate between other schema that inherit this schema. The property name used MUST be defined at this schema and it MUST be in the required property list. When used, the value MUST be the name of this schema or any schema that inherits it.
 
@@ -57,13 +77,12 @@ class Schema(Model):
     x_ms_enum = XmsEnumType()
     type = StringType(
         choices=["array", "boolean", "integer", "number", "null", "object", "string"],  # https://datatracker.ietf.org/doc/html/draft-zyp-json-schema-04#section-3.5
-        required=True
     )
     allOf = ListType(
         ModelType("Schema"),
     )
 
-    readOnly = BooleanType(default=False)  # Relevant only for Schema "properties" definitions. Declares the property as "read only". This means that it MAY be sent as part of a response but MUST NOT be sent as part of the request. Properties marked as readOnly being true SHOULD NOT be in the required list of the defined schema. Default value is false.
+    readOnly = BooleanType()  # Relevant only for Schema "properties" definitions. Declares the property as "read only". This means that it MAY be sent as part of a response but MUST NOT be sent as part of the request. Properties marked as readOnly being true SHOULD NOT be in the required list of the defined schema. Default value is false.
     xml = ModelType(XML)  # This MAY be used only on properties schemas. It has no effect on root schemas. Adds Additional metadata to describe the XML representation format of this property.
     externalDocs = ModelType(ExternalDocumentation)  # Additional external documentation for this schema.
     example = BaseType()  # A free-form property to include an example of an instance for this schema.
@@ -77,4 +96,14 @@ class Schema(Model):
 
     x_ms_azure_resource = XmsAzureResourceType() # indicates that the Definition Schema Object is a resource as defined by the Resource Manager API
 
-    x_nullable = XNullableType(default=False)  # when true, specifies that null is a valid value for the associated schema
+    x_ms_secret = XmsSecretType()
+
+    x_nullable = XNullableType()  # when true, specifies that null is a valid value for the associated schema
+
+    # specific properties
+    _x_accessibility = XAccessibilityType()   # only used in ContainerRegistry Data plane
+    _x_az_search_deprecated = XAzSearchDeprecatedType()  # only used in Search Data Plane
+    _x_sf_clientlib = XSfClientLibType()  # only used in ServiceFabric Data Plane and ServiceFabricManagedClusters Mgmt Plane
+    _x_apim_code_nillable = XApimCodeNillableType()  # only used in ApiManagement Mgmt Plane
+    _x_comment = XCommentType()  # Only used in IoTCenter Mgmt Plane
+    _x_abstract = XAbstractType()  # Only used in Logic Mgmt Plane and Web Mgmt Plane

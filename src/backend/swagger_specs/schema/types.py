@@ -32,7 +32,11 @@ from schematics.types import StringType, DictType, ListType, BooleanType, BaseTy
 
 
 class DataTypeFormatEnum(StringType):
-    VALID_TYPE_FORMATS = ("int32", "int64", "float", "double", "byte", "binary", "date", "date-time", "password")
+    VALID_TYPE_FORMATS = (
+        "int32", "int64", "float", "double", "byte", "binary", "date", "date-time", "password",
+        # additional formats
+        "duration", "file", "uuid",
+    )
 
     def __init__(self, **kwargs):
         super(DataTypeFormatEnum, self).__init__(choices=self.VALID_TYPE_FORMATS, **kwargs)
@@ -48,7 +52,11 @@ class RegularExpressionType(StringType):
 
 
 class SecurityRequirementType(DictType):
-    """Lists the required security schemes to execute this operation. The object can have multiple security schemes declared in it which are all required (that is, there is a logical AND between the schemes)."""
+    """
+    Lists the required security schemes to execute this operation. The object can have multiple security schemes declared in it which are all required (that is, there is a logical AND between the schemes).
+
+    The type of value could be string or list
+    """
 
     def __init__(self, **kwargs):
         super(SecurityRequirementType, self).__init__(
@@ -316,7 +324,7 @@ class XmsRequestIdType(StringType):
         )
 
 
-class XmsClientRequestIdType(StringType):
+class XmsClientRequestIdType(BooleanType):
     """
     When set, specifies the header parameter to be used instead of x-ms-client-request-id (default is x-ms-client-request-id).
 
@@ -327,6 +335,38 @@ class XmsClientRequestIdType(StringType):
         super(XmsClientRequestIdType, self).__init__(
             serialized_name='x-ms-client-request-id',
             deserialize_from='x-ms-client-request-id',
+            **kwargs
+        )
+
+
+class XmsApiVersionType(BooleanType):
+    """"""
+
+    def __init__(self, **kwargs):
+        super(XmsApiVersionType, self).__init__(
+            serialized_name='x-ms-api-version',
+            deserialize_from='x-ms-api-version',
+            **kwargs
+        )
+
+
+class XmsSkipUrlEncodingType(BooleanType):
+    """"""
+
+    def __init__(self, **kwargs):
+        super(XmsSkipUrlEncodingType, self).__init__(
+            serialized_name='x-ms-skip-url-encoding',
+            deserialize_from='x-ms-skip-url-encoding',
+            **kwargs
+        )
+
+
+class XmsSecretType(BooleanType):
+
+    def __init__(self, **kwargs):
+        super(XmsSecretType, self).__init__(
+            serialized_name='x-ms-secret',
+            deserialize_from='x-ms-secret',
             **kwargs
         )
 
@@ -344,5 +384,138 @@ class XNullableType(BooleanType):
         super(XNullableType, self).__init__(
             serialized_name='x-nullable',
             deserialize_from='x-nullable',
+            **kwargs
+        )
+
+
+class XAccessibilityType(StringType):
+    """ only used in ContainerRegistry Data plane """
+
+    def __init__(self, **kwargs):
+        super(XAccessibilityType, self).__init__(
+            choices=("internal", "public"),
+            serialized_name='x-accessibility',
+            deserialize_from='x-accessibility',
+            **kwargs
+        )
+
+
+class XRequiredType(BooleanType):
+    """ only used in ContainerRegistry Data plane """
+
+    def __init__(self, **kwargs):
+        super(XRequiredType, self).__init__(
+            serialized_name='x-required',
+            deserialize_from='x-required',
+            **kwargs
+        )
+
+
+class XPublishType(BooleanType):
+    """ only used in Maps Data Plane """
+
+    def __init__(self, **kwargs):
+        super(XPublishType, self).__init__(
+            serialized_name='x-publish',
+            deserialize_from='x-publish',
+            **kwargs
+        )
+
+
+class XAzSearchDeprecatedType(BooleanType):
+    """ only used in Search Data Plane """
+
+    def __init__(self, **kwargs):
+        super(XAzSearchDeprecatedType, self).__init__(
+            serialized_name='x-az-search-deprecated',
+            deserialize_from='x-az-search-deprecated',
+            **kwargs
+        )
+
+
+class XSfCodeGenType(BaseType):
+    """ only used in ServiceFabricMesh Mgmt Plane """
+
+    def __init__(self, **kwargs):
+        super(XSfCodeGenType, self).__init__(
+            serialized_name='x-sf-codegen',
+            deserialize_from='x-sf-codegen',
+            **kwargs
+        )
+
+
+class XSfClientLibType(BaseType):
+    """ only used in ServiceFabric Data Plane and ServiceFabricManagedClusters Mgmt Plane """
+
+    def __init__(self, **kwargs):
+        super(XSfClientLibType, self).__init__(
+            serialized_name='x-sf-clientlib',
+            deserialize_from='x-sf-clientlib',
+            **kwargs
+        )
+
+
+class XApimCodeNillableType(BooleanType):
+    """ only used in ApiManagement Mgmt Plane """
+
+    def __init__(self, **kwargs):
+        super(XApimCodeNillableType, self).__init__(
+            serialized_name='x-apim-code-nillable',
+            deserialize_from='x-apim-code-nillable',
+            **kwargs
+        )
+
+
+class XCommentType(StringType):
+    """ Only used in IoTCenter Mgmt Plane """
+
+    def __init__(self, **kwargs):
+        super(XCommentType, self).__init__(
+            serialized_name='x-comment',
+            deserialize_from='x-comment',
+            **kwargs
+        )
+
+
+class XAbstractType(BooleanType):
+    """ Only used in Logic Mgmt Plane and Web Mgmt Plane """
+
+    def __init__(self, **kwargs):
+        super(XAbstractType, self).__init__(
+            serialized_name='x-abstract',
+            deserialize_from='x-abstract',
+            **kwargs
+        )
+
+
+class XClientNameType(StringType):
+    """ Only used in Maps Data Plane """
+
+    def __init__(self, **kwargs):
+        super(XClientNameType, self).__init__(
+            serialized_name='x-client-name',
+            deserialize_from='x-client-name',
+            **kwargs
+        )
+
+
+class XNewPatternType(StringType):
+    """ Only used in FrontDoor Mgmt Plane """
+
+    def __init__(self, **kwargs):
+        super(XNewPatternType, self).__init__(
+            serialized_name='x-new-pattern',
+            deserialize_from='x-new-pattern',
+            **kwargs
+        )
+
+
+class XPreviousPatternType(StringType):
+    """ Only used in FrontDoor Mgmt Plane """
+
+    def __init__(self, **kwargs):
+        super(XPreviousPatternType, self).__init__(
+            serialized_name='x-previous-pattern',
+            deserialize_from='x-previous-pattern',
             **kwargs
         )

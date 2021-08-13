@@ -12,37 +12,6 @@ from ._resource import Resource, ResourceVersion
 logger = logging.getLogger('backend')
 
 
-class ResourceProviderTag:
-
-    def __init__(self, tag, resource_provider):
-        self._tag = tag
-        self.date = None
-
-        if self._tag is not None:
-            dt_re = re.compile(r'([0-9]{4})([-_]([0-9]{1,2})([-_]([0-9]{1,2}))?)?')
-            try:
-                pieces = next(dt_re.finditer(self._tag))
-                year = int(pieces[1])
-                month = int(pieces[3]) if pieces[3] else 1
-                day = int(pieces[5]) if pieces[5] else 1
-                self.date = datetime.date(year, month, day)
-            except (StopIteration, ValueError):
-                logger.warning(f'ParseTagDateError: {resource_provider} : {self._tag}')
-                self.date = datetime.date.min
-
-    def __str__(self):
-        return self._tag
-
-    def __hash__(self):
-        return hash(str(self))
-
-    def __eq__(self, other):
-        return str(self) == str(other)
-
-    def __ne__(self, other):
-        return str(self) != str(other)
-
-
 class ResourceProvider:
 
     def __init__(self, name, file_path, readme_path, swagger_module):
@@ -55,11 +24,27 @@ class ResourceProvider:
             logger.warning(f"MissReadmeFile: {self} : {map_path_2_repo(file_path)}")
         self._tags = None
 
-        # FIXME For Develop only
-        self.get_resource_map()
-
     def __str__(self):
         return f'{self._swagger_module}/{self._name}'
+
+    def get_resource_map(self):
+        resource_map = {}
+        for root, dirs, files in os.walk(self._file_path):
+            if 'example' in root:
+                continue
+            for file in files:
+                if not file.endswith('.json'):
+                    continue
+                file_path = os.path.join(root, file)
+                for resource in self._parse_resources_in_file(file_path):
+                    if resource.path not in resource_map:
+                        resource_map[resource.path] = {}
+                    if self._replace_current_resource(
+                        curr_resource=resource_map[resource.path].get(resource.version, None),
+                        resource=resource
+                    ):
+                        resource_map[resource.path][resource.version] = resource
+        return resource_map
 
     @property
     def tags(self):
@@ -112,25 +97,6 @@ class ResourceProvider:
         tags.sort(key=lambda item: item[0].date, reverse=True)
         tags = OrderedDict(tags)
         return tags
-
-    def get_resource_map(self):
-        resource_map = {}
-        for root, dirs, files in os.walk(self._file_path):
-            if 'example' in root:
-                continue
-            for file in files:
-                if not file.endswith('.json'):
-                    continue
-                file_path = os.path.join(root, file)
-                for resource in self._parse_resources_in_file(file_path):
-                    if resource.path not in resource_map:
-                        resource_map[resource.path] = {}
-                    if self._replace_current_resource(
-                        curr_resource=resource_map[resource.path].get(resource.version, None),
-                        resource=resource
-                    ):
-                        resource_map[resource.path][resource.version] = resource
-        return resource_map
 
     def _fetch_latest_tag(self, file_path):
         for tag, file_set in self.tags.items():
@@ -195,14 +161,45 @@ class ResourceProvider:
         if not version:
             logger.error(f'InvalidSwaggerFile: {self} : invalid info version {version} in file {file_path}')
 
-        for path in body.get('paths', {}):
+        for path, body in body.get('paths', {}).items():
             resource = Resource(path=path, version=version, file_path=file_path, resource_provider=self)
             resources.append(resource)
 
         # x-ms-paths:
         #   alternative to Paths Object that allows Path Item Object to have query parameters for non pure REST APIs
-        for path in body.get('x-ms-paths', {}):
+        for path, body in body.get('x-ms-paths', {}).items():
             resource = Resource(path=path, version=version, file_path=file_path, resource_provider=self)
             resources.append(resource)
 
         return resources
+
+
+class ResourceProviderTag:
+
+    def __init__(self, tag, resource_provider):
+        self._tag = tag
+        self.date = None
+
+        if self._tag is not None:
+            dt_re = re.compile(r'([0-9]{4})([-_]([0-9]{1,2})([-_]([0-9]{1,2}))?)?')
+            try:
+                pieces = next(dt_re.finditer(self._tag))
+                year = int(pieces[1])
+                month = int(pieces[3]) if pieces[3] else 1
+                day = int(pieces[5]) if pieces[5] else 1
+                self.date = datetime.date(year, month, day)
+            except (StopIteration, ValueError):
+                logger.warning(f'ParseTagDateError: {resource_provider} : {self._tag}')
+                self.date = datetime.date.min
+
+    def __str__(self):
+        return self._tag
+
+    def __hash__(self):
+        return hash(str(self))
+
+    def __eq__(self, other):
+        return str(self) == str(other)
+
+    def __ne__(self, other):
+        return str(self) != str(other)

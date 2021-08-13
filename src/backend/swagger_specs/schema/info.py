@@ -14,4 +14,6 @@ class Info(Model):
     termsOfService = StringType()  # The Terms of Service for the API.
     contact = ModelType(Contact)  # The contact information for the exposed API.
     license = ModelType(License)  # The license information for the exposed API.
-    x_ms_code_generation_settings = XmsCodeGenerationSettingsType()  # Deprecated
+
+    # specific properties
+    _x_ms_code_generation_settings = XmsCodeGenerationSettingsType()  # Deprecated

@@ -14,3 +14,14 @@ class XmsPageable(Model):
     itemName = StringType(default='value')  # Optional (default: value). Specifies the name of the property that provides the collection of pageable items.
     nextLinkName = StringType(required=True)  # Specifies the name of the property that provides the next link (common: nextLink). If the model does not have a next link property then specify null. This is useful for services that return an object that has an array referenced by itemName. The object is then flattened in a way that the array is directly returned, no paging is used. This provides a better client side API to the end user.
     operationName = StringType()  # Optional (default: <operationName>Next). Specifies the name of the operation for retrieving the next page.
+
+
+class XmsPageableType(ModelType):
+
+    def __init__(self, **kwargs):
+        super(XmsPageableType, self).__init__(
+            XmsPageable,
+            serialized_name='x-ms-pageable',
+            deserialize_from='x-ms-pageable',
+            **kwargs
+        )
