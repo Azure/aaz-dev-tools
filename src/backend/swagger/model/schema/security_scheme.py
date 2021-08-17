@@ -1,4 +1,4 @@
-from schematics.models import Model, BaseType
+from schematics.models import Model
 from schematics.types import StringType, URLType, PolyModelType
 from .types import ScopesType
 

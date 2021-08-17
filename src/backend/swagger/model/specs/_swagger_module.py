@@ -31,7 +31,7 @@ class MgmtPlaneModule(SwaggerModule):
             if os.path.isdir(path):
                 name_parts = name.split('.')
                 if name_parts[0].lower() == 'microsoft':
-                    readme_path = search_readme_md_path(path, search_parent=True)
+                    readme_path = _search_readme_md_path(path, search_parent=True)
                     rp.append(ResourceProvider(name, path, readme_path, swagger_module=self))
                 elif name.lower() != 'common':
                     # azsadmin module only
@@ -54,12 +54,12 @@ class DataPlaneModule(SwaggerModule):
             path = os.path.join(self._path, name)
             if os.path.isdir(path):
                 if name.lower() in ('preview', 'stable'):
-                    readme_path = search_readme_md_path(self._path)
+                    readme_path = _search_readme_md_path(self._path)
                     rp = [ResourceProvider(self.name, self._path, readme_path, swagger_module=self)]
                     break
                 name_parts = name.split('.')
                 if name_parts[0].lower() in ('microsoft', 'azure'):
-                    readme_path = search_readme_md_path(path, search_parent=True)
+                    readme_path = _search_readme_md_path(path, search_parent=True)
                     rp.append(ResourceProvider(name, path, readme_path, swagger_module=self))
                 elif name.lower() != 'common':
                     has_sub_module = True
@@ -72,12 +72,12 @@ class DataPlaneModule(SwaggerModule):
                         sub_module = DataPlaneModule(name, path, parent=self)
                         rp.extend(sub_module.get_resource_providers())
                     else:
-                        readme_path = search_readme_md_path(path, search_parent=True)
+                        readme_path = _search_readme_md_path(path, search_parent=True)
                         rp.append(ResourceProvider(name, path, readme_path, swagger_module=self))
         return rp
 
 
-def search_readme_md_path(path, search_parent=False):
+def _search_readme_md_path(path, search_parent=False):
     if search_parent:
         readme_path = os.path.join(os.path.dirname(path), 'readme.md')
         if os.path.exists(readme_path):
@@ -91,7 +91,7 @@ def search_readme_md_path(path, search_parent=False):
     for name in os.listdir(path):
         sub_path = os.path.join(path, name)
         if os.path.isdir(sub_path):
-            readme_path = search_readme_md_path(sub_path)
+            readme_path = _search_readme_md_path(sub_path)
             if readme_path is not None:
                 return readme_path
     return None

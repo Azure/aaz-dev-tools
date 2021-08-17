@@ -1,5 +1,5 @@
 from schematics.models import Model
-from schematics.types import BaseType, StringType, ModelType, DictType, PolyModelType
+from schematics.types import BaseType, StringType, ModelType, DictType
 from .schema import Schema
 from .header import Header
 from .types import XmsExamplesType, XmsErrorResponseType, XNullableType

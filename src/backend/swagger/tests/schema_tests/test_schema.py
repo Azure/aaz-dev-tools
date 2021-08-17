@@ -1,7 +1,7 @@
 import os
 
 from unittest import TestCase
-from swagger_specs import SwaggerSpecs
+from swagger.model.specs import SwaggerSpecs
 import json
 
 
@@ -35,7 +35,7 @@ class SchemaTest(TestCase):
             yield file_path, body
 
     def test_Swagger(self):
-        from swagger_specs.schema.swagger import Swagger
+        from swagger.model.schema.swagger import Swagger
         parsed = 0
         for file_path, body in self._swagger_bodies():
             try:
@@ -52,7 +52,7 @@ class SchemaTest(TestCase):
                 yield file_path, body['info']
 
     def test_Info(self):
-        from swagger_specs.schema.info import Info
+        from swagger.model.schema.info import Info
         parsed = 0
         for file_path, body in self._infoes():
             try:
@@ -69,7 +69,7 @@ class SchemaTest(TestCase):
                 yield file_path, v
 
     def test_PathItem(self):
-        from swagger_specs.schema.path_item import PathItem
+        from swagger.model.schema.path_item import PathItem
         parsed = 0
         for file_path, body in self._pathItems():
             try:
@@ -86,7 +86,7 @@ class SchemaTest(TestCase):
                 yield file_path, v
 
     def test_Schema_by_definitions(self):
-        from swagger_specs.schema.schema import Schema
+        from swagger.model.schema.schema import Schema
         parsed = 0
         for file_path, body in self._definitions():
             try:
@@ -103,7 +103,7 @@ class SchemaTest(TestCase):
                 yield file_path, v
 
     def test_ParameterType(self):
-        from swagger_specs.schema.parameter import ParameterType
+        from swagger.model.schema.parameter import ParameterType
         parsed = 0
         for file_path, body in self._parameters():
             try:
@@ -120,7 +120,7 @@ class SchemaTest(TestCase):
                 yield file_path, v
 
     def test_Response(self):
-        from swagger_specs.schema.response import Response
+        from swagger.model.schema.response import Response
         parsed = 0
         for file_path, body in self._responses():
             try:
@@ -137,7 +137,7 @@ class SchemaTest(TestCase):
                 yield file_path, v
 
     def test_Header(self):
-        from swagger_specs.schema.header import Header
+        from swagger.model.schema.header import Header
         parsed = 0
         for file_path, body in self._response_headers():
             try:
@@ -154,7 +154,7 @@ class SchemaTest(TestCase):
                 yield file_path, body['schema']
 
     def test_Schema_by_response(self):
-        from swagger_specs.schema.schema import Schema
+        from swagger.model.schema.schema import Schema
         parsed = 0
         for file_path, body in self._response_schema():
             try:
@@ -171,7 +171,7 @@ class SchemaTest(TestCase):
                 yield file_path, v
 
     def test_SecuritySchemeType(self):
-        from swagger_specs.schema.security_scheme import SecuritySchemeType
+        from swagger.model.schema.security_scheme import SecuritySchemeType
         parsed = 0
         for file_path, body in self._securityDefinitions():
             try:
@@ -188,7 +188,7 @@ class SchemaTest(TestCase):
                 yield file_path, v
 
     def test_Tag(self):
-        from swagger_specs.schema.tag import Tag
+        from swagger.model.schema.tag import Tag
         parsed = 0
         for file_path, body in self._tags():
             try:
@@ -205,7 +205,7 @@ class SchemaTest(TestCase):
                 yield file_path, body['externalDocs']
 
     def test_ExternalDocumentation(self):
-        from swagger_specs.schema.external_documentation import ExternalDocumentation
+        from swagger.model.schema.external_documentation import ExternalDocumentation
         parsed = 0
         for file_path, body in self._externalDocs():
             try:
@@ -222,7 +222,7 @@ class SchemaTest(TestCase):
                 yield file_path, v
 
     def test_PathItem_by_xmsPaths(self):
-        from swagger_specs.schema.path_item import PathItem
+        from swagger.model.schema.path_item import PathItem
         parsed = 0
         for file_path, body in self._x_ms_paths():
             try:
@@ -239,7 +239,7 @@ class SchemaTest(TestCase):
                 yield file_path, body['x-ms-parameterized-host']
 
     def test_XmsParameterizedHost(self):
-        from swagger_specs.schema.x_ms_parameterized_host import XmsParameterizedHost
+        from swagger.model.schema.x_ms_parameterized_host import XmsParameterizedHost
         parsed = 0
         for file_path, body in self._x_ms_parameterized_host():
             try:

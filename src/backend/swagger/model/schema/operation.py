@@ -1,5 +1,5 @@
 from schematics.models import Model
-from schematics.types import StringType, ModelType, ListType, DictType, BooleanType, PolyModelType, BaseType
+from schematics.types import StringType, ModelType, ListType, DictType, BooleanType, PolyModelType
 from .external_documentation import ExternalDocumentation
 from .parameter import ParameterType
 from .response import Response
