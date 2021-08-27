@@ -2,6 +2,7 @@
 <?schema 0.1 ?>
 
 <commandGroup name="monitor data-collection rule">
+    <help short="Manage data collection rule"/>
 
     <!--  monitor data-collection rule create  -->
     <command name="create" version="2021-04-01" isPreview="true">
@@ -206,12 +207,12 @@
                 <array>
                     <arg def="$logAnalytics[].workspaceResourceId" options="workspace" type="@ResourceID">
                         <help short="The resource ID of the Log Analytics workspace."/>
-                        <resourceIDFormat convenientProp="name">
+                        <format convenientProp="name">
                             <prop name="subscription" default="$subscription"/>
                             <prop name="resourceGroup" default="$resourceGroup"/>
                             <prop name="namespace" default="Microsoft.OperationalInsights"/>
                             <prop name="type" default="workspaces"/>
-                        </resourceIDFormat>
+                        </format>
                     </arg>
                     <arg def="$logAnalytics[].name" required="true" options="name" type="string">
                         <help short="A friendly name for the destination.">
@@ -896,12 +897,12 @@
                 <array>
                     <arg def="$logAnalytics[].workspaceResourceId" options="workspace" type="@ResourceID">
                         <help short="The resource ID of the Log Analytics workspace."/>
-                        <resourceIDFormat convenientProp="name">
+                        <format convenientProp="name">
                             <prop name="subscription" default="$subscription"/>
                             <prop name="resourceGroup" default="$resourceGroup"/>
                             <prop name="namespace" default="Microsoft.OperationalInsights"/>
                             <prop name="type" default="workspaces"/>
-                        </resourceIDFormat>
+                        </format>
                     </arg>
                     <arg def="$logAnalytics[].name" required="true" options="name" type="string">
                         <help short="A friendly name for the destination.">
@@ -1337,12 +1338,12 @@
             <argGroup name="">
                 <arg def="$name" options="--name -n" required="true" type="string"/>
                 <arg def="$workspaceResourceId" options="--workspace" type="@ResourceID">
-                    <resourceIDFormat convenientProp="name">
+                    <format convenientProp="name">
                         <prop name="subscription" default="$subscription"/>
                         <prop name="resourceGroup" default="$resourceGroup"/>
                         <prop name="namespace" default="Microsoft.OperationalInsights"/>
                         <prop name="type" default="workspaces"/>
-                    </resourceIDFormat>
+                    </format>
                 </arg>
             </argGroup>
 
@@ -1678,12 +1679,12 @@
 
             <argGroup name="">
                 <arg def="$workspaceResourceId" options="--workspace" type="@ResourceID">
-                    <resourceIDFormat convenientProp="name">
+                    <format convenientProp="name">
                         <prop name="subscription" default="$subscription"/>
                         <prop name="resourceGroup" default="$resourceGroup"/>
                         <prop name="namespace" default="Microsoft.OperationalInsights"/>
                         <prop name="type" default="workspaces"/>
-                    </resourceIDFormat>
+                    </format>
                 </arg>
             </argGroup>
 
