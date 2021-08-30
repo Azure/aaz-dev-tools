@@ -27,7 +27,7 @@
                     <p>Multiple actions can be specified by using more than one --data-flows argument.</p>
                 </help>
                 <array>
-                    <arg def="$dataFlows[].streams" required="true" options="streams" type="array<str>" nargs="+">
+                    <arg def="$dataFlows[].streams" required="true" options="streams" type="array<string>" nargs="+">
                         <help short="List of streams for this data flow."/>
                         <array de-duplication="true">
                             <enum type="string">
@@ -39,7 +39,7 @@
                             </enum>
                         </array>
                     </arg>
-                    <arg def="$dataFlows[].destinations" required="true" options="destinations" type="array<str>" nargs="+">
+                    <arg def="$dataFlows[].destinations" required="true" options="destinations" type="array<string>" nargs="+">
                         <help short="List of destinations for this data flow."/>
                     </arg>
                 </array>
@@ -52,7 +52,7 @@
                     <p>Multiple actions can be specified by using more than one --performance-counters argument.</p>
                 </help>
                 <array>
-                    <arg def="$performanceCounters[].streams" required="true" options="streams" type="array<str>" nargs="+">
+                    <arg def="$performanceCounters[].streams" required="true" options="streams" type="array<string>" nargs="+">
                         <help short="List of streams that this data source will be sent to.">
                             <p>A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.</p>
                         </help>
@@ -66,7 +66,7 @@
                     <arg def="$performanceCounters[].samplingFrequencyInSeconds" required="true" options="sampling-frequency" type="int32">
                         <help short="The number of seconds between consecutive counter measurements"/>
                     </arg>
-                    <arg def="$performanceCounters[].counterSpecifiers" required="true" options="counter-specifiers" type="array<str>" nargs="+">
+                    <arg def="$performanceCounters[].counterSpecifiers" required="true" options="counter-specifiers" type="array<string>" nargs="+">
                         <help short="A list of specifier names of the performance counters you want to collect.">
                             <p>Use a wildcard (*) to collect a counter for all instances.</p>
                             <p>To get a list of performance counters on Windows, run the command 'typeperf'.</p>
@@ -82,7 +82,7 @@
             <arg def="$windowsEventLogs" options="--windows-event-logs" type="array<object>" nargs="*">
                 <help short="The list of Windows Event Log data source configurations."/>
                 <array>
-                    <arg def="$windowsEventLogs[].streams" required="true" options="streams" type="array<str>" nargs="+">
+                    <arg def="$windowsEventLogs[].streams" required="true" options="streams" type="array<string>" nargs="+">
                         <help short="List of streams that this data source will be sent to.">
                             <p>A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.</p>
                         </help>
@@ -93,7 +93,7 @@
                             </enum>
                         </array>
                     </arg>
-                    <arg def="$windowsEventLogs[].xPathQueries" required="true" options="x-path-queries" type="array<str>" nargs="+">
+                    <arg def="$windowsEventLogs[].xPathQueries" required="true" options="x-path-queries" type="array<string>" nargs="+">
                         <help short="A list of Windows Event Log queries in XPATH format."/>
                     </arg>
                     <arg def="$windowsEventLogs[].name" required="true" options="name" type="string">
@@ -106,7 +106,7 @@
             <arg def="$syslog" options="--syslog" type="array<object>" nargs="*">
                 <help short="The list of Syslog data source configurations."/>
                 <array>
-                    <arg def="$syslog[].streams" required="true" options="streams" type="array<str>" nargs="+">
+                    <arg def="$syslog[].streams" required="true" options="streams" type="array<string>" nargs="+">
                         <help short="List of streams that this data source will be sent to.">
                             <p>A stream indicates  what schema will be used for this data and usually what table in Log Analytics the data will</p>
                         </help>
@@ -116,7 +116,7 @@
                             </enum>
                         </array>
                     </arg>
-                    <arg def="$syslog[].facilityNames" required="true" options="facility-names" type="array<str>" nargs="+">
+                    <arg def="$syslog[].facilityNames" required="true" options="facility-names" type="array<string>" nargs="+">
                         <help short="The list of facility names."/>
                         <array de-duplication="true">
                             <enum type="string">
@@ -149,7 +149,7 @@
                             <p>This name should be unique across all data sources (regardless of type) within the data collection rule.</p>
                         </help>
                     </arg>
-                    <arg def="$syslog[].logLevels" options="log-levels" type="array<str>" nargs="*">
+                    <arg def="$syslog[].logLevels" options="log-levels" type="array<string>" nargs="*">
                         <help short="The log levels to collect."/>
                         <array de-duplication="true">
                             <enum type="string">
@@ -170,7 +170,7 @@
             <arg def="$extensions" options="--extensions" type="array<object>" nargs="*">
                 <help short="The list of Azure VM extension data source configurations."/>
                 <array>
-                    <arg def="$extensions[].streams" required="true" options="streams" type="array<str>" nargs="+">
+                    <arg def="$extensions[].streams" required="true" options="streams" type="array<string>" nargs="+">
                         <help short="List of streams that this data source will be sent to.">
                             <p>A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.</p>
                         </help>
@@ -190,7 +190,7 @@
                     <arg def="$extensions[].extensionSettings" required="true" options="extension-settings" type="object">
                         <help short="The extension settings. The format is specific for particular extension."/>
                     </arg>
-                    <arg def="$extensions[].inputDataSources" required="true" options="input-data-sources" type="array<str>">
+                    <arg def="$extensions[].inputDataSources" required="true" options="input-data-sources" type="array<string>">
                         <help short="The list of data sources this extension needs data from."/>
                     </arg>
                     <arg def="$extensions[].name" required="true" options="name" type="string">
@@ -717,7 +717,7 @@
                     <p>Multiple actions can be specified by using more than one --data-flows argument.</p>
                 </help>
                 <array>
-                    <arg def="$dataFlows[].streams" required="true" options="streams" type="array<str>" nargs="+">
+                    <arg def="$dataFlows[].streams" required="true" options="streams" type="array<string>" nargs="+">
                         <help short="List of streams for this data flow."/>
                         <array de-duplication="true">
                             <enum type="string">
@@ -729,7 +729,7 @@
                             </enum>
                         </array>
                     </arg>
-                    <arg def="$dataFlows[].destinations" required="true" options="destinations" type="array<str>" nargs="+">
+                    <arg def="$dataFlows[].destinations" required="true" options="destinations" type="array<string>" nargs="+">
                         <help short="List of destinations for this data flow."/>
                     </arg>
                 </array>
@@ -742,7 +742,7 @@
                     <p>Multiple actions can be specified by using more than one --performance-counters argument.</p>
                 </help>
                 <array>
-                    <arg def="$performanceCounters[].streams" required="true" options="streams" type="array<str>" nargs="+">
+                    <arg def="$performanceCounters[].streams" required="true" options="streams" type="array<string>" nargs="+">
                         <help short="List of streams that this data source will be sent to.">
                             <p>A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.</p>
                         </help>
@@ -756,7 +756,7 @@
                     <arg def="$performanceCounters[].samplingFrequencyInSeconds" required="true" options="sampling-frequency" type="int32">
                         <help short="The number of seconds between consecutive counter measurements"/>
                     </arg>
-                    <arg def="$performanceCounters[].counterSpecifiers" required="true" options="counter-specifiers" type="array<str>" nargs="+">
+                    <arg def="$performanceCounters[].counterSpecifiers" required="true" options="counter-specifiers" type="array<string>" nargs="+">
                         <help short="A list of specifier names of the performance counters you want to collect.">
                             <p>Use a wildcard (*) to collect a counter for all instances.</p>
                             <p>To get a list of performance counters on Windows, run the command 'typeperf'.</p>
@@ -772,7 +772,7 @@
             <arg def="$windowsEventLogs" options="--windows-event-logs" type="array<object>" nargs="*">
                 <help short="The list of Windows Event Log data source configurations."/>
                 <array>
-                    <arg def="$windowsEventLogs[].streams" required="true" options="streams" type="array<str>" nargs="+">
+                    <arg def="$windowsEventLogs[].streams" required="true" options="streams" type="array<string>" nargs="+">
                         <help short="List of streams that this data source will be sent to.">
                             <p>A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.</p>
                         </help>
@@ -783,7 +783,7 @@
                             </enum>
                         </array>
                     </arg>
-                    <arg def="$windowsEventLogs[].xPathQueries" required="true" options="x-path-queries" type="array<str>" nargs="+">
+                    <arg def="$windowsEventLogs[].xPathQueries" required="true" options="x-path-queries" type="array<string>" nargs="+">
                         <help short="A list of Windows Event Log queries in XPATH format."/>
                     </arg>
                     <arg def="$windowsEventLogs[].name" required="true" options="name" type="string">
@@ -796,7 +796,7 @@
             <arg def="$syslog" options="--syslog" type="array<object>" nargs="*">
                 <help short="The list of Syslog data source configurations."/>
                 <array>
-                    <arg def="$syslog[].streams" required="true" options="streams" type="array<str>" nargs="+">
+                    <arg def="$syslog[].streams" required="true" options="streams" type="array<string>" nargs="+">
                         <help short="List of streams that this data source will be sent to.">
                             <p>A stream indicates  what schema will be used for this data and usually what table in Log Analytics the data will</p>
                         </help>
@@ -806,7 +806,7 @@
                             </enum>
                         </array>
                     </arg>
-                    <arg def="$syslog[].facilityNames" required="true" options="facility-names" type="array<str>" nargs="+">
+                    <arg def="$syslog[].facilityNames" required="true" options="facility-names" type="array<string>" nargs="+">
                         <help short="The list of facility names."/>
                         <array de-duplication="true">
                             <enum type="string">
@@ -839,7 +839,7 @@
                             <p>This name should be unique across all data sources (regardless of type) within the data collection rule.</p>
                         </help>
                     </arg>
-                    <arg def="$syslog[].logLevels" options="log-levels" type="array<str>" nargs="*">
+                    <arg def="$syslog[].logLevels" options="log-levels" type="array<string>" nargs="*">
                         <help short="The log levels to collect."/>
                         <array de-duplication="true">
                             <enum type="string">
@@ -860,7 +860,7 @@
             <arg def="$extensions" options="--extensions" type="array<object>" nargs="*">
                 <help short="The list of Azure VM extension data source configurations."/>
                 <array>
-                    <arg def="$extensions[].streams" required="true" options="streams" type="array<str>" nargs="+">
+                    <arg def="$extensions[].streams" required="true" options="streams" type="array<string>" nargs="+">
                         <help short="List of streams that this data source will be sent to.">
                             <p>A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.</p>
                         </help>
@@ -880,7 +880,7 @@
                     <arg def="$extensions[].extensionSettings" required="true" options="extension-settings" type="object">
                         <help short="The extension settings. The format is specific for particular extension."/>
                     </arg>
-                    <arg def="$extensions[].inputDataSources" required="true" options="input-data-sources" type="array<str>">
+                    <arg def="$extensions[].inputDataSources" required="true" options="input-data-sources" type="array<string>">
                         <help short="The list of data sources this extension needs data from."/>
                     </arg>
                     <arg def="$extensions[].name" required="true" options="name" type="string">
@@ -978,7 +978,7 @@
                     <header>
                     </header>
                     <body>
-                        <json def="$instance" type="object">
+                        <json type="object">
                             <prop name="tags" type="dict" arg="$tags"/>
                         </json>
                     </body>

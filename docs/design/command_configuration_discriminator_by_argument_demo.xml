@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<?schema 0.1 ?>
+
+<commandGroup name="datafactory integration-runtime">
+    <help short="Manage data-factory integration runtime"/>
+
+    <command name="create" version="2018-06-01" isPreview="true">
+        <help short="Create an integration runtime"/>
+        <argGroup name="">
+            <arg def="$resourceGroup" type="@ResourceGroup" required="true"/>
+            <arg def="$factoryName" options="--factory-name" type="string" required="true">
+                <help short="The factory name."/>
+                <format pattern="^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$" minLength="3" maxLength="63"/>
+            </arg>
+            <arg def="$integrationRuntimeName" options="--name -n" type="string" required="true">
+                <help short="The integration runtime name."/>
+                <format pattern="^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$" minLength="3" maxLength="63"/>
+            </arg>
+            <arg def="$ifMatch" options="--if-match" type="string">
+                <help short="ETag of the integration runtime entity. Should only be specified for update, for which it should match existing entity or can be * for unconditional update."/>
+            </arg>
+            <arg def="$type" options="--type" type="string" required="true">
+                <help short="The type of integration runtime."/>
+                <enum type="string">
+                    <enum-item value="Managed"/>
+                    <enum-item value="SelfHosted"/>
+                </enum>
+            </arg>
+            <arg def="$description" options="--description" type="string">
+                <help short="Integration runtime description."/>
+            </arg>
+        </argGroup>
+
+        <argGroup name="Managed">
+            <arg def="$computeProperties" options="--compute" type="object">
+                <help short="The compute resource properties for managed integration runtime."/>
+                <arg def="$computeProperties.location" options="location" type="string">
+                    <help short="The location for managed integration runtime. The supported regions could be found on https://docs.microsoft.com/en-us/azure/data-factory/data-factory-data-movement-activities"/>
+                </arg>
+                <arg def="$computeProperties.nodeSize" options="nodeSize" type="string">
+                    <help short="The node size requirement to managed integration runtime"/>
+                </arg>
+                <arg def="$computeProperties.numberOfNodes" options="numberOfNodes" type="integer">
+                    <help short="The required number of nodes for managed integration runtime."/>
+                    <format min="1"/>
+                </arg>
+                <arg def="$computeProperties.maxParallelExecutionsPerNode" options="maxParallelExecutionsPerNode" type="integer">
+                    <help short="Maximum parallel executions count per node for managed integration runtime."/>
+                    <format min="1"/>
+                </arg>
+                <arg def="$computeProperties.dataFlowProperties" options="dataFlowProperties" type="object">
+                    <help short="Data flow properties for managed integration runtime."/>
+                    <arg def="$computeProperties.dataFlowProperties.computeType" options="computeType" type="string">
+                        <help short="Compute type of the cluster which will execute data flow job."/>
+                        <enum type="string">
+                            <enum-item value="General"/>
+                            <enum-item value="MemoryOptimized"/>
+                            <enum-item value="ComputeOptimized"/>
+                        </enum>
+                    </arg>
+                    <arg def="$computeProperties.dataFlowProperties.coreCount" options="coreCount" type="integer">
+                        <help short="Core count of the cluster which will execute data flow job."/>
+                        <enum type="integer">
+                            <enum-item value="8"/>
+                            <enum-item value="16"/>
+                            <enum-item value="32"/>
+                            <enum-item value="48"/>
+                            <enum-item value="80"/>
+                            <enum-item value="144"/>
+                            <enum-item value="272"/>
+                        </enum>
+                    </arg>
+                    <arg def="$computeProperties.dataFlowProperties.timeToLive" options="timeToLive" type="integer">
+                        <help short="Time to live (in minutes) setting of the cluster which will execute data flow job."/>
+                        <format min="0"/>
+                    </arg>
+                </arg>
+                <arg def="$computeProperties.vNetProperties" options="vNetProperties" type="object">
+                    <help short="VNet properties for managed integration runtime."/>
+                    <arg def="$computeProperties.vNetProperties.vNetId" options="vNetId" type="string">
+                        <help short="The ID of the VNet that this integration runtime will join."/>
+                    </arg>
+                    <arg def="$computeProperties.vNetProperties.subnet" options="subnet" type="string">
+                        <help short="The name of the subnet this integration runtime will join."/>
+                    </arg>
+                    <arg def="$computeProperties.vNetProperties.publicIPs" options="publicIPs" type="array<string>" nargs="*">
+                        <help short="Resource IDs of the public IP addresses that this integration runtime will use."/>
+                    </arg>
+                </arg>
+            </arg>
+            <arg def="$ssisProperties" options="--ssis" type="object">
+                <help short="SSIS properties for managed integration runtime."/>
+                <arg def="$ssisProperties.catalogInfo" options="catalogInfo" type="object">
+                    <help short="Catalog information for managed dedicated integration runtime."/>
+                    <arg def="$ssisProperties.catalogInfo.catalogServerEndpoint" options="serverEndpoint" type="string">
+                        <help short="The catalog database server URL."/>
+                    </arg>
+                    <arg def="$ssisProperties.catalogInfo.catalogAdminUserName" options="adminUserName" type="string">
+                        <help short="The administrator user name of catalog database."/>
+                        <format minLength="1" maxLength="128"/>
+                    </arg>
+                    <arg def="$ssisProperties.catalogInfo.catalogAdminPassword" options="adminPassword" type="object">
+                        <help short="The password of the administrator user account of the catalog database."/>
+                        <arg def="$ssisProperties.catalogInfo.catalogAdminPassword.value" options="value" type="string" required="true">
+                            <help short="Value of secure string."/>
+                        </arg>
+                    </arg>
+                    <arg def="$ssisProperties.catalogInfo.catalogPricingTier" options="catalogPricingTier" type="string">
+                        <help short="The pricing tier for the catalog database. The valid values could be found in https://azure.microsoft.com/en-us/pricing/details/sql-database/"/>
+                        <enum type="string">
+                            <enum-item value="Basic"/>
+                            <enum-item value="Standard"/>
+                            <enum-item value="Premium"/>
+                            <enum-item value="PremiumRS"/>
+                        </enum>
+                    </arg>
+                    <arg def="$ssisProperties.catalogInfo.dualStandbyPairName" options="dualStandbyPairName" type="string">
+                        <help short="The dual standby pair name of Azure-SSIS Integration Runtimes to support SSISDB failover."/>
+                    </arg>
+                </arg>
+                <arg def="$ssisProperties.licenseType" options="licenseType" type="string">
+                    <help short=""/>
+                    <enum type="string">
+                        <enum-item value="BasePrice"/>
+                        <enum-item value="LicenseIncluded"/>
+                    </enum>
+                </arg>
+                <arg def="$ssisProperties.customSetupScriptProperties" options="customSetupScript" type="object">
+                    <help short="Custom setup script properties for a managed dedicated integration runtime."/>
+                    <arg def="$ssisProperties.customSetupScriptProperties.blobContainerUri" options="blobContainerUri" type="string">
+                        <help short=""/>
+                    </arg>
+                    <arg def="$ssisProperties.customSetupScriptProperties.sasToken" options="sasToken" type="object">
+                        <help short=""/>
+                        <arg def="$ssisProperties.customSetupScriptProperties.sasToken.value" options="value" type="string">
+                            <help short=""/>
+                        </arg>
+                    </arg>
+                </arg>
+                <arg def="$ssisProperties.dataProxyProperties" options="dataProxy" type="object">
+                    <help short=""/>
+                    <arg def="$ssisProperties.dataProxyProperties.connectVia" options="connectVia" type="object">
+                        <help short=""/>
+                        <arg def="$ssisProperties.dataProxyProperties.connectVia.type" options="type" type="string">
+                            <help short=""/>
+                            <enum type="string">
+                                <enum-item value="IntegrationRuntimeReference"/>
+                                <enum-item value="LinkedServiceReference"/>
+                                <enum-item value="CredentialReference"/>
+                            </enum>
+                        </arg>
+                        <arg def="$ssisProperties.dataProxyProperties.connectVia.referenceName" options="referenceName" type="string">
+                            <help short=""/>
+                        </arg>
+                    </arg>
+                    <arg def="$ssisProperties.dataProxyProperties.stagingLinkedService" options="stagingLinkedService" type="object">
+                        <help short=""/>
+                        <arg def="$ssisProperties.dataProxyProperties.stagingLinkedService.type" options="type" type="string">
+                            <help short=""/>
+                            <enum type="string">
+                                <enum-item value="IntegrationRuntimeReference"/>
+                                <enum-item value="LinkedServiceReference"/>
+                                <enum-item value="CredentialReference"/>
+                            </enum>
+                        </arg>
+                        <arg def="$ssisProperties.dataProxyProperties.stagingLinkedService.referenceName" options="referenceName" type="string">
+                            <help short=""/>
+                        </arg>
+                    </arg>
+                    <arg def="$ssisProperties.dataProxyProperties.path" options="path" type="string">
+                        <help short=""/>
+                    </arg>
+                </arg>
+                <arg def="$ssisProperties.edition" options="edition" type="string">
+                    <help short=""/>
+                    <enum type="string">
+                        <enum-item value="Standard"/>
+                        <enum-item value="Enterprise"/>
+                    </enum>
+                </arg>
+                <arg def="$ssisProperties.expressCustomSetupProperties" options="expressCustomSetup" type="array<object>" nargs="*">
+                    <help short=""/>
+                    <array>
+                        <arg def="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup" options="cmdkeySetup" type="object">
+                            <help short=""/>
+                            <arg def="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.targetName" options="targetName" type="object">
+                                <help short="The server name of data source access."/>
+                            </arg>
+                            <arg def="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.userName" options="userName" type="object">
+                                <help short="The user name of data source access."/>
+                            </arg>
+                            <arg def="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password" options="password" type="object">
+                                <help short=""/>
+                                <arg def="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString" options="secureString" type="object">
+                                    <help short=""/>
+                                    <arg def="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString.value" options="value" type="string" required="true">
+                                        <help short=""/>
+                                    </arg>
+                                </arg>
+                                <arg def="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret" options="azureKeyVaultSecret" type="object">
+                                    <help short=""/>
+                                    <arg def="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.store" options="store" type="object">
+                                        <help short=""/>
+                                        <arg def="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.store.type" options="type" type="string" required="true">
+                                            <help short=""/>
+                                            <enum type="string">
+                                                <enum-item value="LinkedServiceReference"/>
+                                            </enum>
+                                        </arg>
+                                        <arg def="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.store.referenceName" options="referenceName" type="string" required="true">
+                                            <help short=""/>
+                                        </arg>
+                                        <arg def="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.store.parameters" options="parameters" type="object">
+                                            <help short=""/>
+                                        </arg>
+                                    </arg>
+                                    <arg def="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.secretName" options="secretName" type="object" required="true">
+                                        <help short=""/>
+                                    </arg>
+                                    <arg def="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.secretVersion" options="secretVersion" type="object">
+                                        <help short=""/>
+                                    </arg>
+                                </arg>
+                            </arg>
+                        </arg>
+                        <arg def="$ssisProperties.expressCustomSetupProperties[].EnvironmentVariableSetup" options="environmentVariableSetup" type="object">
+                            <help short=""/>
+                            <arg def="$ssisProperties.expressCustomSetupProperties[].EnvironmentVariableSetup.variableName" options="variableName" type="string">
+                                <help short=""/>
+                            </arg>
+                            <arg def="$ssisProperties.expressCustomSetupProperties[].EnvironmentVariableSetup.variableValue" options="variableValue" type="string">
+                                <help short=""/>
+                            </arg>
+                        </arg>
+                        <arg def="$ssisProperties.expressCustomSetupProperties[].ComponentSetup" options="componentSetup" type="object">
+                            <help short=""/>
+                            <arg def="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.componentName" options="componentName" type="string" required="true">
+                                <help short=""/>
+                            </arg>
+                            <arg def="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey" options="licenseKey" type="object">
+                                <help short=""/>
+                                <arg def="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.SecureString" options="secureString" type="object">
+                                    <help short=""/>
+                                    <arg def="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.SecureString.value" options="value" required="true" type="string">
+                                        <help short=""/>
+                                    </arg>
+                                </arg>
+                                <arg def="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret" options="azureKeyVaultSecret" type="object">
+                                    <help short=""/>
+                                    <arg def="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.store" options="store" type="object" required="true">
+                                        <help short=""/>
+                                        <arg def="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.store.type" options="type" type="string" required="true">
+                                            <enum type="string">
+                                                <enum-item value="LinkedServiceReference"/>
+                                            </enum>
+                                        </arg>
+                                        <arg def="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.store.referenceName" options="referenceName" type="string" required="true">
+                                            <help short=""/>
+                                        </arg>
+                                        <arg def="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.store.parameters" options="parameters" type="object">
+                                            <help short=""/>
+                                        </arg>
+                                    </arg>
+                                    <arg def="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.secretName" options="secretName" type="object" required="true">
+                                        <help short=""/>
+                                    </arg>
+                                    <arg def="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.secretVersion" options="secretVersion" type="object">
+                                        <help short=""/>
+                                    </arg>
+                                </arg>
+                            </arg>
+
+                        </arg>
+                        <arg def="$ssisProperties.expressCustomSetupProperties[].AzPowerShellSetup" options="azPowerShellSetup" type="object">
+                            <help short=""/>
+                            <arg def="$ssisProperties.expressCustomSetupProperties[].AzPowerShellSetup.version" options="version" type="string">
+                                <help short=""/>
+                            </arg>
+                        </arg>
+                    </array>
+                </arg>
+                <arg def="$ssisProperties.packageStores" options="packageStores" type="array<object>" nargs="*">
+                    <help short=""/>
+                    <array>
+                        <prop def="$ssisProperties.packageStores[].name" options="name" type="string" required="true">
+                            <help short=""/>
+                        </prop>
+                        <prop def="$ssisProperties.packageStores[].packageStoreLinkedService" options="packageStoreLinkedService" type="object" required="true">
+                            <help short=""/>
+                            <prop def="$ssisProperties.packageStores[].packageStoreLinkedService.type" options="type" type="string">
+                                <enum type="string">
+                                    <enum-item value="IntegrationRuntimeReference"/>
+                                    <enum-item value="LinkedServiceReference"/>
+                                    <enum-item value="CredentialReference"/>
+                                </enum>
+                            </prop>
+                            <prop def="$ssisProperties.packageStores[].packageStoreLinkedService.referenceName" options="referenceName" type="string">
+                                <help short=""/>
+                            </prop>
+                        </prop>
+                    </array>
+                </arg>
+                <arg def="$ssisProperties.managedCredential" options="managedCredential" type="object">
+                    <help short=""/>
+                    <arg def="$ssisProperties.managedCredential.type" options="type" type="string">
+                        <enum type="string">
+                            <enum-item value="IntegrationRuntimeReference"/>
+                            <enum-item value="LinkedServiceReference"/>
+                            <enum-item value="CredentialReference"/>
+                        </enum>
+                    </arg>
+                    <arg def="$ssisProperties.managedCredential.referenceName" options="referenceName" type="string">
+                        <help short=""/>
+                    </arg>
+                </arg>
+            </arg>
+            <arg def="$managedVirtualNetwork" options="--managed-virtual-network" type="object">
+                <help short=""/>
+                <arg def="$managedVirtualNetwork.type" options="type" type="string" required="true">
+                    <help short=""/>
+                    <enum type="string">
+                        <enum-item value="ManagedVirtualNetworkReference"/>
+                    </enum>
+                </arg>
+                <arg def="$managedVirtualNetwork.referenceName" options="referenceName" type="string" required="true">
+                    <help short=""/>
+                </arg>
+            </arg>
+        </argGroup>
+
+        <argGroup name="SelfHosted">
+            <arg def="$linkedInfo" options="--linked-info" type="object">
+                <help short="The base definition of a linked integration runtime."/>
+                <arg def="$linkedInfo.authorizationType" options="authorization-type" type="string" required="true">
+                    <help short="The authorization type for integration runtime sharing."/>
+                </arg>
+            </arg>
+        </argGroup>
+
+        <argGroup name="Global">
+            <arg def="$subscription" type="@Subscription" required="true"/>
+        </argGroup>
+
+        <operation>
+            <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DataFactory/factories/{factoryName}/integrationRuntimes/{integrationRuntimeName}">
+                <request method="put">
+                    <path>
+                        <param name="subscriptionId" arg="$subscription"/>
+                        <param name="resourceGroupName" arg="$resourceGroup"/>
+                        <param name="factoryName" arg="$factoryName"/>
+                        <param name="integrationRuntimeName" arg="$integrationRuntimeName"/>
+                    </path>
+                    <query>
+                        <const name="api-version" value="2018-06-01"/>
+                    </query>
+                    <header>
+                        <param name="If-Match" value="$ifMatch"/>
+                    </header>
+                    <body>
+                        <json type="object">
+                            <prop name="properties" type="object" required="true">
+                                <prop name="type" type="string" required="true" arg="$type">
+                                    <enum type="string">
+                                        <enum-item value="Managed"/>
+                                        <enum-item value="SelfHosted"/>
+                                    </enum>
+                                </prop>
+                                <prop name="description" type="string" arg="$description"/>
+                                <discriminator arg="$type" value="Managed">
+                                    <prop name="typeProperties" type="object" required="true">
+                                        <prop name="computeProperties" type="object" arg="$computeProperties">
+                                            <prop name="location" type="string"/>
+                                            <prop name="nodeSize" type="string"/>
+                                            <prop name="numberOfNodes" type="integer"/>
+                                            <prop name="maxParallelExecutionsPerNode" type="integer"/>
+                                            <prop name="dataFlowProperties" type="object">
+                                                <prop name="computeType" type="string">
+                                                    <enum type="string">
+                                                        <enum-item value="General"/>
+                                                        <enum-item value="MemoryOptimized"/>
+                                                        <enum-item value="ComputeOptimized"/>
+                                                    </enum>
+                                                </prop>
+                                                <prop name="coreCount" type="integer"/>
+                                                <prop name="timeToLive" type="integer"/>
+                                                <additionalProp type="object"/>
+                                            </prop>
+                                            <prop name="vNetProperties">
+                                                <prop name="vNetId" type="string"/>
+                                                <prop name="subnet" type="string"/>
+                                                <prop name="publicIPs" type="array<string>"/>
+                                                <additionalProp type="object"/>
+                                            </prop>
+                                            <additionalProp type="object"/>
+                                        </prop>
+                                        <prop name="ssisProperties" type="object" arg="$ssisProperties">
+                                            <prop name="catalogInfo" type="object" arg="$ssisProperties.catalogInfo">
+                                                <prop name="catalogServerEndpoint" type="string" arg="$ssisProperties.catalogInfo.catalogServerEndpoint"/>
+                                                <prop name="catalogAdminUserName" type="string" arg="$ssisProperties.catalogInfo.catalogAdminUserName"/>
+                                                <prop name="catalogAdminPassword" type="object" arg="$ssisProperties.catalogInfo.catalogAdminPassword">
+                                                    <prop name="type" type="string" required="true" value="SecureString"/>
+                                                    <prop name="value" type="string" required="true" arg="$ssisProperties.catalogInfo.catalogAdminPassword.value"/>
+                                                </prop>
+                                                <prop name="catalogPricingTier" type="string" arg="$ssisProperties.catalogInfo.catalogPricingTier">
+                                                    <enum type="string">
+                                                        <enum-item value="Basic"/>
+                                                        <enum-item value="Standard"/>
+                                                        <enum-item value="Premium"/>
+                                                        <enum-item value="PremiumRS"/>
+                                                    </enum>
+                                                </prop>
+                                                <prop name="dualStandbyPairName" type="string" arg="$ssisProperties.catalogInfo.dualStandbyPairName"/>
+                                                <additionalProp type="object"/>
+                                            </prop>
+                                            <prop name="licenseType" type="string" arg="$ssisProperties.licenseType">
+                                                <enum type="string">
+                                                    <enum-item value="BasePrice"/>
+                                                    <enum-item value="LicenseIncluded"/>
+                                                </enum>
+                                            </prop>
+                                            <prop name="customSetupScriptProperties" type="object" arg="$ssisProperties.customSetupScriptProperties">
+                                                <prop name="blobContainerUri" type="string" arg="$ssisProperties.customSetupScriptProperties.blobContainerUri"/>
+                                                <prop name="sasToken" type="object" arg="$ssisProperties.customSetupScriptProperties.sasToken">
+                                                    <prop name="type" type="string" required="true" value="SecureString"/>
+                                                    <prop name="value" type="string" required="true" arg="$ssisProperties.customSetupScriptProperties.sasToken.value"/>
+                                                </prop>
+                                            </prop>
+                                            <prop name="dataProxyProperties" type="object" arg="$ssisProperties.dataProxyProperties">
+                                                <prop name="connectVia" type="object" arg="$ssisProperties.dataProxyProperties.connectVia">
+                                                    <prop name="type" type="string" arg="$ssisProperties.dataProxyProperties.connectVia.type">
+                                                        <enum type="string">
+                                                            <enum-item value="IntegrationRuntimeReference"/>
+                                                            <enum-item value="LinkedServiceReference"/>
+                                                            <enum-item value="CredentialReference"/>
+                                                        </enum>
+                                                    </prop>
+                                                    <prop name="referenceName" type="string" arg="$ssisProperties.dataProxyProperties.connectVia.referenceName"/>
+                                                </prop>
+                                                <prop name="stagingLinkedService" type="object" arg="$ssisProperties.dataProxyProperties.stagingLinkedService">
+                                                    <prop name="type" type="string" arg="$ssisProperties.dataProxyProperties.stagingLinkedService.type">
+                                                        <enum type="string">
+                                                            <enum-item value="IntegrationRuntimeReference"/>
+                                                            <enum-item value="LinkedServiceReference"/>
+                                                            <enum-item value="CredentialReference"/>
+                                                        </enum>
+                                                    </prop>
+                                                    <prop name="referenceName" type="string" arg="$ssisProperties.dataProxyProperties.stagingLinkedService.referenceName"/>
+                                                </prop>
+                                                <prop name="path" type="string" arg="$ssisProperties.dataProxyProperties.path"/>
+                                            </prop>
+                                            <prop name="edition" type="string" arg="$ssisProperties.edition">
+                                                <enum type="string">
+                                                    <enum-item value="Standard"/>
+                                                    <enum-item value="Enterprise"/>
+                                                </enum>
+                                            </prop>
+                                            <prop name="expressCustomSetupProperties" type="array<object>" arg="$ssisProperties.expressCustomSetupProperties">
+                                                <array>
+                                                    <discriminator arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup">
+                                                        <prop name="type" type="string" required="true" value="CmdkeySetup"/>
+                                                        <prop name="typeProperties" type="object" required="true">
+                                                            <prop name="targetName" type="object" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.targetName"/>
+                                                            <prop name="userName" type="object" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.userName"/>
+                                                            <prop name="password" type="object" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password">
+                                                                <discriminator arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString">
+                                                                    <prop name="type" type="string" required="true" value="SecureString"/>
+                                                                    <prop name="value" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString.value"/>
+                                                                </discriminator>
+                                                                <discriminator arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret">
+                                                                    <prop name="type" type="string" required="true" value="AzureKeyVaultSecret"/>
+                                                                    <prop name="store" type="object" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.store">
+                                                                        <prop name="type" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.store.type">
+                                                                            <enum value="string">
+                                                                                <enum-item value="LinkedServiceReference"/>
+                                                                            </enum>
+                                                                        </prop>
+                                                                        <prop name="referenceName" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.store.referenceName"/>
+                                                                        <prop name="parameters" type="object" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.store.parameters">
+                                                                            <additionalProp type="object"/>
+                                                                        </prop>
+                                                                    </prop>
+                                                                    <!--   TODO: distinguish with `dict` type and `any` type for object  -->
+                                                                    <prop name="secretName" type="object" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.secretName"/>
+                                                                    <prop name="secretVersion" type="object" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.secretVersion"/>
+                                                                </discriminator>
+                                                            </prop>
+                                                        </prop>
+                                                    </discriminator>
+                                                    <discriminator arg="$ssisProperties.expressCustomSetupProperties[].EnvironmentVariableSetup">
+                                                        <prop name="type" type="string" required="true" value="EnvironmentVariableSetup"/>
+                                                        <prop name="typeProperties" type="object" required="true">
+                                                            <prop name="variableName" type="string" required="true"/>
+                                                            <prop name="variableValue" type="string" required="true"/>
+                                                        </prop>
+                                                    </discriminator>
+                                                    <discriminator arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup">
+                                                        <prop name="type" type="string" required="true" value="ComponentSetup"/>
+                                                        <prop name="typeProperties" type="object" required="true">
+                                                            <prop name="componentName" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.componentName"/>
+                                                            <prop name="licenseKey" type="object" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey">
+                                                                <discriminator arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.SecureString">
+                                                                    <prop name="type" type="string" required="true" value="SecureString"/>
+                                                                    <prop name="value" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.SecureString.value"/>
+                                                                </discriminator>
+                                                                <discriminator arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret">
+                                                                    <prop name="type" type="string" required="true" value="AzureKeyVaultSecret"/>
+                                                                    <prop name="store" type="object" required="true" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.store">
+                                                                        <prop name="type" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.store.type">
+                                                                            <enum value="string">
+                                                                                <enum-item value="LinkedServiceReference"/>
+                                                                            </enum>
+                                                                        </prop>
+                                                                        <prop name="referenceName" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.store.referenceName"/>
+                                                                        <prop name="parameters" type="object" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.store.parameters">
+                                                                            <additionalProp type="object"/>
+                                                                        </prop>
+                                                                    </prop>
+                                                                    <prop name="secretName" type="object" required="true" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.secretName"/>
+                                                                    <prop name="secretVersion" type="object" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.secretVersion"/>
+                                                                </discriminator>
+                                                            </prop>
+                                                        </prop>
+                                                    </discriminator>
+                                                    <discriminator arg="$ssisProperties.expressCustomSetupProperties[].AzPowerShellSetup">
+                                                        <prop name="type" type="string" required="true" value="AzPowerShellSetup"/>
+                                                        <prop name="typeProperties" type="object" required="true">
+                                                            <prop name="version" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].AzPowerShellSetup.version"/>
+                                                        </prop>
+                                                    </discriminator>
+                                                </array>
+                                            </prop>
+                                            <prop name="packageStores" type="array<object>" arg="$ssisProperties.packageStores">
+                                                <array>
+                                                    <prop name="name" type="string" required="true" arg="$ssisProperties.packageStores[].name"/>
+                                                    <prop name="packageStoreLinkedService" type="object" required="true" arg="$ssisProperties.packageStores[].packageStoreLinkedService">
+                                                        <prop name="type" type="string" arg="$ssisProperties.packageStores[].packageStoreLinkedService.type">
+                                                            <enum type="string">
+                                                                <enum-item value="IntegrationRuntimeReference"/>
+                                                                <enum-item value="LinkedServiceReference"/>
+                                                                <enum-item value="CredentialReference"/>
+                                                            </enum>
+                                                        </prop>
+                                                        <prop name="referenceName" type="string" arg="$ssisProperties.packageStores[].packageStoreLinkedService.referenceName"/>
+                                                    </prop>
+                                                </array>
+                                            </prop>
+                                            <prop name="managedCredential" type="object" arg="$ssisProperties.managedCredential">
+                                                <prop name="type" type="string" arg="$ssisProperties.managedCredential.type">
+                                                    <enum>
+                                                        <enum-item value="IntegrationRuntimeReference"/>
+                                                        <enum-item value="LinkedServiceReference"/>
+                                                        <enum-item value="CredentialReference"/>
+                                                    </enum>
+                                                </prop>
+                                                <prop name="referenceName" type="string" arg="$ssisProperties.managedCredential.referenceName"/>
+                                            </prop>
+                                            <additionalProp type="object"/>
+                                        </prop>
+                                    </prop>
+                                    <prop name="managedVirtualNetwork" type="object" arg="$managedVirtualNetwork">
+                                        <prop name="type" type="string" required="true" arg="$managedVirtualNetwork.type">
+                                            <enum-item value="ManagedVirtualNetworkReference"/>
+                                        </prop>
+                                        <prop name="referenceName" type="string" required="true" arg="$managedVirtualNetwork.referenceName"/>
+                                    </prop>
+                                    <additionalProp type="object"/>
+                                </discriminator>
+                                <discriminator arg="$type" value="SelfHosted">
+                                    <prop name="typeProperties" type="object" required="true">
+                                        <prop name="linkedInfo" type="object" arg="$linkedInfo">
+                                            <prop name="authorizationType" type="string" required="true" arg="$linkedInfo.authorizationType"/>
+                                        </prop>
+                                    </prop>
+                                    <additionalProp type="object"/>
+                                </discriminator>
+                            </prop>
+                        </json>
+                    </body>
+                </request>
+            </http>
+        </operation>
+    </command>
+
+    <command name="update" version="2018-06-01" isPreview="true">
+        <help short="Update an integration runtime"/>
+
+
+    </command>
+
+</commandGroup>
