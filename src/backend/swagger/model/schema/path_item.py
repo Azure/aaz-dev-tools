@@ -21,6 +21,22 @@ class PathItem(Model):
     # ignored because it is not used
     # ref = ReferenceType()  # Allows for an external definition of this path item. The referenced structure MUST be in the format of a Path Item Object. If there are conflicts between the referenced definition and this Path Item's definition, the behavior is undefined.
 
+    def unfold(self, ref_loader):
+        if self.get is not None:
+            self.get.unfold(ref_loader)
+        if self.put is not None:
+            self.put.unfold(ref_loader)
+        if self.post is not None:
+            self.post.unfold(ref_loader)
+        if self.delete is not None:
+            self.delete.unfold(ref_loader)
+        if self.options is not None:
+            self.options.unfold(ref_loader)
+        if self.head is not None:
+            self.head.unfold(ref_loader)
+        if self.patch is not None:
+            self.patch.unfold(ref_loader)
+
 
 class PathsType(DictType):
 

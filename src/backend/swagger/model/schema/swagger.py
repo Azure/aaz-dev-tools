@@ -42,3 +42,6 @@ class Swagger(Model):
     x_ms_paths = XmsPathsType()  # alternative to Paths Object that allows Path Item Object to have query parameters for non pure REST APIs
     x_ms_parameterized_host = XmsParameterizedHostType()
 
+    def unfold(self, ref_loader):
+        pass
+

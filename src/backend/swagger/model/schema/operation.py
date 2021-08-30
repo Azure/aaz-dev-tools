@@ -39,3 +39,6 @@ class Operation(Model):
     # specific properties
     _x_publish = XPublishType()  # only used in Maps Data Plane
     _x_sf_codegen = XSfCodeGenType()  # only used in ServiceFabricMesh Mgmt Plane
+
+    def unfold(self, ref_loader, *traces):
+        pass
