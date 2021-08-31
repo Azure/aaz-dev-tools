@@ -2,7 +2,7 @@ from schematics.models import Model
 from schematics.types import StringType, BooleanType, ModelType, PolyModelType, BaseType
 from .schema import Schema
 from .items import Items
-from .reference import Reference
+from .reference import Reference, Linkable
 from .x_ms_parameter_grouping import XmsParameterGroupingType
 from .types import XmsSkipURLEncodingType, XAccessibilityType
 from .types import XmsParameterLocationType, XmsApiVersionType, XmsSkipUrlEncodingType
@@ -98,13 +98,20 @@ class FormDataParameter(Items, _ParameterBase):
     ) # multi - corresponds to multiple parameter instances instead of multiple values for a single instance foo=bar&foo=baz.
 
 
-class BodyParameter(_ParameterBase):
+class BodyParameter(_ParameterBase, Linkable):
     """The payload that's appended to the HTTP request. Since there can only be one payload, there can only be one body parameter. The name of the body parameter has no effect on the parameter itself and is used for documentation purposes only. Since Form parameters are also in the payload, body and form parameters cannot exist together for the same operation."""
 
     IN_VALUE = "body"
     schema = ModelType(Schema, required=True)  # The schema defining the type used for the body parameter.
 
     x_nullable = XNullableType(default=False)  # when true, specifies that null is a valid value for the associated schema
+
+    def link(self, swagger_loader, file_path, *traces):
+        if getattr(self, 'linked', False):
+            return
+        self.linked = True
+
+        self.schema.link(swagger_loader, file_path, *traces)
 
 
 class ParameterType(PolyModelType):

@@ -34,7 +34,7 @@ class SwaggerLoader:
         key = f'{path}#{name}'
 
         if key in self._loaded:
-            return self._loaded[key]
+            return self._loaded[key], path, key
 
         ref = self.get_swagger(path)
         if ref is None:
@@ -54,7 +54,7 @@ class SwaggerLoader:
                 ref = getattr(ref, prop)
         assert ref is not None
         self._loaded[key] = ref
-        return ref
+        return ref, path, key
 
     @staticmethod
     def _parse_ref_link(file_path, ref_link):

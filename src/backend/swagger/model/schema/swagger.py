@@ -11,6 +11,7 @@ from .external_documentation import ExternalDocumentation
 from .security_scheme import SecuritySchemeType
 from .types import SecurityRequirementType, MimeType
 from .x_ms_parameterized_host import XmsParameterizedHostType
+from .reference import Linkable
 
 
 def _swagger_version_validator(v):
@@ -18,7 +19,7 @@ def _swagger_version_validator(v):
         raise ValidationError(f"Only Support Swagger '2.0': Current value is '{v}'")
 
 
-class Swagger(Model):
+class Swagger(Model, Linkable):
     """
     This is the root document object for the API specification. It combines what previously was the Resource Listing and API Declaration (version 1.2 and earlier) together into one document.
     """
@@ -42,6 +43,32 @@ class Swagger(Model):
     x_ms_paths = XmsPathsType()  # alternative to Paths Object that allows Path Item Object to have query parameters for non pure REST APIs
     x_ms_parameterized_host = XmsParameterizedHostType()
 
-    def unfold(self, ref_loader):
-        pass
+    def link(self, swagger_loader, file_path, *traces):
+        if getattr(self, 'linked', False):
+            return
+        self.linked = True
+
+        if self.paths is not None:
+            for path in self.paths.values():
+                path.link(swagger_loader, file_path, *traces)
+
+        if self.definitions is not None:
+            for definition in self.definitions.values():
+                definition.link(swagger_loader, file_path, *traces)
+
+        if self.parameters is not None:
+            for param in self.parameters.values():
+                if isinstance(param, Linkable):
+                    param.link(swagger_loader, file_path, *traces)
+
+        if self.responses is not None:
+            for response in self.responses.values():
+                response.link(swagger_loader, file_path, *traces)
+
+        if self.x_ms_paths is not None:
+            for path in self.x_ms_paths.values():
+                path.link(swagger_loader, file_path, *traces)
+
+        if self.x_ms_parameterized_host is not None:
+            self.x_ms_parameterized_host.link(swagger_loader, file_path, *traces)
 

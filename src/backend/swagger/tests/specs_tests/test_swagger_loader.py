@@ -60,7 +60,7 @@ class SwaggerLoaderTest(TestCase):
                     continue
                 if ref_link is not None:
                     try:
-                        loader.load_ref(file_path, ref_link)
+                        ref, path = loader.load_ref(file_path, ref_link)
                     except Exception:
                         print(file_path)
                         raise

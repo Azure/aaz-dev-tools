@@ -1,6 +1,6 @@
 from schematics.models import Model
 from schematics.types import ListType, BaseType, DictType, ModelType, BooleanType, FloatType, IntType, StringType, PolyModelType
-from .reference import ReferenceType
+from .reference import ReferenceType, Linkable
 from .types import DataTypeFormatEnum, RegularExpressionType, XmsClientNameType, XmsExternal, XmsDiscriminatorValue, XmsClientFlatten, XmsMutabilityType, XmsClientDefaultType, XNullableType, XmsAzureResourceType
 from .xml import XML
 from .external_documentation import ExternalDocumentation
@@ -26,7 +26,7 @@ def _items_claim_function(_, data):
         return None
 
 
-class Schema(Model):
+class Schema(Model, Linkable):
     """
     The Schema Object allows the definition of input and output data types. These types can be objects, but also primitives and arrays. This object is based on the JSON Schema Specification Draft 4 and uses a predefined subset of it. On top of this subset, there are extensions provided by this specification to allow for more complete documentation.
     Further information about the properties can be found in JSON Schema Core and JSON Schema Validation. Unless stated otherwise, the property definitions follow the JSON Schema specification as referenced here.
@@ -107,3 +107,37 @@ class Schema(Model):
     _x_apim_code_nillable = XApimCodeNillableType()  # only used in ApiManagement Mgmt Plane
     _x_comment = XCommentType()  # Only used in IoTCenter Mgmt Plane
     _x_abstract = XAbstractType()  # Only used in Logic Mgmt Plane and Web Mgmt Plane
+
+    def __init__(self, *args, **kwargs):
+        super(Schema, self).__init__(*args, **kwargs)
+        self.ref_instance = None
+        self.linked = False
+
+    def link(self, swagger_loader, file_path, *traces):
+        if getattr(self, 'linked', False):
+            return
+        self.linked = True
+
+        if self.ref is not None:
+            self.ref_instance, path, ref_key = swagger_loader.load_ref(file_path, self.ref)
+            if isinstance(self.ref_instance, Linkable):
+                self.ref_instance.link(swagger_loader, path, *traces, ref_key)
+
+        if self.items is not None:
+            if isinstance(self.items, list):
+                for item in self.items:
+                    item.link(swagger_loader, file_path, *traces)
+            else:
+                self.items.link(swagger_loader, file_path, *traces)
+
+        if self.properties is not None:
+            for prop in self.properties.values():
+                prop.link(swagger_loader, file_path, *traces)
+
+        if self.additionalProperties is not None and isinstance(self.additionalProperties, Linkable):
+            self.additionalProperties.link(swagger_loader, file_path, *traces)
+
+        if self.allOf is not None:
+            for item in self.allOf:
+                item.link(swagger_loader, file_path, *traces)
+            # TODO: check discriminator

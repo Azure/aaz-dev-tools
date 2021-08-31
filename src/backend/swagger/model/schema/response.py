@@ -3,9 +3,10 @@ from schematics.types import BaseType, StringType, ModelType, DictType
 from .schema import Schema
 from .header import Header
 from .types import XmsExamplesType, XmsErrorResponseType, XNullableType
+from .reference import Linkable
 
 
-class Response(Model):
+class Response(Model, Linkable):
     """Describes a single response from an API Operation."""
 
     description = StringType(required=True)  # A short description of the response. GFM syntax can be used for rich text representation.
@@ -17,6 +18,15 @@ class Response(Model):
     x_ms_error_response = XmsErrorResponseType()
 
     x_nullable = XNullableType(default=False)  # when true, specifies that null is a valid value for the associated schema
+
+    def link(self, swagger_loader, file_path, *traces):
+        if getattr(self, 'linked', False):
+            return
+        self.linked = True
+        if self.schema is not None:
+            self.schema.link(swagger_loader, file_path, *traces)
+
+        # TODO: add support for examples and x_ms_examples
 
     @classmethod
     def _claim_polymorphic(cls, data):

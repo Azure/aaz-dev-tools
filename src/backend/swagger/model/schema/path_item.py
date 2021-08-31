@@ -1,11 +1,11 @@
 from schematics.models import Model
 from schematics.types import ModelType, ListType, DictType
-# from .reference import ReferenceType
 from .operation import Operation
 from .parameter import ParameterType
+from .reference import Linkable
 
 
-class PathItem(Model):
+class PathItem(Model, Linkable):
     """Describes the operations available on a single path. A Path Item may be empty, due to ACL constraints. The path itself is still exposed to the documentation viewer but they will not know which operations and parameters are available"""
 
     get = ModelType(Operation)  # A definition of a GET operation on this path.
@@ -21,21 +21,30 @@ class PathItem(Model):
     # ignored because it is not used
     # ref = ReferenceType()  # Allows for an external definition of this path item. The referenced structure MUST be in the format of a Path Item Object. If there are conflicts between the referenced definition and this Path Item's definition, the behavior is undefined.
 
-    def unfold(self, ref_loader):
+    def link(self, swagger_loader, file_path, *traces):
+        if getattr(self, 'linked', False):
+            return
+        self.linked = True
+
+        if self.parameters is not None:
+            for param in self.parameters:
+                if isinstance(param, Linkable):
+                    param.link(swagger_loader, file_path, *traces)
+
         if self.get is not None:
-            self.get.unfold(ref_loader)
+            self.get.link(swagger_loader, file_path, *traces)
         if self.put is not None:
-            self.put.unfold(ref_loader)
+            self.put.link(swagger_loader, file_path, *traces)
         if self.post is not None:
-            self.post.unfold(ref_loader)
+            self.post.link(swagger_loader, file_path, *traces)
         if self.delete is not None:
-            self.delete.unfold(ref_loader)
+            self.delete.link(swagger_loader, file_path, *traces)
         if self.options is not None:
-            self.options.unfold(ref_loader)
+            self.options.link(swagger_loader, file_path, *traces)
         if self.head is not None:
-            self.head.unfold(ref_loader)
+            self.head.link(swagger_loader, file_path, *traces)
         if self.patch is not None:
-            self.patch.unfold(ref_loader)
+            self.patch.link(swagger_loader, file_path, *traces)
 
 
 class PathsType(DictType):
