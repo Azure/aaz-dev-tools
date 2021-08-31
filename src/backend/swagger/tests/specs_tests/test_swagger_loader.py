@@ -1,6 +1,7 @@
 import os
 from unittest import TestCase
 from swagger.model.specs import SwaggerSpecs, SwaggerLoader
+from swagger.utils import exceptions
 import json
 
 
@@ -39,7 +40,7 @@ class SwaggerLoaderTest(TestCase):
                         yield p
         elif isinstance(body, dict):
             for k in body:
-                if k == '$ref':
+                if k == '$ref' or k == 'x-ms-odata':
                     if isinstance(body[k], str):
                         yield body[k]
                 else:
@@ -60,7 +61,9 @@ class SwaggerLoaderTest(TestCase):
                     continue
                 if ref_link is not None:
                     try:
-                        ref, path = loader.load_ref(file_path, ref_link)
+                        ref, path, key = loader.load_ref(file_path, ref_link)
+                    except exceptions.InvalidSwaggerValueError as err:
+                        print(err)
                     except Exception:
                         print(file_path)
                         raise

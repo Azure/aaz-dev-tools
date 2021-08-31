@@ -1,16 +1,19 @@
 from schematics.models import Model
 from schematics.types import StringType
-import abc
 
 
 class Linkable:
 
     def __init__(self):
-        self.linked = False
+        self._linked = False
 
-    @abc.abstractmethod
+    def is_linked(self):
+        if not hasattr(self, '_linked'):
+            self._linked = False
+        return self._linked
+
     def link(self, swagger_loader, file_path, *traces):
-        pass
+        self._linked = True
 
 
 class ReferenceType(StringType):
@@ -30,13 +33,14 @@ class Reference(Model, Linkable):
     ref = ReferenceType(required=True)  # The reference string
 
     def __init__(self, *args, **kwargs):
-        super(Reference, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.ref_instance = None
 
     def link(self, swagger_loader, file_path, *traces):
-        if getattr(self, 'linked', False):
+        if self.is_linked():
             return
-        self.linked = True
+        super().link(swagger_loader, file_path, *traces)
+
         self.ref_instance, path, ref_key = swagger_loader.load_ref(file_path, self.ref)
         if isinstance(self.ref_instance, Linkable):
             self.ref_instance.link(swagger_loader, path, *traces, ref_key)

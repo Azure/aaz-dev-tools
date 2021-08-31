@@ -17,9 +17,9 @@ class XmsParameterizedHost(Model, Linkable):
     parameters = ListType(ParameterType(support_reference=True))  # The list of parameters that are used within the hostTemplate. This can include both reference parameters as well as explicit parameters. Note that "in" is required and must be set to "path". The reference parameters will be treated as global parameters and will end up as property of the client.
 
     def link(self, swagger_loader, file_path, *traces):
-        if getattr(self, 'linked', False):
+        if self.is_linked():
             return
-        self.linked = True
+        super().link(swagger_loader, file_path, *traces)
 
         if self.parameters is not None:
             for param in self.parameters:

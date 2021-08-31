@@ -1,7 +1,7 @@
 import os
 from unittest import TestCase
 from swagger.model.specs import SwaggerSpecs, SwaggerLoader
-import json
+from swagger.utils import exceptions
 
 
 class SwaggerLinkTest(TestCase):
@@ -25,9 +25,53 @@ class SwaggerLinkTest(TestCase):
                         if file_path_filter is None or file_path_filter(file_path):
                             yield file_path
 
+    def test_swagger_link_data_collection_rules(self):
+        file_path = os.path.join(self.specs._folder_path, 'specification', 'monitor', 'resource-manager',
+                                 'Microsoft.Insights', 'stable', '2021-04-01', 'dataCollectionRules_API.json')
+        loader = SwaggerLoader()
+        loader.load_swagger(file_path)
+        idx = 0
+        while idx < len(loader.loaded_swaggers):
+            swagger = loader.loaded_swaggers[idx]
+            try:
+                swagger.link(loader)
+            except exceptions.InvalidSwaggerValueError as err:
+                print(err)
+            except Exception:
+                raise
+            print(swagger.file_path)
+            idx += 1
+        assert idx == 2
+
+    def test_swagger_link_data_factory(self):
+        file_path = os.path.join(self.specs._folder_path, 'specification', 'datafactory', 'resource-manager',
+                                 'Microsoft.DataFactory', 'stable', '2018-06-01', 'datafactory.json')
+        loader = SwaggerLoader()
+        loader.load_swagger(file_path)
+        idx = 0
+        while idx < len(loader.loaded_swaggers):
+            swagger = loader.loaded_swaggers[idx]
+            try:
+                swagger.link(loader)
+            except exceptions.InvalidSwaggerValueError as err:
+                print(err)
+            except Exception:
+                raise
+            print(swagger.file_path)
+            idx += 1
+
     def test_swagger_link(self):
         for file_path in self._swagger_file_paths(lambda x: 'example' not in x.lower()):
             loader = SwaggerLoader()
-            swagger = loader.load_swagger(file_path)
-            swagger.link(loader, file_path)
-            print(file_path)
+            loader.load_swagger(file_path)
+            idx = 0
+            while idx < len(loader.loaded_swaggers):
+                swagger = loader.loaded_swaggers[idx]
+                try:
+                    swagger.link(loader)
+                except exceptions.InvalidSwaggerValueError as err:
+                    print(err)
+                except Exception:
+                    raise
+                print(swagger.file_path)
+                idx += 1

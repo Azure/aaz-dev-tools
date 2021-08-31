@@ -11,18 +11,22 @@ class SwaggerLoader:
 
     def __init__(self):
         self._loaded = {}
+        self.loaded_swaggers = []
 
     def load_swagger(self, file_path):
         from swagger.model.schema.swagger import Swagger
         file_key = f'{file_path}#'
         if file_key in self._loaded:
             return self._loaded[file_key]
+
         with open(file_path, 'r', encoding='utf-8') as f:
             body = json.load(f)
         if 'example' in file_path.lower():
             self._loaded[file_key] = body
         else:
-            self._loaded[file_key] = Swagger(body)
+            self._loaded[file_key] = Swagger(body, file_path=file_path)
+            self.loaded_swaggers.append(self._loaded[file_key])
+
         return self._loaded[file_key]
 
     def get_swagger(self, file_path):
@@ -48,10 +52,16 @@ class SwaggerLoader:
         for prop in name.split('/'):
             if prop == '':
                 continue
-            if isinstance(ref, dict):
-                ref = ref[prop]
-            else:
-                ref = getattr(ref, prop)
+            try:
+                if isinstance(ref, dict):
+                    ref = ref[prop]
+                else:
+                    ref = getattr(ref, prop)
+            except (KeyError, AttributeError):
+                raise exceptions.InvalidSwaggerValueError(
+                    msg='Failed to find reference in swagger',
+                    key="$ref", value=ref_link, file_path=file_path)
+
         assert ref is not None
         self._loaded[key] = ref
         return ref, path, key

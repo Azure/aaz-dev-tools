@@ -42,14 +42,13 @@ class Operation(Model, Linkable):
     _x_sf_codegen = XSfCodeGenType()  # only used in ServiceFabricMesh Mgmt Plane
 
     def __init__(self, *args, **kwargs):
-        super(Operation, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.x_ms_odata_instance = None
-        self.linked = False
 
     def link(self, swagger_loader, file_path, *traces):
-        if getattr(self, 'linked', False):
+        if self.is_linked():
             return
-        self.linked = True
+        super().link(swagger_loader, file_path, *traces)
 
         if self.parameters is not None:
             for param in self.parameters:

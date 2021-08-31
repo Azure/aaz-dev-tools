@@ -43,32 +43,36 @@ class Swagger(Model, Linkable):
     x_ms_paths = XmsPathsType()  # alternative to Paths Object that allows Path Item Object to have query parameters for non pure REST APIs
     x_ms_parameterized_host = XmsParameterizedHostType()
 
-    def link(self, swagger_loader, file_path, *traces):
-        if getattr(self, 'linked', False):
+    def __init__(self, *args, **kwargs):
+        self.file_path = kwargs.pop('file_path')
+        super().__init__(*args, **kwargs)
+
+    def link(self, swagger_loader, *traces):
+        if self.is_linked():
             return
-        self.linked = True
+        super().link(swagger_loader, self.file_path, *traces)
 
         if self.paths is not None:
             for path in self.paths.values():
-                path.link(swagger_loader, file_path, *traces)
+                path.link(swagger_loader, self.file_path, *traces)
 
         if self.definitions is not None:
             for definition in self.definitions.values():
-                definition.link(swagger_loader, file_path, *traces)
+                definition.link(swagger_loader, self.file_path, *traces)
 
         if self.parameters is not None:
             for param in self.parameters.values():
                 if isinstance(param, Linkable):
-                    param.link(swagger_loader, file_path, *traces)
+                    param.link(swagger_loader, self.file_path, *traces)
 
         if self.responses is not None:
             for response in self.responses.values():
-                response.link(swagger_loader, file_path, *traces)
+                response.link(swagger_loader, self.file_path, *traces)
 
         if self.x_ms_paths is not None:
             for path in self.x_ms_paths.values():
-                path.link(swagger_loader, file_path, *traces)
+                path.link(swagger_loader, self.file_path, *traces)
 
         if self.x_ms_parameterized_host is not None:
-            self.x_ms_parameterized_host.link(swagger_loader, file_path, *traces)
+            self.x_ms_parameterized_host.link(swagger_loader, self.file_path, *traces)
 

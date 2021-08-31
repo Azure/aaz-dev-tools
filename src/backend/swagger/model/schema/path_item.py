@@ -22,9 +22,9 @@ class PathItem(Model, Linkable):
     # ref = ReferenceType()  # Allows for an external definition of this path item. The referenced structure MUST be in the format of a Path Item Object. If there are conflicts between the referenced definition and this Path Item's definition, the behavior is undefined.
 
     def link(self, swagger_loader, file_path, *traces):
-        if getattr(self, 'linked', False):
+        if self.is_linked():
             return
-        self.linked = True
+        super().link(swagger_loader, file_path, *traces)
 
         if self.parameters is not None:
             for param in self.parameters:

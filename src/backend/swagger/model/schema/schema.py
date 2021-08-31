@@ -109,14 +109,13 @@ class Schema(Model, Linkable):
     _x_abstract = XAbstractType()  # Only used in Logic Mgmt Plane and Web Mgmt Plane
 
     def __init__(self, *args, **kwargs):
-        super(Schema, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.ref_instance = None
-        self.linked = False
 
     def link(self, swagger_loader, file_path, *traces):
-        if getattr(self, 'linked', False):
+        if self.is_linked():
             return
-        self.linked = True
+        super().link(swagger_loader, file_path, *traces)
 
         if self.ref is not None:
             self.ref_instance, path, ref_key = swagger_loader.load_ref(file_path, self.ref)

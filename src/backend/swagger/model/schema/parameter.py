@@ -107,9 +107,9 @@ class BodyParameter(_ParameterBase, Linkable):
     x_nullable = XNullableType(default=False)  # when true, specifies that null is a valid value for the associated schema
 
     def link(self, swagger_loader, file_path, *traces):
-        if getattr(self, 'linked', False):
+        if self.is_linked():
             return
-        self.linked = True
+        super().link(swagger_loader, file_path, *traces)
 
         self.schema.link(swagger_loader, file_path, *traces)
 

@@ -39,7 +39,7 @@ class SchemaTest(TestCase):
         parsed = 0
         for file_path, body in self._swagger_bodies():
             try:
-                Swagger(body)
+                Swagger(body, file_path=file_path)
             except Exception as err:
                 print(file_path)
                 raise err
