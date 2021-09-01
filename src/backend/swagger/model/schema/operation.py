@@ -7,11 +7,11 @@ from .types import MimeType, XmsRequestIdType, XmsExamplesType, SecurityRequirem
 from .x_ms_pageable import XmsPageableType
 from .x_ms_long_running_operation import XmsLongRunningOperationType, XmsLongRunningOperationOptionsType
 from .x_ms_odata import XmsODataType
-from .reference import Reference
+from .reference import Reference, Linkable
 from .types import XSfCodeGenType
 
 
-class Operation(Model):
+class Operation(Model, Linkable):
     """Describes a single API operation on a path."""
 
     tags = ListType(StringType())  # A list of tags for API documentation control. Tags can be used for logical grouping of operations by resources or any other qualifier.
@@ -32,6 +32,7 @@ class Operation(Model):
     x_ms_pageable = XmsPageableType()
     x_ms_long_running_operation = XmsLongRunningOperationType(default=False)
     x_ms_long_running_operation_options = XmsLongRunningOperationOptionsType()
+
     x_ms_odata = XmsODataType()  # indicates the operation includes one or more OData query parameters.
     x_ms_request_id = XmsRequestIdType()
     x_ms_examples = XmsExamplesType()
@@ -39,3 +40,26 @@ class Operation(Model):
     # specific properties
     _x_publish = XPublishType()  # only used in Maps Data Plane
     _x_sf_codegen = XSfCodeGenType()  # only used in ServiceFabricMesh Mgmt Plane
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.x_ms_odata_instance = None
+
+    def link(self, swagger_loader, *traces):
+        if self.is_linked():
+            return
+        super().link(swagger_loader, *traces)
+
+        if self.parameters is not None:
+            for idx, param in enumerate(self.parameters):
+                if isinstance(param, Linkable):
+                    param.link(swagger_loader, *self.traces, 'parameters', idx)
+
+        for key, response in self.responses.items():
+            response.link(swagger_loader, *self.traces, 'responses', key)
+
+        if self.x_ms_odata is not None:
+            self.x_ms_odata_instance, instance_traces = swagger_loader.load_ref(
+                self.x_ms_odata, *self.traces, 'x_ms_odata')
+            if isinstance(self.x_ms_odata_instance, Linkable):
+                self.x_ms_odata_instance.link(swagger_loader, *instance_traces)

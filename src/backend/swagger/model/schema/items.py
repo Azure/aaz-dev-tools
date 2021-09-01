@@ -17,7 +17,6 @@ class Items(Model):
     collectionFormat = StringType(
         choices=("csv", "ssv", "tsv", "pipes"),
         default="csv",
-
     ) # Determines the format of the array if type array is used. Possible values are: csv - comma separated values foo,bar; ssv - space separated values foo bar; tsv - tab separated values foo\tbar; pipes - pipe separated values foo|bar.
 
     default = BaseType() # This keyword can be used to supply a default JSON value associated with a particular schema.  It is RECOMMENDED that a default value be valid against the associated schema.

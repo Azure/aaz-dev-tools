@@ -11,6 +11,7 @@ from .external_documentation import ExternalDocumentation
 from .security_scheme import SecuritySchemeType
 from .types import SecurityRequirementType, MimeType
 from .x_ms_parameterized_host import XmsParameterizedHostType
+from .reference import Linkable
 
 
 def _swagger_version_validator(v):
@@ -18,7 +19,7 @@ def _swagger_version_validator(v):
         raise ValidationError(f"Only Support Swagger '2.0': Current value is '{v}'")
 
 
-class Swagger(Model):
+class Swagger(Model, Linkable):
     """
     This is the root document object for the API specification. It combines what previously was the Resource Listing and API Declaration (version 1.2 and earlier) together into one document.
     """
@@ -42,3 +43,34 @@ class Swagger(Model):
     x_ms_paths = XmsPathsType()  # alternative to Paths Object that allows Path Item Object to have query parameters for non pure REST APIs
     x_ms_parameterized_host = XmsParameterizedHostType()
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def link(self, swagger_loader, *traces):
+        if self.is_linked():
+            return
+        super().link(swagger_loader, *traces)
+
+        if self.paths is not None:
+            for key, path in self.paths.items():
+                path.link(swagger_loader, *self.traces, 'paths', key)
+
+        if self.definitions is not None:
+            for key, definition in self.definitions.items():
+                definition.link(swagger_loader, *self.traces, 'definitions', key)
+
+        if self.parameters is not None:
+            for key, param in self.parameters.items():
+                if isinstance(param, Linkable):
+                    param.link(swagger_loader, *self.traces, 'parameters', key)
+
+        if self.responses is not None:
+            for key, response in self.responses.items():
+                response.link(swagger_loader, *self.traces, 'responses', key)
+
+        if self.x_ms_paths is not None:
+            for key, path in self.x_ms_paths.items():
+                path.link(swagger_loader, *self.traces, 'x_ms_paths', key)
+
+        if self.x_ms_parameterized_host is not None:
+            self.x_ms_parameterized_host.link(swagger_loader, *self.traces, 'x_ms_parameterized_host')

@@ -1,11 +1,11 @@
 from schematics.models import Model
 from schematics.types import ModelType, ListType, DictType
-# from .reference import ReferenceType
 from .operation import Operation
 from .parameter import ParameterType
+from .reference import Linkable
 
 
-class PathItem(Model):
+class PathItem(Model, Linkable):
     """Describes the operations available on a single path. A Path Item may be empty, due to ACL constraints. The path itself is still exposed to the documentation viewer but they will not know which operations and parameters are available"""
 
     get = ModelType(Operation)  # A definition of a GET operation on this path.
@@ -20,6 +20,31 @@ class PathItem(Model):
 
     # ignored because it is not used
     # ref = ReferenceType()  # Allows for an external definition of this path item. The referenced structure MUST be in the format of a Path Item Object. If there are conflicts between the referenced definition and this Path Item's definition, the behavior is undefined.
+
+    def link(self, swagger_loader, *traces):
+        if self.is_linked():
+            return
+        super().link(swagger_loader, *traces)
+
+        if self.parameters is not None:
+            for idx, param in enumerate(self.parameters):
+                if isinstance(param, Linkable):
+                    param.link(swagger_loader, *self.traces, 'parameters', idx)
+
+        if self.get is not None:
+            self.get.link(swagger_loader, *self.traces, 'get')
+        if self.put is not None:
+            self.put.link(swagger_loader, *self.traces, 'put')
+        if self.post is not None:
+            self.post.link(swagger_loader, *self.traces, 'post')
+        if self.delete is not None:
+            self.delete.link(swagger_loader, *self.traces, 'delete')
+        if self.options is not None:
+            self.options.link(swagger_loader, *self.traces, 'options')
+        if self.head is not None:
+            self.head.link(swagger_loader, *self.traces, 'head')
+        if self.patch is not None:
+            self.patch.link(swagger_loader, *self.traces, 'patch')
 
 
 class PathsType(DictType):
