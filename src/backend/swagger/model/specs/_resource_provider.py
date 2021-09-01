@@ -46,6 +46,10 @@ class ResourceProvider:
                         resource_map[resource.path][resource.version] = resource
         return resource_map
 
+    def group_operations(self):
+        resource_map = self.get_resource_map()
+        pass
+
     @property
     def tags(self):
         if self._tags is None:

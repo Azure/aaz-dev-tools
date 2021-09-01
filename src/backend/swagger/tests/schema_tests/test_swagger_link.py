@@ -1,29 +1,10 @@
 import os
-from unittest import TestCase
-from swagger.model.specs import SwaggerSpecs, SwaggerLoader
+from swagger.tests.common import SwaggerSpecsTestCase
+from swagger.model.specs import SwaggerLoader
 from swagger.utils import exceptions
 
 
-class SwaggerLinkTest(TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super(SwaggerLinkTest, self).__init__(*args, **kwargs)
-        folder_path = os.environ.get("AAZ_SWAGGER_PATH", None)
-        if not folder_path or not os.path.isdir(folder_path):
-            raise ValueError("Invalid swagger folder path, Please setup it in environment value 'AAZ_SWAGGER_PATH'.")
-        self.specs = SwaggerSpecs(folder_path=folder_path)
-
-    def _swagger_file_paths(self, file_path_filter=None):
-        modules = self.specs.get_data_plane_modules() + self.specs.get_mgmt_plane_modules()
-        for module in modules:
-            for rp in module.get_resource_providers():
-                for root, dirs, files in os.walk(rp._file_path):
-                    for file in files:
-                        if not file.endswith('.json'):
-                            continue
-                        file_path = os.path.join(root, file)
-                        if file_path_filter is None or file_path_filter(file_path):
-                            yield file_path
+class SwaggerLinkTest(SwaggerSpecsTestCase):
 
     def test_swagger_link_data_collection_rules(self):
         file_path = os.path.join(self.specs._folder_path, 'specification', 'monitor', 'resource-manager',
@@ -61,7 +42,7 @@ class SwaggerLinkTest(TestCase):
             idx += 1
 
     def test_swagger_link(self):
-        for file_path in self._swagger_file_paths(lambda x: 'example' not in x.lower()):
+        for file_path in self._get_swagger_file_paths(lambda x: 'example' not in x.lower()):
             loader = SwaggerLoader()
             loader.load_file(file_path)
             idx = 0
