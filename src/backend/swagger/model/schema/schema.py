@@ -111,8 +111,8 @@ class Schema(Model, Linkable):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.ref_instance = None
-        self.dis_parent = None
-        self.dis_children = {}
+        self.disc_parent = None
+        self.disc_children = {}
 
     def link(self, swagger_loader, *traces):
         if self.is_linked():
@@ -142,31 +142,33 @@ class Schema(Model, Linkable):
             for idx, item in enumerate(self.allOf):
                 item.link(swagger_loader, *self.traces, 'allOf', idx)
 
-    # def link_discriminator(self, definition_name=None):
-    #     if self.allOf is None:
-    #         return
-    #     for item in self.allOf:
-    #         if item.discriminator_instance is not None:
-    #             if self.dis_parent is not None:
-    #                 raise ValueError("Multiple discriminator parents exists.")
-    #             self.dis_parent = item.discriminator_instance
-    #
-    #             if self.x_ms_discriminator_value is not None:
-    #                 discriminator_value = self.x_ms_discriminator_value
-    #             elif definition_name is not None:
-    #                 discriminator_value = definition_name
-    #             else:
-    #                 raise ValueError("DiscriminatorValue is empty.")
-    #             if discriminator_value in self.dis_parent.dis_children:
-    #                 raise ValueError(f"Duplicated discriminator children for value '{discriminator_value}'")
-    #             self.dis_parent.dis_children[discriminator_value] = self
+        self._link_disc()
+
+    def _link_disc(self):
+        if self.allOf is None:
+            return
+        for item in self.allOf:
+            if item.disc_instance is not None:
+                if self.disc_parent is not None:
+                    raise ValueError("Multiple discriminator parents exists.")
+                self.disc_parent = item.disc_instance
+
+                if self.x_ms_discriminator_value is not None:
+                    disc_value = self.x_ms_discriminator_value
+                elif len(self.traces) > 2 and self.traces[-2] == 'definitions':
+                    disc_value = self.traces[-1]   # use the definition name as discriminator value
+                else:
+                    raise ValueError("DiscriminatorValue is empty.")
+                if disc_value in self.disc_parent.disc_children:
+                    raise ValueError(f"Duplicated discriminator children for value '{disc_value}'")
+                self.disc_parent.disc_children[disc_value] = self
 
     @property
-    def discriminator_instance(self):
+    def disc_instance(self):
         assert self.is_linked()
         if self.discriminator is not None:
             return self
         elif self.ref_instance is not None:
-            return self.ref_instance.discriminator_instance
+            return self.ref_instance.disc_instance
         return None
 
