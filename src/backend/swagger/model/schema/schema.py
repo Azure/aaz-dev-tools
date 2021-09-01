@@ -6,6 +6,7 @@ from .xml import XML
 from .external_documentation import ExternalDocumentation
 from .x_ms_enum import XmsEnumType
 from .types import XmsSecretType, XAccessibilityType, XAzSearchDeprecatedType, XSfClientLibType, XApimCodeNillableType, XCommentType, XAbstractType, XClientNameType
+from swagger.utils.exceptions import InvalidSwaggerValueError
 
 
 def _additionalProperties_claim_function(_, data):
@@ -150,7 +151,10 @@ class Schema(Model, Linkable):
         for item in self.allOf:
             if item.disc_instance is not None:
                 if self.disc_parent is not None:
-                    raise ValueError("Multiple discriminator parents exists.")
+                    raise InvalidSwaggerValueError(
+                        msg="Multiple discriminator parents exists.",
+                        key=self.traces, value=None
+                    )
                 self.disc_parent = item.disc_instance
 
                 if self.x_ms_discriminator_value is not None:
@@ -158,9 +162,15 @@ class Schema(Model, Linkable):
                 elif len(self.traces) > 2 and self.traces[-2] == 'definitions':
                     disc_value = self.traces[-1]   # use the definition name as discriminator value
                 else:
-                    raise ValueError("DiscriminatorValue is empty.")
+                    raise InvalidSwaggerValueError(
+                        msg="DiscriminatorValue is empty.",
+                        key=self.traces, value=None
+                    )
                 if disc_value in self.disc_parent.disc_children:
-                    raise ValueError(f"Duplicated discriminator children for value '{disc_value}'")
+                    raise InvalidSwaggerValueError(
+                        msg=f"Duplicated discriminator children for same value",
+                        key=self.traces, value=disc_value
+                    )
                 self.disc_parent.disc_children[disc_value] = self
 
     @property
