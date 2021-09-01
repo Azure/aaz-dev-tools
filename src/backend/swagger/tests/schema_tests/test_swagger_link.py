@@ -40,7 +40,6 @@ class SwaggerLinkTest(TestCase):
                 print(err)
             except Exception:
                 raise
-            print(file_path)
             idx += 1
         assert idx == 2
 
@@ -59,7 +58,6 @@ class SwaggerLinkTest(TestCase):
                 print(err)
             except Exception:
                 raise
-            print(file_path)
             idx += 1
 
     def test_swagger_link(self):
@@ -76,5 +74,4 @@ class SwaggerLinkTest(TestCase):
                     print(err)
                 except Exception:
                     raise
-                print(file_path)
                 idx += 1
