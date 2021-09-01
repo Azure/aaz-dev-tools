@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+from collections import OrderedDict
 from swagger.utils import exceptions
 
 
@@ -11,87 +12,95 @@ class SwaggerLoader:
 
     def __init__(self):
         self._loaded = {}
-        self.loaded_swaggers = []
+        self.loaded_swaggers = OrderedDict()
 
-    def load_swagger(self, file_path):
+    def load_file(self, file_path):
         from swagger.model.schema.swagger import Swagger
-        file_key = f'{file_path}#'
-        if file_key in self._loaded:
-            return self._loaded[file_key]
+        loaded = self.get_loaded(file_path)
+        if loaded is not None:
+            return loaded
 
         with open(file_path, 'r', encoding='utf-8') as f:
             body = json.load(f)
+
         if 'example' in file_path.lower():
-            self._loaded[file_key] = body
+            loaded = body
         else:
-            self._loaded[file_key] = Swagger(body, file_path=file_path)
-            self.loaded_swaggers.append(self._loaded[file_key])
+            loaded = Swagger(body)
+            self.loaded_swaggers[file_path] = loaded
+        self._cache_loaded(loaded, file_path)
+        return loaded
 
-        return self._loaded[file_key]
+    def get_loaded(self, *traces):
+        return self._loaded.get(traces, None)
 
-    def get_swagger(self, file_path):
-        file_key = f'{file_path}#'
-        return self._loaded.get(file_key, None)
+    def _cache_loaded(self, loaded, *traces):
+        self._loaded[traces] = loaded
 
-    def load_ref(self, file_path, ref_link):
-        path, name = self._parse_ref_link(file_path, ref_link)
-        key = f'{path}#{name}'
+    def load_ref(self, ref_link, *ref_traces):
+        traces = self._parse_ref_link(ref_traces, ref_link)
 
-        if key in self._loaded:
-            return self._loaded[key], path, key
+        ref = self.get_loaded(*traces)
+        if ref is not None:
+            return ref, traces
 
-        ref = self.get_swagger(path)
+        file_path = traces[0]
+        ref = self.get_loaded(file_path)
         if ref is None:
             try:
-                ref = self.load_swagger(path)
+                ref = self.load_file(file_path)
             except FileNotFoundError:
                 raise exceptions.InvalidSwaggerValueError(
                     msg='Cannot find reference swagger file',
-                    key="$ref", value=ref_link, file_path=file_path)
+                    key=ref_traces, value=ref_link)
 
-        for prop in name.split('/'):
-            if prop == '':
-                continue
+        for prop in traces[1:]:
+            assert prop != ''
             try:
                 if isinstance(ref, dict):
+                    ref = ref[prop]
+                elif isinstance(ref, list):
                     ref = ref[prop]
                 else:
                     ref = getattr(ref, prop)
             except (KeyError, AttributeError):
                 raise exceptions.InvalidSwaggerValueError(
                     msg='Failed to find reference in swagger',
-                    key="$ref", value=ref_link, file_path=file_path)
+                    key=ref_traces, value=ref_link)
 
         assert ref is not None
-        self._loaded[key] = ref
-        return ref, path, key
+        self._cache_loaded(ref, *traces)
+        return ref, traces
 
-    @staticmethod
-    def _parse_ref_link(file_path, ref_link):
+    @classmethod
+    def _parse_ref_link(cls, ref_traces, ref_link):
+        file_path = ref_traces[0]
+
         parts = ref_link.strip().split('#')
 
         if not (1 <= len(parts) <= 2):
             raise exceptions.InvalidSwaggerValueError(
                 msg="Invalid Reference Value",
-                key="$ref", value=ref_link, file_path=file_path)
+                key=ref_traces, value=ref_link)
 
         if parts[0] == '':
             # start with '#'
-            return file_path, parts[1]
+            traces = [trace for trace in parts[1].split('/') if trace]
+            return file_path, *traces
 
         # find ref_file_path
-        path = os.path.dirname(file_path)
+        file_path = os.path.dirname(file_path)
         for s in parts[0].split('/'):
             if s == '.':
                 continue
             elif s == '':
                 continue
             elif s == '..':
-                path = os.path.dirname(path)
+                file_path = os.path.dirname(file_path)
             else:
-                path = os.path.join(path, s)
-
+                file_path = os.path.join(file_path, s)
         if len(parts) == 2:
-            return path, parts[1]
+            traces = [trace for trace in parts[1].split('/') if trace]
+            return file_path, *traces
         else:
-            return path, ''
+            return file_path,

@@ -53,7 +53,7 @@ class SwaggerLoaderTest(TestCase):
     def test_ref_loader(self):
         for file_path in self._swagger_file_paths(lambda x: 'example' not in x.lower()):
             loader = SwaggerLoader()
-            loader.load_swagger(file_path)
+            loader.load_file(file_path)
             with open(file_path, 'r', encoding='utf-8') as f:
                 body = json.load(f)
             for ref_link in self._fetch_ref_values(body):
@@ -61,7 +61,7 @@ class SwaggerLoaderTest(TestCase):
                     continue
                 if ref_link is not None:
                     try:
-                        ref, path, key = loader.load_ref(file_path, ref_link)
+                        ref, traces = loader.load_ref(ref_link, file_path)
                     except exceptions.InvalidSwaggerValueError as err:
                         print(err)
                     except Exception:

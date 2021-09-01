@@ -44,35 +44,33 @@ class Swagger(Model, Linkable):
     x_ms_parameterized_host = XmsParameterizedHostType()
 
     def __init__(self, *args, **kwargs):
-        self.file_path = kwargs.pop('file_path')
         super().__init__(*args, **kwargs)
 
     def link(self, swagger_loader, *traces):
         if self.is_linked():
             return
-        super().link(swagger_loader, self.file_path, *traces)
+        super().link(swagger_loader, *traces)
 
         if self.paths is not None:
-            for path in self.paths.values():
-                path.link(swagger_loader, self.file_path, *traces)
+            for key, path in self.paths.items():
+                path.link(swagger_loader, *self.traces, 'paths', key)
 
         if self.definitions is not None:
-            for definition in self.definitions.values():
-                definition.link(swagger_loader, self.file_path, *traces)
+            for key, definition in self.definitions.items():
+                definition.link(swagger_loader, *self.traces, 'definitions', key)
 
         if self.parameters is not None:
-            for param in self.parameters.values():
+            for key, param in self.parameters.items():
                 if isinstance(param, Linkable):
-                    param.link(swagger_loader, self.file_path, *traces)
+                    param.link(swagger_loader, *self.traces, 'parameters', key)
 
         if self.responses is not None:
-            for response in self.responses.values():
-                response.link(swagger_loader, self.file_path, *traces)
+            for key, response in self.responses.items():
+                response.link(swagger_loader, *self.traces, 'responses', key)
 
         if self.x_ms_paths is not None:
-            for path in self.x_ms_paths.values():
-                path.link(swagger_loader, self.file_path, *traces)
+            for key, path in self.x_ms_paths.items():
+                path.link(swagger_loader, *self.traces, 'x_ms_paths', key)
 
         if self.x_ms_parameterized_host is not None:
-            self.x_ms_parameterized_host.link(swagger_loader, self.file_path, *traces)
-
+            self.x_ms_parameterized_host.link(swagger_loader, *self.traces, 'x_ms_parameterized_host')

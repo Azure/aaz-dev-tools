@@ -6,14 +6,19 @@ class Linkable:
 
     def __init__(self):
         self._linked = False
+        self.traces = None
 
     def is_linked(self):
         if not hasattr(self, '_linked'):
             self._linked = False
         return self._linked
 
-    def link(self, swagger_loader, file_path, *traces):
+    def link(self, swagger_loader, *traces):
         self._linked = True
+        assert len(traces) > 0
+        self.traces = tuple(traces)
+        for trace in self.traces:
+            assert isinstance(trace, (str, int))
 
 
 class ReferenceType(StringType):
@@ -36,14 +41,14 @@ class Reference(Model, Linkable):
         super().__init__(*args, **kwargs)
         self.ref_instance = None
 
-    def link(self, swagger_loader, file_path, *traces):
+    def link(self, swagger_loader, *traces):
         if self.is_linked():
             return
-        super().link(swagger_loader, file_path, *traces)
+        super().link(swagger_loader, *traces)
 
-        self.ref_instance, path, ref_key = swagger_loader.load_ref(file_path, self.ref)
+        self.ref_instance, instance_traces = swagger_loader.load_ref(self.ref, *self.traces, 'ref')
         if isinstance(self.ref_instance, Linkable):
-            self.ref_instance.link(swagger_loader, path, *traces, ref_key)
+            self.ref_instance.link(swagger_loader, *instance_traces)
 
     @classmethod
     def _claim_polymorphic(cls, data):

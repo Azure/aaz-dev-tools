@@ -45,20 +45,21 @@ class Operation(Model, Linkable):
         super().__init__(*args, **kwargs)
         self.x_ms_odata_instance = None
 
-    def link(self, swagger_loader, file_path, *traces):
+    def link(self, swagger_loader, *traces):
         if self.is_linked():
             return
-        super().link(swagger_loader, file_path, *traces)
+        super().link(swagger_loader, *traces)
 
         if self.parameters is not None:
-            for param in self.parameters:
+            for idx, param in enumerate(self.parameters):
                 if isinstance(param, Linkable):
-                    param.link(swagger_loader, file_path, *traces)
+                    param.link(swagger_loader, *self.traces, 'parameters', idx)
 
-        for response in self.responses.values():
-            response.link(swagger_loader, file_path, *traces)
+        for key, response in self.responses.items():
+            response.link(swagger_loader, *self.traces, 'responses', key)
 
         if self.x_ms_odata is not None:
-            self.x_ms_odata_instance, path, ref_key = swagger_loader.load_ref(file_path, self.x_ms_odata)
+            self.x_ms_odata_instance, instance_traces = swagger_loader.load_ref(
+                self.x_ms_odata, *self.traces, 'x_ms_odata')
             if isinstance(self.x_ms_odata_instance, Linkable):
-                self.x_ms_odata_instance.link(swagger_loader, path, *traces, ref_key)
+                self.x_ms_odata_instance.link(swagger_loader, *instance_traces)

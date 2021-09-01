@@ -106,12 +106,12 @@ class BodyParameter(_ParameterBase, Linkable):
 
     x_nullable = XNullableType(default=False)  # when true, specifies that null is a valid value for the associated schema
 
-    def link(self, swagger_loader, file_path, *traces):
+    def link(self, swagger_loader, *traces):
         if self.is_linked():
             return
-        super().link(swagger_loader, file_path, *traces)
+        super().link(swagger_loader, *traces)
 
-        self.schema.link(swagger_loader, file_path, *traces)
+        self.schema.link(swagger_loader, *self.traces, 'schema')
 
 
 class ParameterType(PolyModelType):

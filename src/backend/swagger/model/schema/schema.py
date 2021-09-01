@@ -111,32 +111,62 @@ class Schema(Model, Linkable):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.ref_instance = None
+        self.dis_parent = None
+        self.dis_children = {}
 
-    def link(self, swagger_loader, file_path, *traces):
+    def link(self, swagger_loader, *traces):
         if self.is_linked():
             return
-        super().link(swagger_loader, file_path, *traces)
+        super().link(swagger_loader, *traces)
 
         if self.ref is not None:
-            self.ref_instance, path, ref_key = swagger_loader.load_ref(file_path, self.ref)
+            self.ref_instance, instance_traces = swagger_loader.load_ref(self.ref, *self.traces, 'ref')
             if isinstance(self.ref_instance, Linkable):
-                self.ref_instance.link(swagger_loader, path, *traces, ref_key)
+                self.ref_instance.link(swagger_loader, *instance_traces)
 
         if self.items is not None:
             if isinstance(self.items, list):
-                for item in self.items:
-                    item.link(swagger_loader, file_path, *traces)
+                for idx, item in enumerate(self.items):
+                    item.link(swagger_loader, *self.traces, 'items', idx)
             else:
-                self.items.link(swagger_loader, file_path, *traces)
+                self.items.link(swagger_loader, *self.traces, 'items')
 
         if self.properties is not None:
-            for prop in self.properties.values():
-                prop.link(swagger_loader, file_path, *traces)
+            for key, prop in self.properties.items():
+                prop.link(swagger_loader, *self.traces, 'properties', key)
 
-        if self.additionalProperties is not None and isinstance(self.additionalProperties, Linkable):
-            self.additionalProperties.link(swagger_loader, file_path, *traces)
+        if self.additionalProperties is not None and isinstance(self.additionalProperties, Schema):
+            self.additionalProperties.link(swagger_loader, *self.traces, 'additionalProperties')
 
         if self.allOf is not None:
-            for item in self.allOf:
-                item.link(swagger_loader, file_path, *traces)
-            # TODO: check discriminator
+            for idx, item in enumerate(self.allOf):
+                item.link(swagger_loader, *self.traces, 'allOf', idx)
+
+    # def link_discriminator(self, definition_name=None):
+    #     if self.allOf is None:
+    #         return
+    #     for item in self.allOf:
+    #         if item.discriminator_instance is not None:
+    #             if self.dis_parent is not None:
+    #                 raise ValueError("Multiple discriminator parents exists.")
+    #             self.dis_parent = item.discriminator_instance
+    #
+    #             if self.x_ms_discriminator_value is not None:
+    #                 discriminator_value = self.x_ms_discriminator_value
+    #             elif definition_name is not None:
+    #                 discriminator_value = definition_name
+    #             else:
+    #                 raise ValueError("DiscriminatorValue is empty.")
+    #             if discriminator_value in self.dis_parent.dis_children:
+    #                 raise ValueError(f"Duplicated discriminator children for value '{discriminator_value}'")
+    #             self.dis_parent.dis_children[discriminator_value] = self
+
+    @property
+    def discriminator_instance(self):
+        assert self.is_linked()
+        if self.discriminator is not None:
+            return self
+        elif self.ref_instance is not None:
+            return self.ref_instance.discriminator_instance
+        return None
+
