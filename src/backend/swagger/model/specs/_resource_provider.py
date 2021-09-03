@@ -46,8 +46,12 @@ class ResourceProvider:
                         resource=resource
                     ):
                         resource_map[resource.id][resource.version] = resource
-
         return resource_map
+
+    def get_grouped_resource_map(self):
+        resource_map = self.get_resource_map()
+
+
 
     @classmethod
     def _generate_resource_id(cls, path):

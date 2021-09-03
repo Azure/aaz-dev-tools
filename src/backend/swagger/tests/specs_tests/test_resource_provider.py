@@ -11,6 +11,11 @@ class ResourceProviderLoaderTest(SwaggerSpecsTestCase):
         for rp in self.get_data_plane_resource_providers():
             print(rp)
 
+    def test_resource_map(self):
+        for rp in self.get_resource_providers():
+            print(rp)
+            resource_map = rp.get_resource_map()
+
     def test_resource_map_similar_path(self):
         for rp in self.get_resource_providers():
             print(rp)
