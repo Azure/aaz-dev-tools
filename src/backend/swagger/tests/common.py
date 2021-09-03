@@ -12,36 +12,36 @@ class SwaggerSpecsTestCase(TestCase):
             raise ValueError("Invalid swagger folder path, Please setup it in environment value 'AAZ_SWAGGER_PATH'.")
         self.specs = SwaggerSpecs(folder_path=folder_path)
 
-    def _get_data_plane_modules(self, module_filter=None):
+    def get_data_plane_modules(self, module_filter=None):
         for module in self.specs.get_data_plane_modules():
             if module_filter is None or module_filter(module):
                 yield module
 
-    def _get_mgmt_plane_modules(self, module_filter=None):
+    def get_mgmt_plane_modules(self, module_filter=None):
         for module in self.specs.get_mgmt_plane_modules():
             if module_filter is None or module_filter(module):
                 yield module
 
-    def _get_data_plane_resource_provides(self, resource_provider_filter=None, **kwargs):
-        for module in self._get_data_plane_modules(**kwargs):
+    def get_data_plane_resource_providers(self, resource_provider_filter=None, **kwargs):
+        for module in self.get_data_plane_modules(**kwargs):
             for rp in module.get_resource_providers():
                 if resource_provider_filter is None or resource_provider_filter(rp):
                     yield rp
 
-    def _get_mgmt_plane_resource_provides(self, resource_provider_filter=None, **kwargs):
-        for module in self._get_mgmt_plane_modules(**kwargs):
+    def get_mgmt_plane_resource_providers(self, resource_provider_filter=None, **kwargs):
+        for module in self.get_mgmt_plane_modules(**kwargs):
             for rp in module.get_resource_providers():
                 if resource_provider_filter is None or resource_provider_filter(rp):
                     yield rp
 
-    def _get_resource_provides(self, **kwargs):
-        for rp in self._get_data_plane_resource_provides(**kwargs):
+    def get_resource_providers(self, **kwargs):
+        for rp in self.get_data_plane_resource_providers(**kwargs):
             yield rp
-        for rp in self._get_mgmt_plane_resource_provides(**kwargs):
+        for rp in self.get_mgmt_plane_resource_providers(**kwargs):
             yield rp
 
-    def _get_swagger_file_paths(self, file_path_filter=None, **kwargs):
-        for rp in self._get_resource_provides(**kwargs):
+    def get_swagger_file_paths(self, file_path_filter=None, **kwargs):
+        for rp in self.get_resource_providers(**kwargs):
             for root, dirs, files in os.walk(rp._file_path):
                 for file in files:
                     if not file.endswith('.json'):

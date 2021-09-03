@@ -8,7 +8,7 @@ class SwaggerLoaderTest(SwaggerSpecsTestCase):
 
     def test_load_swagger(self):
         loader = SwaggerLoader()
-        for file_path in self._get_swagger_file_paths(lambda x: 'example' not in x.lower()):
+        for file_path in self.get_swagger_file_paths(lambda x: 'example' not in x.lower()):
             s = loader.load_file(file_path)
             assert s is not None
 
@@ -31,7 +31,7 @@ class SwaggerLoaderTest(SwaggerSpecsTestCase):
             return None
 
     def test_ref_loader(self):
-        for file_path in self._get_swagger_file_paths(lambda x: 'example' not in x.lower()):
+        for file_path in self.get_swagger_file_paths(lambda x: 'example' not in x.lower()):
             loader = SwaggerLoader()
             loader.load_file(file_path)
             with open(file_path, 'r', encoding='utf-8') as f:

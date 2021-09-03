@@ -42,7 +42,7 @@ class SwaggerLinkTest(SwaggerSpecsTestCase):
             idx += 1
 
     def test_swagger_link(self):
-        for file_path in self._get_swagger_file_paths(lambda x: 'example' not in x.lower()):
+        for file_path in self.get_swagger_file_paths(lambda x: 'example' not in x.lower()):
             loader = SwaggerLoader()
             loader.load_file(file_path)
             idx = 0

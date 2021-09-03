@@ -8,12 +8,18 @@ logger = logging.getLogger('backend')
 
 class Resource:
 
-    def __init__(self, path, version, file_path, resource_provider):
+    def __init__(self, resource_id, path, version, file_path, resource_provider, body):
         self.path = path
+        self.id = resource_id
         self.version = ResourceVersion(version)
         self.file_path = file_path
         self._resource_provider = resource_provider
         self.file_path_version = self._get_file_path_version(file_path)
+        operations = {}
+        for name, v in body.items():
+            if isinstance(v, dict) and 'operationId' in v:
+                operations[v['operationId']] = name
+        self.operations = operations
 
     @staticmethod
     def _get_file_path_version(file_path):

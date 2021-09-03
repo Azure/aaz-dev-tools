@@ -7,7 +7,7 @@ import json
 class SchemaTest(SwaggerSpecsTestCase):
 
     def _swagger_bodies(self):
-        for file_path in self._get_swagger_file_paths(lambda x: 'example' not in x.lower()):
+        for file_path in self.get_swagger_file_paths(lambda x: 'example' not in x.lower()):
             with open(file_path, 'r', encoding='utf-8') as f:
                 body = json.load(f)
             if 'swagger' not in body:
