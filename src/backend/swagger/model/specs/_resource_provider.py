@@ -46,12 +46,20 @@ class ResourceProvider:
                         resource=resource
                     ):
                         resource_map[resource.id][resource.version] = resource
+        resource_op_group_map = {}
+        for resource_id, version_map in resource_map.items():
+            resource_op_group_map[resource_id] = set()
+            for resource in version_map.values():
+                resource_op_group_map[resource_id].add(resource.op_group_name)
+            # if len(resource_op_group_map[resource_id]) > 1:
+            #     version_op_group_map = OrderedDict()
+            #     for version, resource in sorted(version_map.items(), key=lambda item: str(item[0]), reverse=True):
+            #         version_op_group_map[str(version)] = resource.op_group_name
+            #     logger.error(f"DuplicatedResourceOperationName:\n"
+            #                  f"\tpath: {resource_id}\n"
+            #                  f"\tversionMap: {version_op_group_map}\n"
+            #                  f"\toperationId: {resource_op_group_map[resource_id]}\n")
         return resource_map
-
-    def get_grouped_resource_map(self):
-        resource_map = self.get_resource_map()
-
-
 
     @classmethod
     def _generate_resource_id(cls, path):
