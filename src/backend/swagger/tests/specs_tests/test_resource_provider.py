@@ -27,3 +27,8 @@ class ResourceProviderLoaderTest(SwaggerSpecsTestCase):
                         path = resource.path
                     if path != resource.path:
                         print(f"\n\t\t{path}\n\t\t{resource.path}\n")
+
+    def test_resource_op_group_map(self):
+        for rp in self.get_resource_providers():
+            print(rp)
+            resource_op_group_map = rp.get_resource_op_group_map()
