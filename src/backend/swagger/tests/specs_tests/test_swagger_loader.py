@@ -1,35 +1,15 @@
-import os
-from unittest import TestCase
-from swagger.model.specs import SwaggerSpecs, SwaggerLoader
+from swagger.tests.common import SwaggerSpecsTestCase
+from swagger.model.specs import SwaggerLoader
 from swagger.utils import exceptions
 import json
 
 
-class SwaggerLoaderTest(TestCase):
-
-    def __init__(self, *args, **kwargs):
-        super(SwaggerLoaderTest, self).__init__(*args, **kwargs)
-        folder_path = os.environ.get("AAZ_SWAGGER_PATH", None)
-        if not folder_path or not os.path.isdir(folder_path):
-            raise ValueError("Invalid swagger folder path, Please setup it in environment value 'AAZ_SWAGGER_PATH'.")
-        self.specs = SwaggerSpecs(folder_path=folder_path)
-
-    def _swagger_file_paths(self, file_path_filter=None):
-        modules = self.specs.get_data_plane_modules() + self.specs.get_mgmt_plane_modules()
-        for module in modules:
-            for rp in module.get_resource_providers():
-                for root, dirs, files in os.walk(rp._file_path):
-                    for file in files:
-                        if not file.endswith('.json'):
-                            continue
-                        file_path = os.path.join(root, file)
-                        if file_path_filter is None or file_path_filter(file_path):
-                            yield file_path
+class SwaggerLoaderTest(SwaggerSpecsTestCase):
 
     def test_load_swagger(self):
         loader = SwaggerLoader()
-        for file_path in self._swagger_file_paths(lambda x: 'example' not in x.lower()):
-            s = loader.load_swagger(file_path)
+        for file_path in self.get_swagger_file_paths(lambda x: 'example' not in x.lower()):
+            s = loader.load_file(file_path)
             assert s is not None
 
     def _fetch_ref_values(self, body):
@@ -51,7 +31,7 @@ class SwaggerLoaderTest(TestCase):
             return None
 
     def test_ref_loader(self):
-        for file_path in self._swagger_file_paths(lambda x: 'example' not in x.lower()):
+        for file_path in self.get_swagger_file_paths(lambda x: 'example' not in x.lower()):
             loader = SwaggerLoader()
             loader.load_file(file_path)
             with open(file_path, 'r', encoding='utf-8') as f:

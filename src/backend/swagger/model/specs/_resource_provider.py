@@ -14,6 +14,8 @@ logger = logging.getLogger('backend')
 
 class ResourceProvider:
 
+    URL_PARAMETER_PLACEHOLDER = '{}'
+
     def __init__(self, name, file_path, readme_path, swagger_module):
         self._name = name
         self._file_path = file_path
@@ -37,14 +39,41 @@ class ResourceProvider:
                     continue
                 file_path = os.path.join(root, file)
                 for resource in self._parse_resources_in_file(file_path):
-                    if resource.path not in resource_map:
-                        resource_map[resource.path] = {}
+                    if resource.id not in resource_map:
+                        resource_map[resource.id] = {}
                     if self._replace_current_resource(
-                        curr_resource=resource_map[resource.path].get(resource.version, None),
+                        curr_resource=resource_map[resource.id].get(resource.version, None),
                         resource=resource
                     ):
-                        resource_map[resource.path][resource.version] = resource
+                        resource_map[resource.id][resource.version] = resource
         return resource_map
+
+    def get_resource_op_group_map(self):
+        resource_map = self.get_resource_map()
+        resource_op_group_map = {}
+        for resource_id, version_map in resource_map.items():
+            _, latest_resource = sorted(
+                version_map.items(),
+                key=lambda item: str(item[0]),
+                reverse=True
+            )[0]
+            op_group_name = latest_resource.op_group_name or ""
+            if op_group_name not in resource_op_group_map:
+                resource_op_group_map[op_group_name] = {}
+            resource_op_group_map[op_group_name][resource_id] = version_map
+        return resource_op_group_map
+
+    @classmethod
+    def _generate_resource_id(cls, path):
+        path_parts = path.split('?', maxsplit=1)
+        url_parts = path_parts[0].split('/')
+        idx = 2  # ignore to the parameter name in first part of url, such as `/{parameter}` or `/{parameter}/...`
+        while idx < len(url_parts):
+            if url_parts[idx].startswith('{') and url_parts[idx].endswith('}'):
+                url_parts[idx] = cls.URL_PARAMETER_PLACEHOLDER
+            idx += 1
+        path_parts[0] = '/'.join(url_parts).lower()
+        return '?'.join(path_parts)
 
     @property
     def tags(self):
@@ -109,7 +138,14 @@ class ResourceProvider:
             # previous resource with same path and version
             return True
 
-        assert curr_resource.path == resource.path and curr_resource.version == resource.version
+        assert curr_resource.id == resource.id and curr_resource.version == resource.version
+
+        if curr_resource.path != resource.path:
+            logger.warning(
+                f'SimilarResourcePath: {self} :\n'
+                f'\tFile: {map_path_2_repo(curr_resource.file_path)} Path: {curr_resource.path}\n'
+                f'\tFile: {map_path_2_repo(resource.file_path)} Path: {resource.path}')
+
         curr_rs_tag = self._fetch_latest_tag(curr_resource.file_path)
         rs_tag = self._fetch_latest_tag(resource.file_path)
 
@@ -140,7 +176,9 @@ class ResourceProvider:
             elif curr_rs_tag.date > rs_tag.date:
                 return False
 
-        logger.warning(f'DuplicatedResource: {self} : In files {map_path_2_repo(curr_resource.file_path)} {map_path_2_repo(resource.file_path)} ; Resource Path {resource.path}')
+        logger.warning(f'DuplicatedResource: {self} :\n'
+                       f'\tFile: {map_path_2_repo(curr_resource.file_path)} Path: {curr_resource.path}\n'
+                       f'\tFile: {map_path_2_repo(resource.file_path)} Path: {resource.path}')
         return False
 
     def _parse_resources_in_file(self, file_path):
@@ -161,14 +199,18 @@ class ResourceProvider:
         if not version:
             logger.error(f'InvalidSwaggerFile: {self} : invalid info version {version} in file {file_path}')
 
-        for path, body in body.get('paths', {}).items():
-            resource = Resource(path=path, version=version, file_path=file_path, resource_provider=self)
+        for path, value in body.get('paths', {}).items():
+            resource = Resource(
+                resource_id=self._generate_resource_id(path),
+                path=path, version=version, file_path=file_path, resource_provider=self, body=value)
             resources.append(resource)
 
         # x-ms-paths:
         #   alternative to Paths Object that allows Path Item Object to have query parameters for non pure REST APIs
-        for path, body in body.get('x-ms-paths', {}).items():
-            resource = Resource(path=path, version=version, file_path=file_path, resource_provider=self)
+        for path, value in body.get('x-ms-paths', {}).items():
+            resource = Resource(
+                resource_id=self._generate_resource_id(path),
+                path=path, version=version, file_path=file_path, resource_provider=self, body=value)
             resources.append(resource)
 
         return resources
