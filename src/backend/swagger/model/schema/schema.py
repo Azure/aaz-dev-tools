@@ -77,7 +77,7 @@ class Schema(Model, Linkable):
     enum = ListType(BaseType())
     x_ms_enum = XmsEnumType()
     type = StringType(
-        choices=["array", "boolean", "integer", "number", "null", "object", "string"],  # https://datatracker.ietf.org/doc/html/draft-zyp-json-schema-04#section-3.5
+        choices=["array", "boolean", "integer", "number", "object", "string"],  # https://datatracker.ietf.org/doc/html/draft-zyp-json-schema-04#section-3.5
     )
     allOf = ListType(
         ModelType("Schema"),
