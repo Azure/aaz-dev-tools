@@ -65,3 +65,19 @@ class CMDJsonValueField(BaseType):
 class CMDRegularExpressionField(StringType):
     # This string SHOULD be a valid regular expression
     pass
+
+
+class CMDVersionField(StringType):
+
+    def __init__(self, *args, **kwargs):
+        super(CMDVersionField, self).__init__(*args, **kwargs)
+
+
+class CMDResourceIdField(StringType):
+
+    def __init__(self, *args, **kwargs):
+        super(CMDResourceIdField, self).__init__(
+            serialized_name='id',
+            deserialize_from='id',
+            *args, **kwargs
+        )

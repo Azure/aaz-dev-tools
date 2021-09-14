@@ -1,8 +1,9 @@
 from schematics.models import Model
-from schematics.types import StringType, ModelType, ListType, BooleanType
+from schematics.types import StringType, ModelType, ListType
 from ._help import CMDHelp
 from ._command import CMDCommand
 from ._fields import CMDStageField
+from ._resource import CMDResource
 
 
 class CMDCommandGroup(Model):

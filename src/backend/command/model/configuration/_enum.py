@@ -1,5 +1,5 @@
 from schematics.models import Model
-from schematics.types import StringType, ListType, ModelType, BooleanType, BaseType
+from schematics.types import StringType, ListType, ModelType, BooleanType
 from ._fields import CMDJsonValueField
 
 

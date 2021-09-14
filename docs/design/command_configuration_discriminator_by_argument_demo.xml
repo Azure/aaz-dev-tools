@@ -2,9 +2,12 @@
 <?schema 0.1 ?>
 
 <commandGroup name="datafactory integration-runtime">
+
     <help short="Manage data-factory integration runtime"/>
 
     <command name="create" version="2018-06-01" stage="Preview">
+        <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.datafactory/factories/{}/integrationruntimes/{}" version="2018-06-01"/>
+
         <help short="Create an integration runtime"/>
         <argGroup name="">
             <arg var="$resourceGroup" type="@ResourceGroup" required="true"/>
@@ -582,6 +585,8 @@
     </command>
 
     <command name="update" version="2018-06-01" stage="Preview">
+        <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.datafactory/factories/{}/integrationruntimes/{}" version="2018-06-01"/>
+
         <help short="Update an integration runtime"/>
 
 

@@ -6,6 +6,7 @@
 
     <!--  monitor data-collection rule create  -->
     <command name="create" version="2021-04-01" stage="Preview">
+        <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
         <help short="Manage data collection endpoint for monitor control service."/>
         <argGroup name="">
             <arg var="$name" options="--name -n" required="true" type="string">
@@ -612,6 +613,7 @@
     <!--  monitor data-collection rule delete  -->
     <!--  More details about idPart: https://github.com/Azure/msrestazure-for-python/blob/master/msrestazure/tools.py#L115-L129 -->
     <command name="delete" version="2021-04-01" stage="Preview" confirmation="true">
+        <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
         <help short="Delete a data collection rule."/>
         <argGroup name="Resource Id">
             <!--  TODO: how to express ids?  -->
@@ -653,6 +655,7 @@
 
     <!--  monitor data-collection rule show  -->
     <command name="show" version="2021-04-01" stage="Preview">
+        <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
         <help short="Show the specified data collection rule."/>
         <argGroup name="Resource Id">
             <arg var="$ids" options="--ids" type="array<@ResourceID>" nargs="*" multiExe="true"/>
@@ -698,6 +701,7 @@
 
     <!--  monitor data-collection rule update  -->
     <command name="update" version="2021-04-01" stage="Preview">
+        <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
         <help short="Update a data collection rule."/>
         <argGroup name="">
             <arg var="$description" options="--description" type="string">
@@ -934,37 +938,37 @@
         <condition var="$condition_1">
             <hasValue arg="$tags"/>
         </condition>
+
         <condition var="$condition_2">
-            <hasValue arg="$dataFlows"/>
-            <or/>
-            <hasValue arg="$performanceCounters"/>
-            <or/>
-            <hasValue arg="$windowsEventLogs"/>
-            <or/>
-            <hasValue arg="$syslog"/>
-            <or/>
-            <hasValue arg="$extensions"/>
-            <or/>
-            <hasValue arg="$logAnalytics"/>
-            <or/>
-            <hasValue arg="$azureMonitorMetrics"/>
+            <or>
+                <hasValue arg="$dataFlows"/>
+                <hasValue arg="$performanceCounters"/>
+                <hasValue arg="$windowsEventLogs"/>
+                <hasValue arg="$syslog"/>
+                <hasValue arg="$extensions"/>
+                <hasValue arg="$logAnalytics"/>
+                <hasValue arg="$azureMonitorMetrics"/>
+            </or>
         </condition>
+
         <condition var="$condition_3">
-            <hasValue arg="$add"/>
-            <or/>
-            <hasValue arg="$remove"/>
-            <or/>
-            <hasValue arg="$set"/>
+            <or>
+                <hasValue arg="$add"/>
+                <hasValue arg="$remove"/>
+                <hasValue arg="$set"/>
+            </or>
         </condition>
 
         <condition var="$condition_4">
-            <not><condition ref="$condition_1"/></not>
-            <and/>
-            <condition>
-                <condition ref="$condition_2"/>
-                <or/>
-                <condition ref="$condition_3"/>
-            </condition>
+            <and>
+                <not>
+                    <hasValue arg="$tags"/>
+                </not>
+                <or>
+                    <condition ref="$condition_2"/>
+                    <condition ref="$condition_3"/>
+                </or>
+            </and>
         </condition>
 
         <operation when="$condition_1">
@@ -1239,6 +1243,9 @@
 
     <!--  monitor data-collection rule list  -->
     <command name="list" version="2021-04-01" stage="Preview">
+        <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules" version="2021-04-01"/>
+        <resource id="/subscriptions/{}/providers/microsoft.insights/datacollectionrules" version="2021-04-01"/>
+
         <help short="List all data collection rules."/>
         <argGroup name="">
             <arg var="$resourceGroup" type="@ResourceGroup"/>
@@ -1321,13 +1328,16 @@
 
     <!--  monitor data-collection rule data-flow  -->
     <commandGroup name="data-flow">
+
         <!--  monitor data-collection rule data-flow add  -->
         <command name="add" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Add a data flow."/>
         </command>
 
         <!--  monitor data-collection rule data-flow list  -->
         <command name="list" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="List data flows."/>
         </command>
     </commandGroup>
@@ -1337,6 +1347,7 @@
 
         <!--  monitor data-collection rule log-analytics add  -->
         <command name="add" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Add Log Analytics destinations of a data collection rule."/>
             <argGroup name="">
                 <arg var="$name" options="--name -n" required="true" type="string"/>
@@ -1446,6 +1457,7 @@
 
         <!--  monitor data-collection rule log-analytics remove  -->
         <command name="remove" alias="delete" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Delete a Log Analytics destinations of a data collection rule."/>
             <argGroup name="Property Filter">
                 <arg var="$name" options="--name -n" type="string"/>
@@ -1550,6 +1562,7 @@
 
         <!--  monitor data-collection rule log-analytics list  -->
         <command name="list" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="List Log Analytics destinations of a data collection rule."/>
             <argGroup name="Resource Id">
                 <arg var="$resourceId" options="--id" type="@ResourceID">
@@ -1597,6 +1610,7 @@
 
         <!--  monitor data-collection rule log-analytics show  -->
         <command name="show" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Show a Log Analytics destination of a data collection rule."/>
             <argGroup name="Property Filter">
                 <arg var="$name" options="--name -n" type="string"/>
@@ -1659,6 +1673,7 @@
 
         <!--  monitor data-collection rule log-analytics set  -->
         <command name="set" alias="update" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Update a Log Analytics destination of a data collection rule."/>
             <argGroup name="Property Filter">
                 <arg var="$name" options="--name -n" type="string"/>
@@ -1800,72 +1815,90 @@
 
     <!--  monitor data-collection rule performance-counter  -->
     <commandGroup name="performance-counter">
+
         <!--  monitor data-collection rule performance-counter add  -->
         <command name="add" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Add a Log performance counter data source."/>
         </command>
         <!--  monitor data-collection rule performance-counter delete  -->
         <command name="delete" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Delete a Log performance counter data source."/>
         </command>
         <!--  monitor data-collection rule performance-counter list  -->
         <command name="list" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="List Log performance counter data sources."/>
         </command>
         <!--  monitor data-collection rule performance-counter show  -->
         <command name="show" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Show a Log performance counter data source."/>
         </command>
         <!--  monitor data-collection rule performance-counter update  -->
         <command name="update" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Update a Log performance counter data source."/>
         </command>
     </commandGroup>
 
     <!--  monitor data-collection rule windows-event-log  -->
     <commandGroup name="windows-event-log">
+
         <!--  monitor data-collection rule windows-event-log add  -->
         <command name="add" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Add a Windows Event Log data source."/>
         </command>
         <!--  monitor data-collection rule windows-event-log delete  -->
         <command name="delete" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Delete a Windows Event Log data source."/>
         </command>
         <!--  monitor data-collection rule windows-event-log list  -->
         <command name="list" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="List Windows Event Log data sources."/>
         </command>
         <!--  monitor data-collection rule windows-event-log show  -->
         <command name="show" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Show a Windows Event Log data source."/>
         </command>
         <!--  monitor data-collection rule windows-event-log update  -->
         <command name="update" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Update a Windows Event Log data source."/>
         </command>
     </commandGroup>
 
     <!--  monitor data-collection rule syslog  -->
     <commandGroup name="syslog">
+
         <!--  monitor data-collection rule syslog add  -->
         <command name="add" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Add a Syslog data source."/>
         </command>
         <!--  monitor data-collection rule syslog delete  -->
         <command name="delete" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Delete a Syslog data source."/>
         </command>
         <!--  monitor data-collection rule syslog list  -->
         <command name="list" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="List Syslog data sources."/>
         </command>
         <!--  monitor data-collection rule syslog show  -->
         <command name="show" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Show a Syslog data source."/>
         </command>
         <!--  monitor data-collection rule syslog update  -->
         <command name="update" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
             <help short="Update a Syslog data source."/>
         </command>
     </commandGroup>

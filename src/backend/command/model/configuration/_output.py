@@ -1,5 +1,5 @@
 from schematics.models import Model
-from schematics.types import StringType, BooleanType, ListType
+from schematics.types import StringType, BooleanType
 from ._fields import CMDTypeField, CMDVariantField
 
 
