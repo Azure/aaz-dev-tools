@@ -3,8 +3,9 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 from schematics.models import Model
-from schematics.types import ModelType, BooleanType
-from ._fields import CMDTypeField, CMDVariantField, StringType, CMDSchemaField
+from schematics.types import ModelType, BooleanType, IntType, FloatType, ListType, PolyModelType
+from ._fields import CMDTypeField, CMDVariantField, StringType, CMDSchemaClassField, CMDRegularExpressionField
+from ._enum import CMDEnum
 
 
 class CMDSchemaBase(Model):
@@ -25,8 +26,190 @@ class CMDSchemaBase(Model):
 
 
 class CMDSchema(CMDSchemaBase):
+    # properties as tags
 
-    name = StringType()
+    name = StringType(required=True)
     arg = CMDVariantField()
-    schema = CMDSchemaField()
+    cls = CMDSchemaClassField()   # define a schema which can be used in other
+    required = BooleanType()
+    readonly = BooleanType()
+
+    @classmethod
+    def _claim_polymorphic(cls, data):
+        if super(CMDSchema, cls)._claim_polymorphic(data):
+            # distinguish with CMDArgBase and CMDArg
+            return 'name' in data
+        return False
+
+
+# cls
+class CMDClsSchemaBase(CMDSchemaBase):
+
+    @classmethod
+    def _claim_polymorphic(cls, data):
+        if isinstance(data, dict):
+            type_value = data.get('type', None)
+            if type_value is not None and type_value.startswith("@"):
+                return True
+        return False
+
+
+class CMDClsSchema(CMDSchema, CMDClsSchemaBase):
+    pass
+
+
+# string
+class CMDStringSchemaFormat(Model):
+    pattern = CMDRegularExpressionField()
+    max_length = IntType(min_value=0)
+    min_length = IntType(min_value=0)
+
+
+class CMDStringSchemaBase(CMDSchemaBase):
+    TYPE_VALUE = "string"
+
+    format_ = ModelType(
+        CMDStringSchemaFormat,
+        serialized_name='format',
+        deserialize_from='format'
+    )
+    enum = ModelType(CMDEnum)
+
+
+class CMDStringSchema(CMDSchema, CMDStringSchemaBase):
+    pass
+
+
+# integer
+class CMDIntegerSchemaFormat(Model):
+    bits = IntType(choices=(32, 64), default=32)
+    multiple_of = IntType(min_value=0)
+    maximum = IntType()
+    minimum = IntType()
+
+
+class CMDIntegerSchemaBase(CMDSchemaBase):
+    TYPE_VALUE = "integer"
+
+    format_ = ModelType(
+        CMDIntegerSchemaFormat,
+        serialized_name='format',
+        deserialize_from='format'
+    )
+    enum = ModelType(CMDEnum)
+
+
+class CMDIntegerSchema(CMDSchema, CMDIntegerSchemaBase):
+    pass
+
+
+# boolean
+class CMDBooleanSchemaBase(CMDSchemaBase):
+    TYPE_VALUE = "boolean"
+
+
+class CMDBooleanSchema(CMDSchema, CMDBooleanSchemaBase):
+    pass
+
+
+# float
+class CMDFloatSchemaFormat(Model):
+    bits = IntType(choices=(32, 64), default=32)
+    multiple_of = FloatType(min_value=0)
+    maximum = FloatType()
+    exclusive_maximum = BooleanType()
+    minimum = FloatType()
+    exclusive_minimum = BooleanType()
+
+
+class CMDFloatSchemaBase(CMDSchemaBase):
+    TYPE_VALUE = "float"
+
+    format_ = ModelType(
+        CMDFloatSchemaFormat,
+        serialized_name='format',
+        deserialize_from='format'
+    )
+    enum = ModelType(CMDEnum)
+
+
+class CMDFloatSchema(CMDSchema, CMDFloatSchemaBase):
+    pass
+
+
+# object
+
+class CMDObjectSchemaFormat(Model):
+    max_properties = IntType(min_value=0)
+    min_properties = IntType(min_value=0)
+
+
+# discriminator
+class CMDObjectSchemaDiscriminator(Model):
+    # properties as tags
+    arg = CMDVariantField()
+    value = StringType()    # TODO: check possible types of value
+
+    # properties as nodes
+    format_ = ModelType(
+        CMDObjectSchemaFormat,
+        serialized_name='format',
+        deserialize_from='format'
+    )
+    props = ListType(PolyModelType(CMDSchema, allow_subclasses=True))
+    discriminators = ListType(ModelType('CMDObjectSchemaDiscriminator'))
+
+
+class CMDObjectSchemaBase(CMDSchemaBase):
+    TYPE_VALUE = "object"
+
+    format_ = ModelType(
+        CMDObjectSchemaFormat,
+        serialized_name='format',
+        deserialize_from='format'
+    )
+    props = ListType(PolyModelType(CMDSchema, allow_subclasses=True))
+    discriminators = ListType(ModelType(CMDObjectSchemaDiscriminator))
+
+
+class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
+    pass
+
+
+# array
+class CMDArraySchemaFormat(Model):
+    unique = BooleanType(default=False)
+    max_length = IntType(min_value=0)
+    min_length = IntType(min_value=0)
+
+
+class CMDArraySchemaBase(CMDSchemaBase):
+    TYPE_VALUE = "array"
+
+    format_ = ModelType(
+        CMDArraySchemaFormat,
+        serialized_name='format',
+        deserialize_from='format'
+    )
+    item = PolyModelType(CMDSchemaBase, allow_subclasses=True)
+
+
+class CMDArraySchema(CMDSchema, CMDArraySchemaBase):
+    pass
+
+
+# json
+class CMDJson(Model):
+    var = CMDVariantField()
+    ref = CMDVariantField()
+
+    type_ = CMDTypeField(required=True)  # "object"
+
+    format_ = ModelType(
+        CMDObjectSchemaFormat,
+        serialized_name='format',
+        deserialize_from='format'
+    )
+    props = ListType(PolyModelType(CMDSchema, allow_subclasses=True))
+    discriminators = ListType(ModelType(CMDObjectSchemaDiscriminator))
 

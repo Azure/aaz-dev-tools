@@ -44,10 +44,10 @@ class CMDTypeField(StringType):
         )
 
 
-class CMDSchemaField(StringType):
+class CMDSchemaClassField(StringType):
 
     def __init__(self, *args, **kwargs):
-        super(CMDSchemaField, self).__init__(
+        super(CMDSchemaClassField, self).__init__(
             regex=r'\@[a-zA-Z0-9_]+',
             *args, **kwargs
         )

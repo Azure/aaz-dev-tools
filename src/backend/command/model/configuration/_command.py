@@ -20,4 +20,4 @@ class CMDCommand(Model):
     arg_groups = ListType(ModelType(CMDArgGroup))
     conditions = ListType(ModelType(CMDCondition))
     operations = ListType(PolyModelType(CMDOperation, allow_subclasses=True))
-    outputs = ListType(ModelType(CMDOutput))
+    outputs = ListType(PolyModelType(CMDOutput, allow_subclasses=True))

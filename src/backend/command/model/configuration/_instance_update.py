@@ -5,6 +5,7 @@
 from schematics.models import Model
 from schematics.types import ModelType, BooleanType
 from ._fields import CMDVariantField
+from ._schema import CMDJson
 
 
 class CMDInstanceUpdateAction(Model):
@@ -21,13 +22,15 @@ class CMDInstanceUpdateAction(Model):
         return False
 
 
+# json instance update
 class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
     POLYMORPHIC_KEY = "json"
 
     # properties as nodes
-    # json = ModelType()
+    json = ModelType(CMDJson)
 
 
+# generic instance update
 class CMDGenericInstanceUpdateMethod(Model):
 
     # properties as tags

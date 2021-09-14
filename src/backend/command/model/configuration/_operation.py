@@ -1,5 +1,5 @@
 from schematics.models import Model
-from schematics.types import StringType, ModelType, ListType, URLType
+from schematics.types import PolyModelType, ModelType, ListType, URLType
 from ._fields import CMDVariantField
 from ._http import CMDHttpAction
 from ._instance_update import CMDInstanceUpdateAction
@@ -29,4 +29,4 @@ class CMDInstanceUpdateOperation(CMDOperation):
     POLYMORPHIC_KEY = "instance_update"
 
     # properties as nodes
-    instance_update = ModelType(CMDInstanceUpdateAction)
+    instance_update = PolyModelType(CMDInstanceUpdateAction, allow_subclasses=True)

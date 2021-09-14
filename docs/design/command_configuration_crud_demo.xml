@@ -401,8 +401,8 @@
                     <header>
                     </header>
                     <body>
-                        <json var="$instance" type="object" schema="@DataCollectionRuleResource">
-                            <prop name="location" type="string" immutable="true"/>
+                        <json var="$instance" type="object" cls="@DataCollectionRuleResource">
+                            <prop name="location" type="string" readonly="true"/>
                             <prop name="tags" type="dict"/>
                             <prop name="kind" type="string">
                                 <enum>
@@ -410,12 +410,12 @@
                                     <enum-item name="Windows">"Windows"</enum-item>
                                 </enum>
                             </prop>
-                            <prop name="id" type="string" immutable="true"/>
-                            <prop name="name" type="string" immutable="true"/>
-                            <prop name="type" type="string" immutable="true"/>
-                            <prop name="etag" type="string" immutable="true"/>
-                            <prop name="createdBy" type="string" immutable="true"/>
-                            <prop name="createdByType" type="string" immutable="true">
+                            <prop name="id" type="string" readonly="true"/>
+                            <prop name="name" type="string" readonly="true"/>
+                            <prop name="type" type="string" readonly="true"/>
+                            <prop name="etag" type="string" readonly="true"/>
+                            <prop name="createdBy" type="string" readonly="true"/>
+                            <prop name="createdByType" type="string" readonly="true">
                                 <enum>
                                     <enum-item name="User">"User"</enum-item>
                                     <enum-item name="Application">"Application"</enum-item>
@@ -423,9 +423,9 @@
                                     <enum-item name="Key">"Key"</enum-item>
                                 </enum>
                             </prop>
-                            <prop name="createdAt" type="string" format="date-time" immutable="true"/>
-                            <prop name="lastModifiedBy" type="string" immutable="true"/>
-                            <prop name="lastModifiedByType" type="string" immutable="true">
+                            <prop name="createdAt" type="string" format="date-time" readonly="true"/>
+                            <prop name="lastModifiedBy" type="string" readonly="true"/>
+                            <prop name="lastModifiedByType" type="string" readonly="true">
                                 <enum>
                                     <enum-item name="User">"User"</enum-item>
                                     <enum-item name="Application">"Application"</enum-item>
@@ -433,10 +433,10 @@
                                     <enum-item name="Key">"Key"</enum-item>
                                 </enum>
                             </prop>
-                            <prop name="lastModifiedAt" type="string" format="date-time" immutable="true"/>
+                            <prop name="lastModifiedAt" type="string" format="date-time" readonly="true"/>
                             <prop name="properties" type="object" flatten="true">
                                 <prop name="description" type="string"/>
-                                <prop name="immutableId" type="string" immutable="true"/>
+                                <prop name="immutableId" type="string" readonly="true"/>
                                 <prop name="dataSources" type="object">
                                     <prop name="performanceCounters" type="array<object>">
                                         <array>
@@ -545,7 +545,7 @@
                                     <prop name="logAnalytics" type="array<object>">
                                         <array>
                                             <prop name="workspaceResourceId" type="string"/>
-                                            <prop name="workspaceId" type="string" immutable="true"/>
+                                            <prop name="workspaceId" type="string" readonly="true"/>
                                             <prop name="name" type="string"/>
                                         </array>
                                     </prop>
@@ -569,7 +569,7 @@
                                         <prop name="destinations" type="array<string>"/>
                                     </array>
                                 </prop>
-                                <prop name="provisioningState" type="string" immutable="true">
+                                <prop name="provisioningState" type="string" readonly="true">
                                     <enum>
                                         <enum-item name="Creating">"Creating"</enum-item>
                                         <enum-item name="Updating">"Updating"</enum-item>
@@ -587,17 +587,17 @@
                         <prop name="x-ms-request-id"/>
                     </header>
                     <body content-type="application/json">
-                        <json type="object" schema="@ErrorResponseCommonV2">
-                            <prop name="error" type="object" schema="@ErrorDetail">
-                                <prop name="code" type="string" immutable="true"/>
-                                <prop name="message" type="string" immutable="true"/>
-                                <prop name="target" type="string" immutable="true"/>
+                        <json type="object" cls="@ErrorResponseCommonV2">
+                            <prop name="error" type="object" cls="@ErrorDetail">
+                                <prop name="code" type="string" readonly="true"/>
+                                <prop name="message" type="string" readonly="true"/>
+                                <prop name="target" type="string" readonly="true"/>
                                 <!-- loop reference expression -->
-                                <prop name="details" type="array<@ErrorDetail>" immutable="true"/>
-                                <prop name="additionalInfo" type="array<object>" immutable="true">
+                                <prop name="details" type="array<@ErrorDetail>" readonly="true"/>
+                                <prop name="additionalInfo" type="array<object>" readonly="true">
                                     <array>
-                                        <prop name="type" type="string" immutable="true"/>
-                                        <prop name="info" type="object" immutable="true"/>
+                                        <prop name="type" type="string" readonly="true"/>
+                                        <prop name="info" type="object" readonly="true"/>
                                     </array>
                                 </prop>
                             </prop>
@@ -998,17 +998,17 @@
                         <prop name="x-ms-request-id"/>
                     </header>
                     <body content-type="application/json">
-                        <json type="object" schema="@ErrorResponseCommonV2">
-                            <prop name="error" type="object" schema="@ErrorDetail">
-                                <prop name="code" type="string" immutable="true"/>
-                                <prop name="message" type="string" immutable="true"/>
-                                <prop name="target" type="string" immutable="true"/>
+                        <json type="object" cls="@ErrorResponseCommonV2">
+                            <prop name="error" type="object" cls="@ErrorDetail">
+                                <prop name="code" type="string" readonly="true"/>
+                                <prop name="message" type="string" readonly="true"/>
+                                <prop name="target" type="string" readonly="true"/>
                                 <!-- loop reference expression -->
-                                <prop name="details" type="array<@ErrorDetail>" immutable="true"/>
-                                <prop name="additionalInfo" type="array<object>" immutable="true">
+                                <prop name="details" type="array<@ErrorDetail>" readonly="true"/>
+                                <prop name="additionalInfo" type="array<object>" readonly="true">
                                     <array>
-                                        <prop name="type" type="string" immutable="true"/>
-                                        <prop name="info" type="object" immutable="true"/>
+                                        <prop name="type" type="string" readonly="true"/>
+                                        <prop name="info" type="object" readonly="true"/>
                                     </array>
                                 </prop>
                             </prop>
@@ -1270,7 +1270,7 @@
                     <header>
                     </header>
                     <body>
-                        <json var="$instance" type="object" schema="@DataCollectionRuleResourceListResult">
+                        <json var="$instance" type="object" cls="@DataCollectionRuleResourceListResult">
                             <prop name="value" type="array<@DataCollectionRuleResource>"/>
                             <prop name="nextLink" type="string" format="url"/>
                         </json>
