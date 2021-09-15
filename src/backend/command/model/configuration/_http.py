@@ -49,8 +49,16 @@ class CMDHttpResponseHeader(Model):
 
 class CMDHttpResponse(Model):
     # properties as tags
-    status_code = ListType(IntType())
-    is_error = BooleanType(default=False)
+    status_code = ListType(
+        IntType(),
+        serialized_name='statusCode',
+        deserialize_from='statusCode',
+    )
+    is_error = BooleanType(
+        default=False,
+        serialized_name='isError',
+        deserialize_from='isError'
+    )
 
     # properties as nodes
     header = ModelType(CMDHttpResponseHeader)

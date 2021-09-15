@@ -18,8 +18,12 @@ class CMDCommand(Model):
 
     # properties as nodes
     resources = ListType(ModelType(CMDResource))   # the azure resources used in this command
-    help_ = ModelType(CMDHelp, required=True)
-    arg_groups = ListType(ModelType(CMDArgGroup))
+    help = ModelType(CMDHelp, required=True)
+    arg_groups = ListType(
+        ModelType(CMDArgGroup),
+        serialized_name='argGroups',
+        deserialize_from='argGroups'
+    )
     conditions = ListType(ModelType(CMDCondition))
     operations = ListType(PolyModelType(CMDOperation, allow_subclasses=True))
     outputs = ListType(PolyModelType(CMDOutput, allow_subclasses=True))

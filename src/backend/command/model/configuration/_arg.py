@@ -64,8 +64,7 @@ class CMDArg(CMDArgBase):
     hide = BooleanType(default=False)
 
     # properties as nodes
-    help_ = ModelType(CMDArgumentHelp)
-
+    help = ModelType(CMDArgumentHelp)
     default = ModelType(CMDArgDefault)
     blank = ModelType(CMDArgBlank)
 
@@ -80,8 +79,16 @@ class CMDArg(CMDArgBase):
 # string
 class CMDStringArgFormat(Model):
     pattern = CMDRegularExpressionField()
-    max_length = IntType(min_value=0)
-    min_length = IntType(min_value=0)
+    max_length = IntType(
+        serialized_name="maxLength",
+        deserialize_from="maxLength",
+        min_value=0
+    )
+    min_length = IntType(
+        serialized_name="minLength",
+        deserialize_from="minLength",
+        min_value=0
+    )
 
 
 class CMDStringArgBase(CMDArgBase):
@@ -101,7 +108,11 @@ class CMDStringArg(CMDArg, CMDStringArgBase):
 
 # integer
 class CMDIntegerArgFormat(Model):
-    multiple_of = IntType(min_value=0)
+    multiple_of = IntType(
+        min_value=0,
+        serialized_name='multipleOf',
+        deserialize_from='multipleOf'
+    )
     maximum = IntType()
     minimum = IntType()
 
@@ -132,11 +143,21 @@ class CMDBooleanArg(CMDArg, CMDBooleanArgBase):
 
 # float
 class CMDFloatArgFormat(Model):
-    multiple_of = FloatType(min_value=0)
+    multiple_of = FloatType(
+        min_value=0,
+        serialized_name='multipleOf',
+        deserialize_from='multipleOf'
+    )
     maximum = FloatType()
-    exclusive_maximum = BooleanType()
+    exclusive_maximum = BooleanType(
+        serialized_name='exclusiveMaximum',
+        deserialize_from='exclusiveMaximum'
+    )
     minimum = FloatType()
-    exclusive_minimum = BooleanType()
+    exclusive_minimum = BooleanType(
+        serialized_name='exclusiveMinimum',
+        deserialize_from='exclusiveMinimum'
+    )
 
 
 class CMDFloatArgBase(CMDArgBase):
@@ -156,8 +177,16 @@ class CMDFloatArg(CMDArg, CMDFloatArgBase):
 
 # object
 class CMDObjectArgFormat(Model):
-    max_properties = IntType(min_value=0)
-    min_properties = IntType(min_value=0)
+    max_properties = IntType(
+        min_value=0,
+        serialized_name='maxProperties',
+        deserialize_from='maxProperties'
+    )
+    min_properties = IntType(
+        min_value=0,
+        serialized_name='minProperties',
+        deserialize_from='minProperties'
+    )
 
 
 class CMDObjectArgBase(CMDArgBase):
@@ -178,8 +207,16 @@ class CMDObjectArg(CMDArg, CMDObjectArgBase):
 # array
 class CMDArrayArgFormat(Model):
     unique = BooleanType(default=False)
-    max_length = IntType(min_value=0)
-    min_length = IntType(min_value=0)
+    max_length = IntType(
+        min_value=0,
+        serialized_name='maxLength',
+        deserialize_from='maxLength'
+    )
+    min_length = IntType(
+        min_value=0,
+        serialized_name='minLength',
+        deserialize_from='minLength'
+    )
 
 
 class CMDArrayArgBase(CMDArgBase):

@@ -24,15 +24,26 @@ class CMDObjectOutput(CMDOutput):
     TYPE_VALUE = 'object'
 
     ref = CMDVariantField(required=True)
-    client_flatten = BooleanType(default=False)
+    client_flatten = BooleanType(
+        serialized_name='clientFlatten',
+        deserialize_from='clientFlatten',
+        default=False
+    )
 
 
 class CMDArrayOutput(CMDOutput):
     TYPE_VALUE = 'array'
 
     ref = CMDVariantField(required=True)
-    client_flatten = BooleanType(default=False)
-    next_link = CMDVariantField()
+    client_flatten = BooleanType(
+        serialized_name='clientFlatten',
+        deserialize_from='clientFlatten',
+        default=False
+    )
+    next_link = CMDVariantField(
+        serialized_name='nextLink',
+        deserialize_from='nextLink',
+    )
 
 
 class CMDStringOutput(CMDOutput):

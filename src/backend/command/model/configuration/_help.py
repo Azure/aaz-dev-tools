@@ -14,4 +14,8 @@ class CMDHelp(Model):
 class CMDArgumentHelp(CMDHelp):
 
     # properties as nodes
-    ref_commands = ListType(StringType())   # popular commands
+    ref_commands = ListType(
+        StringType(),
+        serialized_name='refCommands',
+        deserialize_from='refCommands',
+    )   # popular commands

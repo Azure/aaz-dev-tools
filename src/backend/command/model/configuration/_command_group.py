@@ -3,7 +3,6 @@ from schematics.types import StringType, ModelType, ListType
 from ._help import CMDHelp
 from ._command import CMDCommand
 from ._fields import CMDStageField
-from ._resource import CMDResource
 
 
 class CMDCommandGroup(Model):
@@ -12,6 +11,10 @@ class CMDCommandGroup(Model):
     stage = CMDStageField()
 
     # properties as nodes
-    help_ = ModelType(CMDHelp, required=True)
+    help = ModelType(CMDHelp, required=True)
     commands = ListType(ModelType(CMDCommand))  # sub commands
-    command_groups = ListType(ModelType("CMDCommandGroup"))  # sub command groups
+    command_groups = ListType(
+        ModelType("CMDCommandGroup"),
+        serialized_name='commandGroups',
+        deserialize_from='commandGroups'
+    )  # sub command groups

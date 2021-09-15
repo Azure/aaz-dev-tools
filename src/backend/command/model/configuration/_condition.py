@@ -7,7 +7,11 @@ class CMDConditionOperator(Model):
     # properties as tags
     TYPE_VALUE = None
 
-    type_ = StringType(required=True)
+    type_ = StringType(
+        required=True,
+        serialized_name='type',
+        deserialize_from='type'
+    )
 
     @classmethod
     def _claim_polymorphic(cls, data):

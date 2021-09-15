@@ -29,4 +29,10 @@ class CMDInstanceUpdateOperation(CMDOperation):
     POLYMORPHIC_KEY = "instance_update"
 
     # properties as nodes
-    instance_update = PolyModelType(CMDInstanceUpdateAction, allow_subclasses=True, required=True)
+    instance_update = PolyModelType(
+        CMDInstanceUpdateAction,
+        serialized_name='instanceUpdate',
+        deserialize_from='instanceUpdate',
+        allow_subclasses=True,
+        required=True,
+    )

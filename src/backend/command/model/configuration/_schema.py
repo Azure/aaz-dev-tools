@@ -61,8 +61,16 @@ class CMDClsSchema(CMDSchema, CMDClsSchemaBase):
 # string
 class CMDStringSchemaFormat(Model):
     pattern = CMDRegularExpressionField()
-    max_length = IntType(min_value=0)
-    min_length = IntType(min_value=0)
+    max_length = IntType(
+        min_value=0,
+        serialized_name='maxLength',
+        deserialize_from='maxLength',
+    )
+    min_length = IntType(
+        min_value=0,
+        serialized_name='minLength',
+        deserialize_from='minLength',
+    )
 
 
 class CMDStringSchemaBase(CMDSchemaBase):
@@ -83,7 +91,11 @@ class CMDStringSchema(CMDSchema, CMDStringSchemaBase):
 # integer
 class CMDIntegerSchemaFormat(Model):
     bits = IntType(choices=(32, 64), default=32)
-    multiple_of = IntType(min_value=0)
+    multiple_of = IntType(
+        min_value=0,
+        serialized_name='multipleOf',
+        deserialize_from='multipleOf'
+    )
     maximum = IntType()
     minimum = IntType()
 
@@ -115,11 +127,21 @@ class CMDBooleanSchema(CMDSchema, CMDBooleanSchemaBase):
 # float
 class CMDFloatSchemaFormat(Model):
     bits = IntType(choices=(32, 64), default=32)
-    multiple_of = FloatType(min_value=0)
+    multiple_of = FloatType(
+        min_value=0,
+        serialized_name='multipleOf',
+        deserialize_from='multipleOf'
+    )
     maximum = FloatType()
-    exclusive_maximum = BooleanType()
+    exclusive_maximum = BooleanType(
+        serialized_name='exclusiveMaximum',
+        deserialize_from='exclusiveMaximum'
+    )
     minimum = FloatType()
-    exclusive_minimum = BooleanType()
+    exclusive_minimum = BooleanType(
+        serialized_name='exclusiveMinimum',
+        deserialize_from='exclusiveMinimum'
+    )
 
 
 class CMDFloatSchemaBase(CMDSchemaBase):
@@ -140,8 +162,16 @@ class CMDFloatSchema(CMDSchema, CMDFloatSchemaBase):
 # object
 
 class CMDObjectSchemaFormat(Model):
-    max_properties = IntType(min_value=0)
-    min_properties = IntType(min_value=0)
+    max_properties = IntType(
+        min_value=0,
+        serialized_name='maxProperties',
+        deserialize_from='maxProperties'
+    )
+    min_properties = IntType(
+        min_value=0,
+        serialized_name='minProperties',
+        deserialize_from='minProperties'
+    )
 
 
 # discriminator
@@ -179,8 +209,16 @@ class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
 # array
 class CMDArraySchemaFormat(Model):
     unique = BooleanType(default=False)
-    max_length = IntType(min_value=0)
-    min_length = IntType(min_value=0)
+    max_length = IntType(
+        min_value=0,
+        serialized_name='maxLength',
+        deserialize_from='maxLength'
+    )
+    min_length = IntType(
+        min_value=0,
+        serialized_name='minLength',
+        deserialize_from='minLength'
+    )
 
 
 class CMDArraySchemaBase(CMDSchemaBase):

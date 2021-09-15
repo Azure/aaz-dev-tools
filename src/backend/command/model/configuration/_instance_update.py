@@ -13,7 +13,11 @@ class CMDInstanceUpdateAction(Model):
 
     # properties as tags
     instance = CMDVariantField(required=True)
-    client_flatten = BooleanType(default=False)  # to control instance in client_flatten mode or not
+    client_flatten = BooleanType(
+        default=False,
+        serialized_name='clientFlatten',
+        deserialize_from='clientFlatten'
+    )  # to control instance in client_flatten mode or not
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -37,7 +41,10 @@ class CMDGenericInstanceUpdateMethod(Model):
     add = CMDVariantField()
     set = CMDVariantField()
     remove = CMDVariantField()
-    force_string = CMDVariantField()
+    force_string = CMDVariantField(
+        serialized_name='forceString',
+        deserialize_from='forceString'
+    )
 
 
 class CMDGenericInstanceUpdateAction(CMDInstanceUpdateAction):
