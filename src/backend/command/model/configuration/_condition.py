@@ -1,5 +1,6 @@
 from schematics.models import Model
 from schematics.types import PolyModelType, ListType, StringType
+from schematics.types.serializable import serializable
 from ._fields import CMDVariantField
 
 
@@ -7,19 +8,18 @@ class CMDConditionOperator(Model):
     # properties as tags
     TYPE_VALUE = None
 
-    type_ = StringType(
-        required=True,
-        serialized_name='type',
-        deserialize_from='type'
-    )
+    @serializable
+    def type(self):
+        assert self.TYPE_VALUE is not None
+        return self.TYPE_VALUE
 
     @classmethod
     def _claim_polymorphic(cls, data):
         if isinstance(data, dict):
             type_value = data.get('type', None)
-            if type_value is not None:
-                typ = type_value.replace("<", " ").replace(">", " ").strip().split()[0]
-                return typ == cls.TYPE_VALUE
+            return cls.TYPE_VALUE is not None and type_value == cls.TYPE_VALUE
+        elif isinstance(data, CMDConditionOperator):
+            return data.TYPE_VALUE == cls.TYPE_VALUE
         return False
 
 
@@ -27,13 +27,13 @@ class CMDConditionAndOperator(CMDConditionOperator):
     TYPE_VALUE = "and"
 
     # properties as nodes
-    operators = ListType(PolyModelType(CMDConditionOperator, allow_subclasses=True))
+    operators = ListType(PolyModelType(CMDConditionOperator, allow_subclasses=True), min_size=2)
 
 
 class CMDConditionOrOperator(CMDConditionOperator):
     TYPE_VALUE = "or"
 
-    operators = ListType(PolyModelType(CMDConditionOperator, allow_subclasses=True))
+    operators = ListType(PolyModelType(CMDConditionOperator, allow_subclasses=True), min_size=2)
 
 
 class CMDConditionNotOperator(CMDConditionOperator):
