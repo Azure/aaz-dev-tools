@@ -14,16 +14,17 @@ class CMDCommand(Model):
     # properties as tags
     name = StringType(min_length=1, required=True)
     stage = CMDStageField()
-    version = CMDVersionField()
+    version = CMDVersionField(required=True)
 
     # properties as nodes
-    resources = ListType(ModelType(CMDResource))   # the azure resources used in this command
+    resources = ListType(ModelType(CMDResource), min_size=1)   # the azure resources used in this command
     help = ModelType(CMDHelp, required=True)
     arg_groups = ListType(
         ModelType(CMDArgGroup),
         serialized_name='argGroups',
-        deserialize_from='argGroups'
+        deserialize_from='argGroups',
+        serialize_when_none=False
     )
-    conditions = ListType(ModelType(CMDCondition))
-    operations = ListType(PolyModelType(CMDOperation, allow_subclasses=True))
-    outputs = ListType(PolyModelType(CMDOutput, allow_subclasses=True))
+    conditions = ListType(ModelType(CMDCondition), serialize_when_none=False)
+    operations = ListType(PolyModelType(CMDOperation, allow_subclasses=True), min_size=1)
+    outputs = ListType(PolyModelType(CMDOutput, allow_subclasses=True), min_size=1)
