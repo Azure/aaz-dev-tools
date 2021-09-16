@@ -1,7 +1,7 @@
 from schematics.models import Model
-from schematics.types import StringType, ModelType, ListType, PolyModelType
+from schematics.types import ModelType, ListType, PolyModelType
 from ._help import CMDHelp
-from ._fields import CMDStageField, CMDVersionField
+from ._fields import CMDStageField, CMDVersionField, CMDCommandNameField
 from ._arg_group import CMDArgGroup
 from ._condition import CMDCondition
 from ._operation import CMDOperation
@@ -12,7 +12,7 @@ from ._resource import CMDResource
 class CMDCommand(Model):
 
     # properties as tags
-    name = StringType(min_length=1, required=True)
+    name = CMDCommandNameField(required=True)
     stage = CMDStageField()
     version = CMDVersionField(required=True)
 

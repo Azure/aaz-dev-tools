@@ -101,3 +101,15 @@ class CMDResourceIdField(StringType):
             deserialize_from='id',
             *args, **kwargs
         )
+
+
+class CMDCommandNameField(StringType):
+
+    def __init__(self, *args, **kwargs):
+        super(CMDCommandNameField, self).__init__(min_length=1, *args, **kwargs)
+
+
+class CMDCommandGroupNameField(StringType):
+
+    def __init__(self, *args, **kwargs):
+        super(CMDCommandGroupNameField, self).__init__(min_length=1, *args, **kwargs)
