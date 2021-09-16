@@ -43,7 +43,7 @@ class CMDConditionNotOperator(CMDConditionOperator):
     TYPE_VALUE = "not"
 
     # properties as nodes
-    operator = PolyModelType(CMDConditionOperator, allow_subclasses=True)
+    operator = PolyModelType(CMDConditionOperator, allow_subclasses=True, required=True)
 
 
 class CMDConditionHasValueOperator(CMDConditionOperator):
@@ -55,7 +55,7 @@ class CMDConditionHasValueOperator(CMDConditionOperator):
 
 class CMDCondition(Model):
     # properties as tags
-    var = CMDVariantField()  # define variant
+    var = CMDVariantField(required=True)  # define variant
 
     # properties as nodes
-    operator = PolyModelType(CMDConditionOperator, allow_subclasses=True)
+    operator = PolyModelType(CMDConditionOperator, allow_subclasses=True, required=True)

@@ -3,8 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 from schematics.models import Model
-from schematics.types import ModelType, BooleanType, IntType, FloatType, ListType, PolyModelType
-from ._fields import CMDTypeField, CMDVariantField, StringType, CMDSchemaClassField, CMDRegularExpressionField
+from schematics.types import ModelType, IntType, FloatType, ListType, PolyModelType
+from ._fields import CMDTypeField, CMDVariantField, StringType, CMDSchemaClassField, CMDRegularExpressionField, CMDBooleanField
 from ._enum import CMDEnum
 
 
@@ -31,8 +31,8 @@ class CMDSchema(CMDSchemaBase):
     name = StringType(required=True)
     arg = CMDVariantField()
     cls = CMDSchemaClassField()   # define a schema which can be used in other
-    required = BooleanType()
-    readonly = BooleanType()
+    required = CMDBooleanField()
+    readonly = CMDBooleanField()
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -133,12 +133,12 @@ class CMDFloatSchemaFormat(Model):
         deserialize_from='multipleOf'
     )
     maximum = FloatType()
-    exclusive_maximum = BooleanType(
+    exclusive_maximum = CMDBooleanField(
         serialized_name='exclusiveMaximum',
         deserialize_from='exclusiveMaximum'
     )
     minimum = FloatType()
-    exclusive_minimum = BooleanType(
+    exclusive_minimum = CMDBooleanField(
         serialized_name='exclusiveMinimum',
         deserialize_from='exclusiveMinimum'
     )
@@ -208,7 +208,7 @@ class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
 
 # array
 class CMDArraySchemaFormat(Model):
-    unique = BooleanType(default=False)
+    unique = CMDBooleanField()
     max_length = IntType(
         min_value=0,
         serialized_name='maxLength',

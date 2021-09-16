@@ -1,12 +1,12 @@
 from schematics.models import Model
-from schematics.types import StringType, ListType, ModelType, BooleanType
-from ._fields import CMDPrimitiveField
+from schematics.types import StringType, ListType, ModelType
+from ._fields import CMDPrimitiveField, CMDBooleanField
 
 
 class CMDEnumItem(Model):
     # properties as tags
     name = StringType(required=True)
-    hide = BooleanType(default=False)
+    hide = CMDBooleanField()
 
     # properties as nodes
     value = CMDPrimitiveField(required=True)

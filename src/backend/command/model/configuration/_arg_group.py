@@ -8,5 +8,5 @@ class CMDArgGroup(Model):
     name = StringType(required=True)
 
     # properties as nodes
-    args = ListType(PolyModelType(CMDArg, allow_subclasses=True))
+    args = ListType(PolyModelType(CMDArg, allow_subclasses=True), min_size=1)
 

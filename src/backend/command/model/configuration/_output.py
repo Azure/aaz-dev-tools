@@ -1,6 +1,6 @@
 from schematics.models import Model
-from schematics.types import StringType, BooleanType
-from ._fields import CMDTypeField, CMDVariantField
+from schematics.types import StringType
+from ._fields import CMDTypeField, CMDVariantField, CMDBooleanField
 
 
 class CMDOutput(Model):
@@ -24,10 +24,9 @@ class CMDObjectOutput(CMDOutput):
     TYPE_VALUE = 'object'
 
     ref = CMDVariantField(required=True)
-    client_flatten = BooleanType(
+    client_flatten = CMDBooleanField(
         serialized_name='clientFlatten',
         deserialize_from='clientFlatten',
-        default=False
     )
 
 
@@ -35,10 +34,9 @@ class CMDArrayOutput(CMDOutput):
     TYPE_VALUE = 'array'
 
     ref = CMDVariantField(required=True)
-    client_flatten = BooleanType(
+    client_flatten = CMDBooleanField(
         serialized_name='clientFlatten',
         deserialize_from='clientFlatten',
-        default=False
     )
     next_link = CMDVariantField(
         serialized_name='nextLink',

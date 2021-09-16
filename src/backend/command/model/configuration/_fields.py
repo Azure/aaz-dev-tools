@@ -1,4 +1,22 @@
-from schematics.types import StringType, BaseType
+from schematics.types import StringType, BaseType, BooleanType
+
+
+class CMDBooleanField(BooleanType):
+
+    def __init__(self, **kwargs):
+        super(CMDBooleanField, self).__init__(serialize_when_none=False, default=False, **kwargs)
+
+    def to_native(self, value, context=None):
+        value = super(CMDBooleanField, self).to_native(value, context)
+        if value is False:
+            return None  # return None when value is false to hide field with `serialize_when_none=False`
+        return value
+
+    def to_primitive(self, value, context=None):
+        value = super(CMDBooleanField, self).to_primitive(value, context)
+        if value is False:
+            return None  # return None when value is false to hide field with `serialize_when_none=False`
+        return value
 
 
 class CMDStageEnum:

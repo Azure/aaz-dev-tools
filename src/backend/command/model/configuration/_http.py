@@ -3,8 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 from schematics.models import Model
-from schematics.types import StringType, ModelType, ListType, URLType, PolyModelType, IntType, BooleanType
-from ._fields import CMDVariantField, CMDPrimitiveField
+from schematics.types import StringType, ModelType, ListType, URLType, PolyModelType, IntType
+from ._fields import CMDVariantField, CMDPrimitiveField, CMDBooleanField
 from ._http_body import CMDHttpBody
 
 
@@ -58,8 +58,7 @@ class CMDHttpResponse(Model):
         serialized_name='statusCode',
         deserialize_from='statusCode',
     )
-    is_error = BooleanType(
-        default=False,
+    is_error = CMDBooleanField(
         serialized_name='isError',
         deserialize_from='isError'
     )

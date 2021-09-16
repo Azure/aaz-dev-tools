@@ -1,6 +1,5 @@
 from unittest import TestCase
-from command.model.configuration._condition import CMDConditionAndOperator,\
-    CMDConditionOrOperator, CMDConditionNotOperator, CMDConditionHasValueOperator, CMDCondition
+from command.model.configuration._condition import *
 
 
 class ConditionTest(TestCase):
@@ -84,3 +83,5 @@ class ConditionTest(TestCase):
             }
         )
         condition.validate()
+        print(condition.to_native())
+        print(condition.to_primitive())

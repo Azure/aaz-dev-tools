@@ -10,6 +10,9 @@ class CMDHelp(Model):
     # properties as nodes
     long = ListType(StringType())   # long-summary separated by lines
 
+    class Options:
+        serialize_when_none = False
+
 
 class CMDArgumentHelp(CMDHelp):
 
@@ -19,3 +22,6 @@ class CMDArgumentHelp(CMDHelp):
         serialized_name='refCommands',
         deserialize_from='refCommands',
     )   # popular commands
+
+    class Options:
+        serialize_when_none = False

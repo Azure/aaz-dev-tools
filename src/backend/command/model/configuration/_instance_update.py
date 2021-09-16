@@ -3,8 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 from schematics.models import Model
-from schematics.types import ModelType, BooleanType
-from ._fields import CMDVariantField
+from schematics.types import ModelType
+from ._fields import CMDVariantField, CMDBooleanField
 from ._schema import CMDJson
 
 
@@ -13,8 +13,7 @@ class CMDInstanceUpdateAction(Model):
 
     # properties as tags
     instance = CMDVariantField(required=True)
-    client_flatten = BooleanType(
-        default=False,
+    client_flatten = CMDBooleanField(
         serialized_name='clientFlatten',
         deserialize_from='clientFlatten'
     )  # to control instance in client_flatten mode or not

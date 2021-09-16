@@ -1,8 +1,8 @@
 from schematics.models import Model
-from schematics.types import StringType, ListType, ModelType, BooleanType, PolyModelType, FloatType, IntType
+from schematics.types import StringType, ListType, ModelType, PolyModelType, FloatType, IntType
 from schematics.types.serializable import serializable
 from ._help import CMDArgumentHelp
-from ._fields import CMDStageField, CMDVariantField, CMDRegularExpressionField, CMDPrimitiveField
+from ._fields import CMDStageField, CMDVariantField, CMDRegularExpressionField, CMDPrimitiveField, CMDBooleanField
 from ._enum import CMDEnum
 
 
@@ -41,7 +41,7 @@ class CMDArgBase(Model):
     TYPE_VALUE = None
 
     # base types: "array", "boolean", "integer", "float", "object", "string",
-    # predefined types: "@File", "@ResourceID", "@ResourceGroup", "@Subscription", "@Json"
+    # special types: "@File", "@ResourceID", "@ResourceGroup", "@Subscription", "@Json"
 
     @serializable
     def type(self):
@@ -68,15 +68,15 @@ class CMDArg(CMDArgBase):
     # properties as tags
     var = CMDVariantField(required=True)
     options = ListType(StringType(), min_size=1, required=True)    # argument option names
-    required = BooleanType(default=False)
+    required = CMDBooleanField()
     stage = CMDStageField()
 
-    hide = BooleanType(default=False)
+    hide = CMDBooleanField()
 
     # properties as nodes
-    help = ModelType(CMDArgumentHelp)
-    default = ModelType(CMDArgDefault)
-    blank = ModelType(CMDArgBlank)
+    help = ModelType(CMDArgumentHelp, serialize_when_none=False)
+    default = ModelType(CMDArgDefault, serialize_when_none=False)
+    blank = ModelType(CMDArgBlank, serialize_when_none=False)
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -103,6 +103,9 @@ class CMDStringArgFormat(Model):
         min_value=0
     )
 
+    class Options:
+        serialize_when_none = False
+
 
 class CMDStringArgBase(CMDArgBase):
     TYPE_VALUE = "string"
@@ -110,9 +113,10 @@ class CMDStringArgBase(CMDArgBase):
     format_ = ModelType(
         CMDStringArgFormat,
         serialized_name='format',
-        deserialize_from='format'
+        deserialize_from='format',
+        serialize_when_none=False
     )
-    enum = ModelType(CMDEnum)
+    enum = ModelType(CMDEnum, serialize_when_none = False)
 
 
 class CMDStringArg(CMDArg, CMDStringArgBase):
@@ -192,6 +196,9 @@ class CMDIntegerArgFormat(Model):
     maximum = IntType()
     minimum = IntType()
 
+    class Options:
+        serialize_when_none = False
+
 
 class CMDIntegerArgBase(CMDArgBase):
     TYPE_VALUE = "integer"
@@ -199,9 +206,10 @@ class CMDIntegerArgBase(CMDArgBase):
     format_ = ModelType(
         CMDIntegerArgFormat,
         serialized_name='format',
-        deserialize_from='format'
+        deserialize_from='format',
+        serialize_when_none=False
     )
-    enum = ModelType(CMDEnum)
+    enum = ModelType(CMDEnum, serialize_when_none=False)
 
 
 class CMDIntegerArg(CMDArg, CMDIntegerArgBase):
@@ -243,15 +251,18 @@ class CMDFloatArgFormat(Model):
         deserialize_from='multipleOf'
     )
     maximum = FloatType()
-    exclusive_maximum = BooleanType(
+    exclusive_maximum = CMDBooleanField(
         serialized_name='exclusiveMaximum',
         deserialize_from='exclusiveMaximum'
     )
     minimum = FloatType()
-    exclusive_minimum = BooleanType(
+    exclusive_minimum = CMDBooleanField(
         serialized_name='exclusiveMinimum',
         deserialize_from='exclusiveMinimum'
     )
+
+    class Options:
+        serialize_when_none = False
 
 
 class CMDFloatArgBase(CMDArgBase):
@@ -260,9 +271,10 @@ class CMDFloatArgBase(CMDArgBase):
     format_ = ModelType(
         CMDFloatArgFormat,
         serialized_name='format',
-        deserialize_from='format'
+        deserialize_from='format',
+        serialize_when_none=False,
     )
-    enum = ModelType(CMDEnum)
+    enum = ModelType(CMDEnum, serialize_when_none=False)
 
 
 class CMDFloatArg(CMDArg, CMDFloatArgBase):
@@ -300,6 +312,9 @@ class CMDObjectArgFormat(Model):
         deserialize_from='minProperties'
     )
 
+    class Options:
+        serialize_when_none = False
+
 
 class CMDObjectArgBase(CMDArgBase):
     TYPE_VALUE = "object"
@@ -307,9 +322,10 @@ class CMDObjectArgBase(CMDArgBase):
     format_ = ModelType(
         CMDObjectArgFormat,
         serialized_name='format',
-        deserialize_from='format'
+        deserialize_from='format',
+        serialize_when_none=False
     )
-    args = ListType(PolyModelType(CMDArg, allow_subclasses=True))
+    args = ListType(PolyModelType(CMDArg, allow_subclasses=True), serialize_when_none=False)
 
 
 class CMDObjectArg(CMDArg, CMDObjectArgBase):
@@ -318,7 +334,7 @@ class CMDObjectArg(CMDArg, CMDObjectArgBase):
 
 # array
 class CMDArrayArgFormat(Model):
-    unique = BooleanType(default=False)
+    unique = CMDBooleanField()
     max_length = IntType(
         min_value=0,
         serialized_name='maxLength',
@@ -330,6 +346,9 @@ class CMDArrayArgFormat(Model):
         deserialize_from='minLength'
     )
 
+    class Options:
+        serialize_when_none = False
+
 
 class CMDArrayArgBase(CMDArgBase):
     TYPE_VALUE = "array"
@@ -337,7 +356,8 @@ class CMDArrayArgBase(CMDArgBase):
     format_ = ModelType(
         CMDArrayArgFormat,
         serialized_name='format',
-        deserialize_from='format'
+        deserialize_from='format',
+        serialize_when_none=False
     )
     item = PolyModelType(CMDArgBase, allow_subclasses=True, required=True)
 
