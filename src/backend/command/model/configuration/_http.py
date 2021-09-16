@@ -4,18 +4,22 @@
 # --------------------------------------------------------------------------------------------
 from schematics.models import Model
 from schematics.types import StringType, ModelType, ListType, URLType, PolyModelType, IntType, BooleanType
-from ._fields import CMDVariantField
+from ._fields import CMDVariantField, CMDPrimitiveField
 from ._http_body import CMDHttpBody
 
 
 class CMDHttpParam(Model):
+    # properties as tags
     name = StringType(required=True)
     arg = CMDVariantField(required=True)
 
 
 class CMDHttpConst(Model):
+    # properties as tags
     name = StringType(required=True)
-    value = StringType(required=True)
+
+    # properties as nodes
+    value = CMDPrimitiveField(required=True)
 
 
 class CMDHttpRequestArgs(Model):

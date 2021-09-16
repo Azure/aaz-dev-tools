@@ -1,5 +1,5 @@
 from unittest import TestCase
-from command.model.configuration._condition import CMDConditionOperator, CMDConditionAndOperator,\
+from command.model.configuration._condition import CMDConditionAndOperator,\
     CMDConditionOrOperator, CMDConditionNotOperator, CMDConditionHasValueOperator, CMDCondition
 
 

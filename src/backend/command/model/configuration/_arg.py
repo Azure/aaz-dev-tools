@@ -1,7 +1,8 @@
 from schematics.models import Model
-from schematics.types import StringType, ListType, ModelType, BooleanType, BaseType, PolyModelType, FloatType, IntType
+from schematics.types import StringType, ListType, ModelType, BooleanType, PolyModelType, FloatType, IntType
+from schematics.types.serializable import serializable
 from ._help import CMDArgumentHelp
-from ._fields import CMDStageField, CMDVariantField, CMDTypeField, CMDRegularExpressionField
+from ._fields import CMDStageField, CMDVariantField, CMDRegularExpressionField, CMDPrimitiveField
 from ._enum import CMDEnum
 
 
@@ -9,7 +10,7 @@ class CMDArgDefault(Model):
     """ The argument value if an argument is not used """
 
     # properties as nodes
-    value = BaseType(required=True)  # json value format string, support null
+    value = CMDPrimitiveField()  # json value format string, support null
 
 
 class CMDArgBlank(Model):
@@ -33,7 +34,7 @@ class CMDArgBlank(Model):
     """
 
     # properties as nodes
-    value = BaseType(required=True)  # json value format string, support null
+    value = CMDPrimitiveField()  # json value format string, support null
 
 
 class CMDArgBase(Model):
@@ -41,7 +42,14 @@ class CMDArgBase(Model):
 
     # base types: "array", "boolean", "integer", "float", "object", "string",
     # predefined types: "@File", "@ResourceID", "@ResourceGroup", "@Subscription", "@Json"
-    type_ = CMDTypeField(required=True)
+
+    @serializable
+    def type(self):
+        return self._get_type()
+
+    def _get_type(self):
+        assert self.TYPE_VALUE is not None
+        return self.TYPE_VALUE
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -50,6 +58,8 @@ class CMDArgBase(Model):
             if type_value is not None:
                 typ = type_value.replace("<", " ").replace(">", " ").strip().split()[0]
                 return typ == cls.TYPE_VALUE
+        elif isinstance(data, CMDArgBase):
+            return data.TYPE_VALUE == cls.TYPE_VALUE
         return False
 
 
@@ -71,8 +81,11 @@ class CMDArg(CMDArgBase):
     @classmethod
     def _claim_polymorphic(cls, data):
         if super(CMDArg, cls)._claim_polymorphic(data):
-            # distinguish with CMDArgBase and CMDArg
-            return 'var' in data
+            if isinstance(data, dict):
+                # distinguish with CMDArgBase and CMDArg
+                return 'var' in data
+            else:
+                return isinstance(data, CMDArg)
         return False
 
 
@@ -106,6 +119,69 @@ class CMDStringArg(CMDArg, CMDStringArgBase):
     pass
 
 
+# byte: base64 encoded characters
+class CMDByteArgBase(CMDStringArgBase):
+    TYPE_VALUE = "byte"
+
+
+class CMDByteArg(CMDStringArg, CMDByteArgBase):
+    pass
+
+
+# binary: any sequence of octets
+class CMDBinaryArgBase(CMDStringArgBase):
+    TYPE_VALUE = "binary"
+
+
+class CMDBinaryArg(CMDStringArg, CMDBinaryArgBase):
+    pass
+
+
+# duration
+class CMDDurationArgBase(CMDStringArgBase):
+    TYPE_VALUE = "duration"
+
+
+class CMDDurationArg(CMDStringArg, CMDDurationArgBase):
+    pass
+
+
+# date: As defined by full-date - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
+class CMDDateArgBase(CMDStringArgBase):
+    TYPE_VALUE = "date"
+
+
+class CMDDateArg(CMDStringArg, CMDDateArgBase):
+    pass
+
+
+# date-time: As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
+class CMDDateTimeArgBase(CMDStringArgBase):
+    TYPE_VALUE = "date-time"
+
+
+class CMDDateTimeArg(CMDStringArg, CMDDateTimeArgBase):
+    pass
+
+
+# uuid
+class CMDUuidArgBase(CMDStringArgBase):
+    TYPE_VALUE = "uuid"
+
+
+class CMDUuidArg(CMDStringArg, CMDUuidArgBase):
+    pass
+
+
+# password
+class CMDPasswordArgBase(CMDStringArgBase):
+    TYPE_VALUE = "password"
+
+
+class CMDPasswordArg(CMDStringArg, CMDPasswordArgBase):
+    pass
+
+
 # integer
 class CMDIntegerArgFormat(Model):
     multiple_of = IntType(
@@ -129,6 +205,24 @@ class CMDIntegerArgBase(CMDArgBase):
 
 
 class CMDIntegerArg(CMDArg, CMDIntegerArgBase):
+    pass
+
+
+# integer32
+class CMDInteger32ArgBase(CMDIntegerArgBase):
+    TYPE_VALUE = "integer32"
+
+
+class CMDInteger32Arg(CMDIntegerArg, CMDInteger32ArgBase):
+    pass
+
+
+# integer64
+class CMDInteger64ArgBase(CMDIntegerArgBase):
+    TYPE_VALUE = "integer64"
+
+
+class CMDInteger64Arg(CMDIntegerArg, CMDInteger64ArgBase):
     pass
 
 
@@ -172,6 +266,24 @@ class CMDFloatArgBase(CMDArgBase):
 
 
 class CMDFloatArg(CMDArg, CMDFloatArgBase):
+    pass
+
+
+# float32
+class CMDFloat32ArgBase(CMDFloatArgBase):
+    TYPE_VALUE = "float32"
+
+
+class CMDFloat32Arg(CMDFloatArg, CMDFloat32ArgBase):
+    pass
+
+
+# float64
+class CMDFloat64ArgBase(CMDFloatArgBase):
+    TYPE_VALUE = "float64"
+
+
+class CMDFloat64Arg(CMDFloatArg, CMDFloat64ArgBase):
     pass
 
 
@@ -227,7 +339,10 @@ class CMDArrayArgBase(CMDArgBase):
         serialized_name='format',
         deserialize_from='format'
     )
-    item = PolyModelType(CMDArgBase, allow_subclasses=True)
+    item = PolyModelType(CMDArgBase, allow_subclasses=True, required=True)
+
+    def _get_type(self):
+        return f"{self.TYPE_VALUE}<{self.item.type}>"
 
 
 class CMDArrayArg(CMDArg, CMDArrayArgBase):

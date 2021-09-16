@@ -1,5 +1,5 @@
 from schematics.models import Model
-from schematics.types import PolyModelType, ListType, StringType
+from schematics.types import PolyModelType, ListType
 from schematics.types.serializable import serializable
 from ._fields import CMDVariantField
 
@@ -10,6 +10,9 @@ class CMDConditionOperator(Model):
 
     @serializable
     def type(self):
+        return self._get_type()
+
+    def _get_type(self):
         assert self.TYPE_VALUE is not None
         return self.TYPE_VALUE
 

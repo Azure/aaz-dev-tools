@@ -1,8 +1,7 @@
 from schematics.types import StringType, BaseType
-from enum import Enum
 
 
-class CMDStageEnum(str, Enum):
+class CMDStageEnum:
     Experimental = "Experimental"
     Preview = "Preview"
     Stable = "Stable"
@@ -33,7 +32,7 @@ class CMDVariantField(StringType):
 
 class CMDTypeField(StringType):
     """
-    Base type: "array", "boolean", "integer", "number", "object", "string"
+    Base type: "array", "boolean", "integer", "float", "object", "string"
     """
 
     def __init__(self, *args, **kwargs):
@@ -53,13 +52,16 @@ class CMDSchemaClassField(StringType):
         )
 
 
-class CMDJsonValueField(BaseType):
+class CMDPrimitiveField(BaseType):
     """
     Can parse json value format string, the result type can be None, integer, float, bool, string, list or dict
     """
 
     def __init__(self, *args, **kwargs):
-        super(CMDJsonValueField, self).__init__(*args, **kwargs)
+        super(CMDPrimitiveField, self).__init__(
+            serialize_when_none=True,
+            *args, **kwargs,
+        )
 
 
 class CMDRegularExpressionField(StringType):

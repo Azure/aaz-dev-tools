@@ -1,6 +1,6 @@
 from schematics.models import Model
 from schematics.types import StringType, ListType, ModelType, BooleanType
-from ._fields import CMDJsonValueField
+from ._fields import CMDPrimitiveField
 
 
 class CMDEnumItem(Model):
@@ -9,7 +9,7 @@ class CMDEnumItem(Model):
     hide = BooleanType(default=False)
 
     # properties as nodes
-    value = CMDJsonValueField(required=True)
+    value = CMDPrimitiveField(required=True)
 
 
 class CMDEnum(Model):
