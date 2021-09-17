@@ -18,9 +18,12 @@ class CMDConditionOperator(Model):
 
     @classmethod
     def _claim_polymorphic(cls, data):
+        if cls.TYPE_VALUE is None:
+            return False
+
         if isinstance(data, dict):
             type_value = data.get('type', None)
-            return cls.TYPE_VALUE is not None and type_value == cls.TYPE_VALUE
+            return type_value == cls.TYPE_VALUE
         elif isinstance(data, CMDConditionOperator):
             return data.TYPE_VALUE == cls.TYPE_VALUE
         return False

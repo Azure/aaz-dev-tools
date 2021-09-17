@@ -6,7 +6,7 @@ from ._fields import CMDPrimitiveField, CMDBooleanField
 class CMDEnumItem(Model):
     # properties as tags
     name = StringType(required=True)
-    hide = CMDBooleanField()
+    hide = CMDBooleanField()    # used in arguments
 
     # properties as nodes
     value = CMDPrimitiveField(required=True)

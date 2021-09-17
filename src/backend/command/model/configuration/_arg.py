@@ -3,7 +3,22 @@ from schematics.types import StringType, ListType, ModelType, PolyModelType, Flo
 from schematics.types.serializable import serializable
 from ._help import CMDArgumentHelp
 from ._fields import CMDStageField, CMDVariantField, CMDRegularExpressionField, CMDPrimitiveField, CMDBooleanField
-from ._enum import CMDEnum
+
+
+class CMDArgEnumItem(Model):
+    # properties as tags
+    name = StringType(required=True)
+    hide = CMDBooleanField()
+
+    # properties as nodes
+    value = CMDPrimitiveField(required=True)
+
+
+class CMDArgEnum(Model):
+    # properties as tags
+
+    # properties as nodes
+    items = ListType(ModelType(CMDArgEnumItem), min_size=1)
 
 
 class CMDArgDefault(Model):
@@ -53,6 +68,9 @@ class CMDArgBase(Model):
 
     @classmethod
     def _claim_polymorphic(cls, data):
+        if cls.TYPE_VALUE is None:
+            return False
+
         if isinstance(data, dict):
             type_value = data.get('type', None)
             if type_value is not None:
@@ -110,13 +128,13 @@ class CMDStringArgFormat(Model):
 class CMDStringArgBase(CMDArgBase):
     TYPE_VALUE = "string"
 
-    format_ = ModelType(
+    fmt = ModelType(
         CMDStringArgFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False
     )
-    enum = ModelType(CMDEnum, serialize_when_none = False)
+    enum = ModelType(CMDArgEnum, serialize_when_none = False)
 
 
 class CMDStringArg(CMDArg, CMDStringArgBase):
@@ -203,13 +221,13 @@ class CMDIntegerArgFormat(Model):
 class CMDIntegerArgBase(CMDArgBase):
     TYPE_VALUE = "integer"
 
-    format_ = ModelType(
+    fmt = ModelType(
         CMDIntegerArgFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False
     )
-    enum = ModelType(CMDEnum, serialize_when_none=False)
+    enum = ModelType(CMDArgEnum, serialize_when_none=False)
 
 
 class CMDIntegerArg(CMDArg, CMDIntegerArgBase):
@@ -268,13 +286,13 @@ class CMDFloatArgFormat(Model):
 class CMDFloatArgBase(CMDArgBase):
     TYPE_VALUE = "float"
 
-    format_ = ModelType(
+    fmt = ModelType(
         CMDFloatArgFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False,
     )
-    enum = ModelType(CMDEnum, serialize_when_none=False)
+    enum = ModelType(CMDArgEnum, serialize_when_none=False)
 
 
 class CMDFloatArg(CMDArg, CMDFloatArgBase):
@@ -319,7 +337,7 @@ class CMDObjectArgFormat(Model):
 class CMDObjectArgBase(CMDArgBase):
     TYPE_VALUE = "object"
 
-    format_ = ModelType(
+    fmt = ModelType(
         CMDObjectArgFormat,
         serialized_name='format',
         deserialize_from='format',
@@ -353,7 +371,7 @@ class CMDArrayArgFormat(Model):
 class CMDArrayArgBase(CMDArgBase):
     TYPE_VALUE = "array"
 
-    format_ = ModelType(
+    fmt = ModelType(
         CMDArrayArgFormat,
         serialized_name='format',
         deserialize_from='format',

@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 from schematics.models import Model
-from schematics.types import ModelType
+from schematics.types import ModelType, PolyModelType
 from ._fields import CMDVariantField, CMDBooleanField
 from ._schema import CMDJson
 
@@ -20,8 +20,13 @@ class CMDInstanceUpdateAction(Model):
 
     @classmethod
     def _claim_polymorphic(cls, data):
+        if cls.POLYMORPHIC_KEY is None:
+            return False
+
         if isinstance(data, dict):
-            return cls.POLYMORPHIC_KEY is not None and cls.POLYMORPHIC_KEY in data
+            return cls.POLYMORPHIC_KEY in data
+        elif isinstance(data, CMDInstanceUpdateAction):
+            return hasattr(data, cls.POLYMORPHIC_KEY)
         return False
 
 
@@ -30,7 +35,7 @@ class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
     POLYMORPHIC_KEY = "json"
 
     # properties as nodes
-    json = ModelType(CMDJson)
+    json = PolyModelType(CMDJson, allow_subclasses=True, required=True)
 
 
 # generic instance update

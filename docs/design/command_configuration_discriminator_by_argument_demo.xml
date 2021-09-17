@@ -364,8 +364,8 @@
                             <prop name="properties" type="object" required="true">
                                 <prop name="type" type="string" required="true" arg="$type">
                                     <enum>
-                                        <enum-item name="Managed">"Managed"</enum-item>
-                                        <enum-item name="SelfHosted">"SelfHosted"</enum-item>
+                                        <enum-item>"Managed"</enum-item>
+                                        <enum-item>"SelfHosted"</enum-item>
                                     </enum>
                                 </prop>
                                 <prop name="description" type="string" arg="$description"/>
@@ -562,7 +562,9 @@
                                     </prop>
                                     <prop name="managedVirtualNetwork" type="object" arg="$managedVirtualNetwork">
                                         <prop name="type" type="string" required="true" arg="$managedVirtualNetwork.type">
-                                            <enum-item name="ManagedVirtualNetworkReference">"ManagedVirtualNetworkReference"</enum-item>
+                                            <enum>
+                                                <enum-item>"ManagedVirtualNetworkReference"</enum-item>
+                                            </enum>
                                         </prop>
                                         <prop name="referenceName" type="string" required="true" arg="$managedVirtualNetwork.referenceName"/>
                                     </prop>

@@ -13,8 +13,13 @@ class CMDOperation(Model):
 
     @classmethod
     def _claim_polymorphic(cls, data):
+        if cls.POLYMORPHIC_KEY is None:
+            return False
+
         if isinstance(data, dict):
-            return cls.POLYMORPHIC_KEY is not None and cls.POLYMORPHIC_KEY in data
+            return cls.POLYMORPHIC_KEY in data
+        elif isinstance(data, CMDOperation):
+            return hasattr(data, cls.POLYMORPHIC_KEY)
         return False
 
 
@@ -26,13 +31,11 @@ class CMDHttpOperation(CMDOperation):
 
 
 class CMDInstanceUpdateOperation(CMDOperation):
-    POLYMORPHIC_KEY = "instance_update"
+    POLYMORPHIC_KEY = "instanceUpdate"
 
     # properties as nodes
-    instance_update = PolyModelType(
+    instanceUpdate = PolyModelType(
         CMDInstanceUpdateAction,
-        serialized_name='instanceUpdate',
-        deserialize_from='instanceUpdate',
         allow_subclasses=True,
         required=True,
     )
