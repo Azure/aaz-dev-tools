@@ -13,10 +13,6 @@ class CMDInstanceUpdateAction(Model):
 
     # properties as tags
     instance = CMDVariantField(required=True)
-    client_flatten = CMDBooleanField(
-        serialized_name='clientFlatten',
-        deserialize_from='clientFlatten'
-    )  # to control instance in client_flatten mode or not
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -53,6 +49,12 @@ class CMDGenericInstanceUpdateMethod(Model):
 
 class CMDGenericInstanceUpdateAction(CMDInstanceUpdateAction):
     POLYMORPHIC_KEY = "generic"
+
+    # properties as tags
+    client_flatten = CMDBooleanField(
+        serialized_name='clientFlatten',
+        deserialize_from='clientFlatten'
+    )  # to control instance in client_flatten mode or not
 
     # properties as nodes
     generic = ModelType(CMDGenericInstanceUpdateMethod)
