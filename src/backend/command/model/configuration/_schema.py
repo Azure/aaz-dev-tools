@@ -9,6 +9,8 @@ from ._fields import CMDVariantField, StringType, CMDSchemaClassField, CMDRegula
 
 
 class CMDSchemaEnumItem(Model):
+    arg = CMDVariantField(serialize_when_none=False)    # value will be used when specific argument is provided
+
     # properties as nodes
     value = CMDPrimitiveField(required=True)
 
@@ -77,8 +79,17 @@ class CMDSchema(CMDSchemaBase):
         return False
 
 
-# cls  TODO: add support for cls
+# cls
 class CMDClsSchemaBase(CMDSchemaBase):
+
+    _type = StringType(
+        deserialize_from='type',
+        serialized_name='type',
+        required=True
+    )
+
+    def _get_type(self):
+        return self._type
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -229,8 +240,8 @@ class CMDObjectSchemaFormat(Model):
 # discriminator
 class CMDObjectSchemaDiscriminator(Model):
     # properties as tags
-    arg = CMDVariantField(required=True)
-    value = StringType(serialize_when_none=False)    # TODO: check possible types of value
+    prop = StringType(required=True)
+    value = StringType(required=True)    # TODO: check possible types of value
 
     # properties as nodes
     props = ListType(
@@ -263,6 +274,11 @@ class CMDObjectSchemaBase(CMDSchemaBase):
 
 
 class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
+    # properties as tags
+    client_flatten = CMDBooleanField(
+        serialized_name="clientFlatten",
+        deserialize_from="clientFlatten"
+    )
     cls = CMDSchemaClassField(serialize_when_none=False)   # define a schema which can be used by others
 
 

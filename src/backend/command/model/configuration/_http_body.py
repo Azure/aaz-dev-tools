@@ -16,6 +16,8 @@ class CMDHttpBody(Model):
         elif isinstance(data, CMDHttpBody):
             return hasattr(data, cls.POLYMORPHIC_KEY)
 
+        return False
+
 
 class CMDHttpJsonBody(CMDHttpBody):
     POLYMORPHIC_KEY = "json"

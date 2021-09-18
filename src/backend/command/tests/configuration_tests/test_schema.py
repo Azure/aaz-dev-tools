@@ -138,7 +138,7 @@ class SchemaTest(TestCase):
             ],
             "discriminators": [
                 {
-                    "arg": "$type",
+                    "prop": "type",
                     "value": "Managed",
                     "props": [
                         {
@@ -162,18 +162,38 @@ class SchemaTest(TestCase):
                                                     "arg": "$ssisProperties.expressCustomSetupProperties",
                                                     "item": {
                                                         "type": "object",
+                                                        "props": [
+                                                            {
+                                                                "name": "type",
+                                                                "type": "string",
+                                                                "required": True,
+                                                                "enum": {
+                                                                    "items": [
+                                                                        {
+                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup",
+                                                                            "value": "CmdkeySetup",
+                                                                        },
+                                                                        {
+                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].EnvironmentVariableSetup",
+                                                                            "value": "EnvironmentVariableSetup",
+                                                                        },
+                                                                        {
+                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].ComponentSetup",
+                                                                            "value": "ComponentSetup",
+                                                                        },
+                                                                        {
+                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].AzPowerShellSetup",
+                                                                            "value": "AzPowerShellSetup",
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                        ],
                                                         "discriminators": [
                                                             {
-                                                                "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup",
+                                                                "prop": "type",
+                                                                "value": "CmdkeySetup",
                                                                 "props": [
-                                                                    {
-                                                                        "name": "type",
-                                                                        "type": "string",
-                                                                        "required": True,
-                                                                        "default": {
-                                                                            "value": "CmdkeySetup",
-                                                                        }
-                                                                    },
                                                                     {
                                                                         "name": "typeProperties",
                                                                         "type": "object",
@@ -196,18 +216,27 @@ class SchemaTest(TestCase):
                                                                                 "type": "object",
                                                                                 "required": True,
                                                                                 "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password",
+                                                                                "props": [
+                                                                                    {
+                                                                                        "name": "type",
+                                                                                        "type": "string",
+                                                                                        "required": True,
+                                                                                        "enum": {
+                                                                                            "items": [
+                                                                                                {
+                                                                                                    "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString",
+                                                                                                    "value": "SecureString",
+                                                                                                }
+                                                                                            ],
+                                                                                        },
+                                                                                    }
+
+                                                                                ],
                                                                                 "discriminators": [
                                                                                     {
-                                                                                        "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString",
+                                                                                        "prop": "type",
+                                                                                        "value": "SecureString",
                                                                                         "props": [
-                                                                                            {
-                                                                                                "name": "type",
-                                                                                                "type": "string",
-                                                                                                "required": True,
-                                                                                                "default": {
-                                                                                                    "value": "SecureString",
-                                                                                                },
-                                                                                            },
                                                                                             {
                                                                                                 "name": "value",
                                                                                                 "type": "string",
@@ -224,7 +253,6 @@ class SchemaTest(TestCase):
 
                                                                 ]
                                                             }
-
                                                         ]
                                                     }
                                                 }
@@ -263,7 +291,7 @@ class SchemaTest(TestCase):
                     ],
                 },
                 {
-                    "arg": "$type",
+                    "prop": "type",
                     "value": "SelfHosted",
                     "props": [
                         {
@@ -301,18 +329,38 @@ class SchemaTest(TestCase):
             "arg": "$ssisProperties.expressCustomSetupProperties",
             "item": {
                 "type": "object",
+                "props": [
+                    {
+                        "name": "type",
+                        "type": "string",
+                        "required": True,
+                        "enum": {
+                            "items": [
+                                {
+                                    "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup",
+                                    "value": "CmdkeySetup",
+                                },
+                                {
+                                    "arg": "$ssisProperties.expressCustomSetupProperties[].EnvironmentVariableSetup",
+                                    "value": "EnvironmentVariableSetup",
+                                },
+                                {
+                                    "arg": "$ssisProperties.expressCustomSetupProperties[].ComponentSetup",
+                                    "value": "ComponentSetup",
+                                },
+                                {
+                                    "arg": "$ssisProperties.expressCustomSetupProperties[].AzPowerShellSetup",
+                                    "value": "AzPowerShellSetup",
+                                }
+                            ]
+                        }
+                    },
+                ],
                 "discriminators": [
                     {
-                        "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup",
+                        "prop": "type",
+                        "value": "CmdkeySetup",
                         "props": [
-                            {
-                                "name": "type",
-                                "type": "string",
-                                "required": True,
-                                "default": {
-                                    "value": "CmdkeySetup",
-                                }
-                            },
                             {
                                 "name": "typeProperties",
                                 "type": "object",
@@ -335,18 +383,27 @@ class SchemaTest(TestCase):
                                         "type": "object",
                                         "required": True,
                                         "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password",
+                                        "props": [
+                                            {
+                                                "name": "type",
+                                                "type": "string",
+                                                "required": True,
+                                                "enum": {
+                                                    "items": [
+                                                        {
+                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString",
+                                                            "value": "SecureString",
+                                                        }
+                                                    ],
+                                                },
+                                            }
+
+                                        ],
                                         "discriminators": [
                                             {
-                                                "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString",
+                                                "prop": "type",
+                                                "value": "SecureString",
                                                 "props": [
-                                                    {
-                                                        "name": "type",
-                                                        "type": "string",
-                                                        "required": True,
-                                                        "default": {
-                                                            "value": "SecureString",
-                                                        },
-                                                    },
                                                     {
                                                         "name": "value",
                                                         "type": "string",
@@ -363,7 +420,6 @@ class SchemaTest(TestCase):
 
                         ]
                     }
-
                 ]
             }
         })
@@ -401,7 +457,7 @@ class SchemaTest(TestCase):
             ],
             "discriminators": [
                 {
-                    "arg": "$type",
+                    "prop": "type",
                     "value": "Managed",
                     "props": [
                         {
@@ -425,18 +481,38 @@ class SchemaTest(TestCase):
                                                     "arg": "$ssisProperties.expressCustomSetupProperties",
                                                     "item": {
                                                         "type": "object",
+                                                        "props": [
+                                                            {
+                                                                "name": "type",
+                                                                "type": "string",
+                                                                "required": True,
+                                                                "enum": {
+                                                                    "items": [
+                                                                        {
+                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup",
+                                                                            "value": "CmdkeySetup",
+                                                                        },
+                                                                        {
+                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].EnvironmentVariableSetup",
+                                                                            "value": "EnvironmentVariableSetup",
+                                                                        },
+                                                                        {
+                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].ComponentSetup",
+                                                                            "value": "ComponentSetup",
+                                                                        },
+                                                                        {
+                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].AzPowerShellSetup",
+                                                                            "value": "AzPowerShellSetup",
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                        ],
                                                         "discriminators": [
                                                             {
-                                                                "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup",
+                                                                "prop": "type",
+                                                                "value": "CmdkeySetup",
                                                                 "props": [
-                                                                    {
-                                                                        "name": "type",
-                                                                        "type": "string",
-                                                                        "required": True,
-                                                                        "default": {
-                                                                            "value": "CmdkeySetup",
-                                                                        }
-                                                                    },
                                                                     {
                                                                         "name": "typeProperties",
                                                                         "type": "object",
@@ -459,18 +535,27 @@ class SchemaTest(TestCase):
                                                                                 "type": "object",
                                                                                 "required": True,
                                                                                 "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password",
+                                                                                "props": [
+                                                                                    {
+                                                                                        "name": "type",
+                                                                                        "type": "string",
+                                                                                        "required": True,
+                                                                                        "enum": {
+                                                                                            "items": [
+                                                                                                {
+                                                                                                    "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString",
+                                                                                                    "value": "SecureString",
+                                                                                                }
+                                                                                            ],
+                                                                                        },
+                                                                                    }
+
+                                                                                ],
                                                                                 "discriminators": [
                                                                                     {
-                                                                                        "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString",
+                                                                                        "prop": "type",
+                                                                                        "value": "SecureString",
                                                                                         "props": [
-                                                                                            {
-                                                                                                "name": "type",
-                                                                                                "type": "string",
-                                                                                                "required": True,
-                                                                                                "default": {
-                                                                                                    "value": "SecureString",
-                                                                                                },
-                                                                                            },
                                                                                             {
                                                                                                 "name": "value",
                                                                                                 "type": "string",
@@ -487,7 +572,6 @@ class SchemaTest(TestCase):
 
                                                                 ]
                                                             }
-
                                                         ]
                                                     }
                                                 }
@@ -526,7 +610,7 @@ class SchemaTest(TestCase):
                     ],
                 },
                 {
-                    "arg": "$type",
+                    "prop": "type",
                     "value": "SelfHosted",
                     "props": [
                         {
@@ -562,72 +646,100 @@ class SchemaTest(TestCase):
             "var": "$instanceList",
             "ref": "$insts",
             "item": {
-                                                        "type": "object",
-                                                        "discriminators": [
-                                                            {
-                                                                "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup",
-                                                                "props": [
-                                                                    {
-                                                                        "name": "type",
-                                                                        "type": "string",
-                                                                        "required": True,
-                                                                        "default": {
-                                                                            "value": "CmdkeySetup",
-                                                                        }
-                                                                    },
-                                                                    {
-                                                                        "name": "typeProperties",
-                                                                        "type": "object",
-                                                                        "required": True,
-                                                                        "props": [
-                                                                            {
-                                                                                "name": "targetName",
-                                                                                "type": "object",
-                                                                                "required": True,
-                                                                                "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.targetName",
-                                                                            },
-                                                                            {
-                                                                                "name": "userName",
-                                                                                "type": "object",
-                                                                                "required": True,
-                                                                                "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.userName",
-                                                                            },
-                                                                            {
-                                                                                "name": "password",
-                                                                                "type": "object",
-                                                                                "required": True,
-                                                                                "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password",
-                                                                                "discriminators": [
-                                                                                    {
-                                                                                        "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString",
-                                                                                        "props": [
-                                                                                            {
-                                                                                                "name": "type",
-                                                                                                "type": "string",
-                                                                                                "required": True,
-                                                                                                "default": {
-                                                                                                    "value": "SecureString",
-                                                                                                },
-                                                                                            },
-                                                                                            {
-                                                                                                "name": "value",
-                                                                                                "type": "string",
-                                                                                                "required": True,
-                                                                                                "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString.value"
-                                                                                            }
-                                                                                        ]
-                                                                                    }
-                                                                                ]
-                                                                            }
-                                                                        ]
+                "type": "object",
+                "props": [
+                    {
+                        "name": "type",
+                        "type": "string",
+                        "required": True,
+                        "enum": {
+                            "items": [
+                                {
+                                    "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup",
+                                    "value": "CmdkeySetup",
+                                },
+                                {
+                                    "arg": "$ssisProperties.expressCustomSetupProperties[].EnvironmentVariableSetup",
+                                    "value": "EnvironmentVariableSetup",
+                                },
+                                {
+                                    "arg": "$ssisProperties.expressCustomSetupProperties[].ComponentSetup",
+                                    "value": "ComponentSetup",
+                                },
+                                {
+                                    "arg": "$ssisProperties.expressCustomSetupProperties[].AzPowerShellSetup",
+                                    "value": "AzPowerShellSetup",
+                                }
+                            ]
+                        }
+                    },
+                ],
+                "discriminators": [
+                    {
+                        "prop": "type",
+                        "value": "CmdkeySetup",
+                        "props": [
+                            {
+                                "name": "typeProperties",
+                                "type": "object",
+                                "required": True,
+                                "props": [
+                                    {
+                                        "name": "targetName",
+                                        "type": "object",
+                                        "required": True,
+                                        "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.targetName",
+                                    },
+                                    {
+                                        "name": "userName",
+                                        "type": "object",
+                                        "required": True,
+                                        "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.userName",
+                                    },
+                                    {
+                                        "name": "password",
+                                        "type": "object",
+                                        "required": True,
+                                        "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password",
+                                        "props": [
+                                            {
+                                                "name": "type",
+                                                "type": "string",
+                                                "required": True,
+                                                "enum": {
+                                                    "items": [
+                                                        {
+                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString",
+                                                            "value": "SecureString",
+                                                        }
+                                                    ],
+                                                },
+                                            }
 
-                                                                    }
-
-                                                                ]
-                                                            }
-
-                                                        ]
+                                        ],
+                                        "discriminators": [
+                                            {
+                                                "prop": "type",
+                                                "value": "SecureString",
+                                                "props": [
+                                                    {
+                                                        "name": "value",
+                                                        "type": "string",
+                                                        "required": True,
+                                                        "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString.value"
                                                     }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+
+                            }
+
+                        ]
+                    }
+                ]
+            }
         })
         json.validate()
         print(json.to_native())

@@ -3,14 +3,15 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 from schematics.models import Model
-from schematics.types import StringType, ModelType, ListType, URLType, PolyModelType, IntType
-from ._fields import CMDVariantField, CMDPrimitiveField, CMDBooleanField
+from schematics.types import StringType, ModelType, ListType, PolyModelType, IntType, URLType
+from ._fields import CMDVariantField, CMDPrimitiveField, CMDBooleanField, CMDURLPathField
 from ._http_body import CMDHttpBody
 
 
 class CMDHttpParam(Model):
     # properties as tags
     name = StringType(required=True)
+    required = CMDBooleanField()
     arg = CMDVariantField(required=True)
 
 
@@ -28,6 +29,9 @@ class CMDHttpRequestArgs(Model):
     params = ListType(ModelType(CMDHttpParam))
     consts = ListType(ModelType(CMDHttpConst))
 
+    class Options:
+        serialize_when_none = True
+
 
 class CMDHttpRequest(Model):
     # properties as tags
@@ -39,16 +43,25 @@ class CMDHttpRequest(Model):
     header = ModelType(CMDHttpRequestArgs)
     body = PolyModelType(CMDHttpBody, allow_subclasses=True)
 
+    class Options:
+        serialize_when_none = True
+
 
 class CMDHttpResponseHeaderItem(Model):
     # properties as tags
     name = StringType(required=True)
     var = CMDVariantField()
 
+    class Options:
+        serialize_when_none = True
+
 
 class CMDHttpResponseHeader(Model):
     # properties as nodes
     items = ListType(ModelType(CMDHttpResponseHeaderItem))
+
+    class Options:
+        serialize_when_none = True
 
 
 class CMDHttpResponse(Model):
@@ -67,10 +80,13 @@ class CMDHttpResponse(Model):
     header = ModelType(CMDHttpResponseHeader)
     body = PolyModelType(CMDHttpBody, allow_subclasses=True)
 
+    class Options:
+        serialize_when_none = True
+
 
 class CMDHttpAction(Model):
     # properties as tags
-    path = URLType(required=True)
+    path = CMDURLPathField(required=True)
 
     # properties as nodes
     request = ModelType(CMDHttpRequest)

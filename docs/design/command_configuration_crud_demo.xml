@@ -435,7 +435,7 @@
                                 </enum>
                             </prop>
                             <prop name="lastModifiedAt" type="string" format="date-time" readonly="true"/>
-                            <prop name="properties" type="object" flatten="true">
+                            <prop name="properties" type="object" clientFlatten="true">
                                 <prop name="description" type="string"/>
                                 <prop name="immutableId" type="string" readonly="true"/>
                                 <prop name="dataSources" type="object">
@@ -607,7 +607,7 @@
                 </response>
             </http>
         </operation>
-        <output type="object" ref="$instance" clientFlatten="true"/>
+        <output type="object" ref="$instance" clientclientFlatten="true"/>
     </command>
 
     <!--  monitor data-collection rule delete  -->
@@ -696,7 +696,7 @@
                 </response>
             </http>
         </operation>
-        <output type="object" ref="$instance" clientFlatten="true"/>
+        <output type="object" ref="$instance" clientclientFlatten="true"/>
     </command>
 
     <!--  monitor data-collection rule update  -->
@@ -1197,7 +1197,7 @@
         </operation>
 
         <operation when="$condition_3">
-            <instanceUpdate instance="$instance" clientFlatten="true">
+            <instanceUpdate instance="$instance" clientclientFlatten="true">
                 <generic add="$add" set="$set" remove="$remove" forceString="$forceString"/>
             </instanceUpdate>
         </operation>
@@ -1238,7 +1238,7 @@
             </http>
         </operation>
 
-        <output type="object" ref="$instance" clientFlatten="true"/>
+        <output type="object" ref="$instance" clientclientFlatten="true"/>
     </command>
 
     <!--  monitor data-collection rule list  -->
@@ -1452,7 +1452,7 @@
             <operation>
                 <buildFilter var="$index" idx="-1"/>
             </operation>
-            <output type="object" ref="$instance.properties.destinations.logAnalytics[$index]" clientFlatten="true"/>
+            <output type="object" ref="$instance.properties.destinations.logAnalytics[$index]" clientclientFlatten="true"/>
         </command>
 
         <!--  monitor data-collection rule log-analytics remove  -->
@@ -1605,7 +1605,7 @@
                 </http>
             </operation>
 
-            <output type="array<object>" ref="$instance.properties.destinations.logAnalytics" clientFlatten="true"/>
+            <output type="array<object>" ref="$instance.properties.destinations.logAnalytics" clientclientFlatten="true"/>
         </command>
 
         <!--  monitor data-collection rule log-analytics show  -->
@@ -1668,7 +1668,7 @@
                 </buildFilter>
             </operation>
 
-            <output type="object" ref="$instance.properties.destinations.logAnalytics[$index]" clientFlatten="true"/>
+            <output type="object" ref="$instance.properties.destinations.logAnalytics[$index]" clientclientFlatten="true"/>
         </command>
 
         <!--  monitor data-collection rule log-analytics set  -->
@@ -1808,7 +1808,7 @@
                     </response>
                 </http>
             </operation>
-            <output type="object" ref="$instance.properties.destinations.logAnalytics[$index]" clientFlatten="true"/>
+            <output type="object" ref="$instance.properties.destinations.logAnalytics[$index]" clientclientFlatten="true"/>
         </command>
 
     </commandGroup>

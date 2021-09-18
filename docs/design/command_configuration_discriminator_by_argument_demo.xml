@@ -348,16 +348,16 @@
             <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DataFactory/factories/{factoryName}/integrationRuntimes/{integrationRuntimeName}">
                 <request method="put">
                     <path>
-                        <param name="subscriptionId" arg="$subscription"/>
-                        <param name="resourceGroupName" arg="$resourceGroup"/>
-                        <param name="factoryName" arg="$factoryName"/>
-                        <param name="integrationRuntimeName" arg="$integrationRuntimeName"/>
+                        <param name="subscriptionId" required="true" arg="$subscription"/>
+                        <param name="resourceGroupName" required="true" arg="$resourceGroup"/>
+                        <param name="factoryName" required="true" arg="$factoryName"/>
+                        <param name="integrationRuntimeName" required="true" arg="$integrationRuntimeName"/>
                     </path>
                     <query>
-                        <const name="api-version" value="2018-06-01"/>
+                        <const name="api-version">"2018-06-01"</const>
                     </query>
                     <header>
-                        <param name="If-Match" value="$ifMatch"/>
+                        <param name="If-Match" required="false" arg="$ifMatch"/>
                     </header>
                     <body>
                         <json type="object">
@@ -369,7 +369,7 @@
                                     </enum>
                                 </prop>
                                 <prop name="description" type="string" arg="$description"/>
-                                <discriminator arg="$type" value="Managed">
+                                <discriminator prop="type" value="Managed">
                                     <prop name="typeProperties" type="object" required="true">
                                         <prop name="computeProperties" type="object" arg="$computeProperties">
                                             <prop name="location" type="string"/>
@@ -379,9 +379,9 @@
                                             <prop name="dataFlowProperties" type="object">
                                                 <prop name="computeType" type="string">
                                                     <enum>
-                                                        <enum-item name="General">"General"</enum-item>
-                                                        <enum-item name="MemoryOptimized">"MemoryOptimized"</enum-item>
-                                                        <enum-item name="ComputeOptimized">"ComputeOptimized"</enum-item>
+                                                        <enum-item>"General"</enum-item>
+                                                        <enum-item>"MemoryOptimized"</enum-item>
+                                                        <enum-item>"ComputeOptimized"</enum-item>
                                                     </enum>
                                                 </prop>
                                                 <prop name="coreCount" type="integer"/>
@@ -406,10 +406,10 @@
                                                 </prop>
                                                 <prop name="catalogPricingTier" type="string" arg="$ssisProperties.catalogInfo.catalogPricingTier">
                                                     <enum>
-                                                        <enum-item name="Basic">"Basic"</enum-item>
-                                                        <enum-item name="Standard">"Standard"</enum-item>
-                                                        <enum-item name="Premium">"Premium"</enum-item>
-                                                        <enum-item name="PremiumRS">"PremiumRS"</enum-item>
+                                                        <enum-item>"Basic"</enum-item>
+                                                        <enum-item>"Standard"</enum-item>
+                                                        <enum-item>"Premium"</enum-item>
+                                                        <enum-item>"PremiumRS"</enum-item>
                                                     </enum>
                                                 </prop>
                                                 <prop name="dualStandbyPairName" type="string" arg="$ssisProperties.catalogInfo.dualStandbyPairName"/>
@@ -417,8 +417,8 @@
                                             </prop>
                                             <prop name="licenseType" type="string" arg="$ssisProperties.licenseType">
                                                 <enum>
-                                                    <enum-item name="BasePrice">"BasePrice"</enum-item>
-                                                    <enum-item name="LicenseIncluded">"LicenseIncluded"</enum-item>
+                                                    <enum-item>"BasePrice"</enum-item>
+                                                    <enum-item>"LicenseIncluded"</enum-item>
                                                 </enum>
                                             </prop>
                                             <prop name="customSetupScriptProperties" type="object" arg="$ssisProperties.customSetupScriptProperties">
@@ -432,9 +432,9 @@
                                                 <prop name="connectVia" type="object" arg="$ssisProperties.dataProxyProperties.connectVia">
                                                     <prop name="type" type="string" arg="$ssisProperties.dataProxyProperties.connectVia.type">
                                                         <enum>
-                                                            <enum-item name="IntegrationRuntimeReference">"IntegrationRuntimeReference"</enum-item>
-                                                            <enum-item name="LinkedServiceReference">"LinkedServiceReference"</enum-item>
-                                                            <enum-item name="CredentialReference">"CredentialReference"</enum-item>
+                                                            <enum-item>"IntegrationRuntimeReference"</enum-item>
+                                                            <enum-item>"LinkedServiceReference"</enum-item>
+                                                            <enum-item>"CredentialReference"</enum-item>
                                                         </enum>
                                                     </prop>
                                                     <prop name="referenceName" type="string" arg="$ssisProperties.dataProxyProperties.connectVia.referenceName"/>
@@ -442,9 +442,9 @@
                                                 <prop name="stagingLinkedService" type="object" arg="$ssisProperties.dataProxyProperties.stagingLinkedService">
                                                     <prop name="type" type="string" arg="$ssisProperties.dataProxyProperties.stagingLinkedService.type">
                                                         <enum>
-                                                            <enum-item name="IntegrationRuntimeReference">"IntegrationRuntimeReference"</enum-item>
-                                                            <enum-item name="LinkedServiceReference">"LinkedServiceReference"</enum-item>
-                                                            <enum-item name="CredentialReference">"CredentialReference"</enum-item>
+                                                            <enum-item>"IntegrationRuntimeReference"</enum-item>
+                                                            <enum-item>"LinkedServiceReference"</enum-item>
+                                                            <enum-item>"CredentialReference"</enum-item>
                                                         </enum>
                                                     </prop>
                                                     <prop name="referenceName" type="string" arg="$ssisProperties.dataProxyProperties.stagingLinkedService.referenceName"/>
@@ -453,28 +453,40 @@
                                             </prop>
                                             <prop name="edition" type="string" arg="$ssisProperties.edition">
                                                 <enum>
-                                                    <enum-item name="Standard">"Standard"</enum-item>
-                                                    <enum-item name="Enterprise">"Enterprise"</enum-item>
+                                                    <enum-item>"Standard"</enum-item>
+                                                    <enum-item>"Enterprise"</enum-item>
                                                 </enum>
                                             </prop>
                                             <prop name="expressCustomSetupProperties" type="array<object>" arg="$ssisProperties.expressCustomSetupProperties">
                                                 <array>
-                                                    <discriminator arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup">
-                                                        <prop name="type" type="string" required="true" value="CmdkeySetup"/>
+                                                    <prop name="type" type="string" required="true">
+                                                        <enum>
+                                                            <enum-item arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup">"CmdkeySetup"</enum-item>
+                                                            <enum-item arg="$ssisProperties.expressCustomSetupProperties[].EnvironmentVariableSetup">"EnvironmentVariableSetup"</enum-item>
+                                                            <enum-item arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup">"ComponentSetup"</enum-item>
+                                                            <enum-item arg="$ssisProperties.expressCustomSetupProperties[].AzPowerShellSetup">"AzPowerShellSetup"</enum-item>
+                                                        </enum>
+                                                    </prop>
+                                                    <discriminator prop="type" value="CmdkeySetup">
                                                         <prop name="typeProperties" type="object" required="true">
                                                             <prop name="targetName" type="object" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.targetName"/>
                                                             <prop name="userName" type="object" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.userName"/>
                                                             <prop name="password" type="object" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password">
-                                                                <discriminator arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString">
-                                                                    <prop name="type" type="string" required="true" value="SecureString"/>
+                                                                <prop name="type" type="string" required="true">
+                                                                    <enum>
+                                                                        <enum-item arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString">"SecureString"</enum-item>
+                                                                        <enum-item arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret">"AzureKeyVaultSecret"</enum-item>
+                                                                    </enum>
+                                                                </prop>
+
+                                                                <discriminator prop="type" value="SecureString">
                                                                     <prop name="value" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString.value"/>
                                                                 </discriminator>
-                                                                <discriminator arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret">
-                                                                    <prop name="type" type="string" required="true" value="AzureKeyVaultSecret"/>
+                                                                <discriminator prop="type" value="AzureKeyVaultSecret">
                                                                     <prop name="store" type="object" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.store">
                                                                         <prop name="type" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.store.type">
                                                                             <enum value="string">
-                                                                                <enum-item name="LinkedServiceReference">"LinkedServiceReference"</enum-item>
+                                                                                <enum-item>"LinkedServiceReference"</enum-item>
                                                                             </enum>
                                                                         </prop>
                                                                         <prop name="referenceName" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.AzureKeyVaultSecret.store.referenceName"/>
@@ -489,28 +501,30 @@
                                                             </prop>
                                                         </prop>
                                                     </discriminator>
-                                                    <discriminator arg="$ssisProperties.expressCustomSetupProperties[].EnvironmentVariableSetup">
-                                                        <prop name="type" type="string" required="true" value="EnvironmentVariableSetup"/>
+                                                    <discriminator prop="type" value="EnvironmentVariableSetup">
                                                         <prop name="typeProperties" type="object" required="true">
                                                             <prop name="variableName" type="string" required="true"/>
                                                             <prop name="variableValue" type="string" required="true"/>
                                                         </prop>
                                                     </discriminator>
-                                                    <discriminator arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup">
-                                                        <prop name="type" type="string" required="true" value="ComponentSetup"/>
+                                                    <discriminator prop="type" value="ComponentSetup">
                                                         <prop name="typeProperties" type="object" required="true">
                                                             <prop name="componentName" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.componentName"/>
                                                             <prop name="licenseKey" type="object" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey">
-                                                                <discriminator arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.SecureString">
-                                                                    <prop name="type" type="string" required="true" value="SecureString"/>
+                                                                <prop name="type" type="string" required="true">
+                                                                    <enum>
+                                                                        <enum-item arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.SecureString">"SecureString"</enum-item>
+                                                                        <enum-item arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret">"AzureKeyVaultSecret"</enum-item>
+                                                                    </enum>
+                                                                </prop>
+                                                                <discriminator prop="type" value="SecureString">
                                                                     <prop name="value" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.SecureString.value"/>
                                                                 </discriminator>
-                                                                <discriminator arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret">
-                                                                    <prop name="type" type="string" required="true" value="AzureKeyVaultSecret"/>
+                                                                <discriminator prop="type" value="AzureKeyVaultSecret">
                                                                     <prop name="store" type="object" required="true" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.store">
                                                                         <prop name="type" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.store.type">
                                                                             <enum value="string">
-                                                                                <enum-item name="LinkedServiceReference">"LinkedServiceReference"</enum-item>
+                                                                                <enum-item>"LinkedServiceReference"</enum-item>
                                                                             </enum>
                                                                         </prop>
                                                                         <prop name="referenceName" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].ComponentSetup.licenseKey.AzureKeyVaultSecret.store.referenceName"/>
@@ -524,8 +538,7 @@
                                                             </prop>
                                                         </prop>
                                                     </discriminator>
-                                                    <discriminator arg="$ssisProperties.expressCustomSetupProperties[].AzPowerShellSetup">
-                                                        <prop name="type" type="string" required="true" value="AzPowerShellSetup"/>
+                                                    <discriminator prop="type" value="AzPowerShellSetup">
                                                         <prop name="typeProperties" type="object" required="true">
                                                             <prop name="version" type="string" required="true" arg="$ssisProperties.expressCustomSetupProperties[].AzPowerShellSetup.version"/>
                                                         </prop>
@@ -538,9 +551,9 @@
                                                     <prop name="packageStoreLinkedService" type="object" required="true" arg="$ssisProperties.packageStores[].packageStoreLinkedService">
                                                         <prop name="type" type="string" arg="$ssisProperties.packageStores[].packageStoreLinkedService.type">
                                                             <enum>
-                                                                <enum-item name="IntegrationRuntimeReference">"IntegrationRuntimeReference"</enum-item>
-                                                                <enum-item name="LinkedServiceReference">"LinkedServiceReference"</enum-item>
-                                                                <enum-item name="CredentialReference">"CredentialReference"</enum-item>
+                                                                <enum-item>"IntegrationRuntimeReference"</enum-item>
+                                                                <enum-item>"LinkedServiceReference"</enum-item>
+                                                                <enum-item>"CredentialReference"</enum-item>
                                                             </enum>
                                                         </prop>
                                                         <prop name="referenceName" type="string" arg="$ssisProperties.packageStores[].packageStoreLinkedService.referenceName"/>
@@ -550,9 +563,9 @@
                                             <prop name="managedCredential" type="object" arg="$ssisProperties.managedCredential">
                                                 <prop name="type" type="string" arg="$ssisProperties.managedCredential.type">
                                                     <enum>
-                                                        <enum-item name="IntegrationRuntimeReference">"IntegrationRuntimeReference"</enum-item>
-                                                        <enum-item name="LinkedServiceReference">"LinkedServiceReference"</enum-item>
-                                                        <enum-item name="CredentialReference">"CredentialReference"</enum-item>
+                                                        <enum-item>"IntegrationRuntimeReference"</enum-item>
+                                                        <enum-item>"LinkedServiceReference"</enum-item>
+                                                        <enum-item>"CredentialReference"</enum-item>
                                                     </enum>
                                                 </prop>
                                                 <prop name="referenceName" type="string" arg="$ssisProperties.managedCredential.referenceName"/>
@@ -570,7 +583,7 @@
                                     </prop>
                                     <additionalProp type="object"/>
                                 </discriminator>
-                                <discriminator arg="$type" value="SelfHosted">
+                                <discriminator prop="type" value="SelfHosted">
                                     <prop name="typeProperties" type="object" required="true">
                                         <prop name="linkedInfo" type="object" arg="$linkedInfo">
                                             <prop name="authorizationType" type="string" required="true" arg="$linkedInfo.authorizationType"/>
@@ -582,6 +595,261 @@
                         </json>
                     </body>
                 </request>
+                <response statusCodes="200">
+                    <header>
+                    </header>
+                    <body>
+                        <json var="$instance" type="object">
+                            <prop name="properties" type="object" required="true">
+                                <prop name="type" type="string" required="true">
+                                    <enum>
+                                        <enum-item>"Managed"</enum-item>
+                                        <enum-item>"SelfHosted"</enum-item>
+                                    </enum>
+                                </prop>
+                                <prop name="description" type="string"/>
+                                <discriminator prop="type" value="Managed">
+                                    <prop name="typeProperties" type="object" required="true">
+                                        <prop name="computeProperties" type="object">
+                                            <prop name="location" type="string"/>
+                                            <prop name="nodeSize" type="string"/>
+                                            <prop name="numberOfNodes" type="integer"/>
+                                            <prop name="maxParallelExecutionsPerNode" type="integer"/>
+                                            <prop name="dataFlowProperties" type="object">
+                                                <prop name="computeType" type="string">
+                                                    <enum>
+                                                        <enum-item>"General"</enum-item>
+                                                        <enum-item>"MemoryOptimized"</enum-item>
+                                                        <enum-item>"ComputeOptimized"</enum-item>
+                                                    </enum>
+                                                </prop>
+                                                <prop name="coreCount" type="integer"/>
+                                                <prop name="timeToLive" type="integer"/>
+                                                <additionalProp type="object"/>
+                                            </prop>
+                                            <prop name="vNetProperties">
+                                                <prop name="vNetId" type="string"/>
+                                                <prop name="subnet" type="string"/>
+                                                <prop name="publicIPs" type="array<string>"/>
+                                                <additionalProp type="object"/>
+                                            </prop>
+                                            <additionalProp type="object"/>
+                                        </prop>
+                                        <prop name="ssisProperties" type="object">
+                                            <prop name="catalogInfo" type="object">
+                                                <prop name="catalogServerEndpoint" type="string"/>
+                                                <prop name="catalogAdminUserName" type="string"/>
+                                                <prop name="catalogAdminPassword" type="object">
+                                                    <prop name="type" type="string" required="true" value="SecureString"/>
+                                                    <prop name="value" type="string" required="true"/>
+                                                </prop>
+                                                <prop name="catalogPricingTier" type="string">
+                                                    <enum>
+                                                        <enum-item>"Basic"</enum-item>
+                                                        <enum-item>"Standard"</enum-item>
+                                                        <enum-item>"Premium"</enum-item>
+                                                        <enum-item>"PremiumRS"</enum-item>
+                                                    </enum>
+                                                </prop>
+                                                <prop name="dualStandbyPairName" type="string"/>
+                                                <additionalProp type="object"/>
+                                            </prop>
+                                            <prop name="licenseType" type="string">
+                                                <enum>
+                                                    <enum-item>"BasePrice"</enum-item>
+                                                    <enum-item>"LicenseIncluded"</enum-item>
+                                                </enum>
+                                            </prop>
+                                            <prop name="customSetupScriptProperties" type="object">
+                                                <prop name="blobContainerUri" type="string"/>
+                                                <prop name="sasToken" type="object">
+                                                    <prop name="type" type="string" required="true" value="SecureString"/>
+                                                    <prop name="value" type="string" required="true"/>
+                                                </prop>
+                                            </prop>
+                                            <prop name="dataProxyProperties" type="object">
+                                                <prop name="connectVia" type="object">
+                                                    <prop name="type" type="string">
+                                                        <enum>
+                                                            <enum-item>"IntegrationRuntimeReference"</enum-item>
+                                                            <enum-item>"LinkedServiceReference"</enum-item>
+                                                            <enum-item>"CredentialReference"</enum-item>
+                                                        </enum>
+                                                    </prop>
+                                                    <prop name="referenceName" type="string"/>
+                                                </prop>
+                                                <prop name="stagingLinkedService" type="object">
+                                                    <prop name="type" type="string">
+                                                        <enum>
+                                                            <enum-item>"IntegrationRuntimeReference"</enum-item>
+                                                            <enum-item>"LinkedServiceReference"</enum-item>
+                                                            <enum-item>"CredentialReference"</enum-item>
+                                                        </enum>
+                                                    </prop>
+                                                    <prop name="referenceName" type="string"/>
+                                                </prop>
+                                                <prop name="path" type="string"/>
+                                            </prop>
+                                            <prop name="edition" type="string">
+                                                <enum>
+                                                    <enum-item>"Standard"</enum-item>
+                                                    <enum-item>"Enterprise"</enum-item>
+                                                </enum>
+                                            </prop>
+                                            <prop name="expressCustomSetupProperties" type="array<object>">
+                                                <array>
+                                                    <prop name="type" type="string" required="true">
+                                                        <enum>
+                                                            <enum-item>"CmdkeySetup"</enum-item>
+                                                            <enum-item>"EnvironmentVariableSetup"</enum-item>
+                                                            <enum-item>"ComponentSetup"</enum-item>
+                                                            <enum-item>"AzPowerShellSetup"</enum-item>
+                                                        </enum>
+                                                    </prop>
+                                                    <discriminator prop="type" value="CmdkeySetup">
+                                                        <prop name="typeProperties" type="object" required="true">
+                                                            <prop name="targetName" type="object" required="true"/>
+                                                            <prop name="userName" type="object" required="true"/>
+                                                            <prop name="password" type="object" required="true">
+                                                                <prop name="type" type="string" required="true">
+                                                                    <enum>
+                                                                        <enum-item>"SecureString"</enum-item>
+                                                                        <enum-item>"AzureKeyVaultSecret"</enum-item>
+                                                                    </enum>
+                                                                </prop>
+
+                                                                <discriminator prop="type" value="SecureString">
+                                                                    <prop name="value" type="string" required="true"/>
+                                                                </discriminator>
+                                                                <discriminator prop="type" value="AzureKeyVaultSecret">
+                                                                    <prop name="store" type="object" required="true">
+                                                                        <prop name="type" type="string" required="true">
+                                                                            <enum value="string">
+                                                                                <enum-item>"LinkedServiceReference"</enum-item>
+                                                                            </enum>
+                                                                        </prop>
+                                                                        <prop name="referenceName" type="string" required="true"/>
+                                                                        <prop name="parameters" type="object">
+                                                                            <additionalProp type="object"/>
+                                                                        </prop>
+                                                                    </prop>
+                                                                    <!--   TODO: distinguish with `dict` type and `any` type for object  -->
+                                                                    <prop name="secretName" type="object" required="true"/>
+                                                                    <prop name="secretVersion" type="object"/>
+                                                                </discriminator>
+                                                            </prop>
+                                                        </prop>
+                                                    </discriminator>
+                                                    <discriminator prop="type" value="EnvironmentVariableSetup">
+                                                        <prop name="typeProperties" type="object" required="true">
+                                                            <prop name="variableName" type="string" required="true"/>
+                                                            <prop name="variableValue" type="string" required="true"/>
+                                                        </prop>
+                                                    </discriminator>
+                                                    <discriminator prop="type" value="ComponentSetup">
+                                                        <prop name="typeProperties" type="object" required="true">
+                                                            <prop name="componentName" type="string" required="true"/>
+                                                            <prop name="licenseKey" type="object">
+                                                                <prop name="type" type="string" required="true">
+                                                                    <enum>
+                                                                        <enum-item>"SecureString"</enum-item>
+                                                                        <enum-item>"AzureKeyVaultSecret"</enum-item>
+                                                                    </enum>
+                                                                </prop>
+                                                                <discriminator prop="type" value="SecureString">
+                                                                    <prop name="value" type="string" required="true"/>
+                                                                </discriminator>
+                                                                <discriminator prop="type" value="AzureKeyVaultSecret">
+                                                                    <prop name="store" type="object" required="true">
+                                                                        <prop name="type" type="string" required="true">
+                                                                            <enum value="string">
+                                                                                <enum-item>"LinkedServiceReference"</enum-item>
+                                                                            </enum>
+                                                                        </prop>
+                                                                        <prop name="referenceName" type="string" required="true"/>
+                                                                        <prop name="parameters" type="object">
+                                                                            <additionalProp type="object"/>
+                                                                        </prop>
+                                                                    </prop>
+                                                                    <prop name="secretName" type="object" required="true"/>
+                                                                    <prop name="secretVersion" type="object"/>
+                                                                </discriminator>
+                                                            </prop>
+                                                        </prop>
+                                                    </discriminator>
+                                                    <discriminator prop="type" value="AzPowerShellSetup">
+                                                        <prop name="typeProperties" type="object" required="true">
+                                                            <prop name="version" type="string" required="true"/>
+                                                        </prop>
+                                                    </discriminator>
+                                                </array>
+                                            </prop>
+                                            <prop name="packageStores" type="array<object>">
+                                                <array>
+                                                    <prop name="name" type="string" required="true"/>
+                                                    <prop name="packageStoreLinkedService" type="object" required="true">
+                                                        <prop name="type" type="string">
+                                                            <enum>
+                                                                <enum-item>"IntegrationRuntimeReference"</enum-item>
+                                                                <enum-item>"LinkedServiceReference"</enum-item>
+                                                                <enum-item>"CredentialReference"</enum-item>
+                                                            </enum>
+                                                        </prop>
+                                                        <prop name="referenceName" type="string"/>
+                                                    </prop>
+                                                </array>
+                                            </prop>
+                                            <prop name="managedCredential" type="object">
+                                                <prop name="type" type="string">
+                                                    <enum>
+                                                        <enum-item>"IntegrationRuntimeReference"</enum-item>
+                                                        <enum-item>"LinkedServiceReference"</enum-item>
+                                                        <enum-item>"CredentialReference"</enum-item>
+                                                    </enum>
+                                                </prop>
+                                                <prop name="referenceName" type="string"/>
+                                            </prop>
+                                            <additionalProp type="object"/>
+                                        </prop>
+                                    </prop>
+                                    <prop name="managedVirtualNetwork" type="object">
+                                        <prop name="type" type="string" required="true">
+                                            <enum>
+                                                <enum-item>"ManagedVirtualNetworkReference"</enum-item>
+                                            </enum>
+                                        </prop>
+                                        <prop name="referenceName" type="string" required="true"/>
+                                    </prop>
+                                    <additionalProp type="object"/>
+                                </discriminator>
+                                <discriminator prop="type" value="SelfHosted">
+                                    <prop name="typeProperties" type="object" required="true">
+                                        <prop name="linkedInfo" type="object">
+                                            <prop name="authorizationType" type="string" required="true"/>
+                                        </prop>
+                                    </prop>
+                                    <additionalProp type="object"/>
+                                </discriminator>
+                            </prop>
+                        </json>
+                    </body>
+                </response>
+                <response errorResponse="true">
+                    <header>
+                        <prop name="x-ms-request-id"/>
+                    </header>
+                    <body content-type="application/json">
+                        <json type="object" cls="@CloudError">
+                            <prop name="error" type="object" clientFlatten="true">
+                                <prop name="code" type="string" required="true"/>
+                                <prop name="message" type="string" required="true"/>
+                                <prop name="target" type="string"/>
+                                <!-- loop reference expression -->
+                                <prop name="details" type="array<@CloudError>"/>
+                            </prop>
+                        </json>
+                    </body>
+                </response>
             </http>
         </operation>
     </command>
