@@ -48,19 +48,6 @@ class CMDVariantField(StringType):
         )
 
 
-class CMDTypeField(StringType):
-    """
-    Base type: "array", "boolean", "integer", "float", "object", "string"
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(CMDTypeField, self).__init__(
-            serialized_name='type',
-            deserialize_from='type',
-            *args, **kwargs
-        )
-
-
 class CMDSchemaClassField(StringType):
 
     def __init__(self, *args, **kwargs):
