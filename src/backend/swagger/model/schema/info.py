@@ -11,7 +11,10 @@ class Info(Model):
     title = StringType(required=True)       # The title of the application.
     version = StringType(required=True)     # Provides the version of the application API (not to be confused with the specification version)
     description = StringType()  # A short description of the application
-    termsOfService = StringType()  # The Terms of Service for the API.
+    terms_of_service = StringType(
+        serialized_name="termsOfService",
+        deserialize_from="termsOfService"
+    )  # The Terms of Service for the API.
     contact = ModelType(Contact)  # The contact information for the exposed API.
     license = ModelType(License)  # The license information for the exposed API.
 

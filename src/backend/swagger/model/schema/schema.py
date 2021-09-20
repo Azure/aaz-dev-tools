@@ -9,7 +9,7 @@ from .types import XmsSecretType, XAccessibilityType, XAzSearchDeprecatedType, X
 from swagger.utils.exceptions import InvalidSwaggerValueError
 
 
-def _additionalProperties_claim_function(_, data):
+def _additional_properties_claim_function(_, data):
     if isinstance(data, bool):
         return bool
     elif isinstance(data, dict):
@@ -40,15 +40,33 @@ class Schema(Model, Linkable):
     default = BaseType()
 
     # Validation keywords for numeric instances (number and integer)
-    multipleOf = FloatType(min_value=0)
+    multiple_of = FloatType(
+        min_value=0,
+        serialized_name="multipleOf",
+        deserialize_from="multipleOf"
+    )
     maximum = FloatType()
-    exclusiveMaximum = BooleanType()
+    exclusive_maximum = BooleanType(
+        serialized_name="exclusiveMaximum",
+        deserialize_from="exclusiveMaximum",
+    )
     minimum = FloatType()
-    exclusiveMinimum = BooleanType()
+    exclusive_minimum = BooleanType(
+        serialized_name="exclusiveMinimum",
+        deserialize_from="exclusiveMinimum"
+    )
 
     # Validation keywords for strings
-    maxLength = IntType(min_value=0)
-    minLength = IntType(min_value=0)
+    max_length = IntType(
+        min_value=0,
+        serialized_name="maxLength",
+        deserialize_from="maxLength"
+    )
+    min_length = IntType(
+        min_value=0,
+        serialized_name="minLength",
+        deserialize_from="minLength"
+    )
     pattern = RegularExpressionType()
 
     # Validation keywords for arrays
@@ -56,20 +74,41 @@ class Schema(Model, Linkable):
         [ModelType("Schema"), ListType(ModelType("Schema"))],
         claim_function=_items_claim_function,
     )
-    maxItems = IntType(min_value=0)
-    minItems = IntType(min_value=0)
-    uniqueItems = BooleanType()
+    max_items = IntType(
+        min_value=0,
+        serialized_name="maxItems",
+        deserialize_from="maxItems"
+    )
+    min_items = IntType(
+        min_value=0,
+        serialized_name="minItems",
+        deserialize_from="minItems"
+    )
+    unique_items = BooleanType(
+        serialized_name="uniqueItems",
+        deserialize_from="uniqueItems"
+    )
 
     # Validation keywords for objects
-    maxProperties = IntType(min_value=0)
-    minProperties = IntType(min_value=0)
+    max_properties = IntType(
+        min_value=0,
+        serialized_name="maxProperties",
+        deserialize_from="maxProperties"
+    )
+    min_properties = IntType(
+        min_value=0,
+        serialized_name="minProperties",
+        deserialize_from="minProperties"
+    )
     required = ListType(StringType(), min_size=1)
     properties = DictType(
         ModelType("Schema"),
     )
-    additionalProperties = PolyModelType(
+    additional_properties = PolyModelType(
         [bool, ModelType("Schema")],
-        claim_function=_additionalProperties_claim_function,
+        claim_function=_additional_properties_claim_function,
+        serialized_name="additionalProperties",
+        deserialize_from="additionalProperties"
     )
     discriminator = StringType()  # Adds support for polymorphism. The discriminator is the schema property name that is used to differentiate between other schema that inherit this schema. The property name used MUST be defined at this schema and it MUST be in the required property list. When used, the value MUST be the name of this schema or any schema that inherits it.
 
@@ -79,13 +118,22 @@ class Schema(Model, Linkable):
     type = StringType(
         choices=["array", "boolean", "integer", "number", "object", "string"],  # https://datatracker.ietf.org/doc/html/draft-zyp-json-schema-04#section-3.5
     )
-    allOf = ListType(
+    all_of = ListType(
         ModelType("Schema"),
+        serialized_name="allOf",
+        deserialize_from="allOf"
     )
 
-    readOnly = BooleanType()  # Relevant only for Schema "properties" definitions. Declares the property as "read only". This means that it MAY be sent as part of a response but MUST NOT be sent as part of the request. Properties marked as readOnly being true SHOULD NOT be in the required list of the defined schema. Default value is false.
+    read_only = BooleanType(
+        serialized_name="readOnly",
+        deserialize_from="readOnly"
+    )  # Relevant only for Schema "properties" definitions. Declares the property as "read only". This means that it MAY be sent as part of a response but MUST NOT be sent as part of the request. Properties marked as readOnly being true SHOULD NOT be in the required list of the defined schema. Default value is false.
     xml = ModelType(XML)  # This MAY be used only on properties schemas. It has no effect on root schemas. Adds Additional metadata to describe the XML representation format of this property.
-    externalDocs = ModelType(ExternalDocumentation)  # Additional external documentation for this schema.
+    external_docs = ModelType(
+        ExternalDocumentation,
+        serialized_name="externalDocs",
+        deserialize_from="externalDocs"
+    )  # Additional external documentation for this schema.
     example = BaseType()  # A free-form property to include an example of an instance for this schema.
 
     x_ms_client_name = XmsClientNameType()
@@ -136,19 +184,19 @@ class Schema(Model, Linkable):
             for key, prop in self.properties.items():
                 prop.link(swagger_loader, *self.traces, 'properties', key)
 
-        if self.additionalProperties is not None and isinstance(self.additionalProperties, Schema):
-            self.additionalProperties.link(swagger_loader, *self.traces, 'additionalProperties')
+        if self.additional_properties is not None and isinstance(self.additional_properties, Schema):
+            self.additional_properties.link(swagger_loader, *self.traces, 'additionalProperties')
 
-        if self.allOf is not None:
-            for idx, item in enumerate(self.allOf):
+        if self.all_of is not None:
+            for idx, item in enumerate(self.all_of):
                 item.link(swagger_loader, *self.traces, 'allOf', idx)
 
         self._link_disc()
 
     def _link_disc(self):
-        if self.allOf is None:
+        if self.all_of is None:
             return
-        for item in self.allOf:
+        for item in self.all_of:
             if item.disc_instance is not None:
                 if self.disc_parent is not None:
                     raise InvalidSwaggerValueError(

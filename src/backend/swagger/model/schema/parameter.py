@@ -52,10 +52,17 @@ class QueryParameter(Items, _ParameterBase):
     """Parameters that are appended to the URL. For example, in /items?id=###, the query parameter is id."""
 
     IN_VALUE = "query"
-    allowEmptyValue = BooleanType(default=False)  # Sets the ability to pass empty-valued parameters. This is valid only for either query or formData parameters and allows you to send a parameter with a name only or an empty value. Default value is false.
-    collectionFormat = StringType(
+    allow_empty_value = BooleanType(
+        default=False,
+        serialized_name="allowEmptyValue",
+        deserialize_from="allowEmptyValue",
+    )  # Sets the ability to pass empty-valued parameters. This is valid only for either query or formData parameters and allows you to send a parameter with a name only or an empty value. Default value is false.
+
+    collection_format = StringType(
         choices=("csv", "ssv", "tsv", "pipes", "multi"),
         default="csv",
+        serialized_name="collectionFormat",
+        deserialize_from="collectionFormat",
     )  # multi - corresponds to multiple parameter instances instead of multiple values for a single instance foo=bar&foo=baz.
 
     x_ms_api_version = XmsApiVersionType()
@@ -90,11 +97,16 @@ class FormDataParameter(Items, _ParameterBase):
         choices=("string", "number", "integer", "boolean", "array", "file"),
         required=True
     )   #  If type is "file", the consumes MUST be either "multipart/form-data", " application/x-www-form-urlencoded" or both
-    allowEmptyValue = BooleanType(default=False)  # Sets the ability to pass empty-valued parameters. This is valid only for either query or formData parameters and allows you to send a parameter with a name only or an empty value. Default value is false.
-    collectionFormat = StringType(
+    allow_empty_value = BooleanType(
+        default=False,
+        serialized_name="allowEmptyValue",
+        deserialize_from="allowEmptyValue",
+    )  # Sets the ability to pass empty-valued parameters. This is valid only for either query or formData parameters and allows you to send a parameter with a name only or an empty value. Default value is false.
+    collection_format = StringType(
         choices=("csv", "ssv", "tsv", "pipes", "multi"),
         default="csv",
-
+        serialized_name="collectionFormat",
+        deserialize_from="collectionFormat",
     ) # multi - corresponds to multiple parameter instances instead of multiple values for a single instance foo=bar&foo=baz.
 
 

@@ -14,32 +14,63 @@ class Items(Model):
 
     format = DataTypeFormatEnum()   # The extending format for the previously mentioned type. See Data Type Formats for further details.
 
-    collectionFormat = StringType(
+    collection_format = StringType(
         choices=("csv", "ssv", "tsv", "pipes"),
         default="csv",
-    ) # Determines the format of the array if type array is used. Possible values are: csv - comma separated values foo,bar; ssv - space separated values foo bar; tsv - tab separated values foo\tbar; pipes - pipe separated values foo|bar.
+        serialized_name="collectionFormat",
+        deserialize_from="collectionFormat",
+    )  # Determines the format of the array if type array is used. Possible values are: csv - comma separated values foo,bar; ssv - space separated values foo bar; tsv - tab separated values foo\tbar; pipes - pipe separated values foo|bar.
 
     default = BaseType() # This keyword can be used to supply a default JSON value associated with a particular schema.  It is RECOMMENDED that a default value be valid against the associated schema.
 
     enum = ListType(BaseType())
 
     # Validation keywords for numeric instances (number and integer)
-    multipleOf = FloatType(min_value=0)  # The value of "multipleOf" MUST be a JSON number.  This number MUST be strictly greater than 0.
+    multiple_of = FloatType(
+        min_value=0,
+        serialized_name="multipleOf",
+        deserialize_from="multipleOf",
+    )  # The value of "multipleOf" MUST be a JSON number.  This number MUST be strictly greater than 0.
     maximum = FloatType()
-    exclusiveMaximum = BooleanType()
+    exclusive_maximum = BooleanType(
+        serialized_name="exclusiveMaximum",
+        deserialize_from="exclusiveMaximum",
+    )
     minimum = FloatType()
-    exclusiveMinimum = BooleanType()
+    exclusive_minimum = BooleanType(
+        serialized_name="exclusiveMinimum",
+        deserialize_from="exclusiveMinimum"
+    )
 
     # Validation keywords for strings
-    maxLength = IntType(min_value=0)
-    minLength = IntType(min_value=0)
+    max_length = IntType(
+        min_value=0,
+        serialized_name="maxLength",
+        deserialize_from="maxLength"
+    )
+    min_length = IntType(
+        min_value=0,
+        serialized_name="minLength",
+        deserialize_from="minLength"
+    )
     pattern = RegularExpressionType()
 
     # Validation keywords for arrays
     items = ModelType("Items")   # Required if type is "array". Describes the type of items in the array.
-    maxItems = IntType(min_value=0)
-    minItems = IntType(min_value=0)
-    uniqueItems = BooleanType()
+    max_items = IntType(
+        min_value=0,
+        serialized_name="maxItems",
+        deserialize_from="maxItems"
+    )
+    min_items = IntType(
+        min_value=0,
+        serialized_name="minItems",
+        deserialize_from="minItems"
+    )
+    unique_items = BooleanType(
+        serialized_name="uniqueItems",
+        deserialize_from="uniqueItems"
+    )
 
     x_ms_enum = XmsEnumType()
     x_nullable = XNullableType(default=False)  # when true, specifies that null is a valid value for the associated schema

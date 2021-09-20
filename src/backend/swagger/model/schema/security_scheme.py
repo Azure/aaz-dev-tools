@@ -40,8 +40,14 @@ class OAuth2SecurityScheme(_SecuritySchemeBase):
     TYPE_VALUE = "oauth2"
 
     flow = StringType(choices=("implicit", "password", "application", "accessCode"), required=True)  # The flow used by the OAuth2 security scheme.
-    authorizationUrl = URLType()  # The authorization URL to be used for this flow. oauth2 ("implicit", "accessCode")
-    tokenUrl = URLType()  # The token URL to be used for this flow. oauth2 ("password", "application", "accessCode")
+    authorization_url = URLType(
+        serialized_name="authorizationUrl",
+        deserialize_from="authorizationUrl"
+    )  # The authorization URL to be used for this flow. oauth2 ("implicit", "accessCode")
+    token_url = URLType(
+        serialized_name="tokenUrl",
+        deserialize_from="tokenUrl"
+    )  # The token URL to be used for this flow. oauth2 ("password", "application", "accessCode")
     scopes = ScopesType()  # The available scopes for the OAuth2 security scheme.
 
 
