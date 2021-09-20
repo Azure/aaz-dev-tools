@@ -12,16 +12,16 @@ class DataTypeFormatEnum(StringType):
         super(DataTypeFormatEnum, self).__init__(choices=self.VALID_TYPE_FORMATS, **kwargs)
 
 
-class MimeType(StringType):
+class MimeField(StringType):
     pass
 
 
-class RegularExpressionType(StringType):
+class RegularExpressionField(StringType):
     # This string SHOULD be a valid regular expression
     pass
 
 
-class SecurityRequirementType(DictType):
+class SecurityRequirementField(DictType):
     """
     Lists the required security schemes to execute this operation. The object can have multiple security schemes declared in it which are all required (that is, there is a logical AND between the schemes).
 
@@ -29,25 +29,25 @@ class SecurityRequirementType(DictType):
     """
 
     def __init__(self, **kwargs):
-        super(SecurityRequirementType, self).__init__(
+        super(SecurityRequirementField, self).__init__(
             field=ListType(StringType()), **kwargs)
 
 
-class ScopesType(DictType):
+class ScopesField(DictType):
     """Lists the available scopes for an OAuth2 security scheme."""
 
     def __init__(self, **kwargs):
-        super(ScopesType, self).__init__(field=StringType(), **kwargs)
+        super(ScopesField, self).__init__(field=StringType(), **kwargs)
 
 
-class XmsCodeGenerationSettingsType(BaseType):
+class XmsCodeGenerationSettingsField(BaseType):
     """
     x-ms-code-generation-settings extension on info element enables passing code generation settings via the OpenAPI definition.
 
     https://github.com/Azure/autorest/tree/main/docs/extensions#x-ms-code-generation-settings
     """
     def __init__(self, **kwargs):
-        super(XmsCodeGenerationSettingsType, self).__init__(
+        super(XmsCodeGenerationSettingsField, self).__init__(
             default=False,
             serialized_name="x-ms-code-generation-settings",
             deserialize_from="x-ms-code-generation-settings",
@@ -55,7 +55,7 @@ class XmsCodeGenerationSettingsType(BaseType):
         )
 
 
-class XmsSkipURLEncodingType(BooleanType):
+class XmsSkipURLEncodingField(BooleanType):
     """
     skips URL encoding for path and query parameters.
 
@@ -63,7 +63,7 @@ class XmsSkipURLEncodingType(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsSkipURLEncodingType, self).__init__(
+        super(XmsSkipURLEncodingField, self).__init__(
             default=False,
             serialized_name="x-ms-skip-url-encoding",
             deserialize_from="x-ms-skip-url-encoding",
@@ -71,7 +71,7 @@ class XmsSkipURLEncodingType(BooleanType):
         )
 
 
-class XmsParameterLocationType(StringType):
+class XmsParameterLocationField(StringType):
     """
     By default Autorest processes global parameters as properties on the client. For example subscriptionId and apiVersion which are defined in the global parameters section end up being properties of the client. It would be natural to define resourceGroupName once in the global parameters section and then reference it everywhere, rather than repeating the same definition inline everywhere. One may not want resourceGroupName as a property on the client, just because it is defined in the global parameters section. This extension helps you achieve that. You can add this extension with value "method" "x-ms-parameter-location": "method" and resourceGroupName will not be a client property.
 
@@ -81,7 +81,7 @@ class XmsParameterLocationType(StringType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsParameterLocationType, self).__init__(
+        super(XmsParameterLocationField, self).__init__(
             choices=("client", "method"),
             serialized_name="x-ms-parameter-location",
             deserialize_from="x-ms-parameter-location",
@@ -89,7 +89,7 @@ class XmsParameterLocationType(StringType):
         )
 
 
-class XmsClientNameType(StringType):
+class XmsClientNameField(StringType):
     """
     In some situations, data passed by name, such as query parameters, entity headers, or elements of a JSON document body, are not suitable for use in client-side code. For example, a header like 'x-ms-version' would turn out like xMsVersion, or x_ms_version, or XMsVersion, depending on the preferences of a particular code generator. It may be better to allow a code generator to use 'version' as the name of the parameter in client code.
 
@@ -99,14 +99,14 @@ class XmsClientNameType(StringType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsClientNameType, self).__init__(
+        super(XmsClientNameField, self).__init__(
             serialized_name="x-ms-client-name",
             deserialize_from="x-ms-client-name",
             **kwargs
         )
 
 
-class XmsExternal(BooleanType):
+class XmsExternalField(BooleanType):
     """
     To allow generated clients to share models via shared libraries an x-ms-external extension was introduced. When a Schema Object contains this extensions it's definition will be excluded from generated library. Note that in strongly typed languages the code will not compile unless the assembly containing the type is referenced with the project/library.
 
@@ -114,14 +114,14 @@ class XmsExternal(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsExternal, self).__init__(
+        super(XmsExternalField, self).__init__(
             serialized_name="x-ms-external",
             deserialize_from="x-ms-external",
             **kwargs
         )
 
 
-class XmsDiscriminatorValue(StringType):
+class XmsDiscriminatorValueField(StringType):
     """
     Swagger 2.0 specification requires that when used, the value of discriminator field MUST match the name of the schema or any schema that inherits it. To overcome this limitation x-ms-discriminator-value extension was introduced.
 
@@ -129,14 +129,14 @@ class XmsDiscriminatorValue(StringType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsDiscriminatorValue, self).__init__(
+        super(XmsDiscriminatorValueField, self).__init__(
             serialized_name="x-ms-discriminator-value",
             deserialize_from="x-ms-discriminator-value",
             **kwargs
         )
 
 
-class XmsClientFlatten(BooleanType):
+class XmsClientFlattenField(BooleanType):
     """
     This extension allows to flatten deeply nested payloads into a more user friendly object.
 
@@ -144,14 +144,14 @@ class XmsClientFlatten(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsClientFlatten, self).__init__(
+        super(XmsClientFlattenField, self).__init__(
             serialized_name="x-ms-client-flatten",
             deserialize_from="x-ms-client-flatten",
             **kwargs
         )
 
 
-class XmsMutabilityType(ListType):
+class XmsMutabilityField(ListType):
     """
     This extension offers insight to Autorest on how to generate code (mutability of the property of the model classes being generated). It doesn't alter the modeling of the actual payload that is sent on the wire.
 
@@ -166,7 +166,7 @@ class XmsMutabilityType(ListType):
     )
 
     def __init__(self, **kwargs):
-        super(XmsMutabilityType, self).__init__(
+        super(XmsMutabilityField, self).__init__(
             field=StringType(choices=self.VALID_VALUES),
             serialized_name='x-ms-mutability',
             deserialize_from='x-ms-mutability',
@@ -174,7 +174,7 @@ class XmsMutabilityType(ListType):
         )
 
 
-class XmsExamplesType(DictType):
+class XmsExamplesField(DictType):
     """
     Describes the format for specifying examples for request and response of an operation in an OpenAPI definition. It is a dictionary of different variations of the examples for a given operation.
 
@@ -182,7 +182,7 @@ class XmsExamplesType(DictType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsExamplesType, self).__init__(
+        super(XmsExamplesField, self).__init__(
             field=BaseType(),
             serialized_name='x-ms-examples',
             deserialize_from='x-ms-examples',
@@ -190,7 +190,7 @@ class XmsExamplesType(DictType):
         )
 
 
-class XmsErrorResponseType(BooleanType):
+class XmsErrorResponseField(BooleanType):
     """
     Indicates whether the response status code should be treated as an error response or not.
 
@@ -198,14 +198,14 @@ class XmsErrorResponseType(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsErrorResponseType, self).__init__(
+        super(XmsErrorResponseField, self).__init__(
             serialized_name='x-ms-error-response',
             deserialize_from='x-ms-error-response',
             **kwargs
         )
 
 
-class XmsTextType(BooleanType):
+class XmsTextField(BooleanType):
     """
     Swagger spec doesn't allow dev to model this XML structure: <title language="text">the title</title> This is well known issue: https://github.com/OAI/OpenAPI-Specification/issues/630
 
@@ -217,14 +217,14 @@ class XmsTextType(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsTextType, self).__init__(
+        super(XmsTextField, self).__init__(
             serialized_name='x-ms-text',
             deserialize_from='x-ms-text',
             **kwargs
         )
 
 
-class XmsClientDefaultType(BaseType):
+class XmsClientDefaultField(BaseType):
     """
     Set the default value for a property or a parameter.
 
@@ -236,14 +236,14 @@ class XmsClientDefaultType(BaseType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsClientDefaultType, self).__init__(
+        super(XmsClientDefaultField, self).__init__(
             serialized_name='x-ms-client-default',
             deserialize_from='x-ms-client-default',
             **kwargs
         )
 
 
-class XmsHeaderCollectionPrefixType(StringType):
+class XmsHeaderCollectionPrefixField(StringType):
     """
     Handle collections of arbitrary headers by distinguishing them with a specified prefix. Has different behavior if it refers to a request header or a response header:
         - Request header: All keys in the request headers will be prefixed with the prefix value before being sent to the service.
@@ -257,14 +257,14 @@ class XmsHeaderCollectionPrefixType(StringType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsHeaderCollectionPrefixType, self).__init__(
+        super(XmsHeaderCollectionPrefixField, self).__init__(
             serialized_name='x-ms-header-collection-prefix',
             deserialize_from='x-ms-header-collection-prefix',
             **kwargs
         )
 
 
-class XmsAzureResourceType(BooleanType):
+class XmsAzureResourceField(BooleanType):
     """
     Resource types as defined by the Resource Manager API are tagged by using a x-ms-azure-resource extension.
 
@@ -272,14 +272,14 @@ class XmsAzureResourceType(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsAzureResourceType, self).__init__(
+        super(XmsAzureResourceField, self).__init__(
             serialized_name='x-ms-azure-resource',
             deserialize_from='x-ms-azure-resource',
             **kwargs
         )
 
 
-class XmsRequestIdType(StringType):
+class XmsRequestIdField(StringType):
     """
     When set, allows to overwrite the x-ms-request-id response header (default is x-ms-request-id).
 
@@ -287,14 +287,14 @@ class XmsRequestIdType(StringType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsRequestIdType, self).__init__(
+        super(XmsRequestIdField, self).__init__(
             serialized_name='x-ms-request-id',
             deserialize_from='x-ms-request-id',
             **kwargs
         )
 
 
-class XmsClientRequestIdType(BooleanType):
+class XmsClientRequestIdField(BooleanType):
     """
     When set, specifies the header parameter to be used instead of x-ms-client-request-id (default is x-ms-client-request-id).
 
@@ -302,46 +302,46 @@ class XmsClientRequestIdType(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsClientRequestIdType, self).__init__(
+        super(XmsClientRequestIdField, self).__init__(
             serialized_name='x-ms-client-request-id',
             deserialize_from='x-ms-client-request-id',
             **kwargs
         )
 
 
-class XmsApiVersionType(BooleanType):
+class XmsApiVersionField(BooleanType):
     """"""
 
     def __init__(self, **kwargs):
-        super(XmsApiVersionType, self).__init__(
+        super(XmsApiVersionField, self).__init__(
             serialized_name='x-ms-api-version',
             deserialize_from='x-ms-api-version',
             **kwargs
         )
 
 
-class XmsSkipUrlEncodingType(BooleanType):
+class XmsSkipUrlEncodingField(BooleanType):
     """"""
 
     def __init__(self, **kwargs):
-        super(XmsSkipUrlEncodingType, self).__init__(
+        super(XmsSkipUrlEncodingField, self).__init__(
             serialized_name='x-ms-skip-url-encoding',
             deserialize_from='x-ms-skip-url-encoding',
             **kwargs
         )
 
 
-class XmsSecretType(BooleanType):
+class XmsSecretField(BooleanType):
 
     def __init__(self, **kwargs):
-        super(XmsSecretType, self).__init__(
+        super(XmsSecretField, self).__init__(
             serialized_name='x-ms-secret',
             deserialize_from='x-ms-secret',
             **kwargs
         )
 
 
-class XNullableType(BooleanType):
+class XNullableField(BooleanType):
     """
     Set "x-nullable": true on a schema to indicate that a null is a legal value. By default, a null value should be disallowed when forming a request and rejected during payload deserialization.
 
@@ -351,18 +351,18 @@ class XNullableType(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XNullableType, self).__init__(
+        super(XNullableField, self).__init__(
             serialized_name='x-nullable',
             deserialize_from='x-nullable',
             **kwargs
         )
 
 
-class XAccessibilityType(StringType):
+class XAccessibilityField(StringType):
     """ only used in ContainerRegistry Data plane """
 
     def __init__(self, **kwargs):
-        super(XAccessibilityType, self).__init__(
+        super(XAccessibilityField, self).__init__(
             choices=("internal", "public"),
             serialized_name='x-accessibility',
             deserialize_from='x-accessibility',
@@ -370,121 +370,121 @@ class XAccessibilityType(StringType):
         )
 
 
-class XRequiredType(BooleanType):
+class XRequiredField(BooleanType):
     """ only used in ContainerRegistry Data plane """
 
     def __init__(self, **kwargs):
-        super(XRequiredType, self).__init__(
+        super(XRequiredField, self).__init__(
             serialized_name='x-required',
             deserialize_from='x-required',
             **kwargs
         )
 
 
-class XPublishType(BooleanType):
+class XPublishField(BooleanType):
     """ only used in Maps Data Plane """
 
     def __init__(self, **kwargs):
-        super(XPublishType, self).__init__(
+        super(XPublishField, self).__init__(
             serialized_name='x-publish',
             deserialize_from='x-publish',
             **kwargs
         )
 
 
-class XAzSearchDeprecatedType(BooleanType):
+class XAzSearchDeprecatedField(BooleanType):
     """ only used in Search Data Plane """
 
     def __init__(self, **kwargs):
-        super(XAzSearchDeprecatedType, self).__init__(
+        super(XAzSearchDeprecatedField, self).__init__(
             serialized_name='x-az-search-deprecated',
             deserialize_from='x-az-search-deprecated',
             **kwargs
         )
 
 
-class XSfCodeGenType(BaseType):
+class XSfCodeGenField(BaseType):
     """ only used in ServiceFabricMesh Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XSfCodeGenType, self).__init__(
+        super(XSfCodeGenField, self).__init__(
             serialized_name='x-sf-codegen',
             deserialize_from='x-sf-codegen',
             **kwargs
         )
 
 
-class XSfClientLibType(BaseType):
+class XSfClientLibField(BaseType):
     """ only used in ServiceFabric Data Plane and ServiceFabricManagedClusters Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XSfClientLibType, self).__init__(
+        super(XSfClientLibField, self).__init__(
             serialized_name='x-sf-clientlib',
             deserialize_from='x-sf-clientlib',
             **kwargs
         )
 
 
-class XApimCodeNillableType(BooleanType):
+class XApimCodeNillableField(BooleanType):
     """ only used in ApiManagement Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XApimCodeNillableType, self).__init__(
+        super(XApimCodeNillableField, self).__init__(
             serialized_name='x-apim-code-nillable',
             deserialize_from='x-apim-code-nillable',
             **kwargs
         )
 
 
-class XCommentType(StringType):
+class XCommentField(StringType):
     """ Only used in IoTCenter Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XCommentType, self).__init__(
+        super(XCommentField, self).__init__(
             serialized_name='x-comment',
             deserialize_from='x-comment',
             **kwargs
         )
 
 
-class XAbstractType(BooleanType):
+class XAbstractField(BooleanType):
     """ Only used in Logic Mgmt Plane and Web Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XAbstractType, self).__init__(
+        super(XAbstractField, self).__init__(
             serialized_name='x-abstract',
             deserialize_from='x-abstract',
             **kwargs
         )
 
 
-class XClientNameType(StringType):
+class XClientNameField(StringType):
     """ Only used in Maps Data Plane """
 
     def __init__(self, **kwargs):
-        super(XClientNameType, self).__init__(
+        super(XClientNameField, self).__init__(
             serialized_name='x-client-name',
             deserialize_from='x-client-name',
             **kwargs
         )
 
 
-class XNewPatternType(StringType):
+class XNewPatternField(StringType):
     """ Only used in FrontDoor Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XNewPatternType, self).__init__(
+        super(XNewPatternField, self).__init__(
             serialized_name='x-new-pattern',
             deserialize_from='x-new-pattern',
             **kwargs
         )
 
 
-class XPreviousPatternType(StringType):
+class XPreviousPatternField(StringType):
     """ Only used in FrontDoor Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XPreviousPatternType, self).__init__(
+        super(XPreviousPatternField, self).__init__(
             serialized_name='x-previous-pattern',
             deserialize_from='x-previous-pattern',
             **kwargs

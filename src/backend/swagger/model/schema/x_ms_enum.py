@@ -32,10 +32,10 @@ class XmsEnum(Model):
     )
 
 
-class XmsEnumType(ModelType):
+class XmsEnumField(ModelType):
 
     def __init__(self, **kwargs):
-        super(XmsEnumType, self).__init__(
+        super(XmsEnumField, self).__init__(
             XmsEnum,
             serialized_name="x-ms-enum",
             deserialize_from="x-ms-enum",

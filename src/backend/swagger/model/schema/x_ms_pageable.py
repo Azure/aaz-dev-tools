@@ -27,10 +27,10 @@ class XmsPageable(Model):
     )  # Optional (default: <operationName>Next). Specifies the name of the operation for retrieving the next page.
 
 
-class XmsPageableType(ModelType):
+class XmsPageableField(ModelType):
 
     def __init__(self, **kwargs):
-        super(XmsPageableType, self).__init__(
+        super(XmsPageableField, self).__init__(
             XmsPageable,
             serialized_name='x-ms-pageable',
             deserialize_from='x-ms-pageable',

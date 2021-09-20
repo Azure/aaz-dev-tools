@@ -2,7 +2,7 @@ from schematics.models import Model
 from schematics.types import StringType, ModelType
 from .contact import Contact
 from .license import License
-from .types import XmsCodeGenerationSettingsType
+from .fields import XmsCodeGenerationSettingsField
 
 
 class Info(Model):
@@ -19,4 +19,4 @@ class Info(Model):
     license = ModelType(License)  # The license information for the exposed API.
 
     # specific properties
-    _x_ms_code_generation_settings = XmsCodeGenerationSettingsType()  # Deprecated
+    _x_ms_code_generation_settings = XmsCodeGenerationSettingsField()  # Deprecated

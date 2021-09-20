@@ -1,7 +1,7 @@
 from schematics.models import Model
 from schematics.types import ModelType, ListType, DictType
 from .operation import Operation
-from .parameter import ParameterType
+from .parameter import ParameterField
 from .reference import Linkable
 
 
@@ -16,7 +16,7 @@ class PathItem(Model, Linkable):
     head = ModelType(Operation)  # A definition of a HEAD operation on this path.
     patch = ModelType(Operation)  # A definition of a PATCH operation on this path.
 
-    parameters = ListType(ParameterType(support_reference=True))  # A list of parameters that are applicable for all the operations described under this path. These parameters can be overridden at the operation level, but cannot be removed there. The list MUST NOT include duplicated parameters. A unique parameter is defined by a combination of a name and location. The list can use the Reference Object to link to parameters that are defined at the Swagger Object's parameters. There can be one "body" parameter at most.
+    parameters = ListType(ParameterField(support_reference=True))  # A list of parameters that are applicable for all the operations described under this path. These parameters can be overridden at the operation level, but cannot be removed there. The list MUST NOT include duplicated parameters. A unique parameter is defined by a combination of a name and location. The list can use the Reference Object to link to parameters that are defined at the Swagger Object's parameters. There can be one "body" parameter at most.
 
     # ignored because it is not used
     # ref = ReferenceType()  # Allows for an external definition of this path item. The referenced structure MUST be in the format of a Path Item Object. If there are conflicts between the referenced definition and this Path Item's definition, the behavior is undefined.
@@ -47,16 +47,16 @@ class PathItem(Model, Linkable):
             self.patch.link(swagger_loader, *self.traces, 'patch')
 
 
-class PathsType(DictType):
+class PathsField(DictType):
 
     def __init__(self, **kwargs):
-        super(PathsType, self).__init__(
+        super(PathsField, self).__init__(
             ModelType(PathItem),
             **kwargs
         )
 
 
-class XmsPathsType(DictType):
+class XmsPathsField(DictType):
 
     """
     OpenAPI 2.0 has a built-in limitation on paths. Only one operation can be mapped to a path and http method. There are some APIs, however, where multiple distinct operations are mapped to the same path and same http method. For example GET /mypath/query-drive?op=file and GET /mypath/query-drive?op=folder may return two different model types (stream in the first example and JSON model representing Folder in the second). Since OpenAPI does not treat query parameters as part of the path the above 2 operations may not co-exist in the standard "paths" element.
@@ -67,7 +67,7 @@ class XmsPathsType(DictType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsPathsType, self).__init__(
+        super(XmsPathsField, self).__init__(
             ModelType(PathItem),
             serialized_name="x-ms-paths",
             deserialize_from="x-ms-paths",

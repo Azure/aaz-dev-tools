@@ -3,11 +3,11 @@ from schematics.types import StringType, BooleanType, ModelType, PolyModelType, 
 from .schema import Schema
 from .items import Items
 from .reference import Reference, Linkable
-from .x_ms_parameter_grouping import XmsParameterGroupingType
-from .types import XmsSkipURLEncodingType, XAccessibilityType
-from .types import XmsParameterLocationType, XmsApiVersionType, XmsSkipUrlEncodingType
-from .types import XmsClientNameType, XmsClientFlatten, XmsClientDefaultType, XmsHeaderCollectionPrefixType
-from .types import XmsClientRequestIdType, XNullableType, XPublishType, XRequiredType, XClientNameType, XNewPatternType, XPreviousPatternType, XCommentType
+from .x_ms_parameter_grouping import XmsParameterGroupingField
+from .fields import XmsSkipURLEncodingField, XAccessibilityField
+from .fields import XmsParameterLocationField, XmsApiVersionField, XmsSkipUrlEncodingField
+from .fields import XmsClientNameField, XmsClientFlattenField, XmsClientDefaultField, XmsHeaderCollectionPrefixField
+from .fields import XmsClientRequestIdField, XNullableField, XPublishField, XRequiredField, XClientNameField, XNewPatternField, XPreviousPatternField, XCommentField
 
 
 class _ParameterBase(Model):
@@ -17,41 +17,47 @@ class _ParameterBase(Model):
     """
 
     IN_VALUE = None
+
     name = StringType(required=True)    # The name of the parameter. Parameter names are case sensitive. If in is "path", the name field MUST correspond to the associated path segment from the path field in the Paths Object. See Path Templating for further information. For all other cases, the name corresponds to the parameter name used based on the in property.
     description = StringType()  # A brief description of the parameter. This could contain examples of use.
     required = BooleanType(default=False)  # Determines whether this parameter is mandatory. If the parameter is in "path", this property is required and its value MUST be true. Otherwise, the property MAY be included and its default value is false.
-    _in = StringType(serialized_name="in", required=True)   # The location of the parameter. Possible values are "query", "header", "path", "formData" or "body".
+    _in = StringType(
+        serialized_name="in",
+        deserialize_from="in",
+        required=True
+    )   # The location of the parameter. Possible values are "query", "header", "path", "formData" or "body".
 
-    x_ms_parameter_grouping = XmsParameterGroupingType()
-    x_ms_parameter_location = XmsParameterLocationType()
-    x_ms_client_name = XmsClientNameType()
-    x_ms_client_flatten = XmsClientFlatten()
-    x_ms_client_default = XmsClientDefaultType()
+    x_ms_parameter_grouping = XmsParameterGroupingField()
+    x_ms_parameter_location = XmsParameterLocationField()
+    x_ms_client_name = XmsClientNameField()
+    x_ms_client_flatten = XmsClientFlattenField()
+    x_ms_client_default = XmsClientDefaultField()
 
     # specific properties
-    _x_accessibility = XAccessibilityType()   # only used in ContainerRegistry Data plane
-    _x_required = XRequiredType()  # only used in ContainerRegistry Data plane
-    _x_publish = XPublishType()  # only used in Maps Data Plane
+    _x_accessibility = XAccessibilityField()   # only used in ContainerRegistry Data plane
+    _x_required = XRequiredField()  # only used in ContainerRegistry Data plane
+    _x_publish = XPublishField()  # only used in Maps Data Plane
     _x_example = BaseType(serialized_name='x-example', deserialize_from='x-example')  # deprecated
     _x_examples = BaseType(serialized_name='x-examples', deserialize_from='x-examples')  # deprecated
-    _x_client_name = XClientNameType()  # Only used in Maps Data Plane
-    _x_new_pattern = XNewPatternType()  # Only used in FrontDoor Mgmt Plane
-    _x_previous_pattern = XPreviousPatternType()  # Only used in FrontDoor Mgmt Plane
-    _x_comment = XCommentType()  # Only used in IoTCenter Mgmt Plane
+    _x_client_name = XClientNameField()  # Only used in Maps Data Plane
+    _x_new_pattern = XNewPatternField()  # Only used in FrontDoor Mgmt Plane
+    _x_previous_pattern = XPreviousPatternField()  # Only used in FrontDoor Mgmt Plane
+    _x_comment = XCommentField()  # Only used in IoTCenter Mgmt Plane
 
     @classmethod
     def _claim_polymorphic(cls, data):
         if isinstance(data, dict):
             in_value = data.get('in', None)
             return in_value is not None and in_value == cls.IN_VALUE
-        else:
-            return False
+        elif isinstance(data, _ParameterBase):
+            return data.IN_VALUE == cls.IN_VALUE
+        return False
 
 
 class QueryParameter(Items, _ParameterBase):
     """Parameters that are appended to the URL. For example, in /items?id=###, the query parameter is id."""
-
     IN_VALUE = "query"
+
     allow_empty_value = BooleanType(
         default=False,
         serialized_name="allowEmptyValue",
@@ -65,25 +71,25 @@ class QueryParameter(Items, _ParameterBase):
         deserialize_from="collectionFormat",
     )  # multi - corresponds to multiple parameter instances instead of multiple values for a single instance foo=bar&foo=baz.
 
-    x_ms_api_version = XmsApiVersionType()
-    x_ms_skip_url_encoding = XmsSkipUrlEncodingType()
+    x_ms_api_version = XmsApiVersionField()
+    x_ms_skip_url_encoding = XmsSkipUrlEncodingField()
 
 
 class HeaderParameter(Items, _ParameterBase):
     """Custom headers that are expected as part of the request."""
     IN_VALUE = "header"
 
-    x_ms_header_collection_prefix = XmsHeaderCollectionPrefixType()  # Handle collections of arbitrary headers by distinguishing them with a specified prefix.
-    x_ms_client_request_id = XmsClientRequestIdType()
+    x_ms_header_collection_prefix = XmsHeaderCollectionPrefixField()  # Handle collections of arbitrary headers by distinguishing them with a specified prefix.
+    x_ms_client_request_id = XmsClientRequestIdField()
 
 
 class PathParameter(Items, _ParameterBase):
     """Used together with Path Templating, where the parameter value is actually part of the operation's URL. This does not include the host or base path of the API. For example, in /items/{itemId}, the path parameter is itemId."""
-
     IN_VALUE = "path"
+
     required = BooleanType(required=True, default=True)
 
-    x_ms_skip_url_encoding = XmsSkipURLEncodingType()
+    x_ms_skip_url_encoding = XmsSkipURLEncodingField()
 
 
 class FormDataParameter(Items, _ParameterBase):
@@ -93,6 +99,7 @@ class FormDataParameter(Items, _ParameterBase):
     """
 
     IN_VALUE = "formData"
+
     type = StringType(
         choices=("string", "number", "integer", "boolean", "array", "file"),
         required=True
@@ -114,9 +121,10 @@ class BodyParameter(_ParameterBase, Linkable):
     """The payload that's appended to the HTTP request. Since there can only be one payload, there can only be one body parameter. The name of the body parameter has no effect on the parameter itself and is used for documentation purposes only. Since Form parameters are also in the payload, body and form parameters cannot exist together for the same operation."""
 
     IN_VALUE = "body"
+
     schema = ModelType(Schema, required=True)  # The schema defining the type used for the body parameter.
 
-    x_nullable = XNullableType(default=False)  # when true, specifies that null is a valid value for the associated schema
+    x_nullable = XNullableField(default=False)  # when true, specifies that null is a valid value for the associated schema
 
     def link(self, swagger_loader, *traces):
         if self.is_linked():
@@ -126,7 +134,7 @@ class BodyParameter(_ParameterBase, Linkable):
         self.schema.link(swagger_loader, *self.traces, 'schema')
 
 
-class ParameterType(PolyModelType):
+class ParameterField(PolyModelType):
 
     def __init__(self, support_reference, **kwargs):
         model_spec = [
@@ -134,4 +142,4 @@ class ParameterType(PolyModelType):
         ]
         if support_reference:
             model_spec.append(Reference)
-        super(ParameterType, self).__init__(model_spec=model_spec, **kwargs)
+        super(ParameterField, self).__init__(model_spec=model_spec, **kwargs)

@@ -1,5 +1,3 @@
-import os
-
 from swagger.tests.common import SwaggerSpecsTestCase
 import json
 
@@ -83,11 +81,11 @@ class SchemaTest(SwaggerSpecsTestCase):
                 yield file_path, v
 
     def test_ParameterType(self):
-        from swagger.model.schema.parameter import ParameterType
+        from swagger.model.schema.parameter import ParameterField
         parsed = 0
         for file_path, body in self._parameters():
             try:
-                ParameterType(support_reference=True)(body)
+                ParameterField(support_reference=True)(body)
             except Exception as err:
                 print(file_path)
                 raise err
@@ -151,11 +149,11 @@ class SchemaTest(SwaggerSpecsTestCase):
                 yield file_path, v
 
     def test_SecuritySchemeType(self):
-        from swagger.model.schema.security_scheme import SecuritySchemeType
+        from swagger.model.schema.security_scheme import SecuritySchemeField
         parsed = 0
         for file_path, body in self._securityDefinitions():
             try:
-                SecuritySchemeType()(body)
+                SecuritySchemeField()(body)
             except Exception as err:
                 print(file_path)
                 raise err

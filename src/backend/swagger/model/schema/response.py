@@ -2,7 +2,7 @@ from schematics.models import Model
 from schematics.types import BaseType, StringType, ModelType, DictType
 from .schema import Schema
 from .header import Header
-from .types import XmsExamplesType, XmsErrorResponseType, XNullableType
+from .fields import XmsExamplesField, XmsErrorResponseField, XNullableField
 from .reference import Linkable
 
 
@@ -14,10 +14,10 @@ class Response(Model, Linkable):
     headers = DictType(ModelType(Header))  # A list of headers that are sent with the response.
     examples = DictType(BaseType())
 
-    x_ms_examples = XmsExamplesType()
-    x_ms_error_response = XmsErrorResponseType()
+    x_ms_examples = XmsExamplesField()
+    x_ms_error_response = XmsErrorResponseField()
 
-    x_nullable = XNullableType(default=False)  # when true, specifies that null is a valid value for the associated schema
+    x_nullable = XNullableField(default=False)  # when true, specifies that null is a valid value for the associated schema
 
     def link(self, swagger_loader, *traces):
         if self.is_linked():
@@ -31,4 +31,8 @@ class Response(Model, Linkable):
 
     @classmethod
     def _claim_polymorphic(cls, data):
-        return isinstance(data, dict) and 'description' in data
+        if isinstance(data, dict):
+            return 'description' in data
+        elif isinstance(data, Response):
+            return True
+        return False

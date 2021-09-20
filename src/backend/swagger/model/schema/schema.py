@@ -1,11 +1,11 @@
 from schematics.models import Model
 from schematics.types import ListType, BaseType, DictType, ModelType, BooleanType, FloatType, IntType, StringType, PolyModelType
-from .reference import ReferenceType, Linkable
-from .types import DataTypeFormatEnum, RegularExpressionType, XmsClientNameType, XmsExternal, XmsDiscriminatorValue, XmsClientFlatten, XmsMutabilityType, XmsClientDefaultType, XNullableType, XmsAzureResourceType
+from .reference import ReferenceField, Linkable
+from .fields import DataTypeFormatEnum, RegularExpressionField, XmsClientNameField, XmsExternalField, XmsDiscriminatorValueField, XmsClientFlattenField, XmsMutabilityField, XmsClientDefaultField, XNullableField, XmsAzureResourceField
 from .xml import XML
 from .external_documentation import ExternalDocumentation
-from .x_ms_enum import XmsEnumType
-from .types import XmsSecretType, XAccessibilityType, XAzSearchDeprecatedType, XSfClientLibType, XApimCodeNillableType, XCommentType, XAbstractType, XClientNameType
+from .x_ms_enum import XmsEnumField
+from .fields import XmsSecretField, XAccessibilityField, XAzSearchDeprecatedField, XSfClientLibField, XApimCodeNillableField, XCommentField, XAbstractField, XClientNameField
 from swagger.utils.exceptions import InvalidSwaggerValueError
 
 
@@ -33,7 +33,7 @@ class Schema(Model, Linkable):
     Further information about the properties can be found in JSON Schema Core and JSON Schema Validation. Unless stated otherwise, the property definitions follow the JSON Schema specification as referenced here.
     """
 
-    ref = ReferenceType()
+    ref = ReferenceField()
     format = DataTypeFormatEnum()
     title = StringType()
     description = StringType()
@@ -67,7 +67,7 @@ class Schema(Model, Linkable):
         serialized_name="minLength",
         deserialize_from="minLength"
     )
-    pattern = RegularExpressionType()
+    pattern = RegularExpressionField()
 
     # Validation keywords for arrays
     items = PolyModelType(
@@ -114,7 +114,7 @@ class Schema(Model, Linkable):
 
     # Validation keywords for any instance type
     enum = ListType(BaseType())
-    x_ms_enum = XmsEnumType()
+    x_ms_enum = XmsEnumField()
     type = StringType(
         choices=["array", "boolean", "integer", "number", "object", "string"],  # https://datatracker.ietf.org/doc/html/draft-zyp-json-schema-04#section-3.5
     )
@@ -136,26 +136,26 @@ class Schema(Model, Linkable):
     )  # Additional external documentation for this schema.
     example = BaseType()  # A free-form property to include an example of an instance for this schema.
 
-    x_ms_client_name = XmsClientNameType()
-    x_ms_external = XmsExternal()
-    x_ms_discriminator_value = XmsDiscriminatorValue()
-    x_ms_client_flatten = XmsClientFlatten()
-    x_ms_mutability = XmsMutabilityType()
-    x_ms_client_default = XmsClientDefaultType()
+    x_ms_client_name = XmsClientNameField()
+    x_ms_external = XmsExternalField()
+    x_ms_discriminator_value = XmsDiscriminatorValueField()
+    x_ms_client_flatten = XmsClientFlattenField()
+    x_ms_mutability = XmsMutabilityField()
+    x_ms_client_default = XmsClientDefaultField()
 
-    x_ms_azure_resource = XmsAzureResourceType() # indicates that the Definition Schema Object is a resource as defined by the Resource Manager API
+    x_ms_azure_resource = XmsAzureResourceField() # indicates that the Definition Schema Object is a resource as defined by the Resource Manager API
 
-    x_ms_secret = XmsSecretType()
+    x_ms_secret = XmsSecretField()
 
-    x_nullable = XNullableType()  # when true, specifies that null is a valid value for the associated schema
+    x_nullable = XNullableField()  # when true, specifies that null is a valid value for the associated schema
 
     # specific properties
-    _x_accessibility = XAccessibilityType()   # only used in ContainerRegistry Data plane
-    _x_az_search_deprecated = XAzSearchDeprecatedType()  # only used in Search Data Plane
-    _x_sf_clientlib = XSfClientLibType()  # only used in ServiceFabric Data Plane and ServiceFabricManagedClusters Mgmt Plane
-    _x_apim_code_nillable = XApimCodeNillableType()  # only used in ApiManagement Mgmt Plane
-    _x_comment = XCommentType()  # Only used in IoTCenter Mgmt Plane
-    _x_abstract = XAbstractType()  # Only used in Logic Mgmt Plane and Web Mgmt Plane
+    _x_accessibility = XAccessibilityField()   # only used in ContainerRegistry Data plane
+    _x_az_search_deprecated = XAzSearchDeprecatedField()  # only used in Search Data Plane
+    _x_sf_clientlib = XSfClientLibField()  # only used in ServiceFabric Data Plane and ServiceFabricManagedClusters Mgmt Plane
+    _x_apim_code_nillable = XApimCodeNillableField()  # only used in ApiManagement Mgmt Plane
+    _x_comment = XCommentField()  # Only used in IoTCenter Mgmt Plane
+    _x_abstract = XAbstractField()  # Only used in Logic Mgmt Plane and Web Mgmt Plane
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -1,7 +1,7 @@
 from schematics.models import Model
 from schematics.types import BaseType, StringType, FloatType, ModelType, BooleanType, IntType, ListType
-from .types import DataTypeFormatEnum, RegularExpressionType, XNullableType
-from .x_ms_enum import XmsEnumType
+from .fields import DataTypeFormatEnum, RegularExpressionField, XNullableField
+from .x_ms_enum import XmsEnumField
 
 
 class Items(Model):
@@ -53,7 +53,7 @@ class Items(Model):
         serialized_name="minLength",
         deserialize_from="minLength"
     )
-    pattern = RegularExpressionType()
+    pattern = RegularExpressionField()
 
     # Validation keywords for arrays
     items = ModelType("Items")   # Required if type is "array". Describes the type of items in the array.
@@ -72,5 +72,5 @@ class Items(Model):
         deserialize_from="uniqueItems"
     )
 
-    x_ms_enum = XmsEnumType()
-    x_nullable = XNullableType(default=False)  # when true, specifies that null is a valid value for the associated schema
+    x_ms_enum = XmsEnumField()
+    x_nullable = XNullableField(default=False)  # when true, specifies that null is a valid value for the associated schema

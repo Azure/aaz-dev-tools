@@ -21,11 +21,11 @@ class Linkable:
             assert isinstance(trace, (str, int))
 
 
-class ReferenceType(StringType):
+class ReferenceField(StringType):
 
     def __init__(self, serialized_name="$ref", deserialize_from="$ref", **kwargs):
 
-        super(ReferenceType, self).__init__(
+        super(ReferenceField, self).__init__(
             serialized_name=serialized_name,
             deserialize_from=deserialize_from,
             **kwargs
@@ -35,7 +35,7 @@ class ReferenceType(StringType):
 class Reference(Model, Linkable):
     """A simple object to allow referencing other definitions in the specification. It can be used to reference parameters and responses that are defined at the top level for reuse."""
 
-    ref = ReferenceType(required=True)  # The reference string
+    ref = ReferenceField(required=True)  # The reference string
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

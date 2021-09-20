@@ -1,7 +1,7 @@
-from .reference import ReferenceType
+from .reference import ReferenceField
 
 
-class XmsODataType(ReferenceType):
+class XmsODataField(ReferenceField):
     """
     When present the x-ms-odata extensions indicates the operation includes one or more OData query parameters. These parameters include $filter, $top, $orderby, $skip, and $expand. In some languages the generated method will expose these parameters as strongly types OData type.
 
@@ -10,7 +10,7 @@ class XmsODataType(ReferenceType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsODataType, self).__init__(
+        super(XmsODataField, self).__init__(
             serialized_name='x-ms-odata',
             deserialize_from='x-ms-odata',
             **kwargs
