@@ -1,8 +1,9 @@
 from schematics.models import Model
 from schematics.types import ModelType, ListType
-from ._help import CMDHelp
+
 from ._command import CMDCommand
 from ._fields import CMDStageField, CMDCommandGroupNameField
+from ._help import CMDHelp
 
 
 class CMDCommandGroup(Model):

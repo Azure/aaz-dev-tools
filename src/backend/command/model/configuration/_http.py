@@ -3,31 +3,17 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 from schematics.models import Model
-from schematics.types import StringType, ModelType, ListType, PolyModelType, IntType, URLType
-from ._fields import CMDVariantField, CMDPrimitiveField, CMDBooleanField, CMDURLPathField
+from schematics.types import StringType, ModelType, ListType, PolyModelType, IntType
+
+from ._fields import CMDVariantField, CMDBooleanField, CMDURLPathField
 from ._http_body import CMDHttpBody
-
-
-class CMDHttpParam(Model):
-    # properties as tags
-    name = StringType(required=True)
-    required = CMDBooleanField()
-    arg = CMDVariantField(required=True)
-
-
-class CMDHttpConst(Model):
-    # properties as tags
-    name = StringType(required=True)
-
-    # properties as nodes
-    value = CMDPrimitiveField(required=True)
+from ._http_param import CMDHttpParam
 
 
 class CMDHttpRequestArgs(Model):
-
     # properties as nodes
-    params = ListType(ModelType(CMDHttpParam))
-    consts = ListType(ModelType(CMDHttpConst))
+    params = ListType(PolyModelType(CMDHttpParam, allow_subclasses=True))
+    consts = ListType(PolyModelType(CMDHttpParam, allow_subclasses=True))
 
     class Options:
         serialize_when_none = True
@@ -35,7 +21,7 @@ class CMDHttpRequestArgs(Model):
 
 class CMDHttpRequest(Model):
     # properties as tags
-    method = StringType(choices=("get", "put", "post", "delete", "options", "head", "patch", ), required=True)
+    method = StringType(choices=("get", "put", "post", "delete", "options", "head", "patch",), required=True)
 
     # properties as nodes
     path = ModelType(CMDHttpRequestArgs)

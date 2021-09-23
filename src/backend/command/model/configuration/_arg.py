@@ -1,8 +1,10 @@
 from schematics.models import Model
-from schematics.types import StringType, ListType, ModelType, PolyModelType, FloatType, IntType
+from schematics.types import StringType, ListType, ModelType, PolyModelType
 from schematics.types.serializable import serializable
+
+from ._fields import CMDStageField, CMDVariantField, CMDPrimitiveField, CMDBooleanField
+from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
 from ._help import CMDArgumentHelp
-from ._fields import CMDStageField, CMDVariantField, CMDRegularExpressionField, CMDPrimitiveField, CMDBooleanField
 
 
 class CMDArgEnumItem(Model):
@@ -82,10 +84,9 @@ class CMDArgBase(Model):
 
 
 class CMDArg(CMDArgBase):
-
     # properties as tags
     var = CMDVariantField(required=True)
-    options = ListType(StringType(), min_size=1, required=True)    # argument option names
+    options = ListType(StringType(), min_size=1, required=True)  # argument option names
     required = CMDBooleanField()
     stage = CMDStageField()
 
@@ -108,33 +109,16 @@ class CMDArg(CMDArgBase):
 
 
 # string
-class CMDStringArgFormat(Model):
-    pattern = CMDRegularExpressionField()
-    max_length = IntType(
-        serialized_name="maxLength",
-        deserialize_from="maxLength",
-        min_value=0
-    )
-    min_length = IntType(
-        serialized_name="minLength",
-        deserialize_from="minLength",
-        min_value=0
-    )
-
-    class Options:
-        serialize_when_none = False
-
-
 class CMDStringArgBase(CMDArgBase):
     TYPE_VALUE = "string"
 
     fmt = ModelType(
-        CMDStringArgFormat,
+        CMDStringFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False
     )
-    enum = ModelType(CMDArgEnum, serialize_when_none = False)
+    enum = ModelType(CMDArgEnum, serialize_when_none=False)
 
 
 class CMDStringArg(CMDArg, CMDStringArgBase):
@@ -205,24 +189,11 @@ class CMDPasswordArg(CMDStringArg, CMDPasswordArgBase):
 
 
 # integer
-class CMDIntegerArgFormat(Model):
-    multiple_of = IntType(
-        min_value=0,
-        serialized_name='multipleOf',
-        deserialize_from='multipleOf'
-    )
-    maximum = IntType()
-    minimum = IntType()
-
-    class Options:
-        serialize_when_none = False
-
-
 class CMDIntegerArgBase(CMDArgBase):
     TYPE_VALUE = "integer"
 
     fmt = ModelType(
-        CMDIntegerArgFormat,
+        CMDIntegerFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False
@@ -262,32 +233,11 @@ class CMDBooleanArg(CMDArg, CMDBooleanArgBase):
 
 
 # float
-class CMDFloatArgFormat(Model):
-    multiple_of = FloatType(
-        min_value=0,
-        serialized_name='multipleOf',
-        deserialize_from='multipleOf'
-    )
-    maximum = FloatType()
-    exclusive_maximum = CMDBooleanField(
-        serialized_name='exclusiveMaximum',
-        deserialize_from='exclusiveMaximum'
-    )
-    minimum = FloatType()
-    exclusive_minimum = CMDBooleanField(
-        serialized_name='exclusiveMinimum',
-        deserialize_from='exclusiveMinimum'
-    )
-
-    class Options:
-        serialize_when_none = False
-
-
 class CMDFloatArgBase(CMDArgBase):
     TYPE_VALUE = "float"
 
     fmt = ModelType(
-        CMDFloatArgFormat,
+        CMDFloatFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False,
@@ -318,27 +268,11 @@ class CMDFloat64Arg(CMDFloatArg, CMDFloat64ArgBase):
 
 
 # object
-class CMDObjectArgFormat(Model):
-    max_properties = IntType(
-        min_value=0,
-        serialized_name='maxProperties',
-        deserialize_from='maxProperties'
-    )
-    min_properties = IntType(
-        min_value=0,
-        serialized_name='minProperties',
-        deserialize_from='minProperties'
-    )
-
-    class Options:
-        serialize_when_none = False
-
-
 class CMDObjectArgBase(CMDArgBase):
     TYPE_VALUE = "object"
 
     fmt = ModelType(
-        CMDObjectArgFormat,
+        CMDObjectFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False
@@ -351,28 +285,11 @@ class CMDObjectArg(CMDArg, CMDObjectArgBase):
 
 
 # array
-class CMDArrayArgFormat(Model):
-    unique = CMDBooleanField()
-    max_length = IntType(
-        min_value=0,
-        serialized_name='maxLength',
-        deserialize_from='maxLength'
-    )
-    min_length = IntType(
-        min_value=0,
-        serialized_name='minLength',
-        deserialize_from='minLength'
-    )
-
-    class Options:
-        serialize_when_none = False
-
-
 class CMDArrayArgBase(CMDArgBase):
     TYPE_VALUE = "array"
 
     fmt = ModelType(
-        CMDArrayArgFormat,
+        CMDArrayFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False

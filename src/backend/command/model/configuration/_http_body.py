@@ -1,5 +1,6 @@
 from schematics.models import Model
 from schematics.types import PolyModelType
+
 from ._schema import CMDJson
 
 

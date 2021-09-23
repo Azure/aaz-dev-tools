@@ -1,5 +1,6 @@
 from schematics.models import Model
 from schematics.types import PolyModelType, ModelType, ListType
+
 from ._fields import CMDVariantField, CMDBooleanField
 from ._http import CMDHttpAction
 from ._instance_update import CMDInstanceUpdateAction

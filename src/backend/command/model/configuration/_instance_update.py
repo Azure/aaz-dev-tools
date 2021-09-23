@@ -4,6 +4,7 @@
 # --------------------------------------------------------------------------------------------
 from schematics.models import Model
 from schematics.types import ModelType, PolyModelType
+
 from ._fields import CMDVariantField, CMDBooleanField
 from ._schema import CMDJson
 
@@ -36,7 +37,6 @@ class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
 
 # generic instance update
 class CMDGenericInstanceUpdateMethod(Model):
-
     # properties as tags
     add = CMDVariantField()
     set = CMDVariantField()

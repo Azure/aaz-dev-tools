@@ -3,13 +3,15 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 from schematics.models import Model
-from schematics.types import ModelType, IntType, FloatType, ListType, PolyModelType
+from schematics.types import ModelType, ListType, PolyModelType
 from schematics.types.serializable import serializable
-from ._fields import CMDVariantField, StringType, CMDSchemaClassField, CMDRegularExpressionField, CMDBooleanField, CMDPrimitiveField
+
+from ._fields import CMDVariantField, StringType, CMDSchemaClassField, CMDBooleanField, CMDPrimitiveField
+from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
 
 
 class CMDSchemaEnumItem(Model):
-    arg = CMDVariantField(serialize_when_none=False)    # value will be used when specific argument is provided
+    arg = CMDVariantField(serialize_when_none=False)  # value will be used when specific argument is provided
 
     # properties as nodes
     value = CMDPrimitiveField(required=True)
@@ -72,7 +74,7 @@ class CMDSchema(CMDSchemaBase):
     def _claim_polymorphic(cls, data):
         if super(CMDSchema, cls)._claim_polymorphic(data):
             if isinstance(data, dict):
-                # distinguish with CMDArgBase and CMDArg
+                # distinguish with CMDSchemaBase and CMDSchema
                 return 'name' in data
             else:
                 return isinstance(data, CMDSchema)
@@ -81,7 +83,6 @@ class CMDSchema(CMDSchemaBase):
 
 # cls
 class CMDClsSchemaBase(CMDSchemaBase):
-
     _type = StringType(
         deserialize_from='type',
         serialized_name='type',
@@ -107,28 +108,11 @@ class CMDClsSchema(CMDSchema, CMDClsSchemaBase):
 
 
 # string
-class CMDStringSchemaFormat(Model):
-    pattern = CMDRegularExpressionField()
-    max_length = IntType(
-        min_value=0,
-        serialized_name='maxLength',
-        deserialize_from='maxLength',
-    )
-    min_length = IntType(
-        min_value=0,
-        serialized_name='minLength',
-        deserialize_from='minLength',
-    )
-
-    class Options:
-        serialize_when_none = False
-
-
 class CMDStringSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "string"
 
     fmt = ModelType(
-        CMDStringSchemaFormat,
+        CMDStringFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False
@@ -140,26 +124,75 @@ class CMDStringSchema(CMDSchema, CMDStringSchemaBase):
     pass
 
 
+# byte: base64 encoded characters
+class CMDByteSchemaBase(CMDStringSchemaBase):
+    TYPE_VALUE = "byte"
+
+
+class CMDByteSchema(CMDStringSchema, CMDByteSchemaBase):
+    pass
+
+
+# binary: any sequence of octets
+class CMDBinarySchemaBase(CMDStringSchemaBase):
+    TYPE_VALUE = "binary"
+
+
+class CMDBinarySchema(CMDStringSchema, CMDBinarySchemaBase):
+    pass
+
+
+# duration
+class CMDDurationSchemaBase(CMDStringSchemaBase):
+    TYPE_VALUE = "duration"
+
+
+class CMDDurationSchema(CMDStringSchema, CMDDurationSchemaBase):
+    pass
+
+
+# date: As defined by full-date - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
+class CMDDateSchemaBase(CMDStringSchemaBase):
+    TYPE_VALUE = "date"
+
+
+class CMDDateSchema(CMDStringSchema, CMDDateSchemaBase):
+    pass
+
+
+# date-time: As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
+class CMDDateTimeSchemaBase(CMDStringSchemaBase):
+    TYPE_VALUE = "date-time"
+
+
+class CMDDateTimeSchema(CMDStringSchema, CMDDateTimeSchemaBase):
+    pass
+
+
+# uuid
+class CMDUuidSchemaBase(CMDStringSchemaBase):
+    TYPE_VALUE = "uuid"
+
+
+class CMDUuidSchema(CMDStringSchema, CMDUuidSchemaBase):
+    pass
+
+
+# password
+class CMDPasswordSchemaBase(CMDStringSchemaBase):
+    TYPE_VALUE = "password"
+
+
+class CMDPasswordSchema(CMDStringSchema, CMDPasswordSchemaBase):
+    pass
+
+
 # integer
-class CMDIntegerSchemaFormat(Model):
-    bits = IntType(choices=(32, 64), default=32)
-    multiple_of = IntType(
-        min_value=0,
-        serialized_name='multipleOf',
-        deserialize_from='multipleOf'
-    )
-    maximum = IntType()
-    minimum = IntType()
-
-    class Options:
-        serialize_when_none = False
-
-
 class CMDIntegerSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "integer"
 
     fmt = ModelType(
-        CMDIntegerSchemaFormat,
+        CMDIntegerFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False
@@ -168,6 +201,24 @@ class CMDIntegerSchemaBase(CMDSchemaBase):
 
 
 class CMDIntegerSchema(CMDSchema, CMDIntegerSchemaBase):
+    pass
+
+
+# integer32
+class CMDInteger32SchemaBase(CMDIntegerSchemaBase):
+    TYPE_VALUE = "integer32"
+
+
+class CMDInteger32Schema(CMDIntegerSchema, CMDInteger32SchemaBase):
+    pass
+
+
+# integer64
+class CMDInteger64SchemaBase(CMDIntegerSchemaBase):
+    TYPE_VALUE = "integer64"
+
+
+class CMDInteger64Schema(CMDIntegerSchema, CMDInteger64SchemaBase):
     pass
 
 
@@ -181,33 +232,11 @@ class CMDBooleanSchema(CMDSchema, CMDBooleanSchemaBase):
 
 
 # float
-class CMDFloatSchemaFormat(Model):
-    bits = IntType(choices=(32, 64), default=32)
-    multiple_of = FloatType(
-        min_value=0,
-        serialized_name='multipleOf',
-        deserialize_from='multipleOf'
-    )
-    maximum = FloatType()
-    exclusive_maximum = CMDBooleanField(
-        serialized_name='exclusiveMaximum',
-        deserialize_from='exclusiveMaximum'
-    )
-    minimum = FloatType()
-    exclusive_minimum = CMDBooleanField(
-        serialized_name='exclusiveMinimum',
-        deserialize_from='exclusiveMinimum'
-    )
-
-    class Options:
-        serialize_when_none = False
-
-
 class CMDFloatSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "float"
 
     fmt = ModelType(
-        CMDFloatSchemaFormat,
+        CMDFloatFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False
@@ -219,29 +248,31 @@ class CMDFloatSchema(CMDSchema, CMDFloatSchemaBase):
     pass
 
 
+# float32
+class CMDFloat32SchemaBase(CMDFloatSchemaBase):
+    TYPE_VALUE = "float32"
+
+
+class CMDFloat32Schema(CMDFloatSchema, CMDFloat32SchemaBase):
+    pass
+
+
+# float64
+class CMDFloat64SchemaBase(CMDFloatSchemaBase):
+    TYPE_VALUE = "float64"
+
+
+class CMDFloat64Schema(CMDFloatSchema, CMDFloat64SchemaBase):
+    pass
+
+
 # object
-
-class CMDObjectSchemaFormat(Model):
-    max_properties = IntType(
-        min_value=0,
-        serialized_name='maxProperties',
-        deserialize_from='maxProperties'
-    )
-    min_properties = IntType(
-        min_value=0,
-        serialized_name='minProperties',
-        deserialize_from='minProperties'
-    )
-
-    class Options:
-        serialize_when_none = False
-
 
 # discriminator
 class CMDObjectSchemaDiscriminator(Model):
     # properties as tags
     prop = StringType(required=True)
-    value = StringType(required=True)    # TODO: check possible types of value
+    value = StringType(required=True)  # TODO: check possible types of value
 
     # properties as nodes
     props = ListType(
@@ -258,7 +289,7 @@ class CMDObjectSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "object"
 
     fmt = ModelType(
-        CMDObjectSchemaFormat,
+        CMDObjectFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False
@@ -279,33 +310,16 @@ class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
         serialized_name="clientFlatten",
         deserialize_from="clientFlatten"
     )
-    cls = CMDSchemaClassField(serialize_when_none=False)   # define a schema which can be used by others
+    cls = CMDSchemaClassField(serialize_when_none=False)  # define a schema which can be used by others
 
 
 # array
-class CMDArraySchemaFormat(Model):
-    unique = CMDBooleanField()
-    max_length = IntType(
-        min_value=0,
-        serialized_name='maxLength',
-        deserialize_from='maxLength'
-    )
-    min_length = IntType(
-        min_value=0,
-        serialized_name='minLength',
-        deserialize_from='minLength'
-    )
-
-    class Options:
-        serialize_when_none = False
-
-
 class CMDArraySchemaBase(CMDSchemaBase):
     TYPE_VALUE = "array"
 
     # properties as nodes
     fmt = ModelType(
-        CMDArraySchemaFormat,
+        CMDArrayFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False,
@@ -352,11 +366,11 @@ class CMDObjectJson(CMDJson):
     TYPE_VALUE = "object"
 
     # properties as tags
-    cls = CMDSchemaClassField(serialize_when_none=False)   # define a schema which can be used by others
+    cls = CMDSchemaClassField(serialize_when_none=False)  # define a schema which can be used by others
 
     # properties as nodes
     fmt = ModelType(
-        CMDObjectSchemaFormat,
+        CMDObjectFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False,
@@ -376,7 +390,7 @@ class CMDArrayJson(CMDJson):
 
     # properties as nodes
     fmt = ModelType(
-        CMDArraySchemaFormat,
+        CMDArrayFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False,
