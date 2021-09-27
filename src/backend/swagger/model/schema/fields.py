@@ -3,9 +3,12 @@ from schematics.types import StringType, DictType, ListType, BooleanType, BaseTy
 
 class DataTypeFormatEnum(StringType):
     VALID_TYPE_FORMATS = (
-        "int32", "int64", "float", "double", "byte", "binary", "date", "date-time", "password",
+        "int32", "int64",
+        "float", "double",
+        "byte", "binary", "date", "date-time", "password",
         # additional formats
-        "duration", "file", "uuid",
+        "duration", "uuid",
+        "file",
     )
 
     def __init__(self, **kwargs):
@@ -239,27 +242,6 @@ class XmsClientDefaultField(BaseType):
         super(XmsClientDefaultField, self).__init__(
             serialized_name='x-ms-client-default',
             deserialize_from='x-ms-client-default',
-            **kwargs
-        )
-
-
-class XmsHeaderCollectionPrefixField(StringType):
-    """
-    Handle collections of arbitrary headers by distinguishing them with a specified prefix. Has different behavior if it refers to a request header or a response header:
-        - Request header: All keys in the request headers will be prefixed with the prefix value before being sent to the service.
-        - Response header: Only response headers that start with the prefix specified here will be returned to users. Additionally, the prefix will be stripped from the response header key before being returned to users
-
-    Additionally, applying this extension to a schema forces the schema to become a dictionary.
-
-    Schema: string. Name of the prefix you want to append / filter by. A common value for storage libraries is x-ms-meta-.
-
-    https://github.com/Azure/autorest/blob/main/docs/extensions/readme.md#x-ms-header-collection-prefix
-    """
-
-    def __init__(self, **kwargs):
-        super(XmsHeaderCollectionPrefixField, self).__init__(
-            serialized_name='x-ms-header-collection-prefix',
-            deserialize_from='x-ms-header-collection-prefix',
             **kwargs
         )
 

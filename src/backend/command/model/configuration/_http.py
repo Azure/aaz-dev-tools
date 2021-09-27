@@ -19,14 +19,30 @@ class CMDHttpRequestArgs(Model):
         serialize_when_none = True
 
 
+class CMDHttpRequestPath(CMDHttpRequestArgs):
+    pass
+
+
+class CMDHttpRequestQuery(CMDHttpRequestArgs):
+    pass
+
+
+class CMDHttpRequestHeader(CMDHttpRequestArgs):
+    # properties as tags
+    client_request_id = StringType(
+        serialized_name="clientRequestId",
+        deserialize_from="clientRequestId",
+    )    # specifies the header parameter to be used instead of `x-ms-client-request-id`
+
+
 class CMDHttpRequest(Model):
     # properties as tags
     method = StringType(choices=("get", "put", "post", "delete", "options", "head", "patch",), required=True)
 
     # properties as nodes
-    path = ModelType(CMDHttpRequestArgs)
-    query = ModelType(CMDHttpRequestArgs)
-    header = ModelType(CMDHttpRequestArgs)
+    path = ModelType(CMDHttpRequestPath)
+    query = ModelType(CMDHttpRequestQuery)
+    header = ModelType(CMDHttpRequestHeader)
     body = PolyModelType(CMDHttpBody, allow_subclasses=True)
 
     class Options:

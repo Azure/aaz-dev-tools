@@ -1,13 +1,16 @@
 from schematics.models import Model
 from schematics.types import StringType, BooleanType, ModelType, PolyModelType, BaseType
-from .schema import Schema
+
+from command.model.configuration import CMDSchemaDefault, CMDObjectJson, CMDArrayJson, CMDObjectSchema, CMDArraySchema
+from .fields import XmsClientNameField, XmsClientFlattenField, XmsClientDefaultField
+from .fields import XmsClientRequestIdField, XNullableField, XPublishField, XRequiredField, XClientNameField, \
+    XNewPatternField, XPreviousPatternField, XCommentField
+from .fields import XmsParameterLocationField, XmsApiVersionField, XmsSkipUrlEncodingField
+from .fields import XmsSkipURLEncodingField, XAccessibilityField
 from .items import Items
 from .reference import Reference, Linkable
+from .schema import Schema
 from .x_ms_parameter_grouping import XmsParameterGroupingField
-from .fields import XmsSkipURLEncodingField, XAccessibilityField
-from .fields import XmsParameterLocationField, XmsApiVersionField, XmsSkipUrlEncodingField
-from .fields import XmsClientNameField, XmsClientFlattenField, XmsClientDefaultField, XmsHeaderCollectionPrefixField
-from .fields import XmsClientRequestIdField, XNullableField, XPublishField, XRequiredField, XClientNameField, XNewPatternField, XPreviousPatternField, XCommentField
 
 
 class _ParameterBase(Model):
@@ -18,23 +21,25 @@ class _ParameterBase(Model):
 
     IN_VALUE = None
 
-    name = StringType(required=True)    # The name of the parameter. Parameter names are case sensitive. If in is "path", the name field MUST correspond to the associated path segment from the path field in the Paths Object. See Path Templating for further information. For all other cases, the name corresponds to the parameter name used based on the in property.
-    description = StringType()  # A brief description of the parameter. This could contain examples of use.
-    required = BooleanType(default=False)  # Determines whether this parameter is mandatory. If the parameter is in "path", this property is required and its value MUST be true. Otherwise, the property MAY be included and its default value is false.
+    name = StringType(
+        required=True)  # The name of the parameter. Parameter names are case sensitive. If in is "path", the name field MUST correspond to the associated path segment from the path field in the Paths Object. See Path Templating for further information. For all other cases, the name corresponds to the parameter name used based on the in property.
+    description = StringType()  # TODO: # A brief description of the parameter. This could contain examples of use.
+    required = BooleanType(
+        default=False)  # Determines whether this parameter is mandatory. If the parameter is in "path", this property is required and its value MUST be true. Otherwise, the property MAY be included and its default value is false.
     _in = StringType(
         serialized_name="in",
         deserialize_from="in",
         required=True
-    )   # The location of the parameter. Possible values are "query", "header", "path", "formData" or "body".
+    )  # The location of the parameter. Possible values are "query", "header", "path", "formData" or "body".
 
-    x_ms_parameter_grouping = XmsParameterGroupingField()
-    x_ms_parameter_location = XmsParameterLocationField()
-    x_ms_client_name = XmsClientNameField()
-    x_ms_client_flatten = XmsClientFlattenField()
+    x_ms_parameter_grouping = XmsParameterGroupingField()  # TODO:
+    x_ms_parameter_location = XmsParameterLocationField()  # TODO:
+    x_ms_client_name = XmsClientNameField()  # TODO:
+    x_ms_client_flatten = XmsClientFlattenField()  # TODO:
     x_ms_client_default = XmsClientDefaultField()
 
     # specific properties
-    _x_accessibility = XAccessibilityField()   # only used in ContainerRegistry Data plane
+    _x_accessibility = XAccessibilityField()  # only used in ContainerRegistry Data plane
     _x_required = XRequiredField()  # only used in ContainerRegistry Data plane
     _x_publish = XPublishField()  # only used in Maps Data Plane
     _x_example = BaseType(serialized_name='x-example', deserialize_from='x-example')  # deprecated
@@ -65,8 +70,7 @@ class QueryParameter(Items, _ParameterBase):
     )  # Sets the ability to pass empty-valued parameters. This is valid only for either query or formData parameters and allows you to send a parameter with a name only or an empty value. Default value is false.
 
     collection_format = StringType(
-        choices=("csv", "ssv", "tsv", "pipes", "multi"),
-        default="csv",
+        choices=("csv", "ssv", "tsv", "pipes", "multi"),  # default is csv
         serialized_name="collectionFormat",
         deserialize_from="collectionFormat",
     )  # multi - corresponds to multiple parameter instances instead of multiple values for a single instance foo=bar&foo=baz.
@@ -74,13 +78,41 @@ class QueryParameter(Items, _ParameterBase):
     x_ms_api_version = XmsApiVersionField()
     x_ms_skip_url_encoding = XmsSkipUrlEncodingField()
 
+    def to_cmd_model(self):
+        param = self.to_cmd_param()
+
+        param.name = self.name
+        param.required = self.required
+
+        if self.x_ms_skip_url_encoding:
+            param.skip_url_encoding = False
+
+        if self.x_ms_client_default is not None:
+            param.default = CMDSchemaDefault()
+            param.default.value = self.x_ms_client_default
+
+        return param
+
 
 class HeaderParameter(Items, _ParameterBase):
     """Custom headers that are expected as part of the request."""
     IN_VALUE = "header"
 
-    x_ms_header_collection_prefix = XmsHeaderCollectionPrefixField()  # Handle collections of arbitrary headers by distinguishing them with a specified prefix.
     x_ms_client_request_id = XmsClientRequestIdField()
+
+    def _new_param(self):
+        pass
+
+    def to_cmd_model(self):
+        param = self.to_cmd_param()
+
+        param.name = self.name
+        param.required = self.required
+
+        if self.x_ms_client_default is not None:
+            param.default = CMDSchemaDefault()
+            param.default.value = self.x_ms_client_default
+        return param
 
 
 class PathParameter(Items, _ParameterBase):
@@ -90,6 +122,20 @@ class PathParameter(Items, _ParameterBase):
     required = BooleanType(required=True, default=True)
 
     x_ms_skip_url_encoding = XmsSkipURLEncodingField()
+
+    def to_cmd_model(self):
+        param = self.to_cmd_param()
+        param.name = self.name
+        param.required = self.required
+
+        if self.x_ms_skip_url_encoding:
+            param.skip_url_encoding = False
+
+        if self.x_ms_client_default is not None:
+            param.default = CMDSchemaDefault()
+            param.default.value = self.x_ms_client_default
+
+        return param
 
 
 class FormDataParameter(Items, _ParameterBase):
@@ -103,18 +149,17 @@ class FormDataParameter(Items, _ParameterBase):
     type = StringType(
         choices=("string", "number", "integer", "boolean", "array", "file"),
         required=True
-    )   #  If type is "file", the consumes MUST be either "multipart/form-data", " application/x-www-form-urlencoded" or both
+    )  # If type is "file", the consumes MUST be either "multipart/form-data", " application/x-www-form-urlencoded" or both
     allow_empty_value = BooleanType(
         default=False,
         serialized_name="allowEmptyValue",
         deserialize_from="allowEmptyValue",
     )  # Sets the ability to pass empty-valued parameters. This is valid only for either query or formData parameters and allows you to send a parameter with a name only or an empty value. Default value is false.
     collection_format = StringType(
-        choices=("csv", "ssv", "tsv", "pipes", "multi"),
-        default="csv",
+        choices=("csv", "ssv", "tsv", "pipes", "multi"),  # default is csv
         serialized_name="collectionFormat",
         deserialize_from="collectionFormat",
-    ) # multi - corresponds to multiple parameter instances instead of multiple values for a single instance foo=bar&foo=baz.
+    )  # multi - corresponds to multiple parameter instances instead of multiple values for a single instance foo=bar&foo=baz.
 
 
 class BodyParameter(_ParameterBase, Linkable):
@@ -124,7 +169,8 @@ class BodyParameter(_ParameterBase, Linkable):
 
     schema = ModelType(Schema, required=True)  # The schema defining the type used for the body parameter.
 
-    x_nullable = XNullableField(default=False)  # when true, specifies that null is a valid value for the associated schema
+    x_nullable = XNullableField(
+        default=False)  # TODO: # when true, specifies that null is a valid value for the associated schema
 
     def link(self, swagger_loader, *traces):
         if self.is_linked():
@@ -132,6 +178,23 @@ class BodyParameter(_ParameterBase, Linkable):
         super().link(swagger_loader, *traces)
 
         self.schema.link(swagger_loader, *self.traces, 'schema')
+
+    def to_cmd_model(self):
+        v = self.schema.to_cmd_schema(traces=[])
+        if isinstance(v, CMDObjectSchema):
+            model = CMDObjectJson()
+            model.fmt = v.fmt
+            model.props = v.props
+            model.discriminators = v.discriminators
+            model.cls = v.cls
+        elif isinstance(v, CMDArraySchema):
+            model = CMDArrayJson()
+            model.fmt = v.fmt
+            model.item = v.item
+        else:
+            raise NotImplementedError()
+
+        return model
 
 
 class ParameterField(PolyModelType):

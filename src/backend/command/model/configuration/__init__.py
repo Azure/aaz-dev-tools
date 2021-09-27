@@ -27,7 +27,7 @@ from ._fields import CMDBooleanField, CMDStageEnum, CMDStageField, CMDVariantFie
     CMDCommandGroupNameField, CMDURLPathField
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
 from ._help import CMDHelp, CMDArgumentHelp
-from ._http import CMDHttpRequestArgs, \
+from ._http import CMDHttpRequestArgs, CMDHttpRequestPath, CMDHttpRequestQuery, CMDHttpRequestHeader, \
     CMDHttpRequest, \
     CMDHttpResponseHeaderItem, CMDHttpResponseHeader, CMDHttpResponse, \
     CMDHttpAction
@@ -49,9 +49,20 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDSchemaBase, CMDSchema, \
     CMDClsSchemaBase, CMDClsSchema, \
     CMDStringSchemaBase, CMDStringSchema, \
+    CMDByteSchemaBase, CMDByteSchema, \
+    CMDBinarySchemaBase, CMDBinarySchema, \
+    CMDDurationSchemaBase, CMDDurationSchema, \
+    CMDDateSchemaBase, CMDDateSchema, \
+    CMDDateTimeSchemaBase, CMDDateTimeSchema, \
+    CMDUuidSchemaBase, CMDUuidSchema, \
+    CMDPasswordSchemaBase, CMDPasswordSchema, \
     CMDIntegerSchemaBase, CMDIntegerSchema, \
+    CMDInteger32SchemaBase, CMDInteger32Schema, \
+    CMDInteger64SchemaBase, CMDInteger64Schema, \
     CMDBooleanSchemaBase, CMDBooleanSchema, \
     CMDFloatSchemaBase, CMDFloatSchema, \
+    CMDFloat32SchemaBase, CMDFloat32Schema, \
+    CMDFloat64SchemaBase, CMDFloat64Schema, \
     CMDObjectSchemaDiscriminator, CMDObjectSchemaBase, CMDObjectSchema, \
     CMDArraySchemaBase, CMDArraySchema, \
     CMDJson, CMDObjectJson, CMDArrayJson

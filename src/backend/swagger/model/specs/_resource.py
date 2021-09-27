@@ -31,6 +31,12 @@ class Resource:
         self.operations = operations
         self.op_group_name = self._get_operation_group_name()
 
+    def __str__(self):
+        return f"{self.path} {self.version}"
+
+    def __hash__(self):
+        return hash(f"{self.id} {self.version}")
+
     def _get_operation_group_name(self):
         # TODO: Check database to fetch customized operation group name for resource_id
 

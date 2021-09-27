@@ -88,17 +88,17 @@ class CMDArrayFormat(Model):
         deserialize_from='minLength'
     )
 
-    string_format = StringType(
+    str_format = StringType(
         choices=(
-            "csv",
+            "csv",  # default
             "ssv",
             "tsv",
             "pipes",
             "multi"
         ),
-        serialized_name="stringFormat",
-        deserialize_from="stringFormat",
-    )   # the format convert array to string
+        serialized_name="strFormat",
+        deserialize_from="strFormat",
+    )   # the format convert an array instance to a string
 
     class Options:
         serialize_when_none = False

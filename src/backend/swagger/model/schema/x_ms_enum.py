@@ -29,7 +29,7 @@ class XmsEnum(Model):
     model_as_extensible = BooleanType(
         serialized_name="modelAsExtensible",
         deserialize_from="modelAsExtensible"
-    )
+    )   # TODO: don't know its usage
 
 
 class XmsEnumField(ModelType):

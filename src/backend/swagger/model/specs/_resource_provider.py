@@ -17,7 +17,7 @@ class ResourceProvider:
     URL_PARAMETER_PLACEHOLDER = '{}'
 
     def __init__(self, name, file_path, readme_path, swagger_module):
-        self._name = name
+        self.name = name
         self._file_path = file_path
         self._readme_path = readme_path
         self._swagger_module = swagger_module
@@ -27,7 +27,7 @@ class ResourceProvider:
         self._tags = None
 
     def __str__(self):
-        return f'{self._swagger_module}/{self._name}'
+        return f'{self._swagger_module}/{self.name}'
 
     def get_resource_map(self):
         resource_map = {}
@@ -48,8 +48,9 @@ class ResourceProvider:
                         resource_map[resource.id][resource.version] = resource
         return resource_map
 
-    def get_resource_op_group_map(self):
-        resource_map = self.get_resource_map()
+    def get_resource_op_group_map(self, resource_map=None):
+        if resource_map is None:
+            resource_map = self.get_resource_map()
         resource_op_group_map = {}
         for resource_id, version_map in resource_map.items():
             _, latest_resource = sorted(
