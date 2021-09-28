@@ -13,6 +13,7 @@ class SwaggerLoader:
     def __init__(self):
         self._loaded = {}
         self.loaded_swaggers = OrderedDict()
+        self._linked_idx = 0
 
     def load_file(self, file_path):
         from swagger.model.schema.swagger import Swagger
@@ -30,6 +31,12 @@ class SwaggerLoader:
             self.loaded_swaggers[file_path] = loaded
         self._cache_loaded(loaded, file_path)
         return loaded
+
+    def link_swaggers(self):
+        while self._linked_idx < len(self.loaded_swaggers):
+            file_path, swagger = [*self.loaded_swaggers.items()][self._linked_idx]
+            swagger.link(self, file_path)
+            self._linked_idx += 1
 
     def get_loaded(self, *traces):
         return self._loaded.get(traces, None)

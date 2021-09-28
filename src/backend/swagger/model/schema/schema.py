@@ -125,7 +125,7 @@ class Schema(Model, Linkable):
     required = ListType(StringType(), min_size=1)  # TODO:
     properties = DictType(
         ModelType("Schema"),
-    )  # TODO:
+    )
     additional_properties = PolyModelType(
         [bool, ModelType("Schema")],
         claim_function=_additional_properties_claim_function,
@@ -144,7 +144,7 @@ class Schema(Model, Linkable):
         ModelType("Schema"),
         serialized_name="allOf",
         deserialize_from="allOf"
-    )  # TODO:
+    )
 
     read_only = BooleanType(
         serialized_name="readOnly",
@@ -158,16 +158,16 @@ class Schema(Model, Linkable):
     )  # TODO: # Additional external documentation for this schema.
     example = BaseType()  # TODO: # A free-form property to include an example of an instance for this schema.
 
-    x_ms_client_name = XmsClientNameField()
-    x_ms_external = XmsExternalField()
+    x_ms_client_name = XmsClientNameField()  # TODO:
+    x_ms_external = XmsExternalField()  # TODO:
     x_ms_discriminator_value = XmsDiscriminatorValueField()
     x_ms_client_flatten = XmsClientFlattenField()
-    x_ms_mutability = XmsMutabilityField()
+    x_ms_mutability = XmsMutabilityField()  # TODO:
     x_ms_client_default = XmsClientDefaultField()
 
-    x_ms_azure_resource = XmsAzureResourceField() # indicates that the Definition Schema Object is a resource as defined by the Resource Manager API
+    x_ms_azure_resource = XmsAzureResourceField() # TODO: # indicates that the Definition Schema Object is a resource as defined by the Resource Manager API
 
-    x_ms_secret = XmsSecretField()
+    x_ms_secret = XmsSecretField()  # TODO:
 
     x_nullable = XNullableField()  # TODO: # when true, specifies that null is a valid value for the associated schema
 
@@ -372,7 +372,7 @@ class Schema(Model, Linkable):
             else:
                 raise exceptions.InvalidSwaggerValueError(
                     f"format is not supported", key=[self.type, self.format])
-        elif self.type == "object":
+        elif self.type == "object" or self.properties or self.all_of:
             if self.format is None:
                 if in_base:
                     model = CMDObjectSchemaBase()
@@ -405,21 +405,29 @@ class Schema(Model, Linkable):
             model.fmt = self.build_cmd_object_format() or model.fmt
 
             prop_dict = {}
-            for prop in model.props:
-                prop_dict[prop.name] = prop
+            if model.props is not None:
+                for prop in model.props:
+                    prop_dict[prop.name] = prop
 
             if self.all_of:
                 for item in self.all_of:
                     disc_parent = item.disc_instance
-                    if disc_parent is not None and disc_parent in traces:
-                        # if disc_parent already in trace, ignore
+                    if disc_parent is None and disc_parent in traces:
+                        # disc_parent already in trace, break reference loop
                         continue
                     v = item.to_cmd_schema(traces=[*traces, self], in_base=True)
                     for prop in v.props:
                         prop_dict[prop.name] = prop
-
+                    if disc_parent is not None and disc_parent not in traces:
+                        # the value for discriminator could be fixed.
+                        disc_prop = disc_parent.discriminator
+                        for disc_value, disc_child in disc_parent.disc_children.items():
+                            if disc_child == self:
+                                prop_dict[disc_prop].default = CMDSchemaDefault()
+                                prop_dict[disc_prop].default.value = disc_value
+                                break
             if self.properties:
-                for name, p in self.properties:
+                for name, p in self.properties.items():
                     assert isinstance(p, Schema)
                     prop = p.to_cmd_schema(traces=[*traces, self])
                     prop.name = name
@@ -434,7 +442,10 @@ class Schema(Model, Linkable):
             if self.disc_children:
                 model.discriminators = []
                 assert self.discriminator is not None
-                for disc_value, disc_child in self.disc_children:
+                for disc_value, disc_child in self.disc_children.items():
+                    if disc_child in traces:
+                        # disc_child already in trace, break reference loop
+                        continue
                     disc = CMDObjectSchemaDiscriminator()
                     disc.prop = self.discriminator
                     disc.value = disc_value
@@ -443,6 +454,10 @@ class Schema(Model, Linkable):
                     disc.props = [prop for prop in v.props if prop.name not in prop_dict]
                     disc.discriminators = v.discriminators
                     model.discriminators.append(disc)
+
+            if self.x_ms_client_flatten:
+                assert isinstance(model, CMDObjectSchema)
+                model.client_flatten = True
 
             if getattr(self, "_looped", False):
                 model.cls = self._schema_cls
@@ -459,7 +474,6 @@ class Schema(Model, Linkable):
         return model
 
     def build_cmd_string_format(self):
-        assert self.type == "string"
         fmt_assigned = False
 
         fmt = CMDStringFormat()
@@ -479,7 +493,6 @@ class Schema(Model, Linkable):
         return fmt
 
     def build_cmd_integer_format(self):
-        assert self.type == "integer"
         fmt_assigned = False
         fmt = CMDIntegerFormat()
 
@@ -504,7 +517,6 @@ class Schema(Model, Linkable):
         return fmt
 
     def build_cmd_float_format(self):
-        assert self.type == "number"
         fmt_assigned = False
         fmt = CMDFloatFormat()
 
@@ -529,7 +541,6 @@ class Schema(Model, Linkable):
         return fmt
 
     def build_cmd_array_format(self):
-        assert self.type == "array"
         fmt_assigned = False
         fmt = CMDArrayFormat()
 
@@ -550,7 +561,6 @@ class Schema(Model, Linkable):
         return fmt
 
     def build_cmd_object_format(self):
-        assert self.type == "object"
         fmt_assigned = False
         fmt = CMDObjectFormat()
 

@@ -4,7 +4,7 @@ from swagger.model.schema.operation import Operation
 from swagger.model.schema.parameter import PathParameter, QueryParameter, HeaderParameter, FormDataParameter, BodyParameter
 from swagger.model.schema.reference import Reference
 from swagger.utils import exceptions
-from command.model.configuration import CMDHttpOperation, CMDHttpAction, CMDHttpRequest, CMDHttpResponse, CMDHttpRequestPath, CMDHttpRequestQuery, CMDHttpRequestHeader, CMDHttpBody
+from command.model.configuration import CMDHttpOperation, CMDHttpAction, CMDHttpRequest, CMDHttpResponse, CMDHttpRequestPath, CMDHttpRequestQuery, CMDHttpRequestHeader, CMDHttpJsonBody, CMDJson
 
 
 class CommandConfigurationGenerator:
@@ -15,7 +15,7 @@ class CommandConfigurationGenerator:
     def load_resources(self, resources):
         for resource in resources:
             swagger = self.loader.load_file(resource.file_path)
-            swagger.link(self.loader, resource.file_path)
+            self.loader.link_swaggers()
             self._flatten_resource_path(swagger, resource.path)
 
     def _flatten_resource_path(self, swagger, path):
@@ -95,7 +95,12 @@ class CommandConfigurationGenerator:
 
                 elif isinstance(p, BodyParameter):
                     assert request.body is None
-                    request.body = CMDHttpBody()
+
+                    param = p.to_cmd_model()
+
+                    if isinstance(param, CMDJson):
+                        request.body = CMDHttpJsonBody()
+                        request.body.json = param
 
                 elif isinstance(p, FormDataParameter):
                     # TODO: For DataPlan

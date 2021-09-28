@@ -23,7 +23,31 @@ class SchemaTest(SwaggerSpecsTestCase):
         ]:
             resources = []
             for resource_id in resource_op_group_map[op_group_name]:
-                resources.append(resource_map[resource_id][version])
+                if version in resource_map[resource_id]:
+                    resources.append(resource_map[resource_id][version])
+            generator.load_resources(resources)
+
+    def test_data_factory(self):
+        rp = next(self.get_mgmt_plane_resource_providers(
+            module_filter=lambda m: m.name == "datafactory",
+            resource_provider_filter=lambda r: r.name == "Microsoft.DataFactory"
+        ))
+
+        generator = CommandConfigurationGenerator()
+
+        version = "2018-06-01"
+        resource_map = rp.get_resource_map()
+        resource_op_group_map = rp.get_resource_op_group_map(resource_map)
+        print([*resource_op_group_map.keys()])
+        for op_group_name in [
+            # "IntegrationRuntimes",
+            "IntegrationRuntime",
+            # "Factories"
+        ]:
+            resources = []
+            for resource_id in resource_op_group_map[op_group_name]:
+                if version in resource_map[resource_id]:
+                    resources.append(resource_map[resource_id][version])
             generator.load_resources(resources)
 
     def test_mgmt_modules(self):
