@@ -10,6 +10,6 @@ class InvalidSwaggerValueError(ValueError):
 
     def __str__(self):
         if self.value:
-            return f"{self.__class__.__name__}: {self.msg} : {self.key} : {self.value}"
+            return f"{self.__class__.__name__}: {self.msg} : {self.value} : {self.key}"
         else:
             return f"{self.__class__.__name__}: {self.msg} : {self.key}"

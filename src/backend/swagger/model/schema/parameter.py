@@ -11,6 +11,7 @@ from .items import Items
 from .reference import Reference, Linkable
 from .schema import Schema
 from .x_ms_parameter_grouping import XmsParameterGroupingField
+from swagger.utils import exceptions
 
 
 class _ParameterBase(Model):
@@ -179,8 +180,8 @@ class BodyParameter(_ParameterBase, Linkable):
 
         self.schema.link(swagger_loader, *self.traces, 'schema')
 
-    def to_cmd_model(self):
-        v = self.schema.to_cmd_schema(traces=[])
+    def to_cmd_model(self, mutability):
+        v = self.schema.to_cmd_schema(traces_route=[], mutability=mutability)
         if isinstance(v, CMDObjectSchema):
             model = CMDObjectJson()
             model.fmt = v.fmt
@@ -192,7 +193,10 @@ class BodyParameter(_ParameterBase, Linkable):
             model.fmt = v.fmt
             model.item = v.item
         else:
-            raise NotImplementedError()
+            raise exceptions.InvalidSwaggerValueError(
+                msg="Invalid Body Parameter type",
+                key=self.traces, value=v.type
+            )
 
         return model
 

@@ -154,6 +154,13 @@ class XmsClientFlattenField(BooleanType):
         )
 
 
+class MutabilityEnum:
+
+    Create = "create"
+    Read = "read"
+    Update = "update"
+
+
 class XmsMutabilityField(ListType):
     """
     This extension offers insight to Autorest on how to generate code (mutability of the property of the model classes being generated). It doesn't alter the modeling of the actual payload that is sent on the wire.
@@ -163,9 +170,9 @@ class XmsMutabilityField(ListType):
     """
 
     VALID_VALUES = (
-        'create',  # Indicates that the value of the property can be set while creating/initializing/constructing the object
-        'read',   # Indicates that the value of the property can be read
-        'update',  # Indicates that value of the property can be updated anytime(even after the object is created)
+        MutabilityEnum.Create,  # Indicates that the value of the property can be set while creating/initializing/constructing the object
+        MutabilityEnum.Read,   # Indicates that the value of the property can be read
+        MutabilityEnum.Update,  # Indicates that value of the property can be updated anytime(even after the object is created)
     )
 
     def __init__(self, **kwargs):

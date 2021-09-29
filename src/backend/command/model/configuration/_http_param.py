@@ -11,16 +11,11 @@ class CMDHttpParam(CMDSchemaBase):
     # properties as tags
     name = StringType(required=True)
     arg = CMDVariantField()
-    required = CMDBooleanField()
-    readonly = CMDBooleanField()  # it is required for const
 
     skip_url_encoding = CMDBooleanField(
         serialized_name="skipUrlEncoding",
         deserialize_from="skipUrlEncoding",
     )
-
-    # properties as nodes
-    default = ModelType(CMDSchemaDefault, serialize_when_none=False)  # it is required for const
 
     @classmethod
     def _claim_polymorphic(cls, data):

@@ -34,6 +34,18 @@ class CMDSchemaDefault(Model):
 class CMDSchemaBase(Model):
     TYPE_VALUE = None
 
+    #properties as tags
+    required = CMDBooleanField()
+    read_only = CMDBooleanField(
+        serialized_name="readOnly",
+        deserialize_from="readOnly"
+    )
+
+    # properties as nodes
+    default = ModelType(CMDSchemaDefault, serialize_when_none=False)
+
+    # when a schema is const then its read_only is True and its default value is not None.
+
     # base types: "array", "boolean", "integer", "float", "object", "string",
 
     @serializable
@@ -64,11 +76,6 @@ class CMDSchema(CMDSchemaBase):
 
     name = StringType(required=True)
     arg = CMDVariantField(serialize_when_none=False)
-    required = CMDBooleanField()
-    readonly = CMDBooleanField()
-
-    # properties as nodes
-    default = ModelType(CMDSchemaDefault, serialize_when_none=False)
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -285,6 +292,15 @@ class CMDObjectSchemaDiscriminator(Model):
     )
 
 
+# additionalProperties
+class CMDObjectSchemaAdditionalProperties(Model):
+    # properties as tags
+    arg = CMDVariantField(serialize_when_none=False)
+
+    # properties as nodes
+    item = PolyModelType(CMDSchemaBase, allow_subclasses=True)
+
+
 class CMDObjectSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "object"
 
@@ -300,6 +316,12 @@ class CMDObjectSchemaBase(CMDSchemaBase):
     )
     discriminators = ListType(
         ModelType(CMDObjectSchemaDiscriminator),
+        serialize_when_none=False,
+    )
+    additional_props = ModelType(
+        CMDObjectSchemaAdditionalProperties,
+        serialized_name="additionalProps",
+        deserialize_from="additionalProps",
         serialize_when_none=False,
     )
 

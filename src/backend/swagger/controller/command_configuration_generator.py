@@ -5,6 +5,7 @@ from swagger.model.schema.parameter import PathParameter, QueryParameter, Header
 from swagger.model.schema.reference import Reference
 from swagger.utils import exceptions
 from command.model.configuration import CMDHttpOperation, CMDHttpAction, CMDHttpRequest, CMDHttpResponse, CMDHttpRequestPath, CMDHttpRequestQuery, CMDHttpRequestHeader, CMDHttpJsonBody, CMDJson
+from swagger.model.schema.fields import MutabilityEnum
 
 
 class CommandConfigurationGenerator:
@@ -25,22 +26,22 @@ class CommandConfigurationGenerator:
         assert isinstance(path_item, PathItem)
 
         if path_item.get is not None:
-            self._build_http_operation(path, 'get', path_item.get)
+            self._build_http_operation(path, 'get', path_item.get, mutability=MutabilityEnum.Read)
         if path_item.put is not None:
-            self._build_http_operation(path, 'put', path_item.put, mutability_mode='create')
-            self._build_http_operation(path, 'put', path_item.put, mutability_mode='update')
+            self._build_http_operation(path, 'put', path_item.put, mutability=MutabilityEnum.Create)
+            self._build_http_operation(path, 'put', path_item.put, mutability=MutabilityEnum.Update)
         if path_item.patch is not None:
-            self._build_http_operation(path, 'patch', path_item.patch, mutability_mode='update')
+            self._build_http_operation(path, 'patch', path_item.patch, mutability=MutabilityEnum.Update)
         if path_item.delete is not None:
-            self._build_http_operation(path, 'delete', path_item.delete)
+            self._build_http_operation(path, 'delete', path_item.delete, mutability=MutabilityEnum.Update)
 
         if path_item.post is not None:
-            self._build_http_operation(path, 'post', path_item.post)  # TODO: determine which mutability mode should be used
+            self._build_http_operation(path, 'post', path_item.post, mutability=MutabilityEnum.Create)
 
         if path_item.head is not None:
-            self._build_http_operation(path, 'head', path_item.head)
+            self._build_http_operation(path, 'head', path_item.head, mutability=MutabilityEnum.Read)
 
-    def _build_http_operation(self, path, method, op: Operation, mutability_mode=None):
+    def _build_http_operation(self, path, method, op: Operation, mutability):
         cmd_op = CMDHttpOperation()
         cmd_op.http = CMDHttpAction()
         cmd_op.http.path = path
@@ -96,7 +97,7 @@ class CommandConfigurationGenerator:
                 elif isinstance(p, BodyParameter):
                     assert request.body is None
 
-                    param = p.to_cmd_model()
+                    param = p.to_cmd_model(mutability=mutability)
 
                     if isinstance(param, CMDJson):
                         request.body = CMDHttpJsonBody()

@@ -1,5 +1,6 @@
 from schematics.models import Model
 from schematics.types import StringType
+from uuid import uuid4
 
 
 class Linkable:
@@ -7,6 +8,7 @@ class Linkable:
     def __init__(self):
         self._linked = False
         self.traces = None
+        self._random_uuid = uuid4()
 
     def is_linked(self):
         if not hasattr(self, '_linked'):
@@ -19,6 +21,9 @@ class Linkable:
         self.traces = tuple(traces)
         for trace in self.traces:
             assert isinstance(trace, (str, int))
+
+    def __hash__(self):
+        return hash(self._random_uuid)
 
 
 class ReferenceField(StringType):
