@@ -294,9 +294,6 @@ class CMDObjectSchemaDiscriminator(Model):
 
 # additionalProperties
 class CMDObjectSchemaAdditionalProperties(Model):
-    # properties as tags
-    arg = CMDVariantField(serialize_when_none=False)
-
     # properties as nodes
     item = PolyModelType(CMDSchemaBase, allow_subclasses=True)
 

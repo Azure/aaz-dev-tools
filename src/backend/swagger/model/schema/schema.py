@@ -58,7 +58,7 @@ class Schema(Model, Linkable):
     ref = ReferenceField()
     format = DataTypeFormatEnum()
     title = StringType()
-    description = StringType()
+    description = StringType() # TODO:
     default = BaseType()
 
     # Validation keywords for numeric instances (number and integer)
@@ -122,7 +122,7 @@ class Schema(Model, Linkable):
         serialized_name="minProperties",
         deserialize_from="minProperties"
     )
-    required = ListType(StringType(), min_size=1)  # TODO:
+    required = ListType(StringType(), min_size=1)
     properties = DictType(
         ModelType("Schema"),
     )
@@ -131,7 +131,7 @@ class Schema(Model, Linkable):
         claim_function=_additional_properties_claim_function,
         serialized_name="additionalProperties",
         deserialize_from="additionalProperties"
-    )  # TODO:
+    )
     discriminator = StringType()  # Adds support for polymorphism. The discriminator is the schema property name that is used to differentiate between other schema that inherit this schema. The property name used MUST be defined at this schema and it MUST be in the required property list. When used, the value MUST be the name of this schema or any schema that inherits it.
 
     # Validation keywords for any instance type
@@ -149,7 +149,7 @@ class Schema(Model, Linkable):
     read_only = BooleanType(
         serialized_name="readOnly",
         deserialize_from="readOnly"
-    )  # TODO: # Relevant only for Schema "properties" definitions. Declares the property as "read only". This means that it MAY be sent as part of a response but MUST NOT be sent as part of the request. Properties marked as readOnly being true SHOULD NOT be in the required list of the defined schema. Default value is false.
+    )  # Relevant only for Schema "properties" definitions. Declares the property as "read only". This means that it MAY be sent as part of a response but MUST NOT be sent as part of the request. Properties marked as readOnly being true SHOULD NOT be in the required list of the defined schema. Default value is false.
     xml = ModelType(XML)  # TODO: # This MAY be used only on properties schemas. It has no effect on root schemas. Adds Additional metadata to describe the XML representation format of this property.
     external_docs = ModelType(
         ExternalDocumentation,
@@ -162,7 +162,7 @@ class Schema(Model, Linkable):
     x_ms_external = XmsExternalField()  # TODO:
     x_ms_discriminator_value = XmsDiscriminatorValueField()
     x_ms_client_flatten = XmsClientFlattenField()
-    x_ms_mutability = XmsMutabilityField()  # TODO:
+    x_ms_mutability = XmsMutabilityField()
     x_ms_client_default = XmsClientDefaultField()
 
     x_ms_azure_resource = XmsAzureResourceField() # TODO: # indicates that the Definition Schema Object is a resource as defined by the Resource Manager API
@@ -171,7 +171,7 @@ class Schema(Model, Linkable):
 
     x_nullable = XNullableField()  # TODO: # when true, specifies that null is a valid value for the associated schema
 
-    # specific properties
+    # specific properties, will not support
     _x_accessibility = XAccessibilityField()   # only used in ContainerRegistry Data plane
     _x_az_search_deprecated = XAzSearchDeprecatedField()  # only used in Search Data Plane
     _x_sf_clientlib = XSfClientLibField()  # only used in ServiceFabric Data Plane and ServiceFabricManagedClusters Mgmt Plane
@@ -564,8 +564,9 @@ class Schema(Model, Linkable):
                 elif self.additional_properties is True:
                     model.additional_props = CMDObjectSchemaAdditionalProperties()
 
-            if self.x_ms_client_flatten:
-                assert isinstance(model, CMDObjectSchema)
+            if self.x_ms_client_flatten and isinstance(model, CMDObjectSchema):
+                # client flatten can only be supported for CMDObjectSchema install of CMDObjectSchemaBase.
+                # Because CMDObjectSchemaBase will not link with argument
                 model.client_flatten = True
 
             if getattr(self, "_looped", False):
