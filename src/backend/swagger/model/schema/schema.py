@@ -8,7 +8,7 @@ from .x_ms_enum import XmsEnumField
 from .fields import XmsSecretField, XAccessibilityField, XAzSearchDeprecatedField, XSfClientLibField, XApimCodeNillableField, XCommentField, XAbstractField, XClientNameField, MutabilityEnum
 from swagger.utils import exceptions
 
-from command.model.configuration import CMDIntegerFormat, CMDStringFormat, CMDFloatFormat, CMDArrayFormat, CMDObjectFormat, CMDSchemaEnum, CMDSchemaEnumItem, CMDSchema
+from command.model.configuration import CMDIntegerFormat, CMDStringFormat, CMDFloatFormat, CMDArrayFormat, CMDObjectFormat, CMDSchemaEnum, CMDSchemaEnumItem, CMDSchema, CMDSchemaBase
 
 from command.model.configuration import CMDSchemaDefault,\
     CMDStringSchema, CMDStringSchemaBase, \
@@ -454,14 +454,15 @@ class Schema(Model, Linkable):
                 if v is None:
                     # ignore by mutability
                     return None
+                assert isinstance(v, CMDSchemaBase)
                 model.item = v
         elif isinstance(model, CMDObjectSchemaBase):
             # props
             prop_dict = {}
             if model.props is not None:
                 # inherent from $ref
-                for v in model.props:
-                    prop_dict[v.name] = v
+                for prop in model.props:
+                    prop_dict[prop.name] = prop
 
             if self.all_of:
                 # inherent from allOf
@@ -474,7 +475,13 @@ class Schema(Model, Linkable):
                     if v is None:
                         # ignore by mutability
                         continue
-
+                    if isinstance(v, CMDClsSchemaBase):
+                        raise exceptions.InvalidSwaggerValueError(
+                            msg="AllOf not support to reference loop",
+                            key=self.traces,
+                            value=v.type
+                        )
+                    assert isinstance(v, CMDObjectSchemaBase)
                     if v.fmt:
                         model.fmt = v.fmt
 
@@ -503,6 +510,7 @@ class Schema(Model, Linkable):
                     if v is None:
                         # ignore by mutability
                         continue
+                    assert isinstance(v, CMDSchema)
                     v.name = name
                     prop_dict[name] = v
 
@@ -538,6 +546,7 @@ class Schema(Model, Linkable):
                     if v is None:
                         # ignore by mutability
                         continue
+                    assert isinstance(v, CMDObjectSchemaBase)
                     if v.props:
                         disc.props = [prop for prop in v.props if prop.name not in prop_dict]
                     if v.discriminators:
@@ -553,6 +562,7 @@ class Schema(Model, Linkable):
                     v = self.additional_properties.to_cmd_schema(
                         traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
                     if v is not None:
+                        assert isinstance(v, CMDSchemaBase)
                         if model.read_only:
                             # mark additional_props as read_only to help sub schema inherent those properties
                             v.read_only = True
