@@ -380,10 +380,7 @@ class Schema(Model, Linkable):
 
     def to_cmd_schema(self, traces_route, mutability, ref_link=None, in_base=False):
         if self.traces in traces_route:
-            try:
-                assert isinstance(ref_link, str)
-            except Exception:
-                raise
+            assert isinstance(ref_link, str), f"Ref Link needed: {traces_route}"
             schema_cls = f"@{ref_link.split('/')[-1]}"
             if in_base:
                 model = CMDClsSchemaBase()
