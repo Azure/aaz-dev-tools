@@ -1,7 +1,7 @@
 from schematics.models import Model
 from schematics.types import StringType, BooleanType, ModelType, PolyModelType, BaseType
 
-from command.model.configuration import CMDSchemaDefault, CMDObjectJson, CMDArrayJson, CMDObjectSchema, CMDArraySchema
+from command.model.configuration import CMDSchemaDefault, CMDObjectJson, CMDArrayJson, CMDObjectSchema, CMDArraySchema, CMDHttpParam
 from .fields import XmsClientNameField, XmsClientFlattenField, XmsClientDefaultField
 from .fields import XmsClientRequestIdField, XNullableField, XPublishField, XRequiredField, XClientNameField, \
     XNewPatternField, XPreviousPatternField, XCommentField
@@ -91,6 +91,8 @@ class QueryParameter(Items, _ParameterBase):
         if self.x_ms_client_default is not None:
             param.default = CMDSchemaDefault()
             param.default.value = self.x_ms_client_default
+        if self.description and isinstance(param, CMDHttpParam):
+            param.description = self.description
 
         return param
 
@@ -113,6 +115,9 @@ class HeaderParameter(Items, _ParameterBase):
         if self.x_ms_client_default is not None:
             param.default = CMDSchemaDefault()
             param.default.value = self.x_ms_client_default
+        if self.description and isinstance(param, CMDHttpParam):
+            param.description = self.description
+
         return param
 
 
@@ -135,6 +140,9 @@ class PathParameter(Items, _ParameterBase):
         if self.x_ms_client_default is not None:
             param.default = CMDSchemaDefault()
             param.default.value = self.x_ms_client_default
+
+        if self.description and isinstance(param, CMDHttpParam):
+            param.description = self.description
 
         return param
 

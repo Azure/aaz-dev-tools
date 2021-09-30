@@ -10,7 +10,8 @@ from ._schema import CMDSchemaBase, CMDSchemaDefault, CMDStringSchemaBase, CMDIn
 class CMDHttpParam(CMDSchemaBase):
     # properties as tags
     name = StringType(required=True)
-    arg = CMDVariantField()
+    arg = CMDVariantField(serialize_when_none=True)
+    description = StringType(serialize_when_none=True)
 
     skip_url_encoding = CMDBooleanField(
         serialized_name="skipUrlEncoding",

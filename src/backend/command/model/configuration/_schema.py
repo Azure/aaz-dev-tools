@@ -73,9 +73,10 @@ class CMDSchemaBase(Model):
 
 class CMDSchema(CMDSchemaBase):
     # properties as tags
-
     name = StringType(required=True)
     arg = CMDVariantField(serialize_when_none=False)
+
+    description = StringType(serialize_when_none=False)
 
     @classmethod
     def _claim_polymorphic(cls, data):

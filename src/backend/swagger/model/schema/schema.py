@@ -8,7 +8,7 @@ from .x_ms_enum import XmsEnumField
 from .fields import XmsSecretField, XAccessibilityField, XAzSearchDeprecatedField, XSfClientLibField, XApimCodeNillableField, XCommentField, XAbstractField, XClientNameField, MutabilityEnum
 from swagger.utils import exceptions
 
-from command.model.configuration import CMDIntegerFormat, CMDStringFormat, CMDFloatFormat, CMDArrayFormat, CMDObjectFormat, CMDSchemaEnum, CMDSchemaEnumItem
+from command.model.configuration import CMDIntegerFormat, CMDStringFormat, CMDFloatFormat, CMDArrayFormat, CMDObjectFormat, CMDSchemaEnum, CMDSchemaEnumItem, CMDSchema
 
 from command.model.configuration import CMDSchemaDefault,\
     CMDStringSchema, CMDStringSchemaBase, \
@@ -58,7 +58,7 @@ class Schema(Model, Linkable):
     ref = ReferenceField()
     format = DataTypeFormatEnum()
     title = StringType()
-    description = StringType() # TODO:
+    description = StringType()
     default = BaseType()
 
     # Validation keywords for numeric instances (number and integer)
@@ -165,7 +165,7 @@ class Schema(Model, Linkable):
     x_ms_mutability = XmsMutabilityField()
     x_ms_client_default = XmsClientDefaultField()
 
-    x_ms_azure_resource = XmsAzureResourceField() # TODO: # indicates that the Definition Schema Object is a resource as defined by the Resource Manager API
+    x_ms_azure_resource = XmsAzureResourceField()  # TODO: # indicates that the Definition Schema Object is a resource as defined by the Resource Manager API
 
     x_ms_secret = XmsSecretField()  # TODO:
 
@@ -580,6 +580,9 @@ class Schema(Model, Linkable):
         elif self.default is not None:
             model.default = CMDSchemaDefault()
             model.default.value = self.default
+
+        if self.description and isinstance(model, CMDObjectSchema):
+            model.description = self.description
 
         return model
 
