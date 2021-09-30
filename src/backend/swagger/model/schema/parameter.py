@@ -79,8 +79,8 @@ class QueryParameter(Items, _ParameterBase):
     x_ms_api_version = XmsApiVersionField()
     x_ms_skip_url_encoding = XmsSkipUrlEncodingField()
 
-    def to_cmd_model(self):
-        param = self.to_cmd_param()
+    def to_cmd_model(self, mutability):
+        param = self.to_cmd_param(mutability)
 
         param.name = self.name
         param.required = self.required
@@ -106,8 +106,8 @@ class HeaderParameter(Items, _ParameterBase):
     def _new_param(self):
         pass
 
-    def to_cmd_model(self):
-        param = self.to_cmd_param()
+    def to_cmd_model(self, mutability):
+        param = self.to_cmd_param(mutability)
 
         param.name = self.name
         param.required = self.required
@@ -129,8 +129,8 @@ class PathParameter(Items, _ParameterBase):
 
     x_ms_skip_url_encoding = XmsSkipURLEncodingField()
 
-    def to_cmd_model(self):
-        param = self.to_cmd_param()
+    def to_cmd_model(self, mutability):
+        param = self.to_cmd_param(mutability)
         param.name = self.name
         param.required = self.required
 
@@ -169,6 +169,12 @@ class FormDataParameter(Items, _ParameterBase):
         serialized_name="collectionFormat",
         deserialize_from="collectionFormat",
     )  # multi - corresponds to multiple parameter instances instead of multiple values for a single instance foo=bar&foo=baz.
+
+    def to_cmd_model(self, mutability):
+        raise exceptions.InvalidSwaggerValueError(
+            msg="FormData Parameter is not supported",
+            key=[self.name, self.type, self.format]
+        )
 
 
 class BodyParameter(_ParameterBase, Linkable):
@@ -218,3 +224,5 @@ class ParameterField(PolyModelType):
         if support_reference:
             model_spec.append(Reference)
         super(ParameterField, self).__init__(model_spec=model_spec, **kwargs)
+
+

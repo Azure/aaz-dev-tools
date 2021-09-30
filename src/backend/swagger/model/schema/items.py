@@ -89,7 +89,7 @@ class Items(Model):
     x_ms_enum = XmsEnumField()
     x_nullable = XNullableField()  # TODO: # when true, specifies that null is a valid value for the associated schema
 
-    def to_cmd_param(self, in_base=False):
+    def to_cmd_param(self, mutability, in_base=False):
 
         if self.type == "string":
             if self.format is None:
@@ -210,7 +210,7 @@ class Items(Model):
             model.fmt = self.build_cmd_array_format()
             if self.items:
                 assert isinstance(self.items, Items)
-                model.item = self.items.to_cmd_param(in_base=True)
+                model.item = self.items.to_cmd_param(mutability=mutability, in_base=True)
 
         if self.default is not None:
             model.default = CMDSchemaDefault()
