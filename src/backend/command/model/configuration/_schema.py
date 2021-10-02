@@ -351,71 +351,16 @@ class CMDArraySchemaBase(CMDSchemaBase):
 
 
 class CMDArraySchema(CMDSchema, CMDArraySchemaBase):
-    pass
+    # properties as tags
+    cls = CMDSchemaClassField(serialize_when_none=False)  # define a schema which can be used by others
 
 
 # json
 class CMDJson(Model):
-    TYPE_VALUE = None
 
     # properties as tags
     var = CMDVariantField(serialize_when_none=False)
     ref = CMDVariantField(serialize_when_none=False)
 
-    @serializable
-    def type(self):
-        return self._get_type()
-
-    def _get_type(self):
-        assert self.TYPE_VALUE is not None
-        return self.TYPE_VALUE
-
-    @classmethod
-    def _claim_polymorphic(cls, data):
-        if isinstance(data, dict):
-            type_value = data.get('type', None)
-            if type_value is not None:
-                typ = type_value.replace("<", " ").replace(">", " ").strip().split()[0]
-                return typ == cls.TYPE_VALUE
-        elif isinstance(data, CMDJson):
-            return data.TYPE_VALUE == cls.TYPE_VALUE
-        return False
-
-
-class CMDObjectJson(CMDJson):
-    TYPE_VALUE = "object"
-
-    # properties as tags
-    cls = CMDSchemaClassField(serialize_when_none=False)  # define a schema which can be used by others
-
     # properties as nodes
-    fmt = ModelType(
-        CMDObjectFormat,
-        serialized_name='format',
-        deserialize_from='format',
-        serialize_when_none=False,
-    )
-    props = ListType(
-        PolyModelType(CMDSchema, allow_subclasses=True),
-        serialize_when_none=False,
-    )
-    discriminators = ListType(
-        ModelType(CMDObjectSchemaDiscriminator),
-        serialize_when_none=False,
-    )
-
-
-class CMDArrayJson(CMDJson):
-    TYPE_VALUE = "array"
-
-    # properties as nodes
-    fmt = ModelType(
-        CMDArrayFormat,
-        serialized_name='format',
-        deserialize_from='format',
-        serialize_when_none=False,
-    )
-    item = PolyModelType(CMDSchemaBase, allow_subclasses=True, required=True)
-
-    def _get_type(self):
-        return f"{self.TYPE_VALUE}<{self.item.type}>"
+    schema = PolyModelType(CMDSchemaBase, allow_subclasses=True, required=True)

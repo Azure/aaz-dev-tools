@@ -1,10 +1,5 @@
 from swagger.model.specs import SwaggerLoader
 from swagger.model.schema.path_item import PathItem
-from swagger.model.schema.operation import Operation
-from swagger.model.schema.parameter import PathParameter, QueryParameter, HeaderParameter, FormDataParameter, BodyParameter
-from swagger.model.schema.reference import Reference
-from swagger.utils import exceptions
-from command.model.configuration import CMDHttpOperation, CMDHttpAction, CMDHttpRequest, CMDHttpResponse, CMDHttpRequestPath, CMDHttpRequestQuery, CMDHttpRequestHeader, CMDHttpJsonBody, CMDJson
 from swagger.model.schema.fields import MutabilityEnum
 
 

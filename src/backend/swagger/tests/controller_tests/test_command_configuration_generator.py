@@ -63,6 +63,7 @@ class SchemaTest(SwaggerSpecsTestCase):
             for resource_id in resource_op_group_map[op_group_name]:
                 versions.update(resource_map[resource_id].keys())
             for version in versions:
+                # print(op_group_name, version)
                 resources = []
                 for resource_id in resource_op_group_map[op_group_name]:
                     if version in resource_map[resource_id]:
@@ -76,7 +77,10 @@ class SchemaTest(SwaggerSpecsTestCase):
                     raise
 
     def test_mgmt_modules(self):
-        for rp in self.get_mgmt_plane_resource_providers():
+        # without network module
+        for rp in self.get_mgmt_plane_resource_providers(
+                module_filter=lambda m: m.name != "network",
+        ):
             print(str(rp))
             generator = CommandConfigurationGenerator()
             resource_map = rp.get_resource_map()
@@ -86,6 +90,7 @@ class SchemaTest(SwaggerSpecsTestCase):
                 for resource_id in resource_op_group_map[op_group_name]:
                     versions.update(resource_map[resource_id].keys())
                 for version in versions:
+                    # print(op_group_name, version)
                     resources = []
                     for resource_id in resource_op_group_map[op_group_name]:
                         if version in resource_map[resource_id]:
@@ -109,6 +114,7 @@ class SchemaTest(SwaggerSpecsTestCase):
                 for resource_id in resource_op_group_map[op_group_name]:
                     versions.update(resource_map[resource_id].keys())
                 for version in versions:
+                    # print(op_group_name, version)
                     resources = []
                     for resource_id in resource_op_group_map[op_group_name]:
                         if version in resource_map[resource_id]:

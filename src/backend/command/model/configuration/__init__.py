@@ -65,4 +65,4 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDFloat64SchemaBase, CMDFloat64Schema, \
     CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, CMDObjectSchemaBase, CMDObjectSchema, \
     CMDArraySchemaBase, CMDArraySchema, \
-    CMDJson, CMDObjectJson, CMDArrayJson
+    CMDJson

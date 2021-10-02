@@ -46,98 +46,16 @@ class PathItem(Model, Linkable):
         if self.patch is not None:
             self.patch.link(swagger_loader, *self.traces, 'patch')
 
-    @staticmethod
-    def _convert_param_to_cmd_model(param, mutability):
-        while isinstance(param, Reference):
-            if param.ref_instance is None:
-                raise exceptions.InvalidSwaggerValueError(
-                    msg="Reference not exist",
-                    key=[],
-                    value=param.ref
-                )
-            param = param.ref_instance
-        model = param.to_cmd_model(mutability=mutability)
-        return param, model
-
     def to_cmd_operation(self, path, method, mutability):
         op = getattr(self, method, None)
         if op is None:
             return None
         assert isinstance(op, Operation)
 
-        cmd_op = CMDHttpOperation()
-        cmd_op.http = CMDHttpAction()
-        cmd_op.http.path = path
-        if op.x_ms_long_running_operation:
-            cmd_op.long_running = True
+        cmd_op = op.to_cmd_operation(
+            path=path, method=method, parent_parameters=self.parameters, mutability=mutability)
 
-        # request
-        request = CMDHttpRequest()
-        request.method = method
-
-        param_models = {}
-        client_request_id_name = None
-        if self.parameters:
-            for p in self.parameters:
-                p, model = self._convert_param_to_cmd_model(p, mutability=mutability)
-                if model is None:
-                    continue
-                if p.IN_VALUE not in param_models:
-                    param_models[p.IN_VALUE] = {}
-                param_models[p.IN_VALUE][p.name] = model
-                if p.IN_VALUE == HeaderParameter.IN_VALUE:
-                    if p.x_ms_client_request_id or p.name == "x-ms-client-request-id":
-                        client_request_id_name = p.name
-
-        if op.parameters:
-            for p in op.parameters:
-                p, model = self._convert_param_to_cmd_model(p, mutability=mutability)
-                if model is None:
-                    continue
-                if p.IN_VALUE not in param_models:
-                    param_models[p.IN_VALUE] = {}
-                param_models[p.IN_VALUE][p.name] = model
-                if p.IN_VALUE == HeaderParameter.IN_VALUE:
-                    if p.x_ms_client_request_id or p.name == "x-ms-client-request-id":
-                        client_request_id_name = p.name
-
-        if PathParameter.IN_VALUE in param_models:
-            request.path = CMDHttpRequestPath()
-            request.path.params = []
-            for _, model in sorted(param_models[PathParameter.IN_VALUE].items()):
-                request.path.params.append(model)
-
-        if QueryParameter.IN_VALUE in param_models:
-            request.query = CMDHttpRequestQuery()
-            request.query.params = []
-            for _, model in sorted(param_models[QueryParameter.IN_VALUE].items()):
-                request.query.params.append(model)
-
-        if HeaderParameter.IN_VALUE in param_models:
-            request.header = CMDHttpRequestHeader()
-            request.header.client_request_id = client_request_id_name
-            request.header.params = []
-            for name, model in sorted(param_models[HeaderParameter.IN_VALUE].items()):
-                request.header.params.append(model)
-
-        if BodyParameter.IN_VALUE in param_models:
-            if len(param_models[BodyParameter.IN_VALUE]) > 1:
-                raise exceptions.InvalidSwaggerValueError(
-                    msg="Duplicate parameters in request body",
-                    key=self.traces,
-                    value=[path, method, mutability, *param_models[BodyParameter.IN_VALUE].keys()]
-                )
-            model = [*param_models[BodyParameter.IN_VALUE].values()][0]
-            if isinstance(model, CMDJson):
-                request.body = CMDHttpJsonBody()
-                request.body.json = model
-            else:
-                raise NotImplementedError()
-
-        if FormDataParameter.IN_VALUE in param_models:
-            raise NotImplementedError()
-
-        # response
+        return cmd_op
 
 
 class PathsField(DictType):

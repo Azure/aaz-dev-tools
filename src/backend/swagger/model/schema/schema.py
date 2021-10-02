@@ -380,7 +380,7 @@ class Schema(Model, Linkable):
 
     def to_cmd_schema(self, traces_route, mutability, ref_link=None, in_base=False):
         if self.traces in traces_route:
-            assert isinstance(ref_link, str), f"Ref Link needed: {traces_route}"
+            assert isinstance(ref_link, str), f"Ref Link needed: {[*traces_route, self.traces]}"
             schema_cls = f"@{ref_link.split('/')[-1]}"
             if in_base:
                 model = CMDClsSchemaBase()
@@ -576,9 +576,10 @@ class Schema(Model, Linkable):
                 # Because CMDObjectSchemaBase will not link with argument
                 model.client_flatten = True
 
-            if getattr(self, "_looped", False):
-                model.cls = self._schema_cls
-                setattr(self, "_looped", False)
+        if getattr(self, "_looped", False):
+            assert isinstance(model, (CMDObjectSchemaBase, CMDArraySchemaBase))
+            model.cls = self._schema_cls
+            setattr(self, "_looped", False)
 
         if self.x_ms_client_default is not None:
             model.default = CMDSchemaDefault()
@@ -588,7 +589,7 @@ class Schema(Model, Linkable):
             model.default = CMDSchemaDefault()
             model.default.value = self.default
 
-        if self.description and isinstance(model, CMDObjectSchema):
+        if self.description and isinstance(model, CMDSchema):
             model.description = self.description
 
         return model

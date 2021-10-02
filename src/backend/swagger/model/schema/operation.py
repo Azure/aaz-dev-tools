@@ -1,20 +1,25 @@
 from schematics.models import Model
 from schematics.types import StringType, ModelType, ListType, DictType, BooleanType, PolyModelType
+
+from command.model.configuration import CMDHttpOperation, CMDHttpAction, CMDHttpRequest, CMDHttpRequestPath, \
+    CMDHttpRequestQuery, CMDHttpRequestHeader, CMDHttpJsonBody, CMDJson
+from swagger.utils import exceptions
 from .external_documentation import ExternalDocumentation
-from .parameter import ParameterField
+from .fields import MimeField, XmsRequestIdField, XmsExamplesField, SecurityRequirementField, XPublishField, \
+    XSfCodeGenField
+from .parameter import ParameterField, PathParameter, QueryParameter, HeaderParameter, BodyParameter, FormDataParameter
+from .reference import Reference, Linkable
 from .response import Response
-from .fields import MimeField, XmsRequestIdField, XmsExamplesField, SecurityRequirementField, XPublishField, XSfCodeGenField
-from .x_ms_pageable import XmsPageableField
 from .x_ms_long_running_operation import XmsLongRunningOperationField, XmsLongRunningOperationOptionsField
 from .x_ms_odata import XmsODataField
-from .reference import Reference, Linkable
+from .x_ms_pageable import XmsPageableField
 
 
 class Operation(Model, Linkable):
     """Describes a single API operation on a path."""
 
     tags = ListType(StringType())  # A list of tags for API documentation control. Tags can be used for logical grouping of operations by resources or any other qualifier.
-    summary = StringType()     # A short summary of what the operation does. For maximum readability in the swagger-ui, this field SHOULD be less than 120 characters.
+    summary = StringType()  # A short summary of what the operation does. For maximum readability in the swagger-ui, this field SHOULD be less than 120 characters.
     description = StringType()  # A verbose explanation of the operation behavior. GFM syntax can be used for rich text representation.
     external_docs = ModelType(
         ExternalDocumentation,
@@ -31,7 +36,9 @@ class Operation(Model, Linkable):
     responses = DictType(PolyModelType([
         Reference, Response
     ]), required=True)  # The list of possible responses as they are returned from executing this operation.
-    schemes = ListType(StringType(choices=("http", "https", "ws", "wss")))  # The transfer protocol for the operation. Values MUST be from the list: "http", "https", "ws", "wss". The value overrides the Swagger Object schemes definition.
+    schemes = ListType(StringType(
+        choices=("http", "https", "ws", "wss")
+    ))  # The transfer protocol for the operation. Values MUST be from the list: "http", "https", "ws", "wss". The value overrides the Swagger Object schemes definition.
     deprecated = BooleanType(default=False)  # Declares this operation to be deprecated. Usage of the declared operation should be refrained. Default value is false.
     security = ListType(SecurityRequirementField())  # A declaration of which security schemes are applied for this operation. The list of values describes alternative security schemes that can be used (that is, there is a logical OR between the security requirements). This definition overrides any declared top-level security. To remove a top-level security declaration, an empty array can be used.
 
@@ -69,3 +76,202 @@ class Operation(Model, Linkable):
                 self.x_ms_odata, *self.traces, 'x_ms_odata')
             if isinstance(self.x_ms_odata_instance, Linkable):
                 self.x_ms_odata_instance.link(swagger_loader, *instance_traces)
+
+    @staticmethod
+    def _convert_param_to_cmd_model(param, mutability):
+        while isinstance(param, Reference):
+            if param.ref_instance is None:
+                raise exceptions.InvalidSwaggerValueError(
+                    msg="Reference not exist",
+                    key=[],
+                    value=param.ref
+                )
+            param = param.ref_instance
+        model = param.to_cmd_model(mutability=mutability)
+        return param, model
+
+    def to_cmd_operation(self, path, method, parent_parameters, mutability):
+        cmd_op = CMDHttpOperation()
+        if self.x_ms_long_running_operation:
+            cmd_op.long_running = True
+
+        cmd_op.http = CMDHttpAction()
+        cmd_op.http.path = path
+        cmd_op.http.request = CMDHttpRequest()
+        cmd_op.http.request.method = method
+        cmd_op.http.responses = []
+
+        # request
+        request = cmd_op.http.request
+
+        param_models = {}
+        client_request_id_name = None
+        if parent_parameters:
+            for p in parent_parameters:
+                p, model = self._convert_param_to_cmd_model(p, mutability=mutability)
+                if model is None:
+                    continue
+                if p.IN_VALUE not in param_models:
+                    param_models[p.IN_VALUE] = {}
+                param_models[p.IN_VALUE][p.name] = model
+                if p.IN_VALUE == HeaderParameter.IN_VALUE:
+                    if p.x_ms_client_request_id or p.name == "x-ms-client-request-id":
+                        client_request_id_name = p.name
+
+        if self.parameters:
+            for p in self.parameters:
+                p, model = self._convert_param_to_cmd_model(p, mutability=mutability)
+                if model is None:
+                    continue
+                if p.IN_VALUE not in param_models:
+                    param_models[p.IN_VALUE] = {}
+                param_models[p.IN_VALUE][p.name] = model
+                if p.IN_VALUE == HeaderParameter.IN_VALUE:
+                    if p.x_ms_client_request_id or p.name == "x-ms-client-request-id":
+                        client_request_id_name = p.name
+
+        if PathParameter.IN_VALUE in param_models:
+            request.path = CMDHttpRequestPath()
+            request.path.params = []
+            for _, model in sorted(param_models[PathParameter.IN_VALUE].items()):
+                request.path.params.append(model)
+
+        if QueryParameter.IN_VALUE in param_models:
+            request.query = CMDHttpRequestQuery()
+            request.query.params = []
+            for _, model in sorted(param_models[QueryParameter.IN_VALUE].items()):
+                request.query.params.append(model)
+
+        if HeaderParameter.IN_VALUE in param_models:
+            request.header = CMDHttpRequestHeader()
+            request.header.client_request_id = client_request_id_name
+            request.header.params = []
+            for name, model in sorted(param_models[HeaderParameter.IN_VALUE].items()):
+                request.header.params.append(model)
+
+        if BodyParameter.IN_VALUE in param_models:
+            if len(param_models[BodyParameter.IN_VALUE]) > 1:
+                raise exceptions.InvalidSwaggerValueError(
+                    msg="Duplicate parameters in request body",
+                    key=self.traces,
+                    value=[path, method, mutability, *param_models[BodyParameter.IN_VALUE].keys()]
+                )
+            model = [*param_models[BodyParameter.IN_VALUE].values()][0]
+            if isinstance(model, CMDJson):
+                request.body = CMDHttpJsonBody()
+                request.body.json = model
+            else:
+                raise NotImplementedError()
+
+        if FormDataParameter.IN_VALUE in param_models:
+            raise NotImplementedError()
+
+        # response
+        success_responses = {}
+        redirect_responses = {}
+        error_responses = {}
+
+        # convert default response
+        if 'default' in self.responses:
+            resp = self.responses['default']
+            while isinstance(resp, Reference):
+                if resp.ref_instance is None:
+                    raise exceptions.InvalidSwaggerValueError(
+                        msg="Reference not exist",
+                        key=[],
+                        value=resp.ref
+                    )
+                resp = resp.ref_instance
+            model = resp.to_cmd_model()
+            model.is_error = True
+            error_responses['default'] = (resp, model)
+
+        for code, resp in self.responses.items():
+            if code == "default":
+                continue
+            while isinstance(resp, Reference):
+                if resp.ref_instance is None:
+                    raise exceptions.InvalidSwaggerValueError(
+                        msg="Reference not exist",
+                        key=[],
+                        value=resp.ref
+                    )
+                resp = resp.ref_instance
+            status_code = int(code)
+
+            if status_code < 300:
+                # success
+                find_match = False
+                for _, (p_resp, p_model) in success_responses.items():
+                    if p_resp.schema == resp.schema:
+                        p_model.status_codes.append(status_code)
+                        find_match = True
+                        break
+                if not find_match:
+                    model = resp.to_cmd_model()
+                    model.status_codes = [status_code]
+                    assert not model.is_error
+                    success_responses[code] = (resp, model)
+            elif status_code < 400:
+                # redirect
+                find_match = False
+                for _, (p_resp, p_model) in redirect_responses.items():
+                    if p_resp.schema == resp.schema:
+                        p_model.status_codes.append(status_code)
+                        find_match = True
+                        break
+                if not find_match:
+                    model = resp.to_cmd_model()
+                    model.status_codes = [status_code]
+                    assert not model.is_error
+                    redirect_responses[code] = (resp, model)
+            else:
+                # error
+                find_match = False
+                for p_code, (p_resp, p_model) in error_responses.items():
+                    if p_resp.schema == resp.schema:
+                        if p_code != "default":
+                            p_model.status_codes.append(status_code)
+                        find_match = True
+                        break
+                if not find_match:
+                    model = resp.to_cmd_model()
+                    model.status_codes = [status_code]
+                    model.is_error = True
+                    error_responses[code] = (resp, model)
+
+        if len(success_responses) > 2:
+            raise exceptions.InvalidSwaggerValueError(
+                msg="Multi Schema for success responses",
+                key=[self.traces],
+                value=[*success_responses.keys()]
+            )
+        if len(redirect_responses) > 2:
+            raise exceptions.InvalidSwaggerValueError(
+                msg="Multi Schema for redirect responses",
+                key=[self.traces],
+                value=[*redirect_responses.keys()]
+            )
+        if len(error_responses) > 2:
+            raise exceptions.InvalidSwaggerValueError(
+                msg="Multi Schema for error responses",
+                key=[self.traces],
+                value=[*error_responses.keys()]
+            )
+        if 'default' not in error_responses and len(error_responses) == 1:
+            p_resp, p_model = [*error_responses.values()][0]
+            if p_model.body is not None:
+                # use the current error response as default
+                p_model.status_codes = None
+                error_responses = {
+                    "default": (p_resp, p_model)
+                }
+
+        if 'default' not in error_responses:
+            raise exceptions.InvalidSwaggerValueError(
+                msg="Miss default response",
+                key=self.traces,
+                value=[path, method]
+            )
+
+        return cmd_op

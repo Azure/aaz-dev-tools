@@ -68,15 +68,16 @@ class CMDHttpResponseHeader(Model):
 
 class CMDHttpResponse(Model):
     # properties as tags
-    status_code = ListType(
+    status_codes = ListType(
         IntType(),
         serialized_name='statusCode',
         deserialize_from='statusCode',
-    )
+    )   # if status_codes is None, then it's the default response.
     is_error = CMDBooleanField(
         serialized_name='isError',
         deserialize_from='isError'
     )
+    description = StringType(required=True)
 
     # properties as nodes
     header = ModelType(CMDHttpResponseHeader)

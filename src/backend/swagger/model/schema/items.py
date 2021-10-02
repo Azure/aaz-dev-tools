@@ -89,8 +89,7 @@ class Items(Model):
     x_ms_enum = XmsEnumField()
     x_nullable = XNullableField()  # TODO: # when true, specifies that null is a valid value for the associated schema
 
-    def to_cmd_param(self, mutability, in_base=False):
-
+    def _build_model(self, in_base):
         if self.type == "string":
             if self.format is None:
                 if in_base:
@@ -194,6 +193,11 @@ class Items(Model):
         else:
             raise exceptions.InvalidSwaggerValueError(
                 f"type is not supported", key=[self.type])
+
+        return model
+
+    def to_cmd_param(self, mutability, in_base=False):
+        model = self._build_model(in_base=in_base)
 
         if isinstance(model, CMDStringSchemaBase):
             model.fmt = self.build_cmd_string_format()
