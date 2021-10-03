@@ -1,10 +1,8 @@
 from schematics.models import Model
 from schematics.types import ModelType, ListType, DictType
 from .operation import Operation
-from .parameter import ParameterField, PathParameter, QueryParameter, HeaderParameter, BodyParameter, FormDataParameter
+from .parameter import ParameterField, ParameterBase
 from .reference import Linkable, Reference
-from swagger.utils import exceptions
-from command.model.configuration import CMDHttpOperation, CMDHttpAction, CMDHttpRequest, CMDHttpResponse, CMDHttpRequestPath, CMDHttpRequestQuery, CMDHttpRequestHeader, CMDHttpJsonBody, CMDJson
 
 
 class PathItem(Model, Linkable):
@@ -32,6 +30,14 @@ class PathItem(Model, Linkable):
             for idx, param in enumerate(self.parameters):
                 if isinstance(param, Linkable):
                     param.link(swagger_loader, *self.traces, 'parameters', idx)
+
+            # replace parameter reference by parameter instance
+            for idx in range(len(self.parameters)):
+                param = self.parameters[idx]
+                while isinstance(param, Reference):
+                    param = param.ref_instance
+                assert isinstance(param, ParameterBase)
+                self.parameters[idx] = param
 
         if self.get is not None:
             self.get.link(swagger_loader, *self.traces, 'get')

@@ -55,6 +55,7 @@ class SchemaTest(SwaggerSpecsTestCase):
             module_filter=lambda m: m.name == "network",
             resource_provider_filter=lambda r: r.name == "Microsoft.Network"
         ))
+        print(str(rp))
         generator = CommandConfigurationGenerator()
         resource_map = rp.get_resource_map()
         resource_op_group_map = rp.get_resource_op_group_map(resource_map)
@@ -79,7 +80,12 @@ class SchemaTest(SwaggerSpecsTestCase):
     def test_mgmt_modules(self):
         # without network module
         for rp in self.get_mgmt_plane_resource_providers(
-                module_filter=lambda m: m.name != "network",
+                module_filter=lambda m: m.name not in (
+                        "network",  # Take hours to execute
+                ),
+                resource_provider_filter=lambda m: str(m) not in (
+                        "(MgmtPlane)/azsadmin/infrastructureinsights/Microsoft.InfrastructureInsights.Admin",  # have invalid reference
+                )
         ):
             print(str(rp))
             generator = CommandConfigurationGenerator()

@@ -1,7 +1,7 @@
-from schematics.types import StringType, ModelType
+from schematics.types import StringType
 
 from ._fields import CMDVariantField, CMDBooleanField
-from ._schema import CMDSchemaBase, CMDSchemaDefault, CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase, \
+from ._schema import CMDSchemaBase, CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase, \
     CMDBooleanSchemaBase, CMDArraySchemaBase, CMDByteSchemaBase, CMDBinarySchemaBase, CMDDurationSchemaBase, \
     CMDDateSchemaBase, CMDDateTimeSchemaBase, CMDUuidSchemaBase, CMDPasswordSchemaBase, CMDInteger32SchemaBase, \
     CMDInteger64SchemaBase, CMDFloat32SchemaBase, CMDFloat64SchemaBase

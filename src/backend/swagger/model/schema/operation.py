@@ -7,7 +7,8 @@ from swagger.utils import exceptions
 from .external_documentation import ExternalDocumentation
 from .fields import MimeField, XmsRequestIdField, XmsExamplesField, SecurityRequirementField, XPublishField, \
     XSfCodeGenField
-from .parameter import ParameterField, PathParameter, QueryParameter, HeaderParameter, BodyParameter, FormDataParameter
+from .parameter import ParameterField, PathParameter, QueryParameter, HeaderParameter, BodyParameter,\
+    FormDataParameter, ParameterBase
 from .reference import Reference, Linkable
 from .response import Response
 from .x_ms_long_running_operation import XmsLongRunningOperationField, XmsLongRunningOperationOptionsField
@@ -19,36 +20,36 @@ class Operation(Model, Linkable):
     """Describes a single API operation on a path."""
 
     tags = ListType(StringType())  # A list of tags for API documentation control. Tags can be used for logical grouping of operations by resources or any other qualifier.
-    summary = StringType()  # A short summary of what the operation does. For maximum readability in the swagger-ui, this field SHOULD be less than 120 characters.
+    summary = StringType()  # TODO: # A short summary of what the operation does. For maximum readability in the swagger-ui, this field SHOULD be less than 120 characters.
     description = StringType()  # A verbose explanation of the operation behavior. GFM syntax can be used for rich text representation.
     external_docs = ModelType(
         ExternalDocumentation,
         serialized_name="externalDocs",
         deserialize_from="externalDocs"
-    )  # Additional external documentation for this operation.
+    )  # TODO: # Additional external documentation for this operation.
     operation_id = StringType(
         serialized_name="operationId",
         deserialize_from="operationId",
     )  # Unique string used to identify the operation. The id MUST be unique among all operations described in the API. Tools and libraries MAY use the operationId to uniquely identify an operation, therefore, it is recommended to follow common programming naming conventions.
-    consumes = ListType(MimeField())  # A list of MIME types the operation can consume. This overrides the consumes definition at the Swagger Object. An empty value MAY be used to clear the global definition. Value MUST be as described under Mime Types.
-    produces = ListType(MimeField())  # A list of MIME types the operation can produce. This overrides the produces definition at the Swagger Object. An empty value MAY be used to clear the global definition. Value MUST be as described under Mime Types.
+    consumes = ListType(MimeField())  # TODO: # A list of MIME types the operation can consume. This overrides the consumes definition at the Swagger Object. An empty value MAY be used to clear the global definition. Value MUST be as described under Mime Types.
+    produces = ListType(MimeField())  # TODO: # A list of MIME types the operation can produce. This overrides the produces definition at the Swagger Object. An empty value MAY be used to clear the global definition. Value MUST be as described under Mime Types.
     parameters = ListType(ParameterField(support_reference=True))  # A list of parameters that are applicable for this operation. If a parameter is already defined at the Path Item, the new definition will override it, but can never remove it. The list MUST NOT include duplicated parameters. A unique parameter is defined by a combination of a name and location. The list can use the Reference Object to link to parameters that are defined at the Swagger Object's parameters. There can be one "body" parameter at most.
     responses = DictType(PolyModelType([
         Reference, Response
     ]), required=True)  # The list of possible responses as they are returned from executing this operation.
     schemes = ListType(StringType(
         choices=("http", "https", "ws", "wss")
-    ))  # The transfer protocol for the operation. Values MUST be from the list: "http", "https", "ws", "wss". The value overrides the Swagger Object schemes definition.
-    deprecated = BooleanType(default=False)  # Declares this operation to be deprecated. Usage of the declared operation should be refrained. Default value is false.
-    security = ListType(SecurityRequirementField())  # A declaration of which security schemes are applied for this operation. The list of values describes alternative security schemes that can be used (that is, there is a logical OR between the security requirements). This definition overrides any declared top-level security. To remove a top-level security declaration, an empty array can be used.
+    ))  # TODO: # The transfer protocol for the operation. Values MUST be from the list: "http", "https", "ws", "wss". The value overrides the Swagger Object schemes definition.
+    deprecated = BooleanType(default=False)  # TODO: # Declares this operation to be deprecated. Usage of the declared operation should be refrained. Default value is false.
+    security = ListType(SecurityRequirementField())  # TOOD: # A declaration of which security schemes are applied for this operation. The list of values describes alternative security schemes that can be used (that is, there is a logical OR between the security requirements). This definition overrides any declared top-level security. To remove a top-level security declaration, an empty array can be used.
 
-    x_ms_pageable = XmsPageableField()
+    x_ms_pageable = XmsPageableField()  # TODO:
     x_ms_long_running_operation = XmsLongRunningOperationField(default=False)
-    x_ms_long_running_operation_options = XmsLongRunningOperationOptionsField()
+    x_ms_long_running_operation_options = XmsLongRunningOperationOptionsField()  # TODO:
 
-    x_ms_odata = XmsODataField()  # indicates the operation includes one or more OData query parameters.
+    x_ms_odata = XmsODataField()  # TODO: # indicates the operation includes one or more OData query parameters.
     x_ms_request_id = XmsRequestIdField()
-    x_ms_examples = XmsExamplesField()
+    x_ms_examples = XmsExamplesField()  # TODO:
 
     # specific properties
     _x_publish = XPublishField()  # only used in Maps Data Plane
@@ -68,27 +69,36 @@ class Operation(Model, Linkable):
                 if isinstance(param, Linkable):
                     param.link(swagger_loader, *self.traces, 'parameters', idx)
 
+            # replace parameter reference by parameter instance
+            for idx in range(len(self.parameters)):
+                param = self.parameters[idx]
+                while isinstance(param, Reference):
+                    param = param.ref_instance
+                assert isinstance(param, ParameterBase)
+                self.parameters[idx] = param
+
         for key, response in self.responses.items():
             response.link(swagger_loader, *self.traces, 'responses', key)
+
+        # replace response reference by response instance
+        for key in [*self.responses.keys()]:
+            resp = self.responses[key]
+            while isinstance(resp, Reference):
+                if resp.ref_instance is None:
+                    raise exceptions.InvalidSwaggerValueError(
+                        msg="Reference not exist",
+                        key=[],
+                        value=resp.ref
+                    )
+                resp = resp.ref_instance
+            assert isinstance(resp, Response)
+            self.responses[key] = resp
 
         if self.x_ms_odata is not None:
             self.x_ms_odata_instance, instance_traces = swagger_loader.load_ref(
                 self.x_ms_odata, *self.traces, 'x_ms_odata')
             if isinstance(self.x_ms_odata_instance, Linkable):
                 self.x_ms_odata_instance.link(swagger_loader, *instance_traces)
-
-    @staticmethod
-    def _convert_param_to_cmd_model(param, mutability):
-        while isinstance(param, Reference):
-            if param.ref_instance is None:
-                raise exceptions.InvalidSwaggerValueError(
-                    msg="Reference not exist",
-                    key=[],
-                    value=param.ref
-                )
-            param = param.ref_instance
-        model = param.to_cmd_model(mutability=mutability)
-        return param, model
 
     def to_cmd_operation(self, path, method, parent_parameters, mutability):
         cmd_op = CMDHttpOperation()
@@ -108,7 +118,7 @@ class Operation(Model, Linkable):
         client_request_id_name = None
         if parent_parameters:
             for p in parent_parameters:
-                p, model = self._convert_param_to_cmd_model(p, mutability=mutability)
+                model = p.to_cmd_model(mutability=mutability)
                 if model is None:
                     continue
                 if p.IN_VALUE not in param_models:
@@ -120,7 +130,7 @@ class Operation(Model, Linkable):
 
         if self.parameters:
             for p in self.parameters:
-                p, model = self._convert_param_to_cmd_model(p, mutability=mutability)
+                model = p.to_cmd_model(mutability=mutability)
                 if model is None:
                     continue
                 if p.IN_VALUE not in param_models:
@@ -174,14 +184,6 @@ class Operation(Model, Linkable):
         # convert default response
         if 'default' in self.responses:
             resp = self.responses['default']
-            while isinstance(resp, Reference):
-                if resp.ref_instance is None:
-                    raise exceptions.InvalidSwaggerValueError(
-                        msg="Reference not exist",
-                        key=[],
-                        value=resp.ref
-                    )
-                resp = resp.ref_instance
             model = resp.to_cmd_model()
             model.is_error = True
             error_responses['default'] = (resp, model)
@@ -189,14 +191,6 @@ class Operation(Model, Linkable):
         for code, resp in self.responses.items():
             if code == "default":
                 continue
-            while isinstance(resp, Reference):
-                if resp.ref_instance is None:
-                    raise exceptions.InvalidSwaggerValueError(
-                        msg="Reference not exist",
-                        key=[],
-                        value=resp.ref
-                    )
-                resp = resp.ref_instance
             status_code = int(code)
 
             if status_code < 300:
@@ -273,5 +267,13 @@ class Operation(Model, Linkable):
                 key=self.traces,
                 value=[path, method]
             )
+
+        cmd_op.http.responses = []
+        for _, model in success_responses.values():
+            cmd_op.http.responses.append(model)
+        for _, model in redirect_responses.values():
+            cmd_op.http.responses.append(model)
+        for _, model in error_responses.values():
+            cmd_op.http.responses.append(model)
 
         return cmd_op
