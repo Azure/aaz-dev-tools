@@ -105,6 +105,7 @@ class Operation(Model, Linkable):
         if self.x_ms_long_running_operation:
             cmd_op.long_running = True
 
+        cmd_op.operation_id = self.operation_id
         cmd_op.http = CMDHttpAction()
         cmd_op.http.path = path
         cmd_op.http.request = CMDHttpRequest()
@@ -252,21 +253,22 @@ class Operation(Model, Linkable):
                 key=[self.traces],
                 value=[*error_responses.keys()]
             )
-        if 'default' not in error_responses and len(error_responses) == 1:
-            p_resp, p_model = [*error_responses.values()][0]
-            if p_model.body is not None:
-                # use the current error response as default
-                p_model.status_codes = None
-                error_responses = {
-                    "default": (p_resp, p_model)
-                }
 
-        if 'default' not in error_responses:
-            raise exceptions.InvalidSwaggerValueError(
-                msg="Miss default response",
-                key=self.traces,
-                value=[path, method]
-            )
+        # # default response
+        # if 'default' not in error_responses and len(error_responses) == 1:
+        #     p_resp, p_model = [*error_responses.values()][0]
+        #     if p_model.body is not None:
+        #         # use the current error response as default
+        #         p_model.status_codes = None
+        #         error_responses = {
+        #             "default": (p_resp, p_model)
+        #         }
+        # if 'default' not in error_responses:
+        #     raise exceptions.InvalidSwaggerValueError(
+        #         msg="Miss default response",
+        #         key=self.traces,
+        #         value=[path, method]
+        #     )
 
         cmd_op.http.responses = []
         for _, model in success_responses.values():
@@ -275,5 +277,10 @@ class Operation(Model, Linkable):
             cmd_op.http.responses.append(model)
         for _, model in error_responses.values():
             cmd_op.http.responses.append(model)
-
+        if len(cmd_op.http.responses) == 0:
+            raise exceptions.InvalidSwaggerValueError(
+                msg="No http response",
+                key=self.traces,
+                value=[path, method]
+            )
         return cmd_op

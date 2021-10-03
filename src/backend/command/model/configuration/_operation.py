@@ -1,5 +1,5 @@
 from schematics.models import Model
-from schematics.types import PolyModelType, ModelType, ListType
+from schematics.types import PolyModelType, ModelType, ListType, StringType
 
 from ._fields import CMDVariantField, CMDBooleanField
 from ._http import CMDHttpAction
@@ -32,6 +32,12 @@ class CMDHttpOperation(CMDOperation):
         serialized_name="longRunning",
         deserialize_from="longRunning",
     )
+
+    operation_id = StringType(
+        serialized_name="operationId",
+        deserialize_from="operationId",
+        required=True
+    )   # OperationId from swagger
 
     # properties as nodes
     http = ModelType(CMDHttpAction, required=True)
