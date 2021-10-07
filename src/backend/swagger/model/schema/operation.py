@@ -106,6 +106,8 @@ class Operation(Model, Linkable):
             cmd_op.long_running = True
 
         cmd_op.operation_id = self.operation_id
+        cmd_op.description = self.description
+
         cmd_op.http = CMDHttpAction()
         cmd_op.http.path = path
         cmd_op.http.request = CMDHttpRequest()

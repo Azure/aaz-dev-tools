@@ -363,4 +363,4 @@ class CMDJson(Model):
     ref = CMDVariantField(serialize_when_none=False)
 
     # properties as nodes
-    schema = PolyModelType(CMDSchemaBase, allow_subclasses=True, required=True)
+    schema = PolyModelType(CMDSchemaBase, allow_subclasses=True)  # this property is required when ref property is None

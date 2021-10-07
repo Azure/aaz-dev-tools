@@ -6,6 +6,7 @@ import re
 import inflect
 from fuzzywuzzy import fuzz
 from ._utils import map_path_2_repo
+from command.model.configuration import CMDResource
 
 
 logger = logging.getLogger('backend')
@@ -121,6 +122,12 @@ class Resource:
                 raise ValueError(f'InvalidReadiness: in file path: {file_path}')
             file_path_version.readiness = ResourceVersion.Readiness.Preview
         return file_path_version
+
+    def to_cmd_resource(self):
+        resource = CMDResource()
+        resource.id = self.id
+        resource.version = self.version.version
+        return resource
 
 
 class ResourceVersion:

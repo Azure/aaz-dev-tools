@@ -39,6 +39,8 @@ class CMDHttpOperation(CMDOperation):
         required=True
     )   # OperationId from swagger
 
+    description = StringType()
+
     # properties as nodes
     http = ModelType(CMDHttpAction, required=True)
 

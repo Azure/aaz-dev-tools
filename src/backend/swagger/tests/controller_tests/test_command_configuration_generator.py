@@ -104,7 +104,11 @@ class SchemaTest(SwaggerSpecsTestCase):
                     try:
                         generator.load_resources(resources)
                     except exceptions.InvalidSwaggerValueError as err:
-                        print(err)
+                        if err.msg not in (
+                                "type is not supported",
+                                "format is not supported"
+                        ):
+                            print(err)
                     except Exception:
                         print([str(resource) for resource in resources])
                         raise
@@ -128,7 +132,11 @@ class SchemaTest(SwaggerSpecsTestCase):
                     try:
                         generator.load_resources(resources)
                     except exceptions.InvalidSwaggerValueError as err:
-                        print(err)
+                        if err.msg not in (
+                            "type is not supported",
+                            "format is not supported"
+                        ):
+                            print(err)
                     except Exception:
                         print([str(resource) for resource in resources])
                         raise

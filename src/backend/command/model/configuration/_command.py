@@ -27,4 +27,4 @@ class CMDCommand(Model):
     )
     conditions = ListType(ModelType(CMDCondition), serialize_when_none=False)
     operations = ListType(PolyModelType(CMDOperation, allow_subclasses=True), min_size=1)
-    outputs = ListType(PolyModelType(CMDOutput, allow_subclasses=True), min_size=1)
+    outputs = ListType(PolyModelType(CMDOutput, allow_subclasses=True), min_size=1)  # support to add outputs in different formats, such table
