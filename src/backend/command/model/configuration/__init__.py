@@ -32,13 +32,6 @@ from ._http import CMDHttpRequestArgs, CMDHttpRequestPath, CMDHttpRequestQuery, 
     CMDHttpResponseHeaderItem, CMDHttpResponseHeader, CMDHttpResponse, \
     CMDHttpAction
 from ._http_body import CMDHttpBody, CMDHttpJsonBody
-from ._http_param import CMDHttpParam, \
-    CMDHttpStringParam, CMDHttpByteParam, CMDHttpBinaryParam, CMDHttpDurationParam, CMDHttpDateParam, \
-    CMDHttpDateTimeParam, CMDHttpUuidParam, CMDHttpPasswordParam, \
-    CMDHttpIntegerParam, CMDHttpInteger32Param, CMDHttpInteger64Param, \
-    CMDHttpFloatParam, CMDHttpFloat32Param, CMDHttpFloat64Param, \
-    CMDHttpBooleanParam, \
-    CMDHttpArrayParam
 from ._instance_update import CMDInstanceUpdateAction, \
     CMDJsonInstanceUpdateAction, \
     CMDGenericInstanceUpdateMethod, CMDGenericInstanceUpdateAction

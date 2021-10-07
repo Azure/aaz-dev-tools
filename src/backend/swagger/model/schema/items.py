@@ -4,16 +4,22 @@ from schematics.types import BaseType, StringType, FloatType, ModelType, Boolean
 from command.model.configuration import CMDIntegerFormat, CMDStringFormat, CMDFloatFormat, CMDArrayFormat, \
     CMDSchemaEnum, CMDSchemaEnumItem
 from command.model.configuration import CMDSchemaDefault, \
-    CMDHttpStringParam, CMDHttpByteParam, CMDHttpBinaryParam, CMDHttpDateParam, CMDHttpDateTimeParam, \
-    CMDHttpPasswordParam, CMDHttpDurationParam, CMDHttpUuidParam, \
-    CMDHttpIntegerParam, CMDHttpInteger32Param, CMDHttpInteger64Param, \
-    CMDHttpBooleanParam, \
-    CMDHttpFloatParam, CMDHttpFloat32Param, CMDHttpFloat64Param, \
-    CMDHttpArrayParam, \
-    CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase, \
-    CMDBooleanSchemaBase, CMDArraySchemaBase, CMDByteSchemaBase, CMDBinarySchemaBase, CMDDurationSchemaBase, \
-    CMDDateSchemaBase, CMDDateTimeSchemaBase, CMDUuidSchemaBase, CMDPasswordSchemaBase, \
-    CMDInteger32SchemaBase, CMDInteger64SchemaBase, CMDFloat32SchemaBase, CMDFloat64SchemaBase
+    CMDStringSchemaBase, CMDStringSchema, \
+    CMDIntegerSchemaBase, CMDIntegerSchema, \
+    CMDInteger32SchemaBase, CMDInteger32Schema, \
+    CMDInteger64SchemaBase, CMDInteger64Schema, \
+    CMDFloatSchemaBase, CMDFloatSchema, \
+    CMDFloat32SchemaBase, CMDFloat32Schema, \
+    CMDFloat64SchemaBase, CMDFloat64Schema, \
+    CMDBooleanSchemaBase, CMDBooleanSchema, \
+    CMDArraySchemaBase, CMDArraySchema, \
+    CMDByteSchemaBase, CMDByteSchema, \
+    CMDBinarySchemaBase, CMDBinarySchema, \
+    CMDDurationSchemaBase, CMDDurationSchema, \
+    CMDDateSchemaBase, CMDDateSchema, \
+    CMDDateTimeSchemaBase, CMDDateTimeSchema, \
+    CMDUuidSchemaBase, CMDUuidSchema, \
+    CMDPasswordSchemaBase, CMDPasswordSchema
 from swagger.utils import exceptions
 from .fields import DataTypeFormatEnum, RegularExpressionField, XNullableField
 from .x_ms_enum import XmsEnumField
@@ -95,42 +101,42 @@ class Items(Model):
                 if in_base:
                     model = CMDStringSchemaBase()
                 else:
-                    model = CMDHttpStringParam()
+                    model = CMDStringSchema()
             elif self.format == "byte":
                 if in_base:
                     model = CMDByteSchemaBase()
                 else:
-                    model = CMDHttpByteParam()
+                    model = CMDByteSchema()
             elif self.format == "binary":
                 if in_base:
                     model = CMDBinarySchemaBase()
                 else:
-                    model = CMDHttpBinaryParam()
+                    model = CMDBinarySchema()
             elif self.format == "date":
                 if in_base:
                     model = CMDDateSchemaBase()
                 else:
-                    model = CMDHttpDateParam()
+                    model = CMDDateSchema()
             elif self.format == "date-time":
                 if in_base:
                     model = CMDDateTimeSchemaBase()
                 else:
-                    model = CMDHttpDateTimeParam()
+                    model = CMDDateTimeSchema()
             elif self.format == "password":
                 if in_base:
                     model = CMDPasswordSchemaBase()
                 else:
-                    model = CMDHttpPasswordParam()
+                    model = CMDPasswordSchema()
             elif self.format == "duration":
                 if in_base:
                     model = CMDDurationSchemaBase()
                 else:
-                    model = CMDHttpDurationParam()
+                    model = CMDDurationSchema()
             elif self.format == "uuid":
                 if in_base:
                     model = CMDUuidSchemaBase()
                 else:
-                    model = CMDHttpUuidParam()
+                    model = CMDUuidSchema()
             else:
                 raise exceptions.InvalidSwaggerValueError(
                     f"format is not supported", key=[self.type, self.format])
@@ -139,17 +145,17 @@ class Items(Model):
                 if in_base:
                     model = CMDIntegerSchemaBase()
                 else:
-                    model = CMDHttpIntegerParam()
+                    model = CMDIntegerSchema()
             elif self.format == "int32":
                 if in_base:
                     model = CMDInteger32SchemaBase()
                 else:
-                    model = CMDHttpInteger32Param()
+                    model = CMDInteger32Schema()
             elif self.format == "int64":
                 if in_base:
                     model = CMDInteger64SchemaBase()
                 else:
-                    model = CMDHttpInteger64Param()
+                    model = CMDInteger64Schema()
             else:
                 raise exceptions.InvalidSwaggerValueError(
                     f"format is not supported", key=[self.type, self.format])
@@ -158,7 +164,7 @@ class Items(Model):
                 if in_base:
                     model = CMDBooleanSchemaBase()
                 else:
-                    model = CMDHttpBooleanParam()
+                    model = CMDBooleanSchema()
             else:
                 raise exceptions.InvalidSwaggerValueError(
                     f"format is not supported", key=[self.type, self.format])
@@ -167,17 +173,17 @@ class Items(Model):
                 if in_base:
                     model = CMDFloatSchemaBase()
                 else:
-                    model = CMDHttpFloatParam()
+                    model = CMDFloatSchema()
             elif self.format == "float":
                 if in_base:
                     model = CMDFloat32SchemaBase()
                 else:
-                    model = CMDHttpFloat32Param()
+                    model = CMDFloat32Schema()
             elif self.format == "double":
                 if in_base:
                     model = CMDFloat64SchemaBase()
                 else:
-                    model = CMDHttpFloat64Param()
+                    model = CMDFloat64Schema()
             else:
                 raise exceptions.InvalidSwaggerValueError(
                     f"format is not supported", key=[self.type, self.format])
@@ -186,7 +192,7 @@ class Items(Model):
                 if in_base:
                     model = CMDArraySchemaBase()
                 else:
-                    model = CMDHttpArrayParam()
+                    model = CMDArraySchema()
             else:
                 raise exceptions.InvalidSwaggerValueError(
                     f"format is not supported", key=[self.type, self.format])

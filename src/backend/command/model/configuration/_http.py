@@ -7,13 +7,13 @@ from schematics.types import StringType, ModelType, ListType, PolyModelType, Int
 
 from ._fields import CMDVariantField, CMDBooleanField, CMDURLPathField
 from ._http_body import CMDHttpBody
-from ._http_param import CMDHttpParam
+from ._schema import CMDSchema
 
 
 class CMDHttpRequestArgs(Model):
     # properties as nodes
-    params = ListType(PolyModelType(CMDHttpParam, allow_subclasses=True))
-    consts = ListType(PolyModelType(CMDHttpParam, allow_subclasses=True))
+    params = ListType(PolyModelType(CMDSchema, allow_subclasses=True))
+    consts = ListType(PolyModelType(CMDSchema, allow_subclasses=True))
 
     class Options:
         serialize_when_none = True

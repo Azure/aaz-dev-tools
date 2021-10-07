@@ -78,6 +78,11 @@ class CMDSchema(CMDSchemaBase):
 
     description = StringType(serialize_when_none=False)
 
+    skip_url_encoding = CMDBooleanField(
+        serialized_name="skipUrlEncoding",
+        deserialize_from="skipUrlEncoding",
+    )   # used in path and query parameters
+
     @classmethod
     def _claim_polymorphic(cls, data):
         if super(CMDSchema, cls)._claim_polymorphic(data):
