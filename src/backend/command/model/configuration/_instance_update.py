@@ -6,7 +6,8 @@ from schematics.models import Model
 from schematics.types import ModelType, PolyModelType
 
 from ._fields import CMDVariantField, CMDBooleanField
-from ._schema import CMDJson
+from ._content import CMDJson
+from ._arg import CMDClsArg
 
 
 class CMDInstanceUpdateAction(Model):
@@ -26,13 +27,19 @@ class CMDInstanceUpdateAction(Model):
             return hasattr(data, cls.POLYMORPHIC_KEY)
         return False
 
+    def generate_args(self):
+        raise NotImplementedError()
+
 
 # json instance update
 class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
     POLYMORPHIC_KEY = "json"
 
     # properties as nodes
-    json = PolyModelType(CMDJson, allow_subclasses=True, required=True)
+    json = ModelType(CMDJson, required=True)
+
+    def generate_args(self):
+        return self.json.generate_args()
 
 
 # generic instance update
@@ -46,6 +53,34 @@ class CMDGenericInstanceUpdateMethod(Model):
         deserialize_from='forceString'
     )
 
+    def generate_args(self):
+        self.add = "$add"
+        self.set = "$set"
+        self.remove = "$remove"
+        self.force_string = "$forceString"
+
+        args = [
+            CMDClsArg({
+                'var': self.add,
+                'type': "@GenericUpdateAdd"
+            }),
+            CMDClsArg({
+                'var': self.set,
+                'type': "@GenericUpdateSet"
+            }),
+            CMDClsArg({
+                'var': self.remove,
+                'type': "@GenericUpdateRemove"
+            }),
+            CMDClsArg({
+                'var': self.force_string,
+                'type': "@GenericUpdateForceString"
+            })
+        ]
+        for arg in args:
+            arg.group = "Generic Update"
+        return args
+
 
 class CMDGenericInstanceUpdateAction(CMDInstanceUpdateAction):
     POLYMORPHIC_KEY = "generic"
@@ -58,3 +93,6 @@ class CMDGenericInstanceUpdateAction(CMDInstanceUpdateAction):
 
     # properties as nodes
     generic = ModelType(CMDGenericInstanceUpdateMethod)
+
+    def generate_args(self):
+        return self.generic.generate_args()

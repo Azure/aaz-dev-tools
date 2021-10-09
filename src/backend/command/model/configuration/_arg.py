@@ -5,6 +5,7 @@ from schematics.types.serializable import serializable
 from ._fields import CMDStageField, CMDVariantField, CMDPrimitiveField, CMDBooleanField
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
 from ._help import CMDArgumentHelp
+import copy
 
 
 class CMDArgEnumItem(Model):
@@ -15,6 +16,13 @@ class CMDArgEnumItem(Model):
     # properties as nodes
     value = CMDPrimitiveField(required=True)
 
+    @classmethod
+    def build_enum_item(cls, builder, schema_item):
+        item = cls()
+        item.value = copy.deepcopy(schema_item.value)
+        item.name = str(item.value)
+        return item
+
 
 class CMDArgEnum(Model):
     # properties as tags
@@ -22,12 +30,27 @@ class CMDArgEnum(Model):
     # properties as nodes
     items = ListType(ModelType(CMDArgEnumItem), min_size=1)
 
+    @classmethod
+    def build_enum(cls, builder, schema_enum):
+        enum = cls()
+        enum.items = []
+        for schema_item in schema_enum.items:
+            item = builder.get_enum_item(schema_item)
+            enum.items.append(item)
+        return enum
+
 
 class CMDArgDefault(Model):
     """ The argument value if an argument is not used """
 
     # properties as nodes
     value = CMDPrimitiveField()  # json value format string, support null
+
+    @classmethod
+    def build_default(cls, builder, schema_default):
+        default = cls()
+        default.value = copy.deepcopy(schema_default.value)
+        return default
 
 
 class CMDArgBlank(Model):
@@ -82,6 +105,10 @@ class CMDArgBase(Model):
             return data.TYPE_VALUE == cls.TYPE_VALUE
         return False
 
+    @classmethod
+    def build_arg_base(cls, builder):
+        return cls()
+
 
 class CMDArg(CMDArgBase):
     # properties as tags
@@ -91,11 +118,12 @@ class CMDArg(CMDArgBase):
     stage = CMDStageField()
 
     hide = CMDBooleanField()
+    group = StringType(serialize_when_none=False)   # argument group name
 
     # properties as nodes
     help = ModelType(CMDArgumentHelp, serialize_when_none=False)
-    default = ModelType(CMDArgDefault, serialize_when_none=False)
-    blank = ModelType(CMDArgBlank, serialize_when_none=False)
+    default = ModelType(CMDArgDefault, serialize_when_none=False)  # default value is used when argument isn't in command
+    blank = ModelType(CMDArgBlank, serialize_when_none=False)  # blank value is used when argument don't have any value
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -106,6 +134,45 @@ class CMDArg(CMDArgBase):
             else:
                 return isinstance(data, CMDArg)
         return False
+
+    @classmethod
+    def build_arg(cls, builder):
+        arg = cls.build_arg_base(builder)
+        assert isinstance(arg, CMDArg)
+        arg.var = builder.get_var()
+        arg.options = builder.get_options()
+        arg.help = builder.get_help()
+
+        arg.required = builder.get_required()
+        arg.default = builder.get_default()
+        arg.blank = builder.get_blank()
+        return arg
+
+
+#cls
+class CMDClsArgBase(CMDArgBase):
+    _type = StringType(
+        deserialize_from='type',
+        serialized_name='type',
+        required=True
+    )
+
+    def _get_type(self):
+        return self._type
+
+    @classmethod
+    def _claim_polymorphic(cls, data):
+        if isinstance(data, dict):
+            type_value = data.get('type', None)
+            if type_value is not None and type_value.startswith("@"):
+                return True
+        elif isinstance(data, CMDClsArgBase):
+            return True
+        return False
+
+
+class CMDClsArg(CMDArg, CMDClsArgBase):
+    pass
 
 
 # string
@@ -119,6 +186,14 @@ class CMDStringArgBase(CMDArgBase):
         serialize_when_none=False
     )
     enum = ModelType(CMDArgEnum, serialize_when_none=False)
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super(CMDStringArgBase, cls).build_arg_base(builder)
+        assert isinstance(arg, CMDStringArgBase)
+        arg.fmt = builder.get_fmt()
+        arg.enum = builder.get_enum()
+        return arg
 
 
 class CMDStringArg(CMDArg, CMDStringArgBase):
@@ -200,6 +275,14 @@ class CMDIntegerArgBase(CMDArgBase):
     )
     enum = ModelType(CMDArgEnum, serialize_when_none=False)
 
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super(CMDIntegerArgBase, cls).build_arg_base(builder)
+        assert isinstance(arg, CMDIntegerArgBase)
+        arg.fmt = builder.get_fmt()
+        arg.enum = builder.get_enum()
+        return arg
+
 
 class CMDIntegerArg(CMDArg, CMDIntegerArgBase):
     pass
@@ -244,6 +327,14 @@ class CMDFloatArgBase(CMDArgBase):
     )
     enum = ModelType(CMDArgEnum, serialize_when_none=False)
 
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super(CMDFloatArgBase, cls).build_arg_base(builder)
+        assert isinstance(arg, CMDFloatArgBase)
+        arg.fmt = builder.get_fmt()
+        arg.enum = builder.get_enum()
+        return arg
+
 
 class CMDFloatArg(CMDArg, CMDFloatArgBase):
     pass
@@ -279,6 +370,14 @@ class CMDObjectArgBase(CMDArgBase):
     )
     args = ListType(PolyModelType(CMDArg, allow_subclasses=True), serialize_when_none=False)
 
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super(CMDObjectArgBase, cls).build_arg_base(builder)
+        assert isinstance(arg, CMDObjectArgBase)
+        arg.fmt = builder.get_fmt()
+        arg.args = builder.get_sub_args()
+        return arg
+
 
 class CMDObjectArg(CMDArg, CMDObjectArgBase):
     pass
@@ -298,6 +397,14 @@ class CMDArrayArgBase(CMDArgBase):
 
     def _get_type(self):
         return f"{self.TYPE_VALUE}<{self.item.type}>"
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super(CMDArrayArgBase, cls).build_arg_base(builder)
+        assert isinstance(arg, CMDArrayArgBase)
+        arg.fmt = builder.get_fmt()
+        arg.item = builder.get_sub_item()
+        return arg
 
 
 class CMDArrayArg(CMDArg, CMDArrayArgBase):

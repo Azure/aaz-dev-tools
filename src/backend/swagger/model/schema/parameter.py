@@ -1,7 +1,7 @@
 from schematics.models import Model
 from schematics.types import StringType, BooleanType, ModelType, PolyModelType, BaseType
 
-from command.model.configuration import CMDSchemaDefault, CMDJson, CMDBooleanSchemaBase, CMDStringSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDFloatSchemaBase, CMDIntegerSchemaBase, CMDSchema
+from command.model.configuration import CMDSchemaDefault, CMDJson, CMDBooleanSchema, CMDStringSchema, CMDObjectSchema, CMDArraySchema, CMDFloatSchema, CMDIntegerSchema, CMDSchema
 from .fields import XmsClientNameField, XmsClientFlattenField, XmsClientDefaultField
 from .fields import XmsClientRequestIdField, XNullableField, XPublishField, XRequiredField, XClientNameField, \
     XNewPatternField, XPreviousPatternField, XCommentField
@@ -199,17 +199,21 @@ class BodyParameter(ParameterBase, Linkable):
         self.schema.link(swagger_loader, *self.traces, 'schema')
 
     def to_cmd_model(self, mutability):
-        v = self.schema.to_cmd_schema(traces_route=[], mutability=mutability, in_base=True)
+        v = self.schema.to_cmd_schema(traces_route=[], mutability=mutability)
+        v.name = self.name
         if isinstance(v, (
-                CMDStringSchemaBase,
-                CMDObjectSchemaBase,
-                CMDArraySchemaBase,
-                CMDBooleanSchemaBase,
-                CMDFloatSchemaBase,
-                CMDIntegerSchemaBase
+                CMDStringSchema,
+                CMDObjectSchema,
+                CMDArraySchema,
+                CMDBooleanSchema,
+                CMDFloatSchema,
+                CMDIntegerSchema
         )):
             model = CMDJson()
             model.schema = v
+            if isinstance(v, CMDObjectSchema):
+                # flatten body parameter
+                v.client_flatten = True
         else:
             raise exceptions.InvalidSwaggerValueError(
                 msg="Invalid Response type",

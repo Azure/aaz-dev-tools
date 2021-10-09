@@ -1,7 +1,7 @@
 from schematics.models import Model
-from schematics.types import PolyModelType
+from schematics.types import ModelType
 
-from ._schema import CMDJson
+from ._content import CMDJson
 
 
 class CMDHttpBody(Model):
@@ -19,8 +19,14 @@ class CMDHttpBody(Model):
 
         return False
 
+    def generate_args(self):
+        raise NotImplementedError()
+
 
 class CMDHttpJsonBody(CMDHttpBody):
     POLYMORPHIC_KEY = "json"
 
-    json = PolyModelType(CMDJson, allow_subclasses=True, required=True)
+    json = ModelType(CMDJson, required=True)
+
+    def generate_args(self):
+        return self.json.generate_args()

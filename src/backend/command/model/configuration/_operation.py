@@ -23,6 +23,9 @@ class CMDOperation(Model):
             return hasattr(data, cls.POLYMORPHIC_KEY)
         return False
 
+    def generate_args(self):
+        raise NotImplementedError()
+
 
 class CMDHttpOperation(CMDOperation):
     POLYMORPHIC_KEY = "http"
@@ -44,6 +47,9 @@ class CMDHttpOperation(CMDOperation):
     # properties as nodes
     http = ModelType(CMDHttpAction, required=True)
 
+    def generate_args(self):
+        return self.http.generate_args()
+
 
 class CMDInstanceUpdateOperation(CMDOperation):
     POLYMORPHIC_KEY = "instanceUpdate"
@@ -56,3 +62,6 @@ class CMDInstanceUpdateOperation(CMDOperation):
         serialized_name="instanceUpdate",
         deserialize_from="instanceUpdate"
     )
+
+    def generate_args(self):
+        return self.instance_update.generate_args()

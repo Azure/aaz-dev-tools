@@ -48,6 +48,12 @@ class CMDHttpRequest(Model):
     class Options:
         serialize_when_none = True
 
+    def generate_args(self):
+        args = []
+        if self.body:
+            args.extend(self.body.generate_args())
+        return args
+
 
 class CMDHttpResponseHeaderItem(Model):
     # properties as tags
@@ -94,3 +100,6 @@ class CMDHttpAction(Model):
     # properties as nodes
     request = ModelType(CMDHttpRequest)
     responses = ListType(ModelType(CMDHttpResponse))
+
+    def generate_args(self):
+        return self.request.generate_args()

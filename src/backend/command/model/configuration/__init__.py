@@ -57,5 +57,6 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDFloat32SchemaBase, CMDFloat32Schema, \
     CMDFloat64SchemaBase, CMDFloat64Schema, \
     CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, CMDObjectSchemaBase, CMDObjectSchema, \
-    CMDArraySchemaBase, CMDArraySchema, \
-    CMDJson
+    CMDArraySchemaBase, CMDArraySchema
+from ._content import CMDJson
+from ._arg_builder import CMDArgBuilder

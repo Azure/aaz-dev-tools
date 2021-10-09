@@ -6,6 +6,23 @@ from schematics.models import Model
 from schematics.types import ModelType, ListType, PolyModelType
 from schematics.types.serializable import serializable
 
+from ._arg import CMDStringArg, CMDStringArgBase, \
+    CMDByteArg, CMDByteArgBase, \
+    CMDBinaryArg, CMDBinaryArgBase, \
+    CMDDurationArg, CMDDurationArgBase, \
+    CMDDateArg, CMDDateArgBase, \
+    CMDDateTimeArg, CMDDateTimeArgBase, \
+    CMDUuidArg, CMDUuidArgBase, \
+    CMDPasswordArg, CMDPasswordArgBase, \
+    CMDBooleanArg, CMDBooleanArgBase, \
+    CMDIntegerArg, CMDIntegerArgBase, \
+    CMDInteger32Arg, CMDInteger32ArgBase, \
+    CMDInteger64Arg, CMDInteger64ArgBase, \
+    CMDFloatArg, CMDFloatArgBase, \
+    CMDFloat32Arg, CMDFloat32ArgBase, \
+    CMDFloat64Arg, CMDFloat64ArgBase, \
+    CMDArrayArg, CMDArrayArgBase, \
+    CMDObjectArg, CMDObjectArgBase
 from ._fields import CMDVariantField, StringType, CMDSchemaClassField, CMDBooleanField, CMDPrimitiveField
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
 
@@ -33,8 +50,9 @@ class CMDSchemaDefault(Model):
 
 class CMDSchemaBase(Model):
     TYPE_VALUE = None
+    ARG_TYPE = None
 
-    #properties as tags
+    # properties as tags
     required = CMDBooleanField()
     read_only = CMDBooleanField(
         serialized_name="readOnly",
@@ -81,7 +99,7 @@ class CMDSchema(CMDSchemaBase):
     skip_url_encoding = CMDBooleanField(
         serialized_name="skipUrlEncoding",
         deserialize_from="skipUrlEncoding",
-    )   # used in path and query parameters
+    )  # used in path and query parameters
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -123,6 +141,7 @@ class CMDClsSchema(CMDSchema, CMDClsSchemaBase):
 # string
 class CMDStringSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "string"
+    ARG_TYPE = CMDStringArgBase
 
     fmt = ModelType(
         CMDStringFormat,
@@ -134,75 +153,83 @@ class CMDStringSchemaBase(CMDSchemaBase):
 
 
 class CMDStringSchema(CMDSchema, CMDStringSchemaBase):
-    pass
+    ARG_TYPE = CMDStringArg
 
 
 # byte: base64 encoded characters
 class CMDByteSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "byte"
+    ARG_TYPE = CMDByteArgBase
 
 
 class CMDByteSchema(CMDStringSchema, CMDByteSchemaBase):
-    pass
+    ARG_TYPE = CMDByteArg
 
 
 # binary: any sequence of octets
 class CMDBinarySchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "binary"
+    ARG_TYPE = CMDBinaryArgBase
 
 
 class CMDBinarySchema(CMDStringSchema, CMDBinarySchemaBase):
-    pass
+    ARG_TYPE = CMDBinaryArg
 
 
 # duration
 class CMDDurationSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "duration"
+    ARG_TYPE = CMDDurationArgBase
 
 
 class CMDDurationSchema(CMDStringSchema, CMDDurationSchemaBase):
-    pass
+    ARG_TYPE = CMDDurationArg
 
 
 # date: As defined by full-date - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
 class CMDDateSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "date"
+    ARG_TYPE = CMDDateArgBase
 
 
 class CMDDateSchema(CMDStringSchema, CMDDateSchemaBase):
-    pass
+    ARG_TYPE = CMDDateArg
 
 
 # date-time: As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
 class CMDDateTimeSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "date-time"
+    ARG_TYPE = CMDDateTimeArgBase
 
 
 class CMDDateTimeSchema(CMDStringSchema, CMDDateTimeSchemaBase):
-    pass
+    ARG_TYPE = CMDDateTimeArg
 
 
 # uuid
 class CMDUuidSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "uuid"
+    ARG_TYPE = CMDUuidArgBase
 
 
 class CMDUuidSchema(CMDStringSchema, CMDUuidSchemaBase):
-    pass
+    ARG_TYPE = CMDUuidArg
 
 
 # password
 class CMDPasswordSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "password"
+    ARG_TYPE = CMDPasswordArgBase
 
 
 class CMDPasswordSchema(CMDStringSchema, CMDPasswordSchemaBase):
-    pass
+    ARG_TYPE = CMDPasswordArg
 
 
 # integer
 class CMDIntegerSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "integer"
+    ARG_TYPE = CMDIntegerArgBase
 
     fmt = ModelType(
         CMDIntegerFormat,
@@ -214,39 +241,43 @@ class CMDIntegerSchemaBase(CMDSchemaBase):
 
 
 class CMDIntegerSchema(CMDSchema, CMDIntegerSchemaBase):
-    pass
+    ARG_TYPE = CMDIntegerArg
 
 
 # integer32
 class CMDInteger32SchemaBase(CMDIntegerSchemaBase):
     TYPE_VALUE = "integer32"
+    ARG_TYPE = CMDInteger32ArgBase
 
 
 class CMDInteger32Schema(CMDIntegerSchema, CMDInteger32SchemaBase):
-    pass
+    ARG_TYPE = CMDInteger32Arg
 
 
 # integer64
 class CMDInteger64SchemaBase(CMDIntegerSchemaBase):
     TYPE_VALUE = "integer64"
+    ARG_TYPE = CMDInteger64ArgBase
 
 
 class CMDInteger64Schema(CMDIntegerSchema, CMDInteger64SchemaBase):
-    pass
+    ARG_TYPE = CMDInteger64Arg
 
 
 # boolean
 class CMDBooleanSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "boolean"
+    ARG_TYPE = CMDBooleanArgBase
 
 
 class CMDBooleanSchema(CMDSchema, CMDBooleanSchemaBase):
-    pass
+    ARG_TYPE = CMDBooleanArg
 
 
 # float
 class CMDFloatSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "float"
+    ARG_TYPE = CMDFloatArgBase
 
     fmt = ModelType(
         CMDFloatFormat,
@@ -258,31 +289,35 @@ class CMDFloatSchemaBase(CMDSchemaBase):
 
 
 class CMDFloatSchema(CMDSchema, CMDFloatSchemaBase):
-    pass
+    ARG_TYPE = CMDFloatArg
 
 
 # float32
 class CMDFloat32SchemaBase(CMDFloatSchemaBase):
     TYPE_VALUE = "float32"
+    ARG_TYPE = CMDFloat32ArgBase
 
 
 class CMDFloat32Schema(CMDFloatSchema, CMDFloat32SchemaBase):
-    pass
+    ARG_TYPE = CMDFloat32Arg
 
 
 # float64
 class CMDFloat64SchemaBase(CMDFloatSchemaBase):
     TYPE_VALUE = "float64"
+    ARG_TYPE = CMDFloat64ArgBase
 
 
 class CMDFloat64Schema(CMDFloatSchema, CMDFloat64SchemaBase):
-    pass
+    ARG_TYPE = CMDFloat64Arg
 
 
 # object
 
 # discriminator
 class CMDObjectSchemaDiscriminator(Model):
+    ARG_TYPE = CMDObjectArg
+
     # properties as tags
     prop = StringType(required=True)
     value = StringType(required=True)  # TODO: check possible types of value
@@ -297,6 +332,29 @@ class CMDObjectSchemaDiscriminator(Model):
         serialize_when_none=False,
     )
 
+    # # disc_prop_name = None
+    # if self.discriminators:
+    #     # for disc in self.discriminators:
+    #     #     if disc_prop_name is None:
+    #     #         disc_prop_name = disc.prop
+    #     #     assert disc_prop_name == disc.prop
+    #     # disc_prop = None
+    #     # for prop in self.props:
+    #     #     if prop.name == disc_prop_name:
+    #     #         disc_prop = prop
+    #     #         break
+    #     # assert isinstance(disc_prop.enum, CMDSchemaEnum)
+    #     for disc in self.discriminators:
+    #         with ctx.build_sub_ctx(disc) as sub_ctx:
+    #             disc_args, flattened = sub_ctx.get_args()
+    #         # if not flattened:
+    #         #     assert len(disc_args) == 1
+    #         #     disc_arg = disc_args[0]
+    #         #     for item in disc_prop.enum.items:
+    #         #         if item.value == disc.value:
+    #         #             item.arg = disc_arg.var
+    #         arg.args.extend(disc_args)
+
 
 # additionalProperties
 class CMDObjectSchemaAdditionalProperties(Model):
@@ -306,6 +364,7 @@ class CMDObjectSchemaAdditionalProperties(Model):
 
 class CMDObjectSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "object"
+    ARG_TYPE = CMDObjectArgBase
 
     fmt = ModelType(
         CMDObjectFormat,
@@ -326,10 +385,12 @@ class CMDObjectSchemaBase(CMDSchemaBase):
         serialized_name="additionalProps",
         deserialize_from="additionalProps",
         serialize_when_none=False,
-    )
+    )  # TODO:
 
 
 class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
+    ARG_TYPE = CMDObjectArg
+
     # properties as tags
     client_flatten = CMDBooleanField(
         serialized_name="clientFlatten",
@@ -341,6 +402,7 @@ class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
 # array
 class CMDArraySchemaBase(CMDSchemaBase):
     TYPE_VALUE = "array"
+    ARG_TYPE = CMDArrayArgBase
 
     # properties as nodes
     fmt = ModelType(
@@ -356,16 +418,11 @@ class CMDArraySchemaBase(CMDSchemaBase):
 
 
 class CMDArraySchema(CMDSchema, CMDArraySchemaBase):
-    # properties as tags
-    cls = CMDSchemaClassField(serialize_when_none=False)  # define a schema which can be used by others
-
-
-# json
-class CMDJson(Model):
+    ARG_TYPE = CMDArrayArg
 
     # properties as tags
-    var = CMDVariantField(serialize_when_none=False)
-    ref = CMDVariantField(serialize_when_none=False)
+    cls = CMDSchemaClassField(
+        serialize_when_none=False)  # TODO: convert to arg # define a schema which can be used by others
 
-    # properties as nodes
-    schema = PolyModelType(CMDSchemaBase, allow_subclasses=True)  # this property is required when ref property is None
+
+

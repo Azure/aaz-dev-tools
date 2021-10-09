@@ -3,8 +3,14 @@ from schematics.types import StringType, FloatType, IntType
 from ._fields import CMDRegularExpressionField, CMDBooleanField
 
 
+class CMDFormat(Model):
+
+    def build_arg_fmt(self, builder):
+        raise NotImplementedError()
+
+
 # string
-class CMDStringFormat(Model):
+class CMDStringFormat(CMDFormat):
     pattern = CMDRegularExpressionField()
     max_length = IntType(
         serialized_name="maxLength",
@@ -20,9 +26,16 @@ class CMDStringFormat(Model):
     class Options:
         serialize_when_none = False
 
+    def build_arg_fmt(self, builder):
+        fmt = CMDStringFormat()
+        fmt.pattern = self.pattern
+        fmt.max_length = self.max_length
+        fmt.min_length = self.min_length
+        return fmt
+
 
 # integer
-class CMDIntegerFormat(Model):
+class CMDIntegerFormat(CMDFormat):
     multiple_of = IntType(
         min_value=0,
         serialized_name='multipleOf',
@@ -34,9 +47,16 @@ class CMDIntegerFormat(Model):
     class Options:
         serialize_when_none = False
 
+    def build_arg_fmt(self, builder):
+        fmt = CMDIntegerFormat()
+        fmt.multiple_of = self.multiple_of
+        fmt.maximum = self.maximum
+        fmt.minimum = self.minimum
+        return fmt
+
 
 # float
-class CMDFloatFormat(Model):
+class CMDFloatFormat(CMDFormat):
     multiple_of = FloatType(
         min_value=0,
         serialized_name='multipleOf',
@@ -56,9 +76,18 @@ class CMDFloatFormat(Model):
     class Options:
         serialize_when_none = False
 
+    def build_arg_fmt(self, builder):
+        fmt = CMDFloatFormat()
+        fmt.multiple_of = self.multiple_of
+        fmt.maximum = self.maximum
+        fmt.exclusive_maximum = self.exclusive_maximum
+        fmt.minimum = self.minimum
+        fmt.exclusive_minimum = self.exclusive_minimum
+        return fmt
+
 
 # object
-class CMDObjectFormat(Model):
+class CMDObjectFormat(CMDFormat):
     max_properties = IntType(
         min_value=0,
         serialized_name='maxProperties',
@@ -73,9 +102,15 @@ class CMDObjectFormat(Model):
     class Options:
         serialize_when_none = False
 
+    def build_arg_fmt(self, builder):
+        fmt = CMDObjectFormat()
+        fmt.max_properties = self.max_properties
+        fmt.min_properties = self.min_properties
+        return fmt
+
 
 # array
-class CMDArrayFormat(Model):
+class CMDArrayFormat(CMDFormat):
     unique = CMDBooleanField()
     max_length = IntType(
         min_value=0,
@@ -102,3 +137,11 @@ class CMDArrayFormat(Model):
 
     class Options:
         serialize_when_none = False
+
+    def build_arg_fmt(self, builder):
+        fmt = CMDArrayFormat()
+        fmt.unique = self.unique
+        fmt.max_length = self.max_length
+        fmt.min_length = self.min_length
+        fmt.str_format = self.str_format
+        return fmt

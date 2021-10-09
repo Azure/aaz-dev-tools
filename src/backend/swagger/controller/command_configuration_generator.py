@@ -13,10 +13,6 @@ logger = logging.getLogger('backend')
 class BuildInVariants:
 
     Instance = "$instance"
-    Add = "$add"
-    Set = "$set"
-    Remove = "$remove"
-    ForceString = "$forceString"
 
 
 class CommandConfigurationGenerator:
@@ -80,9 +76,10 @@ class CommandConfigurationGenerator:
 
     @staticmethod
     def _generate_command_arguments(command):
-        # TODO:
-        # command
-        pass
+        args = []
+        for op in command.operations:
+            args.extend(op.generate_args())
+        return args
 
     @staticmethod
     def _merge_commands(prim_command, second_command):
@@ -228,7 +225,6 @@ class CommandConfigurationGenerator:
         command.operations = [op]
 
         self._generate_command_arguments(command)
-
         return command
 
     def _generate_instance_update_operations(self, put_op):
@@ -244,10 +240,6 @@ class CommandConfigurationGenerator:
         generic_update_op.instance_update.instance = BuildInVariants.Instance
         generic_update_op.instance_update.client_flatten = True
         generic_update_op.instance_update.generic = CMDGenericInstanceUpdateMethod()
-        generic_update_op.instance_update.generic.add = BuildInVariants.Add
-        generic_update_op.instance_update.generic.set = BuildInVariants.Set
-        generic_update_op.instance_update.generic.remove = BuildInVariants.Remove
-        generic_update_op.instance_update.generic.force_string = BuildInVariants.ForceString
 
         put_op.http.request.body.json.ref = BuildInVariants.Instance
         put_op.http.request.body.json.schema = None
