@@ -153,23 +153,6 @@ class CMDArg(CMDArgBase):
         arg.blank = builder.get_blank()
         return arg
 
-    # @staticmethod
-    # def _dash_case_option(option):
-    #
-    #     pass
-    #
-    # @staticmethod
-    # def _camel_case_option(option):
-    #     pass
-
-    # def switch_options_format(self, in_dash):
-    #     if not self.options:
-    #         return
-    #     if in_dash:
-    #         self.options = [self._dash_case_option(op) for op in self.options]
-    #     else:
-    #         self.options = [self._camel_case_option(op) for op in self.options]
-
 
 #cls
 class CMDClsArgBase(CMDArgBase):

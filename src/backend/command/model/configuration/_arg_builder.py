@@ -47,6 +47,7 @@ class CMDArgBuilder:
         self.schema = schema
         self._parent = parent
         self._arg_var = arg_var
+        self._flatten_discriminators = False
 
     def get_sub_builder(self, schema):
         return self.new_builder(schema=schema, parent=self)
@@ -67,6 +68,8 @@ class CMDArgBuilder:
                 return True
             if self.schema.name == "properties":
                 return True
+        if isinstance(self.schema, CMDObjectSchemaDiscriminator):
+            return self._parent._flatten_discriminators
         return False
 
     def get_args(self):
@@ -86,12 +89,30 @@ class CMDArgBuilder:
     def get_sub_args(self):
         assert isinstance(self.schema, (CMDObjectSchemaBase, CMDObjectSchemaDiscriminator))
         sub_args = []
+        discriminator_mapping = {}
         if self.schema.discriminators:
+            # update self._flatten_discriminators, if any discriminator need flatten, then all discriminator needs tp flatten
             for disc in self.schema.discriminators:
                 sub_builder = self.get_sub_builder(schema=disc)
-                sub_args.extend(sub_builder.get_args())
+                self._flatten_discriminators = self._flatten_discriminators or sub_builder._need_flatten()
+            for disc in self.schema.discriminators:
+                sub_builder = self.get_sub_builder(schema=disc)
+                results = sub_builder.get_args()
+                sub_args.extend(results)
+                if not self._flatten_discriminators:
+                    assert len(results) == 1
+                    if disc.prop not in discriminator_mapping:
+                        discriminator_mapping[disc.prop] = {}
+                    discriminator_mapping[disc.prop][disc.value] = results[0].var
         if self.schema.props:
             for prop in self.schema.props:
+                if prop.name in discriminator_mapping:
+                    # If discriminators are not flattened then prop value can be associate with discriminator arguments
+                    assert hasattr(prop, 'enum')
+                    for item in prop.enum.items:
+                        if item.value in discriminator_mapping[prop.name]:
+                            item.arg = discriminator_mapping[prop.name][item.value]
+                    continue
                 sub_builder = self.get_sub_builder(schema=prop)
                 sub_args.extend(sub_builder.get_args())
         if not sub_args:
@@ -138,7 +159,7 @@ class CMDArgBuilder:
             opt_name = self._build_option_name(self.schema.name)
         else:
             raise NotImplementedError()
-        return opt_name
+        return [opt_name, ]
 
     def _build_help(self):
         if hasattr(self.schema, 'description') and self.schema.description:

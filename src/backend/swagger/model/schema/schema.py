@@ -520,28 +520,31 @@ class Schema(Model, Linkable):
                     if name in prop_dict:
                         prop_dict[name].required = True
 
-            if prop_dict:
-                model.props = []
-                for prop in prop_dict.values():
-                    if model.read_only:
-                        # mark properties as read_only to help sub schema inherent those properties
-                        prop.read_only = True
-                    model.props.append(prop)
-
-            # fmt
-            model.fmt = self.build_cmd_object_format() or model.fmt
-
             # discriminators
             if self.disc_children:
                 discriminators = []
                 assert self.discriminator is not None
+                disc_prop = self.discriminator
                 for disc_value, disc_child in self.disc_children.items():
                     if disc_child.traces in traces_route:
                         # discriminator child already in trace, break reference loop
                         continue
                     disc = CMDObjectSchemaDiscriminator()
-                    disc.prop = self.discriminator
+                    disc.prop = disc_prop
                     disc.value = disc_value
+
+                    # make sure discriminator value is an enum item of discriminator property
+                    if prop_dict[disc_prop].enum is None:
+                        prop_dict[disc_prop].enum = CMDSchemaEnum()
+                        prop_dict[disc_prop].enum.items = []
+                    exist_disc_value = False
+                    for enum_item in prop_dict[disc_prop].enum.items:
+                        if enum_item.value == disc_value:
+                            exist_disc_value = True
+                    if not exist_disc_value:
+                        enum_item = CMDSchemaEnumItem()
+                        enum_item.value = disc_value
+                        prop_dict[disc_prop].enum.items.append(enum_item)
 
                     v = disc_child.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
                     if v is None:
@@ -556,6 +559,17 @@ class Schema(Model, Linkable):
                     discriminators.append(disc)
                 if discriminators:
                     model.discriminators = discriminators
+
+            if prop_dict:
+                model.props = []
+                for prop in prop_dict.values():
+                    if model.read_only:
+                        # mark properties as read_only to help sub schema inherent those properties
+                        prop.read_only = True
+                    model.props.append(prop)
+
+            # fmt
+            model.fmt = self.build_cmd_object_format() or model.fmt
 
             # additional properties
             if self.additional_properties:
