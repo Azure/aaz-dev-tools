@@ -119,6 +119,11 @@ class CMDArg(CMDArgBase):
 
     hide = CMDBooleanField()
     group = StringType(serialize_when_none=False)   # argument group name
+    id_part = StringType(
+        serialized_name='idPart',
+        deserialize_from='idPart',
+        serialize_when_none=False
+    )   # for Resource Id argument
 
     # properties as nodes
     help = ModelType(CMDArgumentHelp, serialize_when_none=False)
@@ -147,6 +152,23 @@ class CMDArg(CMDArgBase):
         arg.default = builder.get_default()
         arg.blank = builder.get_blank()
         return arg
+
+    # @staticmethod
+    # def _dash_case_option(option):
+    #
+    #     pass
+    #
+    # @staticmethod
+    # def _camel_case_option(option):
+    #     pass
+
+    # def switch_options_format(self, in_dash):
+    #     if not self.options:
+    #         return
+    #     if in_dash:
+    #         self.options = [self._dash_case_option(op) for op in self.options]
+    #     else:
+    #         self.options = [self._camel_case_option(op) for op in self.options]
 
 
 #cls
@@ -374,7 +396,10 @@ class CMDObjectArgBase(CMDArgBase):
     def build_arg_base(cls, builder):
         arg = super(CMDObjectArgBase, cls).build_arg_base(builder)
         assert isinstance(arg, CMDObjectArgBase)
-        arg.fmt = builder.get_fmt()
+        try:
+            arg.fmt = builder.get_fmt()
+        except Exception:
+            raise
         arg.args = builder.get_sub_args()
         return arg
 

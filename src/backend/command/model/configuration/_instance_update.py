@@ -54,10 +54,10 @@ class CMDGenericInstanceUpdateMethod(Model):
     )
 
     def generate_args(self):
-        self.add = "$add"
-        self.set = "$set"
-        self.remove = "$remove"
-        self.force_string = "$forceString"
+        self.add = "$GenericUpdate.add"
+        self.set = "$GenericUpdate.set"
+        self.remove = "$GenericUpdate.remove"
+        self.force_string = "$GenericUpdate.forceString"
 
         args = [
             CMDClsArg({

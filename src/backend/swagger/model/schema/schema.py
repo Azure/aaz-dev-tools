@@ -396,7 +396,8 @@ class Schema(Model, Linkable):
             return model
 
         if self.ref_instance is not None:
-            model = self.ref_instance.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability, ref_link=self.ref)
+            model = self.ref_instance.to_cmd_schema(
+                traces_route=[*traces_route, self.traces], mutability=mutability, ref_link=self.ref)
             if model is None:
                 # ignore by mutability
                 return None
@@ -575,6 +576,9 @@ class Schema(Model, Linkable):
                 # client flatten can only be supported for CMDObjectSchema install of CMDObjectSchemaBase.
                 # Because CMDObjectSchemaBase will not link with argument
                 model.client_flatten = True
+
+            if not model.props and not model.discriminators and not model.additional_props:
+                return None
 
         if getattr(self, "_looped", False):
             assert isinstance(model, (CMDObjectSchemaBase, CMDArraySchemaBase))

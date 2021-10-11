@@ -3,28 +3,39 @@
 from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDArraySchemaBase, CMDSchemaEnumItem
 from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgEnumItem, CMDArgDefault, CMDBooleanArgBase, CMDArgBlank
 from ._format import CMDFormat
+import re
 
 
 class CMDArgBuilder:
 
     @classmethod
-    def new_builder(cls, schema, parent=None):
+    def new_builder(cls, schema, parent=None, var_prefix=None):
+        if var_prefix is None:
+            if parent is None or parent._arg_var is None:
+                arg_var = "$"
+            else:
+                arg_var = parent._arg_var
+        else:
+            arg_var = var_prefix
+
         if parent is None or parent._arg_var is None:
-            arg_var = "$"
             if isinstance(schema, CMDSchema):
+                if not arg_var.endswith("$"):
+                    arg_var += '.'
                 arg_var += f'{schema.name}'
             else:
                 raise NotImplementedError()
         else:
             assert isinstance(parent, CMDArgBuilder)
-            arg_var = parent._arg_var
             if isinstance(parent.schema, CMDArraySchemaBase):
                 arg_var += '[]'
-            elif isinstance(parent.schema, CMDObjectSchemaBase):
+            elif isinstance(parent.schema, (CMDObjectSchemaBase, CMDObjectSchemaDiscriminator)):
+                if not arg_var.endswith("$"):
+                    arg_var += '.'
                 if isinstance(schema, CMDObjectSchemaDiscriminator):
-                    arg_var += f'.{schema.value}'
+                    arg_var += f'{schema.value}'
                 elif isinstance(schema, CMDSchema):
-                    arg_var += f'.{schema.name}'
+                    arg_var += f'{schema.name}'
                 else:
                     raise NotImplementedError()
             else:
@@ -52,7 +63,10 @@ class CMDArgBuilder:
 
     def _need_flatten(self):
         if isinstance(self.schema, CMDObjectSchema):
-            return self.schema.client_flatten
+            if self.schema.client_flatten:
+                return True
+            if self.schema.name == "properties":
+                return True
         return False
 
     def get_args(self):
@@ -110,9 +124,12 @@ class CMDArgBuilder:
     def get_var(self):
         return self._arg_var
 
-    def _build_option_name(self, name):
-        # TODO:
-        return name
+    @staticmethod
+    def _build_option_name(name):
+        name = name.replace('_', '-')
+        name = re.sub('(.)([A-Z][a-z]+)', r'\1-\2', name)
+        name = re.sub('([a-z0-9])([A-Z])', r'\1-\2', name).lower()
+        return '-'.join([p for p in name.split('-') if p])
 
     def get_options(self):
         if isinstance(self.schema, CMDObjectSchemaDiscriminator):
@@ -135,6 +152,8 @@ class CMDArgBuilder:
         return h
 
     def get_fmt(self):
+        if isinstance(self.schema, CMDObjectSchemaDiscriminator):
+            return None
         assert hasattr(self.schema, 'fmt')
         if self.schema.fmt:
             assert isinstance(self.schema.fmt, CMDFormat)

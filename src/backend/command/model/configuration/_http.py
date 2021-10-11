@@ -8,6 +8,9 @@ from schematics.types import StringType, ModelType, ListType, PolyModelType, Int
 from ._fields import CMDVariantField, CMDBooleanField, CMDURLPathField
 from ._http_body import CMDHttpBody
 from ._schema import CMDSchema
+from ._arg_builder import CMDArgBuilder
+from ._arg import CMDClsArg
+from msrestazure.tools import parse_resource_id, is_valid_resource_id
 
 
 class CMDHttpRequestArgs(Model):
@@ -20,11 +23,59 @@ class CMDHttpRequestArgs(Model):
 
 
 class CMDHttpRequestPath(CMDHttpRequestArgs):
-    pass
+
+    def generate_args(self, path):
+        if is_valid_resource_id(path):
+            id_parts = parse_resource_id(path)
+        else:
+            id_parts = {}
+        resource_name = id_parts.pop("resource_name", None)
+        if resource_name and not path.endswith(resource_name):
+            resource_name = None
+        args = []
+        if self.params:
+            var_prefix = '$Path'
+            for param in self.params:
+                id_part = None
+                placeholder = '{' + param.name + '}'
+                for part, name in id_parts.items():
+                    if name == placeholder:
+                        id_part = part
+                        break
+                if id_part == 'subscription':
+                    arg = CMDClsArg({
+                        'var': f'{var_prefix}.subscription',
+                        'type': '@Subscription',
+                    })
+                elif id_part == 'resource_group':
+                    arg = CMDClsArg({
+                        'var': f'{var_prefix}.resourceGroup',
+                        'type': '@ResourceGroup',
+                    })
+                else:
+                    builder = CMDArgBuilder.new_builder(schema=param, var_prefix=var_prefix)
+                    result = builder.get_args()
+                    assert len(result) == 1
+                    arg = result[0]
+
+                if resource_name == placeholder:
+                    arg.options.extend(["name", "n"])
+
+                arg.required = True
+                arg.id_part = id_part
+                args.append(arg)
+                param.arg = arg.var
+        return args
 
 
 class CMDHttpRequestQuery(CMDHttpRequestArgs):
-    pass
+
+    def generate_args(self):
+        args = []
+        for param in self.params:
+            builder = CMDArgBuilder.new_builder(schema=param, var_prefix='$Query')
+            args.extend(builder.get_args())
+        return args
 
 
 class CMDHttpRequestHeader(CMDHttpRequestArgs):
@@ -33,6 +84,13 @@ class CMDHttpRequestHeader(CMDHttpRequestArgs):
         serialized_name="clientRequestId",
         deserialize_from="clientRequestId",
     )    # specifies the header parameter to be used instead of `x-ms-client-request-id`
+
+    def generate_args(self):
+        args = []
+        for param in self.params:
+            builder = CMDArgBuilder.new_builder(schema=param, var_prefix='$Header')
+            args.extend(builder.get_args())
+        return args
 
 
 class CMDHttpRequest(Model):
@@ -48,8 +106,14 @@ class CMDHttpRequest(Model):
     class Options:
         serialize_when_none = True
 
-    def generate_args(self):
+    def generate_args(self, path):
         args = []
+        if self.path:
+            args.extend(self.path.generate_args(path))
+        if self.query:
+            args.extend(self.query.generate_args())
+        if self.header:
+            args.extend(self.header.generate_args())
         if self.body:
             args.extend(self.body.generate_args())
         return args
@@ -102,4 +166,4 @@ class CMDHttpAction(Model):
     responses = ListType(ModelType(CMDHttpResponse))
 
     def generate_args(self):
-        return self.request.generate_args()
+        return self.request.generate_args(path=self.path)
