@@ -22,8 +22,9 @@ from ._arg import CMDStringArg, CMDStringArgBase, \
     CMDFloat32Arg, CMDFloat32ArgBase, \
     CMDFloat64Arg, CMDFloat64ArgBase, \
     CMDArrayArg, CMDArrayArgBase, \
-    CMDObjectArg, CMDObjectArgBase
-from ._fields import CMDVariantField, StringType, CMDSchemaClassField, CMDBooleanField, CMDPrimitiveField
+    CMDObjectArg, CMDObjectArgBase, \
+    CMDClsArg, CMDClsArgBase
+from ._fields import CMDVariantField, StringType, CMDClassField, CMDBooleanField, CMDPrimitiveField
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
 
 
@@ -114,6 +115,8 @@ class CMDSchema(CMDSchemaBase):
 
 # cls
 class CMDClsSchemaBase(CMDSchemaBase):
+    ARG_TYPE = CMDClsArgBase
+
     _type = StringType(
         deserialize_from='type',
         serialized_name='type',
@@ -135,7 +138,7 @@ class CMDClsSchemaBase(CMDSchemaBase):
 
 
 class CMDClsSchema(CMDSchema, CMDClsSchemaBase):
-    pass
+    ARG_TYPE = CMDClsArg
 
 
 # string
@@ -332,29 +335,6 @@ class CMDObjectSchemaDiscriminator(Model):
         serialize_when_none=False,
     )
 
-    # # disc_prop_name = None
-    # if self.discriminators:
-    #     # for disc in self.discriminators:
-    #     #     if disc_prop_name is None:
-    #     #         disc_prop_name = disc.prop
-    #     #     assert disc_prop_name == disc.prop
-    #     # disc_prop = None
-    #     # for prop in self.props:
-    #     #     if prop.name == disc_prop_name:
-    #     #         disc_prop = prop
-    #     #         break
-    #     # assert isinstance(disc_prop.enum, CMDSchemaEnum)
-    #     for disc in self.discriminators:
-    #         with ctx.build_sub_ctx(disc) as sub_ctx:
-    #             disc_args, flattened = sub_ctx.get_args()
-    #         # if not flattened:
-    #         #     assert len(disc_args) == 1
-    #         #     disc_arg = disc_args[0]
-    #         #     for item in disc_prop.enum.items:
-    #         #         if item.value == disc.value:
-    #         #             item.arg = disc_arg.var
-    #         arg.args.extend(disc_args)
-
 
 # additionalProperties
 class CMDObjectSchemaAdditionalProperties(Model):
@@ -396,7 +376,7 @@ class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
         serialized_name="clientFlatten",
         deserialize_from="clientFlatten"
     )
-    cls = CMDSchemaClassField(serialize_when_none=False)  # define a schema which can be used by others
+    cls = CMDClassField(serialize_when_none=False)  # define a schema which can be used by others
 
 
 # array
@@ -421,7 +401,7 @@ class CMDArraySchema(CMDSchema, CMDArraySchemaBase):
     ARG_TYPE = CMDArrayArg
 
     # properties as tags
-    cls = CMDSchemaClassField(
+    cls = CMDClassField(
         serialize_when_none=False)  # TODO: convert to arg # define a schema which can be used by others
 
 

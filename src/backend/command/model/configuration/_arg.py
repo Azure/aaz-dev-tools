@@ -2,7 +2,7 @@ from schematics.models import Model
 from schematics.types import StringType, ListType, ModelType, PolyModelType
 from schematics.types.serializable import serializable
 
-from ._fields import CMDStageField, CMDVariantField, CMDPrimitiveField, CMDBooleanField
+from ._fields import CMDStageField, CMDVariantField, CMDPrimitiveField, CMDBooleanField, CMDClassField
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
 from ._help import CMDArgumentHelp
 import copy
@@ -113,7 +113,7 @@ class CMDArgBase(Model):
 class CMDArg(CMDArgBase):
     # properties as tags
     var = CMDVariantField(required=True)
-    options = ListType(StringType(), min_size=1, required=True)  # argument option names
+    options = ListType(StringType(), min_size=1, required=True)  # argument option names, the name is in dash case "aa-bb-cc"
     required = CMDBooleanField()
     stage = CMDStageField()
 
@@ -174,6 +174,12 @@ class CMDClsArgBase(CMDArgBase):
         elif isinstance(data, CMDClsArgBase):
             return True
         return False
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super(CMDClsArgBase, cls).build_arg_base(builder)
+        arg._type = builder.get_type()
+        return arg
 
 
 class CMDClsArg(CMDArg, CMDClsArgBase):
@@ -388,7 +394,15 @@ class CMDObjectArgBase(CMDArgBase):
 
 
 class CMDObjectArg(CMDArg, CMDObjectArgBase):
-    pass
+
+    cls = CMDClassField(serialize_when_none=False)  # define a class which can be used by loop
+
+    @classmethod
+    def build_arg(cls, builder):
+        arg = super(CMDObjectArg, cls).build_arg(builder)
+        assert isinstance(arg, CMDObjectArg)
+        arg.cls = builder.get_cls()
+        return arg
 
 
 # array
@@ -416,4 +430,12 @@ class CMDArrayArgBase(CMDArgBase):
 
 
 class CMDArrayArg(CMDArg, CMDArrayArgBase):
-    pass
+
+    cls = CMDClassField(serialize_when_none=False)  # define a class which can be used by loop
+
+    @classmethod
+    def build_arg(cls, builder):
+        arg = super(CMDArrayArg, cls).build_arg(builder)
+        assert isinstance(arg, CMDArrayArg)
+        arg.cls = builder.get_cls()
+        return arg

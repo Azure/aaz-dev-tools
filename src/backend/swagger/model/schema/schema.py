@@ -572,19 +572,24 @@ class Schema(Model, Linkable):
             model.fmt = self.build_cmd_object_format() or model.fmt
 
             # additional properties
-            if self.additional_properties:
-                if isinstance(self.additional_properties, Schema):
-                    v = self.additional_properties.to_cmd_schema(
-                        traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
-                    if v is not None:
-                        assert isinstance(v, CMDSchemaBase)
-                        if model.read_only:
-                            # mark additional_props as read_only to help sub schema inherent those properties
-                            v.read_only = True
-                        model.additional_props = CMDObjectSchemaAdditionalProperties()
-                        model.additional_props.item = v
-                elif self.additional_properties is True:
+            if isinstance(self.additional_properties, Schema):
+                v = self.additional_properties.to_cmd_schema(
+                    traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
+                if v is not None:
+                    assert isinstance(v, CMDSchemaBase)
+                    if model.read_only:
+                        # mark additional_props as read_only to help sub schema inherent those properties
+                        v.read_only = True
                     model.additional_props = CMDObjectSchemaAdditionalProperties()
+                    model.additional_props.item = v
+            elif self.additional_properties is True:
+                model.additional_props = CMDObjectSchemaAdditionalProperties()
+
+            # TODO: Pending for discussion. Maybe we need service team to fix those cases in swagger
+            # elif self.additional_properties is None:
+            #     # to handle object schema without any properties
+            #     if self.properties is None and self.all_of is None and self.ref is None and self.discriminator is None:
+            #         model.additional_props = CMDObjectSchemaAdditionalProperties()
 
             if self.x_ms_client_flatten and isinstance(model, CMDObjectSchema):
                 # client flatten can only be supported for CMDObjectSchema install of CMDObjectSchemaBase.

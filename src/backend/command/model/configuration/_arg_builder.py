@@ -192,3 +192,12 @@ class CMDArgBuilder:
         assert isinstance(schema_item, CMDSchemaEnumItem)
         item = CMDArgEnumItem.build_enum_item(self, schema_item)
         return item
+
+    def get_cls(self):
+        if isinstance(self.schema, CMDObjectSchemaDiscriminator):
+            return None
+        assert hasattr(self.schema, 'cls')
+        return self.schema.cls
+
+    def get_type(self):
+        return self.schema._get_type()

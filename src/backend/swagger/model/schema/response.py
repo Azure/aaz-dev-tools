@@ -73,15 +73,22 @@ class Response(Model, Linkable):
                 model = CMDJson()
                 model.schema = v
             else:
-                raise exceptions.InvalidSwaggerValueError(
-                    msg="Invalid Response type",
-                    key=self.traces,
-                    value=v.type
-                )
+                if v is None:
+                    raise exceptions.InvalidSwaggerValueError(
+                        msg="Invalid Response",
+                        key=self.traces,
+                        value=v
+                    )
+                else:
+                    raise exceptions.InvalidSwaggerValueError(
+                        msg="Invalid Response type",
+                        key=self.traces,
+                        value=v.type
+                    )
 
             if isinstance(model, CMDJson):
                 response.body = CMDHttpJsonBody()
-                response.body.json = v
+                response.body.json = model
             else:
                 raise NotImplementedError()
 

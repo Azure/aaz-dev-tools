@@ -200,6 +200,8 @@ class BodyParameter(ParameterBase, Linkable):
 
     def to_cmd_model(self, mutability):
         v = self.schema.to_cmd_schema(traces_route=[], mutability=mutability)
+        if v is None:
+            return None
         v.name = self.name
         if isinstance(v, (
                 CMDStringSchema,
