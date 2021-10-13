@@ -2,6 +2,11 @@ from swagger.tests.common import SwaggerSpecsTestCase
 from swagger.controller.command_configuration_generator import CommandConfigurationGenerator
 from swagger.utils import exceptions
 
+MUTE_ERROR_MESSAGES = (
+    "type is not supported",
+    "format is not supported"
+)
+
 
 class SchemaTest(SwaggerSpecsTestCase):
 
@@ -65,25 +70,72 @@ class SchemaTest(SwaggerSpecsTestCase):
             for resource_id in resource_op_group_map[op_group_name]:
                 if version in resource_map[resource_id]:
                     resources.append(resource_map[resource_id][version])
-            generator.load_resources(resources)
+            try:
+                generator.load_resources(resources)
+            except exceptions.InvalidSwaggerValueError as err:
+                if err.msg not in MUTE_ERROR_MESSAGES:
+                    print(err)
+            except Exception:
+                print([str(resource) for resource in resources])
+                raise
 
-    def test_automation(self):
+    def test_recovery_services(self):
         rp = next(self.get_mgmt_plane_resource_providers(
-            module_filter=lambda m: m.name == "automation",
-            resource_provider_filter=lambda r: r.name == "Microsoft.Automation"
+            module_filter=lambda m: m.name == "recoveryservicessiterecovery",
+            resource_provider_filter=lambda r: r.name == "Microsoft.RecoveryServices"
         ))
 
         generator = CommandConfigurationGenerator()
 
-        version = "2019-06-01"
         resource_map = rp.get_resource_map()
         resource_op_group_map = rp.get_resource_op_group_map(resource_map)
         for op_group_name in resource_op_group_map:
-            resources = []
+            versions = set()
             for resource_id in resource_op_group_map[op_group_name]:
-                if version in resource_map[resource_id]:
-                    resources.append(resource_map[resource_id][version])
-            generator.load_resources(resources)
+                versions.update(resource_map[resource_id].keys())
+            for version in versions:
+                # print(op_group_name, version)
+                resources = []
+                for resource_id in resource_op_group_map[op_group_name]:
+                    if version in resource_map[resource_id]:
+                        resources.append(resource_map[resource_id][version])
+                try:
+                    generator.load_resources(resources)
+                except exceptions.InvalidSwaggerValueError as err:
+                    if err.msg not in MUTE_ERROR_MESSAGES:
+                        print(err)
+                except Exception:
+                    print([str(resource) for resource in resources])
+                    raise
+
+    def test_securityinsights(self):
+        rp = next(self.get_mgmt_plane_resource_providers(
+            module_filter=lambda m: m.name == "securityinsights",
+            resource_provider_filter=lambda r: r.name == "Microsoft.SecurityInsights"
+        ))
+
+        generator = CommandConfigurationGenerator()
+
+        resource_map = rp.get_resource_map()
+        resource_op_group_map = rp.get_resource_op_group_map(resource_map)
+        for op_group_name in resource_op_group_map:
+            versions = set()
+            for resource_id in resource_op_group_map[op_group_name]:
+                versions.update(resource_map[resource_id].keys())
+            for version in versions:
+                # print(op_group_name, version)
+                resources = []
+                for resource_id in resource_op_group_map[op_group_name]:
+                    if version in resource_map[resource_id]:
+                        resources.append(resource_map[resource_id][version])
+                try:
+                    generator.load_resources(resources)
+                except exceptions.InvalidSwaggerValueError as err:
+                    if err.msg not in MUTE_ERROR_MESSAGES:
+                        print(err)
+                except Exception:
+                    print([str(resource) for resource in resources])
+                    raise
 
     def test_network(self):
         rp = next(self.get_mgmt_plane_resource_providers(
@@ -117,6 +169,7 @@ class SchemaTest(SwaggerSpecsTestCase):
         for rp in self.get_mgmt_plane_resource_providers(
                 module_filter=lambda m: m.name not in (
                         "network",  # Take hours to execute
+                        "securityinsights",  # invalid swagger
                 ),
                 resource_provider_filter=lambda m: str(m) not in (
                         "(MgmtPlane)/azsadmin/infrastructureinsights/Microsoft.InfrastructureInsights.Admin",  # have invalid reference
@@ -139,10 +192,7 @@ class SchemaTest(SwaggerSpecsTestCase):
                     try:
                         generator.load_resources(resources)
                     except exceptions.InvalidSwaggerValueError as err:
-                        if err.msg not in (
-                                "type is not supported",
-                                "format is not supported"
-                        ):
+                        if err.msg not in MUTE_ERROR_MESSAGES:
                             print(err)
                     except Exception:
                         print([str(resource) for resource in resources])
@@ -167,10 +217,7 @@ class SchemaTest(SwaggerSpecsTestCase):
                     try:
                         generator.load_resources(resources)
                     except exceptions.InvalidSwaggerValueError as err:
-                        if err.msg not in (
-                            "type is not supported",
-                            "format is not supported"
-                        ):
+                        if err.msg not in MUTE_ERROR_MESSAGES:
                             print(err)
                     except Exception:
                         print([str(resource) for resource in resources])

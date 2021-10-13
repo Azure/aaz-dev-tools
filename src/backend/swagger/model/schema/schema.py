@@ -5,7 +5,7 @@ from .fields import DataTypeFormatEnum, RegularExpressionField, XmsClientNameFie
 from .xml import XML
 from .external_documentation import ExternalDocumentation
 from .x_ms_enum import XmsEnumField
-from .fields import XmsSecretField, XAccessibilityField, XAzSearchDeprecatedField, XSfClientLibField, XApimCodeNillableField, XCommentField, XAbstractField, XClientNameField, MutabilityEnum
+from .fields import XmsSecretField, XAccessibilityField, XAzSearchDeprecatedField, XSfClientLibField, XApimCodeNillableField, XCommentField, XAbstractField, XADLNameField, MutabilityEnum
 from swagger.utils import exceptions
 
 from command.model.configuration import CMDIntegerFormat, CMDStringFormat, CMDFloatFormat, CMDArrayFormat, CMDObjectFormat, CMDSchemaEnum, CMDSchemaEnumItem, CMDSchema, CMDSchemaBase
@@ -178,6 +178,7 @@ class Schema(Model, Linkable):
     _x_apim_code_nillable = XApimCodeNillableField()  # only used in ApiManagement Mgmt Plane
     _x_comment = XCommentField()  # Only used in IoTCenter Mgmt Plane
     _x_abstract = XAbstractField()  # Only used in Logic Mgmt Plane and Web Mgmt Plane
+    _x_adl_name = XADLNameField()  # Only used in FluidRelay Mgmt Plane
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -185,13 +186,20 @@ class Schema(Model, Linkable):
         self.disc_parent = None
         self.disc_children = {}
 
-    @property
-    def disc_instance(self):
+    def get_disc_parent(self):
         assert self.is_linked()
-        if self.discriminator is not None:
+        if self.disc_parent is not None:
+            return self.disc_parent
+        elif self.discriminator is not None:
+            if not self.properties or self.discriminator not in self.properties:
+                raise exceptions.InvalidSwaggerValueError(
+                    msg="Discriminator property isn't in properties",
+                    key=self.traces,
+                    value=self.discriminator
+                )
             return self
         elif self.ref_instance is not None:
-            return self.ref_instance.disc_instance
+            return self.ref_instance.get_disc_parent()
         return None
 
     def link(self, swagger_loader, *traces):
@@ -233,7 +241,7 @@ class Schema(Model, Linkable):
         if self.all_of is None:
             return
         for item in self.all_of:
-            disc_parent = item.disc_instance
+            disc_parent = item.get_disc_parent()
             if disc_parent is not None:
                 if self.disc_parent is not None:
                     raise exceptions.InvalidSwaggerValueError(
@@ -248,7 +256,7 @@ class Schema(Model, Linkable):
                     disc_value = self.traces[-1]   # use the definition name as discriminator value
                 else:
                     raise exceptions.InvalidSwaggerValueError(
-                        msg="DiscriminatorValue is empty.",
+                        msg="Discriminator value is empty.",
                         key=self.traces, value=None
                     )
                 if disc_value in self.disc_parent.disc_children:
@@ -468,8 +476,8 @@ class Schema(Model, Linkable):
             if self.all_of:
                 # inherent from allOf
                 for item in self.all_of:
-                    disc_parent = item.disc_instance
-                    if disc_parent is not None and disc_parent.traces in traces_route:
+                    disc_parent = item.get_disc_parent()
+                    if disc_parent is not None and item.ref_instance.traces in traces_route:
                         # discriminator parent already in trace, break reference loop
                         continue
                     v = item.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
@@ -533,6 +541,19 @@ class Schema(Model, Linkable):
                     disc.prop = disc_prop
                     disc.value = disc_value
 
+                    if disc_prop not in prop_dict:
+                        raise exceptions.InvalidSwaggerValueError(
+                            msg="Discriminator Property don't exist",
+                            key=self.traces,
+                            value=[disc_prop, mutability]
+                        )
+                    if not hasattr(prop_dict[disc_prop], "enum"):
+                        raise exceptions.InvalidSwaggerValueError(
+                            msg="Invalid Discriminator Property type",
+                            key=self.traces,
+                            value=[disc_prop, prop_dict[disc_prop].type]
+                        )
+
                     # make sure discriminator value is an enum item of discriminator property
                     if prop_dict[disc_prop].enum is None:
                         prop_dict[disc_prop].enum = CMDSchemaEnum()
@@ -585,11 +606,10 @@ class Schema(Model, Linkable):
             elif self.additional_properties is True:
                 model.additional_props = CMDObjectSchemaAdditionalProperties()
 
-            # TODO: Pending for discussion. Maybe we need service team to fix those cases in swagger
-            # elif self.additional_properties is None:
-            #     # to handle object schema without any properties
-            #     if self.properties is None and self.all_of is None and self.ref is None and self.discriminator is None:
-            #         model.additional_props = CMDObjectSchemaAdditionalProperties()
+            elif self.additional_properties is None:
+                # to handle object schema without any properties
+                if self.properties is None and self.all_of is None and self.ref is None and self.discriminator is None:
+                    model.additional_props = CMDObjectSchemaAdditionalProperties()
 
             if self.x_ms_client_flatten and isinstance(model, CMDObjectSchema):
                 # client flatten can only be supported for CMDObjectSchema install of CMDObjectSchemaBase.

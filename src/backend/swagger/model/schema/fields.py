@@ -478,3 +478,14 @@ class XPreviousPatternField(StringType):
             deserialize_from='x-previous-pattern',
             **kwargs
         )
+
+
+class XADLNameField(StringType):
+    """ Only used in Plane"""
+
+    def __init__(self, **kwargs):
+        super(XADLNameField, self).__init__(
+            serialized_name='x-adl-name',
+            deserialize_from='x-adl-name',
+            **kwargs
+        )

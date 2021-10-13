@@ -696,7 +696,7 @@
                 </response>
             </http>
         </operation>
-        <output type="object" ref="$instance" clientclientFlatten="true"/>
+        <output type="object" ref="$instance" clientFlatten="true"/>
     </command>
 
     <!--  monitor data-collection rule update  -->

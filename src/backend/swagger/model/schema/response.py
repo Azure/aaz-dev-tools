@@ -75,7 +75,7 @@ class Response(Model, Linkable):
             else:
                 if v is None:
                     raise exceptions.InvalidSwaggerValueError(
-                        msg="Invalid Response",
+                        msg="Invalid Response Schema. It's None.",
                         key=self.traces,
                         value=v
                     )
