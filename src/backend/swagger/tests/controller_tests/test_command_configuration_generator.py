@@ -108,6 +108,35 @@ class SchemaTest(SwaggerSpecsTestCase):
                     print([str(resource) for resource in resources])
                     raise
 
+    def test_databox(self):
+        rp = next(self.get_mgmt_plane_resource_providers(
+            module_filter=lambda m: m.name == "databox",
+            resource_provider_filter=lambda r: r.name == "Microsoft.DataBox"
+        ))
+
+        generator = CommandConfigurationGenerator()
+
+        resource_map = rp.get_resource_map()
+        resource_op_group_map = rp.get_resource_op_group_map(resource_map)
+        for op_group_name in resource_op_group_map:
+            versions = set()
+            for resource_id in resource_op_group_map[op_group_name]:
+                versions.update(resource_map[resource_id].keys())
+            for version in versions:
+                # print(op_group_name, version)
+                resources = []
+                for resource_id in resource_op_group_map[op_group_name]:
+                    if version in resource_map[resource_id]:
+                        resources.append(resource_map[resource_id][version])
+                try:
+                    generator.load_resources(resources)
+                except exceptions.InvalidSwaggerValueError as err:
+                    if err.msg not in MUTE_ERROR_MESSAGES:
+                        print(err)
+                except Exception:
+                    print([str(resource) for resource in resources])
+                    raise
+
     def test_securityinsights(self):
         rp = next(self.get_mgmt_plane_resource_providers(
             module_filter=lambda m: m.name == "securityinsights",

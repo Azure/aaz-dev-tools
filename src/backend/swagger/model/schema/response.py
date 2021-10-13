@@ -62,6 +62,12 @@ class Response(Model, Linkable):
 
         if self.schema:
             v = self.schema.to_cmd_schema(traces_route=[], mutability=MutabilityEnum.Read, in_base=True)
+            if v.frozen:
+                raise exceptions.InvalidSwaggerValueError(
+                    msg="Invalid Response Schema. It's None.",
+                    key=self.traces,
+                )
+
             if isinstance(v, (
                     CMDStringSchemaBase,
                     CMDObjectSchemaBase,
@@ -73,18 +79,11 @@ class Response(Model, Linkable):
                 model = CMDJson()
                 model.schema = v
             else:
-                if v is None:
-                    raise exceptions.InvalidSwaggerValueError(
-                        msg="Invalid Response Schema. It's None.",
-                        key=self.traces,
-                        value=v
-                    )
-                else:
-                    raise exceptions.InvalidSwaggerValueError(
-                        msg="Invalid Response type",
-                        key=self.traces,
-                        value=v.type
-                    )
+                raise exceptions.InvalidSwaggerValueError(
+                    msg="Invalid Response type",
+                    key=self.traces,
+                    value=v.type
+                )
 
             if isinstance(model, CMDJson):
                 response.body = CMDHttpJsonBody()

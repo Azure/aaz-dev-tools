@@ -200,9 +200,12 @@ class BodyParameter(ParameterBase, Linkable):
 
     def to_cmd_model(self, mutability):
         v = self.schema.to_cmd_schema(traces_route=[], mutability=mutability)
-        if v is None:
-            return None
         v.name = self.name
+        if v.frozen:
+            raise exceptions.InvalidSwaggerValueError(
+                msg="Invalid Request Schema. It's None.",
+                key=self.traces,
+            )
         if isinstance(v, (
                 CMDStringSchema,
                 CMDObjectSchema,
@@ -218,7 +221,7 @@ class BodyParameter(ParameterBase, Linkable):
                 v.client_flatten = True
         else:
             raise exceptions.InvalidSwaggerValueError(
-                msg="Invalid Response type",
+                msg="Invalid Request type",
                 key=self.traces,
                 value=v.type
             )

@@ -233,7 +233,7 @@ class CommandConfigurationGenerator:
         json_update_op.instance_update = CMDJsonInstanceUpdateAction()
         json_update_op.instance_update.instance = BuildInVariants.Instance
         json_update_op.instance_update.json = CMDJson()
-        json_update_op.instance_update.schema = put_op.http.request.body.json.schema
+        json_update_op.instance_update.json.schema = put_op.http.request.body.json.schema
 
         generic_update_op = CMDInstanceUpdateOperation()
         generic_update_op.instance_update = CMDGenericInstanceUpdateAction()

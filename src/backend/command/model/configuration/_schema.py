@@ -59,11 +59,11 @@ class CMDSchemaBase(Model):
         serialized_name="readOnly",
         deserialize_from="readOnly"
     )
+    frozen = CMDBooleanField()  # frozen schema will not be used
+    const = CMDBooleanField()   # when a schema is const it's default value is not None.
 
     # properties as nodes
     default = ModelType(CMDSchemaDefault, serialize_when_none=False)
-
-    # when a schema is const then its read_only is True and its default value is not None.
 
     # base types: "array", "boolean", "integer", "float", "object", "string",
 
@@ -323,7 +323,8 @@ class CMDObjectSchemaDiscriminator(Model):
 
     # properties as tags
     prop = StringType(required=True)
-    value = StringType(required=True)  # TODO: check possible types of value
+    value = StringType(required=True)
+    frozen = CMDBooleanField()  # frozen schema will not be used
 
     # properties as nodes
     props = ListType(
@@ -338,6 +339,13 @@ class CMDObjectSchemaDiscriminator(Model):
 
 # additionalProperties
 class CMDObjectSchemaAdditionalProperties(Model):
+    # properties as tags
+    read_only = CMDBooleanField(
+        serialized_name="readOnly",
+        deserialize_from="readOnly"
+    )
+    frozen = CMDBooleanField()
+
     # properties as nodes
     item = PolyModelType(CMDSchemaBase, allow_subclasses=True)
 

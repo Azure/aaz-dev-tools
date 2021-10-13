@@ -73,8 +73,13 @@ class CMDArgBuilder:
         return False
 
     def get_args(self):
-        if isinstance(self.schema, CMDSchemaBase) and self.schema.read_only:
+        if self.schema.frozen:
             return []
+        if isinstance(self.schema, CMDSchemaBase):
+            assert not self.schema.read_only
+            if self.schema.const:
+                return []
+
         arg = self._build_arg()
         if self._need_flatten():
             if isinstance(self.schema, CMDSchema):
@@ -99,7 +104,7 @@ class CMDArgBuilder:
                 sub_builder = self.get_sub_builder(schema=disc)
                 results = sub_builder.get_args()
                 sub_args.extend(results)
-                if not self._flatten_discriminators:
+                if results and not self._flatten_discriminators:
                     assert len(results) == 1
                     if disc.prop not in discriminator_mapping:
                         discriminator_mapping[disc.prop] = {}

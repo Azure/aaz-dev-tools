@@ -406,19 +406,18 @@ class Schema(Model, Linkable):
         if self.ref_instance is not None:
             model = self.ref_instance.to_cmd_schema(
                 traces_route=[*traces_route, self.traces], mutability=mutability, ref_link=self.ref)
-            if model is None:
-                # ignore by mutability
-                return None
         else:
             model = self._build_model(in_base=in_base)
 
         if self.read_only:
             model.read_only = True
+
+        if self.read_only:
             if mutability != MutabilityEnum.Read:
-                return None
+                model.frozen = True  # frozen because of mutability
         elif self.x_ms_mutability:
             if mutability not in self.x_ms_mutability:
-                return None
+                model.frozen = True  # frozen because of mutability
 
         if isinstance(model, CMDStringSchemaBase):
             if self.all_of is not None:
@@ -460,11 +459,10 @@ class Schema(Model, Linkable):
             if self.items:
                 assert isinstance(self.items, Schema)
                 v = self.items.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
-                if v is None:
-                    # ignore by mutability
-                    return None
                 assert isinstance(v, CMDSchemaBase)
                 model.item = v
+                if model.item.frozen:
+                    model.frozen = True  # freeze because array item is frozen
         elif isinstance(model, CMDObjectSchemaBase):
             # props
             prop_dict = {}
@@ -481,9 +479,6 @@ class Schema(Model, Linkable):
                         # discriminator parent already in trace, break reference loop
                         continue
                     v = item.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
-                    if v is None:
-                        # ignore by mutability
-                        continue
                     if isinstance(v, CMDClsSchemaBase):
                         raise exceptions.InvalidSwaggerValueError(
                             msg="AllOf not support to reference loop",
@@ -504,7 +499,7 @@ class Schema(Model, Linkable):
                         disc_prop = disc_parent.discriminator
                         for disc_value, disc_child in disc_parent.disc_children.items():
                             if disc_child == self:
-                                prop_dict[disc_prop].read_only = True
+                                prop_dict[disc_prop].const = True
                                 prop_dict[disc_prop].default = CMDSchemaDefault()
                                 prop_dict[disc_prop].default.value = disc_value
                                 break
@@ -568,10 +563,9 @@ class Schema(Model, Linkable):
                         prop_dict[disc_prop].enum.items.append(enum_item)
 
                     v = disc_child.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
-                    if v is None:
-                        # ignore by mutability
-                        continue
                     assert isinstance(v, CMDObjectSchemaBase)
+                    if v.frozen:
+                        disc.frozen = True
                     if v.props:
                         disc.props = [prop for prop in v.props if prop.name not in prop_dict]
                     if v.discriminators:
@@ -587,37 +581,58 @@ class Schema(Model, Linkable):
                     if model.read_only:
                         # mark properties as read_only to help sub schema inherent those properties
                         prop.read_only = True
+                    if model.frozen:
+                        # mark properties as frozen to help sub schema inherent those properties
+                        prop.frozen = True
                     model.props.append(prop)
 
             # fmt
             model.fmt = self.build_cmd_object_format() or model.fmt
 
             # additional properties
-            if isinstance(self.additional_properties, Schema):
-                v = self.additional_properties.to_cmd_schema(
-                    traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
-                if v is not None:
-                    assert isinstance(v, CMDSchemaBase)
-                    if model.read_only:
-                        # mark additional_props as read_only to help sub schema inherent those properties
-                        v.read_only = True
+            if self.additional_properties:
+                if isinstance(self.additional_properties, Schema):
+                    v = self.additional_properties.to_cmd_schema(
+                        traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
+                    if v is not None:
+                        assert isinstance(v, CMDSchemaBase)
+                        model.additional_props = CMDObjectSchemaAdditionalProperties()
+                        model.additional_props.item = v
+                elif self.additional_properties is True:
                     model.additional_props = CMDObjectSchemaAdditionalProperties()
-                    model.additional_props.item = v
-            elif self.additional_properties is True:
+            elif not model.props and not model.discriminators:
+                # to handle object schema without any properties
                 model.additional_props = CMDObjectSchemaAdditionalProperties()
 
-            elif self.additional_properties is None:
-                # to handle object schema without any properties
-                if self.properties is None and self.all_of is None and self.ref is None and self.discriminator is None:
-                    model.additional_props = CMDObjectSchemaAdditionalProperties()
+            if model.additional_props:
+                if model.read_only:
+                    # mark additional_props as read_only to help sub schema inherent those properties
+                    model.additional_props.read_only = True
+                if model.frozen:
+                    # mark additional_props as frozen to help sub schema inherent those properties
+                    model.additional_props.frozen = True
 
             if self.x_ms_client_flatten and isinstance(model, CMDObjectSchema):
                 # client flatten can only be supported for CMDObjectSchema install of CMDObjectSchemaBase.
                 # Because CMDObjectSchemaBase will not link with argument
                 model.client_flatten = True
 
-            if not model.props and not model.discriminators and not model.additional_props:
-                return None
+            if not model.frozen:
+                need_frozen = True
+                if model.additional_props:
+                    if not model.additional_props.frozen:
+                        need_frozen = False
+                if model.props:
+                    for prop in model.props:
+                        if not prop.frozen:
+                            need_frozen = False
+                            break
+                if model.discriminators:
+                    for disc in model.discriminators:
+                        if not disc.frozen:
+                            need_frozen = False
+                            break
+                model.frozen = need_frozen
 
         if getattr(self, "_looped", False):
             assert isinstance(model, (CMDObjectSchemaBase, CMDArraySchemaBase))
