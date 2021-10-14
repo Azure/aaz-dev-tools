@@ -19,7 +19,12 @@
             <arg var="$location" options="--location -l" type="string">
                 <help short="Location."/>
             </arg>
-            <arg var="$tags" type="@Tags"/>
+            <arg var="$tags" type="object">
+                <help short=""/>
+                <additionalProperty>
+
+                </additionalProperty>
+            </arg>
         </argGroup>
         <argGroup name="Data Flow">
             <arg var="$dataFlows" options="--data-flows" type="array<object>" nargs="*">

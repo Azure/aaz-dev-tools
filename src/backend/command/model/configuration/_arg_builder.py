@@ -1,7 +1,7 @@
 
 
-from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDArraySchemaBase, CMDSchemaEnumItem
-from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgEnumItem, CMDArgDefault, CMDBooleanArgBase, CMDArgBlank
+from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDArraySchemaBase, CMDSchemaEnumItem, CMDObjectSchemaAdditionalProperties
+from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgEnumItem, CMDArgDefault, CMDBooleanArgBase, CMDArgBlank, CMDObjectArgAdditionalProperties
 from ._format import CMDFormat
 import re
 
@@ -29,15 +29,18 @@ class CMDArgBuilder:
             assert isinstance(parent, CMDArgBuilder)
             if isinstance(parent.schema, CMDArraySchemaBase):
                 arg_var += '[]'
+            elif isinstance(parent.schema, CMDObjectSchemaAdditionalProperties):
+                arg_var += '{}'
             elif isinstance(parent.schema, (CMDObjectSchemaBase, CMDObjectSchemaDiscriminator)):
-                if not arg_var.endswith("$"):
-                    arg_var += '.'
-                if isinstance(schema, CMDObjectSchemaDiscriminator):
-                    arg_var += f'{schema.value}'
-                elif isinstance(schema, CMDSchema):
-                    arg_var += f'{schema.name}'
-                else:
-                    raise NotImplementedError()
+                if not isinstance(schema, CMDObjectSchemaAdditionalProperties):
+                    if not arg_var.endswith("$"):
+                        arg_var += '.'
+                    if isinstance(schema, CMDObjectSchemaDiscriminator):
+                        arg_var += f'{schema.value}'
+                    elif isinstance(schema, CMDSchema):
+                        arg_var += f'{schema.name}'
+                    else:
+                        raise NotImplementedError()
             else:
                 raise NotImplementedError()
 
@@ -52,12 +55,26 @@ class CMDArgBuilder:
     def get_sub_builder(self, schema):
         return self.new_builder(schema=schema, parent=self)
 
+    def _ignore(self):
+        if self.schema.frozen:
+            return True
+        if isinstance(self.schema, CMDSchemaBase):
+            assert not self.schema.read_only
+            if self.schema.const:
+                return True
+        return False
+
     def _build_arg_base(self):
+        if self._ignore():
+            return None
         arg_cls = self.schema.ARG_TYPE
-        assert issubclass(arg_cls, CMDArgBase)
+        assert issubclass(arg_cls, (CMDArgBase, CMDObjectArgAdditionalProperties))
         return arg_cls.build_arg_base(self)
 
     def _build_arg(self):
+        if self._ignore():
+            return None
+
         arg_cls = self.schema.ARG_TYPE
         assert issubclass(arg_cls, CMDArg)
         return arg_cls.build_arg(self)
@@ -73,14 +90,11 @@ class CMDArgBuilder:
         return False
 
     def get_args(self):
-        if self.schema.frozen:
+        if self._ignore():
             return []
-        if isinstance(self.schema, CMDSchemaBase):
-            assert not self.schema.read_only
-            if self.schema.const:
-                return []
 
         arg = self._build_arg()
+        assert arg is not None
         if self._need_flatten():
             if isinstance(self.schema, CMDSchema):
                 self.schema.arg = None
@@ -125,9 +139,18 @@ class CMDArgBuilder:
         return sub_args
 
     def get_sub_item(self):
-        assert isinstance(self.schema, CMDArraySchemaBase)
-        sub_builder = self.get_sub_builder(schema=self.schema.item)
-        return sub_builder._build_arg_base()
+        if hasattr(self.schema, "item") and self.schema.item:
+            sub_builder = self.get_sub_builder(schema=self.schema.item)
+            return sub_builder._build_arg_base()
+        else:
+            return None
+
+    def get_additional_props(self):
+        if hasattr(self.schema, "additional_props") and self.schema.additional_props:
+            sub_builder = self.get_sub_builder(schema=self.schema.additional_props)
+            return sub_builder._build_arg_base()
+        else:
+            return None
 
     def get_required(self):
         if isinstance(self.schema, CMDSchemaBase):

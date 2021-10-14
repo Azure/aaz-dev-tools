@@ -22,7 +22,7 @@ from ._arg import CMDStringArg, CMDStringArgBase, \
     CMDFloat32Arg, CMDFloat32ArgBase, \
     CMDFloat64Arg, CMDFloat64ArgBase, \
     CMDArrayArg, CMDArrayArgBase, \
-    CMDObjectArg, CMDObjectArgBase, \
+    CMDObjectArg, CMDObjectArgBase, CMDObjectArgAdditionalProperties, \
     CMDClsArg, CMDClsArgBase
 from ._fields import CMDVariantField, StringType, CMDClassField, CMDBooleanField, CMDPrimitiveField
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
@@ -339,6 +339,8 @@ class CMDObjectSchemaDiscriminator(Model):
 
 # additionalProperties
 class CMDObjectSchemaAdditionalProperties(Model):
+    ARG_TYPE = CMDObjectArgAdditionalProperties
+
     # properties as tags
     read_only = CMDBooleanField(
         serialized_name="readOnly",
@@ -373,7 +375,7 @@ class CMDObjectSchemaBase(CMDSchemaBase):
         serialized_name="additionalProps",
         deserialize_from="additionalProps",
         serialize_when_none=False,
-    )  # TODO:
+    )
 
 
 class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):

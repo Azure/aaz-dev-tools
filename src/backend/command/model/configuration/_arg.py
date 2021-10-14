@@ -370,6 +370,18 @@ class CMDFloat64Arg(CMDFloatArg, CMDFloat64ArgBase):
 
 
 # object
+
+class CMDObjectArgAdditionalProperties(Model):
+    # properties as nodes
+    item = PolyModelType(CMDArgBase, allow_subclasses=True, serialize_when_none=False)
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = cls()
+        arg.item = builder.get_sub_item()
+        return arg
+
+
 class CMDObjectArgBase(CMDArgBase):
     TYPE_VALUE = "object"
 
@@ -380,6 +392,12 @@ class CMDObjectArgBase(CMDArgBase):
         serialize_when_none=False
     )
     args = ListType(PolyModelType(CMDArg, allow_subclasses=True), serialize_when_none=False)
+    additional_props = ModelType(
+        CMDObjectArgAdditionalProperties,
+        serialized_name="additionalProps",
+        deserialize_from="additionalProps",
+        serialize_when_none=False
+    )
 
     @classmethod
     def build_arg_base(cls, builder):
@@ -390,6 +408,7 @@ class CMDObjectArgBase(CMDArgBase):
         except Exception:
             raise
         arg.args = builder.get_sub_args()
+        arg.additional_props = builder.get_additional_props()
         return arg
 
 
