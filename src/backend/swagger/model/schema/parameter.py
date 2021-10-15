@@ -1,7 +1,11 @@
+import logging
+
 from schematics.models import Model
 from schematics.types import StringType, BooleanType, ModelType, PolyModelType, BaseType
 
-from command.model.configuration import CMDSchemaDefault, CMDJson, CMDBooleanSchema, CMDStringSchema, CMDObjectSchema, CMDArraySchema, CMDFloatSchema, CMDIntegerSchema, CMDSchema
+from command.model.configuration import CMDSchemaDefault, CMDJson, CMDBooleanSchema, CMDStringSchema, CMDObjectSchema, \
+    CMDArraySchema, CMDFloatSchema, CMDIntegerSchema, CMDSchema
+from swagger.utils import exceptions
 from .fields import XmsClientNameField, XmsClientFlattenField, XmsClientDefaultField
 from .fields import XmsClientRequestIdField, XNullableField, XPublishField, XRequiredField, XClientNameField, \
     XNewPatternField, XPreviousPatternField, XCommentField
@@ -11,7 +15,8 @@ from .items import Items
 from .reference import Reference, Linkable
 from .schema import Schema
 from .x_ms_parameter_grouping import XmsParameterGroupingField
-from swagger.utils import exceptions
+
+logger = logging.getLogger('backend')
 
 
 class ParameterBase(Model):
@@ -202,10 +207,10 @@ class BodyParameter(ParameterBase, Linkable):
         v = self.schema.to_cmd_schema(traces_route=[], mutability=mutability)
         v.name = self.name
         if v.frozen:
-            raise exceptions.InvalidSwaggerValueError(
-                msg="Invalid Request Schema. It's None.",
-                key=self.traces,
+            logger.warning(
+                msg=f"Request Body Parameter is None: {self.traces}"
             )
+            return None
         if isinstance(v, (
                 CMDStringSchema,
                 CMDObjectSchema,
@@ -237,5 +242,3 @@ class ParameterField(PolyModelType):
         if support_reference:
             model_spec.append(Reference)
         super(ParameterField, self).__init__(model_spec=model_spec, **kwargs)
-
-
