@@ -347,6 +347,17 @@ class XNullableField(BooleanType):
         )
 
 
+class XmsHeaderCollectionPrefix(StringType):
+    """ only used in Storage Data plane """
+
+    def __init__(self, **kwargs):
+        super(XmsHeaderCollectionPrefix, self).__init__(
+            serialized_name='x-ms-header-collection-prefix',
+            deserialize_from='x-ms-header-collection-prefix',
+            **kwargs
+        )
+
+
 class XAccessibilityField(StringType):
     """ only used in ContainerRegistry Data plane """
 

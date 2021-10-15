@@ -10,7 +10,7 @@ from .fields import XmsClientNameField, XmsClientFlattenField, XmsClientDefaultF
 from .fields import XmsClientRequestIdField, XNullableField, XPublishField, XRequiredField, XClientNameField, \
     XNewPatternField, XPreviousPatternField, XCommentField
 from .fields import XmsParameterLocationField, XmsApiVersionField, XmsSkipUrlEncodingField
-from .fields import XmsSkipURLEncodingField, XAccessibilityField
+from .fields import XmsSkipURLEncodingField, XAccessibilityField, XmsHeaderCollectionPrefix
 from .items import Items
 from .reference import Reference, Linkable
 from .schema import Schema
@@ -108,6 +108,9 @@ class HeaderParameter(Items, ParameterBase):
     IN_VALUE = "header"
 
     x_ms_client_request_id = XmsClientRequestIdField()
+
+    # specific properties, will not support
+    x_ms_header_collection_prefix = XmsHeaderCollectionPrefix()  # only used in Storage Data plane
 
     def _new_param(self):
         pass
