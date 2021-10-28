@@ -12,9 +12,11 @@ class ResourceProviderLoaderTest(SwaggerSpecsTestCase):
             print(rp)
 
     def test_resource_map(self):
+        total = 0
         for rp in self.get_resource_providers():
             print(rp)
             resource_map = rp.get_resource_map()
+            total += len(resource_map)
 
     def test_resource_map_similar_path(self):
         for rp in self.get_resource_providers():

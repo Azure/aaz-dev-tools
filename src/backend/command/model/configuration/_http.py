@@ -47,11 +47,13 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                         'var': f'{var_prefix}.subscription',
                         'type': '@Subscription',
                     })
+                    param.arg = arg.var
                 elif id_part == 'resource_group':
                     arg = CMDClsArg({
                         'var': f'{var_prefix}.resourceGroup',
                         'type': '@ResourceGroup',
                     })
+                    param.arg = arg.var
                 else:
                     builder = CMDArgBuilder.new_builder(schema=param, var_prefix=var_prefix)
                     result = builder.get_args()
@@ -59,12 +61,12 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                     arg = result[0]
 
                 if resource_name == placeholder:
-                    arg.options.extend(["name", "n"])
+                    arg.options = list({*arg.options, "name", "n"})
 
                 arg.required = True
                 arg.id_part = id_part
                 args.append(arg)
-                param.arg = arg.var
+
         return args
 
 

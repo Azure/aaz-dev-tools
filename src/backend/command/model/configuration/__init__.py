@@ -16,12 +16,14 @@ from ._arg import CMDArgEnumItem, CMDArgEnum, \
     CMDFloat32ArgBase, CMDFloat32Arg, CMDFloat64ArgBase, CMDFloat64Arg, \
     CMDObjectArgBase, CMDObjectArg, \
     CMDArrayArgBase, CMDArrayArg
+from ._arg_builder import CMDArgBuilder
 from ._arg_group import CMDArgGroup
 from ._command import CMDCommand
 from ._command_group import CMDCommandGroup
 from ._condition import CMDConditionOperator, \
     CMDConditionAndOperator, CMDConditionOrOperator, CMDConditionNotOperator, CMDConditionHasValueOperator, \
     CMDCondition
+from ._content import CMDJson
 from ._fields import CMDBooleanField, CMDStageEnum, CMDStageField, CMDVariantField, CMDClassField, \
     CMDPrimitiveField, CMDRegularExpressionField, CMDVersionField, CMDResourceIdField, CMDCommandNameField, \
     CMDCommandGroupNameField, CMDURLPathField
@@ -58,5 +60,4 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDFloat64SchemaBase, CMDFloat64Schema, \
     CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, CMDObjectSchemaBase, CMDObjectSchema, \
     CMDArraySchemaBase, CMDArraySchema
-from ._content import CMDJson
-from ._arg_builder import CMDArgBuilder
+from ._utils import CMDDiffLevelEnum

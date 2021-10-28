@@ -4,7 +4,7 @@ from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.x_ms_pageable import XmsPageable
 from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, \
     CMDSchemaDefault, CMDHttpJsonBody, CMDObjectOutput, CMDArrayOutput, CMDResource, CMDGenericInstanceUpdateAction, \
-    CMDGenericInstanceUpdateMethod, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, CMDJson, CMDHelp
+    CMDGenericInstanceUpdateMethod, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, CMDJson, CMDHelp, CMDArgGroup
 import logging
 
 logger = logging.getLogger('backend')
@@ -12,7 +12,7 @@ logger = logging.getLogger('backend')
 
 class BuildInVariants:
 
-    Instance = "$instance"
+    Instance = "$Instance"
 
 
 class CommandConfigurationGenerator:
@@ -75,11 +75,37 @@ class CommandConfigurationGenerator:
         return h
 
     @staticmethod
-    def _generate_command_arguments(command):
-        args = []
+    def _group_arguments(arguments):
+        arg_groups = {}
+        for arg in arguments:
+            group_name = arg.group or ""
+            if group_name not in arg_groups:
+                arg_groups[group_name] = {}
+            if arg.var not in arg_groups[group_name]:
+                arg_groups[group_name][arg.var] = arg
+
+        groups = []
+        for group_name, args in arg_groups.items():
+            group = CMDArgGroup()
+            group.name = group_name
+            group.args = [arg for arg in args.items()]
+            groups.append(group)
+        return groups or None
+
+    def _generate_command_arguments(self, command):
+        arguments = {}
         for op in command.operations:
-            args.extend(op.generate_args())
-        return args
+            for arg in op.generate_args():
+                if arg.var not in arguments:
+                    arguments[arg.var] = arg
+        used_options = {}
+        for arg in arguments.values():
+            if arg.options:
+                for option in arg.options:
+                    if option in used_options:
+                        print(f"Duplicated Option Value: {option} : {arg.var} with {used_options[option]} : {command.operations[0].operation_id}")
+                    used_options[option] = arg.var
+        return [*arguments.values()]
 
     @staticmethod
     def _merge_commands(prim_command, second_command):
@@ -128,7 +154,8 @@ class CommandConfigurationGenerator:
         command.help = self._generate_command_help(op.description)
         command.operations = [op]
 
-        self._generate_command_arguments(command)
+        arguments = self._generate_command_arguments(command)
+        command.arg_groups = self._group_arguments(arguments)
 
         return command
 
@@ -152,7 +179,8 @@ class CommandConfigurationGenerator:
         command.help = self._generate_command_help(op.description)
         command.operations = [op]
 
-        self._generate_command_arguments(command)
+        arguments = self._generate_command_arguments(command)
+        command.arg_groups = self._group_arguments(arguments)
 
         return command
 
@@ -176,7 +204,8 @@ class CommandConfigurationGenerator:
         command.help = self._generate_command_help(op.description)
         command.operations = [op]
 
-        self._generate_command_arguments(command)
+        arguments = self._generate_command_arguments(command)
+        command.arg_groups = self._group_arguments(arguments)
 
         return command
 
@@ -200,7 +229,8 @@ class CommandConfigurationGenerator:
         command.help = self._generate_command_help(op.description)
         command.operations = [op]
 
-        self._generate_command_arguments(command)
+        arguments = self._generate_command_arguments(command)
+        command.arg_groups = self._group_arguments(arguments)
 
         return command
 
@@ -224,7 +254,9 @@ class CommandConfigurationGenerator:
         command.help = self._generate_command_help(op.description)
         command.operations = [op]
 
-        self._generate_command_arguments(command)
+        arguments = self._generate_command_arguments(command)
+        command.arg_groups = self._group_arguments(arguments)
+
         return command
 
     def _generate_instance_update_operations(self, put_op):
@@ -277,7 +309,10 @@ class CommandConfigurationGenerator:
             generic_update_op,
             put_op
         ]
-        self._generate_command_arguments(command)
+
+        arguments = self._generate_command_arguments(command)
+        command.arg_groups = self._group_arguments(arguments)
+
         return command
 
     def _generate_update_command_for_patch(self, path_item, resource):
@@ -296,7 +331,10 @@ class CommandConfigurationGenerator:
         command.operations = [
             patch_op
         ]
-        self._generate_command_arguments(command)
+
+        arguments = self._generate_command_arguments(command)
+        command.arg_groups = self._group_arguments(arguments)
+
         return command
 
     def generate_update_command(self, path_item, resource):
