@@ -1,33 +1,33 @@
-from ._utils import map_path_2_repo
-import re
-import yaml
-import os
-import logging
-import json
 import datetime
+import json
+import logging
+import os
+import re
 from collections import OrderedDict
-from ._resource import Resource, ResourceVersion
 
+import yaml
+
+from ._resource import Resource, ResourceVersion
+from ._utils import map_path_2_repo
 
 logger = logging.getLogger('backend')
 
 
 class ResourceProvider:
-
     URL_PARAMETER_PLACEHOLDER = '{}'
 
     def __init__(self, name, file_path, readme_path, swagger_module):
         self.name = name
         self._file_path = file_path
         self._readme_path = readme_path
-        self._swagger_module = swagger_module
+        self.swagger_module = swagger_module
 
         if readme_path is None:
             logger.warning(f"MissReadmeFile: {self} : {map_path_2_repo(file_path)}")
         self._tags = None
 
     def __str__(self):
-        return f'{self._swagger_module}/{self.name}'
+        return f'{self.swagger_module}/{self.name}'
 
     def get_resource_map(self):
         resource_map = {}
@@ -42,8 +42,8 @@ class ResourceProvider:
                     if resource.id not in resource_map:
                         resource_map[resource.id] = {}
                     if self._replace_current_resource(
-                        curr_resource=resource_map[resource.id].get(resource.version, None),
-                        resource=resource
+                            curr_resource=resource_map[resource.id].get(resource.version, None),
+                            resource=resource
                     ):
                         resource_map[resource.id][resource.version] = resource
         return resource_map
@@ -58,7 +58,7 @@ class ResourceProvider:
                 key=lambda item: str(item[0]),
                 reverse=True
             )[0]
-            op_group_name = latest_resource.op_group_name or ""
+            op_group_name = latest_resource.get_operation_group_name() or ""
             if op_group_name not in resource_op_group_map:
                 resource_op_group_map[op_group_name] = {}
             resource_op_group_map[op_group_name][resource_id] = version_map

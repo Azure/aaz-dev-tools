@@ -1,9 +1,9 @@
-import os
 import json
 import logging
+import os
 from collections import OrderedDict
-from swagger.utils import exceptions
 
+from swagger.utils import exceptions
 
 logger = logging.getLogger('backend')
 

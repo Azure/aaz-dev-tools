@@ -1,4 +1,5 @@
 from swagger.tests.common import SwaggerSpecsTestCase
+from datetime import datetime
 
 
 class ResourceProviderLoaderTest(SwaggerSpecsTestCase):
@@ -34,3 +35,13 @@ class ResourceProviderLoaderTest(SwaggerSpecsTestCase):
         for rp in self.get_resource_providers():
             print(rp)
             resource_op_group_map = rp.get_resource_op_group_map()
+
+    def test_resource_map_of_network(self):
+        start = datetime.now()
+        rp = next(self.get_mgmt_plane_resource_providers(
+            module_filter=lambda m: m.name == "network",
+            resource_provider_filter=lambda r: r.name == "Microsoft.Network"
+        ))
+        _ = rp.get_resource_map()
+        delta = datetime.now() - start
+        print(delta.total_seconds())

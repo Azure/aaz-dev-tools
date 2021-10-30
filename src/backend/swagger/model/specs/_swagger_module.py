@@ -1,4 +1,5 @@
 import os
+
 from ._resource_provider import ResourceProvider
 
 
@@ -17,10 +18,11 @@ class SwaggerModule:
 
 
 class MgmtPlaneModule(SwaggerModule):
+    PREFIX = '(MgmtPlane)'
 
     def __str__(self):
         if self._parent is None:
-            return f'(MgmtPlane)/{super().__str__()}'
+            return f'{self.PREFIX}/{super().__str__()}'
         else:
             return super(MgmtPlaneModule, self).__str__()
 
@@ -41,10 +43,11 @@ class MgmtPlaneModule(SwaggerModule):
 
 
 class DataPlaneModule(SwaggerModule):
+    PREFIX = '(DataPlane)'
 
     def __str__(self):
         if self._parent is None:
-            return f'(DataPlane)/{super().__str__()}'
+            return f'{self.PREFIX}/{super().__str__()}'
         else:
             return super(DataPlaneModule, self).__str__()
 

@@ -1,11 +1,11 @@
 import os
+
 from ._swagger_module import MgmtPlaneModule, DataPlaneModule
 
 
 class SwaggerSpecs:
 
     def __init__(self, folder_path):
-        # TODO: check folder structures
         self._folder_path = folder_path
 
     @property
