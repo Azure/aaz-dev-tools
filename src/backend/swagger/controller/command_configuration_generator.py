@@ -4,13 +4,18 @@ from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.x_ms_pageable import XmsPageable
 from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, \
     CMDSchemaDefault, CMDHttpJsonBody, CMDObjectOutput, CMDArrayOutput, CMDResource, CMDGenericInstanceUpdateAction, \
-    CMDGenericInstanceUpdateMethod, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, CMDJson, CMDHelp, CMDArgGroup
+    CMDGenericInstanceUpdateMethod, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, CMDJson, CMDHelp, CMDArgGroup, CMDDiffLevelEnum
 import logging
+from swagger.model.specs._utils import map_path_2_repo
 
 logger = logging.getLogger('backend')
 
 
 class BuildInVariants:
+
+    Query = "$Query"
+    Header = "$Header"
+    Path = "$Path"
 
     Instance = "$Instance"
 
@@ -92,27 +97,93 @@ class CommandConfigurationGenerator:
             groups.append(group)
         return groups or None
 
-    def _generate_command_arguments(self, command):
+    # def _generate_command_arguments(self, command, file_path):
+    #     arguments = {}
+    #     for op in command.operations:
+    #         for arg in op.generate_args():
+    #             if arg.var not in arguments:
+    #                 arguments[arg.var] = arg
+    #     used_options = {}
+    #     for arg in arguments.values():
+    #         if arg.options:
+    #             for option in arg.options:
+    #                 if option in used_options:
+    #                     print(f"Duplicated Option Value: {option} : {arg.var} with {used_options[option]} : {command.operations[-1].operation_id} : {map_path_2_repo(file_path)}")
+    #                 used_options[option] = arg.var
+    #     return [*arguments.values()]
+
+    def _generate_command_arguments(self, command, file_path):
         arguments = {}
         for op in command.operations:
             for arg in op.generate_args():
                 if arg.var not in arguments:
                     arguments[arg.var] = arg
-        used_options = {}
+
+        dropped_args = set()
+        used_args = set()
         for arg in arguments.values():
-            if arg.options:
-                for option in arg.options:
-                    if option in used_options:
-                        print(f"Duplicated Option Value: {option} : {arg.var} with {used_options[option]} : {command.operations[0].operation_id}")
-                    used_options[option] = arg.var
-        return [*arguments.values()]
+            used_args.add(arg.var)
+            if arg.var in dropped_args or not arg.options:
+                continue
+            r_arg = None
+            for v in arguments.values():
+                if v.var in used_args or v.var in dropped_args or arg.var == v.var or not v.options:
+                    continue
+                if not set(arg.options).isdisjoint(v.options):
+                    r_arg = v
+                    break
+            if r_arg:
+                replace, diff_a = self._can_replace_argument(r_arg, arg)
+                if replace:
+                    arg.ref_schema.arg = r_arg.var
+                    dropped_args.add(arg.var)
+                else:
+                    replace, diff_b = self._can_replace_argument(arg, r_arg)
+                    if replace:
+                        r_arg.ref_schema.arg = arg.var
+                        dropped_args.add(r_arg.var)
+                    else:
+                        print(f"Duplicated Option Value: {set(arg.options).intersection(r_arg.options)} : {arg.var} with {r_arg.var} : {command.operations[-1].operation_id}: {diff_a} : {diff_b} : {map_path_2_repo(file_path)}")
+
+        return [arg for var, arg in arguments.items() if var not in dropped_args]
+
+    @staticmethod
+    def _can_replace_argument(arg, old_arg):
+        arg_prefix = arg.var.split('.')[0]
+        old_prefix = old_arg.var.split('.')[0]
+        if old_prefix in (BuildInVariants.Query, BuildInVariants.Header, BuildInVariants.Path):
+            # replace argument should only be in body
+            return False, "Replace argument should only be in body"
+        if arg_prefix in (BuildInVariants.Query, BuildInVariants.Header):
+            return False, "Only support path or body argument to replace"
+        elif arg_prefix == BuildInVariants.Path:
+            # path argument
+            arg_schema_required = arg.ref_schema.required
+            arg_schema_name = arg.ref_schema.name
+            try:
+                arg.ref_schema.required = old_arg.ref_schema.required
+                if old_arg.ref_schema.name == "name" and "name" in arg.options:
+                    arg.ref_schema.name = "name"
+                diff = arg.ref_schema.diff(old_arg.ref_schema, level=CMDDiffLevelEnum.Structure)
+                if diff:
+                    return False, diff
+                return True, None
+            finally:
+                arg.ref_schema.name = arg_schema_name
+                arg.ref_schema.required = arg_schema_required
+        else:
+            # body argument
+            diff = arg.ref_schema.diff(old_arg.ref_schema, level=CMDDiffLevelEnum.Structure)
+            if diff:
+                return False, diff
+            return True, None
 
     @staticmethod
     def _merge_commands(prim_command, second_command):
         # TODO:
         pass
 
-    def generate_output(self, op, pageable: XmsPageable = None):
+    def _generate_output(self, op, pageable: XmsPageable = None):
         assert isinstance(op, CMDHttpOperation)
         output = None
         for resp in op.http.responses:
@@ -146,7 +217,7 @@ class CommandConfigurationGenerator:
         if not self._set_api_version_parameter(op.http.request, api_version=resource.version.version):
             logger.warning(f"Cannot Find api version parameter: {resource.path}, 'get' : {path_item.traces}")
 
-        output = self.generate_output(op, pageable=path_item.get.x_ms_pageable)
+        output = self._generate_output(op, pageable=path_item.get.x_ms_pageable)
         if output is not None:
             command.outputs = []
             command.outputs.append(output)
@@ -154,7 +225,7 @@ class CommandConfigurationGenerator:
         command.help = self._generate_command_help(op.description)
         command.operations = [op]
 
-        arguments = self._generate_command_arguments(command)
+        arguments = self._generate_command_arguments(command, file_path=resource.file_path)
         command.arg_groups = self._group_arguments(arguments)
 
         return command
@@ -171,7 +242,7 @@ class CommandConfigurationGenerator:
         if not self._set_api_version_parameter(op.http.request, api_version=resource.version.version):
             logger.warning(f"Cannot Find api version parameter: {resource.path}, 'delete' : {path_item.traces}")
 
-        output = self.generate_output(op)
+        output = self._generate_output(op)
         if output is not None:
             command.outputs = []
             command.outputs.append(output)
@@ -179,7 +250,7 @@ class CommandConfigurationGenerator:
         command.help = self._generate_command_help(op.description)
         command.operations = [op]
 
-        arguments = self._generate_command_arguments(command)
+        arguments = self._generate_command_arguments(command, file_path=resource.file_path)
         command.arg_groups = self._group_arguments(arguments)
 
         return command
@@ -196,7 +267,7 @@ class CommandConfigurationGenerator:
         if not self._set_api_version_parameter(op.http.request, api_version=resource.version.version):
             logger.warning(f"Cannot Find api version parameter: {resource.path}, 'put' : {path_item.traces}")
 
-        output = self.generate_output(op)
+        output = self._generate_output(op)
         if output is not None:
             command.outputs = []
             command.outputs.append(output)
@@ -204,7 +275,7 @@ class CommandConfigurationGenerator:
         command.help = self._generate_command_help(op.description)
         command.operations = [op]
 
-        arguments = self._generate_command_arguments(command)
+        arguments = self._generate_command_arguments(command, file_path=resource.file_path)
         command.arg_groups = self._group_arguments(arguments)
 
         return command
@@ -221,7 +292,7 @@ class CommandConfigurationGenerator:
         if not self._set_api_version_parameter(op.http.request, api_version=resource.version.version):
             logger.warning(f"Cannot Find api version parameter: {resource.path}, 'post' : {path_item.traces}")
 
-        output = self.generate_output(op)
+        output = self._generate_output(op)
         if output is not None:
             command.outputs = []
             command.outputs.append(output)
@@ -229,7 +300,7 @@ class CommandConfigurationGenerator:
         command.help = self._generate_command_help(op.description)
         command.operations = [op]
 
-        arguments = self._generate_command_arguments(command)
+        arguments = self._generate_command_arguments(command, file_path=resource.file_path)
         command.arg_groups = self._group_arguments(arguments)
 
         return command
@@ -246,7 +317,7 @@ class CommandConfigurationGenerator:
         if not self._set_api_version_parameter(op.http.request, api_version=resource.version.version):
             logger.warning(f"Cannot Find api version parameter: {resource.path}, 'head' : {path_item.traces}")
 
-        output = self.generate_output(op)
+        output = self._generate_output(op)
         if output is not None:
             command.outputs = []
             command.outputs.append(output)
@@ -254,7 +325,7 @@ class CommandConfigurationGenerator:
         command.help = self._generate_command_help(op.description)
         command.operations = [op]
 
-        arguments = self._generate_command_arguments(command)
+        arguments = self._generate_command_arguments(command, file_path=resource.file_path)
         command.arg_groups = self._group_arguments(arguments)
 
         return command
@@ -277,6 +348,40 @@ class CommandConfigurationGenerator:
         put_op.http.request.body.json.schema = None
         return json_update_op, generic_update_op
 
+    @staticmethod
+    def _sync_generic_update(get_op, put_op):
+        """get operation may contains useless query or header parameters for update, ignore them"""
+        get_request = get_op.http.request
+        put_request = put_op.http.request
+
+        query_name_set = set()
+        if put_request.query:
+            for param in put_request.query.params:
+                query_name_set.add(param.name)
+        if get_request.query:
+            get_query_params = []
+            for param in get_request.query.params:
+                if param.name in query_name_set:
+                    get_query_params.append(param)
+                elif param.required:
+                    print(f"Query param {param.name} in Get ({get_op.operation_id}) not in Put ({put_op.operation_id})")
+                    get_query_params.append(param)
+            get_request.query.params = get_query_params
+
+        header_name_set = set()
+        if put_request.header:
+            for param in put_request.header.params:
+                header_name_set.add(param.name)
+        if get_request.header:
+            get_header_params = []
+            for param in get_request.header.params:
+                if param.name in header_name_set:
+                    get_header_params.append(param)
+                elif param.required:
+                    print(f"Header param {param.name} in Get ({get_op.operation_id}) not in Put ({put_op.operation_id})")
+                    get_header_params.append(param)
+            get_request.header.params = get_header_params
+
     def _generate_update_command_for_put(self, path_item, resource):
         command = CMDCommand()
         command.resources = [
@@ -293,9 +398,11 @@ class CommandConfigurationGenerator:
             logger.warning(f"Cannot Find api version parameter: {resource.path}, 'get' : {path_item.traces}")
         if not self._set_api_version_parameter(put_op.http.request, api_version=resource.version.version):
             logger.warning(f"Cannot Find api version parameter: {resource.path}, 'put' : {path_item.traces}")
-        output = self.generate_output(put_op)
+        output = self._generate_output(put_op)
         if output is None:
             return None
+
+        self._sync_generic_update(get_op, put_op)
 
         # assert output is not None
         command.outputs = []
@@ -310,7 +417,7 @@ class CommandConfigurationGenerator:
             put_op
         ]
 
-        arguments = self._generate_command_arguments(command)
+        arguments = self._generate_command_arguments(command, file_path=resource.file_path)
         command.arg_groups = self._group_arguments(arguments)
 
         return command
@@ -323,7 +430,7 @@ class CommandConfigurationGenerator:
         patch_op = path_item.to_cmd_operation(resource.path, method='patch', mutability=MutabilityEnum.Update)
         if not self._set_api_version_parameter(patch_op.http.request, api_version=resource.version.version):
             logger.warning(f"Cannot Find api version parameter: {resource.path}, 'patch' : {path_item.traces}")
-        output = self.generate_output(patch_op)
+        output = self._generate_output(patch_op)
         if output is not None:
             command.outputs = []
             command.outputs.append(output)
@@ -332,7 +439,7 @@ class CommandConfigurationGenerator:
             patch_op
         ]
 
-        arguments = self._generate_command_arguments(command)
+        arguments = self._generate_command_arguments(command, file_path=resource.file_path)
         command.arg_groups = self._group_arguments(arguments)
 
         return command
