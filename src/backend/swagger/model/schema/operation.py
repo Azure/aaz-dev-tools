@@ -6,7 +6,7 @@ from command.model.configuration import CMDHttpOperation, CMDHttpAction, CMDHttp
 from swagger.utils import exceptions
 from .external_documentation import ExternalDocumentation
 from .fields import MimeField, XmsRequestIdField, XmsExamplesField, SecurityRequirementField, XPublishField, \
-    XSfCodeGenField
+    XSfCodeGenField, XmsClientNameField
 from .parameter import ParameterField, PathParameter, QueryParameter, HeaderParameter, BodyParameter,\
     FormDataParameter, ParameterBase
 from .reference import Reference, Linkable
@@ -54,6 +54,7 @@ class Operation(Model, Linkable):
     # specific properties
     _x_publish = XPublishField()  # only used in Maps Data Plane
     _x_sf_codegen = XSfCodeGenField()  # only used in ServiceFabricMesh Mgmt Plane
+    _x_ms_client_name = XmsClientNameField()  # only used in Maps Data Plane
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -16,13 +16,13 @@ class ResourceProviderLoaderTest(SwaggerSpecsTestCase):
         total = 0
         for rp in self.get_resource_providers():
             print(rp)
-            resource_map = rp.get_resource_map()
+            resource_map = rp.get_resource_map(read_only=True)
             total += len(resource_map)
 
     def test_resource_map_similar_path(self):
         for rp in self.get_resource_providers():
             print(rp)
-            resource_map = rp.get_resource_map()
+            resource_map = rp.get_resource_map(read_only=True)
             for resource_version_map in resource_map.values():
                 path = None
                 for resource in resource_version_map.values():
@@ -42,6 +42,6 @@ class ResourceProviderLoaderTest(SwaggerSpecsTestCase):
             module_filter=lambda m: m.name == "network",
             resource_provider_filter=lambda r: r.name == "Microsoft.Network"
         ))
-        _ = rp.get_resource_map()
+        _ = rp.get_resource_map(read_only=True)
         delta = datetime.now() - start
         print(delta.total_seconds())

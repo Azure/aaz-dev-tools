@@ -103,6 +103,7 @@ class CMDArgBuilder:
             return arg.args or []
         elif isinstance(self.schema, CMDSchema):
             self.schema.arg = arg.var
+            arg.ref_schema = self.schema
         return [arg, ]
 
     def get_sub_args(self):

@@ -23,6 +23,7 @@ from ._command_group import CMDCommandGroup
 from ._condition import CMDConditionOperator, \
     CMDConditionAndOperator, CMDConditionOrOperator, CMDConditionNotOperator, CMDConditionHasValueOperator, \
     CMDCondition
+from ._configuration import CMDConfiguration
 from ._content import CMDJson
 from ._fields import CMDBooleanField, CMDStageEnum, CMDStageField, CMDVariantField, CMDClassField, \
     CMDPrimitiveField, CMDRegularExpressionField, CMDVersionField, CMDResourceIdField, CMDCommandNameField, \

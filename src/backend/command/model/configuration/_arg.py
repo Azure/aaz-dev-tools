@@ -130,6 +130,10 @@ class CMDArg(CMDArgBase):
     default = ModelType(CMDArgDefault, serialize_when_none=False)  # default value is used when argument isn't in command
     blank = ModelType(CMDArgBlank, serialize_when_none=False)  # blank value is used when argument don't have any value
 
+    def __init__(self, *args, **kwargs):
+        super(CMDArg, self).__init__(*args, **kwargs)
+        self.ref_schema = None
+
     @classmethod
     def _claim_polymorphic(cls, data):
         if super(CMDArg, cls)._claim_polymorphic(data):

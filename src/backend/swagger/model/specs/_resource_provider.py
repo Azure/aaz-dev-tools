@@ -25,27 +25,34 @@ class ResourceProvider:
         if readme_path is None:
             logger.warning(f"MissReadmeFile: {self} : {map_path_2_repo(file_path)}")
         self._tags = None
+        self._resource_map = None
 
     def __str__(self):
         return f'{self.swagger_module}/{self.name}'
 
-    def get_resource_map(self):
-        resource_map = {}
-        for root, dirs, files in os.walk(self._file_path):
-            if 'example' in root:
-                continue
-            for file in files:
-                if not file.endswith('.json'):
+    def get_resource_map(self, read_only=False, refresh=False):
+        if refresh or not self._resource_map:
+            resource_map = {}
+            for root, dirs, files in os.walk(self._file_path):
+                if 'example' in root:
                     continue
-                file_path = os.path.join(root, file)
-                for resource in self._parse_resources_in_file(file_path):
-                    if resource.id not in resource_map:
-                        resource_map[resource.id] = {}
-                    if self._replace_current_resource(
-                            curr_resource=resource_map[resource.id].get(resource.version, None),
-                            resource=resource
-                    ):
-                        resource_map[resource.id][resource.version] = resource
+                for file in files:
+                    if not file.endswith('.json'):
+                        continue
+                    file_path = os.path.join(root, file)
+                    for resource in self._parse_resources_in_file(file_path):
+                        if resource.id not in resource_map:
+                            resource_map[resource.id] = {}
+                        if self._replace_current_resource(
+                                curr_resource=resource_map[resource.id].get(resource.version, None),
+                                resource=resource
+                        ):
+                            resource_map[resource.id][resource.version] = resource
+            self._resource_map = resource_map
+        resource_map = self._resource_map
+        if not read_only:
+            # if not read_only then resource_map will be generated next time.
+            self._resource_map = None
         return resource_map
 
     def get_resource_op_group_map(self, resource_map=None):

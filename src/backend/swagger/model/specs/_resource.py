@@ -22,7 +22,7 @@ class Resource:
         self.id = resource_id
         self.version = ResourceVersion(version)
         self.file_path = file_path
-        self._resource_provider = resource_provider
+        self.resource_provider = resource_provider
         self.file_path_version = self._get_file_path_version(file_path)
 
         operations = {}
