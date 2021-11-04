@@ -2,7 +2,7 @@ from schematics.models import Model
 from schematics.types import StringType, ModelType, BooleanType
 
 
-class XmsLongRunningOperationType(BooleanType):
+class XmsLongRunningOperationField(BooleanType):
     """
     Some requests like creating/deleting a resource cannot be carried out immediately. In such a situation, the server sends a 201 (Created) or 202 (Accepted) and provides a link to monitor the status of the request. When such an operation is marked with extension "x-ms-long-running-operation": true, in OpenAPI, the generated code will know how to fetch the link to monitor the status. It will keep on polling at regular intervals till the request reaches one of the terminal states: Succeeded, Failed, or Canceled.
 
@@ -10,7 +10,7 @@ class XmsLongRunningOperationType(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsLongRunningOperationType, self).__init__(
+        super(XmsLongRunningOperationField, self).__init__(
             serialized_name='x-ms-long-running-operation',
             deserialize_from='x-ms-long-running-operation',
             **kwargs
@@ -39,10 +39,10 @@ class XmsLongRunningOperationOptions(Model):
     )
 
 
-class XmsLongRunningOperationOptionsType(ModelType):
+class XmsLongRunningOperationOptionsField(ModelType):
 
     def __init__(self, **kwargs):
-        super(XmsLongRunningOperationOptionsType, self).__init__(
+        super(XmsLongRunningOperationOptionsField, self).__init__(
             XmsLongRunningOperationOptions,
             serialized_name='x-ms-long-running-operation-options',
             deserialize_from='x-ms-long-running-operation-options',

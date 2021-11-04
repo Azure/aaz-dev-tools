@@ -1,5 +1,6 @@
 from schematics.models import Model
-from schematics.types import PolyModelType, ModelType, ListType
+from schematics.types import PolyModelType, ModelType, ListType, StringType
+
 from ._fields import CMDVariantField, CMDBooleanField
 from ._http import CMDHttpAction
 from ._instance_update import CMDInstanceUpdateAction
@@ -22,6 +23,9 @@ class CMDOperation(Model):
             return hasattr(data, cls.POLYMORPHIC_KEY)
         return False
 
+    def generate_args(self):
+        raise NotImplementedError()
+
 
 class CMDHttpOperation(CMDOperation):
     POLYMORPHIC_KEY = "http"
@@ -32,8 +36,19 @@ class CMDHttpOperation(CMDOperation):
         deserialize_from="longRunning",
     )
 
+    operation_id = StringType(
+        serialized_name="operationId",
+        deserialize_from="operationId",
+        required=True
+    )   # OperationId from swagger
+
+    description = StringType()
+
     # properties as nodes
     http = ModelType(CMDHttpAction, required=True)
+
+    def generate_args(self):
+        return self.http.generate_args()
 
 
 class CMDInstanceUpdateOperation(CMDOperation):
@@ -47,3 +62,6 @@ class CMDInstanceUpdateOperation(CMDOperation):
         serialized_name="instanceUpdate",
         deserialize_from="instanceUpdate"
     )
+
+    def generate_args(self):
+        return self.instance_update.generate_args()

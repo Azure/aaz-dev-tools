@@ -1,4 +1,5 @@
 from schematics.models import Model
+
 from ._fields import CMDResourceIdField, CMDVersionField
 
 

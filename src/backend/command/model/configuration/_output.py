@@ -1,6 +1,7 @@
 from schematics.models import Model
 from schematics.types import StringType
 from schematics.types.serializable import serializable
+
 from ._fields import CMDVariantField, CMDBooleanField
 
 

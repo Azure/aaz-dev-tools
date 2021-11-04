@@ -19,16 +19,23 @@ class XmsEnum(Model):
     """
 
     name = StringType(required=True)  # Specifies the name for the Enum.
-    modelAsString = BooleanType(default=False)  # When set to true the enum will be modeled as a string. No validation will happen. When set to false, it will be modeled as an enum if that language supports enums. Validation will happen, irrespective of support of enums in that language.
+    model_as_string = BooleanType(
+        default=False,
+        serialized_name="modelAsString",
+        deserialize_from="modelAsString"
+    )  # When set to true the enum will be modeled as a string. No validation will happen. When set to false, it will be modeled as an enum if that language supports enums. Validation will happen, irrespective of support of enums in that language.
     values = ListType(ModelType(XmsEnumValue))
 
-    modelAsExtensible = BooleanType()
+    model_as_extensible = BooleanType(
+        serialized_name="modelAsExtensible",
+        deserialize_from="modelAsExtensible"
+    )   # TODO: don't know its usage
 
 
-class XmsEnumType(ModelType):
+class XmsEnumField(ModelType):
 
     def __init__(self, **kwargs):
-        super(XmsEnumType, self).__init__(
+        super(XmsEnumField, self).__init__(
             XmsEnum,
             serialized_name="x-ms-enum",
             deserialize_from="x-ms-enum",
