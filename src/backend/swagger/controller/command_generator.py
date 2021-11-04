@@ -118,7 +118,6 @@ class CommandGenerator:
         if path_item.get is not None and path_item.put is not None:
             update_by_generic_command = self.generate_generic_update_command(path_item, resource)
         if update_by_patch_command and update_by_generic_command:
-            # TODO: merge patch command and generic command
             update_command = self._merge_update_commands(
                 patch_command=update_by_patch_command, generic_command=update_by_generic_command
             )
@@ -129,12 +128,13 @@ class CommandGenerator:
             command_group.commands.append(update_by_patch_command)
 
         # TODO: generate command group name
+        command_group.name = self._generate_command_group_name(command_group, resource)
 
         return command_group
 
-    def generation_command_group_name(self, resource):
+    def _generate_command_group_name(self, command_group, resource):
         # TODO:
-        return ["COMMAND", "GROUP"]
+        return "COMMAND GROUP NAME"
 
     def generate_command(self, path_item, resource, method, mutability):
         command = CMDCommand()
