@@ -1,6 +1,6 @@
 import logging
 
-from command.model.configuration import CMDCommand, CMDHttpOperation, CMDHttpRequest, \
+from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, \
     CMDSchemaDefault, CMDHttpJsonBody, CMDObjectOutput, CMDArrayOutput, CMDGenericInstanceUpdateAction, \
     CMDGenericInstanceUpdateMethod, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, CMDJson, CMDHelp, \
     CMDArgGroup, CMDDiffLevelEnum, \
@@ -86,23 +86,51 @@ class CommandGenerator:
         if path_item is None:
             path_item = swagger.x_ms_paths.get(resource.path, None)
 
+        command_group = CMDCommandGroup()
+        command_group.commands = []
+
         assert isinstance(path_item, PathItem)
         if path_item.get is not None:
             show_or_list_command = self.generate_command(path_item, resource, 'get', MutabilityEnum.Read)
+            command_group.commands.append(show_or_list_command)
+
         if path_item.delete is not None:
             delete_command = self.generate_command(path_item, resource, 'delete', MutabilityEnum.Create)
+            command_group.commands.append(delete_command)
+
         if path_item.put is not None:
             create_command = self.generate_command(path_item, resource, 'put', MutabilityEnum.Create)
+            command_group.commands.append(create_command)
+
         if path_item.post is not None:
             action_command = self.generate_command(path_item, resource, 'post', MutabilityEnum.Create)
+            command_group.commands.append(action_command)
+
         if path_item.head is not None:
             head_command = self.generate_command(path_item, resource, 'head', MutabilityEnum.Read)
+            command_group.commands.append(head_command)
 
         # update command
+        update_by_patch_command = None
+        update_by_generic_command = None
         if path_item.patch is not None:
             update_by_patch_command = self.generate_command(path_item, resource, 'patch', MutabilityEnum.Update)
         if path_item.get is not None and path_item.put is not None:
             update_by_generic_command = self.generate_generic_update_command(path_item, resource)
+        if update_by_patch_command and update_by_generic_command:
+            # TODO: merge patch command and generic command
+            update_command = self._merge_update_commands(
+                patch_command=update_by_patch_command, generic_command=update_by_generic_command
+            )
+            command_group.commands.append(update_command)
+        elif update_by_generic_command:
+            command_group.commands.append(update_by_generic_command)
+        elif update_by_patch_command:
+            command_group.commands.append(update_by_patch_command)
+
+        # TODO: generate command group name
+
+        return command_group
 
     def generation_command_group_name(self, resource):
         # TODO:
@@ -478,3 +506,8 @@ class CommandGenerator:
                         f"Header param {param.name} in Get ({get_op.operation_id}) not in Put ({put_op.operation_id})")
                     get_header_params.append(param)
             get_request.header.params = get_header_params
+
+    @staticmethod
+    def _merge_update_commands(patch_command, generic_command):
+        # TODO: merge patch command and generic command into one
+        return generic_command
