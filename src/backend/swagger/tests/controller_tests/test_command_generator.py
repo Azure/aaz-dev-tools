@@ -327,7 +327,7 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
 
                 names = set()
                 for resource in r_version_map.values():
-                    name = CommandGenerator._generate_command_group_name(resource)
+                    name = CommandGenerator._generate_command_group_name_by_resource(resource)
                     if name and name not in names:
                         names.add(name)
                 if len(names) > 1:
@@ -355,7 +355,7 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
 
                 names = set()
                 for resource in r_version_map.values():
-                    name = CommandGenerator._generate_command_group_name(resource)
+                    name = CommandGenerator._generate_command_group_name_by_resource(resource)
                     if name and name not in names:
                         names.add(name)
                 if len(names) > 1:
