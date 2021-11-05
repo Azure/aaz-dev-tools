@@ -30,3 +30,31 @@ def operation_id_separate(op_id):
         part = camel_case_to_snake_case(part, separator='_')
         parts[idx] = [p for p in part.split('_') if p]
     return parts
+
+
+def get_url_path_valid_parts(url_path, rp_name):
+    """valid parts of url path is a section of url without subscription, resource group and providers"""
+    url_path = url_path.split('?')[0]
+    parts = url_path.split("/")
+
+    provider_idx = None
+    for idx, part in enumerate(parts):
+        if part.lower() == rp_name.lower():
+            provider_idx = idx
+
+    if provider_idx is None:
+        for idx, part in enumerate(parts):
+            if part.lower() == "providers":
+                provider_idx = idx + 1
+
+    if provider_idx is not None:
+        valid_idx = provider_idx
+    else:
+        valid_idx = 0
+        for idx, part in enumerate(parts):
+            if part.lower() == "subscriptions":
+                valid_idx = idx + 1
+            if part.lower() == "resourcegroups":
+                valid_idx = idx + 1
+
+    return parts[valid_idx:]

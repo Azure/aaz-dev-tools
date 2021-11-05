@@ -9,7 +9,7 @@ from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
 from swagger.model.schema.x_ms_pageable import XmsPageable
 from swagger.model.specs import SwaggerLoader, SwaggerSpecs, DataPlaneModule, MgmtPlaneModule
-from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case
+from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case, get_url_path_valid_parts
 from utils import config
 
 logger = logging.getLogger('backend')
@@ -127,14 +127,16 @@ class CommandGenerator:
         elif update_by_patch_command:
             command_group.commands.append(update_by_patch_command)
 
-        # TODO: generate command group name
-        command_group.name = self._generate_command_group_name(command_group, resource)
+        for command in command_group.commands:
+            parts = command.name.split(' ')
+            group_name = ' '.join(parts[:-1])
+            if command_group.name:
+                assert group_name == command_group.name
+            else:
+                command_group.name = group_name
+            command.name = parts[-1]  # remove the command group name parts
 
         return command_group
-
-    def _generate_command_group_name(self, command_group, resource):
-        # TODO:
-        return "COMMAND GROUP NAME"
 
     def generate_command(self, path_item, resource, method, mutability):
         command = CMDCommand()
@@ -204,7 +206,8 @@ class CommandGenerator:
         arguments = self._generate_command_arguments(command)
         command.arg_groups = self._group_arguments(arguments)
 
-        command.name = "update"
+        group_name = self._generate_command_group_name_by_resource(resource)
+        command.name = f"{group_name} update"
         return command
 
     @staticmethod
@@ -284,24 +287,44 @@ class CommandGenerator:
                 raise NotImplementedError()
         return output
 
-    @staticmethod
-    def _generate_command_name(path_item, resource, method, output):
+    @classmethod
+    def _generate_command_group_name_by_resource(cls, resource):
+        rp_name = resource.resource_provider.name
+        valid_parts = get_url_path_valid_parts(resource.path, rp_name)
+
+        names = []
+
+        # add resource provider name as command group name
+        for rp_part in rp_name.split('.'):
+            if rp_part.lower() == "microsoft":
+                continue
+            names.append(camel_case_to_snake_case(rp_part, '-'))
+
+        for part in valid_parts[1:]:    # ignore first part to avoid include resource provider
+            if part.startswith('{'):
+                continue
+            names.append(camel_case_to_snake_case(part, '-'))
+
+        return " ".join(names)
+
+    def _generate_command_name(self, path_item, resource, method, output):
+        group_name = self._generate_command_group_name_by_resource(resource)
         url_path = resource.id.split("?")[0]
         if method == "get":
             if url_path.endswith("/{}"):
-                command_name = "show"
+                command_name = f"{group_name} show"
             else:
                 sub_url_path = url_path + "/{}"
                 if path_item.get.x_ms_pageable:
-                    command_name = "list"
+                    command_name = f"{group_name} list"
                 elif isinstance(output, CMDArrayOutput) and output.next_link is not None:
-                    command_name = "list"
+                    command_name = f"{group_name} list"
                     # logger.debug(
                     #     f"Command Name For Get set to 'list' by nexLink: {resource.path} :"
                     #     f" {path_item.get.operation_id} : {path_item.traces}"
                     # )
                 elif sub_url_path in resource.resource_provider.get_resource_map(read_only=True):
-                    command_name = "list"
+                    command_name = f"{group_name} list"
                     # logger.debug(
                     #     f"Command Name For Get set to 'list' by sub_url_path: {resource.path} :"
                     #     f" {path_item.get.operation_id} : {path_item.traces}"
@@ -317,41 +340,39 @@ class CommandGenerator:
                         elif "get" in part:
                             contain_get = True
                     if contain_list and not contain_get:
-                        command_name = "list"
+                        command_name = f"{group_name} list"
                         # logger.debug(
                         #     f"Command Name For Get set to 'list' by operation_id: {resource.path} :"
                         #     f" {path_item.get.operation_id} : {path_item.traces}"
                         # )
                     elif contain_get and not contain_list:
-                        command_name = "show"
+                        command_name = f"{group_name} show"
                         # logger.debug(
                         #     f"Command Name For Get set to 'show' by operation_id: {resource.path} :"
                         #     f" {path_item.get.operation_id} : {path_item.traces}"
                         # )
                     else:
-                        command_name = '-'.join(op_parts[-1])
+                        command_name = f"{group_name} " + '-'.join(op_parts[-1])
                         logger.warning(
                             f"Command Name For Get set by operation_id: {command_name} : {resource.path} :"
                             f" {path_item.get.operation_id} : {path_item.traces}"
                         )
         elif method == "delete":
-            command_name = "delete"
+            command_name = f"{group_name} delete"
         elif method == "put":
-            command_name = "create"
+            command_name = f"{group_name} create"
         elif method == "patch":
-            command_name = "update"
+            command_name = f"{group_name} update"
         elif method == "head":
-            command_name = "head"
+            command_name = f"{group_name} head"
         elif method == "post":
             if not url_path.endswith("/{}") and not path_item.get and not path_item.put and not path_item.patch and \
                     not path_item.delete and not path_item.head:
-                command_name = camel_case_to_snake_case(
-                    url_path.split('/')[-1],
-                    separator='-'
-                )
+                # directly use group name as command name
+                command_name = group_name
             else:
                 op_parts = operation_id_separate(path_item.post.operation_id)
-                command_name = '-'.join(op_parts[-1])
+                command_name = f"{group_name} " + '-'.join(op_parts[-1])
                 logger.warning(f"Command Name For Post set by operation_id: {command_name} : {resource.path} :"
                                f" {path_item.post.operation_id} : {path_item.traces}")
         else:

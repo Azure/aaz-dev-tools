@@ -1,5 +1,6 @@
 from swagger.tests.common import SwaggerSpecsTestCase
 from swagger.controller.command_generator import CommandGenerator
+from swagger.model.specs._utils import get_url_path_valid_parts
 from command.model.configuration import CMDResource
 from swagger.utils import exceptions
 
@@ -307,3 +308,59 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
                         except Exception:
                             print(resource_map[r_id][v])
                             raise
+
+    def test_command_group_name_mgmt_plane(self):
+        for rp in self.get_mgmt_plane_resource_providers():
+            print(str(rp))
+            command_group_names = {}
+            resource_map = rp.get_resource_map(read_only=True)
+            for r_id, r_version_map in resource_map.items():
+                valid_parts = get_url_path_valid_parts(r_id, rp.name)
+                if len(valid_parts) and valid_parts[-1] == '{}':
+                    valid_url = '/'.join(valid_parts[:-1])
+                else:
+                    valid_url = '/'.join(valid_parts)
+
+                for part in valid_parts:
+                    if part.lower() == "providers":
+                        print(f"Multi providers in valid_parts: {valid_url} :\n\t {r_id}")
+
+                names = set()
+                for resource in r_version_map.values():
+                    name = CommandGenerator._generate_command_group_name_by_resource(resource)
+                    if name and name not in names:
+                        names.add(name)
+                if len(names) > 1:
+                    print(f"Multi Command group names: {resource.path} :\n\t{names}")
+                for name in names:
+                    if name in command_group_names and command_group_names[name][0] != valid_url:
+                        print(f"Duplicated command group name : '{name}' :\n\t{command_group_names[name][0]} and {valid_url} :\n\t\t{command_group_names[name][1]}\n\t\t{resource.path}")
+                    command_group_names[name] = (valid_url, resource.path)
+
+    def test_command_group_name_data_plane(self):
+        for rp in self.get_data_plane_resource_providers():
+            print(str(rp))
+            command_group_names = {}
+            resource_map = rp.get_resource_map(read_only=True)
+            for r_id, r_version_map in resource_map.items():
+                valid_parts = get_url_path_valid_parts(r_id, rp.name)
+                if len(valid_parts) and valid_parts[-1] == '{}':
+                    valid_url = '/'.join(valid_parts[:-1])
+                else:
+                    valid_url = '/'.join(valid_parts)
+
+                for part in valid_parts:
+                    if part.lower() == "providers":
+                        print(f"Multi providers in valid_parts: {valid_url} :\n\t {r_id}")
+
+                names = set()
+                for resource in r_version_map.values():
+                    name = CommandGenerator._generate_command_group_name_by_resource(resource)
+                    if name and name not in names:
+                        names.add(name)
+                if len(names) > 1:
+                    print(f"Multi Command group names: {resource.path} :\n\t{names}")
+                for name in names:
+                    if name in command_group_names and command_group_names[name][0] != valid_url:
+                        print(f"Duplicated command group name : '{name}' :\n\t{command_group_names[name][0]} and {valid_url} :\n\t\t{command_group_names[name][1]}\n\t\t{resource.path}")
+                    command_group_names[name] = (valid_url, resource.path)
