@@ -9,7 +9,7 @@ from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
 from swagger.model.schema.x_ms_pageable import XmsPageable
 from swagger.model.specs import SwaggerLoader, SwaggerSpecs, DataPlaneModule, MgmtPlaneModule
-from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case
+from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case, get_url_path_valid_parts
 from utils import config
 
 logger = logging.getLogger('backend')
@@ -128,13 +128,29 @@ class CommandGenerator:
             command_group.commands.append(update_by_patch_command)
 
         # TODO: generate command group name
-        command_group.name = self._generate_command_group_name(command_group, resource)
+        command_group.name = self._generate_command_group_name(resource)
 
         return command_group
 
-    def _generate_command_group_name(self, command_group, resource):
-        # TODO:
-        return "COMMAND GROUP NAME"
+    @classmethod
+    def _generate_command_group_name(cls, resource):
+        rp_name = resource.resource_provider.name
+        valid_parts = get_url_path_valid_parts(resource.path, rp_name)
+
+        names = []
+
+        # add resource provider name as command group name
+        for rp_part in rp_name.split('.'):
+            if rp_part.lower() == "microsoft":
+                continue
+            names.append(camel_case_to_snake_case(rp_part, '-'))
+
+        for part in valid_parts[1:]:    # ignore first part to avoid include resource provider
+            if part.startswith('{'):
+                continue
+            names.append(camel_case_to_snake_case(part, '-'))
+
+        return " ".join(names)
 
     def generate_command(self, path_item, resource, method, mutability):
         command = CMDCommand()
