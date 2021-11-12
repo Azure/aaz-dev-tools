@@ -1,18 +1,19 @@
-import os
-import enum
 import datetime
+import enum
 import logging
+import os
 import re
+
 import inflect
 from fuzzywuzzy import fuzz
-from ._utils import map_path_2_repo
 
+from command.model.configuration import CMDResource
+from ._utils import map_path_2_repo
 
 logger = logging.getLogger('backend')
 
 
 class Resource:
-
     _CAMEL_CASE_PATTERN = re.compile(r"^([a-zA-Z][a-z0-9]+)(([A-Z][a-z0-9]*)+)$")
     _inflect_engine = inflect.engine()
 
@@ -21,7 +22,7 @@ class Resource:
         self.id = resource_id
         self.version = ResourceVersion(version)
         self.file_path = file_path
-        self._resource_provider = resource_provider
+        self.resource_provider = resource_provider
         self.file_path_version = self._get_file_path_version(file_path)
 
         operations = {}
@@ -29,10 +30,17 @@ class Resource:
             if isinstance(v, dict) and 'operationId' in v:
                 operations[v['operationId']] = method
         self.operations = operations
-        self.op_group_name = self._get_operation_group_name()
 
-    def _get_operation_group_name(self):
+    def __str__(self):
+        return f"{self.path} {self.version}"
+
+    def __hash__(self):
+        return hash(f"{self.id} {self.version}")
+
+    def get_operation_group_name(self):
         # TODO: Check database to fetch customized operation group name for resource_id
+        if hasattr(self, "_op_group_name"):
+            return self._op_group_name
 
         operation_groups = set()
         for operation_id, method in self.operations.items():
@@ -45,11 +53,13 @@ class Resource:
         if len(operation_groups) == 1:
             return operation_groups.pop()
 
-        return sorted(
+        op_group_name = sorted(
             operation_groups,
             key=lambda nm: fuzz.partial_ratio(self.id, nm),  # use the name which is closest to resource_id
             reverse=True
         )[0]
+        setattr(self, "_op_group_name", op_group_name)
+        return op_group_name
 
     def _parse_operation_group_name(self, op_id, method):
         # extract operation group name from operation_id
@@ -111,14 +121,19 @@ class Resource:
         readiness = os.path.basename(dir_path)
         file_path_version = ResourceVersion(version)
         if file_path_version.readiness == ResourceVersion.Readiness.Stable and readiness.lower() != 'stable':
-            if readiness not in ('preview', ):
+            if readiness not in ('preview',):
                 raise ValueError(f'InvalidReadiness: in file path: {file_path}')
             file_path_version.readiness = ResourceVersion.Readiness.Preview
         return file_path_version
 
+    def to_cmd_resource(self):
+        resource = CMDResource()
+        resource.id = self.id
+        resource.version = self.version.version
+        return resource
+
 
 class ResourceVersion:
-
     class Readiness(enum.Enum):
         Preview = 'preview'
         Stable = 'stable'

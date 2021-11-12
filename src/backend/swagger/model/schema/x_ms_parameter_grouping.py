@@ -12,10 +12,10 @@ class XmsParameterGrouping(Model):
     postfix = StringType()  # Alternative to name parameter. If specified the name of the composite type will be generated as follows {MethodGroup}{Method}{Postfix}
 
 
-class XmsParameterGroupingType(ModelType):
+class XmsParameterGroupingField(ModelType):
 
     def __init__(self, **kwargs):
-        super(XmsParameterGroupingType, self).__init__(
+        super(XmsParameterGroupingField, self).__init__(
             XmsParameterGrouping,
             serialized_name="x-ms-parameter-grouping",
             deserialize_from="x-ms-parameter-grouping",

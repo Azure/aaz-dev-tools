@@ -1,8 +1,11 @@
 from schematics.models import Model
-from schematics.types import StringType, ListType, ModelType, PolyModelType, FloatType, IntType
+from schematics.types import StringType, ListType, ModelType, PolyModelType
 from schematics.types.serializable import serializable
+
+from ._fields import CMDStageField, CMDVariantField, CMDPrimitiveField, CMDBooleanField, CMDClassField
+from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
 from ._help import CMDArgumentHelp
-from ._fields import CMDStageField, CMDVariantField, CMDRegularExpressionField, CMDPrimitiveField, CMDBooleanField
+import copy
 
 
 class CMDArgEnumItem(Model):
@@ -13,6 +16,13 @@ class CMDArgEnumItem(Model):
     # properties as nodes
     value = CMDPrimitiveField(required=True)
 
+    @classmethod
+    def build_enum_item(cls, builder, schema_item):
+        item = cls()
+        item.value = copy.deepcopy(schema_item.value)
+        item.name = str(item.value)
+        return item
+
 
 class CMDArgEnum(Model):
     # properties as tags
@@ -20,12 +30,27 @@ class CMDArgEnum(Model):
     # properties as nodes
     items = ListType(ModelType(CMDArgEnumItem), min_size=1)
 
+    @classmethod
+    def build_enum(cls, builder, schema_enum):
+        enum = cls()
+        enum.items = []
+        for schema_item in schema_enum.items:
+            item = builder.get_enum_item(schema_item)
+            enum.items.append(item)
+        return enum
+
 
 class CMDArgDefault(Model):
     """ The argument value if an argument is not used """
 
     # properties as nodes
     value = CMDPrimitiveField()  # json value format string, support null
+
+    @classmethod
+    def build_default(cls, builder, schema_default):
+        default = cls()
+        default.value = copy.deepcopy(schema_default.value)
+        return default
 
 
 class CMDArgBlank(Model):
@@ -80,21 +105,34 @@ class CMDArgBase(Model):
             return data.TYPE_VALUE == cls.TYPE_VALUE
         return False
 
+    @classmethod
+    def build_arg_base(cls, builder):
+        return cls()
+
 
 class CMDArg(CMDArgBase):
-
     # properties as tags
     var = CMDVariantField(required=True)
-    options = ListType(StringType(), min_size=1, required=True)    # argument option names
+    options = ListType(StringType(), min_size=1, required=True)  # argument option names, the name is in dash case "aa-bb-cc"
     required = CMDBooleanField()
     stage = CMDStageField()
 
     hide = CMDBooleanField()
+    group = StringType(serialize_when_none=False)   # argument group name
+    id_part = StringType(
+        serialized_name='idPart',
+        deserialize_from='idPart',
+        serialize_when_none=False
+    )   # for Resource Id argument
 
     # properties as nodes
     help = ModelType(CMDArgumentHelp, serialize_when_none=False)
-    default = ModelType(CMDArgDefault, serialize_when_none=False)
-    blank = ModelType(CMDArgBlank, serialize_when_none=False)
+    default = ModelType(CMDArgDefault, serialize_when_none=False)  # default value is used when argument isn't in command
+    blank = ModelType(CMDArgBlank, serialize_when_none=False)  # blank value is used when argument don't have any value
+
+    def __init__(self, *args, **kwargs):
+        super(CMDArg, self).__init__(*args, **kwargs)
+        self.ref_schema = None
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -106,35 +144,71 @@ class CMDArg(CMDArgBase):
                 return isinstance(data, CMDArg)
         return False
 
+    @classmethod
+    def build_arg(cls, builder):
+        arg = cls.build_arg_base(builder)
+        assert isinstance(arg, CMDArg)
+        arg.var = builder.get_var()
+        arg.options = builder.get_options()
+        arg.help = builder.get_help()
+
+        arg.required = builder.get_required()
+        arg.default = builder.get_default()
+        arg.blank = builder.get_blank()
+        return arg
+
+
+#cls
+class CMDClsArgBase(CMDArgBase):
+    _type = StringType(
+        deserialize_from='type',
+        serialized_name='type',
+        required=True
+    )
+
+    def _get_type(self):
+        return self._type
+
+    @classmethod
+    def _claim_polymorphic(cls, data):
+        if isinstance(data, dict):
+            type_value = data.get('type', None)
+            if type_value is not None and type_value.startswith("@"):
+                return True
+        elif isinstance(data, CMDClsArgBase):
+            return True
+        return False
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super(CMDClsArgBase, cls).build_arg_base(builder)
+        arg._type = builder.get_type()
+        return arg
+
+
+class CMDClsArg(CMDArg, CMDClsArgBase):
+    pass
+
 
 # string
-class CMDStringArgFormat(Model):
-    pattern = CMDRegularExpressionField()
-    max_length = IntType(
-        serialized_name="maxLength",
-        deserialize_from="maxLength",
-        min_value=0
-    )
-    min_length = IntType(
-        serialized_name="minLength",
-        deserialize_from="minLength",
-        min_value=0
-    )
-
-    class Options:
-        serialize_when_none = False
-
-
 class CMDStringArgBase(CMDArgBase):
     TYPE_VALUE = "string"
 
     fmt = ModelType(
-        CMDStringArgFormat,
+        CMDStringFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False
     )
-    enum = ModelType(CMDArgEnum, serialize_when_none = False)
+    enum = ModelType(CMDArgEnum, serialize_when_none=False)
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super(CMDStringArgBase, cls).build_arg_base(builder)
+        assert isinstance(arg, CMDStringArgBase)
+        arg.fmt = builder.get_fmt()
+        arg.enum = builder.get_enum()
+        return arg
 
 
 class CMDStringArg(CMDArg, CMDStringArgBase):
@@ -205,29 +279,24 @@ class CMDPasswordArg(CMDStringArg, CMDPasswordArgBase):
 
 
 # integer
-class CMDIntegerArgFormat(Model):
-    multiple_of = IntType(
-        min_value=0,
-        serialized_name='multipleOf',
-        deserialize_from='multipleOf'
-    )
-    maximum = IntType()
-    minimum = IntType()
-
-    class Options:
-        serialize_when_none = False
-
-
 class CMDIntegerArgBase(CMDArgBase):
     TYPE_VALUE = "integer"
 
     fmt = ModelType(
-        CMDIntegerArgFormat,
+        CMDIntegerFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False
     )
     enum = ModelType(CMDArgEnum, serialize_when_none=False)
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super(CMDIntegerArgBase, cls).build_arg_base(builder)
+        assert isinstance(arg, CMDIntegerArgBase)
+        arg.fmt = builder.get_fmt()
+        arg.enum = builder.get_enum()
+        return arg
 
 
 class CMDIntegerArg(CMDArg, CMDIntegerArgBase):
@@ -262,37 +331,24 @@ class CMDBooleanArg(CMDArg, CMDBooleanArgBase):
 
 
 # float
-class CMDFloatArgFormat(Model):
-    multiple_of = FloatType(
-        min_value=0,
-        serialized_name='multipleOf',
-        deserialize_from='multipleOf'
-    )
-    maximum = FloatType()
-    exclusive_maximum = CMDBooleanField(
-        serialized_name='exclusiveMaximum',
-        deserialize_from='exclusiveMaximum'
-    )
-    minimum = FloatType()
-    exclusive_minimum = CMDBooleanField(
-        serialized_name='exclusiveMinimum',
-        deserialize_from='exclusiveMinimum'
-    )
-
-    class Options:
-        serialize_when_none = False
-
-
 class CMDFloatArgBase(CMDArgBase):
     TYPE_VALUE = "float"
 
     fmt = ModelType(
-        CMDFloatArgFormat,
+        CMDFloatFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False,
     )
     enum = ModelType(CMDArgEnum, serialize_when_none=False)
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super(CMDFloatArgBase, cls).build_arg_base(builder)
+        assert isinstance(arg, CMDFloatArgBase)
+        arg.fmt = builder.get_fmt()
+        arg.enum = builder.get_enum()
+        return arg
 
 
 class CMDFloatArg(CMDArg, CMDFloatArgBase):
@@ -318,61 +374,66 @@ class CMDFloat64Arg(CMDFloatArg, CMDFloat64ArgBase):
 
 
 # object
-class CMDObjectArgFormat(Model):
-    max_properties = IntType(
-        min_value=0,
-        serialized_name='maxProperties',
-        deserialize_from='maxProperties'
-    )
-    min_properties = IntType(
-        min_value=0,
-        serialized_name='minProperties',
-        deserialize_from='minProperties'
-    )
 
-    class Options:
-        serialize_when_none = False
+class CMDObjectArgAdditionalProperties(Model):
+    # properties as nodes
+    item = PolyModelType(CMDArgBase, allow_subclasses=True, serialize_when_none=False)
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = cls()
+        arg.item = builder.get_sub_item()
+        return arg
 
 
 class CMDObjectArgBase(CMDArgBase):
     TYPE_VALUE = "object"
 
     fmt = ModelType(
-        CMDObjectArgFormat,
+        CMDObjectFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False
     )
     args = ListType(PolyModelType(CMDArg, allow_subclasses=True), serialize_when_none=False)
+    additional_props = ModelType(
+        CMDObjectArgAdditionalProperties,
+        serialized_name="additionalProps",
+        deserialize_from="additionalProps",
+        serialize_when_none=False
+    )
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super(CMDObjectArgBase, cls).build_arg_base(builder)
+        assert isinstance(arg, CMDObjectArgBase)
+        try:
+            arg.fmt = builder.get_fmt()
+        except Exception:
+            raise
+        arg.args = builder.get_sub_args()
+        arg.additional_props = builder.get_additional_props()
+        return arg
 
 
 class CMDObjectArg(CMDArg, CMDObjectArgBase):
-    pass
+
+    cls = CMDClassField(serialize_when_none=False)  # define a class which can be used by loop
+
+    @classmethod
+    def build_arg(cls, builder):
+        arg = super(CMDObjectArg, cls).build_arg(builder)
+        assert isinstance(arg, CMDObjectArg)
+        arg.cls = builder.get_cls()
+        return arg
 
 
 # array
-class CMDArrayArgFormat(Model):
-    unique = CMDBooleanField()
-    max_length = IntType(
-        min_value=0,
-        serialized_name='maxLength',
-        deserialize_from='maxLength'
-    )
-    min_length = IntType(
-        min_value=0,
-        serialized_name='minLength',
-        deserialize_from='minLength'
-    )
-
-    class Options:
-        serialize_when_none = False
-
-
 class CMDArrayArgBase(CMDArgBase):
     TYPE_VALUE = "array"
 
     fmt = ModelType(
-        CMDArrayArgFormat,
+        CMDArrayFormat,
         serialized_name='format',
         deserialize_from='format',
         serialize_when_none=False
@@ -382,6 +443,22 @@ class CMDArrayArgBase(CMDArgBase):
     def _get_type(self):
         return f"{self.TYPE_VALUE}<{self.item.type}>"
 
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super(CMDArrayArgBase, cls).build_arg_base(builder)
+        assert isinstance(arg, CMDArrayArgBase)
+        arg.fmt = builder.get_fmt()
+        arg.item = builder.get_sub_item()
+        return arg
+
 
 class CMDArrayArg(CMDArg, CMDArrayArgBase):
-    pass
+
+    cls = CMDClassField(serialize_when_none=False)  # define a class which can be used by loop
+
+    @classmethod
+    def build_arg(cls, builder):
+        arg = super(CMDArrayArg, cls).build_arg(builder)
+        assert isinstance(arg, CMDArrayArg)
+        arg.cls = builder.get_cls()
+        return arg

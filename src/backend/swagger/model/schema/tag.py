@@ -8,4 +8,8 @@ class Tag(Model):
 
     name = StringType(required=True)  # The name of the tag.
     description = StringType()  # A short description for the tag. GFM syntax can be used for rich text representation.
-    externalDocs = ModelType(ExternalDocumentation)  # Additional external documentation for this tag.
+    external_docs = ModelType(
+        ExternalDocumentation,
+        serialized_name="externalDocs",
+        deserialize_from="externalDocs"
+    )  # Additional external documentation for this tag.

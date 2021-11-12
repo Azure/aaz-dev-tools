@@ -47,8 +47,7 @@ class SwaggerLinkTest(SwaggerSpecsTestCase):
             loader.load_file(file_path)
             idx = 0
             while idx < len(loader.loaded_swaggers):
-                file_path = [*loader.loaded_swaggers.keys()][idx]
-                swagger = loader.loaded_swaggers[file_path]
+                file_path, swagger = [*loader.loaded_swaggers.items()][idx]
                 try:
                     swagger.link(loader, file_path)
                 except exceptions.InvalidSwaggerValueError as err:

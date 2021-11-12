@@ -1,7 +1,7 @@
 from schematics.models import Model
 from schematics.types import URLType, BooleanType, StringType
 
-from .types import XmsTextType
+from .fields import XmsTextField
 
 
 class XML(Model):
@@ -16,4 +16,4 @@ class XML(Model):
     attribute = BooleanType(default=False)  # Declares whether the property definition translates to an attribute instead of an element. Default value is false.
     wrapped = BooleanType(default=False)  # MAY be used only for an array definition. Signifies whether the array is wrapped (for example, <books><book/><book/></books>) or unwrapped (<book/><book/>). Default value is false. The definition takes effect only when defined alongside type being array (outside the items).
 
-    x_ms_text = XmsTextType()
+    x_ms_text = XmsTextField()

@@ -1,6 +1,6 @@
 from schematics.models import Model
 from schematics.types import StringType, URLType, PolyModelType
-from .types import ScopesType
+from .fields import ScopesField
 
 
 class _SecuritySchemeBase(Model):
@@ -8,7 +8,7 @@ class _SecuritySchemeBase(Model):
 
     TYPE_VALUE = None
 
-    type = StringType(choices=("basic", "apiKey", "oauth2"), required=True)  #
+    type = StringType(choices=("basic", "apiKey", "oauth2"), required=True)
     description = StringType()
 
     @classmethod
@@ -16,8 +16,9 @@ class _SecuritySchemeBase(Model):
         if isinstance(data, dict):
             type_value = data.get('type', None)
             return type_value is not None and type_value == cls.TYPE_VALUE
-        else:
-            return False
+        elif isinstance(data, _SecuritySchemeBase):
+            return data.TYPE_VALUE == cls.TYPE_VALUE
+        return False
 
 
 class BasicSecurityScheme(_SecuritySchemeBase):
@@ -40,16 +41,22 @@ class OAuth2SecurityScheme(_SecuritySchemeBase):
     TYPE_VALUE = "oauth2"
 
     flow = StringType(choices=("implicit", "password", "application", "accessCode"), required=True)  # The flow used by the OAuth2 security scheme.
-    authorizationUrl = URLType()  # The authorization URL to be used for this flow. oauth2 ("implicit", "accessCode")
-    tokenUrl = URLType()  # The token URL to be used for this flow. oauth2 ("password", "application", "accessCode")
-    scopes = ScopesType()  # The available scopes for the OAuth2 security scheme.
+    authorization_url = URLType(
+        serialized_name="authorizationUrl",
+        deserialize_from="authorizationUrl"
+    )  # The authorization URL to be used for this flow. oauth2 ("implicit", "accessCode")
+    token_url = URLType(
+        serialized_name="tokenUrl",
+        deserialize_from="tokenUrl"
+    )  # The token URL to be used for this flow. oauth2 ("password", "application", "accessCode")
+    scopes = ScopesField()  # The available scopes for the OAuth2 security scheme.
 
 
-class SecuritySchemeType(PolyModelType):
+class SecuritySchemeField(PolyModelType):
 
     def __init__(self, **kwargs):
         model_spec = [
             BasicSecurityScheme, APIKeySecurityScheme, OAuth2SecurityScheme
         ]
-        super(SecuritySchemeType, self).__init__(model_spec=model_spec, **kwargs)
+        super(SecuritySchemeField, self).__init__(model_spec=model_spec, **kwargs)
 
