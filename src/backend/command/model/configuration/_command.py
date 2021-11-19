@@ -23,8 +23,10 @@ class CMDCommand(Model):
         ModelType(CMDArgGroup),
         serialized_name='argGroups',
         deserialize_from='argGroups',
-        serialize_when_none=False
     )
-    conditions = ListType(ModelType(CMDCondition), serialize_when_none=False)
+    conditions = ListType(ModelType(CMDCondition))
     operations = ListType(PolyModelType(CMDOperation, allow_subclasses=True), min_size=1)
     outputs = ListType(PolyModelType(CMDOutput, allow_subclasses=True), min_size=1)  # support to add outputs in different formats, such table
+
+    class Options:
+        serialize_when_none = False

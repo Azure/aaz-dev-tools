@@ -7,10 +7,12 @@ from ._resource import CMDResource
 
 class CMDConfiguration(Model):
     # properties as nodes
-    resources = ListType(ModelType(CMDResource), min_size=1)  # resources contained in configuration file
+    resources = ListType(ModelType(CMDResource), min_size=1, required=True)  # resources contained in configuration file
     command_group = ModelType(
         CMDCommandGroup,
         serialized_name='commandGroups',
         deserialize_from='commandGroups',
-        serialize_when_none=False,
     )
+
+    class Options:
+        serialize_when_none = False

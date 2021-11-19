@@ -32,9 +32,22 @@ class CMDStageField(StringType):
         super(CMDStageField, self).__init__(
             choices=(CMDStageEnum.Experimental, CMDStageEnum.Preview, CMDStageEnum.Stable),
             default=CMDStageEnum.Stable,
+            serialize_when_none=False,
             *args,
             **kwargs
         )
+
+    def to_native(self, value, context=None):
+        value = super(CMDStageField, self).to_native(value, context)
+        if value == CMDStageEnum.Stable:
+            return None  # return None when value is false to hide field with `serialize_when_none=False`
+        return value
+
+    def to_primitive(self, value, context=None):
+        value = super(CMDStageField, self).to_primitive(value, context)
+        if value == CMDStageEnum.Stable:
+            return None  # return None when value is false to hide field with `serialize_when_none=False`
+        return value
 
 
 class CMDVariantField(StringType):
@@ -106,3 +119,18 @@ class CMDURLPathField(StringType):
 
     def __init__(self, *args, **kwargs):
         super(CMDURLPathField, self).__init__(*args, **kwargs)
+
+
+class CMDDescriptionField(StringType):
+    """The description information from swagger. It's the source of helps. Should not be saved in configuration file."""
+
+    def __init__(self, *args, **kwargs):
+        super(CMDDescriptionField, self).__init__(
+            serialize_when_none=False,
+            *args,
+            **kwargs
+        )
+
+    def to_primitive(self, value, context=None):
+        """the description will not exist when call to primitive"""
+        return None  # return None when value is false to hide field with `serialize_when_none=False`

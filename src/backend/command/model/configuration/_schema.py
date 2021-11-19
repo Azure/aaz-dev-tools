@@ -24,16 +24,19 @@ from ._arg import CMDStringArg, CMDStringArgBase, \
     CMDArrayArg, CMDArrayArgBase, \
     CMDObjectArg, CMDObjectArgBase, CMDObjectArgAdditionalProperties, \
     CMDClsArg, CMDClsArgBase
-from ._fields import CMDVariantField, StringType, CMDClassField, CMDBooleanField, CMDPrimitiveField
+from ._fields import CMDVariantField, StringType, CMDClassField, CMDBooleanField, CMDPrimitiveField, CMDDescriptionField
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
 from ._utils import CMDDiffLevelEnum
 
 
 class CMDSchemaEnumItem(Model):
-    arg = CMDVariantField(serialize_when_none=False)  # value will be used when specific argument is provided
+    arg = CMDVariantField()  # value will be used when specific argument is provided
 
     # properties as nodes
     value = CMDPrimitiveField(required=True)
+
+    class Options:
+        serialize_when_none = False
 
     def diff(self, old, level):
         if type(self) is not type(old):
@@ -117,9 +120,12 @@ class CMDSchemaBase(Model):
     const = CMDBooleanField()   # when a schema is const it's default value is not None.
 
     # properties as nodes
-    default = ModelType(CMDSchemaDefault, serialize_when_none=False)
+    default = ModelType(CMDSchemaDefault)
 
     # base types: "array", "boolean", "integer", "float", "object", "string",
+
+    class Options:
+        serialize_when_none = False
 
     @serializable
     def type(self):
@@ -178,9 +184,9 @@ class CMDSchemaBase(Model):
 class CMDSchema(CMDSchemaBase):
     # properties as tags
     name = StringType(required=True)
-    arg = CMDVariantField(serialize_when_none=False)
+    arg = CMDVariantField()
 
-    description = StringType(serialize_when_none=False)
+    description = CMDDescriptionField()
 
     skip_url_encoding = CMDBooleanField(
         serialized_name="skipUrlEncoding",
@@ -260,10 +266,9 @@ class CMDStringSchemaBase(CMDSchemaBase):
     fmt = ModelType(
         CMDStringFormat,
         serialized_name='format',
-        deserialize_from='format',
-        serialize_when_none=False
+        deserialize_from='format'
     )
-    enum = ModelType(CMDSchemaEnum, serialize_when_none=False)
+    enum = ModelType(CMDSchemaEnum)
 
     def _diff_base(self, old, level, diff):
         diff = super(CMDStringSchemaBase, self)._diff_base(old, level, diff)
@@ -362,9 +367,8 @@ class CMDIntegerSchemaBase(CMDSchemaBase):
         CMDIntegerFormat,
         serialized_name='format',
         deserialize_from='format',
-        serialize_when_none=False
     )
-    enum = ModelType(CMDSchemaEnum, serialize_when_none=False)
+    enum = ModelType(CMDSchemaEnum)
 
     def _diff_base(self, old, level, diff):
         diff = super(CMDIntegerSchemaBase, self)._diff_base(old, level, diff)
@@ -423,9 +427,8 @@ class CMDFloatSchemaBase(CMDSchemaBase):
         CMDFloatFormat,
         serialized_name='format',
         deserialize_from='format',
-        serialize_when_none=False
     )
-    enum = ModelType(CMDSchemaEnum, serialize_when_none=False)
+    enum = ModelType(CMDSchemaEnum)
 
     def _diff_base(self, old, level, diff):
         diff = super(CMDFloatSchemaBase, self)._diff_base(old, level, diff)
@@ -479,12 +482,13 @@ class CMDObjectSchemaDiscriminator(Model):
     # properties as nodes
     props = ListType(
         PolyModelType(CMDSchema, allow_subclasses=True),
-        serialize_when_none=False,
     )
     discriminators = ListType(
         ModelType('CMDObjectSchemaDiscriminator'),
-        serialize_when_none=False,
     )
+
+    class Options:
+        serialize_when_none = False
 
     def diff(self, old, level):
         if self.frozen and old.frozen:
@@ -554,21 +558,17 @@ class CMDObjectSchemaBase(CMDSchemaBase):
         CMDObjectFormat,
         serialized_name='format',
         deserialize_from='format',
-        serialize_when_none=False
     )
     props = ListType(
         PolyModelType(CMDSchema, allow_subclasses=True),
-        serialize_when_none=False
     )
     discriminators = ListType(
         ModelType(CMDObjectSchemaDiscriminator),
-        serialize_when_none=False,
     )
     additional_props = ModelType(
         CMDObjectSchemaAdditionalProperties,
         serialized_name="additionalProps",
         deserialize_from="additionalProps",
-        serialize_when_none=False,
     )
 
     def _diff_base(self, old, level, diff):
@@ -623,7 +623,7 @@ class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
         serialized_name="clientFlatten",
         deserialize_from="clientFlatten"
     )
-    cls = CMDClassField(serialize_when_none=False)  # define a schema which can be used by others
+    cls = CMDClassField()  # define a schema which can be used by others
 
     def _diff(self, old, level, diff):
         diff = super(CMDObjectSchema, self)._diff(old, level, diff)
@@ -648,7 +648,6 @@ class CMDArraySchemaBase(CMDSchemaBase):
         CMDArrayFormat,
         serialized_name='format',
         deserialize_from='format',
-        serialize_when_none=False,
     )
     item = PolyModelType(CMDSchemaBase, allow_subclasses=True, required=True)
 
@@ -673,8 +672,7 @@ class CMDArraySchema(CMDSchema, CMDArraySchemaBase):
     ARG_TYPE = CMDArrayArg
 
     # properties as tags
-    cls = CMDClassField(
-        serialize_when_none=False)  # define a schema which can be used by others # TODO: convert to arg
+    cls = CMDClassField()  # define a schema which can be used by others # TODO: convert to arg
 
     def _diff(self, old, level, diff):
         diff = super(CMDArraySchema, self)._diff(old, level, diff)

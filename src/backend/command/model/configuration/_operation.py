@@ -1,7 +1,7 @@
 from schematics.models import Model
 from schematics.types import PolyModelType, ModelType, ListType, StringType
 
-from ._fields import CMDVariantField, CMDBooleanField
+from ._fields import CMDVariantField, CMDBooleanField, CMDDescriptionField
 from ._http import CMDHttpAction
 from ._instance_update import CMDInstanceUpdateAction
 
@@ -11,6 +11,9 @@ class CMDOperation(Model):
 
     # properties as tags
     when = ListType(CMDVariantField())  # conditions
+
+    class Options:
+        serialize_when_none = False
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -42,7 +45,7 @@ class CMDHttpOperation(CMDOperation):
         required=True
     )   # OperationId from swagger
 
-    description = StringType()
+    description = CMDDescriptionField()
 
     # properties as nodes
     http = ModelType(CMDHttpAction, required=True)

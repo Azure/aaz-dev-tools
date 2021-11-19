@@ -20,6 +20,3 @@ class CMDArgumentHelp(CMDHelp):
         serialized_name='refCommands',
         deserialize_from='refCommands',
     )  # popular commands
-
-    class Options:
-        serialize_when_none = False
