@@ -8,6 +8,7 @@ import json
 
 from command.model.configuration import CMDResource
 from swagger.controller.command_generator import CommandGenerator
+from swagger.utils.tools import swagger_path_to_resource_id
 
 
 def generate_config(swagger_path, config_path, module_name, resource_id, api_version):
