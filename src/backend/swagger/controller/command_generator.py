@@ -11,6 +11,7 @@ from swagger.model.schema.x_ms_pageable import XmsPageable
 from swagger.model.specs import SwaggerLoader, SwaggerSpecs, DataPlaneModule, MgmtPlaneModule
 from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case, get_url_path_valid_parts
 from utils import config
+import inflect
 
 logger = logging.getLogger('backend')
 
@@ -24,6 +25,8 @@ class BuildInVariants:
 
 
 class CommandGenerator:
+
+    _inflect_engine = inflect.engine()
 
     def __init__(self, module_name):
         self.loader = SwaggerLoader()
@@ -303,7 +306,9 @@ class CommandGenerator:
         for part in valid_parts[1:]:    # ignore first part to avoid include resource provider
             if part.startswith('{'):
                 continue
-            names.append(camel_case_to_snake_case(part, '-'))
+            name = camel_case_to_snake_case(part, '-')
+            singular_name = cls._inflect_engine.singular_noun(name)
+            names.append(singular_name)
 
         return " ".join(names)
 
@@ -357,6 +362,7 @@ class CommandGenerator:
                             f"Command Name For Get set by operation_id: {command_name} : {resource.path} :"
                             f" {path_item.get.operation_id} : {path_item.traces}"
                         )
+
         elif method == "delete":
             command_name = f"{group_name} delete"
         elif method == "put":
@@ -469,7 +475,7 @@ class CommandGenerator:
         for group_name, args in arg_groups.items():
             group = CMDArgGroup()
             group.name = group_name
-            group.args = [arg for arg in args.items()]
+            group.args = [arg for arg in args.values()]
             groups.append(group)
         return groups or None
 
