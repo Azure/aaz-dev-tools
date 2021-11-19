@@ -7,6 +7,7 @@ from collections import OrderedDict
 
 import yaml
 
+from swagger.utils.tools import swagger_path_to_resource_id
 from ._resource import Resource, ResourceVersion
 from ._utils import map_path_2_repo
 
@@ -14,7 +15,6 @@ logger = logging.getLogger('backend')
 
 
 class ResourceProvider:
-    URL_PARAMETER_PLACEHOLDER = '{}'
 
     def __init__(self, name, file_path, readme_path, swagger_module):
         self.name = name
@@ -70,18 +70,6 @@ class ResourceProvider:
                 resource_op_group_map[op_group_name] = {}
             resource_op_group_map[op_group_name][resource_id] = version_map
         return resource_op_group_map
-
-    @classmethod
-    def _generate_resource_id(cls, path):
-        path_parts = path.split('?', maxsplit=1)
-        url_parts = path_parts[0].split('/')
-        idx = 2  # ignore to the parameter name in first part of url, such as `/{parameter}` or `/{parameter}/...`
-        while idx < len(url_parts):
-            if url_parts[idx].startswith('{') and url_parts[idx].endswith('}'):
-                url_parts[idx] = cls.URL_PARAMETER_PLACEHOLDER
-            idx += 1
-        path_parts[0] = '/'.join(url_parts).lower()
-        return '?'.join(path_parts)
 
     @property
     def tags(self):
@@ -209,7 +197,7 @@ class ResourceProvider:
 
         for path, value in body.get('paths', {}).items():
             resource = Resource(
-                resource_id=self._generate_resource_id(path),
+                resource_id=swagger_path_to_resource_id(path),
                 path=path, version=version, file_path=file_path, resource_provider=self, body=value)
             resources.append(resource)
 
@@ -217,7 +205,7 @@ class ResourceProvider:
         #   alternative to Paths Object that allows Path Item Object to have query parameters for non pure REST APIs
         for path, value in body.get('x-ms-paths', {}).items():
             resource = Resource(
-                resource_id=self._generate_resource_id(path),
+                resource_id=swagger_path_to_resource_id(path),
                 path=path, version=version, file_path=file_path, resource_provider=self, body=value)
             resources.append(resource)
 
