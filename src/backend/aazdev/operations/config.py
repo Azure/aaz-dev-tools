@@ -10,8 +10,7 @@ from command.model.configuration import CMDResource
 from swagger.controller.command_generator import CommandGenerator
 
 
-def generate_configuration(swagger_path, configuration_path,
-                           module_name, resource_id, api_version):
+def generate_config(swagger_path, config_path, module_name, resource_id, api_version):
     generator = CommandGenerator(module_name="(MgmtPlane)/" + module_name)
     cmd_resource = CMDResource({"id": resource_id, "version": api_version})
     resources = generator.load_resources([cmd_resource])

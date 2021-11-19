@@ -14,12 +14,12 @@ from knack import (
 
 class AazDevCommandsLoader(CLICommandsLoader):
     def load_command_table(self, args):
-        from commands import load_command_table
+        from aazdev.commands import load_command_table
         load_command_table(self, args)
         return super().load_command_table(args)
 
     def load_arguments(self, command):
-        from params import load_arguments
+        from aazdev.params import load_arguments
         load_arguments(self, command)
         super().load_arguments(command)
 

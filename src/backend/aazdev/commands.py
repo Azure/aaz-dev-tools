@@ -11,8 +11,8 @@ def load_command_table(self, _):
     def operation_group(name):
         return f"aazdev.operations.{name}#{{}}"
 
-    with CommandGroup(self, "configuration", operation_group("configuration")) as g:
-        g.command("generate", "generate_configuration")
+    with CommandGroup(self, "config", operation_group("config")) as g:
+        g.command("generate", "generate_config")
 
     with CommandGroup(self, "code", operation_group("code")) as g:
         g.command("generate", "generate_code")
