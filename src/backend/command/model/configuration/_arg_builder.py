@@ -171,6 +171,15 @@ class CMDArgBuilder:
             return blk
         return None
 
+    def get_hide(self):
+        if self.schema.name == 'id' and self._parent:
+            # some modules such as network will not mark 'id' as readonly, so if the parent schema has 'name',
+            # the 'id' argument will be hidden by default.
+            for prop in self._parent.schema.props:
+                if prop.name == 'name':
+                    return True
+        return False
+
     def get_var(self):
         return self._arg_var
 

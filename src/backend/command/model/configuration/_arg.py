@@ -160,6 +160,8 @@ class CMDArg(CMDArgBase):
         arg.required = builder.get_required()
         arg.default = builder.get_default()
         arg.blank = builder.get_blank()
+
+        arg.hide = builder.get_hide()
         return arg
 
 
