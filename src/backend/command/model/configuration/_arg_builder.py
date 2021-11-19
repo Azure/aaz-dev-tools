@@ -172,8 +172,8 @@ class CMDArgBuilder:
         return None
 
     def get_hide(self):
-        if self.schema.name == 'id' and self._parent:
-            # some modules such as network will not mark 'id' as readonly, so if the parent schema has 'name',
+        if self.schema.name == 'id' and not self.get_required() and self._parent:
+            # some resource will have optional 'id' property, if it also has 'name' property,
             # the 'id' argument will be hidden by default.
             for prop in self._parent.schema.props:
                 if prop.name == 'name':
