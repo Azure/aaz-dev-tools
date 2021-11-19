@@ -16,6 +16,9 @@ class CMDArgEnumItem(Model):
     # properties as nodes
     value = CMDPrimitiveField(required=True)
 
+    class Options:
+        serialize_when_none = False
+
     @classmethod
     def build_enum_item(cls, builder, schema_item):
         item = cls()
@@ -83,6 +86,9 @@ class CMDArgBase(Model):
     # base types: "array", "boolean", "integer", "float", "object", "string",
     # special types: "@File", "@ResourceID", "@ResourceGroup", "@Subscription", "@Json"
 
+    class Options:
+        serialize_when_none = False
+
     @serializable
     def type(self):
         return self._get_type()
@@ -118,17 +124,16 @@ class CMDArg(CMDArgBase):
     stage = CMDStageField()
 
     hide = CMDBooleanField()
-    group = StringType(serialize_when_none=False)   # argument group name
+    group = StringType()   # argument group name
     id_part = StringType(
         serialized_name='idPart',
         deserialize_from='idPart',
-        serialize_when_none=False
     )   # for Resource Id argument
 
     # properties as nodes
-    help = ModelType(CMDArgumentHelp, serialize_when_none=False)
-    default = ModelType(CMDArgDefault, serialize_when_none=False)  # default value is used when argument isn't in command
-    blank = ModelType(CMDArgBlank, serialize_when_none=False)  # blank value is used when argument don't have any value
+    help = ModelType(CMDArgumentHelp)
+    default = ModelType(CMDArgDefault)  # default value is used when argument isn't in command
+    blank = ModelType(CMDArgBlank)  # blank value is used when argument don't have any value
 
     def __init__(self, *args, **kwargs):
         super(CMDArg, self).__init__(*args, **kwargs)
@@ -198,9 +203,8 @@ class CMDStringArgBase(CMDArgBase):
         CMDStringFormat,
         serialized_name='format',
         deserialize_from='format',
-        serialize_when_none=False
     )
-    enum = ModelType(CMDArgEnum, serialize_when_none=False)
+    enum = ModelType(CMDArgEnum)
 
     @classmethod
     def build_arg_base(cls, builder):
@@ -286,9 +290,8 @@ class CMDIntegerArgBase(CMDArgBase):
         CMDIntegerFormat,
         serialized_name='format',
         deserialize_from='format',
-        serialize_when_none=False
     )
-    enum = ModelType(CMDArgEnum, serialize_when_none=False)
+    enum = ModelType(CMDArgEnum)
 
     @classmethod
     def build_arg_base(cls, builder):
@@ -338,9 +341,8 @@ class CMDFloatArgBase(CMDArgBase):
         CMDFloatFormat,
         serialized_name='format',
         deserialize_from='format',
-        serialize_when_none=False,
     )
-    enum = ModelType(CMDArgEnum, serialize_when_none=False)
+    enum = ModelType(CMDArgEnum)
 
     @classmethod
     def build_arg_base(cls, builder):
@@ -377,7 +379,10 @@ class CMDFloat64Arg(CMDFloatArg, CMDFloat64ArgBase):
 
 class CMDObjectArgAdditionalProperties(Model):
     # properties as nodes
-    item = PolyModelType(CMDArgBase, allow_subclasses=True, serialize_when_none=False)
+    item = PolyModelType(CMDArgBase, allow_subclasses=True)
+
+    class Options:
+        serialize_when_none = False
 
     @classmethod
     def build_arg_base(cls, builder):
@@ -393,14 +398,12 @@ class CMDObjectArgBase(CMDArgBase):
         CMDObjectFormat,
         serialized_name='format',
         deserialize_from='format',
-        serialize_when_none=False
     )
-    args = ListType(PolyModelType(CMDArg, allow_subclasses=True), serialize_when_none=False)
+    args = ListType(PolyModelType(CMDArg, allow_subclasses=True))
     additional_props = ModelType(
         CMDObjectArgAdditionalProperties,
         serialized_name="additionalProps",
         deserialize_from="additionalProps",
-        serialize_when_none=False
     )
 
     @classmethod
@@ -418,7 +421,7 @@ class CMDObjectArgBase(CMDArgBase):
 
 class CMDObjectArg(CMDArg, CMDObjectArgBase):
 
-    cls = CMDClassField(serialize_when_none=False)  # define a class which can be used by loop
+    cls = CMDClassField()  # define a class which can be used by loop
 
     @classmethod
     def build_arg(cls, builder):
@@ -436,7 +439,6 @@ class CMDArrayArgBase(CMDArgBase):
         CMDArrayFormat,
         serialized_name='format',
         deserialize_from='format',
-        serialize_when_none=False
     )
     item = PolyModelType(CMDArgBase, allow_subclasses=True, required=True)
 
@@ -454,7 +456,7 @@ class CMDArrayArgBase(CMDArgBase):
 
 class CMDArrayArg(CMDArg, CMDArrayArgBase):
 
-    cls = CMDClassField(serialize_when_none=False)  # define a class which can be used by loop
+    cls = CMDClassField()  # define a class which can be used by loop
 
     @classmethod
     def build_arg(cls, builder):

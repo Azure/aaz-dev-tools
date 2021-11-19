@@ -9,6 +9,9 @@ class CMDOutput(Model):
     # properties as tags
     TYPE_VALUE = None  # types: "array", "object", "string",
 
+    class Options:
+        serialize_when_none = False
+
     @serializable
     def type(self):
         return self._get_type()
