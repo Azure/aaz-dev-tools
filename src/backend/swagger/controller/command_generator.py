@@ -307,7 +307,7 @@ class CommandGenerator:
             if part.startswith('{'):
                 continue
             name = camel_case_to_snake_case(part, '-')
-            singular_name = cls._inflect_engine.singular_noun(name)
+            singular_name = cls._inflect_engine.singular_noun(name) or name
             names.append(singular_name)
 
         return " ".join(names)

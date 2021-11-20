@@ -506,11 +506,11 @@ class CMDFloat64Schema(CMDFloatSchema, CMDFloat64SchemaBase):
 
 # discriminator
 
-class CMDFrozenIgnoreModelField(ModelType):
+class CMDObjectSchemaDiscriminatorField(ModelType):
 
-    def __init__(self, model_spec, **kwargs):
-        super(CMDFrozenIgnoreModelField, self).__init__(
-            model_spec=model_spec,
+    def __init__(self, model_spec=None, **kwargs):
+        super(CMDObjectSchemaDiscriminatorField, self).__init__(
+            model_spec=model_spec or CMDObjectSchemaDiscriminator,
             serialize_when_none=False,
             **kwargs
         )
@@ -519,7 +519,7 @@ class CMDFrozenIgnoreModelField(ModelType):
         if hasattr(value, 'frozen') and value.frozen:
             # frozen schema base will be ignored
             return None
-        return super(CMDFrozenIgnoreModelField, self).export(value, format, context)
+        return super(CMDObjectSchemaDiscriminatorField, self).export(value, format, context)
 
 
 class CMDObjectSchemaDiscriminator(Model):
@@ -532,7 +532,7 @@ class CMDObjectSchemaDiscriminator(Model):
 
     # properties as nodes
     props = ListType(CMDSchemaField())
-    discriminators = ListType(CMDFrozenIgnoreModelField(model_spec='CMDObjectSchemaDiscriminator'))
+    discriminators = ListType(CMDObjectSchemaDiscriminatorField(model_spec='CMDObjectSchemaDiscriminator'))
 
     class Options:
         serialize_when_none = False
@@ -624,7 +624,7 @@ class CMDObjectSchemaBase(CMDSchemaBase):
         deserialize_from='format',
     )
     props = ListType(CMDSchemaField())
-    discriminators = ListType(CMDFrozenIgnoreModelField(model_spec="CMDObjectSchemaDiscriminator"))
+    discriminators = ListType(CMDObjectSchemaDiscriminatorField())
     additional_props = CMDObjectSchemaAdditionalPropertiesField()
 
     def _diff_base(self, old, level, diff):
