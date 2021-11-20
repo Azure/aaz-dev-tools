@@ -3,7 +3,7 @@ from schematics.types import PolyModelType
 
 from ._arg_builder import CMDArgBuilder
 from ._fields import CMDVariantField
-from ._schema import CMDSchemaBase, CMDSchema
+from ._schema import CMDSchemaBaseField, CMDSchema
 
 
 # json
@@ -13,7 +13,7 @@ class CMDJson(Model):
     ref = CMDVariantField()
 
     # properties as nodes
-    schema = PolyModelType(CMDSchemaBase, allow_subclasses=True)  # this property is required when ref property is None
+    schema = CMDSchemaBaseField()  # this property is required when ref property is None
     # Note: the schema can be CMDSchema or CMDSchemaBase.
     # For request or instance update, it's CMDSchema.
     # For response, it's CMDSchemaBase.
