@@ -22,7 +22,7 @@ class CMDArgBuilder:
             if isinstance(schema, CMDSchema):
                 if not arg_var.endswith("$"):
                     arg_var += '.'
-                arg_var += f'{schema.name}'
+                arg_var += f'{schema.name}'.replace('$', '')  # some schema name may contain $
             else:
                 raise NotImplementedError()
         else:
@@ -38,7 +38,7 @@ class CMDArgBuilder:
                     if isinstance(schema, CMDObjectSchemaDiscriminator):
                         arg_var += f'{schema.value}'
                     elif isinstance(schema, CMDSchema):
-                        arg_var += f'{schema.name}'
+                        arg_var += f'{schema.name}'.replace('$', '')  # some schema name may contain $
                     else:
                         raise NotImplementedError()
             else:
@@ -194,7 +194,7 @@ class CMDArgBuilder:
         if isinstance(self.schema, CMDObjectSchemaDiscriminator):
             opt_name = self._build_option_name(self.schema.value)
         elif isinstance(self.schema, CMDSchema):
-            opt_name = self._build_option_name(self.schema.name)
+            opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
         else:
             raise NotImplementedError()
         return [opt_name, ]
