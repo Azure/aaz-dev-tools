@@ -181,6 +181,23 @@ class CMDSchemaBase(Model):
         return diff
 
 
+class CMDSchemaBaseField(PolyModelType):
+
+    def __init__(self, **kwargs):
+        super(CMDSchemaBaseField, self).__init__(
+            model_spec=CMDSchemaBase,
+            allow_subclasses=True,
+            serialize_when_none=False,
+            **kwargs
+        )
+
+    def export(self, value, format, context=None):
+        if value.frozen:
+            # frozen schema base will be ignored
+            return None
+        return super(CMDSchemaBaseField, self).export(value, format, context)
+
+
 class CMDSchema(CMDSchemaBase):
     # properties as tags
     name = StringType(required=True)
@@ -228,6 +245,23 @@ class CMDSchema(CMDSchemaBase):
         diff = self._diff_base(old, level, diff)
         diff = self._diff(old, level, diff)
         return diff
+
+
+class CMDSchemaField(PolyModelType):
+
+    def __init__(self, **kwargs):
+        super(CMDSchemaField, self).__init__(
+            model_spec=CMDSchema,
+            allow_subclasses=True,
+            serialize_when_none=False,
+            **kwargs
+        )
+
+    def export(self, value, format, context=None):
+        if value.frozen:
+            # frozen schema base will be ignored
+            return None
+        return super(CMDSchemaField, self).export(value, format, context)
 
 
 # cls
@@ -471,6 +505,23 @@ class CMDFloat64Schema(CMDFloatSchema, CMDFloat64SchemaBase):
 # object
 
 # discriminator
+
+class CMDObjectSchemaDiscriminatorField(ModelType):
+
+    def __init__(self, model_spec=None, **kwargs):
+        super(CMDObjectSchemaDiscriminatorField, self).__init__(
+            model_spec=model_spec or CMDObjectSchemaDiscriminator,
+            serialize_when_none=False,
+            **kwargs
+        )
+
+    def export(self, value, format, context=None):
+        if hasattr(value, 'frozen') and value.frozen:
+            # frozen schema base will be ignored
+            return None
+        return super(CMDObjectSchemaDiscriminatorField, self).export(value, format, context)
+
+
 class CMDObjectSchemaDiscriminator(Model):
     ARG_TYPE = CMDObjectArg
 
@@ -480,12 +531,8 @@ class CMDObjectSchemaDiscriminator(Model):
     frozen = CMDBooleanField()  # frozen schema will not be used
 
     # properties as nodes
-    props = ListType(
-        PolyModelType(CMDSchema, allow_subclasses=True),
-    )
-    discriminators = ListType(
-        ModelType('CMDObjectSchemaDiscriminator'),
-    )
+    props = ListType(CMDSchemaField())
+    discriminators = ListType(CMDObjectSchemaDiscriminatorField(model_spec='CMDObjectSchemaDiscriminator'))
 
     class Options:
         serialize_when_none = False
@@ -532,7 +579,7 @@ class CMDObjectSchemaAdditionalProperties(Model):
     frozen = CMDBooleanField()
 
     # properties as nodes
-    item = PolyModelType(CMDSchemaBase, allow_subclasses=True)
+    item = CMDSchemaBaseField()
 
     def diff(self, old, level):
         if self.frozen and old.frozen:
@@ -550,6 +597,23 @@ class CMDObjectSchemaAdditionalProperties(Model):
         return diff
 
 
+class CMDObjectSchemaAdditionalPropertiesField(ModelType):
+
+    def __init__(self, **kwargs):
+        super(CMDObjectSchemaAdditionalPropertiesField, self).__init__(
+            model_spec=CMDObjectSchemaAdditionalProperties,
+            serialized_name="additionalProps",
+            deserialize_from="additionalProps",
+            serialize_when_none=False,
+            **kwargs
+        )
+
+    def export(self, value, format, context=None):
+        if value.frozen:
+            return None
+        return super(CMDObjectSchemaAdditionalPropertiesField, self).export(value, format, context)
+
+
 class CMDObjectSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "object"
     ARG_TYPE = CMDObjectArgBase
@@ -559,17 +623,9 @@ class CMDObjectSchemaBase(CMDSchemaBase):
         serialized_name='format',
         deserialize_from='format',
     )
-    props = ListType(
-        PolyModelType(CMDSchema, allow_subclasses=True),
-    )
-    discriminators = ListType(
-        ModelType(CMDObjectSchemaDiscriminator),
-    )
-    additional_props = ModelType(
-        CMDObjectSchemaAdditionalProperties,
-        serialized_name="additionalProps",
-        deserialize_from="additionalProps",
-    )
+    props = ListType(CMDSchemaField())
+    discriminators = ListType(CMDObjectSchemaDiscriminatorField())
+    additional_props = CMDObjectSchemaAdditionalPropertiesField()
 
     def _diff_base(self, old, level, diff):
         diff = super(CMDObjectSchemaBase, self)._diff_base(old, level, diff)
@@ -649,7 +705,7 @@ class CMDArraySchemaBase(CMDSchemaBase):
         serialized_name='format',
         deserialize_from='format',
     )
-    item = PolyModelType(CMDSchemaBase, allow_subclasses=True, required=True)
+    item = CMDSchemaBaseField()
 
     def _get_type(self):
         return f"{self.TYPE_VALUE}<{self.item.type}>"
