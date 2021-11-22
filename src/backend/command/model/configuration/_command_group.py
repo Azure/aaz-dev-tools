@@ -13,10 +13,12 @@ class CMDCommandGroup(Model):
 
     # properties as nodes
     help = ModelType(CMDHelp, required=True)
-    commands = ListType(ModelType(CMDCommand), serialize_when_none=False)  # sub commands
+    commands = ListType(ModelType(CMDCommand))  # sub commands
     command_groups = ListType(
         ModelType("CMDCommandGroup"),
         serialized_name='commandGroups',
         deserialize_from='commandGroups',
-        serialize_when_none=False,
     )  # sub command groups
+
+    class Options:
+        serialize_when_none = False

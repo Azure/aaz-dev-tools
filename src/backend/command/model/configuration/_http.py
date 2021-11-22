@@ -5,9 +5,9 @@
 from schematics.models import Model
 from schematics.types import StringType, ModelType, ListType, PolyModelType, IntType
 
-from ._fields import CMDVariantField, CMDBooleanField, CMDURLPathField
+from ._fields import CMDVariantField, CMDBooleanField, CMDURLPathField, CMDDescriptionField
 from ._http_body import CMDHttpBody
-from ._schema import CMDSchema
+from ._schema import CMDSchemaField
 from ._arg_builder import CMDArgBuilder
 from ._arg import CMDClsArg
 from msrestazure.tools import parse_resource_id, is_valid_resource_id
@@ -15,11 +15,11 @@ from msrestazure.tools import parse_resource_id, is_valid_resource_id
 
 class CMDHttpRequestArgs(Model):
     # properties as nodes
-    params = ListType(PolyModelType(CMDSchema, allow_subclasses=True))
-    consts = ListType(PolyModelType(CMDSchema, allow_subclasses=True))
+    params = ListType(CMDSchemaField())
+    consts = ListType(CMDSchemaField())
 
     class Options:
-        serialize_when_none = True
+        serialize_when_none = False
 
 
 class CMDHttpRequestPath(CMDHttpRequestArgs):
@@ -108,7 +108,7 @@ class CMDHttpRequest(Model):
     body = PolyModelType(CMDHttpBody, allow_subclasses=True)
 
     class Options:
-        serialize_when_none = True
+        serialize_when_none = False
 
     def generate_args(self, path):
         args = []
@@ -129,7 +129,7 @@ class CMDHttpResponseHeaderItem(Model):
     var = CMDVariantField()
 
     class Options:
-        serialize_when_none = True
+        serialize_when_none = False
 
 
 class CMDHttpResponseHeader(Model):
@@ -137,7 +137,7 @@ class CMDHttpResponseHeader(Model):
     items = ListType(ModelType(CMDHttpResponseHeaderItem))
 
     class Options:
-        serialize_when_none = True
+        serialize_when_none = False
 
 
 class CMDHttpResponse(Model):
@@ -151,14 +151,14 @@ class CMDHttpResponse(Model):
         serialized_name='isError',
         deserialize_from='isError'
     )
-    description = StringType(required=True)
+    description = CMDDescriptionField(required=True)
 
     # properties as nodes
     header = ModelType(CMDHttpResponseHeader)
     body = PolyModelType(CMDHttpBody, allow_subclasses=True)
 
     class Options:
-        serialize_when_none = True
+        serialize_when_none = False
 
 
 class CMDHttpAction(Model):

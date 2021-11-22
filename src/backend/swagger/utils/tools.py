@@ -7,7 +7,7 @@
 URL_PARAMETER_PLACEHOLDER = "{}"
 
 
-def swagger_path_to_resource_id(path):
+def swagger_resource_path_to_resource_id(path):
     path_parts = path.split("?", maxsplit=1)
     url_parts = path_parts[0].split("/")
     idx = 2  # ignore to the parameter name in first part of url, such as `/{parameter}` or `/{parameter}/...`

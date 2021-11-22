@@ -28,10 +28,10 @@ class CommandGenerator:
 
     _inflect_engine = inflect.engine()
 
-    def __init__(self, module_name):
+    def __init__(self, module_name, swagger_path=None):
         self.loader = SwaggerLoader()
         self.specs = SwaggerSpecs(
-            folder_path=config.SWAGGER_PATH
+            folder_path=swagger_path or config.SWAGGER_PATH
         )
         self.module, self.rps = self._setup_module(module_name)
 
@@ -307,7 +307,7 @@ class CommandGenerator:
             if part.startswith('{'):
                 continue
             name = camel_case_to_snake_case(part, '-')
-            singular_name = cls._inflect_engine.singular_noun(name)
+            singular_name = cls._inflect_engine.singular_noun(name) or name
             names.append(singular_name)
 
         return " ".join(names)

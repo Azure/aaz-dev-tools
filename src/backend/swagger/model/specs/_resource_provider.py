@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 import yaml
 
-from swagger.utils.tools import swagger_path_to_resource_id
+from swagger.utils.tools import swagger_resource_path_to_resource_id
 from ._resource import Resource, ResourceVersion
 from ._utils import map_path_2_repo
 
@@ -197,7 +197,7 @@ class ResourceProvider:
 
         for path, value in body.get('paths', {}).items():
             resource = Resource(
-                resource_id=swagger_path_to_resource_id(path),
+                resource_id=swagger_resource_path_to_resource_id(path),
                 path=path, version=version, file_path=file_path, resource_provider=self, body=value)
             resources.append(resource)
 
@@ -205,7 +205,7 @@ class ResourceProvider:
         #   alternative to Paths Object that allows Path Item Object to have query parameters for non pure REST APIs
         for path, value in body.get('x-ms-paths', {}).items():
             resource = Resource(
-                resource_id=swagger_path_to_resource_id(path),
+                resource_id=swagger_resource_path_to_resource_id(path),
                 path=path, version=version, file_path=file_path, resource_provider=self, body=value)
             resources.append(resource)
 

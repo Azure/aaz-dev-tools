@@ -22,7 +22,7 @@ class CMDArgBuilder:
             if isinstance(schema, CMDSchema):
                 if not arg_var.endswith("$"):
                     arg_var += '.'
-                arg_var += f'{schema.name}'
+                arg_var += f'{schema.name}'.replace('$', '')  # some schema name may contain $
             else:
                 raise NotImplementedError()
         else:
@@ -38,7 +38,7 @@ class CMDArgBuilder:
                     if isinstance(schema, CMDObjectSchemaDiscriminator):
                         arg_var += f'{schema.value}'
                     elif isinstance(schema, CMDSchema):
-                        arg_var += f'{schema.name}'
+                        arg_var += f'{schema.name}'.replace('$', '')  # some schema name may contain $
                     else:
                         raise NotImplementedError()
             else:
@@ -171,6 +171,15 @@ class CMDArgBuilder:
             return blk
         return None
 
+    def get_hide(self):
+        if getattr(self.schema, 'name', None) == 'id' and not self.get_required() and self._parent:
+            # some resource will have optional 'id' property, if it also has 'name' property,
+            # the 'id' argument will be hidden by default.
+            for prop in self._parent.schema.props:
+                if prop.name == 'name':
+                    return True
+        return False
+
     def get_var(self):
         return self._arg_var
 
@@ -185,7 +194,7 @@ class CMDArgBuilder:
         if isinstance(self.schema, CMDObjectSchemaDiscriminator):
             opt_name = self._build_option_name(self.schema.value)
         elif isinstance(self.schema, CMDSchema):
-            opt_name = self._build_option_name(self.schema.name)
+            opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
         else:
             raise NotImplementedError()
         return [opt_name, ]
