@@ -24,4 +24,5 @@ router.register(r'customizations', views.CustomizationView, 'customization')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('api/specifications', views.list_specifications)
 ]

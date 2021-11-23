@@ -12,11 +12,14 @@ class App extends Component {
         module_name: "",
         module_path: "",
       },
+      mgmtPlaneSpecs: null,
+      dataPlaneSpecs: null
     };
   }
 
   componentDidMount(){
     this.refreshList();
+    this.listAllSpecs();
   }
 
   refreshList = () => {
@@ -25,6 +28,14 @@ class App extends Component {
       .then((res) => this.setState({ customizationList: res.data }))
       .catch((err) => console.log(err));
   };
+
+  listAllSpecs = () => {
+    axios
+      .get("/api/specifications")
+      .then((res) => this.setState({ mgmtPlaneSpecs: res.data[0], dataPlaneSpecs: res.data[1]}))
+      .catch((err) => console.log(err));
+  };
+
   toggle = () => {
     this.setState({ modal: !this.state.modal });
   };
