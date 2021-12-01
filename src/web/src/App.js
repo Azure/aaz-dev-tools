@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import axios from "axios";
-import { ListGroup, ListGroupItem} from "reactstrap";
+import { ListGroup, ListGroupItem, InputGroup, Input, Button} from "reactstrap";
 import {Accordion} from "react-bootstrap"
 
 class App extends Component {
@@ -14,7 +14,10 @@ class App extends Component {
       //   module_path: "",
       // },
       mgmtPlaneSpecs: [],
-      dataPlaneSpecs: []
+      dataPlaneSpecs: [],
+      mgmtPlaneSpec: null,
+      dataPlaneSpec: null,
+      moduleName: ""
     };
   }
 
@@ -31,12 +34,43 @@ class App extends Component {
 
   listAllSpecs = () => {
     axios
-      .get("/api/specifications")
+      .get("/specifications")
       .then((res) => {
-        this.setState({ mgmtPlaneSpecs: res.data[0], dataPlaneSpecs: res.data[1]})
+        this.setState({ mgmtPlaneSpecs: res.data["mgmt"], dataPlaneSpecs: res.data["data"]})
       })
       .catch((err) => console.log(err));
   };
+
+  handleSearch = e => {
+    // axios
+    //   .get("/specification?name="+e.target.value)
+    //   .then((res) => {
+    //     if (res.data["mgmt"]||res.data["data"]) {
+    //       this.setState({ mgmtPlaneSpec: res.data["mgmt"], dataPlaneSpec: res.data["data"]})
+    //     } else {
+    //       this.setState({ mgmtPlaneSpec: [], dataPlaneSpec: []})
+    //     }
+    //   })
+    //   .catch((err) => console.log(err));
+    if (this.state.moduleName in this.state.mgmtPlaneSpecs){
+      let mgmtPlaneSpec = {}
+      mgmtPlaneSpec[this.state.moduleName] = this.state.mgmtPlaneSpecs[this.state.moduleName]
+      this.setState({ mgmtPlaneSpec: mgmtPlaneSpec})
+    } else {
+      this.setState({ mgmtPlaneSpec: null})
+    }
+    if (this.state.moduleName in this.state.dataPlaneSpecs){
+      let dataPlaneSpec = {}
+      dataPlaneSpec[this.state.moduleName] = this.state.dataPlaneSpecs[this.state.moduleName]
+      this.setState({ dataPlaneSpec: dataPlaneSpec})
+    } else {
+      this.setState({ dataPlaneSpec: null})
+    }
+  }
+
+  handleInput = e => {
+    this.setState({moduleName: e.target.value})
+  }
 
   // toggle = () => {
   //   this.setState({ modal: !this.state.modal });
@@ -180,20 +214,47 @@ class App extends Component {
             onSave={this.handleSubmit}
           />
         ) : null} */}
-        <Accordion>
-          <Accordion.Item eventKey="0">
-            <Accordion.Header>Management Plane</Accordion.Header>
-            <Accordion.Body>
-              {this.getModule(this.state.mgmtPlaneSpecs)}
-            </Accordion.Body>
-          </Accordion.Item>
-          <Accordion.Item eventKey="1">
-            <Accordion.Header>Data Plane</Accordion.Header>
-            <Accordion.Body>
-              {this.getModule(this.state.dataPlaneSpecs)}
-            </Accordion.Body>
-          </Accordion.Item>
-        </Accordion>
+        {/* <InputGroup>
+          <Input placeholder="Module Name" value={this.state.moduleName} onChange={this.handleInput}/>
+          <Button onClick={this.handleSearch}>Search</Button>
+        </InputGroup>
+        <br/> */}
+        {!(this.state.mgmtPlaneSpec||this.state.dataPlaneSpec) &&
+          <Accordion>
+            <Accordion.Item eventKey="0">
+              <Accordion.Header>Management Plane</Accordion.Header>
+              <Accordion.Body>
+                {this.getModule(this.state.mgmtPlaneSpecs)}
+              </Accordion.Body>
+            </Accordion.Item>
+            <Accordion.Item eventKey="1">
+              <Accordion.Header>Data Plane</Accordion.Header>
+              <Accordion.Body>
+                {this.getModule(this.state.dataPlaneSpecs)}
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
+        }
+        {/* {(this.state.mgmtPlaneSpec||this.state.dataPlaneSpec) &&
+          <Accordion>
+            {this.state.mgmtPlaneSpec && 
+            <Accordion.Item eventKey="0">
+              <Accordion.Header>Management</Accordion.Header>
+              <Accordion.Body>
+                {this.getModule(this.state.mgmtPlaneSpec)}
+              </Accordion.Body>
+            </Accordion.Item>
+            }
+            {this.state.dataPlaneSpec &&
+            <Accordion.Item eventKey="1">
+              <Accordion.Header>Data</Accordion.Header>
+              <Accordion.Body>
+                {this.getModule(this.state.dataPlaneSpec)}
+              </Accordion.Body>
+            </Accordion.Item>
+            }
+          </Accordion>
+        } */}
       </main>
     );
   }

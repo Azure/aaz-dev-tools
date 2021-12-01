@@ -15,6 +15,7 @@ python-Levenshtein = "~=0.12.2"
 django = "*"
 django-cors-headers = "*"
 djangorestframework = "*"
+flask = "*"
 
 [dev-packages]
 
