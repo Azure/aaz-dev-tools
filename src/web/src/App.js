@@ -1,7 +1,8 @@
 import React, { Component } from "react";
 import axios from "axios";
-import { ListGroup, ListGroupItem, InputGroup, Input, Button} from "reactstrap";
-import {Accordion} from "react-bootstrap"
+import { InputGroup, Input, Button} from "reactstrap";
+import ModuleAccordion from "./components/ModuleAccordion"
+
 
 class App extends Component {
   constructor(props) {
@@ -15,9 +16,10 @@ class App extends Component {
       // },
       mgmtPlaneSpecs: [],
       dataPlaneSpecs: [],
-      mgmtPlaneSpec: null,
-      dataPlaneSpec: null,
-      moduleName: ""
+      allMgmtPlaneSpecs: [],
+      allDataPlaneSpecs: [],
+      moduleName: "",
+      moduleFound: false
     };
   }
 
@@ -36,35 +38,37 @@ class App extends Component {
     axios
       .get("/specifications")
       .then((res) => {
-        this.setState({ mgmtPlaneSpecs: res.data["mgmt"], dataPlaneSpecs: res.data["data"]})
+        this.setState({ allMgmtPlaneSpecs: res.data["mgmt"], 
+                        allDataPlaneSpecs: res.data["data"],
+                        mgmtPlaneSpecs: res.data["mgmt"],
+                        dataPlaneSpecs: res.data["data"],
+                      })
       })
       .catch((err) => console.log(err));
   };
 
-  handleSearch = e => {
-    // axios
-    //   .get("/specification?name="+e.target.value)
-    //   .then((res) => {
-    //     if (res.data["mgmt"]||res.data["data"]) {
-    //       this.setState({ mgmtPlaneSpec: res.data["mgmt"], dataPlaneSpec: res.data["data"]})
-    //     } else {
-    //       this.setState({ mgmtPlaneSpec: [], dataPlaneSpec: []})
-    //     }
-    //   })
-    //   .catch((err) => console.log(err));
-    if (this.state.moduleName in this.state.mgmtPlaneSpecs){
-      let mgmtPlaneSpec = {}
-      mgmtPlaneSpec[this.state.moduleName] = this.state.mgmtPlaneSpecs[this.state.moduleName]
-      this.setState({ mgmtPlaneSpec: mgmtPlaneSpec})
+  handleSearch = () => {
+    let found = false
+    if (this.state.moduleName in this.state.allMgmtPlaneSpecs){
+      let mgmtPlaneSpecs = {}
+      mgmtPlaneSpecs[this.state.moduleName] = this.state.allMgmtPlaneSpecs[this.state.moduleName]
+      this.setState({ mgmtPlaneSpecs: mgmtPlaneSpecs})
+      found = true
     } else {
-      this.setState({ mgmtPlaneSpec: null})
+      this.setState({ mgmtPlaneSpecs: null})
     }
-    if (this.state.moduleName in this.state.dataPlaneSpecs){
-      let dataPlaneSpec = {}
-      dataPlaneSpec[this.state.moduleName] = this.state.dataPlaneSpecs[this.state.moduleName]
-      this.setState({ dataPlaneSpec: dataPlaneSpec})
+    if (this.state.moduleName in this.state.allDataPlaneSpecs){
+      let dataPlaneSpecs = {}
+      dataPlaneSpecs[this.state.moduleName] = this.state.allDataPlaneSpecs[this.state.moduleName]
+      this.setState({ dataPlaneSpecs: dataPlaneSpecs})
+      found = true
     } else {
-      this.setState({ dataPlaneSpec: null})
+      this.setState({ dataPlaneSpecs: null})
+    }
+    if (!found){
+      this.setState({ mgmtPlaneSpecs: null, dataPlaneSpecs: null, moduleFound: false})
+    } else {
+      this.setState({moduleFound: true})
     }
   }
 
@@ -150,39 +154,16 @@ class App extends Component {
   //   ));
   // };
 
-  getVersion = versionList => {
-    return versionList.map(version=>{
-      return <ListGroupItem>{version}</ListGroupItem>
-    })
+  
+
+  searchBar = () => {
+    return <InputGroup>
+            <Input placeholder="Module Name" value={this.state.moduleName} onChange={this.handleInput}/>
+            <Button onClick={this.handleSearch}>Search</Button>
+          </InputGroup>
   }
 
-  getResourceId = resourceIdList => {
-    return resourceIdList.map((resourceId) =>{
-      let id = Object.keys(resourceId)[0]
-      return <Accordion>
-            <Accordion.Item eventKey={id}>
-              <Accordion.Header>{id}</Accordion.Header>
-              <Accordion.Body>
-                <ListGroup>{this.getVersion(resourceId[id])}</ListGroup>
-              </Accordion.Body>
-            </Accordion.Item>
-          </Accordion>
-      }
-    )
-  }
-
-  getModule = spec =>{
-    return Object.keys(spec).map((moduleName) =>{
-      return <Accordion>
-              <Accordion.Item eventKey={moduleName}>
-                <Accordion.Header>{moduleName}</Accordion.Header>
-                <Accordion.Body>
-                  {this.getResourceId(spec[moduleName])}
-                </Accordion.Body>
-              </Accordion.Item>
-        </Accordion>
-    })
-  } 
+  
 
   render() {
     
@@ -214,47 +195,11 @@ class App extends Component {
             onSave={this.handleSubmit}
           />
         ) : null} */}
-        {/* <InputGroup>
-          <Input placeholder="Module Name" value={this.state.moduleName} onChange={this.handleInput}/>
-          <Button onClick={this.handleSearch}>Search</Button>
-        </InputGroup>
-        <br/> */}
-        {!(this.state.mgmtPlaneSpec||this.state.dataPlaneSpec) &&
-          <Accordion>
-            <Accordion.Item eventKey="0">
-              <Accordion.Header>Management Plane</Accordion.Header>
-              <Accordion.Body>
-                {this.getModule(this.state.mgmtPlaneSpecs)}
-              </Accordion.Body>
-            </Accordion.Item>
-            <Accordion.Item eventKey="1">
-              <Accordion.Header>Data Plane</Accordion.Header>
-              <Accordion.Body>
-                {this.getModule(this.state.dataPlaneSpecs)}
-              </Accordion.Body>
-            </Accordion.Item>
-          </Accordion>
-        }
-        {/* {(this.state.mgmtPlaneSpec||this.state.dataPlaneSpec) &&
-          <Accordion>
-            {this.state.mgmtPlaneSpec && 
-            <Accordion.Item eventKey="0">
-              <Accordion.Header>Management</Accordion.Header>
-              <Accordion.Body>
-                {this.getModule(this.state.mgmtPlaneSpec)}
-              </Accordion.Body>
-            </Accordion.Item>
-            }
-            {this.state.dataPlaneSpec &&
-            <Accordion.Item eventKey="1">
-              <Accordion.Header>Data</Accordion.Header>
-              <Accordion.Body>
-                {this.getModule(this.state.dataPlaneSpec)}
-              </Accordion.Body>
-            </Accordion.Item>
-            }
-          </Accordion>
-        } */}
+        <this.searchBar/>
+        <br/>
+        <ModuleAccordion hidden={!this.state.moduleFound} mgmtPlaneSpecs={this.state.mgmtPlaneSpecs} dataPlaneSpecs={this.state.dataPlaneSpecs}></ModuleAccordion>
+        <ModuleAccordion hidden={this.state.moduleFound} mgmtPlaneSpecs={this.state.allMgmtPlaneSpecs} dataPlaneSpecs={this.state.allDataPlaneSpecs}></ModuleAccordion>
+        
       </main>
     );
   }
