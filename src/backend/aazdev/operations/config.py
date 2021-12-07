@@ -4,16 +4,8 @@
 # license information.
 # -----------------------------------------------------------------------------
 
-from schematics.types import ListType, ModelType
-
-from .xml import XMLModel
-from command.model.configuration import CMDResource, CMDCommandGroup
+from command.model.configuration import CMDResource, CMDConfiguration
 from swagger.controller.command_generator import CommandGenerator
-
-
-class CodeGen(XMLModel):
-    resource = ListType(ModelType(CMDResource), min_size=1)
-    commandGroup = ModelType(CMDCommandGroup)
 
 
 def generate_config(swagger_path, config_path, module_name, resource_id, api_version):
@@ -22,7 +14,7 @@ def generate_config(swagger_path, config_path, module_name, resource_id, api_ver
     resources = generator.load_resources([cmd_resource])
     command_group = generator.create_draft_command_group(resources[resource_id])
 
-    model = CodeGen({"resource": [cmd_resource], "commandGroup": command_group})
+    model = CMDConfiguration({"resources": [cmd_resource], "command_group": command_group})
     with open(config_path, "w") as fp:
         fp.write(model.to_xml())
     return "Done."
