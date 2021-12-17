@@ -4,11 +4,8 @@
 # license information.
 # -----------------------------------------------------------------------------
 
-import json
-
-from command.model.configuration import CMDResource
+from command.model.configuration import CMDResource, CMDConfiguration
 from swagger.controller.command_generator import CommandGenerator
-import os
 
 
 def generate_config(swagger_path, config_path, module_name, resource_id, api_version):
@@ -17,9 +14,7 @@ def generate_config(swagger_path, config_path, module_name, resource_id, api_ver
     resources = generator.load_resources([cmd_resource])
     command_group = generator.create_draft_command_group(resources[resource_id])
 
-    config = command_group.to_primitive()
-
-    os.makedirs(os.path.dirname(config_path), exist_ok=True)
-    with open(config_path, 'w') as f:
-        json.dump(config, f, indent=4)
-    return "Done"
+    model = CMDConfiguration({"resources": [cmd_resource], "command_group": command_group})
+    with open(config_path, "w") as fp:
+        fp.write(model.to_xml())
+    return "Done."
