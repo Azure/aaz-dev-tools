@@ -1,4 +1,7 @@
 from ..model.specs import SwaggerSpecs
+import os
+
+swagger_path = os.environ['SWAGGER_PATH']
 
 def get_module_map(modules, module_name=None):
         module_map = {}
@@ -13,7 +16,6 @@ def get_module_map(modules, module_name=None):
 
 
 def generate_specs():
-    swagger_path = "C:\\Users\\zhiyihuang\\Repos\\azure-rest-api-specs"
     specs = SwaggerSpecs(folder_path=swagger_path)
     mgmt_plane_modules = specs.get_mgmt_plane_modules()
     data_plane_modules = specs.get_data_plane_modules()
@@ -24,7 +26,6 @@ def generate_specs():
 
 
 def get_specs_for_module(module_name):
-    swagger_path = "C:\\Users\\zhiyihuang\\Repos\\azure-rest-api-specs"
     specs = SwaggerSpecs(folder_path=swagger_path)
     mgmt_plane_modules = specs.get_mgmt_plane_modules()
     data_plane_modules = specs.get_data_plane_modules()
