@@ -1,5 +1,6 @@
 from ..model.specs import SwaggerSpecs
 import os
+import json
 
 swagger_path = os.environ['SWAGGER_PATH']
 
@@ -24,6 +25,17 @@ def generate_specs():
     data_plane_map = get_module_map(data_plane_modules)
     return {"mgmt":mgmt_plane_map, "data": data_plane_map}
 
+def save_specs(filename):
+    data = generate_specs()
+    with open(filename, 'w') as outfile:
+        json.dump(data, outfile)
+    return data
+
+def load_specs(filename):
+    if not os.path.isfile(filename):
+        return save_specs(filename)
+    with open(filename, 'r') as infile:
+        return json.load(infile)
 
 def get_specs_for_module(module_name):
     specs = SwaggerSpecs(folder_path=swagger_path)

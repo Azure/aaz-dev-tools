@@ -1,5 +1,5 @@
 from flask import Flask, request
-from swagger.view.specs import generate_specs, get_specs_for_module
+from swagger.view.specs import load_specs, get_specs_for_module
 import webbrowser
 from threading import Timer
 
@@ -11,7 +11,7 @@ def index():
 
 @app.route("/specifications")
 def get_specs():
-    return generate_specs()
+    return load_specs('specs.json')
 
 @app.route("/specification")
 def get_specs_for():
