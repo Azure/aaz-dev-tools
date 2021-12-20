@@ -247,7 +247,7 @@
                 <arg var="$subscription" type="@Subscription" required="true"/>
             </argGroup>
             <operation longRunning="false">
-                <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                <http clientType="@MgmtClient" path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
                     <request method="put">
                         <path>
                             <param name="subscriptionId" arg="$subscription"/>
@@ -1247,7 +1247,7 @@
                 </http>
             </operation>
 
-            <output type="object" ref="$instance" clientclientFlatten="true"/>
+            <output type="object" ref="$instance" clientFlatten="true"/>
         </command>
 
         <!--  monitor data-collection rule list  -->
@@ -1461,7 +1461,7 @@
                 <operation>
                     <buildFilter var="$index" idx="-1"/>
                 </operation>
-                <output type="object" ref="$instance.properties.destinations.logAnalytics[$index]" clientclientFlatten="true"/>
+                <output type="object" ref="$instance.properties.destinations.logAnalytics[$index]" clientFlatten="true"/>
             </command>
 
             <!--  monitor data-collection rule log-analytics remove  -->

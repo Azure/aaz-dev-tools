@@ -2,7 +2,7 @@ from schematics.models import Model
 from schematics.types import StringType, ModelType, ListType, DictType, BooleanType, PolyModelType
 
 from command.model.configuration import CMDHttpOperation, CMDHttpAction, CMDHttpRequest, CMDHttpRequestPath, \
-    CMDHttpRequestQuery, CMDHttpRequestHeader, CMDHttpJsonBody, CMDJson
+    CMDHttpRequestQuery, CMDHttpRequestHeader, CMDHttpJsonBody, CMDJson, CMDHttpOperationLongRunning
 from swagger.utils import exceptions
 from .external_documentation import ExternalDocumentation
 from .fields import MimeField, XmsRequestIdField, XmsExamplesField, SecurityRequirementField, XPublishField, \
@@ -45,7 +45,7 @@ class Operation(Model, Linkable):
 
     x_ms_pageable = XmsPageableField()  # TODO:
     x_ms_long_running_operation = XmsLongRunningOperationField(default=False)
-    x_ms_long_running_operation_options = XmsLongRunningOperationOptionsField()  # TODO:
+    x_ms_long_running_operation_options = XmsLongRunningOperationOptionsField()
 
     x_ms_odata = XmsODataField()  # TODO: # indicates the operation includes one or more OData query parameters.
     x_ms_request_id = XmsRequestIdField()
@@ -104,7 +104,9 @@ class Operation(Model, Linkable):
     def to_cmd_operation(self, path, method, parent_parameters, mutability):
         cmd_op = CMDHttpOperation()
         if self.x_ms_long_running_operation:
-            cmd_op.long_running = True
+            cmd_op.long_running = CMDHttpOperationLongRunning()
+            if self.x_ms_long_running_operation_options:
+                cmd_op.long_running.final_state_via = self.x_ms_long_running_operation_options.final_state_via
 
         cmd_op.operation_id = self.operation_id
         cmd_op.description = self.description

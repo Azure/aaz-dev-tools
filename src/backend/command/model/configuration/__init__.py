@@ -38,7 +38,7 @@ from ._http_body import CMDHttpBody, CMDHttpJsonBody
 from ._instance_update import CMDInstanceUpdateAction, \
     CMDJsonInstanceUpdateAction, \
     CMDGenericInstanceUpdateMethod, CMDGenericInstanceUpdateAction
-from ._operation import CMDOperation, CMDHttpOperation, CMDInstanceUpdateOperation
+from ._operation import CMDOperation, CMDHttpOperation, CMDInstanceUpdateOperation, CMDHttpOperationLongRunning
 from ._output import CMDOutput, CMDObjectOutput, CMDArrayOutput, CMDStringOutput
 from ._resource import CMDResource
 from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \

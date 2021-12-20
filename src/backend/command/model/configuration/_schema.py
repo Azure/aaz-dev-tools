@@ -392,6 +392,16 @@ class CMDPasswordSchema(CMDStringSchema, CMDPasswordSchemaBase):
     ARG_TYPE = CMDPasswordArg
 
 
+# ResourceId
+class CMDResourceIdSchemaBase(CMDStringSchemaBase):
+    TYPE_VALUE = "resourceId"
+    pass
+
+
+class CMDResourceIdSchema(CMDStringSchema, CMDResourceIdSchemaBase):
+    pass
+
+
 # integer
 class CMDIntegerSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "integer"

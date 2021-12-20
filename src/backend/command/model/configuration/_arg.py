@@ -284,6 +284,15 @@ class CMDPasswordArg(CMDStringArg, CMDPasswordArgBase):
     pass
 
 
+# resource-id
+class CMDResourceIdArgBase(CMDStringArgBase):
+    TYPE_VALUE = "resourceId"
+
+
+class CMDResourceIdArg(CMDStringArg, CMDResourceIdArgBase):
+    pass
+
+
 # integer
 class CMDIntegerArgBase(CMDArgBase):
     TYPE_VALUE = "integer"
