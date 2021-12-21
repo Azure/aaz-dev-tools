@@ -1,7 +1,10 @@
 import React, { Component } from "react";
+import { Routes, Route} from "react-router-dom";
 import axios from "axios";
-import { InputGroup, Input, Button} from "reactstrap";
+import { InputGroup, Input, Button, } from "reactstrap";
+import {Navbar, Nav, Container} from "react-bootstrap"
 import ModuleAccordion from "./components/ModuleAccordion"
+import Editor from "./components/Editor";
 
 
 class App extends Component {
@@ -18,7 +21,7 @@ class App extends Component {
   }
 
   componentDidMount(){
-    this.listAllSpecs();
+   this.listAllSpecs();
   }
 
   listAllSpecs = () => {
@@ -63,21 +66,42 @@ class App extends Component {
     this.setState({moduleName: e.target.value})
   }
 
-  searchBar = () => {
+  SearchBar = () => {
     return <InputGroup>
             <Input placeholder="Module Name" value={this.state.moduleName} onChange={this.handleInput}/>
             <Button onClick={this.handleSearch}>Search</Button>
           </InputGroup>
   }
 
+  Specs = () => {
+    return  <div className="container-fluid row">
+              <this.SearchBar/>
+              <br/>
+              <ModuleAccordion hidden={!this.state.moduleFound} mgmtPlaneSpecs={this.state.mgmtPlaneSpecs} dataPlaneSpecs={this.state.dataPlaneSpecs}></ModuleAccordion>
+              <ModuleAccordion hidden={this.state.moduleFound} mgmtPlaneSpecs={this.state.allMgmtPlaneSpecs} dataPlaneSpecs={this.state.allDataPlaneSpecs}></ModuleAccordion>
+            </div>
+      
+  }
+
+  
+
   render() {
     return (
       <main className="container">
-        <this.searchBar/>
-        <br/>
-        <ModuleAccordion hidden={!this.state.moduleFound} mgmtPlaneSpecs={this.state.mgmtPlaneSpecs} dataPlaneSpecs={this.state.dataPlaneSpecs}></ModuleAccordion>
-        <ModuleAccordion hidden={this.state.moduleFound} mgmtPlaneSpecs={this.state.allMgmtPlaneSpecs} dataPlaneSpecs={this.state.allDataPlaneSpecs}></ModuleAccordion>
-      </main>
+        <Navbar bg="dark" variant="dark">
+          <Container>
+          <Nav className="me-auto">
+            <Nav.Link href="/">Specifications</Nav.Link>
+            <Nav.Link href="/editor">Editor</Nav.Link>
+          </Nav>
+          </Container>
+        </Navbar>
+
+        <Routes>
+          <Route path="/" element={<this.Specs />} />
+          <Route path="editor" element={<Editor />} />
+        </Routes>
+        </main>
     );
   }
 }
