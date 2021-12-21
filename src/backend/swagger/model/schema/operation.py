@@ -4,6 +4,7 @@ from schematics.types import StringType, ModelType, ListType, DictType, BooleanT
 from command.model.configuration import CMDHttpOperation, CMDHttpAction, CMDHttpRequest, CMDHttpRequestPath, \
     CMDHttpRequestQuery, CMDHttpRequestHeader, CMDHttpJsonBody, CMDJson, CMDHttpOperationLongRunning
 from swagger.utils import exceptions
+from swagger.utils.tools import swagger_resource_path_to_resource_id_template
 from .external_documentation import ExternalDocumentation
 from .fields import MimeField, XmsRequestIdField, XmsExamplesField, SecurityRequirementField, XPublishField, \
     XSfCodeGenField, XmsClientNameField
@@ -78,8 +79,25 @@ class Operation(Model, Linkable):
                 assert isinstance(param, ParameterBase)
                 self.parameters[idx] = param
 
+        # current response
+
+        # verify path is resource id template or not
+        resource_id_template = None
+        if self.traces[-1] == 'get':
+            # path should support get method
+            resource_path = self.traces[-2]
+            resource_id_template = swagger_resource_path_to_resource_id_template(resource_path)
+
         for key, response in self.responses.items():
-            response.link(swagger_loader, *self.traces, 'responses', key)
+            if resource_id_template and key != "default" and int(key) < 300:
+                response.link(
+                    swagger_loader, *self.traces, 'responses', key,
+                    resource_id_template=resource_id_template
+                )
+            else:
+                response.link(
+                    swagger_loader, *self.traces, 'responses', key
+                )
 
         # replace response reference by response instance
         for key in [*self.responses.keys()]:

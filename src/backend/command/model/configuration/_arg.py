@@ -3,7 +3,8 @@ from schematics.types import StringType, ListType, ModelType, PolyModelType
 from schematics.types.serializable import serializable
 
 from ._fields import CMDStageField, CMDVariantField, CMDPrimitiveField, CMDBooleanField, CMDClassField
-from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
+from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, \
+    CMDResourceIdFormat
 from ._help import CMDArgumentHelp
 import copy
 
@@ -259,7 +260,7 @@ class CMDDateArg(CMDStringArg, CMDDateArgBase):
 
 # date-time: As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
 class CMDDateTimeArgBase(CMDStringArgBase):
-    TYPE_VALUE = "date-time"
+    TYPE_VALUE = "dateTime"
 
 
 class CMDDateTimeArg(CMDStringArg, CMDDateTimeArgBase):
@@ -287,6 +288,12 @@ class CMDPasswordArg(CMDStringArg, CMDPasswordArgBase):
 # resource-id
 class CMDResourceIdArgBase(CMDStringArgBase):
     TYPE_VALUE = "resourceId"
+
+    fmt = ModelType(
+        CMDResourceIdFormat,
+        serialized_name='format',
+        deserialize_from='format'
+    )
 
 
 class CMDResourceIdArg(CMDStringArg, CMDResourceIdArgBase):

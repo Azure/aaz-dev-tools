@@ -9,6 +9,7 @@ from ._arg import CMDArgEnumItem, CMDArgEnum, \
     CMDDateTimeArgBase, CMDDateTimeArg, \
     CMDUuidArgBase, CMDUuidArg, \
     CMDPasswordArgBase, CMDPasswordArg, \
+    CMDResourceIdArgBase, CMDResourceIdArg, \
     CMDIntegerArgBase, CMDIntegerArg, \
     CMDInteger32ArgBase, CMDInteger32Arg, CMDInteger64ArgBase, CMDInteger64Arg, \
     CMDBooleanArgBase, CMDBooleanArg, \
@@ -28,7 +29,8 @@ from ._content import CMDJson
 from ._fields import CMDBooleanField, CMDStageEnum, CMDStageField, CMDVariantField, CMDClassField, \
     CMDPrimitiveField, CMDRegularExpressionField, CMDVersionField, CMDResourceIdField, CMDCommandNameField, \
     CMDCommandGroupNameField, CMDURLPathField
-from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
+from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, \
+    CMDResourceIdFormat
 from ._help import CMDHelp, CMDArgumentHelp
 from ._http import CMDHttpRequestArgs, CMDHttpRequestPath, CMDHttpRequestQuery, CMDHttpRequestHeader, \
     CMDHttpRequest, \
@@ -52,6 +54,7 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDDateTimeSchemaBase, CMDDateTimeSchema, \
     CMDUuidSchemaBase, CMDUuidSchema, \
     CMDPasswordSchemaBase, CMDPasswordSchema, \
+    CMDResourceIdSchemaBase, CMDResourceIdSchema, \
     CMDIntegerSchemaBase, CMDIntegerSchema, \
     CMDInteger32SchemaBase, CMDInteger32Schema, \
     CMDInteger64SchemaBase, CMDInteger64Schema, \

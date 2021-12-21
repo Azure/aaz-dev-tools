@@ -19,6 +19,7 @@ from command.model.configuration import CMDSchemaDefault,\
     CMDPasswordSchema, CMDPasswordSchemaBase, \
     CMDDurationSchema, CMDDurationSchemaBase, \
     CMDUuidSchema, CMDUuidSchemaBase, \
+    CMDResourceIdSchema, CMDResourceIdFormat, \
     CMDIntegerSchema, CMDIntegerSchemaBase, \
     CMDInteger32Schema, CMDInteger32SchemaBase, \
     CMDInteger64Schema, CMDInteger64SchemaBase, \
@@ -29,6 +30,10 @@ from command.model.configuration import CMDSchemaDefault,\
     CMDObjectSchema, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, \
     CMDArraySchema, CMDArraySchemaBase, \
     CMDClsSchema, CMDClsSchemaBase
+
+import logging
+
+logger = logging.getLogger('backend')
 
 
 def _additional_properties_claim_function(_, data):
@@ -165,7 +170,7 @@ class Schema(Model, Linkable):
     x_ms_mutability = XmsMutabilityField()
     x_ms_client_default = XmsClientDefaultField()
 
-    x_ms_azure_resource = XmsAzureResourceField()  # TODO: # indicates that the Definition Schema Object is a resource as defined by the Resource Manager API
+    x_ms_azure_resource = XmsAzureResourceField()
 
     x_ms_secret = XmsSecretField()  # TODO:
 
@@ -185,6 +190,8 @@ class Schema(Model, Linkable):
         self.ref_instance = None
         self.disc_parent = None
         self.disc_children = {}
+
+        self.resource_id_templates = set()  # valid when there's only one template
 
     def get_disc_parent(self):
         assert self.is_linked()
@@ -211,6 +218,8 @@ class Schema(Model, Linkable):
             self.ref_instance, instance_traces = swagger_loader.load_ref(self.ref, *self.traces, 'ref')
             if isinstance(self.ref_instance, Linkable):
                 self.ref_instance.link(swagger_loader, *instance_traces)
+            if self.ref_instance.x_ms_azure_resource:
+                self.x_ms_azure_resource = True
 
         if self.items is not None:
             if isinstance(self.items, list):
@@ -229,6 +238,8 @@ class Schema(Model, Linkable):
         if self.all_of is not None:
             for idx, item in enumerate(self.all_of):
                 item.link(swagger_loader, *self.traces, 'allOf', idx)
+                if item.x_ms_azure_resource:
+                    self.x_ms_azure_resource = True
 
         self._link_disc()
         if self.type and self.type != "object" and self.all_of:
@@ -576,6 +587,24 @@ class Schema(Model, Linkable):
                     model.discriminators = discriminators
 
             if prop_dict:
+                if self.x_ms_azure_resource and self.resource_id_templates:
+                    if 'id' in prop_dict:
+                        id_prop = prop_dict['id']
+                        if not isinstance(id_prop, CMDResourceIdSchema):
+                            assert isinstance(id_prop, CMDStringSchema)
+                            raw_data = id_prop.to_native()
+                            prop_dict['id'] = id_prop = CMDResourceIdSchema(raw_data=raw_data)
+                        if len(self.resource_id_templates) == 1:
+                            id_prop.fmt = CMDResourceIdFormat()
+                            id_prop.fmt.template = [*self.resource_id_templates][0]
+                        else:
+                            err = exceptions.InvalidSwaggerValueError(
+                                msg="Multi resource id templates error",
+                                key=self.traces,
+                                value=self.resource_id_templates
+                            )
+                            logger.warning(err)
+
                 model.props = []
                 for prop in prop_dict.values():
                     if model.read_only:

@@ -14,6 +14,7 @@ from ._arg import CMDStringArg, CMDStringArgBase, \
     CMDDateTimeArg, CMDDateTimeArgBase, \
     CMDUuidArg, CMDUuidArgBase, \
     CMDPasswordArg, CMDPasswordArgBase, \
+    CMDResourceIdArg, CMDResourceIdArgBase, \
     CMDBooleanArg, CMDBooleanArgBase, \
     CMDIntegerArg, CMDIntegerArgBase, \
     CMDInteger32Arg, CMDInteger32ArgBase, \
@@ -25,7 +26,7 @@ from ._arg import CMDStringArg, CMDStringArgBase, \
     CMDObjectArg, CMDObjectArgBase, CMDObjectArgAdditionalProperties, \
     CMDClsArg, CMDClsArgBase
 from ._fields import CMDVariantField, StringType, CMDClassField, CMDBooleanField, CMDPrimitiveField, CMDDescriptionField
-from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
+from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, CMDResourceIdFormat
 from ._utils import CMDDiffLevelEnum
 
 
@@ -364,7 +365,7 @@ class CMDDateSchema(CMDStringSchema, CMDDateSchemaBase):
 
 # date-time: As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
 class CMDDateTimeSchemaBase(CMDStringSchemaBase):
-    TYPE_VALUE = "date-time"
+    TYPE_VALUE = "dateTime"
     ARG_TYPE = CMDDateTimeArgBase
 
 
@@ -395,11 +396,17 @@ class CMDPasswordSchema(CMDStringSchema, CMDPasswordSchemaBase):
 # ResourceId
 class CMDResourceIdSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "resourceId"
-    pass
+    ARG_TYPE = CMDResourceIdArgBase
+
+    fmt = ModelType(
+        CMDResourceIdFormat,
+        serialized_name='format',
+        deserialize_from='format'
+    )
 
 
 class CMDResourceIdSchema(CMDStringSchema, CMDResourceIdSchemaBase):
-    pass
+    ARG_TYPE = CMDResourceIdArg
 
 
 # integer

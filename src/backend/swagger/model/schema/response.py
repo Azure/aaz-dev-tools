@@ -26,13 +26,20 @@ class Response(Model, Linkable):
 
     x_nullable = XNullableField(default=False)  # TODO: # when true, specifies that null is a valid value for the associated schema
 
-    def link(self, swagger_loader, *traces):
+    def link(self, swagger_loader, *traces, **kwargs):
         if self.is_linked():
             return
         super().link(swagger_loader, *traces)
 
         if self.schema is not None:
             self.schema.link(swagger_loader, *self.traces, 'schema')
+
+        # assign resource id template to the schema and it's ref instance
+        resource_id_template = kwargs.get('resource_id_template', None)
+        if resource_id_template and self.schema:
+            self.schema.resource_id_templates.add(resource_id_template)
+            if self.schema.ref_instance:
+                self.schema.ref_instance.resource_id_templates.add(resource_id_template)
 
         # TODO: add support for examples and x_ms_examples
 
