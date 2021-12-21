@@ -9,6 +9,9 @@ class CMDConditionOperator(Model):
     # properties as tags
     TYPE_VALUE = None
 
+    class Options:
+        _attributes = {"type"}
+
     @serializable
     def type(self):
         return self._get_type()
@@ -36,11 +39,17 @@ class CMDConditionAndOperator(CMDConditionOperator):
     # properties as nodes
     operators = ListType(PolyModelType(CMDConditionOperator, allow_subclasses=True), min_size=2)
 
+    class Options:
+        _attributes = CMDConditionOperator.Options._attributes
+
 
 class CMDConditionOrOperator(CMDConditionOperator):
     TYPE_VALUE = "or"
 
     operators = ListType(PolyModelType(CMDConditionOperator, allow_subclasses=True), min_size=2)
+
+    class Options:
+        _attributes = CMDConditionOperator.Options._attributes
 
 
 class CMDConditionNotOperator(CMDConditionOperator):
@@ -49,12 +58,18 @@ class CMDConditionNotOperator(CMDConditionOperator):
     # properties as nodes
     operator = PolyModelType(CMDConditionOperator, allow_subclasses=True, required=True)
 
+    class Options:
+        _attributes = CMDConditionOperator.Options._attributes
+
 
 class CMDConditionHasValueOperator(CMDConditionOperator):
     TYPE_VALUE = "hasValue"
 
     # properties as tags
     arg = CMDVariantField(required=True)
+
+    class Options:
+        _attributes = CMDConditionOperator.Options._attributes
 
 
 class CMDCondition(Model):
@@ -63,3 +78,6 @@ class CMDCondition(Model):
 
     # properties as nodes
     operator = PolyModelType(CMDConditionOperator, allow_subclasses=True, required=True)
+
+    class Options:
+        _attributes = {"var"}

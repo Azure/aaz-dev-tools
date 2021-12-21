@@ -18,6 +18,7 @@ class CMDArgEnumItem(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = {"name", "hide"}
 
     @classmethod
     def build_enum_item(cls, builder, schema_item):
@@ -32,6 +33,9 @@ class CMDArgEnum(Model):
 
     # properties as nodes
     items = ListType(ModelType(CMDArgEnumItem), min_size=1)
+
+    class Options:
+        _attributes = set()
 
     @classmethod
     def build_enum(cls, builder, schema_enum):
@@ -48,6 +52,9 @@ class CMDArgDefault(Model):
 
     # properties as nodes
     value = CMDPrimitiveField()  # json value format string, support null
+
+    class Options:
+        _attributes = set()
 
     @classmethod
     def build_default(cls, builder, schema_default):
@@ -79,6 +86,9 @@ class CMDArgBlank(Model):
     # properties as nodes
     value = CMDPrimitiveField()  # json value format string, support null
 
+    class Options:
+        _attributes = set()
+
 
 class CMDArgBase(Model):
     TYPE_VALUE = None
@@ -88,6 +98,7 @@ class CMDArgBase(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = {"type"}
 
     @serializable
     def type(self):
@@ -135,6 +146,9 @@ class CMDArg(CMDArgBase):
     default = ModelType(CMDArgDefault)  # default value is used when argument isn't in command
     blank = ModelType(CMDArgBlank)  # blank value is used when argument don't have any value
 
+    class Options:
+        _attributes = CMDArgBase.Options._attributes | {"var", "options", "required", "stage", "hide", "group", "id_part"}
+
     def __init__(self, *args, **kwargs):
         super(CMDArg, self).__init__(*args, **kwargs)
         self.ref_schema = None
@@ -165,13 +179,16 @@ class CMDArg(CMDArgBase):
         return arg
 
 
-#cls
+# cls
 class CMDClsArgBase(CMDArgBase):
     _type = StringType(
         deserialize_from='type',
         serialized_name='type',
         required=True
     )
+
+    class Options:
+        _attributes = CMDArgBase.Options._attributes | {"_type"}
 
     def _get_type(self):
         return self._type
@@ -194,7 +211,8 @@ class CMDClsArgBase(CMDArgBase):
 
 
 class CMDClsArg(CMDArg, CMDClsArgBase):
-    pass
+    class Options:
+        _attributes = CMDArg.Options._attributes | CMDClsArgBase.Options._attributes
 
 
 # string
@@ -208,6 +226,9 @@ class CMDStringArgBase(CMDArgBase):
     )
     enum = ModelType(CMDArgEnum)
 
+    class Options:
+        _attributes = CMDArgBase.Options._attributes | {"fmt"}
+
     @classmethod
     def build_arg_base(cls, builder):
         arg = super(CMDStringArgBase, cls).build_arg_base(builder)
@@ -218,70 +239,99 @@ class CMDStringArgBase(CMDArgBase):
 
 
 class CMDStringArg(CMDArg, CMDStringArgBase):
-    pass
+    class Options:
+        _attributes = CMDArg.Options._attributes | CMDStringArgBase.Options._attributes
 
 
 # byte: base64 encoded characters
 class CMDByteArgBase(CMDStringArgBase):
     TYPE_VALUE = "byte"
 
+    class Options:
+        _attributes = CMDStringArgBase.Options._attributes
+
 
 class CMDByteArg(CMDStringArg, CMDByteArgBase):
-    pass
+    class Options:
+        _attributes = CMDStringArg.Options._attributes | CMDByteArgBase.Options._attributes
 
 
 # binary: any sequence of octets
 class CMDBinaryArgBase(CMDStringArgBase):
     TYPE_VALUE = "binary"
 
+    class Options:
+        _attributes = CMDStringArgBase.Options._attributes
+
 
 class CMDBinaryArg(CMDStringArg, CMDBinaryArgBase):
-    pass
+    class Options:
+        _attributes = CMDStringArg.Options._attributes | CMDBinaryArgBase.Options._attributes
 
 
 # duration
 class CMDDurationArgBase(CMDStringArgBase):
     TYPE_VALUE = "duration"
 
+    class Options:
+        _attributes = CMDStringArgBase.Options._attributes
+
 
 class CMDDurationArg(CMDStringArg, CMDDurationArgBase):
-    pass
+    class Options:
+        _attributes = CMDStringArg.Options._attributes | CMDDurationArgBase.Options._attributes
 
 
 # date: As defined by full-date - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
 class CMDDateArgBase(CMDStringArgBase):
     TYPE_VALUE = "date"
 
+    class Options:
+        _attributes = CMDStringArgBase.Options._attributes
+
 
 class CMDDateArg(CMDStringArg, CMDDateArgBase):
-    pass
+    class Options:
+        _attributes = CMDStringArg.Options._attributes | CMDDateArgBase.Options._attributes
 
 
 # date-time: As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
 class CMDDateTimeArgBase(CMDStringArgBase):
     TYPE_VALUE = "date-time"
 
+    class Options:
+        _attributes = CMDStringArgBase.Options._attributes
+
 
 class CMDDateTimeArg(CMDStringArg, CMDDateTimeArgBase):
-    pass
+    class Options:
+        _attributes = CMDStringArg.Options._attributes | CMDDateTimeArgBase.Options._attributes
 
 
 # uuid
 class CMDUuidArgBase(CMDStringArgBase):
     TYPE_VALUE = "uuid"
 
+    class Options:
+        _attributes = CMDStringArgBase.Options._attributes
+
 
 class CMDUuidArg(CMDStringArg, CMDUuidArgBase):
-    pass
+    class Options:
+        _attributes = CMDStringArg.Options._attributes | CMDUuidArgBase.Options._attributes
 
 
 # password
 class CMDPasswordArgBase(CMDStringArgBase):
     TYPE_VALUE = "password"
 
+    class Options:
+        _attributes = CMDStringArgBase.Options._attributes
+
 
 class CMDPasswordArg(CMDStringArg, CMDPasswordArgBase):
-    pass
+    class Options:
+        _attributes = CMDStringArg.Options._attributes | CMDPasswordArgBase.Options._attributes
 
 
 # integer
@@ -295,6 +345,9 @@ class CMDIntegerArgBase(CMDArgBase):
     )
     enum = ModelType(CMDArgEnum)
 
+    class Options:
+        _attributes = CMDArgBase.Options._attributes
+
     @classmethod
     def build_arg_base(cls, builder):
         arg = super(CMDIntegerArgBase, cls).build_arg_base(builder)
@@ -305,34 +358,47 @@ class CMDIntegerArgBase(CMDArgBase):
 
 
 class CMDIntegerArg(CMDArg, CMDIntegerArgBase):
-    pass
+    class Options:
+        _attributes = CMDArg.Options._attributes | CMDIntegerArgBase.Options._attributes
 
 
 # integer32
 class CMDInteger32ArgBase(CMDIntegerArgBase):
     TYPE_VALUE = "integer32"
 
+    class Options:
+        _attributes = CMDIntegerArgBase.Options._attributes
+
 
 class CMDInteger32Arg(CMDIntegerArg, CMDInteger32ArgBase):
-    pass
+    class Options:
+        _attributes = CMDIntegerArg.Options._attributes | CMDInteger32ArgBase.Options._attributes
 
 
 # integer64
 class CMDInteger64ArgBase(CMDIntegerArgBase):
     TYPE_VALUE = "integer64"
 
+    class Options:
+        _attributes = CMDIntegerArgBase.Options._attributes
+
 
 class CMDInteger64Arg(CMDIntegerArg, CMDInteger64ArgBase):
-    pass
+    class Options:
+        _attributes = CMDIntegerArg.Options._attributes | CMDInteger64ArgBase.Options._attributes
 
 
 # boolean
 class CMDBooleanArgBase(CMDArgBase):
     TYPE_VALUE = "boolean"
 
+    class Options:
+        _attributes = CMDArgBase.Options._attributes
+
 
 class CMDBooleanArg(CMDArg, CMDBooleanArgBase):
-    pass
+    class Options:
+        _attributes = CMDArg.Options._attributes | CMDBooleanArgBase.Options._attributes
 
 
 # float
@@ -346,6 +412,9 @@ class CMDFloatArgBase(CMDArgBase):
     )
     enum = ModelType(CMDArgEnum)
 
+    class Options:
+        _attributes = CMDArgEnum.Options._attributes
+
     @classmethod
     def build_arg_base(cls, builder):
         arg = super(CMDFloatArgBase, cls).build_arg_base(builder)
@@ -356,25 +425,33 @@ class CMDFloatArgBase(CMDArgBase):
 
 
 class CMDFloatArg(CMDArg, CMDFloatArgBase):
-    pass
+    class Options:
+        _attributes = CMDArg.Options._attributes | CMDFloatArgBase.Options._attributes
 
 
 # float32
 class CMDFloat32ArgBase(CMDFloatArgBase):
     TYPE_VALUE = "float32"
 
+    class Options:
+        _attributes = CMDFloatArgBase.Options._attributes
+
 
 class CMDFloat32Arg(CMDFloatArg, CMDFloat32ArgBase):
-    pass
+    class Options:
+        _attributes = CMDFloatArg.Options._attributes | CMDFloat32ArgBase.Options._attributes
 
 
 # float64
 class CMDFloat64ArgBase(CMDFloatArgBase):
     TYPE_VALUE = "float64"
 
+    class Options:
+        _attributes = CMDFloatArgBase.Options._attributes
+
 
 class CMDFloat64Arg(CMDFloatArg, CMDFloat64ArgBase):
-    pass
+    _attributes = CMDFloatArg.Options._attributes | CMDFloat64ArgBase.Options._attributes
 
 
 # object
@@ -385,6 +462,7 @@ class CMDObjectArgAdditionalProperties(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = set()
 
     @classmethod
     def build_arg_base(cls, builder):
@@ -408,6 +486,9 @@ class CMDObjectArgBase(CMDArgBase):
         deserialize_from="additionalProps",
     )
 
+    class Options:
+        _attributes = CMDArgBase.Options._attributes
+
     @classmethod
     def build_arg_base(cls, builder):
         arg = super(CMDObjectArgBase, cls).build_arg_base(builder)
@@ -424,6 +505,9 @@ class CMDObjectArgBase(CMDArgBase):
 class CMDObjectArg(CMDArg, CMDObjectArgBase):
 
     cls = CMDClassField()  # define a class which can be used by loop
+
+    class Options:
+        _attributes = CMDArg.Options._attributes | CMDObjectArgBase.Options._attributes
 
     @classmethod
     def build_arg(cls, builder):
@@ -444,6 +528,9 @@ class CMDArrayArgBase(CMDArgBase):
     )
     item = PolyModelType(CMDArgBase, allow_subclasses=True, required=True)
 
+    class Options:
+        _attributes = CMDArgBase.Options._attributes
+
     def _get_type(self):
         return f"{self.TYPE_VALUE}<{self.item.type}>"
 
@@ -459,6 +546,9 @@ class CMDArrayArgBase(CMDArgBase):
 class CMDArrayArg(CMDArg, CMDArrayArgBase):
 
     cls = CMDClassField()  # define a class which can be used by loop
+
+    class Options:
+        _attributes = CMDArg.Options._attributes | CMDArrayArgBase.Options._attributes
 
     @classmethod
     def build_arg(cls, builder):

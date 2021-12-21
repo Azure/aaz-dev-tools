@@ -8,6 +8,7 @@ class CMDFormat(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = set()
 
     def build_arg_fmt(self, builder):
         raise NotImplementedError()
@@ -26,6 +27,9 @@ class CMDStringFormat(CMDFormat):
         deserialize_from="minLength",
         min_value=0
     )
+
+    class Options:
+        _attributes = CMDFormat.Options._attributes
 
     def build_arg_fmt(self, builder):
         fmt = CMDStringFormat()
@@ -64,6 +68,9 @@ class CMDIntegerFormat(CMDFormat):
     )
     maximum = IntType()
     minimum = IntType()
+
+    class Options:
+        _attributes = CMDFormat.Options._attributes
 
     def build_arg_fmt(self, builder):
         fmt = CMDIntegerFormat()
@@ -113,6 +120,9 @@ class CMDFloatFormat(CMDFormat):
         serialized_name='exclusiveMinimum',
         deserialize_from='exclusiveMinimum'
     )
+
+    class Options:
+        _attributes = CMDFormat.Options._attributes
 
     def build_arg_fmt(self, builder):
         fmt = CMDFloatFormat()
@@ -168,6 +178,9 @@ class CMDObjectFormat(CMDFormat):
         deserialize_from='minProperties'
     )
 
+    class Options:
+        _attributes = CMDFormat.Options._attributes
+
     def build_arg_fmt(self, builder):
         fmt = CMDObjectFormat()
         fmt.max_properties = self.max_properties
@@ -218,6 +231,9 @@ class CMDArrayFormat(CMDFormat):
         serialized_name="strFormat",
         deserialize_from="strFormat",
     )   # the format convert an array instance to a string
+
+    class Options:
+        _attributes = CMDFormat.Options._attributes
 
     def build_arg_fmt(self, builder):
         fmt = CMDArrayFormat()

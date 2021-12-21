@@ -10,3 +10,6 @@ class CMDArgGroup(Model):
 
     # properties as nodes
     args = ListType(PolyModelType(CMDArg, allow_subclasses=True), min_size=1)
+
+    class Options:
+        _attributes = {"name"}

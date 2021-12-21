@@ -37,6 +37,7 @@ class CMDSchemaEnumItem(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = {"arg"}
 
     def diff(self, old, level):
         if type(self) is not type(old):
@@ -58,6 +59,9 @@ class CMDSchemaEnum(Model):
 
     # properties as nodes
     items = ListType(ModelType(CMDSchemaEnumItem), min_size=1)
+
+    class Options:
+        _attributes = set()
 
     def diff(self, old, level):
         if type(self) is not type(old):
@@ -96,6 +100,9 @@ class CMDSchemaDefault(Model):
     # properties as nodes
     value = CMDPrimitiveField()  # json value format string, support null
 
+    class Options:
+        _attributes = set()
+
     def diff(self, old, level):
         if type(self) is not type(old):
             return f"Type: {type(old)} != {type(self)}"
@@ -126,6 +133,7 @@ class CMDSchemaBase(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = {"required", "read_only", "frozen", "const", "type"}
 
     @serializable
     def type(self):
@@ -210,6 +218,9 @@ class CMDSchema(CMDSchemaBase):
         deserialize_from="skipUrlEncoding",
     )  # used in path and query parameters
 
+    class Options:
+        _attributes = CMDSchemaBase.Options._attributes | {"name", "arg", "description", "skip_url_encoding"}
+
     @classmethod
     def _claim_polymorphic(cls, data):
         if super(CMDSchema, cls)._claim_polymorphic(data):
@@ -274,6 +285,9 @@ class CMDClsSchemaBase(CMDSchemaBase):
         required=True
     )
 
+    class Options:
+        _attributes = CMDSchemaBase.Options._attributes
+
     def _get_type(self):
         return self._type
 
@@ -291,6 +305,9 @@ class CMDClsSchemaBase(CMDSchemaBase):
 class CMDClsSchema(CMDSchema, CMDClsSchemaBase):
     ARG_TYPE = CMDClsArg
 
+    class Options:
+        _attributes = CMDSchema.Options._attributes | CMDClsSchemaBase.Options._attributes
+
 
 # string
 class CMDStringSchemaBase(CMDSchemaBase):
@@ -303,6 +320,9 @@ class CMDStringSchemaBase(CMDSchemaBase):
         deserialize_from='format'
     )
     enum = ModelType(CMDSchemaEnum)
+
+    class Options:
+        _attributes = CMDSchemaBase.Options._attributes
 
     def _diff_base(self, old, level, diff):
         diff = super(CMDStringSchemaBase, self)._diff_base(old, level, diff)
@@ -321,15 +341,24 @@ class CMDStringSchemaBase(CMDSchemaBase):
 class CMDStringSchema(CMDSchema, CMDStringSchemaBase):
     ARG_TYPE = CMDStringArg
 
+    class Options:
+        _attributes = CMDSchema.Options._attributes | CMDStringSchemaBase.Options._attributes
+
 
 # byte: base64 encoded characters
 class CMDByteSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "byte"
     ARG_TYPE = CMDByteArgBase
 
+    class Options:
+        _attributes = CMDStringSchemaBase.Options._attributes
+
 
 class CMDByteSchema(CMDStringSchema, CMDByteSchemaBase):
     ARG_TYPE = CMDByteArg
+
+    class Options:
+        _attributes = CMDStringSchema.Options._attributes | CMDByteSchemaBase.Options._attributes
 
 
 # binary: any sequence of octets
@@ -337,9 +366,15 @@ class CMDBinarySchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "binary"
     ARG_TYPE = CMDBinaryArgBase
 
+    class Options:
+        _attributes = CMDStringSchemaBase.Options._attributes
+
 
 class CMDBinarySchema(CMDStringSchema, CMDBinarySchemaBase):
     ARG_TYPE = CMDBinaryArg
+
+    class Options:
+        _attributes = CMDStringSchema.Options._attributes | CMDClsSchemaBase.Options._attributes
 
 
 # duration
@@ -347,9 +382,15 @@ class CMDDurationSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "duration"
     ARG_TYPE = CMDDurationArgBase
 
+    class Options:
+        _attributes = CMDStringSchemaBase.Options._attributes
+
 
 class CMDDurationSchema(CMDStringSchema, CMDDurationSchemaBase):
     ARG_TYPE = CMDDurationArg
+
+    class Options:
+        _attributes = CMDStringSchema.Options._attributes | CMDDurationSchemaBase.Options._attributes
 
 
 # date: As defined by full-date - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
@@ -357,9 +398,15 @@ class CMDDateSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "date"
     ARG_TYPE = CMDDateArgBase
 
+    class Options:
+        _attributes = CMDStringSchemaBase.Options._attributes
+
 
 class CMDDateSchema(CMDStringSchema, CMDDateSchemaBase):
     ARG_TYPE = CMDDateArg
+
+    class Options:
+        _attributes = CMDStringSchema.Options._attributes | CMDDateSchemaBase.Options._attributes
 
 
 # date-time: As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
@@ -367,9 +414,15 @@ class CMDDateTimeSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "date-time"
     ARG_TYPE = CMDDateTimeArgBase
 
+    class Options:
+        _attributes = CMDStringSchemaBase.Options._attributes
+
 
 class CMDDateTimeSchema(CMDStringSchema, CMDDateTimeSchemaBase):
     ARG_TYPE = CMDDateTimeArg
+
+    class Options:
+        _attributes = CMDStringSchema.Options._attributes | CMDDateTimeSchemaBase.Options._attributes
 
 
 # uuid
@@ -377,9 +430,15 @@ class CMDUuidSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "uuid"
     ARG_TYPE = CMDUuidArgBase
 
+    class Options:
+        _attributes = CMDStringSchemaBase.Options._attributes
+
 
 class CMDUuidSchema(CMDStringSchema, CMDUuidSchemaBase):
     ARG_TYPE = CMDUuidArg
+
+    class Options:
+        _attributes = CMDStringSchema.Options._attributes | CMDUuidSchemaBase.Options._attributes
 
 
 # password
@@ -387,9 +446,15 @@ class CMDPasswordSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "password"
     ARG_TYPE = CMDPasswordArgBase
 
+    class Options:
+        _attributes = CMDStringSchemaBase.Options._attributes
+
 
 class CMDPasswordSchema(CMDStringSchema, CMDPasswordSchemaBase):
     ARG_TYPE = CMDPasswordArg
+
+    class Options:
+        _attributes = CMDStringSchema.Options._attributes | CMDPasswordSchemaBase.Options._attributes
 
 
 # integer
@@ -403,6 +468,9 @@ class CMDIntegerSchemaBase(CMDSchemaBase):
         deserialize_from='format',
     )
     enum = ModelType(CMDSchemaEnum)
+
+    class Options:
+        _attributes = CMDSchemaBase.Options._attributes
 
     def _diff_base(self, old, level, diff):
         diff = super(CMDIntegerSchemaBase, self)._diff_base(old, level, diff)
@@ -421,15 +489,24 @@ class CMDIntegerSchemaBase(CMDSchemaBase):
 class CMDIntegerSchema(CMDSchema, CMDIntegerSchemaBase):
     ARG_TYPE = CMDIntegerArg
 
+    class Options:
+        _attributes = CMDSchema.Options._attributes | CMDIntegerSchemaBase.Options._attributes
+
 
 # integer32
 class CMDInteger32SchemaBase(CMDIntegerSchemaBase):
     TYPE_VALUE = "integer32"
     ARG_TYPE = CMDInteger32ArgBase
 
+    class Options:
+        _attributes = CMDIntegerSchemaBase.Options._attributes
+
 
 class CMDInteger32Schema(CMDIntegerSchema, CMDInteger32SchemaBase):
     ARG_TYPE = CMDInteger32Arg
+
+    class Options:
+        _attributes = CMDIntegerSchema.Options._attributes | CMDInteger32SchemaBase.Options._attributes
 
 
 # integer64
@@ -437,9 +514,15 @@ class CMDInteger64SchemaBase(CMDIntegerSchemaBase):
     TYPE_VALUE = "integer64"
     ARG_TYPE = CMDInteger64ArgBase
 
+    class Options:
+        _attributes = CMDIntegerSchemaBase.Options._attributes
+
 
 class CMDInteger64Schema(CMDIntegerSchema, CMDInteger64SchemaBase):
     ARG_TYPE = CMDInteger64Arg
+
+    class Options:
+        _attributes = CMDIntegerSchema.Options._attributes | CMDInteger64SchemaBase.Options._attributes
 
 
 # boolean
@@ -447,9 +530,15 @@ class CMDBooleanSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "boolean"
     ARG_TYPE = CMDBooleanArgBase
 
+    class Options:
+        _attributes = CMDSchemaBase.Options._attributes
+
 
 class CMDBooleanSchema(CMDSchema, CMDBooleanSchemaBase):
     ARG_TYPE = CMDBooleanArg
+
+    class Options:
+        _attributes = CMDSchema.Options._attributes | CMDBooleanSchemaBase.Options._attributes
 
 
 # float
@@ -463,6 +552,9 @@ class CMDFloatSchemaBase(CMDSchemaBase):
         deserialize_from='format',
     )
     enum = ModelType(CMDSchemaEnum)
+
+    class Options:
+        _attributes = CMDSchemaBase.Options._attributes
 
     def _diff_base(self, old, level, diff):
         diff = super(CMDFloatSchemaBase, self)._diff_base(old, level, diff)
@@ -481,15 +573,24 @@ class CMDFloatSchemaBase(CMDSchemaBase):
 class CMDFloatSchema(CMDSchema, CMDFloatSchemaBase):
     ARG_TYPE = CMDFloatArg
 
+    class Options:
+        _attributes = CMDSchema.Options._attributes | CMDFloatSchemaBase.Options._attributes
+
 
 # float32
 class CMDFloat32SchemaBase(CMDFloatSchemaBase):
     TYPE_VALUE = "float32"
     ARG_TYPE = CMDFloat32ArgBase
 
+    class Options:
+        _attributes = CMDFloatSchemaBase.Options._attributes
+
 
 class CMDFloat32Schema(CMDFloatSchema, CMDFloat32SchemaBase):
     ARG_TYPE = CMDFloat32Arg
+
+    class Options:
+        _attributes = CMDFloatSchema.Options._attributes | CMDFloat32SchemaBase.Options._attributes
 
 
 # float64
@@ -497,9 +598,15 @@ class CMDFloat64SchemaBase(CMDFloatSchemaBase):
     TYPE_VALUE = "float64"
     ARG_TYPE = CMDFloat64ArgBase
 
+    class Options:
+        _attributes = CMDFloatSchemaBase.Options._attributes
+
 
 class CMDFloat64Schema(CMDFloatSchema, CMDFloat64SchemaBase):
     ARG_TYPE = CMDFloat64Arg
+
+    class Options:
+        _attributes = CMDFloatSchema.Options._attributes | CMDFloat64SchemaBase.Options._attributes
 
 
 # object
@@ -536,6 +643,7 @@ class CMDObjectSchemaDiscriminator(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = {"prop", "value", "frozen"}
 
     def diff(self, old, level):
         if self.frozen and old.frozen:
@@ -580,6 +688,9 @@ class CMDObjectSchemaAdditionalProperties(Model):
 
     # properties as nodes
     item = CMDSchemaBaseField()
+
+    class Options:
+        _attributes = {"ready_only", "frozen"}
 
     def diff(self, old, level):
         if self.frozen and old.frozen:
@@ -626,6 +737,9 @@ class CMDObjectSchemaBase(CMDSchemaBase):
     props = ListType(CMDSchemaField())
     discriminators = ListType(CMDObjectSchemaDiscriminatorField())
     additional_props = CMDObjectSchemaAdditionalPropertiesField()
+
+    class Options:
+        _attributes = CMDSchemaBase.Options._attributes
 
     def _diff_base(self, old, level, diff):
         diff = super(CMDObjectSchemaBase, self)._diff_base(old, level, diff)
@@ -681,6 +795,9 @@ class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
     )
     cls = CMDClassField()  # define a schema which can be used by others
 
+    class Options:
+        _attributes = CMDSchema.Options._attributes | CMDObjectSchemaBase.Options._attributes | {"client_flatten", "cls"}
+
     def _diff(self, old, level, diff):
         diff = super(CMDObjectSchema, self)._diff(old, level, diff)
         if level >= CMDDiffLevelEnum.BreakingChange:
@@ -707,6 +824,9 @@ class CMDArraySchemaBase(CMDSchemaBase):
     )
     item = CMDSchemaBaseField()
 
+    class Options:
+        _attributes = CMDSchemaBase.Options._attributes
+
     def _get_type(self):
         return f"{self.TYPE_VALUE}<{self.item.type}>"
 
@@ -729,6 +849,9 @@ class CMDArraySchema(CMDSchema, CMDArraySchemaBase):
 
     # properties as tags
     cls = CMDClassField()  # define a schema which can be used by others # TODO: convert to arg
+
+    class Options:
+        _attributes = CMDSchema.Options._attributes | CMDArraySchemaBase.Options._attributes | {"cls"}
 
     def _diff(self, old, level, diff):
         diff = super(CMDArraySchema, self)._diff(old, level, diff)

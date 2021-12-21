@@ -22,3 +22,4 @@ class CMDCommandGroup(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = {"name", "stage"}

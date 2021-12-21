@@ -14,6 +14,7 @@ class CMDOperation(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = {"when"}
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -50,6 +51,9 @@ class CMDHttpOperation(CMDOperation):
     # properties as nodes
     http = ModelType(CMDHttpAction, required=True)
 
+    class Options:
+        _attributes = CMDOperation.Options._attributes | {"long_running", "operation_id", "description"}
+
     def generate_args(self):
         return self.http.generate_args()
 
@@ -65,6 +69,9 @@ class CMDInstanceUpdateOperation(CMDOperation):
         serialized_name="instanceUpdate",
         deserialize_from="instanceUpdate"
     )
+
+    class Options:
+        _attributes = CMDOperation.Options._attributes
 
     def generate_args(self):
         return self.instance_update.generate_args()

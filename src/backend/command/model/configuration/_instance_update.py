@@ -16,6 +16,9 @@ class CMDInstanceUpdateAction(Model):
     # properties as tags
     instance = CMDVariantField(required=True)
 
+    class Options:
+        _attributes = {"instance"}
+
     @classmethod
     def _claim_polymorphic(cls, data):
         if cls.POLYMORPHIC_KEY is None:
@@ -38,6 +41,9 @@ class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
     # properties as nodes
     json = ModelType(CMDJson, required=True)
 
+    class Options:
+        _attributes = CMDInstanceUpdateAction.Options._attributes
+
     def generate_args(self):
         return self.json.generate_args()
 
@@ -52,6 +58,9 @@ class CMDGenericInstanceUpdateMethod(Model):
         serialized_name='forceString',
         deserialize_from='forceString'
     )
+
+    class Options:
+        _attributes = {"add", "set", "remove", "force_string"}
 
     def generate_args(self):
         self.add = "$GenericUpdate.add"
@@ -93,6 +102,9 @@ class CMDGenericInstanceUpdateAction(CMDInstanceUpdateAction):
 
     # properties as nodes
     generic = ModelType(CMDGenericInstanceUpdateMethod)
+
+    class Options:
+        _attributes = CMDInstanceUpdateAction.Options._attributes | {"client_flatten"}
 
     def generate_args(self):
         return self.generic.generate_args()

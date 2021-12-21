@@ -20,9 +20,12 @@ class CMDHttpRequestArgs(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = set()
 
 
 class CMDHttpRequestPath(CMDHttpRequestArgs):
+    class Options:
+        _attributes = CMDHttpRequestArgs.Options._attributes
 
     def generate_args(self, path):
         if is_valid_resource_id(path):
@@ -73,6 +76,8 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
 
 
 class CMDHttpRequestQuery(CMDHttpRequestArgs):
+    class Options:
+        _attributes = CMDHttpRequestArgs.Options._attributes
 
     def generate_args(self):
         args = []
@@ -88,6 +93,9 @@ class CMDHttpRequestHeader(CMDHttpRequestArgs):
         serialized_name="clientRequestId",
         deserialize_from="clientRequestId",
     )    # specifies the header parameter to be used instead of `x-ms-client-request-id`
+
+    class Options:
+        _attributes = CMDHttpRequestArgs.Options._attributes | {"client_request_id"}
 
     def generate_args(self):
         args = []
@@ -109,6 +117,7 @@ class CMDHttpRequest(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = {"method"}
 
     def generate_args(self, path):
         args = []
@@ -130,6 +139,7 @@ class CMDHttpResponseHeaderItem(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = {"name", "var"}
 
 
 class CMDHttpResponseHeader(Model):
@@ -138,6 +148,7 @@ class CMDHttpResponseHeader(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = set()
 
 
 class CMDHttpResponse(Model):
@@ -159,6 +170,7 @@ class CMDHttpResponse(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = {"status_codes", "is_error", "description"}
 
 
 class CMDHttpAction(Model):
@@ -168,6 +180,9 @@ class CMDHttpAction(Model):
     # properties as nodes
     request = ModelType(CMDHttpRequest)
     responses = ListType(ModelType(CMDHttpResponse))
+
+    class Options:
+        _attributes = {"path"}
 
     def generate_args(self):
         return self.request.generate_args(path=self.path)

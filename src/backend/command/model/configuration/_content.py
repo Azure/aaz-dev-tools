@@ -20,6 +20,7 @@ class CMDJson(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = {"var", "ref"}
 
     def generate_args(self):
         if not self.schema:

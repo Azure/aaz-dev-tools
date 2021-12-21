@@ -11,6 +11,7 @@ class CMDHelp(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = {"short"}
 
 
 class CMDArgumentHelp(CMDHelp):
@@ -20,3 +21,6 @@ class CMDArgumentHelp(CMDHelp):
         serialized_name='refCommands',
         deserialize_from='refCommands',
     )  # popular commands
+
+    class Options:
+        _attributes = CMDHelp.Options._attributes

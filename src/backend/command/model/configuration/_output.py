@@ -11,6 +11,7 @@ class CMDOutput(Model):
 
     class Options:
         serialize_when_none = False
+        _attributes = {"type"}
 
     @serializable
     def type(self):
@@ -44,6 +45,9 @@ class CMDObjectOutput(CMDOutput):
         deserialize_from='clientFlatten',
     )
 
+    class Options:
+        _attributes = CMDOutput.Options._attributes
+
 
 class CMDArrayOutput(CMDOutput):
     TYPE_VALUE = 'array'
@@ -67,8 +71,14 @@ class CMDArrayOutput(CMDOutput):
         deserialize_from='nextLink',
     )
 
+    class Options:
+        _attributes = CMDOutput.Options._attributes
+
 
 class CMDStringOutput(CMDOutput):
     TYPE_VALUE = 'string'
 
     value = StringType(required=True)
+
+    class Options:
+        _attributes = CMDOutput.Options._attributes
