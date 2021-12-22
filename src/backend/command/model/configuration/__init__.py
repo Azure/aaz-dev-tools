@@ -10,6 +10,7 @@ from ._arg import CMDArgEnumItem, CMDArgEnum, \
     CMDUuidArgBase, CMDUuidArg, \
     CMDPasswordArgBase, CMDPasswordArg, \
     CMDResourceIdArgBase, CMDResourceIdArg, \
+    CMDResourceLocationArgBase, CMDResourceLocationArg, \
     CMDIntegerArgBase, CMDIntegerArg, \
     CMDInteger32ArgBase, CMDInteger32Arg, CMDInteger64ArgBase, CMDInteger64Arg, \
     CMDBooleanArgBase, CMDBooleanArg, \
@@ -55,6 +56,7 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDUuidSchemaBase, CMDUuidSchema, \
     CMDPasswordSchemaBase, CMDPasswordSchema, \
     CMDResourceIdSchemaBase, CMDResourceIdSchema, \
+    CMDResourceLocationSchemaBase, CMDResourceLocationSchema, \
     CMDIntegerSchemaBase, CMDIntegerSchema, \
     CMDInteger32SchemaBase, CMDInteger32Schema, \
     CMDInteger64SchemaBase, CMDInteger64Schema, \

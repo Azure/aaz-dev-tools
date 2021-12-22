@@ -15,6 +15,7 @@ from ._arg import CMDStringArg, CMDStringArgBase, \
     CMDUuidArg, CMDUuidArgBase, \
     CMDPasswordArg, CMDPasswordArgBase, \
     CMDResourceIdArg, CMDResourceIdArgBase, \
+    CMDResourceLocationArg, CMDResourceLocationArgBase, \
     CMDBooleanArg, CMDBooleanArgBase, \
     CMDIntegerArg, CMDIntegerArgBase, \
     CMDInteger32Arg, CMDInteger32ArgBase, \
@@ -407,6 +408,16 @@ class CMDResourceIdSchemaBase(CMDStringSchemaBase):
 
 class CMDResourceIdSchema(CMDStringSchema, CMDResourceIdSchemaBase):
     ARG_TYPE = CMDResourceIdArg
+
+
+# ResourceLocation
+class CMDResourceLocationSchemaBase(CMDStringSchemaBase):
+    TYPE_VALUE = "resourceLocation"
+    ARG_TYPE = CMDResourceLocationArgBase
+
+
+class CMDResourceLocationSchema(CMDStringSchema, CMDResourceLocationSchemaBase):
+    ARG_TYPE = CMDResourceLocationArg
 
 
 # integer

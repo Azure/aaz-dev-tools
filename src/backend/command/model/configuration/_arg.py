@@ -285,7 +285,7 @@ class CMDPasswordArg(CMDStringArg, CMDPasswordArgBase):
     pass
 
 
-# resource-id
+# resourceId
 class CMDResourceIdArgBase(CMDStringArgBase):
     TYPE_VALUE = "resourceId"
 
@@ -297,6 +297,15 @@ class CMDResourceIdArgBase(CMDStringArgBase):
 
 
 class CMDResourceIdArg(CMDStringArg, CMDResourceIdArgBase):
+    pass
+
+
+# resourceLocation
+class CMDResourceLocationArgBase(CMDStringArgBase):
+    TYPE_VALUE = "resourceLocation"
+
+
+class CMDResourceLocationArg(CMDStringArg, CMDResourceLocationArgBase):
     pass
 
 

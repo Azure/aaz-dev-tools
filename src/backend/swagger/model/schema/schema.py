@@ -20,6 +20,7 @@ from command.model.configuration import CMDSchemaDefault,\
     CMDDurationSchema, CMDDurationSchemaBase, \
     CMDUuidSchema, CMDUuidSchemaBase, \
     CMDResourceIdSchema, CMDResourceIdFormat, \
+    CMDResourceLocationSchema, \
     CMDIntegerSchema, CMDIntegerSchemaBase, \
     CMDInteger32Schema, CMDInteger32SchemaBase, \
     CMDInteger64Schema, CMDInteger64SchemaBase, \
@@ -586,25 +587,32 @@ class Schema(Model, Linkable):
                 if discriminators:
                     model.discriminators = discriminators
 
-            if prop_dict:
-                if self.x_ms_azure_resource and self.resource_id_templates:
-                    if 'id' in prop_dict:
-                        id_prop = prop_dict['id']
-                        if not isinstance(id_prop, CMDResourceIdSchema):
-                            assert isinstance(id_prop, CMDStringSchema)
-                            raw_data = id_prop.to_native()
-                            prop_dict['id'] = id_prop = CMDResourceIdSchema(raw_data=raw_data)
-                        if len(self.resource_id_templates) == 1:
-                            id_prop.fmt = CMDResourceIdFormat()
-                            id_prop.fmt.template = [*self.resource_id_templates][0]
-                        else:
-                            err = exceptions.InvalidSwaggerValueError(
-                                msg="Multi resource id templates error",
-                                key=self.traces,
-                                value=self.resource_id_templates
-                            )
-                            logger.warning(err)
+            # convert special properties when self is an azure resource
+            if self.x_ms_azure_resource and prop_dict:
+                if 'id' in prop_dict and self.resource_id_templates:
+                    id_prop = prop_dict['id']
+                    if not isinstance(id_prop, CMDResourceIdSchema):
+                        assert isinstance(id_prop, CMDStringSchema)
+                        raw_data = id_prop.to_native()
+                        prop_dict['id'] = id_prop = CMDResourceIdSchema(raw_data=raw_data)
+                    if len(self.resource_id_templates) == 1:
+                        id_prop.fmt = CMDResourceIdFormat()
+                        id_prop.fmt.template = [*self.resource_id_templates][0]
+                    else:
+                        err = exceptions.InvalidSwaggerValueError(
+                            msg="Multi resource id templates error",
+                            key=self.traces,
+                            value=self.resource_id_templates
+                        )
+                        logger.warning(err)
+                if 'location' in prop_dict:
+                    location_prop = prop_dict['location']
+                    if not isinstance(location_prop, CMDResourceLocationSchema):
+                        assert isinstance(location_prop, CMDStringSchema)
+                        raw_data = location_prop.to_native()
+                        prop_dict['location'] = CMDResourceLocationSchema(raw_data=raw_data)
 
+            if prop_dict:
                 model.props = []
                 for prop in prop_dict.values():
                     if model.read_only:
