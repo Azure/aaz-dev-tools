@@ -306,7 +306,14 @@ class CMDResourceLocationArgBase(CMDStringArgBase):
 
 
 class CMDResourceLocationArg(CMDStringArg, CMDResourceLocationArgBase):
-    pass
+
+    @classmethod
+    def build_arg(cls, builder):
+        arg = super().build_arg(builder)
+        if arg.options == ['location']:
+            # add 'l' alias for location arg
+            arg.options.append('l')
+        return arg
 
 
 # integer
