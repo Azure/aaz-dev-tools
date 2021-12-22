@@ -137,12 +137,12 @@ class CMDArg(CMDArgBase):
     blank = ModelType(CMDArgBlank)  # blank value is used when argument don't have any value
 
     def __init__(self, *args, **kwargs):
-        super(CMDArg, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.ref_schema = None
 
     @classmethod
     def _claim_polymorphic(cls, data):
-        if super(CMDArg, cls)._claim_polymorphic(data):
+        if super()._claim_polymorphic(data):
             if isinstance(data, dict):
                 # distinguish with CMDArgBase and CMDArg
                 return 'var' in data
@@ -189,7 +189,7 @@ class CMDClsArgBase(CMDArgBase):
 
     @classmethod
     def build_arg_base(cls, builder):
-        arg = super(CMDClsArgBase, cls).build_arg_base(builder)
+        arg = super().build_arg_base(builder)
         arg._type = builder.get_type()
         return arg
 
@@ -211,7 +211,7 @@ class CMDStringArgBase(CMDArgBase):
 
     @classmethod
     def build_arg_base(cls, builder):
-        arg = super(CMDStringArgBase, cls).build_arg_base(builder)
+        arg = super().build_arg_base(builder)
         assert isinstance(arg, CMDStringArgBase)
         arg.fmt = builder.get_fmt()
         arg.enum = builder.get_enum()
@@ -329,7 +329,7 @@ class CMDIntegerArgBase(CMDArgBase):
 
     @classmethod
     def build_arg_base(cls, builder):
-        arg = super(CMDIntegerArgBase, cls).build_arg_base(builder)
+        arg = super().build_arg_base(builder)
         assert isinstance(arg, CMDIntegerArgBase)
         arg.fmt = builder.get_fmt()
         arg.enum = builder.get_enum()
@@ -380,7 +380,7 @@ class CMDFloatArgBase(CMDArgBase):
 
     @classmethod
     def build_arg_base(cls, builder):
-        arg = super(CMDFloatArgBase, cls).build_arg_base(builder)
+        arg = super().build_arg_base(builder)
         assert isinstance(arg, CMDFloatArgBase)
         arg.fmt = builder.get_fmt()
         arg.enum = builder.get_enum()
@@ -442,7 +442,7 @@ class CMDObjectArgBase(CMDArgBase):
 
     @classmethod
     def build_arg_base(cls, builder):
-        arg = super(CMDObjectArgBase, cls).build_arg_base(builder)
+        arg = super().build_arg_base(builder)
         assert isinstance(arg, CMDObjectArgBase)
         try:
             arg.fmt = builder.get_fmt()
@@ -459,7 +459,7 @@ class CMDObjectArg(CMDArg, CMDObjectArgBase):
 
     @classmethod
     def build_arg(cls, builder):
-        arg = super(CMDObjectArg, cls).build_arg(builder)
+        arg = super().build_arg(builder)
         assert isinstance(arg, CMDObjectArg)
         arg.cls = builder.get_cls()
         return arg
@@ -481,7 +481,7 @@ class CMDArrayArgBase(CMDArgBase):
 
     @classmethod
     def build_arg_base(cls, builder):
-        arg = super(CMDArrayArgBase, cls).build_arg_base(builder)
+        arg = super().build_arg_base(builder)
         assert isinstance(arg, CMDArrayArgBase)
         arg.fmt = builder.get_fmt()
         arg.item = builder.get_sub_item()
@@ -490,11 +490,18 @@ class CMDArrayArgBase(CMDArgBase):
 
 class CMDArrayArg(CMDArg, CMDArrayArgBase):
 
+    singular_options = ListType(
+        StringType(),
+        serialized_name='singularOptions',
+        deserialize_from='singularOptions',
+    )  # options to pass element instead of full list
+
     cls = CMDClassField()  # define a class which can be used by loop
 
     @classmethod
     def build_arg(cls, builder):
-        arg = super(CMDArrayArg, cls).build_arg(builder)
+        arg = super().build_arg(builder)
         assert isinstance(arg, CMDArrayArg)
+        arg.singular_options = builder.get_singular_options()
         arg.cls = builder.get_cls()
         return arg

@@ -1,12 +1,16 @@
 
 
-from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDArraySchemaBase, CMDSchemaEnumItem, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema
-from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgEnumItem, CMDArgDefault, CMDBooleanArgBase, CMDArgBlank, CMDObjectArgAdditionalProperties
+from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
+    CMDArraySchema, CMDArraySchemaBase, CMDSchemaEnumItem, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema
+from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgEnumItem, CMDArgDefault, CMDBooleanArgBase, \
+    CMDArgBlank, CMDObjectArgAdditionalProperties
 from ._format import CMDFormat
 import re
+import inflect
 
 
 class CMDArgBuilder:
+    _inflect_engine = inflect.engine()
 
     @classmethod
     def new_builder(cls, schema, parent=None, var_prefix=None):
@@ -199,6 +203,15 @@ class CMDArgBuilder:
         else:
             raise NotImplementedError()
         return [opt_name, ]
+
+    def get_singular_options(self):
+        if not isinstance(self.schema, CMDArraySchema):
+            raise NotImplementedError()
+        opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
+        singular_opt_name = self._inflect_engine.singular_noun(opt_name)
+        if singular_opt_name != opt_name:
+            return [singular_opt_name, ]
+        return None
 
     def _build_help(self):
         if hasattr(self.schema, 'description') and self.schema.description:
