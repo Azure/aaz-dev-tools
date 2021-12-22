@@ -1,6 +1,6 @@
 
 
-from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDArraySchemaBase, CMDSchemaEnumItem, CMDObjectSchemaAdditionalProperties
+from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDArraySchemaBase, CMDSchemaEnumItem, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema
 from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgEnumItem, CMDArgDefault, CMDBooleanArgBase, CMDArgBlank, CMDObjectArgAdditionalProperties
 from ._format import CMDFormat
 import re
@@ -172,12 +172,13 @@ class CMDArgBuilder:
         return None
 
     def get_hide(self):
-        if getattr(self.schema, 'name', None) == 'id' and not self.get_required() and self._parent:
-            # some resource will have optional 'id' property, if it also has 'name' property,
-            # the 'id' argument will be hidden by default.
-            for prop in self._parent.schema.props:
-                if prop.name == 'name':
-                    return True
+        if getattr(self.schema, 'name', None) == 'id' and not self.get_required() and self._parent and \
+                isinstance(self.schema, CMDResourceIdSchema):
+            if self._arg_var.split('.', maxsplit=1)[-1] == 'id':
+                # hide top level 'id' property when it has 'name' property,
+                for prop in self._parent.schema.props:
+                    if prop.name == 'name':
+                        return True
         return False
 
     def get_var(self):
