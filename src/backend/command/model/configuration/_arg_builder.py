@@ -158,7 +158,7 @@ class CMDArgBuilder:
             return None
 
     def get_required(self):
-        if isinstance(self.schema, CMDSchemaBase):
+        if isinstance(self.schema, CMDSchema):
             return self.schema.required
         return False
 

@@ -113,7 +113,6 @@ class CMDSchemaBase(Model):
     ARG_TYPE = None
 
     # properties as tags
-    required = CMDBooleanField()
     read_only = CMDBooleanField(
         serialized_name="readOnly",
         deserialize_from="readOnly"
@@ -155,8 +154,6 @@ class CMDSchemaBase(Model):
         if level >= CMDDiffLevelEnum.BreakingChange:
             if self.type != old.type:
                 diff["type"] = f"{old.type} != {self.type}"
-            if self.required and not old.required:
-                diff["required"] = f"it's required now."
             if self.read_only and not old.read_only:
                 diff["read_only"] = f"it's read_only now."
             if self.const and not old.const:
@@ -170,8 +167,6 @@ class CMDSchemaBase(Model):
                         diff["default"] = default_diff
 
         if level >= CMDDiffLevelEnum.Structure:
-            if self.required != old.required:
-                diff["required"] = f"{old.required} != {self.required}"
             if self.read_only != old.read_only:
                 diff["read_only"] = f"{old.read_only} != {self.read_only}"
             if self.const != old.const:
@@ -204,6 +199,7 @@ class CMDSchema(CMDSchemaBase):
     # properties as tags
     name = StringType(required=True)
     arg = CMDVariantField()
+    required = CMDBooleanField()
 
     description = CMDDescriptionField()
 
@@ -226,8 +222,14 @@ class CMDSchema(CMDSchemaBase):
         if level >= CMDDiffLevelEnum.BreakingChange:
             if self.name != old.name:
                 diff["name"] = f"{old.name} != {self.name}"
+            if self.required and not old.required:
+                diff["required"] = f"it's required now."
             if (not self.skip_url_encoding) != (not old.skip_url_encoding):  # None should be same as false
                 diff["skip_url_encoding"] = f"{old.skip_url_encoding} != {self.skip_url_encoding}"
+
+        if level >= CMDDiffLevelEnum.Structure:
+            if self.required != old.required:
+                diff["required"] = f"{old.required} != {self.required}"
 
         if level >= CMDDiffLevelEnum.Associate:
             if self.arg != old.arg:
@@ -707,7 +709,15 @@ class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
         serialized_name="clientFlatten",
         deserialize_from="clientFlatten"
     )
-    cls = CMDClassField()  # define a schema which can be used by others
+
+    # define a schema cls which can be used by others,
+    # cls definition will not include following properties:
+    #  - name
+    #  - arg
+    #  - required
+    #  - description
+    #  - skip_url_encoding
+    cls = CMDClassField()
 
     def _diff(self, old, level, diff):
         diff = super(CMDObjectSchema, self)._diff(old, level, diff)

@@ -556,11 +556,10 @@ class Schema(Model, Linkable):
                     v.name = name
                     prop_dict[name] = v
 
-            # TODO: move required as list
             if self.required:
                 for name in self.required:
                     if name in prop_dict:
-                        prop_dict[name].required = True
+                        prop_dict[name].required = True  # because required property will not be included in a cls definition, so it's fine to update it in parent level when prop_dict[name] is a cls definition.
 
             # discriminators
             if self.disc_children:
