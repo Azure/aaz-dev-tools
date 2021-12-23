@@ -1,0 +1,6 @@
+setup.py
+flask_my_extension.egg-info/PKG-INFO
+flask_my_extension.egg-info/SOURCES.txt
+flask_my_extension.egg-info/dependency_links.txt
+flask_my_extension.egg-info/entry_points.txt
+flask_my_extension.egg-info/top_level.txt

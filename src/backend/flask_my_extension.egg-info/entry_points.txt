@@ -1,0 +1,3 @@
+[console_scripts]
+aazdev = app:cli
+

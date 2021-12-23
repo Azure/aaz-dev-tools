@@ -1,4 +1,4 @@
-import React, { PureComponent } from "react";
+import React, { PureComponent} from "react";
 import {Accordion} from "react-bootstrap";
 import { ListGroup, ListGroupItem} from "reactstrap";
 
@@ -14,15 +14,15 @@ export default class CustomAccordion extends PureComponent {
       }
 
     getVersion = versionList => {
-        return versionList.map(version=>{
-          return <ListGroupItem key={version}>{version}</ListGroupItem>
-        })
+      return versionList.map((version, index)=>{
+        return <ListGroupItem key={index}>{version}</ListGroupItem>
+      })
     }
 
     getResourceId = resourceIdList => {
-        return resourceIdList.map((resourceId) =>{
+        return resourceIdList.map((resourceId, index) =>{
           let id = Object.keys(resourceId)[0]
-          return <Accordion>
+          return <Accordion key={index}>
               <Accordion.Item eventKey={id}>
                   <Accordion.Header>{id}</Accordion.Header>
                   <Accordion.Body>
@@ -35,8 +35,8 @@ export default class CustomAccordion extends PureComponent {
     }
 
     getModule = spec =>{
-        return Object.keys(spec).map((moduleName) =>{
-            return <Accordion key={moduleName}>
+        return Object.keys(spec).map((moduleName, index) =>{
+            return <Accordion key={index}>
                     <Accordion.Item eventKey={moduleName}>
                     <Accordion.Header>{moduleName}</Accordion.Header>
                     <Accordion.Body>
