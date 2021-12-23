@@ -57,4 +57,4 @@ class Reference(Model, Linkable):
 
     @classmethod
     def _claim_polymorphic(cls, data):
-        return isinstance(data, dict) and "$ref" in data
+        return isinstance(data, dict) and "$ref" in data and len(data) == 1

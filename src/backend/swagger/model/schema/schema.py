@@ -278,7 +278,7 @@ class Schema(Model, Linkable):
                     )
                 self.disc_parent.disc_children[disc_value] = self
 
-    def _build_model(self, in_base):
+    def _build_model(self, in_base, read_only, frozen):
         if self.type == "string":
             if self.format is None:
                 if in_base:
@@ -389,16 +389,28 @@ class Schema(Model, Linkable):
                 raise exceptions.InvalidSwaggerValueError(
                     f"format is not supported", key=self.traces, value=[self.type, self.format])
         elif self.all_of is not None:
-            model = self.all_of[0]._build_model(in_base=in_base)
+            model = self.all_of[0]._build_model(in_base=in_base, read_only=read_only, frozen=frozen)
         elif self.ref_instance is not None:
-            model = self.ref_instance._build_model(in_base=in_base)
+            model = self.ref_instance._build_model(in_base=in_base, read_only=read_only, frozen=frozen)
         else:
             raise exceptions.InvalidSwaggerValueError(
                 f"type is not supported", key=self.traces, value=[self.type])
-
+        model.read_only = read_only
+        model.frozen = frozen
         return model
 
-    def to_cmd_schema(self, traces_route, mutability, ref_link=None, in_base=False):
+    def to_cmd_schema(self, traces_route, mutability, read_only=False, frozen=False, ref_link=None, in_base=False):
+        # verify model will be read only or not
+        read_only = read_only or self.read_only
+        # verify model will be frozen (not used or not)
+        if not frozen:
+            if read_only:
+                if mutability != MutabilityEnum.Read:
+                    frozen = True  # frozen because of mutability
+            elif self.x_ms_mutability:
+                if mutability not in self.x_ms_mutability:
+                    frozen = True  # frozen because of mutability
+
         if self.traces in traces_route:
             assert isinstance(ref_link, str), f"Ref Link needed: {[*traces_route, self.traces]}"
             schema_cls = f"@{ref_link.split('/')[-1]}"
@@ -417,19 +429,14 @@ class Schema(Model, Linkable):
 
         if self.ref_instance is not None:
             model = self.ref_instance.to_cmd_schema(
-                traces_route=[*traces_route, self.traces], mutability=mutability, ref_link=self.ref)
+                traces_route=[*traces_route, self.traces],
+                mutability=mutability,
+                read_only=read_only,
+                frozen=frozen,
+                ref_link=self.ref
+            )
         else:
-            model = self._build_model(in_base=in_base)
-
-        if self.read_only:
-            model.read_only = True
-
-        if self.read_only:
-            if mutability != MutabilityEnum.Read:
-                model.frozen = True  # frozen because of mutability
-        elif self.x_ms_mutability:
-            if mutability not in self.x_ms_mutability:
-                model.frozen = True  # frozen because of mutability
+            model = self._build_model(in_base=in_base, read_only=read_only, frozen=frozen)
 
         if isinstance(model, CMDStringSchemaBase):
             if self.all_of is not None:
@@ -470,11 +477,19 @@ class Schema(Model, Linkable):
             model.fmt = self.build_cmd_array_format() or model.fmt
             if self.items:
                 assert isinstance(self.items, Schema)
-                v = self.items.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
+                v = self.items.to_cmd_schema(
+                    traces_route=[*traces_route, self.traces],
+                    mutability=mutability,
+                    read_only=read_only,
+                    frozen=frozen,
+                    in_base=True,
+                )
                 assert isinstance(v, CMDSchemaBase)
                 model.item = v
-                if model.item.frozen:
-                    model.frozen = True  # freeze because array item is frozen
+
+                # freeze because array item is frozen
+                if not model.frozen and model.item.frozen:
+                    model.frozen = True
         elif isinstance(model, CMDObjectSchemaBase):
             # props
             prop_dict = {}
@@ -490,7 +505,13 @@ class Schema(Model, Linkable):
                     if disc_parent is not None and item.ref_instance.traces in traces_route:
                         # discriminator parent already in trace, break reference loop
                         continue
-                    v = item.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
+                    v = item.to_cmd_schema(
+                        traces_route=[*traces_route, self.traces],
+                        mutability=mutability,
+                        read_only=read_only,
+                        frozen=frozen,
+                        in_base=True
+                    )
                     if isinstance(v, CMDClsSchemaBase):
                         raise exceptions.InvalidSwaggerValueError(
                             msg="AllOf not support to reference loop",
@@ -522,7 +543,12 @@ class Schema(Model, Linkable):
             if self.properties:
                 for name, p in self.properties.items():
                     assert isinstance(p, Schema)
-                    v = p.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability)
+                    v = p.to_cmd_schema(
+                        traces_route=[*traces_route, self.traces],
+                        mutability=mutability,
+                        read_only=read_only,
+                        frozen=frozen
+                    )
                     if v is None:
                         # ignore by mutability
                         continue
@@ -530,6 +556,7 @@ class Schema(Model, Linkable):
                     v.name = name
                     prop_dict[name] = v
 
+            # TODO: move required as list
             if self.required:
                 for name in self.required:
                     if name in prop_dict:
@@ -574,7 +601,13 @@ class Schema(Model, Linkable):
                         enum_item.value = disc_value
                         prop_dict[disc_prop].enum.items.append(enum_item)
 
-                    v = disc_child.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
+                    v = disc_child.to_cmd_schema(
+                        traces_route=[*traces_route, self.traces],
+                        mutability=mutability,
+                        read_only=read_only,
+                        frozen=frozen,
+                        in_base=True
+                    )
                     assert isinstance(v, CMDObjectSchemaBase)
                     if v.frozen:
                         disc.frozen = True
@@ -615,12 +648,6 @@ class Schema(Model, Linkable):
             if prop_dict:
                 model.props = []
                 for prop in prop_dict.values():
-                    if model.read_only:
-                        # mark properties as read_only to help sub schema inherent those properties
-                        prop.read_only = True
-                    if model.frozen:
-                        # mark properties as frozen to help sub schema inherent those properties
-                        prop.frozen = True
                     model.props.append(prop)
 
             # fmt
@@ -630,7 +657,12 @@ class Schema(Model, Linkable):
             if self.additional_properties:
                 if isinstance(self.additional_properties, Schema):
                     v = self.additional_properties.to_cmd_schema(
-                        traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
+                        traces_route=[*traces_route, self.traces],
+                        mutability=mutability,
+                        read_only=read_only,
+                        frozen=frozen,
+                        in_base=True,
+                    )
                     if v is not None:
                         assert isinstance(v, CMDSchemaBase)
                         model.additional_props = CMDObjectSchemaAdditionalProperties()
@@ -642,18 +674,17 @@ class Schema(Model, Linkable):
                 model.additional_props = CMDObjectSchemaAdditionalProperties()
 
             if model.additional_props:
-                if model.read_only:
-                    # mark additional_props as read_only to help sub schema inherent those properties
-                    model.additional_props.read_only = True
-                if model.frozen:
-                    # mark additional_props as frozen to help sub schema inherent those properties
-                    model.additional_props.frozen = True
+                if read_only:
+                    model.additional_props.read_only = read_only
+                if frozen:
+                    model.additional_props.frozen = frozen
 
             if self.x_ms_client_flatten and isinstance(model, CMDObjectSchema):
                 # client flatten can only be supported for CMDObjectSchema install of CMDObjectSchemaBase.
                 # Because CMDObjectSchemaBase will not link with argument
                 model.client_flatten = True
 
+            # when all additional_props and props and discriminators of model is frozen then this model is frozen
             if not model.frozen:
                 need_frozen = True
                 if model.additional_props:
