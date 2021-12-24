@@ -13,7 +13,7 @@ from .fields import XmsParameterLocationField, XmsApiVersionField, XmsSkipUrlEnc
 from .fields import XmsSkipURLEncodingField, XAccessibilityField, XmsHeaderCollectionPrefix
 from .items import Items
 from .reference import Reference, Linkable
-from .schema import Schema
+from .schema import Schema, ReferenceSchema, schema_and_reference_schema_claim_function
 from .x_ms_parameter_grouping import XmsParameterGroupingField
 
 logger = logging.getLogger('backend')
@@ -194,7 +194,11 @@ class BodyParameter(ParameterBase, Linkable):
 
     IN_VALUE = "body"
 
-    schema = ModelType(Schema, required=True)  # The schema defining the type used for the body parameter.
+    schema = PolyModelType(
+        [ModelType(Schema), ModelType(ReferenceSchema)],
+        claim_function=schema_and_reference_schema_claim_function,
+        required=True
+    )  # The schema defining the type used for the body parameter.
 
     x_nullable = XNullableField(
         default=False)  # TODO: # when true, specifies that null is a valid value for the associated schema

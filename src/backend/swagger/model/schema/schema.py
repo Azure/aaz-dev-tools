@@ -37,22 +37,82 @@ import logging
 logger = logging.getLogger('backend')
 
 
+def schema_and_reference_schema_claim_function(_, data):
+    if isinstance(data, dict):
+        if ReferenceSchema._claim_polymorphic(data=data):
+            return ReferenceSchema
+        else:
+            return Schema
+    else:
+        return None
+
+
 def _additional_properties_claim_function(_, data):
     if isinstance(data, bool):
         return bool
     elif isinstance(data, dict):
-        return Schema
+        return schema_and_reference_schema_claim_function(_, data)
     else:
         return None
 
 
 def _items_claim_function(_, data):
     if isinstance(data, dict):
-        return Schema
+        return schema_and_reference_schema_claim_function(_, data)
     elif isinstance(data, list):
-        return ListType(ModelType(Schema))
+        if data and ReferenceSchema._claim_polymorphic(data=data[0]):
+            return ListType(ModelType(ReferenceSchema))
+        else:
+            return ListType(ModelType(Schema))
     else:
         return None
+
+
+class ReferenceSchema(Model, Linkable):
+    ref = ReferenceField(required=True)
+    description = StringType()
+    title = StringType()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ref_instance = None
+        self.x_ms_azure_resource = False
+
+    def get_disc_parent(self):
+        return self.ref_instance.get_disc_parent()
+
+    def link(self, swagger_loader, *traces):
+        if self.is_linked():
+            return
+        super().link(swagger_loader, *traces)
+
+        self.ref_instance, instance_traces = swagger_loader.load_ref(self.ref, *self.traces, 'ref')
+        if isinstance(self.ref_instance, Linkable):
+            self.ref_instance.link(swagger_loader, *instance_traces)
+        if self.ref_instance.x_ms_azure_resource:
+            self.x_ms_azure_resource = True
+
+    def to_cmd_schema(self, traces_route, mutability, read_only=False, frozen=False, ref_link=None, in_base=False):
+        model = self.ref_instance.to_cmd_schema(
+            traces_route=[*traces_route, self.traces],
+            mutability=mutability,
+            read_only=read_only,
+            frozen=frozen,
+            ref_link=self.ref
+        )
+
+        if self.description and isinstance(model, CMDSchema):
+            model.description = self.description
+
+        return model
+
+    def _build_model(self, in_base, read_only, frozen):
+        return self.ref_instance._build_model(in_base=in_base, read_only=read_only, frozen=frozen)
+
+    @classmethod
+    def _claim_polymorphic(cls, data):
+        return isinstance(data, dict) and "$ref" in data and len(data) <= 3 and \
+               set(data.keys()).issubset({"$ref", "description", "title"})
 
 
 class Schema(Model, Linkable):
@@ -99,7 +159,12 @@ class Schema(Model, Linkable):
 
     # Validation keywords for arrays
     items = PolyModelType(
-        [ModelType("Schema"), ListType(ModelType("Schema"))],
+        [
+            ModelType("Schema"),
+            ModelType(ReferenceSchema),
+            ListType(ModelType("Schema")),
+            ListType(ModelType(ReferenceSchema))
+        ],
         claim_function=_items_claim_function,
     )
     max_items = IntType(
@@ -130,10 +195,16 @@ class Schema(Model, Linkable):
     )
     required = ListType(StringType(), min_size=1)
     properties = DictType(
-        ModelType("Schema"),
+        PolyModelType(
+            [
+                ModelType("Schema"),
+                ModelType(ReferenceSchema)
+            ],
+            claim_function=schema_and_reference_schema_claim_function,
+        ),
     )
     additional_properties = PolyModelType(
-        [bool, ModelType("Schema")],
+        [bool, ModelType("Schema"), ModelType(ReferenceSchema)],
         claim_function=_additional_properties_claim_function,
         serialized_name="additionalProperties",
         deserialize_from="additionalProperties"
@@ -147,7 +218,10 @@ class Schema(Model, Linkable):
         choices=["array", "boolean", "integer", "number", "object", "string"],  # https://datatracker.ietf.org/doc/html/draft-zyp-json-schema-04#section-3.5
     )
     all_of = ListType(
-        ModelType("Schema"),
+        PolyModelType(
+            [ModelType("Schema"), ModelType(ReferenceSchema)],
+            claim_function=schema_and_reference_schema_claim_function,
+        ),
         serialized_name="allOf",
         deserialize_from="allOf"
     )
@@ -233,7 +307,7 @@ class Schema(Model, Linkable):
             for key, prop in self.properties.items():
                 prop.link(swagger_loader, *self.traces, 'properties', key)
 
-        if self.additional_properties is not None and isinstance(self.additional_properties, Schema):
+        if self.additional_properties is not None and isinstance(self.additional_properties, (Schema, ReferenceSchema)):
             self.additional_properties.link(swagger_loader, *self.traces, 'additionalProperties')
 
         if self.all_of is not None:
@@ -476,7 +550,7 @@ class Schema(Model, Linkable):
                 )
             model.fmt = self.build_cmd_array_format() or model.fmt
             if self.items:
-                assert isinstance(self.items, Schema)
+                assert isinstance(self.items, (Schema, ReferenceSchema))
                 v = self.items.to_cmd_schema(
                     traces_route=[*traces_route, self.traces],
                     mutability=mutability,
@@ -542,7 +616,7 @@ class Schema(Model, Linkable):
 
             if self.properties:
                 for name, p in self.properties.items():
-                    assert isinstance(p, Schema)
+                    assert isinstance(p, (Schema, ReferenceSchema))
                     v = p.to_cmd_schema(
                         traces_route=[*traces_route, self.traces],
                         mutability=mutability,
@@ -654,7 +728,7 @@ class Schema(Model, Linkable):
 
             # additional properties
             if self.additional_properties:
-                if isinstance(self.additional_properties, Schema):
+                if isinstance(self.additional_properties, (Schema, ReferenceSchema)):
                     v = self.additional_properties.to_cmd_schema(
                         traces_route=[*traces_route, self.traces],
                         mutability=mutability,
