@@ -119,7 +119,7 @@ class Operation(Model, Linkable):
             if isinstance(self.x_ms_odata_instance, Linkable):
                 self.x_ms_odata_instance.link(swagger_loader, *instance_traces)
 
-    def to_cmd_operation(self, path, method, parent_parameters, mutability):
+    def to_cmd(self, builder, parent_parameters, **kwargs):
         cmd_op = CMDHttpOperation()
         if self.x_ms_long_running_operation:
             cmd_op.long_running = CMDHttpOperationLongRunning()
@@ -127,12 +127,12 @@ class Operation(Model, Linkable):
                 cmd_op.long_running.final_state_via = self.x_ms_long_running_operation_options.final_state_via
 
         cmd_op.operation_id = self.operation_id
-        cmd_op.description = self.description
+        builder.setup_description(cmd_op, self)
 
         cmd_op.http = CMDHttpAction()
-        cmd_op.http.path = path
+        cmd_op.http.path = builder.path
         cmd_op.http.request = CMDHttpRequest()
-        cmd_op.http.request.method = method
+        cmd_op.http.request.method = builder.method
         cmd_op.http.responses = []
 
         # request
@@ -142,7 +142,7 @@ class Operation(Model, Linkable):
         client_request_id_name = None
         if parent_parameters:
             for p in parent_parameters:
-                model = p.to_cmd_model(mutability=mutability)
+                model = builder(p)
                 if model is None:
                     continue
                 if p.IN_VALUE not in param_models:
@@ -154,7 +154,7 @@ class Operation(Model, Linkable):
 
         if self.parameters:
             for p in self.parameters:
-                model = p.to_cmd_model(mutability=mutability)
+                model = builder(p)
                 if model is None:
                     continue
                 if p.IN_VALUE not in param_models:
@@ -188,7 +188,7 @@ class Operation(Model, Linkable):
                 raise exceptions.InvalidSwaggerValueError(
                     msg="Duplicate parameters in request body",
                     key=self.traces,
-                    value=[path, method, mutability, *param_models[BodyParameter.IN_VALUE].keys()]
+                    value=[builder.path, builder.method, builder.mutability, *param_models[BodyParameter.IN_VALUE].keys()]
                 )
             model = [*param_models[BodyParameter.IN_VALUE].values()][0]
             if isinstance(model, CMDJson):
@@ -201,109 +201,23 @@ class Operation(Model, Linkable):
             raise NotImplementedError()
 
         # response
-        success_responses = {}
-        redirect_responses = {}
-        error_responses = {}
-
-        # convert default response
-        if 'default' in self.responses:
-            resp = self.responses['default']
-            model = resp.to_cmd_model()
-            model.is_error = True
-            error_responses['default'] = (resp, model)
-
-        for code, resp in self.responses.items():
-            if code == "default":
-                continue
-            status_code = int(code)
-
-            if status_code < 300:
-                # success
-                find_match = False
-                for _, (p_resp, p_model) in success_responses.items():
-                    if p_resp.schema == resp.schema:
-                        p_model.status_codes.append(status_code)
-                        find_match = True
-                        break
-                if not find_match:
-                    model = resp.to_cmd_model()
-                    model.status_codes = [status_code]
-                    assert not model.is_error
-                    success_responses[code] = (resp, model)
-            elif status_code < 400:
-                # redirect
-                find_match = False
-                for _, (p_resp, p_model) in redirect_responses.items():
-                    if p_resp.schema == resp.schema:
-                        p_model.status_codes.append(status_code)
-                        find_match = True
-                        break
-                if not find_match:
-                    model = resp.to_cmd_model()
-                    model.status_codes = [status_code]
-                    assert not model.is_error
-                    redirect_responses[code] = (resp, model)
-            else:
-                # error
-                find_match = False
-                for p_code, (p_resp, p_model) in error_responses.items():
-                    if p_resp.schema == resp.schema:
-                        if p_code != "default":
-                            p_model.status_codes.append(status_code)
-                        find_match = True
-                        break
-                if not find_match:
-                    model = resp.to_cmd_model()
-                    model.status_codes = [status_code]
-                    model.is_error = True
-                    error_responses[code] = (resp, model)
-
-        if len(success_responses) > 2:
-            raise exceptions.InvalidSwaggerValueError(
-                msg="Multi Schema for success responses",
-                key=[self.traces],
-                value=[*success_responses.keys()]
-            )
-        if len(redirect_responses) > 2:
-            raise exceptions.InvalidSwaggerValueError(
-                msg="Multi Schema for redirect responses",
-                key=[self.traces],
-                value=[*redirect_responses.keys()]
-            )
-        if len(error_responses) > 2:
-            raise exceptions.InvalidSwaggerValueError(
-                msg="Multi Schema for error responses",
-                key=[self.traces],
-                value=[*error_responses.keys()]
-            )
-
-        # # default response
-        # if 'default' not in error_responses and len(error_responses) == 1:
-        #     p_resp, p_model = [*error_responses.values()][0]
-        #     if p_model.body is not None:
-        #         # use the current error response as default
-        #         p_model.status_codes = None
-        #         error_responses = {
-        #             "default": (p_resp, p_model)
-        #         }
-        # if 'default' not in error_responses:
-        #     raise exceptions.InvalidSwaggerValueError(
-        #         msg="Miss default response",
-        #         key=self.traces,
-        #         value=[path, method]
-        #     )
+        success_responses,  redirect_responses, error_responses = builder.classify_responses(self)
 
         cmd_op.http.responses = []
-        for _, model in success_responses.values():
+        for status_codes, resp in success_responses:
+            model = builder(resp, status_codes=status_codes)
             cmd_op.http.responses.append(model)
-        for _, model in redirect_responses.values():
+        for status_codes, resp in redirect_responses:
+            model = builder(resp, status_codes=status_codes)
             cmd_op.http.responses.append(model)
-        for _, model in error_responses.values():
+        for status_codes, resp in error_responses:
+            model = builder(resp, is_error=True, status_codes=status_codes)
             cmd_op.http.responses.append(model)
+
         if len(cmd_op.http.responses) == 0:
             raise exceptions.InvalidSwaggerValueError(
                 msg="No http response",
                 key=self.traces,
-                value=[path, method]
+                value=[builder.path, builder.method]
             )
         return cmd_op

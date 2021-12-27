@@ -92,22 +92,28 @@ class ReferenceSchema(Model, Linkable):
         if self.ref_instance.x_ms_azure_resource:
             self.x_ms_azure_resource = True
 
-    def to_cmd_schema(self, traces_route, mutability, read_only=False, frozen=False, ref_link=None, in_base=False):
-        model = self.ref_instance.to_cmd_schema(
-            traces_route=[*traces_route, self.traces],
-            mutability=mutability,
-            read_only=read_only,
-            frozen=frozen,
-            ref_link=self.ref
-        )
-
-        if self.description and isinstance(model, CMDSchema):
-            model.description = self.description
-
+    def to_cmd(self, builder, traces_route, **kwargs):
+        model = builder(self.ref_instance, traces_route=[*traces_route, self.traces], ref_link=self.ref)
+        if isinstance(model, CMDSchema):
+            builder.setup_description(model, self)
         return model
 
-    def _build_model(self, in_base, read_only, frozen):
-        return self.ref_instance._build_model(in_base=in_base, read_only=read_only, frozen=frozen)
+    # def to_cmd_schema(self, traces_route, mutability, read_only=False, frozen=False, ref_link=None, in_base=False):
+    #     model = self.ref_instance.to_cmd_schema(
+    #         traces_route=[*traces_route, self.traces],
+    #         mutability=mutability,
+    #         read_only=read_only,
+    #         frozen=frozen,
+    #         ref_link=self.ref
+    #     )
+    #
+    #     if self.description and isinstance(model, CMDSchema):
+    #         model.description = self.description
+    #
+    #     return model
+    #
+    # def _build_model(self, in_base, read_only, frozen):
+    #     return self.ref_instance._build_model(in_base=in_base, read_only=read_only, frozen=frozen)
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -352,125 +358,246 @@ class Schema(Model, Linkable):
                     )
                 self.disc_parent.disc_children[disc_value] = self
 
-    def _build_model(self, in_base, read_only, frozen):
-        if self.type == "string":
-            if self.format is None:
-                if in_base:
-                    model = CMDStringSchemaBase()
-                else:
-                    model = CMDStringSchema()
-            elif self.format == "byte":
-                if in_base:
-                    model = CMDByteSchemaBase()
-                else:
-                    model = CMDByteSchema()
-            elif self.format == "binary":
-                if in_base:
-                    model = CMDBinarySchemaBase()
-                else:
-                    model = CMDBinarySchema()
-            elif self.format == "date":
-                if in_base:
-                    model = CMDDateSchemaBase()
-                else:
-                    model = CMDDateSchema()
-            elif self.format == "date-time":
-                if in_base:
-                    model = CMDDateTimeSchemaBase()
-                else:
-                    model = CMDDateTimeSchema()
-            elif self.format == "password":
-                if in_base:
-                    model = CMDPasswordSchemaBase()
-                else:
-                    model = CMDPasswordSchema()
-            elif self.format == "duration":
-                if in_base:
-                    model = CMDDurationSchemaBase()
-                else:
-                    model = CMDDurationSchema()
-            elif self.format == "uuid":
-                if in_base:
-                    model = CMDUuidSchemaBase()
-                else:
-                    model = CMDUuidSchema()
+    def to_cmd(self, builder, traces_route, ref_link=None, **kwargs):
+        if self.traces in traces_route:
+            assert isinstance(ref_link, str), f"Ref Link needed: {[*traces_route, self.traces]}"
+            schema_cls = f"@{ref_link.split('/')[-1]}"
+            if builder.in_base:
+                model = CMDClsSchemaBase()
+                model._type = schema_cls
             else:
-                raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=self.traces, value=[self.type, self.format])
-        elif self.type == "integer":
-            if self.format is None:
-                if in_base:
-                    model = CMDIntegerSchemaBase()
-                else:
-                    model = CMDIntegerSchema()
-            elif self.format == "int32":
-                if in_base:
-                    model = CMDInteger32SchemaBase()
-                else:
-                    model = CMDInteger32Schema()
-            elif self.format == "int64":
-                if in_base:
-                    model = CMDInteger64SchemaBase()
-                else:
-                    model = CMDInteger64Schema()
+                model = CMDClsSchema()
+                model._type = schema_cls
+            setattr(self, "_looped", True)
+            if not hasattr(self, "_schema_cls"):
+                setattr(self, "_schema_cls", schema_cls)
             else:
-                raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=self.traces, value=[self.type, self.format])
-        elif self.type == "boolean":
-            if self.format is None:
-                if in_base:
-                    model = CMDBooleanSchemaBase()
-                else:
-                    model = CMDBooleanSchema()
-            else:
-                raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=self.traces, value=[self.type, self.format])
-        elif self.type == "number":
-            if self.format is None:
-                if in_base:
-                    model = CMDFloatSchemaBase()
-                else:
-                    model = CMDFloatSchema()
-            elif self.format == "float":
-                if in_base:
-                    model = CMDFloat32SchemaBase()
-                else:
-                    model = CMDFloat32Schema()
-            elif self.format == "double":
-                if in_base:
-                    model = CMDFloat64SchemaBase()
-                else:
-                    model = CMDFloat64Schema()
-            else:
-                raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=self.traces, value=[self.type, self.format])
-        elif self.type == "array":
-            if self.format is None:
-                if in_base:
-                    model = CMDArraySchemaBase()
-                else:
-                    model = CMDArraySchema()
-            else:
-                raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=self.traces, value=[self.type, self.format])
-        elif self.type == "object" or self.properties or self.additional_properties:
-            if self.format is None:
-                if in_base:
-                    model = CMDObjectSchemaBase()
-                else:
-                    model = CMDObjectSchema()
-            else:
-                raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=self.traces, value=[self.type, self.format])
-        elif self.all_of is not None:
-            model = self.all_of[0]._build_model(in_base=in_base, read_only=read_only, frozen=frozen)
-        elif self.ref_instance is not None:
-            model = self.ref_instance._build_model(in_base=in_base, read_only=read_only, frozen=frozen)
+                assert self._schema_cls == schema_cls
+            return model
+
+        if self.ref_instance is not None:
+            model = builder(self.ref_instance, traces_route=[*traces_route, self.traces], ref_link=self.ref)
         else:
-            raise exceptions.InvalidSwaggerValueError(
-                f"type is not supported", key=self.traces, value=[self.type])
-        model.read_only = read_only
-        model.frozen = frozen
+            model = builder.build_schema(self)
+
+        if isinstance(model, CMDArraySchemaBase):
+            if self.all_of is not None:
+                raise exceptions.InvalidSwaggerValueError(
+                    msg=f"allOf is not supported for `array` type schema",
+                    key=self.traces, value=None
+                )
+            if self.items:
+                assert isinstance(self.items, (Schema, ReferenceSchema))
+                v = builder(self.items, traces_route=[*traces_route, self.traces], in_base=True)
+                assert isinstance(v, CMDSchemaBase)
+                model.item = v
+
+                # freeze because array item is frozen
+                if not model.frozen and model.item.frozen:
+                    model.frozen = True
+        elif isinstance(model, CMDObjectSchemaBase):
+            # props
+            prop_dict = {}
+            if model.props is not None:
+                # inherent from $ref
+                for prop in model.props:
+                    prop_dict[prop.name] = prop
+
+            if self.all_of:
+                # inherent from allOf
+                for item in self.all_of:
+                    disc_parent = item.get_disc_parent()
+                    if disc_parent is not None and item.ref_instance.traces in traces_route:
+                        # discriminator parent already in trace, break reference loop
+                        continue
+                    v = builder(item, traces_route=[*traces_route, self.traces], in_base=True)
+                    if isinstance(v, CMDClsSchemaBase):
+                        raise exceptions.InvalidSwaggerValueError(
+                            msg="AllOf not support to reference loop",
+                            key=self.traces,
+                            value=v.type
+                        )
+                    assert isinstance(v, CMDObjectSchemaBase)
+                    if v.fmt:
+                        model.fmt = v.fmt
+
+                    if v.props:
+                        for p in v.props:
+                            prop_dict[p.name] = p
+
+                    if disc_parent is not None and disc_parent.traces not in traces_route:
+                        # directly use child definition instead of polymorphism.
+                        # So the value for discriminator property is const.
+                        disc_prop = disc_parent.discriminator
+                        for disc_value, disc_child in disc_parent.disc_children.items():
+                            if disc_child == self:
+                                prop_dict[disc_prop].const = True
+                                prop_dict[disc_prop].default = CMDSchemaDefault()
+                                prop_dict[disc_prop].default.value = disc_value
+                                break
+
+                    if v.additional_props:
+                        model.additional_props = v.additional_props
+
+            if self.properties:
+                for name, p in self.properties.items():
+                    assert isinstance(p, (Schema, ReferenceSchema))
+                    v = builder(p, traces_route=[*traces_route, self.traces], in_base=False)
+                    if v is None:
+                        # ignore by mutability
+                        continue
+                    assert isinstance(v, CMDSchema)
+                    v.name = name
+                    prop_dict[name] = v
+
+            if self.required:
+                for name in self.required:
+                    if name in prop_dict:
+                        prop_dict[name].required = True  # because required property will not be included in a cls definition, so it's fine to update it in parent level when prop_dict[name] is a cls definition.
+
+            # discriminators
+            if self.disc_children:
+                discriminators = []
+                assert self.discriminator is not None
+                disc_prop = self.discriminator
+                for disc_value, disc_child in self.disc_children.items():
+                    if disc_child.traces in traces_route:
+                        # discriminator child already in trace, break reference loop
+                        continue
+                    disc = CMDObjectSchemaDiscriminator()
+                    disc.prop = disc_prop
+                    disc.value = disc_value
+
+                    if disc_prop not in prop_dict:
+                        raise exceptions.InvalidSwaggerValueError(
+                            msg="Discriminator Property don't exist",
+                            key=self.traces,
+                            value=[disc_prop, builder.mutability]
+                        )
+                    if not hasattr(prop_dict[disc_prop], "enum"):
+                        raise exceptions.InvalidSwaggerValueError(
+                            msg="Invalid Discriminator Property type",
+                            key=self.traces,
+                            value=[disc_prop, prop_dict[disc_prop].type]
+                        )
+
+                    # make sure discriminator value is an enum item of discriminator property
+                    if prop_dict[disc_prop].enum is None:
+                        prop_dict[disc_prop].enum = CMDSchemaEnum()
+                        prop_dict[disc_prop].enum.items = []
+                    exist_disc_value = False
+                    for enum_item in prop_dict[disc_prop].enum.items:
+                        if enum_item.value == disc_value:
+                            exist_disc_value = True
+                    if not exist_disc_value:
+                        enum_item = CMDSchemaEnumItem()
+                        enum_item.value = disc_value
+                        prop_dict[disc_prop].enum.items.append(enum_item)
+
+                    v = builder(traces_route=[*traces_route, self.traces], in_base=True)
+                    assert isinstance(v, CMDObjectSchemaBase)
+                    if v.frozen:
+                        disc.frozen = True
+                    if v.props:
+                        disc.props = [prop for prop in v.props if prop.name not in prop_dict]
+                    if v.discriminators:
+                        disc.discriminators = v.discriminators
+
+                    discriminators.append(disc)
+                if discriminators:
+                    model.discriminators = discriminators
+
+            # convert special properties when self is an azure resource
+            if self.x_ms_azure_resource and prop_dict:
+                if 'id' in prop_dict and self.resource_id_templates:
+                    id_prop = prop_dict['id']
+                    if not isinstance(id_prop, CMDResourceIdSchema):
+                        assert isinstance(id_prop, CMDStringSchema)
+                        raw_data = id_prop.to_native()
+                        prop_dict['id'] = id_prop = CMDResourceIdSchema(raw_data=raw_data)
+                    if len(self.resource_id_templates) == 1:
+                        id_prop.fmt = CMDResourceIdFormat()
+                        id_prop.fmt.template = [*self.resource_id_templates][0]
+                    else:
+                        err = exceptions.InvalidSwaggerValueError(
+                            msg="Multi resource id templates error",
+                            key=self.traces,
+                            value=self.resource_id_templates
+                        )
+                        # logger.warning(err)
+                if 'location' in prop_dict:
+                    location_prop = prop_dict['location']
+                    if not isinstance(location_prop, CMDResourceLocationSchema):
+                        assert isinstance(location_prop, CMDStringSchema)
+                        raw_data = location_prop.to_native()
+                        prop_dict['location'] = CMDResourceLocationSchema(raw_data=raw_data)
+
+            if prop_dict:
+                model.props = []
+                for prop in prop_dict.values():
+                    model.props.append(prop)
+
+            # additional properties
+            if self.additional_properties:
+                if isinstance(self.additional_properties, (Schema, ReferenceSchema)):
+                    v = builder(self.additional_properties, traces_route=[*traces_route, self.traces], in_base=True)
+                    if v is not None:
+                        assert isinstance(v, CMDSchemaBase)
+                        model.additional_props = CMDObjectSchemaAdditionalProperties()
+                        model.additional_props.item = v
+                elif self.additional_properties is True:
+                    model.additional_props = CMDObjectSchemaAdditionalProperties()
+            elif not model.props and not model.discriminators:
+                # to handle object schema without any properties
+                model.additional_props = CMDObjectSchemaAdditionalProperties()
+
+            if model.additional_props:
+                if builder.read_only:
+                    model.additional_props.read_only = builder.read_only
+                if builder.frozen:
+                    model.additional_props.frozen = builder.frozen
+
+            if self.x_ms_client_flatten and isinstance(model, CMDObjectSchema):
+                # client flatten can only be supported for CMDObjectSchema install of CMDObjectSchemaBase.
+                # Because CMDObjectSchemaBase will not link with argument
+                model.client_flatten = True
+
+            # when all additional_props and props and discriminators of model is frozen then this model is frozen
+            if not model.frozen:
+                need_frozen = True
+                if model.additional_props:
+                    if not model.additional_props.frozen:
+                        need_frozen = False
+                if model.props:
+                    for prop in model.props:
+                        if not prop.frozen:
+                            need_frozen = False
+                            break
+                if model.discriminators:
+                    for disc in model.discriminators:
+                        if not disc.frozen:
+                            need_frozen = False
+                            break
+                model.frozen = need_frozen
+        else:
+            if self.all_of is not None:
+                raise exceptions.InvalidSwaggerValueError(
+                    msg=f"allOf is not supported for `{model.type}` type schema",
+                    key=self.traces, value=None
+                )
+
+        if getattr(self, "_looped", False):
+            assert isinstance(model, (CMDObjectSchemaBase, CMDArraySchemaBase))
+            model.cls = self._schema_cls
+            setattr(self, "_looped", False)
+
+        builder.setup_fmt(model, self)
+        builder.setup_enum(model, self)
+        builder.setup_default(model, self)
+
+        if isinstance(model, CMDSchema):
+            builder.setup_description(model, self)
+
         return model
 
     def to_cmd_schema(self, traces_route, mutability, read_only=False, frozen=False, ref_link=None, in_base=False):
@@ -793,124 +920,245 @@ class Schema(Model, Linkable):
 
         return model
 
-    def build_cmd_string_format(self):
-        fmt_assigned = False
-
-        fmt = CMDStringFormat()
-
-        if self.pattern is not None:
-            fmt.pattern = self.pattern
-            fmt_assigned = True
-        if self.max_length is not None:
-            fmt.max_length = self.max_length
-            fmt_assigned = True
-        if self.min_length is not None:
-            fmt.min_length = self.min_length
-            fmt_assigned = True
-
-        if not fmt_assigned:
-            return None
-        return fmt
-
-    def build_cmd_integer_format(self):
-        fmt_assigned = False
-        fmt = CMDIntegerFormat()
-
-        if self.maximum is not None:
-            fmt.maximum = int(self.maximum)
-            if self.exclusive_maximum and fmt.maximum == self.maximum:
-                fmt.maximum -= 1
-            fmt_assigned = True
-
-        if self.minimum is not None:
-            fmt.minimum = int(self.minimum)
-            if self.exclusive_minimum and fmt.minimum == self.minimum:
-                fmt.minimum += 1
-            fmt_assigned = True
-
-        if self.multiple_of is not None:
-            fmt.multiple_of = self.multiple_of
-            fmt_assigned = True
-
-        if not fmt_assigned:
-            return None
-        return fmt
-
-    def build_cmd_float_format(self):
-        fmt_assigned = False
-        fmt = CMDFloatFormat()
-
-        if self.maximum is not None:
-            fmt.maximum = self.maximum
-            if self.exclusive_maximum:
-                fmt.exclusive_maximum = True
-            fmt_assigned = True
-
-        if self.minimum is not None:
-            fmt.minimum = int(self.minimum)
-            if self.exclusive_minimum:
-                fmt.exclusive_minimum = True
-            fmt_assigned = True
-
-        if self.multiple_of is not None:
-            fmt.multiple_of = self.multiple_of
-            fmt_assigned = True
-
-        if not fmt_assigned:
-            return None
-        return fmt
-
-    def build_cmd_array_format(self):
-        fmt_assigned = False
-        fmt = CMDArrayFormat()
-
-        if self.unique_items:
-            fmt.unique = True
-            fmt_assigned = True
-
-        if self.max_length is not None:
-            fmt.max_length = self.max_length
-            fmt_assigned = True
-
-        if self.min_length is not None:
-            fmt.min_length = self.min_length
-            fmt_assigned = True
-
-        if not fmt_assigned:
-            return None
-        return fmt
-
-    def build_cmd_object_format(self):
-        fmt_assigned = False
-        fmt = CMDObjectFormat()
-
-        if self.max_properties is not None:
-            fmt.max_properties = self.max_properties
-            fmt_assigned = True
-        if self.min_properties is not None:
-            fmt.min_properties = self.min_properties
-            fmt_assigned = True
-
-        if not fmt_assigned:
-            return None
-        return fmt
-
-    def build_enum(self):
-        if not self.enum and not (self.x_ms_enum and self.x_ms_enum.values):
-            return None
-        enum = CMDSchemaEnum()
-        enum.items = []
-        if self.x_ms_enum and self.x_ms_enum.values:
-            for v in self.x_ms_enum.values:
-                item = CMDSchemaEnumItem()
-                item.value = v.value
-                if v.name:
-                    # TODO: the name should be used as display name for argument
-                    pass
-                enum.items.append(item)
-        elif self.enum:
-            for v in self.enum:
-                item = CMDSchemaEnumItem()
-                item.value = v
-                enum.items.append(item)
-        return enum
+    # def _build_model(self, in_base, read_only, frozen):
+    #     if self.type == "string":
+    #         if self.format is None:
+    #             if in_base:
+    #                 model = CMDStringSchemaBase()
+    #             else:
+    #                 model = CMDStringSchema()
+    #         elif self.format == "byte":
+    #             if in_base:
+    #                 model = CMDByteSchemaBase()
+    #             else:
+    #                 model = CMDByteSchema()
+    #         elif self.format == "binary":
+    #             if in_base:
+    #                 model = CMDBinarySchemaBase()
+    #             else:
+    #                 model = CMDBinarySchema()
+    #         elif self.format == "date":
+    #             if in_base:
+    #                 model = CMDDateSchemaBase()
+    #             else:
+    #                 model = CMDDateSchema()
+    #         elif self.format == "date-time":
+    #             if in_base:
+    #                 model = CMDDateTimeSchemaBase()
+    #             else:
+    #                 model = CMDDateTimeSchema()
+    #         elif self.format == "password":
+    #             if in_base:
+    #                 model = CMDPasswordSchemaBase()
+    #             else:
+    #                 model = CMDPasswordSchema()
+    #         elif self.format == "duration":
+    #             if in_base:
+    #                 model = CMDDurationSchemaBase()
+    #             else:
+    #                 model = CMDDurationSchema()
+    #         elif self.format == "uuid":
+    #             if in_base:
+    #                 model = CMDUuidSchemaBase()
+    #             else:
+    #                 model = CMDUuidSchema()
+    #         else:
+    #             raise exceptions.InvalidSwaggerValueError(
+    #                 f"format is not supported", key=self.traces, value=[self.type, self.format])
+    #     elif self.type == "integer":
+    #         if self.format is None:
+    #             if in_base:
+    #                 model = CMDIntegerSchemaBase()
+    #             else:
+    #                 model = CMDIntegerSchema()
+    #         elif self.format == "int32":
+    #             if in_base:
+    #                 model = CMDInteger32SchemaBase()
+    #             else:
+    #                 model = CMDInteger32Schema()
+    #         elif self.format == "int64":
+    #             if in_base:
+    #                 model = CMDInteger64SchemaBase()
+    #             else:
+    #                 model = CMDInteger64Schema()
+    #         else:
+    #             raise exceptions.InvalidSwaggerValueError(
+    #                 f"format is not supported", key=self.traces, value=[self.type, self.format])
+    #     elif self.type == "boolean":
+    #         if self.format is None:
+    #             if in_base:
+    #                 model = CMDBooleanSchemaBase()
+    #             else:
+    #                 model = CMDBooleanSchema()
+    #         else:
+    #             raise exceptions.InvalidSwaggerValueError(
+    #                 f"format is not supported", key=self.traces, value=[self.type, self.format])
+    #     elif self.type == "number":
+    #         if self.format is None:
+    #             if in_base:
+    #                 model = CMDFloatSchemaBase()
+    #             else:
+    #                 model = CMDFloatSchema()
+    #         elif self.format == "float":
+    #             if in_base:
+    #                 model = CMDFloat32SchemaBase()
+    #             else:
+    #                 model = CMDFloat32Schema()
+    #         elif self.format == "double":
+    #             if in_base:
+    #                 model = CMDFloat64SchemaBase()
+    #             else:
+    #                 model = CMDFloat64Schema()
+    #         else:
+    #             raise exceptions.InvalidSwaggerValueError(
+    #                 f"format is not supported", key=self.traces, value=[self.type, self.format])
+    #     elif self.type == "array":
+    #         if self.format is None:
+    #             if in_base:
+    #                 model = CMDArraySchemaBase()
+    #             else:
+    #                 model = CMDArraySchema()
+    #         else:
+    #             raise exceptions.InvalidSwaggerValueError(
+    #                 f"format is not supported", key=self.traces, value=[self.type, self.format])
+    #     elif self.type == "object" or self.properties or self.additional_properties:
+    #         if self.format is None:
+    #             if in_base:
+    #                 model = CMDObjectSchemaBase()
+    #             else:
+    #                 model = CMDObjectSchema()
+    #         else:
+    #             raise exceptions.InvalidSwaggerValueError(
+    #                 f"format is not supported", key=self.traces, value=[self.type, self.format])
+    #     elif self.all_of is not None:
+    #         model = self.all_of[0]._build_model(in_base=in_base, read_only=read_only, frozen=frozen)
+    #     elif self.ref_instance is not None:
+    #         model = self.ref_instance._build_model(in_base=in_base, read_only=read_only, frozen=frozen)
+    #     else:
+    #         raise exceptions.InvalidSwaggerValueError(
+    #             f"type is not supported", key=self.traces, value=[self.type])
+    #     model.read_only = read_only
+    #     model.frozen = frozen
+    #     return model
+    #
+    # def build_cmd_string_format(self):
+    #     fmt_assigned = False
+    #
+    #     fmt = CMDStringFormat()
+    #
+    #     if self.pattern is not None:
+    #         fmt.pattern = self.pattern
+    #         fmt_assigned = True
+    #     if self.max_length is not None:
+    #         fmt.max_length = self.max_length
+    #         fmt_assigned = True
+    #     if self.min_length is not None:
+    #         fmt.min_length = self.min_length
+    #         fmt_assigned = True
+    #
+    #     if not fmt_assigned:
+    #         return None
+    #     return fmt
+    #
+    # def build_cmd_integer_format(self):
+    #     fmt_assigned = False
+    #     fmt = CMDIntegerFormat()
+    #
+    #     if self.maximum is not None:
+    #         fmt.maximum = int(self.maximum)
+    #         if self.exclusive_maximum and fmt.maximum == self.maximum:
+    #             fmt.maximum -= 1
+    #         fmt_assigned = True
+    #
+    #     if self.minimum is not None:
+    #         fmt.minimum = int(self.minimum)
+    #         if self.exclusive_minimum and fmt.minimum == self.minimum:
+    #             fmt.minimum += 1
+    #         fmt_assigned = True
+    #
+    #     if self.multiple_of is not None:
+    #         fmt.multiple_of = self.multiple_of
+    #         fmt_assigned = True
+    #
+    #     if not fmt_assigned:
+    #         return None
+    #     return fmt
+    #
+    # def build_cmd_float_format(self):
+    #     fmt_assigned = False
+    #     fmt = CMDFloatFormat()
+    #
+    #     if self.maximum is not None:
+    #         fmt.maximum = self.maximum
+    #         if self.exclusive_maximum:
+    #             fmt.exclusive_maximum = True
+    #         fmt_assigned = True
+    #
+    #     if self.minimum is not None:
+    #         fmt.minimum = int(self.minimum)
+    #         if self.exclusive_minimum:
+    #             fmt.exclusive_minimum = True
+    #         fmt_assigned = True
+    #
+    #     if self.multiple_of is not None:
+    #         fmt.multiple_of = self.multiple_of
+    #         fmt_assigned = True
+    #
+    #     if not fmt_assigned:
+    #         return None
+    #     return fmt
+    #
+    # def build_cmd_array_format(self):
+    #     fmt_assigned = False
+    #     fmt = CMDArrayFormat()
+    #
+    #     if self.unique_items:
+    #         fmt.unique = True
+    #         fmt_assigned = True
+    #
+    #     if self.max_length is not None:
+    #         fmt.max_length = self.max_length
+    #         fmt_assigned = True
+    #
+    #     if self.min_length is not None:
+    #         fmt.min_length = self.min_length
+    #         fmt_assigned = True
+    #
+    #     if not fmt_assigned:
+    #         return None
+    #     return fmt
+    #
+    # def build_cmd_object_format(self):
+    #     fmt_assigned = False
+    #     fmt = CMDObjectFormat()
+    #
+    #     if self.max_properties is not None:
+    #         fmt.max_properties = self.max_properties
+    #         fmt_assigned = True
+    #     if self.min_properties is not None:
+    #         fmt.min_properties = self.min_properties
+    #         fmt_assigned = True
+    #
+    #     if not fmt_assigned:
+    #         return None
+    #     return fmt
+    #
+    # def build_enum(self):
+    #     if not self.enum and not (self.x_ms_enum and self.x_ms_enum.values):
+    #         return None
+    #     enum = CMDSchemaEnum()
+    #     enum.items = []
+    #     if self.x_ms_enum and self.x_ms_enum.values:
+    #         for v in self.x_ms_enum.values:
+    #             item = CMDSchemaEnumItem()
+    #             item.value = v.value
+    #             if v.name:
+    #                 # TODO: the name should be used as display name for argument
+    #                 pass
+    #             enum.items.append(item)
+    #     elif self.enum:
+    #         for v in self.enum:
+    #             item = CMDSchemaEnumItem()
+    #             item.value = v
+    #             enum.items.append(item)
+    #     return enum

@@ -52,15 +52,12 @@ class PathItem(Model, Linkable):
         if self.patch is not None:
             self.patch.link(swagger_loader, *self.traces, 'patch')
 
-    def to_cmd_operation(self, path, method, mutability):
-        op = getattr(self, method, None)
+    def to_cmd(self, builder, **kwargs):
+        op = getattr(self, builder.method, None)
         if op is None:
             return None
         assert isinstance(op, Operation)
-
-        cmd_op = op.to_cmd_operation(
-            path=path, method=method, parent_parameters=self.parameters, mutability=mutability)
-
+        cmd_op = builder(op, parent_parameters=self.parameters)
         return cmd_op
 
 

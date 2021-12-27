@@ -55,13 +55,11 @@ class Response(Model, Linkable):
             return True
         return False
 
-    def to_cmd_model(self):
+    def to_cmd(self, builder, is_error=False, status_codes=None, **kwargs):
         response = CMDHttpResponse()
-
-        if self.description:
-            response.description = self.description
-        if self.x_ms_error_response:
-            response.is_error = True
+        response.is_error = self.x_ms_error_response or is_error
+        response.status_codes = sorted(status_codes or [])
+        builder.setup_description(response, self)
 
         if self.headers:
             response.header = CMDHttpResponseHeader()
@@ -72,7 +70,8 @@ class Response(Model, Linkable):
                 response.header.items.append(header.name)
 
         if self.schema:
-            v = self.schema.to_cmd_schema(traces_route=[], mutability=MutabilityEnum.Read, in_base=True)
+            v = builder(self.schema, traces_route=[], mutability=MutabilityEnum.Read, in_base=True)
+            # v = self.schema.to_cmd_schema(traces_route=[], mutability=MutabilityEnum.Read, in_base=True)
             if v.frozen:
                 raise exceptions.InvalidSwaggerValueError(
                     msg="Invalid Response Schema. It's None.",

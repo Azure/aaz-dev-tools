@@ -657,6 +657,15 @@ class CMDObjectSchemaBase(CMDSchemaBase):
     discriminators = ListType(CMDObjectSchemaDiscriminatorField())
     additional_props = CMDObjectSchemaAdditionalPropertiesField()
 
+    # define a schema cls which can be used by others,
+    # cls definition will not include properties in CMDSchema only, such as following properties:
+    #  - name
+    #  - arg
+    #  - required
+    #  - description
+    #  - skip_url_encoding
+    cls = CMDClassField()
+
     def _diff_base(self, old, level, diff):
         diff = super(CMDObjectSchemaBase, self)._diff_base(old, level, diff)
 
@@ -710,15 +719,6 @@ class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
         deserialize_from="clientFlatten"
     )
 
-    # define a schema cls which can be used by others,
-    # cls definition will not include following properties:
-    #  - name
-    #  - arg
-    #  - required
-    #  - description
-    #  - skip_url_encoding
-    cls = CMDClassField()
-
     def _diff(self, old, level, diff):
         diff = super(CMDObjectSchema, self)._diff(old, level, diff)
         if level >= CMDDiffLevelEnum.BreakingChange:
@@ -745,6 +745,16 @@ class CMDArraySchemaBase(CMDSchemaBase):
     )
     item = CMDSchemaBaseField()
 
+    # properties as tags
+    # define a schema which can be used by others # TODO: convert to arg
+    # cls definition will not include properties in CMDSchema only, such as following properties:
+    #  - name
+    #  - arg
+    #  - required
+    #  - description
+    #  - skip_url_encoding
+    cls = CMDClassField()
+
     def _get_type(self):
         return f"{self.TYPE_VALUE}<{self.item.type}>"
 
@@ -764,9 +774,6 @@ class CMDArraySchemaBase(CMDSchemaBase):
 
 class CMDArraySchema(CMDSchema, CMDArraySchemaBase):
     ARG_TYPE = CMDArrayArg
-
-    # properties as tags
-    cls = CMDClassField()  # define a schema which can be used by others # TODO: convert to arg
 
     def _diff(self, old, level, diff):
         diff = super(CMDArraySchema, self)._diff(old, level, diff)

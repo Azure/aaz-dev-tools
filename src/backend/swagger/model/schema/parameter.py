@@ -84,23 +84,24 @@ class QueryParameter(Items, ParameterBase):
     x_ms_api_version = XmsApiVersionField()
     x_ms_skip_url_encoding = XmsSkipUrlEncodingField()
 
-    def to_cmd_model(self, mutability):
-        param = self.to_cmd_param(mutability)
+    def to_cmd(self, builder, **kwargs):
+        model = super().to_cmd(builder, **kwargs)
 
-        param.name = self.name
-        param.required = self.required
-        param.description = self.description
+        model.name = self.name
+        model.required = self.required
+        builder.setup_description(model, self)
 
         if self.x_ms_skip_url_encoding:
-            param.skip_url_encoding = False
+            model.skip_url_encoding = False
 
-        if self.x_ms_client_default is not None:
-            param.default = CMDSchemaDefault()
-            param.default.value = self.x_ms_client_default
-        if self.description and isinstance(param, CMDSchema):
-            param.description = self.description
+        return model
 
-        return param
+    # def to_cmd_model(self, mutability):
+    #     param = self.to_cmd_param(mutability)
+    #
+    #     param.name = self.name
+    #     param.required = self.required
+    #     param.description = self.description
 
 
 class HeaderParameter(Items, ParameterBase):
@@ -115,20 +116,28 @@ class HeaderParameter(Items, ParameterBase):
     def _new_param(self):
         pass
 
-    def to_cmd_model(self, mutability):
-        param = self.to_cmd_param(mutability)
+    def to_cmd(self, builder, **kwargs):
+        model = super().to_cmd(builder, **kwargs)
+        model.name = self.name
+        model.required = self.required
 
-        param.name = self.name
-        param.required = self.required
-        param.description = self.description
+        builder.setup_description(model, self)
+        return model
 
-        if self.x_ms_client_default is not None:
-            param.default = CMDSchemaDefault()
-            param.default.value = self.x_ms_client_default
-        if self.description and isinstance(param, CMDSchema):
-            param.description = self.description
-
-        return param
+    # def to_cmd_model(self, mutability):
+    #     param = self.to_cmd_param(mutability)
+    #
+    #     param.name = self.name
+    #     param.required = self.required
+    #     param.description = self.description
+    #
+    #     if self.x_ms_client_default is not None:
+    #         param.default = CMDSchemaDefault()
+    #         param.default.value = self.x_ms_client_default
+    #     if self.description and isinstance(param, CMDSchema):
+    #         param.description = self.description
+    #
+    #     return param
 
 
 class PathParameter(Items, ParameterBase):
@@ -139,23 +148,35 @@ class PathParameter(Items, ParameterBase):
 
     x_ms_skip_url_encoding = XmsSkipURLEncodingField()
 
-    def to_cmd_model(self, mutability):
-        param = self.to_cmd_param(mutability)
-        param.name = self.name
-        param.required = self.required
-        param.description = self.description
+    def to_cmd(self, builder, **kwargs):
+        model = super().to_cmd(builder, **kwargs)
+        model.name = self.name
+        model.required = self.required
+
+        builder.setup_description(model, self)
 
         if self.x_ms_skip_url_encoding:
-            param.skip_url_encoding = False
+            model.skip_url_encoding = False
 
-        if self.x_ms_client_default is not None:
-            param.default = CMDSchemaDefault()
-            param.default.value = self.x_ms_client_default
+        return model
 
-        if self.description and isinstance(param, CMDSchema):
-            param.description = self.description
-
-        return param
+    # def to_cmd_model(self, mutability):
+    #     param = self.to_cmd_param(mutability)
+    #     param.name = self.name
+    #     param.required = self.required
+    #     param.description = self.description
+    #
+    #     if self.x_ms_skip_url_encoding:
+    #         param.skip_url_encoding = False
+    #
+    #     if self.x_ms_client_default is not None:
+    #         param.default = CMDSchemaDefault()
+    #         param.default.value = self.x_ms_client_default
+    #
+    #     if self.description and isinstance(param, CMDSchema):
+    #         param.description = self.description
+    #
+    #     return param
 
 
 class FormDataParameter(Items, ParameterBase):
@@ -181,7 +202,7 @@ class FormDataParameter(Items, ParameterBase):
         deserialize_from="collectionFormat",
     )  # multi - corresponds to multiple parameter instances instead of multiple values for a single instance foo=bar&foo=baz.
 
-    def to_cmd_model(self, mutability):
+    def to_cmd(self, builder, **kwargs):
         # TODO:
         raise exceptions.InvalidSwaggerValueError(
             msg="FormData Parameter is not supported",
@@ -210,8 +231,9 @@ class BodyParameter(ParameterBase, Linkable):
 
         self.schema.link(swagger_loader, *self.traces, 'schema')
 
-    def to_cmd_model(self, mutability):
-        v = self.schema.to_cmd_schema(traces_route=[], mutability=mutability)
+    def to_cmd(self, builder, **kwargs):
+        v = builder(self.schema, traces_route=[], in_base=False)
+        # v = self.schema.to_cmd_schema(traces_route=[], mutability=builder.mutability)
         v.name = self.name
         if v.frozen:
             logger.warning(
@@ -238,6 +260,35 @@ class BodyParameter(ParameterBase, Linkable):
                 value=v.type
             )
         return model
+
+    # def to_cmd_model(self, mutability):
+    #     v = self.schema.to_cmd_schema(traces_route=[], mutability=mutability)
+    #     v.name = self.name
+    #     if v.frozen:
+    #         logger.warning(
+    #             msg=f"Request Body Parameter is None: {self.traces}"
+    #         )
+    #         return None
+    #     if isinstance(v, (
+    #             CMDStringSchema,
+    #             CMDObjectSchema,
+    #             CMDArraySchema,
+    #             CMDBooleanSchema,
+    #             CMDFloatSchema,
+    #             CMDIntegerSchema
+    #     )):
+    #         model = CMDJson()
+    #         model.schema = v
+    #         if isinstance(v, CMDObjectSchema):
+    #             # flatten body parameter
+    #             v.client_flatten = True
+    #     else:
+    #         raise exceptions.InvalidSwaggerValueError(
+    #             msg="Invalid Request type",
+    #             key=self.traces,
+    #             value=v.type
+    #         )
+    #     return model
 
 
 class ParameterField(PolyModelType):
