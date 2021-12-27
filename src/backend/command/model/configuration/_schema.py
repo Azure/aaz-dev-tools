@@ -27,7 +27,8 @@ from ._arg import CMDStringArg, CMDStringArgBase, \
     CMDObjectArg, CMDObjectArgBase, CMDObjectArgAdditionalProperties, \
     CMDClsArg, CMDClsArgBase
 from ._fields import CMDVariantField, StringType, CMDClassField, CMDBooleanField, CMDPrimitiveField, CMDDescriptionField
-from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, CMDResourceIdFormat
+from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, \
+    CMDResourceIdFormat
 from ._utils import CMDDiffLevelEnum
 
 
@@ -118,7 +119,7 @@ class CMDSchemaBase(Model):
         deserialize_from="readOnly"
     )
     frozen = CMDBooleanField()  # frozen schema will not be used
-    const = CMDBooleanField()   # when a schema is const it's default value is not None.
+    const = CMDBooleanField()  # when a schema is const it's default value is not None.
 
     # properties as nodes
     default = ModelType(CMDSchemaDefault)
@@ -294,6 +295,9 @@ class CMDClsSchemaBase(CMDSchemaBase):
 
 class CMDClsSchema(CMDSchema, CMDClsSchemaBase):
     ARG_TYPE = CMDClsArg
+
+
+# TODO: support other properties
 
 
 # string
@@ -906,4 +910,3 @@ def _diff_cls(self_cls, old_cls, level):
         if self_cls != old_cls:
             cls_diff = f"{old_cls} != {self_cls}"
     return cls_diff
-

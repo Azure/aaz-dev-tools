@@ -1,6 +1,7 @@
-from command.model.configuration import CMDIntegerFormat, CMDStringFormat, CMDFloatFormat, CMDArrayFormat, CMDObjectFormat, CMDSchemaEnum, CMDSchemaEnumItem, CMDSchema, CMDSchemaBase
+from command.model.configuration import CMDIntegerFormat, CMDStringFormat, CMDFloatFormat, CMDArrayFormat, \
+    CMDObjectFormat, CMDSchemaEnum, CMDSchemaEnumItem
 
-from command.model.configuration import CMDSchemaDefault,\
+from command.model.configuration import CMDSchemaDefault, \
     CMDStringSchema, CMDStringSchemaBase, \
     CMDByteSchema, CMDByteSchemaBase, \
     CMDBinarySchema, CMDBinarySchemaBase, \
@@ -9,8 +10,6 @@ from command.model.configuration import CMDSchemaDefault,\
     CMDPasswordSchema, CMDPasswordSchemaBase, \
     CMDDurationSchema, CMDDurationSchemaBase, \
     CMDUuidSchema, CMDUuidSchemaBase, \
-    CMDResourceIdSchema, CMDResourceIdFormat, \
-    CMDResourceLocationSchema, \
     CMDIntegerSchema, CMDIntegerSchemaBase, \
     CMDInteger32Schema, CMDInteger32SchemaBase, \
     CMDInteger64Schema, CMDInteger64SchemaBase, \
@@ -18,12 +17,9 @@ from command.model.configuration import CMDSchemaDefault,\
     CMDFloatSchema, CMDFloatSchemaBase, \
     CMDFloat32Schema, CMDFloat32SchemaBase, \
     CMDFloat64Schema, CMDFloat64SchemaBase, \
-    CMDObjectSchema, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, \
-    CMDArraySchema, CMDArraySchemaBase, \
-    CMDClsSchema, CMDClsSchemaBase
+    CMDObjectSchema, CMDObjectSchemaBase, CMDArraySchema, CMDArraySchemaBase
 
 from swagger.utils import exceptions
-from .schema import Schema, ReferenceSchema
 from .fields import MutabilityEnum
 
 
@@ -102,7 +98,7 @@ class CMDBuilder:
                     model = CMDUuidSchema()
             else:
                 raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=schema.traces, value=[schema_type, schema.format])
+                    f"format is not supported", key=getattr(schema, "traces", None), value=[schema_type, schema.format])
         elif schema_type == "integer":
             if schema.format is None:
                 if self.in_base:
@@ -121,7 +117,7 @@ class CMDBuilder:
                     model = CMDInteger64Schema()
             else:
                 raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=schema.traces, value=[schema_type, schema.format])
+                    f"format is not supported", key=getattr(schema, "traces", None), value=[schema_type, schema.format])
         elif schema_type == "boolean":
             if schema.format is None:
                 if self.in_base:
@@ -130,7 +126,7 @@ class CMDBuilder:
                     model = CMDBooleanSchema()
             else:
                 raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=schema.traces, value=[schema_type, schema.format])
+                    f"format is not supported", key=getattr(schema, "traces", None), value=[schema_type, schema.format])
         elif schema_type == "number":
             if schema.format is None:
                 if self.in_base:
@@ -149,7 +145,7 @@ class CMDBuilder:
                     model = CMDFloat64Schema()
             else:
                 raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=schema.traces, value=[schema_type, schema.format])
+                    f"format is not supported", key=getattr(schema, "traces", None), value=[schema_type, schema.format])
         elif schema_type == "array":
             if schema.format is None:
                 if self.in_base:
@@ -158,8 +154,9 @@ class CMDBuilder:
                     model = CMDArraySchema()
             else:
                 raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=schema.traces, value=[schema_type, schema.format])
-        elif schema_type == "object" or getattr(schema, "properties", None) or getattr(schema, "additional_properties", None):
+                    f"format is not supported", key=getattr(schema, "traces", None), value=[schema_type, schema.format])
+        elif schema_type == "object" or getattr(schema, "properties", None) or getattr(schema, "additional_properties",
+                                                                                       None):
             if schema.format is None:
                 if self.in_base:
                     model = CMDObjectSchemaBase()
@@ -167,7 +164,7 @@ class CMDBuilder:
                     model = CMDObjectSchema()
             else:
                 raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=schema.traces, value=[schema_type, schema.format])
+                    f"format is not supported", key=getattr(schema, "traces", None), value=[schema_type, schema.format])
         # for swagger schema only
         elif getattr(schema, "all_of", None) is not None:
             model = self.build_schema(schema.all_of[0])
@@ -175,7 +172,7 @@ class CMDBuilder:
             model = self.build_schema(schema.ref_instance)
         else:
             raise exceptions.InvalidSwaggerValueError(
-                f"type is not supported", key=schema.traces, value=[schema_type])
+                f"type is not supported", key=getattr(schema, "traces", None), value=[schema_type])
 
         model.read_only = self.read_only
         model.frozen = self.frozen
@@ -240,7 +237,6 @@ class CMDBuilder:
     @staticmethod
     def build_cmd_string_format(schema):
         fmt_assigned = False
-
         fmt = CMDStringFormat()
 
         if schema.pattern is not None:
@@ -281,7 +277,7 @@ class CMDBuilder:
         if not fmt_assigned:
             return None
         return fmt
-    
+
     @staticmethod
     def build_cmd_float_format(schema):
         fmt_assigned = False
@@ -306,10 +302,9 @@ class CMDBuilder:
         if not fmt_assigned:
             return None
         return fmt
-    
+
     @staticmethod
     def build_cmd_array_format(schema):
-        assert schema.type == "array"
         fmt_assigned = False
         fmt = CMDArrayFormat()
 
@@ -324,7 +319,7 @@ class CMDBuilder:
         if schema.min_length is not None:
             fmt.min_length = schema.min_length
             fmt_assigned = True
-        
+
         if getattr(schema, "collection_format", None) is not None and schema.collection_format != 'csv':
             fmt.str_format = schema.collection_format
             fmt_assigned = True
@@ -348,7 +343,7 @@ class CMDBuilder:
         if not fmt_assigned:
             return None
         return fmt
-    
+
     @staticmethod
     def classify_responses(schema):
         success_responses = []
@@ -388,13 +383,14 @@ class CMDBuilder:
                 find_match = False
                 for status_codes, p_resp in error_responses:
                     if p_resp.schema == resp.schema:
-                        if status_codes is not None:    # ignore to add into default response
+                        if status_codes is not None:  # ignore to add into default response
                             status_codes.add(status_code)
                         find_match = True
                 if not find_match:
                     error_responses.append(({status_code}, resp))
 
-        if len(success_responses) >= 2:
+        if len(success_responses) >= 3:
+            # 202 may contained
             raise exceptions.InvalidSwaggerValueError(
                 msg="Multi Schema for success responses",
                 key=[schema.traces],
@@ -406,7 +402,7 @@ class CMDBuilder:
                 key=[schema.traces],
                 value=[status_codes for status_codes, _ in redirect_responses]
             )
-        if len(error_responses) >= 2:
+        if len(error_responses) >= 3:
             raise exceptions.InvalidSwaggerValueError(
                 msg="Multi Schema for error responses",
                 key=[schema.traces],
