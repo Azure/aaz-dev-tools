@@ -7,6 +7,8 @@
 from command.model.configuration import CMDResource, CMDConfiguration
 from swagger.controller.command_generator import CommandGenerator
 
+from .xml import XMLSerializer
+
 
 def generate_config(swagger_path, config_path, module_name, resource_id, api_version):
     generator = CommandGenerator(module_name="(MgmtPlane)/" + module_name, swagger_path=swagger_path)
@@ -15,6 +17,6 @@ def generate_config(swagger_path, config_path, module_name, resource_id, api_ver
     command_group = generator.create_draft_command_group(resources[resource_id])
 
     model = CMDConfiguration({"resources": [cmd_resource], "command_group": command_group})
-    with open(config_path, "w") as fp:
-        fp.write(model.to_xml())
+    with open(config_path, "wb") as fp:
+        fp.write(XMLSerializer(model).to_xml())
     return "Done."
