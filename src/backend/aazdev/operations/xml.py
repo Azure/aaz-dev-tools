@@ -9,8 +9,6 @@ from schematics.types import ListType, ModelType
 from schematics.types.compound import PolyModelType
 from xmltodict import parse
 
-from command.model.configuration._schema import CMDSchemaBaseField
-
 XML_ROOT = "CodeGen"
 
 
@@ -34,18 +32,18 @@ def build_xml(primitive, parent=None):
         parent = getattr(linker, XML_ROOT)()
 
     for field_name, data in primitive.items():
-        _primitive_to_xml(field_name, data, parent)
+        primitive_to_xml(field_name, data, parent)
     return parent
 
 
-def _primitive_to_xml(field_name, data, parent):
+def primitive_to_xml(field_name, data, parent):
     linker = ElementMaker()
     if isinstance(data, dict):
         _parent = getattr(linker, field_name)()
         parent.append(build_xml(data, _parent))
     elif isinstance(data, list):
         for d in data:
-            _primitive_to_xml(field_name, d, parent)
+            primitive_to_xml(field_name, d, parent)
     else:
         # store metadata as attributes
         if prev := parent.get(field_name):
@@ -64,29 +62,17 @@ def build_model(model, primitive):
                 continue
             data = primitive[serialized_name]
             curr_field = unwrap(field)
-            # TODO: Handle SchemaBaseField
-            if isinstance(curr_field, CMDSchemaBaseField):
-                continue
             field_value = obtain_field_value(field, curr_field, data)
+            # handle serializable instance
             try:
                 setattr(instance, field_name, field_value)
-            # TODO: Handle Serializable
             except AttributeError:
-                continue
+                pass
         return instance
     else:
-        # TODO: Handle PrimitiveField
+        # handle primitive field
         cast = model.primitive_type or str
         return cast(primitive)
-
-
-def unwrap(field):
-    if isinstance(field, ListType):
-        return unwrap(field.field)
-    elif isinstance(field, ModelType):
-        return field.model_class
-    else:
-        return field
 
 
 def obtain_field_value(prev, curr, data):
@@ -104,6 +90,22 @@ def obtain_field_value(prev, curr, data):
             value = build_model(model, data)
             field_value.append(value)
     else:
-        model = curr.find_model(data) if isinstance(curr, PolyModelType) else curr
+        if isinstance(curr, PolyModelType):
+            try:
+                model = curr.find_model(data)
+            except Exception:
+                # TODO: Better handle SchemaBaseField
+                return None
+        else:
+            model = curr
         field_value = build_model(model, data)
     return field_value
+
+
+def unwrap(field):
+    if isinstance(field, ListType):
+        return unwrap(field.field)
+    elif isinstance(field, ModelType):
+        return field.model_class
+    else:
+        return field
