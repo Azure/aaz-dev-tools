@@ -5,16 +5,26 @@ import { InputGroup, Input, Button, } from "reactstrap";
 import {Navbar, Nav, Container} from "react-bootstrap"
 import ModuleAccordion from "./components/ModuleAccordion"
 import Editor from "./components/Editor";
+import {Spec} from "./components/ModuleAccordion"
 
 
-class App extends Component {
-  constructor(props) {
+type AppState = {
+  mgmtPlaneSpecs: Spec | null,
+  dataPlaneSpecs: Spec | null,
+  allMgmtPlaneSpecs: Spec,
+  allDataPlaneSpecs: Spec,
+  moduleName: string,
+  moduleFound: boolean,
+}
+
+class App extends Component<{}, AppState> {
+  constructor(props: any) {
     super(props);
     this.state = {
-      mgmtPlaneSpecs: [],
-      dataPlaneSpecs: [],
-      allMgmtPlaneSpecs: [],
-      allDataPlaneSpecs: [],
+      mgmtPlaneSpecs: null,
+      dataPlaneSpecs: null,
+      allMgmtPlaneSpecs: {},
+      allDataPlaneSpecs: {},
       moduleName: "",
       moduleFound: false
     };
@@ -40,7 +50,7 @@ class App extends Component {
   handleSearch = () => {
     let found = false
     if (this.state.moduleName in this.state.allMgmtPlaneSpecs){
-      let mgmtPlaneSpecs = {}
+      let mgmtPlaneSpecs:Spec = {};
       mgmtPlaneSpecs[this.state.moduleName] = this.state.allMgmtPlaneSpecs[this.state.moduleName]
       this.setState({ mgmtPlaneSpecs: mgmtPlaneSpecs})
       found = true
@@ -48,7 +58,7 @@ class App extends Component {
       this.setState({ mgmtPlaneSpecs: null})
     }
     if (this.state.moduleName in this.state.allDataPlaneSpecs){
-      let dataPlaneSpecs = {}
+      let dataPlaneSpecs:Spec = {};
       dataPlaneSpecs[this.state.moduleName] = this.state.allDataPlaneSpecs[this.state.moduleName]
       this.setState({ dataPlaneSpecs: dataPlaneSpecs})
       found = true
@@ -62,7 +72,7 @@ class App extends Component {
     }
   }
 
-  handleInput = e => {
+  handleInput = (e: any) => {
     this.setState({moduleName: e.target.value})
   }
 
@@ -82,8 +92,6 @@ class App extends Component {
             </div>
       
   }
-
-  
 
   render() {
     return (

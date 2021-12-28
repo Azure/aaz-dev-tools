@@ -2,9 +2,29 @@ import React, { PureComponent} from "react";
 import {Accordion} from "react-bootstrap";
 import { ListGroup, ListGroupItem} from "reactstrap";
 
-export default class CustomAccordion extends PureComponent {
+type VersionList = []
 
-    constructor(props) {
+type ResourceId = string
+
+type Module = [{
+  [key: ResourceId]: VersionList
+}]
+
+type ModuleName = string
+
+type Spec = {
+  [key: ModuleName]: Module
+}
+
+type AccordionProp = {
+  mgmtPlaneSpecs: Spec | null,
+  dataPlaneSpecs: Spec | null,
+  hidden: boolean
+}
+
+
+export default class CustomAccordion extends PureComponent<AccordionProp, {}> {
+    constructor(props: AccordionProp) {
         super(props);
         this.state = {
             mgmtPlaneSpecs: this.props.mgmtPlaneSpecs,
@@ -13,14 +33,14 @@ export default class CustomAccordion extends PureComponent {
         };
       }
 
-    getVersion = versionList => {
+    getVersion = (versionList: VersionList) => {
       return versionList.map((version, index)=>{
         return <ListGroupItem key={index}>{version}</ListGroupItem>
       })
     }
 
-    getResourceId = resourceIdList => {
-        return resourceIdList.map((resourceId, index) =>{
+    getResourceId = (resourceIdList: Module) => {
+        return resourceIdList.map((resourceId: {[key: ResourceId]: VersionList}, index: number) =>{
           let id = Object.keys(resourceId)[0]
           return <Accordion key={index}>
               <Accordion.Item eventKey={id}>
@@ -34,7 +54,7 @@ export default class CustomAccordion extends PureComponent {
         )
     }
 
-    getModule = spec =>{
+    getModule = (spec: Spec) =>{
         return Object.keys(spec).map((moduleName, index) =>{
             return <Accordion key={index}>
                     <Accordion.Item eventKey={moduleName}>
@@ -68,3 +88,5 @@ export default class CustomAccordion extends PureComponent {
               </Accordion>
     }
 } 
+
+export type {Spec}

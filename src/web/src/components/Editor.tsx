@@ -2,21 +2,44 @@ import React, { Component } from "react";
 import { Input, InputGroup, Button, ListGroup, ListGroupItem} from "reactstrap";
 import { Accordion } from "react-bootstrap";
 
-export default class Editor extends Component {
 
-    constructor(props) {
+type Name = string
+type Type = string
+
+type Argument = {
+  name: Name,
+  type: Type
+}
+
+type Command = {
+  name: Name,
+  arguments: Argument[]
+}
+
+type Resource = {
+  name: Name,
+  commands: Command[]
+} | null
+
+type EditorState = {
+  resource: Resource
+}
+
+export default class Editor extends Component<{}, EditorState> {
+
+    constructor(props: any) {
       super(props);
       this.state = {
-        module: {}
+        resource: null
       }
     }
 
     componentDidMount = () => {
       this.setState({
-        module:{
-          "module_name": "user",
+        resource:{
+          "name": "user",
           "commands": [{
-            "command_name":"create",
+            "name":"create",
             "arguments":[{
               "name":"username",
               "type":"string"
@@ -28,7 +51,7 @@ export default class Editor extends Component {
               "type":"number"
             }]
           }, {
-            "command_name":"update",
+            "name":"update",
             "arguments":[{
               "name":"id",
               "type":"string"
@@ -43,7 +66,7 @@ export default class Editor extends Component {
               "type":"number"
             }]
           }, {
-            "command_name":"show",
+            "name":"show",
             "arguments":[{
               "name":"id",
               "type":"string"
@@ -53,17 +76,17 @@ export default class Editor extends Component {
       })
     }
 
-    getCommandDetail = argumentList => {
+    getCommandDetail = (argumentList: Argument[]) => {
       return argumentList.map(arg=>{
         return <ListGroupItem key={arg["name"]}>{arg["name"]}</ListGroupItem>
         })
     }
 
-    getModuleDetail = commands => {
+    getModuleDetail = (commands: Command[]) => {
       return commands && commands.map((command) =>{
-        return <Accordion key={command["command_name"]}>
-            <Accordion.Item>
-                <Accordion.Header>{command["command_name"]}</Accordion.Header>
+        return <Accordion key={command["name"]}>
+            <Accordion.Item eventKey={command["name"]}>
+                <Accordion.Header>{command["name"]}</Accordion.Header>
                 <Accordion.Body>
                   <ListGroup>{this.getCommandDetail(command["arguments"])}</ListGroup>
                 </Accordion.Body>
@@ -76,8 +99,8 @@ export default class Editor extends Component {
 
     specLinks = () => {
       return <div>
-                <p>Module Name: {this.state.module["module_name"]}</p>
-                {this.getModuleDetail(this.state.module["commands"])}
+                <p>Module Name: {this.state.resource && this.state.resource["name"]}</p>
+                {this.state.resource && this.getModuleDetail(this.state.resource["commands"])}
             </div>  
       
     }
