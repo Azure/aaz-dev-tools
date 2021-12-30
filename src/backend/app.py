@@ -12,8 +12,12 @@ def create_app():
     app = Flask(__name__, static_folder='../web/build', static_url_path='/')
     # other setup
 
-    @app.route("/")
-    def index():
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<string:path>')
+    @app.route('/<path:path>')
+    def index(path):
+        if '.' in path:
+            return app.send_static_file(path)
         return app.send_static_file('index.html')
 
     @app.route("/specifications")

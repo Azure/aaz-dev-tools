@@ -120,3 +120,4 @@ __pycache__/
 # C extensions
 *.so
 
+/src/backend/flask_my_extension.egg-info/

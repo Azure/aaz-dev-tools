@@ -76,21 +76,16 @@ class App extends Component<{}, AppState> {
     this.setState({moduleName: e.target.value})
   }
 
-  SearchBar = () => {
-    return <InputGroup>
-            <Input placeholder="Module Name" value={this.state.moduleName} onChange={this.handleInput}/>
-            <Button onClick={this.handleSearch}>Search</Button>
-          </InputGroup>
-  }
-
   Specs = () => {
     return  <div className="container-fluid row">
-              <this.SearchBar/>
+              <InputGroup>
+                <Input placeholder="Module Name" value={this.state.moduleName} onChange={this.handleInput}/>
+                <Button onClick={this.handleSearch}>Search</Button> 
+              </InputGroup>
               <br/>
               <ModuleAccordion hidden={!this.state.moduleFound} mgmtPlaneSpecs={this.state.mgmtPlaneSpecs} dataPlaneSpecs={this.state.dataPlaneSpecs}></ModuleAccordion>
               <ModuleAccordion hidden={this.state.moduleFound} mgmtPlaneSpecs={this.state.allMgmtPlaneSpecs} dataPlaneSpecs={this.state.allDataPlaneSpecs}></ModuleAccordion>
             </div>
-      
   }
 
   render() {
@@ -104,12 +99,11 @@ class App extends Component<{}, AppState> {
           </Nav>
           </Container>
         </Navbar>
-
         <Routes>
-          <Route path="/" element={<this.Specs />} />
+          <Route path="/" element={<this.Specs />} /> 
           <Route path="editor" element={<Editor />} />
         </Routes>
-        </main>
+      </main>
     );
   }
 }

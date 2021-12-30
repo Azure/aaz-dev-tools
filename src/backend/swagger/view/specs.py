@@ -2,7 +2,7 @@ from ..model.specs import SwaggerSpecs
 import os
 import json
 
-SWAGGER_PATH = os.environ.get("AAZ_SWAGGER_PATH", None)
+from utils.config import SWAGGER_PATH
 
 def get_module_map(modules, module_name=None):
     module_map = {}
