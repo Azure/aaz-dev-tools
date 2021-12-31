@@ -22,14 +22,22 @@ type AccordionProp = {
   hidden: boolean
 }
 
+type AccordionState = {
+  mgmtPlaneSpecs: Spec | null,
+  dataPlaneSpecs: Spec | null,
+  hidden: boolean,
+  activeModule: string | null
+}
 
-export default class CustomAccordion extends PureComponent<AccordionProp, {}> {
+
+export default class CustomAccordion extends PureComponent<AccordionProp, AccordionState> {
     constructor(props: AccordionProp) {
         super(props);
         this.state = {
             mgmtPlaneSpecs: this.props.mgmtPlaneSpecs,
             dataPlaneSpecs: this.props.dataPlaneSpecs,
-            hidden: this.props.hidden
+            hidden: this.props.hidden,
+            activeModule: null
         };
       }
 
@@ -40,31 +48,32 @@ export default class CustomAccordion extends PureComponent<AccordionProp, {}> {
     }
 
     getResourceId = (resourceIdList: Module) => {
-        return resourceIdList.map((resourceId: {[key: ResourceId]: VersionList}, index: number) =>{
-          let id = Object.keys(resourceId)[0]
-          return <Accordion key={index}>
-              <Accordion.Item eventKey={id}>
-                  <Accordion.Header>{id}</Accordion.Header>
-                  <Accordion.Body>
-                  <ListGroup>{this.getVersion(resourceId[id])}</ListGroup>
-                  </Accordion.Body>
-              </Accordion.Item>
+      return  <Accordion>
+                {resourceIdList.map((resourceId: {[key: ResourceId]: VersionList}, index: number) =>{
+                  let id = Object.keys(resourceId)[0]
+                  return  <Accordion.Item eventKey={index.toString()} key={index.toString()}>
+                            <Accordion.Header>{id}</Accordion.Header>
+                            <Accordion.Body>
+                            <ListGroup>
+                              {this.getVersion(resourceId[id])}
+                            </ListGroup>
+                            </Accordion.Body>
+                          </Accordion.Item>
+                })}
               </Accordion>
-          }
-        )
     }
 
     getModule = (spec: Spec) =>{
-        return Object.keys(spec).map((moduleName, index) =>{
-            return <Accordion key={index}>
-                    <Accordion.Item eventKey={moduleName}>
-                    <Accordion.Header>{moduleName}</Accordion.Header>
-                    <Accordion.Body>
-                        {this.getResourceId(spec[moduleName])}
-                    </Accordion.Body>
-                    </Accordion.Item>
-            </Accordion>
-        })
+      return  <Accordion activeKey={this.state.activeModule?this.state.activeModule:undefined} onSelect={e => this.setState({activeModule: e})}>
+                {Object.keys(spec).map((moduleName, index) =>{
+                  return <Accordion.Item eventKey={index.toString()} key={index.toString()}>
+                          <Accordion.Header>{moduleName}</Accordion.Header>
+                          <Accordion.Body>
+                            {this.state.activeModule==index.toString() && this.getResourceId(spec[moduleName])}
+                          </Accordion.Body>
+                          </Accordion.Item>
+                })}
+              </Accordion>
     }
 
     render() {
