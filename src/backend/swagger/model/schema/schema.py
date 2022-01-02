@@ -7,9 +7,8 @@ from schematics.types import ListType, BaseType, DictType, ModelType, BooleanTyp
 from command.model.configuration import CMDSchemaDefault, \
     CMDStringSchema, CMDResourceIdSchema, CMDResourceIdFormat, \
     CMDResourceLocationSchema, \
-    CMDObjectSchema, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, \
-    CMDArraySchemaBase, \
-    CMDClsSchema, CMDClsSchemaBase
+    CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, \
+    CMDArraySchemaBase, CMDObjectSchema
 from command.model.configuration import CMDSchemaEnum, CMDSchemaEnumItem, CMDSchema, CMDSchemaBase
 from swagger.utils import exceptions
 from .external_documentation import ExternalDocumentation
@@ -60,6 +59,18 @@ class ReferenceSchema(Model, Linkable):
     ref = ReferenceField(required=True)
     description = StringType()
     title = StringType()
+    read_only = BooleanType(
+        serialized_name="readOnly",
+        deserialize_from="readOnly"
+    )  # Relevant only for Schema "properties" definitions. Declares the property as "read only". This means that it MAY be sent as part of a response but MUST NOT be sent as part of the request. Properties marked as readOnly being true SHOULD NOT be in the required list of the defined schema. Default value is false.
+    type = StringType(
+        choices=["array", "boolean", "integer", "number", "object", "string"],
+        # https://datatracker.ietf.org/doc/html/draft-zyp-json-schema-04#section-3.5
+    )   #
+
+    x_ms_client_name = XmsClientNameField()  # TODO: used for deserialize name
+
+    x_ms_client_flatten = XmsClientFlattenField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -80,16 +91,18 @@ class ReferenceSchema(Model, Linkable):
         if self.ref_instance.x_ms_azure_resource:
             self.x_ms_azure_resource = True
 
-    def to_cmd(self, builder, traces_route, **kwargs):
-        model = builder(self.ref_instance, traces_route=[*traces_route, self.traces], ref_link=self.ref, **kwargs)
+    def to_cmd(self, builder, support_cls_schema=False, **kwargs):
+        model = builder.register_cls_definition(self, support_cls_schema=support_cls_schema, **kwargs)
         if isinstance(model, CMDSchema):
             builder.setup_description(model, self)
+            if self.x_ms_client_flatten:
+                model.client_flatten = True
         return model
 
     @classmethod
     def _claim_polymorphic(cls, data):
-        return isinstance(data, dict) and "$ref" in data and len(data) <= 3 and \
-               set(data.keys()).issubset({"$ref", "description", "title"})
+        return isinstance(data, dict) and "$ref" in data and len(data) <= 7 and \
+               set(data.keys()).issubset({"$ref", "description", "title", "readOnly", "type", "x-ms-client-name", "x-ms-client-flatten"})
 
 
 class Schema(Model, Linkable):
@@ -216,7 +229,7 @@ class Schema(Model, Linkable):
     )  # TODO: # Additional external documentation for this schema.
     example = BaseType()  # TODO: # A free-form property to include an example of an instance for this schema.
 
-    x_ms_client_name = XmsClientNameField()  # TODO:
+    x_ms_client_name = XmsClientNameField()  # TODO: used for deserialized name
     x_ms_external = XmsExternalField()  # TODO:
     x_ms_discriminator_value = XmsDiscriminatorValueField()
     x_ms_client_flatten = XmsClientFlattenField()
@@ -330,26 +343,10 @@ class Schema(Model, Linkable):
                     )
                 self.disc_parent.disc_children[disc_value] = self
 
-    def to_cmd(self, builder, traces_route, ref_link=None, **kwargs):
-        if self.traces in traces_route:
-            assert isinstance(ref_link, str), f"Ref Link needed: {[*traces_route, self.traces]}"
-            schema_cls = f"@{ref_link.split('/')[-1]}"
-            if builder.in_base:
-                model = CMDClsSchemaBase()
-                model._type = schema_cls
-            else:
-                model = CMDClsSchema()
-                model._type = schema_cls
-                # TODO: support other properties
-            setattr(self, "_looped", True)
-            if not hasattr(self, "_schema_cls"):
-                setattr(self, "_schema_cls", schema_cls)
-            else:
-                assert self._schema_cls == schema_cls
-            return model
+    def to_cmd(self, builder, **kwargs):
 
         if self.ref_instance is not None:
-            model = builder(self.ref_instance, traces_route=[*traces_route, self.traces], ref_link=self.ref)
+            model = builder(self.ref_instance, support_cls_schema=True)
         else:
             model = builder.build_schema(self)
 
@@ -361,7 +358,7 @@ class Schema(Model, Linkable):
                 )
             if self.items:
                 assert isinstance(self.items, (Schema, ReferenceSchema))
-                v = builder(self.items, traces_route=[*traces_route, self.traces], in_base=True)
+                v = builder(self.items, in_base=True, support_cls_schema=True)
                 assert isinstance(v, CMDSchemaBase)
                 model.item = v
 
@@ -380,16 +377,10 @@ class Schema(Model, Linkable):
                 # inherent from allOf
                 for item in self.all_of:
                     disc_parent = item.get_disc_parent()
-                    if disc_parent is not None and item.ref_instance.traces in traces_route:
+                    if disc_parent is not None and builder.find_traces(item.ref_instance.traces):
                         # discriminator parent already in trace, break reference loop
                         continue
-                    v = builder(item, traces_route=[*traces_route, self.traces], in_base=True)
-                    if isinstance(v, CMDClsSchemaBase):
-                        raise exceptions.InvalidSwaggerValueError(
-                            msg="AllOf not support to reference loop",
-                            key=self.traces,
-                            value=v.type
-                        )
+                    v = builder(item, in_base=True, support_cls_schema=False)
                     assert isinstance(v, CMDObjectSchemaBase)
                     if v.fmt:
                         model.fmt = v.fmt
@@ -398,7 +389,7 @@ class Schema(Model, Linkable):
                         for p in v.props:
                             prop_dict[p.name] = p
 
-                    if disc_parent is not None and disc_parent.traces not in traces_route:
+                    if disc_parent is not None and not builder.find_traces(disc_parent.traces):
                         # directly use child definition instead of polymorphism.
                         # So the value for discriminator property is const.
                         disc_prop = disc_parent.discriminator
@@ -415,7 +406,7 @@ class Schema(Model, Linkable):
             if self.properties:
                 for name, p in self.properties.items():
                     assert isinstance(p, (Schema, ReferenceSchema))
-                    v = builder(p, traces_route=[*traces_route, self.traces], in_base=False)
+                    v = builder(p, in_base=False, support_cls_schema=True)
                     if v is None:
                         # ignore by mutability
                         continue
@@ -435,7 +426,7 @@ class Schema(Model, Linkable):
                 assert self.discriminator is not None
                 disc_prop = self.discriminator
                 for disc_value, disc_child in self.disc_children.items():
-                    if disc_child.traces in traces_route:
+                    if builder.find_traces(disc_child.traces):
                         # discriminator child already in trace, break reference loop
                         continue
                     disc = CMDObjectSchemaDiscriminator()
@@ -468,7 +459,7 @@ class Schema(Model, Linkable):
                         enum_item.value = disc_value
                         prop_dict[disc_prop].enum.items.append(enum_item)
 
-                    v = builder(disc_child, traces_route=[*traces_route, self.traces], in_base=True)
+                    v = builder(disc_child, in_base=True, support_cls_schema=False)
                     assert isinstance(v, CMDObjectSchemaBase)
                     if v.frozen:
                         disc.frozen = True
@@ -483,10 +474,13 @@ class Schema(Model, Linkable):
 
             # convert special properties when self is an azure resource
             if self.x_ms_azure_resource and prop_dict:
-                if 'id' in prop_dict and self.resource_id_templates:
+                if 'id' in prop_dict and self.resource_id_templates and not prop_dict['id'].frozen:
                     id_prop = prop_dict['id']
                     if not isinstance(id_prop, CMDResourceIdSchema):
-                        assert isinstance(id_prop, CMDStringSchema)
+                        try:
+                            assert isinstance(id_prop, CMDStringSchema)
+                        except:
+                            raise
                         raw_data = id_prop.to_native()
                         prop_dict['id'] = id_prop = CMDResourceIdSchema(raw_data=raw_data)
                     if len(self.resource_id_templates) == 1:
@@ -499,7 +493,7 @@ class Schema(Model, Linkable):
                             value=self.resource_id_templates
                         )
                         # logger.warning(err)
-                if 'location' in prop_dict:
+                if 'location' in prop_dict and not prop_dict['location'].frozen:
                     location_prop = prop_dict['location']
                     if not isinstance(location_prop, CMDResourceLocationSchema):
                         assert isinstance(location_prop, CMDStringSchema)
@@ -514,7 +508,7 @@ class Schema(Model, Linkable):
             # additional properties
             if self.additional_properties:
                 if isinstance(self.additional_properties, (Schema, ReferenceSchema)):
-                    v = builder(self.additional_properties, traces_route=[*traces_route, self.traces], in_base=True)
+                    v = builder(self.additional_properties, in_base=True, support_cls_schema=True)
                     if v is not None:
                         assert isinstance(v, CMDSchemaBase)
                         model.additional_props = CMDObjectSchemaAdditionalProperties()

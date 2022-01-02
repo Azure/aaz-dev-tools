@@ -2,7 +2,7 @@ from schematics.models import Model
 from schematics.types import BaseType, StringType, ModelType, DictType, PolyModelType
 
 from command.model.configuration import CMDHttpResponse, CMDHttpResponseHeader, CMDHttpJsonBody, CMDObjectSchemaBase, \
-    CMDArraySchemaBase, CMDHttpResponseHeaderItem
+    CMDArraySchemaBase, CMDHttpResponseHeaderItem, CMDClsSchemaBase
 from command.model.configuration import CMDJson, CMDBooleanSchemaBase, CMDStringSchemaBase, CMDFloatSchemaBase, \
     CMDIntegerSchemaBase
 from swagger.model.schema.fields import MutabilityEnum
@@ -70,8 +70,7 @@ class Response(Model, Linkable):
                 response.header.items.append(header.name)
 
         if self.schema:
-            v = builder(self.schema, traces_route=[], mutability=MutabilityEnum.Read, in_base=True)
-            # v = self.schema.to_cmd_schema(traces_route=[], mutability=MutabilityEnum.Read, in_base=True)
+            v = builder(self.schema, mutability=MutabilityEnum.Read, in_base=True, support_cls_schema=True)
             if v.frozen:
                 raise exceptions.InvalidSwaggerValueError(
                     msg="Invalid Response Schema. It's None.",
@@ -84,7 +83,8 @@ class Response(Model, Linkable):
                     CMDArraySchemaBase,
                     CMDBooleanSchemaBase,
                     CMDFloatSchemaBase,
-                    CMDIntegerSchemaBase
+                    CMDIntegerSchemaBase,
+                    CMDClsSchemaBase,
             )):
                 model = CMDJson()
                 model.schema = v

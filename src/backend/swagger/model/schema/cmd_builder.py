@@ -17,21 +17,25 @@ from command.model.configuration import CMDSchemaDefault, \
     CMDFloatSchema, CMDFloatSchemaBase, \
     CMDFloat32Schema, CMDFloat32SchemaBase, \
     CMDFloat64Schema, CMDFloat64SchemaBase, \
-    CMDObjectSchema, CMDObjectSchemaBase, CMDArraySchema, CMDArraySchemaBase
+    CMDObjectSchema, CMDObjectSchemaBase, CMDArraySchema, CMDArraySchemaBase, CMDClsSchema, CMDClsSchemaBase
 
 from swagger.utils import exceptions
 from .fields import MutabilityEnum
+from .schema import ReferenceSchema
 
 
 class CMDBuilder:
 
-    def __init__(self, path, method=None, mutability=None, in_base=False, read_only=False, frozen=False):
+    def __init__(self, path, method=None, mutability=None, in_base=False, read_only=False, frozen=False, parent_ids=None, cls_definitions=None):
         self.path = path
         self.method = method
         self.mutability = mutability
         self.in_base = in_base
         self.read_only = read_only
         self.frozen = frozen
+        self.id = None    # used to find loop
+        self.parent_ids = parent_ids or []
+        self.cls_definitions = {} if cls_definitions is None else cls_definitions
 
     def __call__(self, schema, **kwargs):
         sub_builder = CMDBuilder(
@@ -40,7 +44,9 @@ class CMDBuilder:
             mutability=kwargs.pop('mutability', self.mutability),
             in_base=kwargs.pop('in_base', self.in_base),
             read_only=kwargs.pop('read_only', self.read_only),
-            frozen=kwargs.pop('frozen', self.frozen)
+            frozen=kwargs.pop('frozen', self.frozen),
+            parent_ids=[*self.parent_ids, self.id],
+            cls_definitions=kwargs.pop('cls_definitions', self.cls_definitions),
         )
         if getattr(schema, 'read_only', None):
             sub_builder.read_only = True
@@ -51,7 +57,27 @@ class CMDBuilder:
             elif getattr(schema, 'x_ms_mutability', None):
                 if self.mutability not in schema.x_ms_mutability:
                     sub_builder.frozen = True
+        if hasattr(schema, 'traces'):
+            sub_builder.id = (schema.traces, sub_builder.mutability, sub_builder.read_only, sub_builder.frozen)
+            if sub_builder.id in sub_builder.parent_ids:
+                if len(schema.traces) == 3:
+                    # make sure the trace is reference definition, the trace should be [file_path, 'definitions', name]
+                    raise exceptions.InvalidSwaggerValueError(
+                            msg="Find invalid reference loop",
+                            key=sub_builder.id,
+                            value=sub_builder.parent_ids.index(sub_builder.id),
+                        )
         return schema.to_cmd(sub_builder, **kwargs)
+
+    def find_traces(self, traces):
+        assert traces is not None
+        for parent_id in self.parent_ids:
+            if parent_id is None:
+                continue
+            parent_traces, mutability, read_only, frozen = parent_id
+            if parent_traces == traces:
+                return True
+        return False
 
     def build_schema(self, schema):
         schema_type = getattr(schema, 'type', None)
@@ -177,6 +203,63 @@ class CMDBuilder:
         model.read_only = self.read_only
         model.frozen = self.frozen
         return model
+
+    def _get_cls_definition_name(self, schema):
+        assert isinstance(schema, ReferenceSchema)
+        schema_cls_name = f"{schema.ref.split('/')[-1]}_{self.mutability}"
+        if self.mutability != MutabilityEnum.Read:
+            if self.read_only:
+                schema_cls_name += "_read"
+        if self.frozen:
+            schema_cls_name += "_frozen"
+        return schema_cls_name
+
+    def register_cls_definition(self, schema, support_cls_schema, **kwargs):
+        name = self._get_cls_definition_name(schema)
+        if self.frozen:
+            if support_cls_schema:
+                if self.in_base:
+                    model = CMDClsSchemaBase()
+                else:
+                    model = CMDClsSchema()
+                model.read_only = self.read_only
+                model.frozen = self.frozen
+                model._type = f"@{name}"
+            else:
+                model = self(schema.ref_instance, **kwargs)
+            return model
+
+        if name not in self.cls_definitions:
+            self.cls_definitions[name] = {"count": 1}   # register in cls_definitions first in case of loop reference below
+            model = self(schema.ref_instance, **kwargs)
+            if isinstance(model, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                self.cls_definitions[name]['model'] = model  # when self.cls_definitions[name]['count'] > 1, the loop reference exist
+            else:
+                del self.cls_definitions[name]
+        else:
+            if support_cls_schema:
+                self.cls_definitions[name]['count'] += 1
+                if self.in_base:
+                    model = CMDClsSchemaBase()
+                else:
+                    model = CMDClsSchema()
+                model.read_only = self.read_only
+                model.frozen = self.frozen
+                model._type = f"@{name}"
+            else:
+                if 'model' not in self.cls_definitions[name]:
+                    raise exceptions.InvalidSwaggerValueError(
+                        msg="Find invalid reference loop",
+                        key=schema.traces,
+                        value=name
+                    )
+                model = self(schema.ref_instance, **kwargs)
+        return model
+
+    def get_cls_definition_model(self, model):
+        assert isinstance(model, CMDClsSchemaBase)
+        name = model.type[1:]
+        return self.cls_definitions[name]['model']
 
     @staticmethod
     def setup_enum(model, schema):
@@ -426,3 +509,8 @@ class CMDBuilder:
         #     )
 
         return success_responses, redirect_responses, error_responses
+
+    def apply_cls_definitions(self):
+        for name, definition in self.cls_definitions.items():
+            if definition['count'] > 1:
+                definition['model'].cls = name

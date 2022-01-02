@@ -232,8 +232,7 @@ class BodyParameter(ParameterBase, Linkable):
         self.schema.link(swagger_loader, *self.traces, 'schema')
 
     def to_cmd(self, builder, **kwargs):
-        v = builder(self.schema, traces_route=[], in_base=False)
-        # v = self.schema.to_cmd_schema(traces_route=[], mutability=builder.mutability)
+        v = builder(self.schema, in_base=False, support_cls_schema=True)
         v.name = self.name
         if v.frozen:
             logger.warning(
@@ -260,35 +259,6 @@ class BodyParameter(ParameterBase, Linkable):
                 value=v.type
             )
         return model
-
-    # def to_cmd_model(self, mutability):
-    #     v = self.schema.to_cmd_schema(traces_route=[], mutability=mutability)
-    #     v.name = self.name
-    #     if v.frozen:
-    #         logger.warning(
-    #             msg=f"Request Body Parameter is None: {self.traces}"
-    #         )
-    #         return None
-    #     if isinstance(v, (
-    #             CMDStringSchema,
-    #             CMDObjectSchema,
-    #             CMDArraySchema,
-    #             CMDBooleanSchema,
-    #             CMDFloatSchema,
-    #             CMDIntegerSchema
-    #     )):
-    #         model = CMDJson()
-    #         model.schema = v
-    #         if isinstance(v, CMDObjectSchema):
-    #             # flatten body parameter
-    #             v.client_flatten = True
-    #     else:
-    #         raise exceptions.InvalidSwaggerValueError(
-    #             msg="Invalid Request type",
-    #             key=self.traces,
-    #             value=v.type
-    #         )
-    #     return model
 
 
 class ParameterField(PolyModelType):

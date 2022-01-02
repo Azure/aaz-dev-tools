@@ -3,7 +3,7 @@ import logging
 from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, \
     CMDSchemaDefault, CMDHttpJsonBody, CMDObjectOutput, CMDArrayOutput, CMDGenericInstanceUpdateAction, \
     CMDGenericInstanceUpdateMethod, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, CMDJson, CMDHelp, \
-    CMDArgGroup, CMDDiffLevelEnum, \
+    CMDArgGroup, CMDDiffLevelEnum, CMDClsSchemaBase, \
     CMDObjectSchema, CMDArraySchema, CMDStringSchema, CMDObjectSchemaBase, CMDArraySchemaBase, CMDStringSchemaBase
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
@@ -13,6 +13,8 @@ from swagger.model.specs import SwaggerLoader, SwaggerSpecs, DataPlaneModule, Mg
 from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case, get_url_path_valid_parts
 from utils import config
 import inflect
+from swagger.utils import exceptions
+
 
 logger = logging.getLogger('backend')
 
@@ -162,6 +164,7 @@ class CommandGenerator:
             logger.warning(f"Cannot Find api version parameter: {cmd_builder.path}, '{cmd_builder.method}' : {path_item.traces}")
 
         output = self._generate_output(
+            cmd_builder,
             op,
             pageable=path_item.get.x_ms_pageable if cmd_builder.method == 'get' else None,
         )
@@ -196,7 +199,7 @@ class CommandGenerator:
         if not self._set_api_version_parameter(put_op.http.request, api_version=resource.version.version):
             logger.warning(f"Cannot Find api version parameter: {resource.path}, 'put' : {path_item.traces}")
 
-        output = self._generate_output(put_op)
+        output = self._generate_output(cmd_builder, put_op)
         if output is None:
             return None
 
@@ -242,7 +245,7 @@ class CommandGenerator:
                     break
         return find_api_version
 
-    def _generate_output(self, op, pageable: XmsPageable = None):
+    def _generate_output(self, cmd_builder, op, pageable: XmsPageable = None):
         assert isinstance(op, CMDHttpOperation)
         if pageable is None and op.http.request.method == "get":
             # some list operation may miss pageable
@@ -288,11 +291,29 @@ class CommandGenerator:
                 elif isinstance(resp.body.json.schema, CMDStringSchemaBase):
                     output = CMDStringSchema()
                     output.ref = body_json.var
-                else:
-                    if not isinstance(resp.body.json.schema, CMDObjectSchemaBase):
-                        print(f"Output Special Schema: {type(resp.body.json.schema)}")
+                elif isinstance(resp.body.json.schema, CMDObjectSchemaBase):
                     output = CMDObjectOutput()
                     output.ref = body_json.var
+                elif isinstance(resp.body.json.schema, CMDClsSchemaBase):
+                    model = cmd_builder.get_cls_definition_model(resp.body.json.schema)
+                    if isinstance(model, CMDArraySchemaBase):
+                        output = CMDArrayOutput()
+                        output.ref = body_json.var
+                    elif isinstance(model, CMDObjectSchemaBase):
+                        output = CMDObjectOutput()
+                        output.ref = body_json.var
+                    else:
+                        raise exceptions.InvalidSwaggerValueError(
+                            "Invalid output schema:",
+                            key=[cmd_builder.path, cmd_builder.method],
+                            value=type(model)
+                        )
+                else:
+                    raise exceptions.InvalidSwaggerValueError(
+                        "Invalid output schema:",
+                        key=[cmd_builder.path, cmd_builder.method],
+                        value=type(resp.body.json.schema)
+                    )
                 output.client_flatten = True
             else:
                 raise NotImplementedError()

@@ -296,8 +296,19 @@ class CMDClsSchemaBase(CMDSchemaBase):
 class CMDClsSchema(CMDSchema, CMDClsSchemaBase):
     ARG_TYPE = CMDClsArg
 
+    # properties as tags
+    client_flatten = CMDBooleanField(
+        serialized_name="clientFlatten",
+        deserialize_from="clientFlatten"
+    )
 
-# TODO: support other properties
+    def _diff(self, old, level, diff):
+        diff = super(CMDClsSchema, self)._diff(old, level, diff)
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.client_flatten != old.client_flatten:
+                diff["client_flatten"] = f"from {old.client_flatten} to {self.client_flatten}"
+
+        return diff
 
 
 # string
@@ -668,6 +679,7 @@ class CMDObjectSchemaBase(CMDSchemaBase):
     #  - required
     #  - description
     #  - skip_url_encoding
+    #  - client_flatten
     cls = CMDClassField()
 
     def _diff_base(self, old, level, diff):
