@@ -9,7 +9,7 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'aazdev=aazdev.cmd:cli'
+            'aazdev=aazdev.main:main'
         ],
     },
 )
