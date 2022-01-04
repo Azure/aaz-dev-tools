@@ -5,8 +5,10 @@ from threading import Timer
 import click
 from flask.cli import FlaskGroup
 
+
 def open_browser():
     webbrowser.open_new('http://127.0.0.1:5000/')
+
 
 def create_app():
     app = Flask(__name__, static_folder='../web/build', static_url_path='/')
@@ -30,6 +32,7 @@ def create_app():
 
     Timer(1, open_browser).start()
     return app
+
 
 @click.group(cls=FlaskGroup, create_app=create_app)
 def cli():
