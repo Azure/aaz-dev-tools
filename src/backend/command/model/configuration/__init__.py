@@ -9,6 +9,8 @@ from ._arg import CMDArgEnumItem, CMDArgEnum, \
     CMDDateTimeArgBase, CMDDateTimeArg, \
     CMDUuidArgBase, CMDUuidArg, \
     CMDPasswordArgBase, CMDPasswordArg, \
+    CMDResourceIdArgBase, CMDResourceIdArg, \
+    CMDResourceLocationArgBase, CMDResourceLocationArg, \
     CMDIntegerArgBase, CMDIntegerArg, \
     CMDInteger32ArgBase, CMDInteger32Arg, CMDInteger64ArgBase, CMDInteger64Arg, \
     CMDBooleanArgBase, CMDBooleanArg, \
@@ -28,7 +30,8 @@ from ._content import CMDJson
 from ._fields import CMDBooleanField, CMDStageEnum, CMDStageField, CMDVariantField, CMDClassField, \
     CMDPrimitiveField, CMDRegularExpressionField, CMDVersionField, CMDResourceIdField, CMDCommandNameField, \
     CMDCommandGroupNameField, CMDURLPathField
-from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
+from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, \
+    CMDResourceIdFormat
 from ._help import CMDHelp, CMDArgumentHelp
 from ._http import CMDHttpRequestArgs, CMDHttpRequestPath, CMDHttpRequestQuery, CMDHttpRequestHeader, \
     CMDHttpRequest, \
@@ -38,7 +41,7 @@ from ._http_body import CMDHttpBody, CMDHttpJsonBody
 from ._instance_update import CMDInstanceUpdateAction, \
     CMDJsonInstanceUpdateAction, \
     CMDGenericInstanceUpdateMethod, CMDGenericInstanceUpdateAction
-from ._operation import CMDOperation, CMDHttpOperation, CMDInstanceUpdateOperation
+from ._operation import CMDOperation, CMDHttpOperation, CMDInstanceUpdateOperation, CMDHttpOperationLongRunning
 from ._output import CMDOutput, CMDObjectOutput, CMDArrayOutput, CMDStringOutput
 from ._resource import CMDResource
 from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
@@ -52,6 +55,8 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDDateTimeSchemaBase, CMDDateTimeSchema, \
     CMDUuidSchemaBase, CMDUuidSchema, \
     CMDPasswordSchemaBase, CMDPasswordSchema, \
+    CMDResourceIdSchemaBase, CMDResourceIdSchema, \
+    CMDResourceLocationSchemaBase, CMDResourceLocationSchema, \
     CMDIntegerSchemaBase, CMDIntegerSchema, \
     CMDInteger32SchemaBase, CMDInteger32Schema, \
     CMDInteger64SchemaBase, CMDInteger64Schema, \

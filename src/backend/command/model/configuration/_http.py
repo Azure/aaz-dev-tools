@@ -46,6 +46,7 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                     arg = CMDClsArg({
                         'var': f'{var_prefix}.subscription',
                         'type': '@Subscription',
+                        'options': ['subscription'],
                     })
                     param.arg = arg.var
                     arg.ref_schema = param
@@ -53,6 +54,7 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                     arg = CMDClsArg({
                         'var': f'{var_prefix}.resourceGroup',
                         'type': '@ResourceGroup',
+                        'options': ['resource-group', 'g'],
                     })
                     param.arg = arg.var
                     arg.ref_schema = param

@@ -14,6 +14,8 @@ from ._arg import CMDStringArg, CMDStringArgBase, \
     CMDDateTimeArg, CMDDateTimeArgBase, \
     CMDUuidArg, CMDUuidArgBase, \
     CMDPasswordArg, CMDPasswordArgBase, \
+    CMDResourceIdArg, CMDResourceIdArgBase, \
+    CMDResourceLocationArg, CMDResourceLocationArgBase, \
     CMDBooleanArg, CMDBooleanArgBase, \
     CMDIntegerArg, CMDIntegerArgBase, \
     CMDInteger32Arg, CMDInteger32ArgBase, \
@@ -25,7 +27,8 @@ from ._arg import CMDStringArg, CMDStringArgBase, \
     CMDObjectArg, CMDObjectArgBase, CMDObjectArgAdditionalProperties, \
     CMDClsArg, CMDClsArgBase
 from ._fields import CMDVariantField, StringType, CMDClassField, CMDBooleanField, CMDPrimitiveField, CMDDescriptionField
-from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat
+from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, \
+    CMDResourceIdFormat
 from ._utils import CMDDiffLevelEnum
 
 
@@ -111,13 +114,12 @@ class CMDSchemaBase(Model):
     ARG_TYPE = None
 
     # properties as tags
-    required = CMDBooleanField()
     read_only = CMDBooleanField(
         serialized_name="readOnly",
         deserialize_from="readOnly"
     )
     frozen = CMDBooleanField()  # frozen schema will not be used
-    const = CMDBooleanField()   # when a schema is const it's default value is not None.
+    const = CMDBooleanField()  # when a schema is const it's default value is not None.
 
     # properties as nodes
     default = ModelType(CMDSchemaDefault)
@@ -153,8 +155,6 @@ class CMDSchemaBase(Model):
         if level >= CMDDiffLevelEnum.BreakingChange:
             if self.type != old.type:
                 diff["type"] = f"{old.type} != {self.type}"
-            if self.required and not old.required:
-                diff["required"] = f"it's required now."
             if self.read_only and not old.read_only:
                 diff["read_only"] = f"it's read_only now."
             if self.const and not old.const:
@@ -168,8 +168,6 @@ class CMDSchemaBase(Model):
                         diff["default"] = default_diff
 
         if level >= CMDDiffLevelEnum.Structure:
-            if self.required != old.required:
-                diff["required"] = f"{old.required} != {self.required}"
             if self.read_only != old.read_only:
                 diff["read_only"] = f"{old.read_only} != {self.read_only}"
             if self.const != old.const:
@@ -202,6 +200,7 @@ class CMDSchema(CMDSchemaBase):
     # properties as tags
     name = StringType(required=True)
     arg = CMDVariantField()
+    required = CMDBooleanField()
 
     description = CMDDescriptionField()
 
@@ -224,8 +223,14 @@ class CMDSchema(CMDSchemaBase):
         if level >= CMDDiffLevelEnum.BreakingChange:
             if self.name != old.name:
                 diff["name"] = f"{old.name} != {self.name}"
+            if self.required and not old.required:
+                diff["required"] = f"it's required now."
             if (not self.skip_url_encoding) != (not old.skip_url_encoding):  # None should be same as false
                 diff["skip_url_encoding"] = f"{old.skip_url_encoding} != {self.skip_url_encoding}"
+
+        if level >= CMDDiffLevelEnum.Structure:
+            if self.required != old.required:
+                diff["required"] = f"{old.required} != {self.required}"
 
         if level >= CMDDiffLevelEnum.Associate:
             if self.arg != old.arg:
@@ -290,6 +295,20 @@ class CMDClsSchemaBase(CMDSchemaBase):
 
 class CMDClsSchema(CMDSchema, CMDClsSchemaBase):
     ARG_TYPE = CMDClsArg
+
+    # properties as tags
+    client_flatten = CMDBooleanField(
+        serialized_name="clientFlatten",
+        deserialize_from="clientFlatten"
+    )
+
+    def _diff(self, old, level, diff):
+        diff = super(CMDClsSchema, self)._diff(old, level, diff)
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.client_flatten != old.client_flatten:
+                diff["client_flatten"] = f"from {old.client_flatten} to {self.client_flatten}"
+
+        return diff
 
 
 # string
@@ -364,7 +383,7 @@ class CMDDateSchema(CMDStringSchema, CMDDateSchemaBase):
 
 # date-time: As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
 class CMDDateTimeSchemaBase(CMDStringSchemaBase):
-    TYPE_VALUE = "date-time"
+    TYPE_VALUE = "dateTime"
     ARG_TYPE = CMDDateTimeArgBase
 
 
@@ -390,6 +409,32 @@ class CMDPasswordSchemaBase(CMDStringSchemaBase):
 
 class CMDPasswordSchema(CMDStringSchema, CMDPasswordSchemaBase):
     ARG_TYPE = CMDPasswordArg
+
+
+# ResourceId
+class CMDResourceIdSchemaBase(CMDStringSchemaBase):
+    TYPE_VALUE = "resourceId"
+    ARG_TYPE = CMDResourceIdArgBase
+
+    fmt = ModelType(
+        CMDResourceIdFormat,
+        serialized_name='format',
+        deserialize_from='format'
+    )
+
+
+class CMDResourceIdSchema(CMDStringSchema, CMDResourceIdSchemaBase):
+    ARG_TYPE = CMDResourceIdArg
+
+
+# ResourceLocation
+class CMDResourceLocationSchemaBase(CMDStringSchemaBase):
+    TYPE_VALUE = "resourceLocation"
+    ARG_TYPE = CMDResourceLocationArgBase
+
+
+class CMDResourceLocationSchema(CMDStringSchema, CMDResourceLocationSchemaBase):
+    ARG_TYPE = CMDResourceLocationArg
 
 
 # integer
@@ -627,6 +672,16 @@ class CMDObjectSchemaBase(CMDSchemaBase):
     discriminators = ListType(CMDObjectSchemaDiscriminatorField())
     additional_props = CMDObjectSchemaAdditionalPropertiesField()
 
+    # define a schema cls which can be used by others,
+    # cls definition will not include properties in CMDSchema only, such as following properties:
+    #  - name
+    #  - arg
+    #  - required
+    #  - description
+    #  - skip_url_encoding
+    #  - client_flatten
+    cls = CMDClassField()
+
     def _diff_base(self, old, level, diff):
         diff = super(CMDObjectSchemaBase, self)._diff_base(old, level, diff)
 
@@ -679,7 +734,6 @@ class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
         serialized_name="clientFlatten",
         deserialize_from="clientFlatten"
     )
-    cls = CMDClassField()  # define a schema which can be used by others
 
     def _diff(self, old, level, diff):
         diff = super(CMDObjectSchema, self)._diff(old, level, diff)
@@ -707,6 +761,16 @@ class CMDArraySchemaBase(CMDSchemaBase):
     )
     item = CMDSchemaBaseField()
 
+    # properties as tags
+    # define a schema which can be used by others # TODO: convert to arg
+    # cls definition will not include properties in CMDSchema only, such as following properties:
+    #  - name
+    #  - arg
+    #  - required
+    #  - description
+    #  - skip_url_encoding
+    cls = CMDClassField()
+
     def _get_type(self):
         return f"{self.TYPE_VALUE}<{self.item.type}>"
 
@@ -726,9 +790,6 @@ class CMDArraySchemaBase(CMDSchemaBase):
 
 class CMDArraySchema(CMDSchema, CMDArraySchemaBase):
     ARG_TYPE = CMDArrayArg
-
-    # properties as tags
-    cls = CMDClassField()  # define a schema which can be used by others # TODO: convert to arg
 
     def _diff(self, old, level, diff):
         diff = super(CMDArraySchema, self)._diff(old, level, diff)
@@ -861,4 +922,3 @@ def _diff_cls(self_cls, old_cls, level):
         if self_cls != old_cls:
             cls_diff = f"{old_cls} != {self_cls}"
     return cls_diff
-

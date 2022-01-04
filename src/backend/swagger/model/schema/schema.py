@@ -1,52 +1,108 @@
+import logging
+
 from schematics.models import Model
-from schematics.types import ListType, BaseType, DictType, ModelType, BooleanType, FloatType, IntType, StringType, PolyModelType
-from .reference import ReferenceField, Linkable
-from .fields import DataTypeFormatEnum, RegularExpressionField, XmsClientNameField, XmsExternalField, XmsDiscriminatorValueField, XmsClientFlattenField, XmsMutabilityField, XmsClientDefaultField, XNullableField, XmsAzureResourceField
-from .xml import XML
-from .external_documentation import ExternalDocumentation
-from .x_ms_enum import XmsEnumField
-from .fields import XmsSecretField, XAccessibilityField, XAzSearchDeprecatedField, XSfClientLibField, XApimCodeNillableField, XCommentField, XAbstractField, XADLNameField, MutabilityEnum
+from schematics.types import ListType, BaseType, DictType, ModelType, BooleanType, FloatType, IntType, StringType, \
+    PolyModelType
+
+from command.model.configuration import CMDSchemaDefault, \
+    CMDStringSchema, CMDResourceIdSchema, CMDResourceIdFormat, \
+    CMDResourceLocationSchema, \
+    CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, \
+    CMDArraySchemaBase, CMDObjectSchema
+from command.model.configuration import CMDSchemaEnum, CMDSchemaEnumItem, CMDSchema, CMDSchemaBase
 from swagger.utils import exceptions
+from .external_documentation import ExternalDocumentation
+from .fields import DataTypeFormatEnum, RegularExpressionField, XmsClientNameField, XmsExternalField, \
+    XmsDiscriminatorValueField, XmsClientFlattenField, XmsMutabilityField, XmsClientDefaultField, XNullableField, \
+    XmsAzureResourceField
+from .fields import XmsSecretField, XAccessibilityField, XAzSearchDeprecatedField, XSfClientLibField, \
+    XApimCodeNillableField, XCommentField, XAbstractField, XADLNameField
+from .reference import ReferenceField, Linkable
+from .x_ms_enum import XmsEnumField
+from .xml import XML
 
-from command.model.configuration import CMDIntegerFormat, CMDStringFormat, CMDFloatFormat, CMDArrayFormat, CMDObjectFormat, CMDSchemaEnum, CMDSchemaEnumItem, CMDSchema, CMDSchemaBase
+logger = logging.getLogger('backend')
 
-from command.model.configuration import CMDSchemaDefault,\
-    CMDStringSchema, CMDStringSchemaBase, \
-    CMDByteSchema, CMDByteSchemaBase, \
-    CMDBinarySchema, CMDBinarySchemaBase, \
-    CMDDateSchema, CMDDateSchemaBase, \
-    CMDDateTimeSchema, CMDDateTimeSchemaBase, \
-    CMDPasswordSchema, CMDPasswordSchemaBase, \
-    CMDDurationSchema, CMDDurationSchemaBase, \
-    CMDUuidSchema, CMDUuidSchemaBase, \
-    CMDIntegerSchema, CMDIntegerSchemaBase, \
-    CMDInteger32Schema, CMDInteger32SchemaBase, \
-    CMDInteger64Schema, CMDInteger64SchemaBase, \
-    CMDBooleanSchema, CMDBooleanSchemaBase, \
-    CMDFloatSchema, CMDFloatSchemaBase, \
-    CMDFloat32Schema, CMDFloat32SchemaBase, \
-    CMDFloat64Schema, CMDFloat64SchemaBase, \
-    CMDObjectSchema, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, \
-    CMDArraySchema, CMDArraySchemaBase, \
-    CMDClsSchema, CMDClsSchemaBase
+
+def schema_and_reference_schema_claim_function(_, data):
+    if isinstance(data, dict):
+        if ReferenceSchema._claim_polymorphic(data=data):
+            return ReferenceSchema
+        else:
+            return Schema
+    else:
+        return None
 
 
 def _additional_properties_claim_function(_, data):
     if isinstance(data, bool):
         return bool
     elif isinstance(data, dict):
-        return Schema
+        return schema_and_reference_schema_claim_function(_, data)
     else:
         return None
 
 
 def _items_claim_function(_, data):
     if isinstance(data, dict):
-        return Schema
+        return schema_and_reference_schema_claim_function(_, data)
     elif isinstance(data, list):
-        return ListType(ModelType(Schema))
+        if data and ReferenceSchema._claim_polymorphic(data=data[0]):
+            return ListType(ModelType(ReferenceSchema))
+        else:
+            return ListType(ModelType(Schema))
     else:
         return None
+
+
+class ReferenceSchema(Model, Linkable):
+    ref = ReferenceField(required=True)
+    description = StringType()
+    title = StringType()
+    read_only = BooleanType(
+        serialized_name="readOnly",
+        deserialize_from="readOnly"
+    )  # Relevant only for Schema "properties" definitions. Declares the property as "read only". This means that it MAY be sent as part of a response but MUST NOT be sent as part of the request. Properties marked as readOnly being true SHOULD NOT be in the required list of the defined schema. Default value is false.
+    type = StringType(
+        choices=["array", "boolean", "integer", "number", "object", "string"],
+        # https://datatracker.ietf.org/doc/html/draft-zyp-json-schema-04#section-3.5
+    )   #
+
+    x_ms_client_name = XmsClientNameField()  # TODO: used for deserialize name
+
+    x_ms_client_flatten = XmsClientFlattenField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ref_instance = None
+        self.x_ms_azure_resource = False
+
+    def get_disc_parent(self):
+        return self.ref_instance.get_disc_parent()
+
+    def link(self, swagger_loader, *traces):
+        if self.is_linked():
+            return
+        super().link(swagger_loader, *traces)
+
+        self.ref_instance, instance_traces = swagger_loader.load_ref(self.ref, *self.traces, 'ref')
+        if isinstance(self.ref_instance, Linkable):
+            self.ref_instance.link(swagger_loader, *instance_traces)
+        if self.ref_instance.x_ms_azure_resource:
+            self.x_ms_azure_resource = True
+
+    def to_cmd(self, builder, support_cls_schema=False, **kwargs):
+        model = builder.register_cls_definition(self, support_cls_schema=support_cls_schema, **kwargs)
+        if isinstance(model, CMDSchema):
+            builder.setup_description(model, self)
+            if self.x_ms_client_flatten:
+                model.client_flatten = True
+        return model
+
+    @classmethod
+    def _claim_polymorphic(cls, data):
+        return isinstance(data, dict) and "$ref" in data and len(data) <= 7 and \
+               set(data.keys()).issubset({"$ref", "description", "title", "readOnly", "type", "x-ms-client-name", "x-ms-client-flatten"})
 
 
 class Schema(Model, Linkable):
@@ -93,7 +149,12 @@ class Schema(Model, Linkable):
 
     # Validation keywords for arrays
     items = PolyModelType(
-        [ModelType("Schema"), ListType(ModelType("Schema"))],
+        [
+            ModelType("Schema"),
+            ModelType(ReferenceSchema),
+            ListType(ModelType("Schema")),
+            ListType(ModelType(ReferenceSchema))
+        ],
         claim_function=_items_claim_function,
     )
     max_items = IntType(
@@ -124,10 +185,16 @@ class Schema(Model, Linkable):
     )
     required = ListType(StringType(), min_size=1)
     properties = DictType(
-        ModelType("Schema"),
+        PolyModelType(
+            [
+                ModelType("Schema"),
+                ModelType(ReferenceSchema)
+            ],
+            claim_function=schema_and_reference_schema_claim_function,
+        ),
     )
     additional_properties = PolyModelType(
-        [bool, ModelType("Schema")],
+        [bool, ModelType("Schema"), ModelType(ReferenceSchema)],
         claim_function=_additional_properties_claim_function,
         serialized_name="additionalProperties",
         deserialize_from="additionalProperties"
@@ -138,10 +205,14 @@ class Schema(Model, Linkable):
     enum = ListType(BaseType())
     x_ms_enum = XmsEnumField()
     type = StringType(
-        choices=["array", "boolean", "integer", "number", "object", "string"],  # https://datatracker.ietf.org/doc/html/draft-zyp-json-schema-04#section-3.5
+        choices=["array", "boolean", "integer", "number", "object", "string"],
+        # https://datatracker.ietf.org/doc/html/draft-zyp-json-schema-04#section-3.5
     )
     all_of = ListType(
-        ModelType("Schema"),
+        PolyModelType(
+            [ModelType("Schema"), ModelType(ReferenceSchema)],
+            claim_function=schema_and_reference_schema_claim_function,
+        ),
         serialized_name="allOf",
         deserialize_from="allOf"
     )
@@ -158,21 +229,21 @@ class Schema(Model, Linkable):
     )  # TODO: # Additional external documentation for this schema.
     example = BaseType()  # TODO: # A free-form property to include an example of an instance for this schema.
 
-    x_ms_client_name = XmsClientNameField()  # TODO:
+    x_ms_client_name = XmsClientNameField()  # TODO: used for deserialized name
     x_ms_external = XmsExternalField()  # TODO:
     x_ms_discriminator_value = XmsDiscriminatorValueField()
     x_ms_client_flatten = XmsClientFlattenField()
     x_ms_mutability = XmsMutabilityField()
     x_ms_client_default = XmsClientDefaultField()
 
-    x_ms_azure_resource = XmsAzureResourceField()  # TODO: # indicates that the Definition Schema Object is a resource as defined by the Resource Manager API
+    x_ms_azure_resource = XmsAzureResourceField()
 
     x_ms_secret = XmsSecretField()  # TODO:
 
     x_nullable = XNullableField()  # TODO: # when true, specifies that null is a valid value for the associated schema
 
     # specific properties, will not support
-    _x_accessibility = XAccessibilityField()   # only used in ContainerRegistry Data plane
+    _x_accessibility = XAccessibilityField()  # only used in ContainerRegistry Data plane
     _x_az_search_deprecated = XAzSearchDeprecatedField()  # only used in Search Data Plane
     _x_sf_clientlib = XSfClientLibField()  # only used in ServiceFabric Data Plane and ServiceFabricManagedClusters Mgmt Plane
     _x_apim_code_nillable = XApimCodeNillableField()  # only used in ApiManagement Mgmt Plane
@@ -185,6 +256,8 @@ class Schema(Model, Linkable):
         self.ref_instance = None
         self.disc_parent = None
         self.disc_children = {}
+
+        self.resource_id_templates = set()  # valid when there's only one template
 
     def get_disc_parent(self):
         assert self.is_linked()
@@ -211,6 +284,8 @@ class Schema(Model, Linkable):
             self.ref_instance, instance_traces = swagger_loader.load_ref(self.ref, *self.traces, 'ref')
             if isinstance(self.ref_instance, Linkable):
                 self.ref_instance.link(swagger_loader, *instance_traces)
+            if self.ref_instance.x_ms_azure_resource:
+                self.x_ms_azure_resource = True
 
         if self.items is not None:
             if isinstance(self.items, list):
@@ -223,12 +298,14 @@ class Schema(Model, Linkable):
             for key, prop in self.properties.items():
                 prop.link(swagger_loader, *self.traces, 'properties', key)
 
-        if self.additional_properties is not None and isinstance(self.additional_properties, Schema):
+        if self.additional_properties is not None and isinstance(self.additional_properties, (Schema, ReferenceSchema)):
             self.additional_properties.link(swagger_loader, *self.traces, 'additionalProperties')
 
         if self.all_of is not None:
             for idx, item in enumerate(self.all_of):
                 item.link(swagger_loader, *self.traces, 'allOf', idx)
+                if item.x_ms_azure_resource:
+                    self.x_ms_azure_resource = True
 
         self._link_disc()
         if self.type and self.type != "object" and self.all_of:
@@ -253,7 +330,7 @@ class Schema(Model, Linkable):
                 if self.x_ms_discriminator_value is not None:
                     disc_value = self.x_ms_discriminator_value
                 elif len(self.traces) > 2 and self.traces[-2] == 'definitions':
-                    disc_value = self.traces[-1]   # use the definition name as discriminator value
+                    disc_value = self.traces[-1]  # use the definition name as discriminator value
                 else:
                     raise exceptions.InvalidSwaggerValueError(
                         msg="Discriminator value is empty.",
@@ -266,203 +343,28 @@ class Schema(Model, Linkable):
                     )
                 self.disc_parent.disc_children[disc_value] = self
 
-    def _build_model(self, in_base):
-        if self.type == "string":
-            if self.format is None:
-                if in_base:
-                    model = CMDStringSchemaBase()
-                else:
-                    model = CMDStringSchema()
-            elif self.format == "byte":
-                if in_base:
-                    model = CMDByteSchemaBase()
-                else:
-                    model = CMDByteSchema()
-            elif self.format == "binary":
-                if in_base:
-                    model = CMDBinarySchemaBase()
-                else:
-                    model = CMDBinarySchema()
-            elif self.format == "date":
-                if in_base:
-                    model = CMDDateSchemaBase()
-                else:
-                    model = CMDDateSchema()
-            elif self.format == "date-time":
-                if in_base:
-                    model = CMDDateTimeSchemaBase()
-                else:
-                    model = CMDDateTimeSchema()
-            elif self.format == "password":
-                if in_base:
-                    model = CMDPasswordSchemaBase()
-                else:
-                    model = CMDPasswordSchema()
-            elif self.format == "duration":
-                if in_base:
-                    model = CMDDurationSchemaBase()
-                else:
-                    model = CMDDurationSchema()
-            elif self.format == "uuid":
-                if in_base:
-                    model = CMDUuidSchemaBase()
-                else:
-                    model = CMDUuidSchema()
-            else:
-                raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=self.traces, value=[self.type, self.format])
-        elif self.type == "integer":
-            if self.format is None:
-                if in_base:
-                    model = CMDIntegerSchemaBase()
-                else:
-                    model = CMDIntegerSchema()
-            elif self.format == "int32":
-                if in_base:
-                    model = CMDInteger32SchemaBase()
-                else:
-                    model = CMDInteger32Schema()
-            elif self.format == "int64":
-                if in_base:
-                    model = CMDInteger64SchemaBase()
-                else:
-                    model = CMDInteger64Schema()
-            else:
-                raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=self.traces, value=[self.type, self.format])
-        elif self.type == "boolean":
-            if self.format is None:
-                if in_base:
-                    model = CMDBooleanSchemaBase()
-                else:
-                    model = CMDBooleanSchema()
-            else:
-                raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=self.traces, value=[self.type, self.format])
-        elif self.type == "number":
-            if self.format is None:
-                if in_base:
-                    model = CMDFloatSchemaBase()
-                else:
-                    model = CMDFloatSchema()
-            elif self.format == "float":
-                if in_base:
-                    model = CMDFloat32SchemaBase()
-                else:
-                    model = CMDFloat32Schema()
-            elif self.format == "double":
-                if in_base:
-                    model = CMDFloat64SchemaBase()
-                else:
-                    model = CMDFloat64Schema()
-            else:
-                raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=self.traces, value=[self.type, self.format])
-        elif self.type == "array":
-            if self.format is None:
-                if in_base:
-                    model = CMDArraySchemaBase()
-                else:
-                    model = CMDArraySchema()
-            else:
-                raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=self.traces, value=[self.type, self.format])
-        elif self.type == "object" or self.properties or self.additional_properties:
-            if self.format is None:
-                if in_base:
-                    model = CMDObjectSchemaBase()
-                else:
-                    model = CMDObjectSchema()
-            else:
-                raise exceptions.InvalidSwaggerValueError(
-                    f"format is not supported", key=self.traces, value=[self.type, self.format])
-        elif self.all_of is not None:
-            model = self.all_of[0]._build_model(in_base=in_base)
-        elif self.ref_instance is not None:
-            model = self.ref_instance._build_model(in_base=in_base)
-        else:
-            raise exceptions.InvalidSwaggerValueError(
-                f"type is not supported", key=self.traces, value=[self.type])
-
-        return model
-
-    def to_cmd_schema(self, traces_route, mutability, ref_link=None, in_base=False):
-        if self.traces in traces_route:
-            assert isinstance(ref_link, str), f"Ref Link needed: {[*traces_route, self.traces]}"
-            schema_cls = f"@{ref_link.split('/')[-1]}"
-            if in_base:
-                model = CMDClsSchemaBase()
-                model._type = schema_cls
-            else:
-                model = CMDClsSchema()
-                model._type = schema_cls
-            setattr(self, "_looped", True)
-            if not hasattr(self, "_schema_cls"):
-                setattr(self, "_schema_cls", schema_cls)
-            else:
-                assert self._schema_cls == schema_cls
-            return model
+    def to_cmd(self, builder, **kwargs):
 
         if self.ref_instance is not None:
-            model = self.ref_instance.to_cmd_schema(
-                traces_route=[*traces_route, self.traces], mutability=mutability, ref_link=self.ref)
+            model = builder(self.ref_instance, support_cls_schema=True)
         else:
-            model = self._build_model(in_base=in_base)
+            model = builder.build_schema(self)
 
-        if self.read_only:
-            model.read_only = True
-
-        if self.read_only:
-            if mutability != MutabilityEnum.Read:
-                model.frozen = True  # frozen because of mutability
-        elif self.x_ms_mutability:
-            if mutability not in self.x_ms_mutability:
-                model.frozen = True  # frozen because of mutability
-
-        if isinstance(model, CMDStringSchemaBase):
-            if self.all_of is not None:
-                raise exceptions.InvalidSwaggerValueError(
-                    msg=f"allOf is not supported for `string` type schema",
-                    key=self.traces, value=None
-                )
-            model.fmt = self.build_cmd_string_format() or model.fmt  # use inherent format when None
-            model.enum = self.build_enum() or model.enum    # use inherent enum when None
-        elif isinstance(model, CMDIntegerSchemaBase):
-            if self.all_of is not None:
-                raise exceptions.InvalidSwaggerValueError(
-                    msg=f"allOf is not supported for `integer` type schema",
-                    key=self.traces, value=None
-                )
-            model.fmt = self.build_cmd_integer_format() or model.fmt
-            model.enum = self.build_enum() or model.enum
-        elif isinstance(model, CMDBooleanSchemaBase):
-            if self.all_of is not None:
-                raise exceptions.InvalidSwaggerValueError(
-                    msg=f"allOf is not supported for `boolean` type schema",
-                    key=[ref_link]
-                )
-        elif isinstance(model, CMDFloatSchemaBase):
-            if self.all_of is not None:
-                raise exceptions.InvalidSwaggerValueError(
-                    msg=f"allOf is not supported for `number` type schema",
-                    key=self.traces, value=None
-                )
-            model.fmt = self.build_cmd_float_format() or model.fmt
-            model.enum = self.build_enum() or model.enum
-        elif isinstance(model, CMDArraySchemaBase):
+        if isinstance(model, CMDArraySchemaBase):
             if self.all_of is not None:
                 raise exceptions.InvalidSwaggerValueError(
                     msg=f"allOf is not supported for `array` type schema",
                     key=self.traces, value=None
                 )
-            model.fmt = self.build_cmd_array_format() or model.fmt
             if self.items:
-                assert isinstance(self.items, Schema)
-                v = self.items.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
+                assert isinstance(self.items, (Schema, ReferenceSchema))
+                v = builder(self.items, in_base=True, support_cls_schema=True)
                 assert isinstance(v, CMDSchemaBase)
                 model.item = v
-                if model.item.frozen:
-                    model.frozen = True  # freeze because array item is frozen
+
+                # freeze because array item is frozen
+                if not model.frozen and model.item.frozen:
+                    model.frozen = True
         elif isinstance(model, CMDObjectSchemaBase):
             # props
             prop_dict = {}
@@ -475,16 +377,10 @@ class Schema(Model, Linkable):
                 # inherent from allOf
                 for item in self.all_of:
                     disc_parent = item.get_disc_parent()
-                    if disc_parent is not None and item.ref_instance.traces in traces_route:
+                    if disc_parent is not None and builder.find_traces(item.ref_instance.traces):
                         # discriminator parent already in trace, break reference loop
                         continue
-                    v = item.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
-                    if isinstance(v, CMDClsSchemaBase):
-                        raise exceptions.InvalidSwaggerValueError(
-                            msg="AllOf not support to reference loop",
-                            key=self.traces,
-                            value=v.type
-                        )
+                    v = builder(item, in_base=True, support_cls_schema=False)
                     assert isinstance(v, CMDObjectSchemaBase)
                     if v.fmt:
                         model.fmt = v.fmt
@@ -493,7 +389,7 @@ class Schema(Model, Linkable):
                         for p in v.props:
                             prop_dict[p.name] = p
 
-                    if disc_parent is not None and disc_parent.traces not in traces_route:
+                    if disc_parent is not None and not builder.find_traces(disc_parent.traces):
                         # directly use child definition instead of polymorphism.
                         # So the value for discriminator property is const.
                         disc_prop = disc_parent.discriminator
@@ -509,8 +405,8 @@ class Schema(Model, Linkable):
 
             if self.properties:
                 for name, p in self.properties.items():
-                    assert isinstance(p, Schema)
-                    v = p.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability)
+                    assert isinstance(p, (Schema, ReferenceSchema))
+                    v = builder(p, in_base=False, support_cls_schema=True)
                     if v is None:
                         # ignore by mutability
                         continue
@@ -521,7 +417,8 @@ class Schema(Model, Linkable):
             if self.required:
                 for name in self.required:
                     if name in prop_dict:
-                        prop_dict[name].required = True
+                        prop_dict[
+                            name].required = True  # because required property will not be included in a cls definition, so it's fine to update it in parent level when prop_dict[name] is a cls definition.
 
             # discriminators
             if self.disc_children:
@@ -529,7 +426,7 @@ class Schema(Model, Linkable):
                 assert self.discriminator is not None
                 disc_prop = self.discriminator
                 for disc_value, disc_child in self.disc_children.items():
-                    if disc_child.traces in traces_route:
+                    if builder.find_traces(disc_child.traces):
                         # discriminator child already in trace, break reference loop
                         continue
                     disc = CMDObjectSchemaDiscriminator()
@@ -540,7 +437,7 @@ class Schema(Model, Linkable):
                         raise exceptions.InvalidSwaggerValueError(
                             msg="Discriminator Property don't exist",
                             key=self.traces,
-                            value=[disc_prop, mutability]
+                            value=[disc_prop, builder.mutability]
                         )
                     if not hasattr(prop_dict[disc_prop], "enum"):
                         raise exceptions.InvalidSwaggerValueError(
@@ -562,7 +459,7 @@ class Schema(Model, Linkable):
                         enum_item.value = disc_value
                         prop_dict[disc_prop].enum.items.append(enum_item)
 
-                    v = disc_child.to_cmd_schema(traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
+                    v = builder(disc_child, in_base=True, support_cls_schema=False)
                     assert isinstance(v, CMDObjectSchemaBase)
                     if v.frozen:
                         disc.frozen = True
@@ -575,25 +472,43 @@ class Schema(Model, Linkable):
                 if discriminators:
                     model.discriminators = discriminators
 
+            # convert special properties when self is an azure resource
+            if self.x_ms_azure_resource and prop_dict:
+                if 'id' in prop_dict and self.resource_id_templates and not prop_dict['id'].frozen:
+                    id_prop = prop_dict['id']
+                    if not isinstance(id_prop, CMDResourceIdSchema):
+                        try:
+                            assert isinstance(id_prop, CMDStringSchema)
+                        except:
+                            raise
+                        raw_data = id_prop.to_native()
+                        prop_dict['id'] = id_prop = CMDResourceIdSchema(raw_data=raw_data)
+                    if len(self.resource_id_templates) == 1:
+                        id_prop.fmt = CMDResourceIdFormat()
+                        id_prop.fmt.template = [*self.resource_id_templates][0]
+                    else:
+                        err = exceptions.InvalidSwaggerValueError(
+                            msg="Multi resource id templates error",
+                            key=self.traces,
+                            value=self.resource_id_templates
+                        )
+                        # logger.warning(err)
+                if 'location' in prop_dict and not prop_dict['location'].frozen:
+                    location_prop = prop_dict['location']
+                    if not isinstance(location_prop, CMDResourceLocationSchema):
+                        assert isinstance(location_prop, CMDStringSchema)
+                        raw_data = location_prop.to_native()
+                        prop_dict['location'] = CMDResourceLocationSchema(raw_data=raw_data)
+
             if prop_dict:
                 model.props = []
                 for prop in prop_dict.values():
-                    if model.read_only:
-                        # mark properties as read_only to help sub schema inherent those properties
-                        prop.read_only = True
-                    if model.frozen:
-                        # mark properties as frozen to help sub schema inherent those properties
-                        prop.frozen = True
                     model.props.append(prop)
-
-            # fmt
-            model.fmt = self.build_cmd_object_format() or model.fmt
 
             # additional properties
             if self.additional_properties:
-                if isinstance(self.additional_properties, Schema):
-                    v = self.additional_properties.to_cmd_schema(
-                        traces_route=[*traces_route, self.traces], mutability=mutability, in_base=True)
+                if isinstance(self.additional_properties, (Schema, ReferenceSchema)):
+                    v = builder(self.additional_properties, in_base=True, support_cls_schema=True)
                     if v is not None:
                         assert isinstance(v, CMDSchemaBase)
                         model.additional_props = CMDObjectSchemaAdditionalProperties()
@@ -605,18 +520,17 @@ class Schema(Model, Linkable):
                 model.additional_props = CMDObjectSchemaAdditionalProperties()
 
             if model.additional_props:
-                if model.read_only:
-                    # mark additional_props as read_only to help sub schema inherent those properties
-                    model.additional_props.read_only = True
-                if model.frozen:
-                    # mark additional_props as frozen to help sub schema inherent those properties
-                    model.additional_props.frozen = True
+                if builder.read_only:
+                    model.additional_props.read_only = builder.read_only
+                if builder.frozen:
+                    model.additional_props.frozen = builder.frozen
 
             if self.x_ms_client_flatten and isinstance(model, CMDObjectSchema):
                 # client flatten can only be supported for CMDObjectSchema install of CMDObjectSchemaBase.
                 # Because CMDObjectSchemaBase will not link with argument
                 model.client_flatten = True
 
+            # when all additional_props and props and discriminators of model is frozen then this model is frozen
             if not model.frozen:
                 need_frozen = True
                 if model.additional_props:
@@ -633,143 +547,23 @@ class Schema(Model, Linkable):
                             need_frozen = False
                             break
                 model.frozen = need_frozen
+        else:
+            if self.all_of is not None:
+                raise exceptions.InvalidSwaggerValueError(
+                    msg=f"allOf is not supported for `{model.type}` type schema",
+                    key=self.traces, value=None
+                )
 
         if getattr(self, "_looped", False):
             assert isinstance(model, (CMDObjectSchemaBase, CMDArraySchemaBase))
             model.cls = self._schema_cls
             setattr(self, "_looped", False)
 
-        if self.x_ms_client_default is not None:
-            model.default = CMDSchemaDefault()
-            model.default.value = self.x_ms_client_default
+        builder.setup_fmt(model, self)
+        builder.setup_enum(model, self)
+        builder.setup_default(model, self)
 
-        elif self.default is not None:
-            model.default = CMDSchemaDefault()
-            model.default.value = self.default
-
-        if self.description and isinstance(model, CMDSchema):
-            model.description = self.description
+        if isinstance(model, CMDSchema):
+            builder.setup_description(model, self)
 
         return model
-
-    def build_cmd_string_format(self):
-        fmt_assigned = False
-
-        fmt = CMDStringFormat()
-
-        if self.pattern is not None:
-            fmt.pattern = self.pattern
-            fmt_assigned = True
-        if self.max_length is not None:
-            fmt.max_length = self.max_length
-            fmt_assigned = True
-        if self.min_length is not None:
-            fmt.min_length = self.min_length
-            fmt_assigned = True
-
-        if not fmt_assigned:
-            return None
-        return fmt
-
-    def build_cmd_integer_format(self):
-        fmt_assigned = False
-        fmt = CMDIntegerFormat()
-
-        if self.maximum is not None:
-            fmt.maximum = int(self.maximum)
-            if self.exclusive_maximum and fmt.maximum == self.maximum:
-                fmt.maximum -= 1
-            fmt_assigned = True
-
-        if self.minimum is not None:
-            fmt.minimum = int(self.minimum)
-            if self.exclusive_minimum and fmt.minimum == self.minimum:
-                fmt.minimum += 1
-            fmt_assigned = True
-
-        if self.multiple_of is not None:
-            fmt.multiple_of = self.multiple_of
-            fmt_assigned = True
-
-        if not fmt_assigned:
-            return None
-        return fmt
-
-    def build_cmd_float_format(self):
-        fmt_assigned = False
-        fmt = CMDFloatFormat()
-
-        if self.maximum is not None:
-            fmt.maximum = self.maximum
-            if self.exclusive_maximum:
-                fmt.exclusive_maximum = True
-            fmt_assigned = True
-
-        if self.minimum is not None:
-            fmt.minimum = int(self.minimum)
-            if self.exclusive_minimum:
-                fmt.exclusive_minimum = True
-            fmt_assigned = True
-
-        if self.multiple_of is not None:
-            fmt.multiple_of = self.multiple_of
-            fmt_assigned = True
-
-        if not fmt_assigned:
-            return None
-        return fmt
-
-    def build_cmd_array_format(self):
-        fmt_assigned = False
-        fmt = CMDArrayFormat()
-
-        if self.unique_items:
-            fmt.unique = True
-            fmt_assigned = True
-
-        if self.max_length is not None:
-            fmt.max_length = self.max_length
-            fmt_assigned = True
-
-        if self.min_length is not None:
-            fmt.min_length = self.min_length
-            fmt_assigned = True
-
-        if not fmt_assigned:
-            return None
-        return fmt
-
-    def build_cmd_object_format(self):
-        fmt_assigned = False
-        fmt = CMDObjectFormat()
-
-        if self.max_properties is not None:
-            fmt.max_properties = self.max_properties
-            fmt_assigned = True
-        if self.min_properties is not None:
-            fmt.min_properties = self.min_properties
-            fmt_assigned = True
-
-        if not fmt_assigned:
-            return None
-        return fmt
-
-    def build_enum(self):
-        if not self.enum and not (self.x_ms_enum and self.x_ms_enum.values):
-            return None
-        enum = CMDSchemaEnum()
-        enum.items = []
-        if self.x_ms_enum and self.x_ms_enum.values:
-            for v in self.x_ms_enum.values:
-                item = CMDSchemaEnumItem()
-                item.value = v.value
-                if v.name:
-                    # TODO: the name should be used as display name for argument
-                    pass
-                enum.items.append(item)
-        elif self.enum:
-            for v in self.enum:
-                item = CMDSchemaEnumItem()
-                item.value = v
-                enum.items.append(item)
-        return enum

@@ -30,11 +30,29 @@ class CMDOperation(Model):
         raise NotImplementedError()
 
 
+class CMDHttpOperationLongRunning(Model):
+    # properties as tags
+    final_state_via = StringType(
+        choices=(
+            'azure-async-operation',
+            # (default if not specified) poll until terminal state, the final response will be available at the uri pointed to by the header Azure-AsyncOperation
+            'location',
+            # poll until terminal state, the final response will be available at the uri pointed to by the header Location
+            'original-uri'
+            # poll until terminal state, the final response will be available via GET at the original resource URI. Very common for PUT operations.
+        ),
+        default='azure-async-operation',
+        serialized_name='finalStateVia',
+        deserialize_from='finalStateVia',
+    )
+
+
 class CMDHttpOperation(CMDOperation):
     POLYMORPHIC_KEY = "http"
 
     # properties as tags
-    long_running = CMDBooleanField(
+    long_running = ModelType(
+        CMDHttpOperationLongRunning,
         serialized_name="longRunning",
         deserialize_from="longRunning",
     )

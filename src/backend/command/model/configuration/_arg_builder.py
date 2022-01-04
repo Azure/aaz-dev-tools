@@ -1,12 +1,16 @@
 
 
-from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDArraySchemaBase, CMDSchemaEnumItem, CMDObjectSchemaAdditionalProperties
-from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgEnumItem, CMDArgDefault, CMDBooleanArgBase, CMDArgBlank, CMDObjectArgAdditionalProperties
+from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
+    CMDArraySchema, CMDArraySchemaBase, CMDSchemaEnumItem, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema
+from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgEnumItem, CMDArgDefault, CMDBooleanArgBase, \
+    CMDArgBlank, CMDObjectArgAdditionalProperties
 from ._format import CMDFormat
 import re
+import inflect
 
 
 class CMDArgBuilder:
+    _inflect_engine = inflect.engine()
 
     @classmethod
     def new_builder(cls, schema, parent=None, var_prefix=None):
@@ -154,7 +158,7 @@ class CMDArgBuilder:
             return None
 
     def get_required(self):
-        if isinstance(self.schema, CMDSchemaBase):
+        if isinstance(self.schema, CMDSchema):
             return self.schema.required
         return False
 
@@ -172,12 +176,13 @@ class CMDArgBuilder:
         return None
 
     def get_hide(self):
-        if getattr(self.schema, 'name', None) == 'id' and not self.get_required() and self._parent:
-            # some resource will have optional 'id' property, if it also has 'name' property,
-            # the 'id' argument will be hidden by default.
-            for prop in self._parent.schema.props:
-                if prop.name == 'name':
-                    return True
+        if getattr(self.schema, 'name', None) == 'id' and not self.get_required() and self._parent and \
+                isinstance(self.schema, CMDResourceIdSchema):
+            if self._arg_var.split('.', maxsplit=1)[-1] == 'id':
+                # hide top level 'id' property when it has 'name' property,
+                for prop in self._parent.schema.props:
+                    if prop.name == 'name':
+                        return True
         return False
 
     def get_var(self):
@@ -198,6 +203,15 @@ class CMDArgBuilder:
         else:
             raise NotImplementedError()
         return [opt_name, ]
+
+    def get_singular_options(self):
+        if not isinstance(self.schema, CMDArraySchema):
+            raise NotImplementedError()
+        opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
+        singular_opt_name = self._inflect_engine.singular_noun(opt_name)
+        if singular_opt_name != opt_name:
+            return [singular_opt_name, ]
+        return None
 
     def _build_help(self):
         if hasattr(self.schema, 'description') and self.schema.description:
