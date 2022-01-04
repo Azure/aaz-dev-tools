@@ -69,7 +69,7 @@ export default class CustomAccordion extends PureComponent<AccordionProp, Accord
                   return <Accordion.Item eventKey={index.toString()} key={index.toString()}>
                           <Accordion.Header>{moduleName}</Accordion.Header>
                           <Accordion.Body>
-                            {this.state.activeModule==index.toString() && this.getResourceId(spec[moduleName])}
+                            {this.state.activeModule===index.toString() && this.getResourceId(spec[moduleName])}
                           </Accordion.Body>
                           </Accordion.Item>
                 })}
