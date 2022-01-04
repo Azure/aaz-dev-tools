@@ -55,6 +55,25 @@ class CMDStringFormat(CMDFormat):
         return diff
 
 
+class CMDResourceIdFormat(CMDFormat):
+    template = StringType(required=True)
+
+    def build_arg_fmt(self, builder):
+        fmt = CMDResourceIdFormat()
+        fmt.template = self.template
+        # TODO: add supports for
+        return fmt
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.template != old.template:
+                diff['template'] = f"from {old.template} to {self.template}"
+        return diff
+
+
 # integer
 class CMDIntegerFormat(CMDFormat):
     multiple_of = IntType(

@@ -126,7 +126,7 @@ class Resource:
             file_path_version.readiness = ResourceVersion.Readiness.Preview
         return file_path_version
 
-    def to_cmd_resource(self):
+    def to_cmd(self, **kwargs):
         resource = CMDResource()
         resource.id = self.id
         resource.version = self.version.version
