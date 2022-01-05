@@ -1,5 +1,5 @@
 import sys
-from aazdev.cmd import cli
+from aazdev.app import cli
 
 
 def main() -> None:

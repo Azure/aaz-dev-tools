@@ -15,15 +15,45 @@ class SwaggerSpecs:
     def get_mgmt_plane_modules(self):
         modules = []
         for name in os.listdir(self._spec_folder_path):
-            path = os.path.join(self._spec_folder_path, name, 'resource-manager')
-            if os.path.isdir(path):
-                modules.append(MgmtPlaneModule(name, path=path))
+            module = self.get_mgmt_plane_module(name)
+            if module:
+                modules.append(module)
         return modules
+
+    def get_mgmt_plane_module(self, *names):
+        if not names:
+            return None
+        name = names[0]
+        path = os.path.join(self._spec_folder_path, name, 'resource-manager')
+        if not os.path.isdir(path):
+            return None
+        module = MgmtPlaneModule(name, folder_path=path)
+        for name in names[1:]:
+            path = os.path.join(path, name)
+            if not os.path.isdir(path):
+                return None
+            module = MgmtPlaneModule(name, folder_path=path, parent=module)
+        return module
 
     def get_data_plane_modules(self):
         modules = []
         for name in os.listdir(self._spec_folder_path):
-            path = os.path.join(self._spec_folder_path, name, 'data-plane')
-            if os.path.isdir(path):
-                modules.append(DataPlaneModule(name, path=path))
+            module = self.get_data_plane_module(name)
+            if module:
+                modules.append(module)
         return modules
+
+    def get_data_plane_module(self, *names):
+        if not names:
+            return None
+        name = names[0]
+        path = os.path.join(self._spec_folder_path, name, 'data-plane')
+        if not os.path.isdir(path):
+            return None
+        module = DataPlaneModule(name, folder_path=path)
+        for name in names[1:]:
+            path = os.path.join(path, name)
+            if not os.path.isdir(path):
+                return None
+            module = DataPlaneModule(name, folder_path=path, parent=module)
+        return module

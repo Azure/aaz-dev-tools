@@ -5,9 +5,9 @@ from ._resource_provider import ResourceProvider
 
 class SwaggerModule:
 
-    def __init__(self, name, path, parent=None):
+    def __init__(self, name, folder_path, parent=None):
         self.name = name
-        self._path = path
+        self.folder_path = folder_path
         self._parent = parent
 
     def __str__(self):
@@ -16,9 +16,18 @@ class SwaggerModule:
         else:
             return f"{self.name}"
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and str(other) == str(self)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(str(self))
+
 
 class MgmtPlaneModule(SwaggerModule):
-    PREFIX = '(MgmtPlane)'
+    PREFIX = 'mgmt-plane'
 
     def __str__(self):
         if self._parent is None:
@@ -28,8 +37,8 @@ class MgmtPlaneModule(SwaggerModule):
 
     def get_resource_providers(self):
         rp = []
-        for name in os.listdir(self._path):
-            path = os.path.join(self._path, name)
+        for name in os.listdir(self.folder_path):
+            path = os.path.join(self.folder_path, name)
             if os.path.isdir(path):
                 name_parts = name.split('.')
                 if name_parts[0].lower() == 'microsoft':
@@ -43,7 +52,7 @@ class MgmtPlaneModule(SwaggerModule):
 
 
 class DataPlaneModule(SwaggerModule):
-    PREFIX = '(DataPlane)'
+    PREFIX = 'data-plane'
 
     def __str__(self):
         if self._parent is None:
@@ -53,12 +62,12 @@ class DataPlaneModule(SwaggerModule):
 
     def get_resource_providers(self):
         rp = []
-        for name in os.listdir(self._path):
-            path = os.path.join(self._path, name)
+        for name in os.listdir(self.folder_path):
+            path = os.path.join(self.folder_path, name)
             if os.path.isdir(path):
                 if name.lower() in ('preview', 'stable'):
-                    readme_path = _search_readme_md_path(self._path)
-                    rp = [ResourceProvider(self.name, self._path, readme_path, swagger_module=self)]
+                    readme_path = _search_readme_md_path(self.folder_path)
+                    rp = [ResourceProvider(self.name, self.folder_path, readme_path, swagger_module=self)]
                     break
                 name_parts = name.split('.')
                 if name_parts[0].lower() in ('microsoft', 'azure'):

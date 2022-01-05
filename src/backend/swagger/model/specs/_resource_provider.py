@@ -16,24 +16,24 @@ logger = logging.getLogger('backend')
 
 class ResourceProvider:
 
-    def __init__(self, name, file_path, readme_path, swagger_module):
+    def __init__(self, name, folder_path, readme_path, swagger_module):
         self.name = name
-        self._file_path = file_path
+        self.folder_path = folder_path
         self._readme_path = readme_path
         self.swagger_module = swagger_module
 
         if readme_path is None:
-            logger.warning(f"MissReadmeFile: {self} : {map_path_2_repo(file_path)}")
+            logger.warning(f"MissReadmeFile: {self} : {map_path_2_repo(folder_path)}")
         self._tags = None
         self._resource_map = None
 
     def __str__(self):
-        return f'{self.swagger_module}/{self.name}'
+        return f'{self.swagger_module}/providers/{self.name}'
 
     def get_resource_map(self, read_only=False, refresh=False):
         if refresh or not self._resource_map:
             resource_map = {}
-            for root, dirs, files in os.walk(self._file_path):
+            for root, dirs, files in os.walk(self.folder_path):
                 if 'example' in root:
                     continue
                 for file in files:

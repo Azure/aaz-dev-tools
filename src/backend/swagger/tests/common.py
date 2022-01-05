@@ -42,7 +42,7 @@ class SwaggerSpecsTestCase(TestCase):
 
     def get_swagger_file_paths(self, file_path_filter=None, **kwargs):
         for rp in self.get_resource_providers(**kwargs):
-            for root, dirs, files in os.walk(rp._file_path):
+            for root, dirs, files in os.walk(rp.folder_path):
                 for file in files:
                     if not file.endswith('.json'):
                         continue
