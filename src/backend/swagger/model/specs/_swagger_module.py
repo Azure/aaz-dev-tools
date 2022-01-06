@@ -1,6 +1,7 @@
 import os
 
 from ._resource_provider import ResourceProvider
+from utils.constants import PlaneEnum
 
 
 class SwaggerModule:
@@ -27,7 +28,7 @@ class SwaggerModule:
 
 
 class MgmtPlaneModule(SwaggerModule):
-    PREFIX = 'mgmt-plane'
+    PREFIX = PlaneEnum.Mgmt
 
     def __str__(self):
         if self._parent is None:
@@ -52,7 +53,7 @@ class MgmtPlaneModule(SwaggerModule):
 
 
 class DataPlaneModule(SwaggerModule):
-    PREFIX = 'data-plane'
+    PREFIX = PlaneEnum.Data
 
     def __str__(self):
         if self._parent is None:

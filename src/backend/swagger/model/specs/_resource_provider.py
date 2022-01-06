@@ -30,7 +30,7 @@ class ResourceProvider:
     def __str__(self):
         return f'{self.swagger_module}/providers/{self.name}'
 
-    def get_resource_map(self, read_only=False, refresh=False):
+    def get_resource_map(self, refresh=False):
         if refresh or not self._resource_map:
             resource_map = {}
             for root, dirs, files in os.walk(self.folder_path):
@@ -50,26 +50,7 @@ class ResourceProvider:
                             resource_map[resource.id][resource.version] = resource
             self._resource_map = resource_map
         resource_map = self._resource_map
-        if not read_only:
-            # if not read_only then resource_map will be generated next time.
-            self._resource_map = None
         return resource_map
-
-    def get_resource_op_group_map(self, resource_map=None):
-        if resource_map is None:
-            resource_map = self.get_resource_map()
-        resource_op_group_map = {}
-        for resource_id, version_map in resource_map.items():
-            _, latest_resource = sorted(
-                version_map.items(),
-                key=lambda item: str(item[0]),
-                reverse=True
-            )[0]
-            op_group_name = latest_resource.get_operation_group_name() or ""
-            if op_group_name not in resource_op_group_map:
-                resource_op_group_map[op_group_name] = {}
-            resource_op_group_map[op_group_name][resource_id] = version_map
-        return resource_op_group_map
 
     @property
     def tags(self):

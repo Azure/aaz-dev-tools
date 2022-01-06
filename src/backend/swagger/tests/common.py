@@ -1,9 +1,9 @@
 import os
-from unittest import TestCase
 from swagger.model.specs import SwaggerSpecs
+from aazdev.tests.common import ApiTestCase
 
 
-class SwaggerSpecsTestCase(TestCase):
+class SwaggerSpecsTestCase(ApiTestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

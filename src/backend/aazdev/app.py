@@ -21,15 +21,15 @@ def create_app():
         return app.send_static_file('index.html')
 
     # register routes of swagger module
-    from swagger.view import register_blueprints
+    from swagger.api import register_blueprints
     register_blueprints(app)
 
     # register routes of command module
-    from command.view import register_blueprints
+    from command.api import register_blueprints
     register_blueprints(app)
 
     # register routes of cli module
-    from cli.view import register_blueprints
+    from cli.api import register_blueprints
     register_blueprints(app)
 
     return app

@@ -7,3 +7,4 @@ inflect~=5.3.0
 msrestazure~=0.6.4
 lxml~=4.6.4
 flask~=2.0.2
+cachelib~=0.5.0
