@@ -5,9 +5,11 @@
 # -----------------------------------------------------------------------------
 from lxml.builder import ElementMaker
 from lxml.etree import tostring
+from xmltodict import parse
+
 from schematics.types import ListType, ModelType
 from schematics.types.compound import PolyModelType
-from xmltodict import parse
+from schematics.types.serializable import Serializable
 
 XML_ROOT = "CodeGen"
 
@@ -57,17 +59,15 @@ def build_model(model, primitive):
     if hasattr(model, "_field_list"):
         instance = model()
         for field_name, field in model._field_list:
+            if isinstance(field, Serializable):
+                continue
             serialized_name = field.serialized_name or field_name
             if serialized_name not in primitive:
                 continue
             data = primitive[serialized_name]
             curr_field = unwrap(field)
             field_value = obtain_field_value(field, curr_field, data)
-            # handle serializable instance
-            try:
-                setattr(instance, field_name, field_value)
-            except AttributeError:
-                pass
+            setattr(instance, field_name, field_value)
         return instance
     else:
         # handle primitive field
@@ -90,14 +90,7 @@ def obtain_field_value(prev, curr, data):
             value = build_model(model, data)
             field_value.append(value)
     else:
-        if isinstance(curr, PolyModelType):
-            try:
-                model = curr.find_model(data)
-            except Exception:
-                # TODO: Better handle SchemaBaseField
-                return None
-        else:
-            model = curr
+        model = curr.find_model(data) if isinstance(curr, PolyModelType) else curr
         field_value = build_model(model, data)
     return field_value
 

@@ -13,7 +13,7 @@ class CMDJson(Model):
     ref = CMDVariantField()
 
     # properties as nodes
-    schema = CMDSchemaBaseField()  # this property is required when ref property is None
+    schema = CMDSchemaBaseField(support_schema=True)  # this property is required when ref property is None
     # Note: the schema can be CMDSchema or CMDSchemaBase.
     # For request or instance update, it's CMDSchema.
     # For response, it's CMDSchemaBase.
