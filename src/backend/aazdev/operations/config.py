@@ -3,7 +3,6 @@
 # Licensed under the MIT License. See License.txt in the project root for
 # license information.
 # -----------------------------------------------------------------------------
-
 from command.model.configuration import CMDResource, CMDConfiguration
 from swagger.controller.command_generator import CommandGenerator
 
