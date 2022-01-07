@@ -2,6 +2,7 @@ from swagger.tests.common import SwaggerSpecsTestCase
 import os
 import time
 from utils.constants import PlaneEnum
+from swagger.api.specs import b64encode_str
 
 
 class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
@@ -14,6 +15,9 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
             assert len(json_data) > 0
             for module in json_data:
                 assert os.path.isdir(module['folder'])
+                rv = c.get(module['url'])
+                assert rv.status_code == 200
+                assert rv.get_json()['url'] == module['url']
 
     def test_data_plane_modules(self):
         with self.app.test_client() as c:
@@ -23,6 +27,9 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
             assert len(json_data) > 0
             for module in json_data:
                 assert os.path.isdir(module['folder'])
+                rv = c.get(module['url'])
+                assert rv.status_code == 200
+                assert rv.get_json()['url'] == module['url']
 
     def test_mgmt_plane_rp(self):
         with self.app.test_client() as c:
@@ -30,10 +37,14 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
             json_data = rv.get_json()
             assert rv.status_code == 200
             for module in json_data:
-                rv = c.get(f"{module['id']}/providers")
+                rv = c.get(f"{module['url']}/resource-providers")
                 assert rv.status_code == 200
-                data = rv.get_json()
-                print(f"{len(data)} {data}")
+                rps = rv.get_json()
+                print(f"{len(rps)} {rps}")
+                for rp in rps:
+                    rv = c.get(rp['url'])
+                    assert rv.status_code == 200
+                    assert rv.get_json()['url'] == rp['url']
         time.sleep(1)
 
     def test_data_plane_rp(self):
@@ -42,10 +53,14 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
             json_data = rv.get_json()
             assert rv.status_code == 200
             for module in json_data:
-                rv = c.get(f"{module['id']}/providers")
+                rv = c.get(f"{module['url']}/resource-providers")
                 assert rv.status_code == 200
-                data = rv.get_json()
-                print(f"{len(data)} {data}")
+                rps = rv.get_json()
+                print(f"{len(rps)} {rps}")
+                for rp in rps:
+                    rv = c.get(rp['url'])
+                    assert rv.status_code == 200
+                    assert rv.get_json()['url'] == rp['url']
         time.sleep(1)
 
     def test_mgmt_plane_resources(self):
@@ -54,16 +69,19 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
             modules = rv.get_json()
             assert rv.status_code == 200
             for module in modules:
-                rv = c.get(f"{module['id']}/providers")
+                rv = c.get(f"{module['url']}/resource-providers")
                 assert rv.status_code == 200
                 rps = rv.get_json()
                 for rp in rps:
                     start = time.time()
-                    rv = c.get(f"{rp['id']}/resources")
+                    rv = c.get(f"{rp['url']}/resources")
                     assert rv.status_code == 200
                     resources = rv.get_json()
                     end = time.time()
-                    print(rp['id'], len(resources), f"{end-start}s")
+                    print(rp['url'], len(resources), f"{end-start}s")
+                    for resource in resources:
+                        rv = c.get(resource['url'])
+                        assert rv.status_code == 200
         time.sleep(1)
 
     def test_data_plane_resources(self):
@@ -72,14 +90,101 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
             modules = rv.get_json()
             assert rv.status_code == 200
             for module in modules:
-                rv = c.get(f"{module['id']}/providers")
+                rv = c.get(f"{module['url']}/resource-providers")
                 assert rv.status_code == 200
                 rps = rv.get_json()
                 for rp in rps:
                     start = time.time()
-                    rv = c.get(f"{rp['id']}/resources")
+                    rv = c.get(f"{rp['url']}/resources")
                     assert rv.status_code == 200
                     resources = rv.get_json()
                     end = time.time()
-                    print(rp['id'], len(resources), f"{end-start}s")
+                    print(rp['url'], len(resources), f"{end-start}s")
+                    for resource in resources:
+                        rv = c.get(resource['url'])
+                        assert rv.status_code == 200
         time.sleep(1)
+
+    def test_mgmt_plane_resource_version(self):
+        with self.app.test_client() as c:
+            rv = c.get(f'/swagger/specs/{PlaneEnum.Mgmt}')
+            modules = rv.get_json()
+            assert rv.status_code == 200
+            for module in modules:
+                rv = c.get(f"{module['url']}/resource-providers")
+                assert rv.status_code == 200
+                rps = rv.get_json()
+                for rp in rps:
+                    rv = c.get(f"{rp['url']}/resources")
+                    assert rv.status_code == 200
+                    resources = rv.get_json()
+                    for resource in resources:
+                        for version in resource['versions']:
+                            rv = c.get(version['url'])
+                            assert rv.status_code == 200
+
+    def test_data_plane_resource_version(self):
+        with self.app.test_client() as c:
+            rv = c.get(f'/swagger/specs/{PlaneEnum.Data}')
+            modules = rv.get_json()
+            assert rv.status_code == 200
+            for module in modules:
+                rv = c.get(f"{module['url']}/resource-providers")
+                assert rv.status_code == 200
+                rps = rv.get_json()
+                for rp in rps:
+                    rv = c.get(f"{rp['url']}/resources")
+                    assert rv.status_code == 200
+                    resources = rv.get_json()
+                    for resource in resources:
+                        for version in resource['versions']:
+                            rv = c.get(version['url'])
+                            assert rv.status_code == 200
+
+    def test_mgmt_plane_resource_and_version_in_module(self):
+        with self.app.test_client() as c:
+            rv = c.get(f'/swagger/specs/{PlaneEnum.Mgmt}')
+            modules = rv.get_json()
+            assert rv.status_code == 200
+            for module in modules:
+                rv = c.get(f"{module['url']}/resource-providers")
+                assert rv.status_code == 200
+                rps = rv.get_json()
+                for rp in rps:
+                    rv = c.get(f"{rp['url']}/resources")
+                    assert rv.status_code == 200
+                    resources = rv.get_json()
+                    for resource in resources:
+                        url = f"{module['url']}/resources/{b64encode_str(resource['id'])}"
+                        rv = c.get(url)
+                        assert rv.status_code == 200
+                        assert rv.get_json() == resource
+                        for version in resource['versions']:
+                            url = f"{module['url']}/resources/{b64encode_str(resource['id'])}/v/{b64encode_str(version['version'])}"
+                            rv = c.get(url)
+                            assert rv.status_code == 200
+                            assert rv.get_json() == version
+
+    def test_data_plane_resource_and_version_in_module(self):
+        with self.app.test_client() as c:
+            rv = c.get(f'/swagger/specs/{PlaneEnum.Data}')
+            modules = rv.get_json()
+            assert rv.status_code == 200
+            for module in modules:
+                rv = c.get(f"{module['url']}/resource-providers")
+                assert rv.status_code == 200
+                rps = rv.get_json()
+                for rp in rps:
+                    rv = c.get(f"{rp['url']}/resources")
+                    assert rv.status_code == 200
+                    resources = rv.get_json()
+                    for resource in resources:
+                        url = f"{module['url']}/resources/{b64encode_str(resource['id'])}"
+                        rv = c.get(url)
+                        assert rv.status_code == 200
+                        assert rv.get_json() == resource
+                        for version in resource['versions']:
+                            url = f"{module['url']}/resources/{b64encode_str(resource['id'])}/v/{b64encode_str(version['version'])}"
+                            rv = c.get(url)
+                            assert rv.status_code == 200
+                            assert rv.get_json() == version

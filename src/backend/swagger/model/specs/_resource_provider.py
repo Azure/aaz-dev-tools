@@ -28,7 +28,7 @@ class ResourceProvider:
         self._resource_map = None
 
     def __str__(self):
-        return f'{self.swagger_module}/providers/{self.name}'
+        return f'{self.swagger_module}/resource-providers/{self.name}'
 
     def get_resource_map(self, refresh=False):
         if refresh or not self._resource_map:
