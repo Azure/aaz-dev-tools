@@ -250,6 +250,9 @@ class Schema(Model, Linkable):
     _x_comment = XCommentField()  # Only used in IoTCenter Mgmt Plane
     _x_abstract = XAbstractField()  # Only used in Logic Mgmt Plane and Web Mgmt Plane
     _x_adl_name = XADLNameField()  # Only used in FluidRelay Mgmt Plane
+    _x_enum_Names = ListType(BaseType(), serialized_name="x-enumNames", deserialize_from="x-enumNames")  #  Only used in Marketplane Catalog Data Plane
+    _x_enum_flags = BooleanType(serialized_name="x-enumFlags", deserialize_from="x-enumFlags")  #  Only used in Marketplane Catalog Data Plane
+    _x_dictionary_key = ModelType(ReferenceSchema, serialized_name="x-dictionaryKey", deserialize_from="x-dictionaryKey")  #  Only used in Marketplane Catalog Data Plane
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
