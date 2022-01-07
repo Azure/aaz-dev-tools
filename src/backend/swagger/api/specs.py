@@ -18,7 +18,7 @@ def b64decode_str(value):
 
 @bp.errorhandler(exceptions.InvalidAPIUsage)
 def invalid_api_usage(e):
-    return jsonify(e.to_dict())
+    return jsonify(e.to_dict()), e.status_code
 
 
 # modules
