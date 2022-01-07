@@ -26,23 +26,31 @@ class Config:
     @classmethod
     def validate_and_setup_aaz_path(cls, ctx, param, value):
         # TODO verify folder structure
-        cls.AAZ_PATH = value
+        cls.AAZ_PATH = os.path.expanduser(value)
+        if not os.path.exists(cls.AAZ_PATH):
+            raise ValueError(f"Path '{cls.AAZ_PATH}' does not exist.")
         return cls.AAZ_PATH
 
     @classmethod
     def validate_and_setup_swagger_path(cls, ctx, param, value):
         # TODO verify folder structure
-        cls.SWAGGER_PATH = value
+        cls.SWAGGER_PATH = os.path.expanduser(value)
+        if not os.path.exists(cls.SWAGGER_PATH):
+            raise ValueError(f"Path '{cls.SWAGGER_PATH}' does not exist.")
         return cls.SWAGGER_PATH
 
     @classmethod
     def validate_and_setup_cli_path(cls, ctx, param, value):
         # TODO verify folder structure
-        cls.CLI_PATH = value
+        cls.CLI_PATH = os.path.expanduser(value)
+        if not os.path.exists(cls.CLI_PATH):
+            raise ValueError(f"Path '{cls.CLI_PATH}' does not exist.")
         return cls.CLI_PATH
 
     @classmethod
     def validate_and_setup_cli_extension_path(cls, ctx, param, value):
         # TODO verify folder structure
-        cls.CLI_EXTENSION_PATH = value
+        cls.CLI_EXTENSION_PATH = os.path.expanduser(value)
+        if not os.path.exists(cls.CLI_EXTENSION_PATH):
+            raise ValueError(f"Path '{cls.CLI_EXTENSION_PATH}' does not exist.")
         return cls.CLI_EXTENSION_PATH

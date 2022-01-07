@@ -1,9 +1,8 @@
-from urllib.parse import quote_plus, unquote_plus
+from base64 import urlsafe_b64encode, urlsafe_b64decode
 
 from flask import Blueprint, jsonify
 from swagger.controller.specs_manager import SwaggerSpecsManager
 from utils import exceptions
-from base64 import urlsafe_b64encode, urlsafe_b64decode
 
 bp = Blueprint('swagger', __name__, url_prefix='/swagger/specs')
 
@@ -186,7 +185,8 @@ def get_resource_in_module(plane, mod_names, resource_id):
 
 
 # resource version
-@bp.route("/<plane>/<path:mod_names>/resource-providers/<rp_name>/resources/<resource_id>/v/<version>", methods=("Get",))
+@bp.route("/<plane>/<path:mod_names>/resource-providers/<rp_name>/resources/<resource_id>/v/<version>",
+          methods=("Get",))
 def get_resource_version_in_rp(plane, mod_names, rp_name, resource_id, version):
     resource_id = b64decode_str(resource_id)
     version = b64decode_str(version)
