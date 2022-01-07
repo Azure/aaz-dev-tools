@@ -11,7 +11,7 @@ from swagger.model.schema.x_ms_pageable import XmsPageable
 from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.specs import SwaggerLoader, SwaggerSpecs, DataPlaneModule, MgmtPlaneModule
 from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case, get_url_path_valid_parts
-from utils import config
+from utils import Config
 import inflect
 from swagger.utils import exceptions
 
@@ -34,7 +34,7 @@ class CommandGenerator:
     def __init__(self, module_name, swagger_path=None):
         self.loader = SwaggerLoader()
         self.specs = SwaggerSpecs(
-            folder_path=swagger_path or config.SWAGGER_PATH
+            folder_path=swagger_path or Config.SWAGGER_PATH
         )
         self.module, self.rps = self._setup_module(module_name)
 
@@ -66,7 +66,7 @@ class CommandGenerator:
         # find resource by cmd_resource
         resources = {}
         for rp in self.rps:
-            resource_map = rp.get_resource_map(read_only=True)
+            resource_map = rp.get_resource_map()
             for cmd_r in cmd_resources:
                 if cmd_r.id in resources:
                     if cmd_r.version != resources[cmd_r.id].version:
@@ -357,7 +357,7 @@ class CommandGenerator:
                     #     f"Command Name For Get set to 'list' by nexLink: {resource.path} :"
                     #     f" {path_item.get.operation_id} : {path_item.traces}"
                     # )
-                elif sub_url_path in resource.resource_provider.get_resource_map(read_only=True):
+                elif sub_url_path in resource.resource_provider.get_resource_map():
                     command_name = f"{group_name} list"
                     # logger.debug(
                     #     f"Command Name For Get set to 'list' by sub_url_path: {resource.path} :"

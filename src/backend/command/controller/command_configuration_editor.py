@@ -1,4 +1,4 @@
-from ..model.configuration import CMDResource, CMDConfiguration
+from command.model.configuration import CMDResource, CMDConfiguration
 
 
 class CommandConfigurationEditor:

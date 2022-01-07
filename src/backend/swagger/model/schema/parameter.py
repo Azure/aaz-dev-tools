@@ -1,16 +1,16 @@
 import logging
 
+from command.model.configuration import CMDJson, CMDBooleanSchema, CMDStringSchema, CMDObjectSchema, \
+    CMDArraySchema, CMDFloatSchema, CMDIntegerSchema
 from schematics.models import Model
 from schematics.types import StringType, BooleanType, ModelType, PolyModelType, BaseType
-
-from command.model.configuration import CMDSchemaDefault, CMDJson, CMDBooleanSchema, CMDStringSchema, CMDObjectSchema, \
-    CMDArraySchema, CMDFloatSchema, CMDIntegerSchema, CMDSchema
 from swagger.utils import exceptions
+
 from .fields import XmsClientNameField, XmsClientFlattenField, XmsClientDefaultField
 from .fields import XmsClientRequestIdField, XNullableField, XPublishField, XRequiredField, XClientNameField, \
     XNewPatternField, XPreviousPatternField, XCommentField
 from .fields import XmsParameterLocationField, XmsApiVersionField, XmsSkipUrlEncodingField
-from .fields import XmsSkipURLEncodingField, XAccessibilityField, XmsHeaderCollectionPrefix
+from .fields import XmsSkipURLEncodingField, XAccessibilityField, XmsHeaderCollectionPrefix, XOriginalNameField
 from .items import Items
 from .reference import Reference, Linkable
 from .schema import Schema, ReferenceSchema, schema_and_reference_schema_claim_function
@@ -54,6 +54,7 @@ class ParameterBase(Model):
     _x_new_pattern = XNewPatternField()  # Only used in FrontDoor Mgmt Plane
     _x_previous_pattern = XPreviousPatternField()  # Only used in FrontDoor Mgmt Plane
     _x_comment = XCommentField()  # Only used in IoTCenter Mgmt Plane
+    _x_original_name = XOriginalNameField()  # Only used in Marketplane Catalog Data Plane
 
     @classmethod
     def _claim_polymorphic(cls, data):

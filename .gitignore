@@ -120,5 +120,17 @@ __pycache__/
 # C extensions
 *.so
 
-/src/backend/flask_my_extension.egg-info/
-/aazdev
+
+venv/
+
+*.pyc
+
+instance/
+
+.pytest_cache/
+.coverage
+htmlcov/
+
+dist/
+build/
+*.egg-info/

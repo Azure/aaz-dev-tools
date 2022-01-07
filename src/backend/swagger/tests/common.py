@@ -1,9 +1,9 @@
 import os
-from unittest import TestCase
 from swagger.model.specs import SwaggerSpecs
+from aazdev.tests.common import ApiTestCase
 
 
-class SwaggerSpecsTestCase(TestCase):
+class SwaggerSpecsTestCase(ApiTestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -42,7 +42,7 @@ class SwaggerSpecsTestCase(TestCase):
 
     def get_swagger_file_paths(self, file_path_filter=None, **kwargs):
         for rp in self.get_resource_providers(**kwargs):
-            for root, dirs, files in os.walk(rp._file_path):
+            for root, dirs, files in os.walk(rp.folder_path):
                 for file in files:
                     if not file.endswith('.json'):
                         continue

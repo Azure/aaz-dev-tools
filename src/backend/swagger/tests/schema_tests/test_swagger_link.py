@@ -1,6 +1,7 @@
 import os
 from swagger.tests.common import SwaggerSpecsTestCase
 from swagger.model.specs import SwaggerLoader
+from swagger.model.specs._utils import map_path_2_repo
 from swagger.utils import exceptions
 
 
@@ -44,7 +45,11 @@ class SwaggerLinkTest(SwaggerSpecsTestCase):
     def test_swagger_link(self):
         for file_path in self.get_swagger_file_paths(lambda x: 'example' not in x.lower()):
             loader = SwaggerLoader()
-            loader.load_file(file_path)
+            try:
+                loader.load_file(file_path)
+            except Exception:
+                print(map_path_2_repo(file_path), file_path)
+                raise
             idx = 0
             while idx < len(loader.loaded_swaggers):
                 file_path, swagger = [*loader.loaded_swaggers.items()][idx]
@@ -53,5 +58,6 @@ class SwaggerLinkTest(SwaggerSpecsTestCase):
                 except exceptions.InvalidSwaggerValueError as err:
                     print(err)
                 except Exception:
+                    print(map_path_2_repo(file_path), file_path)
                     raise
                 idx += 1
