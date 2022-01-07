@@ -15,7 +15,7 @@ class Linkable:
             self._linked = False
         return self._linked
 
-    def link(self, swagger_loader, *traces):
+    def link(self, swagger_loader, *traces, **kwargs):
         self._linked = True
         assert len(traces) > 0
         self.traces = tuple(traces)
@@ -46,14 +46,14 @@ class Reference(Model, Linkable):
         super().__init__(*args, **kwargs)
         self.ref_instance = None
 
-    def link(self, swagger_loader, *traces):
+    def link(self, swagger_loader, *traces, **kwargs):
         if self.is_linked():
             return
-        super().link(swagger_loader, *traces)
+        super().link(swagger_loader, *traces, **kwargs)
 
         self.ref_instance, instance_traces = swagger_loader.load_ref(self.ref, *self.traces, 'ref')
         if isinstance(self.ref_instance, Linkable):
-            self.ref_instance.link(swagger_loader, *instance_traces)
+            self.ref_instance.link(swagger_loader, *instance_traces, **kwargs)
 
     @classmethod
     def _claim_polymorphic(cls, data):
