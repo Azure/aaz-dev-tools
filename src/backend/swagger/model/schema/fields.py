@@ -12,7 +12,7 @@ class DataTypeFormatEnum(StringType):
     )
 
     def __init__(self, **kwargs):
-        super(DataTypeFormatEnum, self).__init__(choices=self.VALID_TYPE_FORMATS, **kwargs)
+        super().__init__(choices=self.VALID_TYPE_FORMATS, **kwargs)
 
 
 class MimeField(StringType):
@@ -32,7 +32,7 @@ class SecurityRequirementField(DictType):
     """
 
     def __init__(self, **kwargs):
-        super(SecurityRequirementField, self).__init__(
+        super().__init__(
             field=ListType(StringType()), **kwargs)
 
 
@@ -40,7 +40,7 @@ class ScopesField(DictType):
     """Lists the available scopes for an OAuth2 security scheme."""
 
     def __init__(self, **kwargs):
-        super(ScopesField, self).__init__(field=StringType(), **kwargs)
+        super().__init__(field=StringType(), **kwargs)
 
 
 class XmsCodeGenerationSettingsField(BaseType):
@@ -50,7 +50,7 @@ class XmsCodeGenerationSettingsField(BaseType):
     https://github.com/Azure/autorest/tree/main/docs/extensions#x-ms-code-generation-settings
     """
     def __init__(self, **kwargs):
-        super(XmsCodeGenerationSettingsField, self).__init__(
+        super().__init__(
             default=False,
             serialized_name="x-ms-code-generation-settings",
             deserialize_from="x-ms-code-generation-settings",
@@ -66,7 +66,7 @@ class XmsSkipURLEncodingField(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsSkipURLEncodingField, self).__init__(
+        super().__init__(
             default=False,
             serialized_name="x-ms-skip-url-encoding",
             deserialize_from="x-ms-skip-url-encoding",
@@ -84,7 +84,7 @@ class XmsParameterLocationField(StringType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsParameterLocationField, self).__init__(
+        super().__init__(
             choices=("client", "method"),
             serialized_name="x-ms-parameter-location",
             deserialize_from="x-ms-parameter-location",
@@ -102,7 +102,7 @@ class XmsClientNameField(StringType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsClientNameField, self).__init__(
+        super().__init__(
             serialized_name="x-ms-client-name",
             deserialize_from="x-ms-client-name",
             **kwargs
@@ -117,7 +117,7 @@ class XmsExternalField(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsExternalField, self).__init__(
+        super().__init__(
             serialized_name="x-ms-external",
             deserialize_from="x-ms-external",
             **kwargs
@@ -132,7 +132,7 @@ class XmsDiscriminatorValueField(StringType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsDiscriminatorValueField, self).__init__(
+        super().__init__(
             serialized_name="x-ms-discriminator-value",
             deserialize_from="x-ms-discriminator-value",
             **kwargs
@@ -147,7 +147,7 @@ class XmsClientFlattenField(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsClientFlattenField, self).__init__(
+        super().__init__(
             serialized_name="x-ms-client-flatten",
             deserialize_from="x-ms-client-flatten",
             **kwargs
@@ -176,7 +176,7 @@ class XmsMutabilityField(ListType):
     )
 
     def __init__(self, **kwargs):
-        super(XmsMutabilityField, self).__init__(
+        super().__init__(
             field=StringType(choices=self.VALID_VALUES),
             serialized_name='x-ms-mutability',
             deserialize_from='x-ms-mutability',
@@ -192,7 +192,7 @@ class XmsExamplesField(DictType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsExamplesField, self).__init__(
+        super().__init__(
             field=BaseType(),
             serialized_name='x-ms-examples',
             deserialize_from='x-ms-examples',
@@ -208,7 +208,7 @@ class XmsErrorResponseField(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsErrorResponseField, self).__init__(
+        super().__init__(
             serialized_name='x-ms-error-response',
             deserialize_from='x-ms-error-response',
             **kwargs
@@ -227,7 +227,7 @@ class XmsTextField(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsTextField, self).__init__(
+        super().__init__(
             serialized_name='x-ms-text',
             deserialize_from='x-ms-text',
             **kwargs
@@ -246,7 +246,7 @@ class XmsClientDefaultField(BaseType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsClientDefaultField, self).__init__(
+        super().__init__(
             serialized_name='x-ms-client-default',
             deserialize_from='x-ms-client-default',
             **kwargs
@@ -261,7 +261,7 @@ class XmsAzureResourceField(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsAzureResourceField, self).__init__(
+        super().__init__(
             serialized_name='x-ms-azure-resource',
             deserialize_from='x-ms-azure-resource',
             **kwargs
@@ -276,7 +276,7 @@ class XmsRequestIdField(StringType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsRequestIdField, self).__init__(
+        super().__init__(
             serialized_name='x-ms-request-id',
             deserialize_from='x-ms-request-id',
             **kwargs
@@ -291,7 +291,7 @@ class XmsClientRequestIdField(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XmsClientRequestIdField, self).__init__(
+        super().__init__(
             serialized_name='x-ms-client-request-id',
             deserialize_from='x-ms-client-request-id',
             **kwargs
@@ -302,7 +302,7 @@ class XmsApiVersionField(BooleanType):
     """"""
 
     def __init__(self, **kwargs):
-        super(XmsApiVersionField, self).__init__(
+        super().__init__(
             serialized_name='x-ms-api-version',
             deserialize_from='x-ms-api-version',
             **kwargs
@@ -313,7 +313,7 @@ class XmsSkipUrlEncodingField(BooleanType):
     """"""
 
     def __init__(self, **kwargs):
-        super(XmsSkipUrlEncodingField, self).__init__(
+        super().__init__(
             serialized_name='x-ms-skip-url-encoding',
             deserialize_from='x-ms-skip-url-encoding',
             **kwargs
@@ -323,7 +323,7 @@ class XmsSkipUrlEncodingField(BooleanType):
 class XmsSecretField(BooleanType):
 
     def __init__(self, **kwargs):
-        super(XmsSecretField, self).__init__(
+        super().__init__(
             serialized_name='x-ms-secret',
             deserialize_from='x-ms-secret',
             **kwargs
@@ -340,7 +340,7 @@ class XNullableField(BooleanType):
     """
 
     def __init__(self, **kwargs):
-        super(XNullableField, self).__init__(
+        super().__init__(
             serialized_name='x-nullable',
             deserialize_from='x-nullable',
             **kwargs
@@ -351,7 +351,7 @@ class XmsHeaderCollectionPrefix(StringType):
     """ only used in Storage Data plane """
 
     def __init__(self, **kwargs):
-        super(XmsHeaderCollectionPrefix, self).__init__(
+        super().__init__(
             serialized_name='x-ms-header-collection-prefix',
             deserialize_from='x-ms-header-collection-prefix',
             **kwargs
@@ -362,7 +362,7 @@ class XAccessibilityField(StringType):
     """ only used in ContainerRegistry Data plane """
 
     def __init__(self, **kwargs):
-        super(XAccessibilityField, self).__init__(
+        super().__init__(
             choices=("internal", "public"),
             serialized_name='x-accessibility',
             deserialize_from='x-accessibility',
@@ -374,7 +374,7 @@ class XRequiredField(BooleanType):
     """ only used in ContainerRegistry Data plane """
 
     def __init__(self, **kwargs):
-        super(XRequiredField, self).__init__(
+        super().__init__(
             serialized_name='x-required',
             deserialize_from='x-required',
             **kwargs
@@ -385,7 +385,7 @@ class XPublishField(BooleanType):
     """ only used in Maps Data Plane """
 
     def __init__(self, **kwargs):
-        super(XPublishField, self).__init__(
+        super().__init__(
             serialized_name='x-publish',
             deserialize_from='x-publish',
             **kwargs
@@ -396,7 +396,7 @@ class XAzSearchDeprecatedField(BooleanType):
     """ only used in Search Data Plane """
 
     def __init__(self, **kwargs):
-        super(XAzSearchDeprecatedField, self).__init__(
+        super().__init__(
             serialized_name='x-az-search-deprecated',
             deserialize_from='x-az-search-deprecated',
             **kwargs
@@ -407,7 +407,7 @@ class XSfCodeGenField(BaseType):
     """ only used in ServiceFabricMesh Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XSfCodeGenField, self).__init__(
+        super().__init__(
             serialized_name='x-sf-codegen',
             deserialize_from='x-sf-codegen',
             **kwargs
@@ -418,7 +418,7 @@ class XSfClientLibField(BaseType):
     """ only used in ServiceFabric Data Plane and ServiceFabricManagedClusters Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XSfClientLibField, self).__init__(
+        super().__init__(
             serialized_name='x-sf-clientlib',
             deserialize_from='x-sf-clientlib',
             **kwargs
@@ -429,7 +429,7 @@ class XApimCodeNillableField(BooleanType):
     """ only used in ApiManagement Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XApimCodeNillableField, self).__init__(
+        super().__init__(
             serialized_name='x-apim-code-nillable',
             deserialize_from='x-apim-code-nillable',
             **kwargs
@@ -440,9 +440,20 @@ class XCommentField(StringType):
     """ Only used in IoTCenter Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XCommentField, self).__init__(
+        super().__init__(
             serialized_name='x-comment',
             deserialize_from='x-comment',
+            **kwargs
+        )
+
+
+class XOriginalNameField(StringType):
+    """ Only used in Marketplane Catalog Data Plane """
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            serialized_name='x-originalName',
+            deserialize_from='x-originalName',
             **kwargs
         )
 
@@ -451,7 +462,7 @@ class XAbstractField(BooleanType):
     """ Only used in Logic Mgmt Plane and Web Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XAbstractField, self).__init__(
+        super().__init__(
             serialized_name='x-abstract',
             deserialize_from='x-abstract',
             **kwargs
@@ -462,7 +473,7 @@ class XClientNameField(StringType):
     """ Only used in Maps Data Plane """
 
     def __init__(self, **kwargs):
-        super(XClientNameField, self).__init__(
+        super().__init__(
             serialized_name='x-client-name',
             deserialize_from='x-client-name',
             **kwargs
@@ -473,7 +484,7 @@ class XNewPatternField(StringType):
     """ Only used in FrontDoor Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XNewPatternField, self).__init__(
+        super().__init__(
             serialized_name='x-new-pattern',
             deserialize_from='x-new-pattern',
             **kwargs
@@ -484,7 +495,7 @@ class XPreviousPatternField(StringType):
     """ Only used in FrontDoor Mgmt Plane """
 
     def __init__(self, **kwargs):
-        super(XPreviousPatternField, self).__init__(
+        super().__init__(
             serialized_name='x-previous-pattern',
             deserialize_from='x-previous-pattern',
             **kwargs
@@ -495,7 +506,7 @@ class XADLNameField(StringType):
     """ Only used in Plane"""
 
     def __init__(self, **kwargs):
-        super(XADLNameField, self).__init__(
+        super().__init__(
             serialized_name='x-adl-name',
             deserialize_from='x-adl-name',
             **kwargs

@@ -36,7 +36,7 @@ class App extends Component<{}, AppState> {
 
   listAllSpecs = () => {
     axios
-      .get("/specifications")
+      .get("/swagger/specifications")
       .then((res) => {
         this.setState({ allMgmtPlaneSpecs: res.data["mgmt"], 
                         allDataPlaneSpecs: res.data["data"],

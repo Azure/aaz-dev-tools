@@ -1,3 +1,56 @@
 import os
 
-SWAGGER_PATH = os.environ.get("AAZ_SWAGGER_PATH", None)
+
+class Config:
+    AAZ_PATH = os.environ.get("AAZ_PATH", None)
+    SWAGGER_PATH = os.environ.get("AAZ_SWAGGER_PATH", None)
+    CLI_PATH = os.environ.get("AAZ_CLI_PATH", None)
+    CLI_EXTENSION_PATH = os.environ.get("AAZ_CLI_EXTENSION_PATH", None)
+
+    # Flask configurations
+    HOST = os.environ.get("AAZ_HOST", '127.0.0.1')
+    PORT = int(os.environ.get("AAZ_PORT", 5000))
+    STATIC_FOLDER = '../../web/build'
+    STATIC_URL_PATH = '/'
+
+    @classmethod
+    def validate_and_setup_host(cls, ctx, param, value):
+        cls.HOST = value
+        return cls.HOST
+
+    @classmethod
+    def validate_and_setup_port(cls, ctx, param, value):
+        cls.PORT = value
+        return cls.PORT
+
+    @classmethod
+    def validate_and_setup_aaz_path(cls, ctx, param, value):
+        # TODO verify folder structure
+        cls.AAZ_PATH = os.path.expanduser(value)
+        if not os.path.exists(cls.AAZ_PATH):
+            raise ValueError(f"Path '{cls.AAZ_PATH}' does not exist.")
+        return cls.AAZ_PATH
+
+    @classmethod
+    def validate_and_setup_swagger_path(cls, ctx, param, value):
+        # TODO verify folder structure
+        cls.SWAGGER_PATH = os.path.expanduser(value)
+        if not os.path.exists(cls.SWAGGER_PATH):
+            raise ValueError(f"Path '{cls.SWAGGER_PATH}' does not exist.")
+        return cls.SWAGGER_PATH
+
+    @classmethod
+    def validate_and_setup_cli_path(cls, ctx, param, value):
+        # TODO verify folder structure
+        cls.CLI_PATH = os.path.expanduser(value)
+        if not os.path.exists(cls.CLI_PATH):
+            raise ValueError(f"Path '{cls.CLI_PATH}' does not exist.")
+        return cls.CLI_PATH
+
+    @classmethod
+    def validate_and_setup_cli_extension_path(cls, ctx, param, value):
+        # TODO verify folder structure
+        cls.CLI_EXTENSION_PATH = os.path.expanduser(value)
+        if not os.path.exists(cls.CLI_EXTENSION_PATH):
+            raise ValueError(f"Path '{cls.CLI_EXTENSION_PATH}' does not exist.")
+        return cls.CLI_EXTENSION_PATH

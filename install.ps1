@@ -1,5 +1,5 @@
-py -3.9 -m venv aazdev
-./aazdev/Scripts/Activate
+# py -3 -m venv aazdev
+# ./aazdev/Scripts/Activate
 
 cd ./src/web
 npm install

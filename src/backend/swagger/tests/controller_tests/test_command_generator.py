@@ -21,7 +21,7 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
         v = "2021-04-01"
         generator = CommandGenerator(module_name=str(rp.swagger_module))
 
-        resource_map = rp.get_resource_map(read_only=True)
+        resource_map = rp.get_resource_map()
         resource_ids = []
         resource_versions = set()
         for r_id, r_version_map in resource_map.items():
@@ -53,7 +53,7 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
         v = "2018-06-01"
         generator = CommandGenerator(module_name=str(rp.swagger_module))
 
-        resource_map = rp.get_resource_map(read_only=True)
+        resource_map = rp.get_resource_map()
         resource_ids = []
         resource_versions = set()
         for r_id, r_version_map in resource_map.items():
@@ -85,7 +85,7 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
         v = "2018-06-01"
         generator = CommandGenerator(module_name=str(rp.swagger_module))
 
-        resource_map = rp.get_resource_map(read_only=True)
+        resource_map = rp.get_resource_map()
         resource_ids = []
         resource_versions = set()
         for r_id, r_version_map in resource_map.items():
@@ -116,7 +116,7 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
 
         generator = CommandGenerator(module_name=str(rp.swagger_module))
 
-        resource_map = rp.get_resource_map(read_only=True)
+        resource_map = rp.get_resource_map()
         resource_ids = []
         resource_versions = set()
         for r_id, r_version_map in resource_map.items():
@@ -148,7 +148,7 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
 
         generator = CommandGenerator(module_name=str(rp.swagger_module))
 
-        resource_map = rp.get_resource_map(read_only=True)
+        resource_map = rp.get_resource_map()
         resource_ids = []
         resource_versions = set()
         for r_id, r_version_map in resource_map.items():
@@ -180,7 +180,7 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
 
         generator = CommandGenerator(module_name=str(rp.swagger_module))
 
-        resource_map = rp.get_resource_map(read_only=True)
+        resource_map = rp.get_resource_map()
         resource_ids = []
         resource_versions = set()
         for r_id, r_version_map in resource_map.items():
@@ -204,35 +204,6 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
                         print(resource_map[r_id][v])
                         raise
 
-    # def test_securityinsights(self):
-    #     rp = next(self.get_mgmt_plane_resource_providers(
-    #         module_filter=lambda m: m.name == "securityinsights",
-    #         resource_provider_filter=lambda r: r.name == "Microsoft.SecurityInsights"
-    #     ))
-    #
-    #     generator = CommandConfigurationGenerator()
-    #
-    #     resource_map = rp.get_resource_map(read_only=True)
-    #     resource_op_group_map = rp.get_resource_op_group_map(resource_map)
-    #     for op_group_name in resource_op_group_map:
-    #         versions = set()
-    #         for resource_id in resource_op_group_map[op_group_name]:
-    #             versions.update(resource_map[resource_id].keys())
-    #         for version in versions:
-    #             # print(op_group_name, version)
-    #             resources = []
-    #             for resource_id in resource_op_group_map[op_group_name]:
-    #                 if version in resource_map[resource_id]:
-    #                     resources.append(resource_map[resource_id][version])
-    #             try:
-    #                 generator.load_resources(resources)
-    #             except exceptions.InvalidSwaggerValueError as err:
-    #                 if err.msg not in MUTE_ERROR_MESSAGES:
-    #                     print(err)
-    #             except Exception:
-    #                 print([str(resource) for resource in resources])
-    #                 raise
-
     def test_network(self):
         rp = next(self.get_mgmt_plane_resource_providers(
             module_filter=lambda m: m.name == "network",
@@ -242,7 +213,7 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
 
         generator = CommandGenerator(module_name=str(rp.swagger_module))
 
-        resource_map = rp.get_resource_map(read_only=True)
+        resource_map = rp.get_resource_map()
         resource_ids = []
         resource_versions = set()
         for r_id, r_version_map in resource_map.items():
@@ -281,7 +252,7 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
 
             generator = CommandGenerator(module_name=str(rp.swagger_module))
 
-            resource_map = rp.get_resource_map(read_only=True)
+            resource_map = rp.get_resource_map()
             resource_ids = []
             resource_versions = set()
             for r_id, r_version_map in resource_map.items():
@@ -317,7 +288,7 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
 
             generator = CommandGenerator(module_name=str(rp.swagger_module))
 
-            resource_map = rp.get_resource_map(read_only=True)
+            resource_map = rp.get_resource_map()
             resource_ids = []
             resource_versions = set()
             for r_id, r_version_map in resource_map.items():
@@ -345,7 +316,7 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
         for rp in self.get_mgmt_plane_resource_providers():
             print(str(rp))
             command_group_names = {}
-            resource_map = rp.get_resource_map(read_only=True)
+            resource_map = rp.get_resource_map()
             for r_id, r_version_map in resource_map.items():
                 valid_parts = get_url_path_valid_parts(r_id, rp.name)
                 if len(valid_parts) and valid_parts[-1] == '{}':
@@ -373,7 +344,7 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
         for rp in self.get_data_plane_resource_providers():
             print(str(rp))
             command_group_names = {}
-            resource_map = rp.get_resource_map(read_only=True)
+            resource_map = rp.get_resource_map()
             for r_id, r_version_map in resource_map.items():
                 valid_parts = get_url_path_valid_parts(r_id, rp.name)
                 if len(valid_parts) and valid_parts[-1] == '{}':
