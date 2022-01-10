@@ -181,19 +181,52 @@ class CMDSchemaBase(Model):
 
 class CMDSchemaBaseField(PolyModelType):
 
-    def __init__(self, **kwargs):
+    def __init__(self, support_schema=False, **kwargs):
         super(CMDSchemaBaseField, self).__init__(
             model_spec=CMDSchemaBase,
             allow_subclasses=True,
             serialize_when_none=False,
             **kwargs
         )
+        self.support_schema = support_schema
 
     def export(self, value, format, context=None):
         if value.frozen:
             # frozen schema base will be ignored
             return None
         return super(CMDSchemaBaseField, self).export(value, format, context)
+
+    def find_model(self, data):
+        if self.claim_function:
+            kls = self.claim_function(self, data)
+            if not kls:
+                raise Exception("Input for polymorphic field did not match any model")
+            return kls
+
+        fallback = None
+        matching_classes = set()
+        for kls in self._get_candidates():
+            if self.support_schema:
+                if not issubclass(kls, CMDSchema) and "name" in data:
+                    continue
+            else:
+                if issubclass(kls, CMDSchema):
+                    continue
+            try:
+                kls_claim = kls._claim_polymorphic
+            except AttributeError:
+                if not fallback:
+                    fallback = kls
+            else:
+                if kls_claim(data):
+                    matching_classes.add(kls)
+
+        if not matching_classes and fallback:
+            return fallback
+        elif len(matching_classes) != 1:
+            raise Exception("Got ambiguous input for polymorphic field")
+
+        return matching_classes.pop()
 
 
 class CMDSchema(CMDSchemaBase):
@@ -423,7 +456,7 @@ class CMDResourceIdSchemaBase(CMDStringSchemaBase):
     )
 
 
-class CMDResourceIdSchema(CMDStringSchema, CMDResourceIdSchemaBase):
+class CMDResourceIdSchema(CMDResourceIdSchemaBase, CMDStringSchema,):
     ARG_TYPE = CMDResourceIdArg
 
 

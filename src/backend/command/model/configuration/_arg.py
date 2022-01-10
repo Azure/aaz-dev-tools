@@ -296,7 +296,7 @@ class CMDResourceIdArgBase(CMDStringArgBase):
     )
 
 
-class CMDResourceIdArg(CMDStringArg, CMDResourceIdArgBase):
+class CMDResourceIdArg(CMDResourceIdArgBase, CMDStringArg):
     pass
 
 

@@ -1,5 +1,6 @@
 import click
 from flask import Blueprint
+from command.model.configuration import XMLSerializer
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils import Config
 
@@ -60,6 +61,6 @@ def generate_config(config_path, module, resource_id, version):
     command_group = generator.create_draft_command_group(resources[resource_id])
 
     model = CMDConfiguration({"resources": [cmd_resource], "command_group": command_group})
-    with open(config_path, "w") as fp:
-        fp.write(model.to_xml())
+    with open(config_path, "wb") as fp:
+        fp.write(XMLSerializer(model).to_xml())
     return "Done."

@@ -67,3 +67,4 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, CMDObjectSchemaBase, CMDObjectSchema, \
     CMDArraySchemaBase, CMDArraySchema
 from ._utils import CMDDiffLevelEnum
+from ._xml import XMLSerializer
