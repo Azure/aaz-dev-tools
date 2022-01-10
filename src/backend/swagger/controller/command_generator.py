@@ -4,7 +4,8 @@ from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOper
     CMDSchemaDefault, CMDHttpJsonBody, CMDObjectOutput, CMDArrayOutput, CMDGenericInstanceUpdateAction, \
     CMDGenericInstanceUpdateMethod, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, CMDJson, CMDHelp, \
     CMDArgGroup, CMDDiffLevelEnum, CMDClsSchemaBase, \
-    CMDObjectSchema, CMDArraySchema, CMDStringSchema, CMDObjectSchemaBase, CMDArraySchemaBase, CMDStringSchemaBase
+    CMDObjectSchema, CMDArraySchema, CMDStringSchema, CMDObjectSchemaBase, CMDArraySchemaBase, CMDStringSchemaBase, \
+    CMDStringOutput
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
 from swagger.model.schema.x_ms_pageable import XmsPageable
@@ -289,7 +290,7 @@ class CommandGenerator:
                     output = CMDArrayOutput()
                     output.ref = body_json.var
                 elif isinstance(resp.body.json.schema, CMDStringSchemaBase):
-                    output = CMDStringSchema()
+                    output = CMDStringOutput()
                     output.ref = body_json.var
                 elif isinstance(resp.body.json.schema, CMDObjectSchemaBase):
                     output = CMDObjectOutput()
