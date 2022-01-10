@@ -1,11 +1,10 @@
 import tempfile
 
-from aazdev.operations.xml import XMLSerializer
-from command.model.configuration import CMDResource, CMDConfiguration
+from command.model.configuration import CMDResource, CMDConfiguration, XMLSerializer
 from swagger.controller.command_generator import CommandGenerator
 from swagger.tests.common import SwaggerSpecsTestCase
 from swagger.utils import exceptions
-from utils import config
+from utils.constants import PlaneEnum
 
 MUTE_ERROR_MESSAGES = (
     "type is not supported",
@@ -18,7 +17,7 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
     def test_virtual_network_e2e():
         resource_id = "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}"
         cmd_resource = CMDResource({"id": resource_id, "version": "2021-05-01"})
-        generator = CommandGenerator(module_name="(MgmtPlane)/network", swagger_path=config.SWAGGER_PATH)
+        generator = CommandGenerator(module_name=f"{PlaneEnum.Mgmt}/network")
         resources = generator.load_resources([cmd_resource])
         command_group = generator.create_draft_command_group(resources[resource_id])
 
@@ -36,7 +35,7 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
             module_filter=lambda m: m.name == "network",
             resource_provider_filter=lambda r: r.name == "Microsoft.Network"
         ):
-            resource_map = rp.get_resource_map(read_only=True)
+            resource_map = rp.get_resource_map()
             resource_ids = []
             resource_versions = set()
             for r_id, r_version_map in resource_map.items():
@@ -66,11 +65,11 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
                                     fp.seek(0)
                                     deserialized_model = XMLSerializer(CMDConfiguration).from_xml(fp)
                             except Exception:
-                                print(f"--module {rp.swagger_module.name} --resource {r_id} --version {v}")
+                                print(f"--module {rp.swagger_module.name} --resource-id {r_id} --version {v}")
                             else:
                                 if xml == XMLSerializer(deserialized_model).to_xml():
                                     count += 1
                                 else:
-                                    print(f"--module {rp.swagger_module.name} --resource {r_id} --version {v}")
+                                    print(f"--module {rp.swagger_module.name} --resource-id {r_id} --version {v}")
         coverage = count / total
         print(f"\nCoverage: {count} / {total} = {coverage:.2%}")
