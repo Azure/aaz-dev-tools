@@ -48,15 +48,6 @@ class CMDObjectOutput(CMDOutput):
 class CMDArrayOutput(CMDOutput):
     TYPE_VALUE = 'array'
 
-    _type = StringType(
-        deserialize_from='type',
-        serialized_name='type',
-        required=True
-    )
-
-    def _get_type(self):
-        return self._type
-
     ref = CMDVariantField(required=True)
     client_flatten = CMDBooleanField(
         serialized_name='clientFlatten',
