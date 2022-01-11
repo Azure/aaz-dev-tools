@@ -1,6 +1,6 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask.cli import FlaskGroup, shell_command, routes_command
-from utils import Config
+from utils import Config, exceptions
 
 from .run import run_command
 
@@ -15,6 +15,10 @@ def create_app():
         if '.' in path:
             return app.send_static_file(path)
         return app.send_static_file('index.html')
+
+    @app.errorhandler(exceptions.InvalidAPIUsage)
+    def invalid_api_usage(e):
+        return jsonify(e.to_dict()), e.status_code
 
     # register routes of swagger module
     from swagger.api import register_blueprints

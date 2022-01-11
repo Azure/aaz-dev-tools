@@ -2,7 +2,6 @@ from base64 import urlsafe_b64encode, urlsafe_b64decode
 
 from flask import Blueprint, jsonify
 from swagger.controller.specs_manager import SwaggerSpecsManager
-from utils import exceptions
 
 bp = Blueprint('swagger', __name__, url_prefix='/swagger/specs')
 
@@ -13,11 +12,6 @@ def b64encode_str(value):
 
 def b64decode_str(value):
     return urlsafe_b64decode(value).decode()
-
-
-@bp.errorhandler(exceptions.InvalidAPIUsage)
-def invalid_api_usage(e):
-    return jsonify(e.to_dict()), e.status_code
 
 
 # modules
