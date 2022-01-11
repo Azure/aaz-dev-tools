@@ -1,14 +1,12 @@
 from schematics.models import Model
-from schematics.types import StringType, ListType, DictType, ModelType, PolyModelType
-from schematics.types.serializable import serializable
-from command.model.configuration import CMDCommandGroup
+from schematics.types import StringType, ModelType, UTCDateTimeType
+from command.model.configuration import CMDConfiguration
 
 
 class CMDEditorWorkspace(Model):
 
-    namespace = StringType()
+    version = UTCDateTimeType(required=True)  # this property updated when workspace saved in file.
+    name = StringType(required=True)
 
-    command_groups = ListType(ModelType(CMDCommandGroup))   # command group
-
-    # resource_index = DictType(ListType())
+    configuration = ModelType(CMDConfiguration, serialize_when_none=False)
 

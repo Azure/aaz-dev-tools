@@ -16,3 +16,7 @@ class InvalidAPIUsage(Exception):
 
 class ResourceNotFind(InvalidAPIUsage):
     status_code = 404
+
+
+class ResourceConflict(InvalidAPIUsage):
+    status_code = 409

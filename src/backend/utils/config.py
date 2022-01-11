@@ -7,6 +7,13 @@ class Config:
     CLI_PATH = os.environ.get("AAZ_CLI_PATH", None)
     CLI_EXTENSION_PATH = os.environ.get("AAZ_CLI_EXTENSION_PATH", None)
 
+    AAZ_DEV_FOLDER = os.path.expanduser(
+        os.environ.get("AAZ_DEV_FOLDER", os.path.join("~", ".aaz_dev"))
+    )
+    AAZ_DEV_WORKSPACE_FOLDER = os.path.expanduser(
+        os.environ.get("AAZ_DEV_WORKSPACE_FOLDER", os.path.join(AAZ_DEV_FOLDER, "workspaces"))
+    )
+
     # Flask configurations
     HOST = os.environ.get("AAZ_HOST", '127.0.0.1')
     PORT = int(os.environ.get("AAZ_PORT", 5000))
