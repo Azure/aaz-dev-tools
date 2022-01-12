@@ -1,4 +1,4 @@
-from swagger.model.specs import SwaggerSpecs
+from swagger.model.specs import SwaggerSpecs, ResourceProvider
 from utils.plane import PlaneEnum
 
 
@@ -8,13 +8,28 @@ from collections import OrderedDict
 
 class SwaggerSpecsManager:
 
-    @classmethod
-    def get_modules(cls, plane):
-        specs = SwaggerSpecs(folder_path=Config.SWAGGER_PATH)
+    def __init__(self):
+        self.specs = SwaggerSpecs(folder_path=Config.SWAGGER_PATH)
+        self._modules_cache = {}
+        self._rps_cache = {}
+        self._resource_op_group_map_cache = {}
+        self._resource_map_cache = {}
+
+    def get_resource_map(self, rp):
+        assert isinstance(rp, ResourceProvider)
+        key = str(rp)
+        if key not in self._resource_map_cache:
+            self._resource_map_cache[key] = rp.get_resource_map()
+        return self._resource_map_cache[key]
+
+    def get_modules(self, plane):
+        if plane in self._modules_cache:
+            return self._modules_cache[plane]
+
         if plane == PlaneEnum.Mgmt:
-            modules = specs.get_mgmt_plane_modules(plane=plane)
+            modules = self.specs.get_mgmt_plane_modules(plane=plane)
         elif plane in PlaneEnum.choices():
-            modules = specs.get_data_plane_modules(plane=plane)
+            modules = self.specs.get_data_plane_modules(plane=plane)
         else:
             raise exceptions.InvalidAPIUsage(f"invalid plane name '{plane}'")
 
@@ -25,15 +40,15 @@ class SwaggerSpecsManager:
                 module_str = str(module)
                 if module_str not in result:
                     result[module_str] = module
-        return [*result.values()]
 
-    @classmethod
-    def get_module(cls, plane, mod_names):
-        specs = SwaggerSpecs(folder_path=Config.SWAGGER_PATH)
+        self._modules_cache[plane] = [*result.values()]
+        return self._modules_cache[plane]
+
+    def get_module(self, plane, mod_names):
         if plane == PlaneEnum.Mgmt:
-            module = specs.get_mgmt_plane_module(*mod_names.split('/'), plane=plane)
+            module = self.specs.get_mgmt_plane_module(*mod_names.split('/'), plane=plane)
         elif plane in PlaneEnum.choices():
-            module = specs.get_data_plane_module(*mod_names.split('/'), plane=plane)
+            module = self.specs.get_data_plane_module(*mod_names.split('/'), plane=plane)
         else:
             raise exceptions.InvalidAPIUsage(f"invalid plane name '{plane}'")
 
@@ -41,15 +56,15 @@ class SwaggerSpecsManager:
             raise exceptions.ResourceNotFind(f"Module not find '{mod_names}'")
         return module
 
-    @classmethod
-    def get_resource_providers(cls, plane, mod_names):
-        module = cls.get_module(plane, mod_names)
+    def get_resource_providers(self, plane, mod_names):
+        key = (plane, mod_names)
+        if key not in self._rps_cache:
+            module = self.get_module(plane, mod_names)
+            self._rps_cache[key] = module.get_resource_providers()
+        return self._rps_cache[key]
 
-        return [*module.get_resource_providers()]
-
-    @classmethod
-    def get_resource_provider(cls, plane, mod_names, rp_name):
-        rps = cls.get_resource_providers(plane, mod_names)
+    def get_resource_provider(self, plane, mod_names, rp_name):
+        rps = self.get_resource_providers(plane, mod_names)
         rp = None
         for v in rps:
             if v.name == rp_name:
@@ -59,20 +74,23 @@ class SwaggerSpecsManager:
             raise exceptions.ResourceNotFind(f"resource provider not find '{rp_name}'")
         return rp
 
-    @classmethod
-    def get_grouped_resource_map(cls, plane, mod_names, rp_name):
-        rp = cls.get_resource_provider(plane, mod_names, rp_name)
-        resource_map = rp.get_resource_map()
+    def get_grouped_resource_map(self, plane, mod_names, rp_name):
+        key = (plane, mod_names, rp_name)
+        if key in self._resource_op_group_map_cache:
+            return self._resource_op_group_map_cache[key]
+
+        rp = self.get_resource_provider(plane, mod_names, rp_name)
+        resource_map = self.get_resource_map(rp)
         resource_op_group_map = OrderedDict()
         for resource_id, version_map in resource_map.items():
-            op_group_name = cls.get_resource_op_group_name(version_map)
+            op_group_name = self.get_resource_op_group_name(version_map)
             if op_group_name not in resource_op_group_map:
                 resource_op_group_map[op_group_name] = OrderedDict()
             resource_op_group_map[op_group_name][resource_id] = version_map
-        return resource_op_group_map
+        self._resource_op_group_map_cache[key] = resource_op_group_map
+        return self._resource_op_group_map_cache[key]
 
-    @classmethod
-    def get_resource_op_group_name(cls, version_map):
+    def get_resource_op_group_name(self, version_map):
         _, latest_resource = sorted(
             version_map.items(),
             key=lambda item: str(item[0]),
@@ -80,17 +98,16 @@ class SwaggerSpecsManager:
         )[0]
         return latest_resource.get_operation_group_name() or ""
 
-    @classmethod
-    def get_resource_version_map(cls, plane, mod_names, resource_id, rp_name=None):
+    def get_resource_version_map(self, plane, mod_names, resource_id, rp_name=None):
         if rp_name:
-            rps = [cls.get_resource_provider(plane, mod_names, rp_name)]
+            rps = [self.get_resource_provider(plane, mod_names, rp_name)]
         else:
-            rps = cls.get_resource_providers(plane, mod_names)
+            rps = self.get_resource_providers(plane, mod_names)
 
         version_maps = []
         resource_rps = []
         for rp in rps:
-            resource_map = rp.get_resource_map()
+            resource_map = self.get_resource_map(rp)
             if resource_id in resource_map:
                 version_maps.append(resource_map[resource_id])
                 resource_rps.append(rp)
@@ -105,16 +122,15 @@ class SwaggerSpecsManager:
             )
         return version_maps[0]
 
-    @classmethod
-    def get_resource_in_version(cls, plane, mod_names, resource_id, version, rp_name=None):
+    def get_resource_in_version(self, plane, mod_names, resource_id, version, rp_name=None):
         if rp_name:
-            rps = [cls.get_resource_provider(plane, mod_names, rp_name)]
+            rps = [self.get_resource_provider(plane, mod_names, rp_name)]
         else:
-            rps = cls.get_resource_providers(plane, mod_names)
+            rps = self.get_resource_providers(plane, mod_names)
 
         resources = []
         for rp in rps:
-            resource_map = rp.get_resource_map()
+            resource_map = self.get_resource_map(rp)
             if resource_id in resource_map and version in resource_map[resource_id]:
                 resources.append(resource_map[resource_id][version])
 

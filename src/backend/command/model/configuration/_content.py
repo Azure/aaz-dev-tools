@@ -1,5 +1,4 @@
 from schematics.models import Model
-from schematics.types import PolyModelType
 
 from ._arg_builder import CMDArgBuilder
 from ._fields import CMDVariantField
