@@ -1,7 +1,7 @@
 from swagger.tests.common import SwaggerSpecsTestCase
 import os
 import time
-from utils.constants import PlaneEnum
+from utils.plane import PlaneEnum
 from swagger.api.specs import b64encode_str
 
 

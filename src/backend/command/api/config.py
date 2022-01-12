@@ -53,7 +53,7 @@ def resource_id_type(value):
 def generate_config(config_path, module, resource_id, version):
     from command.model.configuration import CMDResource, CMDConfiguration
     from swagger.controller.command_generator import CommandGenerator
-    from utils.constants import PlaneEnum
+    from utils.plane import PlaneEnum
 
     generator = CommandGenerator(module_name=f"{PlaneEnum.Mgmt}/{module}")
     cmd_resource = CMDResource({"id": resource_id, "version": version})

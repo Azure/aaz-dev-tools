@@ -1,5 +1,5 @@
 from swagger.model.specs import SwaggerSpecs
-from utils.constants import PlaneEnum
+from utils.plane import PlaneEnum
 
 
 from utils import Config, exceptions
@@ -12,9 +12,9 @@ class SwaggerSpecsManager:
     def get_modules(cls, plane):
         specs = SwaggerSpecs(folder_path=Config.SWAGGER_PATH)
         if plane == PlaneEnum.Mgmt:
-            modules = specs.get_mgmt_plane_modules()
-        elif plane == PlaneEnum.Data:
-            modules = specs.get_data_plane_modules()
+            modules = specs.get_mgmt_plane_modules(plane=plane)
+        elif plane in PlaneEnum.choices():
+            modules = specs.get_data_plane_modules(plane=plane)
         else:
             raise exceptions.InvalidAPIUsage(f"invalid plane name '{plane}'")
 
@@ -31,11 +31,11 @@ class SwaggerSpecsManager:
     def get_module(cls, plane, mod_names):
         specs = SwaggerSpecs(folder_path=Config.SWAGGER_PATH)
         if plane == PlaneEnum.Mgmt:
-            module = specs.get_mgmt_plane_module(*mod_names.split('/'))
-        elif plane == PlaneEnum.Data:
-            module = specs.get_data_plane_module(*mod_names.split('/'))
+            module = specs.get_mgmt_plane_module(*mod_names.split('/'), plane=plane)
+        elif plane in PlaneEnum.choices():
+            module = specs.get_data_plane_module(*mod_names.split('/'), plane=plane)
         else:
-            raise exceptions.InvalidAPIUsage(f"invalid plane name '{plane}-plane'")
+            raise exceptions.InvalidAPIUsage(f"invalid plane name '{plane}'")
 
         if not module:
             raise exceptions.ResourceNotFind(f"Module not find '{mod_names}'")

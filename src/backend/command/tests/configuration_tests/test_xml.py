@@ -4,7 +4,7 @@ from command.model.configuration import CMDResource, CMDConfiguration, XMLSerial
 from swagger.controller.command_generator import CommandGenerator
 from swagger.tests.common import SwaggerSpecsTestCase
 from swagger.utils import exceptions
-from utils.constants import PlaneEnum
+from utils.plane import PlaneEnum
 
 MUTE_ERROR_MESSAGES = (
     "type is not supported",
