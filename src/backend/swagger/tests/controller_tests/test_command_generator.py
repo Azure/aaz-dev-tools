@@ -9,7 +9,7 @@ MUTE_ERROR_MESSAGES = (
 )
 
 
-class CommandGeneratorTest(SwaggerSpecsTestCase):
+class CommandGeneratorTestCase(SwaggerSpecsTestCase):
 
     def test_monitor_control_service(self):
         rp = next(self.get_mgmt_plane_resource_providers(
