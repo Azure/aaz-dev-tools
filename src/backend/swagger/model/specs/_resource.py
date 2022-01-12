@@ -130,6 +130,7 @@ class Resource:
         resource = CMDResource()
         resource.id = self.id
         resource.version = self.version.version
+        resource.provider = str(self.resource_provider)
         return resource
 
 

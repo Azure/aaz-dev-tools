@@ -10,9 +10,8 @@ from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
 from swagger.model.schema.x_ms_pageable import XmsPageable
 from swagger.model.schema.cmd_builder import CMDBuilder
-from swagger.model.specs import SwaggerLoader, SwaggerSpecs, DataPlaneModule, MgmtPlaneModule
+from swagger.model.specs import SwaggerLoader
 from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case, get_url_path_valid_parts
-from utils import Config
 import inflect
 from swagger.utils import exceptions
 
@@ -32,59 +31,13 @@ class CommandGenerator:
 
     _inflect_engine = inflect.engine()
 
-    def __init__(self, module_name, swagger_path=None):
+    def __init__(self):
         self.loader = SwaggerLoader()
-        self.specs = SwaggerSpecs(
-            folder_path=swagger_path or Config.SWAGGER_PATH
-        )
-        self.module, self.rps = self._setup_module(module_name)
 
-    def _setup_module(self, module_name):
-        if module_name.startswith(MgmtPlaneModule.PREFIX):
-            for module in self.specs.get_mgmt_plane_modules():
-                if str(module) == module_name:
-                    return module, module.get_resource_providers()
-                elif module_name.startswith(f"{module}/"):
-                    rps = module.get_resource_providers()
-                    for rp in rps:
-                        if str(rp).startswith(f"{module_name}/"):
-                            return rp.swagger_module, rps
-        elif module_name.startswith(DataPlaneModule.PREFIX):
-            for module in self.specs.get_data_plane_modules():
-                if str(module) == module_name:
-                    return module, module.get_resource_providers()
-                elif module_name.startswith(f"{module}/"):
-                    rps = module.get_resource_providers()
-                    for rp in rps:
-                        if str(rp).startswith(f"{module_name}/"):
-                            return rp.swagger_module, rps
-        else:
-            raise ValueError(f"Invalid module name {module_name}")
-        if self.module is None:
-            raise ValueError(f"Cannot find module {module_name}")
-
-    def load_resources(self, cmd_resources):
-        # find resource by cmd_resource
-        resources = {}
-        for rp in self.rps:
-            resource_map = rp.get_resource_map()
-            for cmd_r in cmd_resources:
-                if cmd_r.id in resources:
-                    if cmd_r.version != resources[cmd_r.id].version:
-                        raise ValueError(
-                            f"Multi versions {cmd_r.version} and {resources[cmd_r.id].version} "
-                            f"for resource {cmd_r.id}")
-                    continue
-                if cmd_r.id in resource_map and cmd_r.version in resource_map[cmd_r.id]:
-                    resources[cmd_r.id] = resource_map[cmd_r.id][cmd_r.version]
-
-        for cmd_r in cmd_resources:
-            if cmd_r.id not in resources:
-                raise ValueError(f"Resource {cmd_r.id} for version {cmd_r.version} is not exist")
-            self.loader.load_file(resources[cmd_r.id].file_path)
+    def load_resources(self, resources):
+        for resource in resources:
+            self.loader.load_file(resource.file_path)
         self.loader.link_swaggers()
-
-        return resources
 
     def create_draft_command_group(self, resource):
         swagger = self.loader.get_loaded(resource.file_path)

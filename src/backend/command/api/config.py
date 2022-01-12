@@ -51,16 +51,24 @@ def resource_id_type(value):
     help="Version of the configuration to generate."
 )
 def generate_config(config_path, module, resource_id, version):
-    from command.model.configuration import CMDResource, CMDConfiguration
+    from command.model.configuration import CMDConfiguration
     from swagger.controller.command_generator import CommandGenerator
-    from utils.constants import PlaneEnum
+    from swagger.controller.specs_manager import SwaggerSpecsManager
+    from utils.plane import PlaneEnum
 
-    generator = CommandGenerator(module_name=f"{PlaneEnum.Mgmt}/{module}")
-    cmd_resource = CMDResource({"id": resource_id, "version": version})
-    resources = generator.load_resources([cmd_resource])
-    command_group = generator.create_draft_command_group(resources[resource_id])
+    resource = SwaggerSpecsManager().get_resource_in_version(
+        plane=PlaneEnum.Mgmt, mod_names=module, resource_id=resource_id, version=version)
+    if not resource:
+        return "Resource not exist"
 
-    model = CMDConfiguration({"resources": [cmd_resource], "command_group": command_group})
+    generator = CommandGenerator()
+    generator.load_resources([resource])
+    command_group = generator.create_draft_command_group(resource)
+    model = CMDConfiguration({
+        "plane": PlaneEnum.Mgmt,
+        "resources": [resource.to_cmd()],
+        "command_group": command_group
+    })
     with open(config_path, "wb") as fp:
         fp.write(XMLSerializer(model).to_xml())
     return "Done."

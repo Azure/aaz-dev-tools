@@ -1,7 +1,6 @@
 from swagger.tests.common import SwaggerSpecsTestCase
 from swagger.controller.command_generator import CommandGenerator
 from swagger.model.specs._utils import get_url_path_valid_parts
-from command.model.configuration import CMDResource
 from swagger.utils import exceptions
 
 MUTE_ERROR_MESSAGES = (
@@ -10,7 +9,7 @@ MUTE_ERROR_MESSAGES = (
 )
 
 
-class CommandGeneratorTest(SwaggerSpecsTestCase):
+class CommandGeneratorTestCase(SwaggerSpecsTestCase):
 
     def test_monitor_control_service(self):
         rp = next(self.get_mgmt_plane_resource_providers(
@@ -18,25 +17,17 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
                 resource_provider_filter=lambda r: r.name == "Microsoft.Insights"
         ))
 
-        v = "2021-04-01"
-        generator = CommandGenerator(module_name=str(rp.swagger_module))
+        version = "2021-04-01"
+        generator = CommandGenerator()
 
         resource_map = rp.get_resource_map()
-        resource_ids = []
-        resource_versions = set()
-        for r_id, r_version_map in resource_map.items():
-            resource_ids.append(r_id)
-            resource_versions.update(r_version_map.keys())
-
-        for r_id in resource_ids:
-            if v in resource_map[r_id]:
-                cmd_resource = CMDResource({
-                    "id": r_id,
-                    "version": str(v)
-                })
+        for r_id, version_map in resource_map.items():
+            for v, resource in version_map.items():
+                if str(v) != version:
+                    continue
                 try:
-                    resources = generator.load_resources([cmd_resource])
-                    generator.create_draft_command_group(resources[r_id])
+                    generator.load_resources([resource])
+                    generator.create_draft_command_group(resource)
                 except exceptions.InvalidSwaggerValueError as err:
                     if err.msg not in MUTE_ERROR_MESSAGES:
                         print(err)
@@ -50,25 +41,17 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
             resource_provider_filter=lambda r: r.name == "Microsoft.DataFactory"
         ))
 
-        v = "2018-06-01"
-        generator = CommandGenerator(module_name=str(rp.swagger_module))
+        version = "2018-06-01"
+        generator = CommandGenerator()
 
         resource_map = rp.get_resource_map()
-        resource_ids = []
-        resource_versions = set()
-        for r_id, r_version_map in resource_map.items():
-            resource_ids.append(r_id)
-            resource_versions.update(r_version_map.keys())
-
-        for r_id in resource_ids:
-            if v in resource_map[r_id]:
-                cmd_resource = CMDResource({
-                    "id": r_id,
-                    "version": str(v)
-                })
+        for r_id, version_map in resource_map.items():
+            for v, resource in version_map.items():
+                if str(v) != version:
+                    continue
                 try:
-                    resources = generator.load_resources([cmd_resource])
-                    generator.create_draft_command_group(resources[r_id])
+                    generator.load_resources([resource])
+                    generator.create_draft_command_group(resource)
                 except exceptions.InvalidSwaggerValueError as err:
                     if err.msg not in MUTE_ERROR_MESSAGES:
                         print(err)
@@ -82,25 +65,17 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
             resource_provider_filter=lambda r: r.name == "Microsoft.DataFactory"
         ))
 
-        v = "2018-06-01"
-        generator = CommandGenerator(module_name=str(rp.swagger_module))
+        version = "2018-06-01"
+        generator = CommandGenerator()
 
         resource_map = rp.get_resource_map()
-        resource_ids = []
-        resource_versions = set()
-        for r_id, r_version_map in resource_map.items():
-            resource_ids.append(r_id)
-            resource_versions.update(r_version_map.keys())
-
-        for r_id in resource_ids:
-            if v in resource_map[r_id]:
-                cmd_resource = CMDResource({
-                    "id": r_id,
-                    "version": str(v)
-                })
+        for r_id, version_map in resource_map.items():
+            for v, resource in version_map.items():
+                if str(v) != version:
+                    continue
                 try:
-                    resources = generator.load_resources([cmd_resource])
-                    generator.create_draft_command_group(resources[r_id])
+                    generator.load_resources([resource])
+                    generator.create_draft_command_group(resource)
                 except exceptions.InvalidSwaggerValueError as err:
                     if err.msg not in MUTE_ERROR_MESSAGES:
                         print(err)
@@ -114,31 +89,20 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
             resource_provider_filter=lambda r: r.name == "Microsoft.RecoveryServices"
         ))
 
-        generator = CommandGenerator(module_name=str(rp.swagger_module))
+        generator = CommandGenerator()
 
         resource_map = rp.get_resource_map()
-        resource_ids = []
-        resource_versions = set()
-        for r_id, r_version_map in resource_map.items():
-            resource_ids.append(r_id)
-            resource_versions.update(r_version_map.keys())
-
-        for r_id in resource_ids:
-            for v in resource_versions:
-                if v in resource_map[r_id]:
-                    cmd_resource = CMDResource({
-                        "id": r_id,
-                        "version": str(v)
-                    })
-                    try:
-                        resources = generator.load_resources([cmd_resource])
-                        generator.create_draft_command_group(resources[r_id])
-                    except exceptions.InvalidSwaggerValueError as err:
-                        if err.msg not in MUTE_ERROR_MESSAGES:
-                            print(err)
-                    except Exception:
-                        print(resource_map[r_id][v])
-                        raise
+        for r_id, version_map in resource_map.items():
+            for v, resource in version_map.items():
+                try:
+                    generator.load_resources([resource])
+                    generator.create_draft_command_group(resource)
+                except exceptions.InvalidSwaggerValueError as err:
+                    if err.msg not in MUTE_ERROR_MESSAGES:
+                        print(err)
+                except Exception:
+                    print(resource_map[r_id][v])
+                    raise
 
     def test_storagecache(self):
         rp = next(self.get_mgmt_plane_resource_providers(
@@ -146,31 +110,20 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
             resource_provider_filter=lambda r: r.name == "Microsoft.StorageCache"
         ))
 
-        generator = CommandGenerator(module_name=str(rp.swagger_module))
+        generator = CommandGenerator()
 
         resource_map = rp.get_resource_map()
-        resource_ids = []
-        resource_versions = set()
-        for r_id, r_version_map in resource_map.items():
-            resource_ids.append(r_id)
-            resource_versions.update(r_version_map.keys())
-
-        for r_id in resource_ids:
-            for v in resource_versions:
-                if v in resource_map[r_id]:
-                    cmd_resource = CMDResource({
-                        "id": r_id,
-                        "version": str(v)
-                    })
-                    try:
-                        resources = generator.load_resources([cmd_resource])
-                        generator.create_draft_command_group(resources[r_id])
-                    except exceptions.InvalidSwaggerValueError as err:
-                        if err.msg not in MUTE_ERROR_MESSAGES:
-                            print(err)
-                    except Exception:
-                        print(resource_map[r_id][v])
-                        raise
+        for r_id, version_map in resource_map.items():
+            for v, resource in version_map.items():
+                try:
+                    generator.load_resources([resource])
+                    generator.create_draft_command_group(resource)
+                except exceptions.InvalidSwaggerValueError as err:
+                    if err.msg not in MUTE_ERROR_MESSAGES:
+                        print(err)
+                except Exception:
+                    print(resource_map[r_id][v])
+                    raise
 
     def test_databox(self):
         rp = next(self.get_mgmt_plane_resource_providers(
@@ -178,31 +131,20 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
             resource_provider_filter=lambda r: r.name == "Microsoft.DataBox"
         ))
 
-        generator = CommandGenerator(module_name=str(rp.swagger_module))
+        generator = CommandGenerator()
 
         resource_map = rp.get_resource_map()
-        resource_ids = []
-        resource_versions = set()
-        for r_id, r_version_map in resource_map.items():
-            resource_ids.append(r_id)
-            resource_versions.update(r_version_map.keys())
-
-        for r_id in resource_ids:
-            for v in resource_versions:
-                if v in resource_map[r_id]:
-                    cmd_resource = CMDResource({
-                        "id": r_id,
-                        "version": str(v)
-                    })
-                    try:
-                        resources = generator.load_resources([cmd_resource])
-                        generator.create_draft_command_group(resources[r_id])
-                    except exceptions.InvalidSwaggerValueError as err:
-                        if err.msg not in MUTE_ERROR_MESSAGES:
-                            print(err)
-                    except Exception:
-                        print(resource_map[r_id][v])
-                        raise
+        for r_id, version_map in resource_map.items():
+            for v, resource in version_map.items():
+                try:
+                    generator.load_resources([resource])
+                    generator.create_draft_command_group(resource)
+                except exceptions.InvalidSwaggerValueError as err:
+                    if err.msg not in MUTE_ERROR_MESSAGES:
+                        print(err)
+                except Exception:
+                    print(resource_map[r_id][v])
+                    raise
 
     def test_network(self):
         rp = next(self.get_mgmt_plane_resource_providers(
@@ -211,31 +153,20 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
         ))
         print(str(rp))
 
-        generator = CommandGenerator(module_name=str(rp.swagger_module))
+        generator = CommandGenerator()
 
         resource_map = rp.get_resource_map()
-        resource_ids = []
-        resource_versions = set()
-        for r_id, r_version_map in resource_map.items():
-            resource_ids.append(r_id)
-            resource_versions.update(r_version_map.keys())
-
-        for r_id in resource_ids:
-            for v in resource_versions:
-                if v in resource_map[r_id]:
-                    cmd_resource = CMDResource({
-                        "id": r_id,
-                        "version": str(v)
-                    })
-                    try:
-                        resources = generator.load_resources([cmd_resource])
-                        generator.create_draft_command_group(resources[r_id])
-                    except exceptions.InvalidSwaggerValueError as err:
-                        if err.msg not in MUTE_ERROR_MESSAGES:
-                            print(err)
-                    except Exception:
-                        print(resource_map[r_id][v])
-                        raise
+        for r_id, version_map in resource_map.items():
+            for v, resource in version_map.items():
+                try:
+                    generator.load_resources([resource])
+                    generator.create_draft_command_group(resource)
+                except exceptions.InvalidSwaggerValueError as err:
+                    if err.msg not in MUTE_ERROR_MESSAGES:
+                        print(err)
+                except Exception:
+                    print(resource_map[r_id][v])
+                    raise
 
     def test_mgmt_modules(self):
         # without network module
@@ -250,31 +181,20 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
         ):
             print(str(rp))
 
-            generator = CommandGenerator(module_name=str(rp.swagger_module))
+            generator = CommandGenerator()
 
             resource_map = rp.get_resource_map()
-            resource_ids = []
-            resource_versions = set()
-            for r_id, r_version_map in resource_map.items():
-                resource_ids.append(r_id)
-                resource_versions.update(r_version_map.keys())
-
-            for r_id in resource_ids:
-                for v in resource_versions:
-                    if v in resource_map[r_id]:
-                        cmd_resource = CMDResource({
-                                "id": r_id,
-                                "version": str(v)
-                            })
-                        try:
-                            resources = generator.load_resources([cmd_resource])
-                            generator.create_draft_command_group(resources[r_id])
-                        except exceptions.InvalidSwaggerValueError as err:
-                            if err.msg not in MUTE_ERROR_MESSAGES:
-                                print(err)
-                        except Exception:
-                            print(resource_map[r_id][v])
-                            raise
+            for r_id, version_map in resource_map.items():
+                for v, resource in version_map.items():
+                    try:
+                        generator.load_resources([resource])
+                        generator.create_draft_command_group(resource)
+                    except exceptions.InvalidSwaggerValueError as err:
+                        if err.msg not in MUTE_ERROR_MESSAGES:
+                            print(err)
+                    except Exception:
+                        print(resource_map[r_id][v])
+                        raise
 
     def test_data_plane_modules(self):
         for rp in self.get_data_plane_resource_providers(
@@ -286,31 +206,20 @@ class CommandGeneratorTest(SwaggerSpecsTestCase):
         ):
             print(str(rp))
 
-            generator = CommandGenerator(module_name=str(rp.swagger_module))
+            generator = CommandGenerator()
 
             resource_map = rp.get_resource_map()
-            resource_ids = []
-            resource_versions = set()
-            for r_id, r_version_map in resource_map.items():
-                resource_ids.append(r_id)
-                resource_versions.update(r_version_map.keys())
-
-            for r_id in resource_ids:
-                for v in resource_versions:
-                    if v in resource_map[r_id]:
-                        cmd_resource = CMDResource({
-                            "id": r_id,
-                            "version": str(v)
-                        })
-                        try:
-                            resources = generator.load_resources([cmd_resource])
-                            generator.create_draft_command_group(resources[r_id])
-                        except exceptions.InvalidSwaggerValueError as err:
-                            if err.msg not in MUTE_ERROR_MESSAGES:
-                                print(err)
-                        except Exception:
-                            print(resource_map[r_id][v])
-                            raise
+            for r_id, version_map in resource_map.items():
+                for v, resource in version_map.items():
+                    try:
+                        generator.load_resources([resource])
+                        generator.create_draft_command_group(resource)
+                    except exceptions.InvalidSwaggerValueError as err:
+                        if err.msg not in MUTE_ERROR_MESSAGES:
+                            print(err)
+                    except Exception:
+                        print(resource_map[r_id][v])
+                        raise
 
     def test_command_group_name_mgmt_plane(self):
         for rp in self.get_mgmt_plane_resource_providers():

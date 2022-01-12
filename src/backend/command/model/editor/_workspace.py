@@ -9,4 +9,3 @@ class CMDEditorWorkspace(Model):
     name = StringType(required=True)
 
     configuration = ModelType(CMDConfiguration, serialize_when_none=False)
-

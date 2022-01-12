@@ -1,10 +1,11 @@
 import tempfile
 
-from command.model.configuration import CMDResource, CMDConfiguration, XMLSerializer
+from command.model.configuration import CMDConfiguration, XMLSerializer
 from swagger.controller.command_generator import CommandGenerator
+from swagger.controller.specs_manager import SwaggerSpecsManager
 from swagger.tests.common import SwaggerSpecsTestCase
 from swagger.utils import exceptions
-from utils.constants import PlaneEnum
+from utils.plane import PlaneEnum
 
 MUTE_ERROR_MESSAGES = (
     "type is not supported",
@@ -13,15 +14,19 @@ MUTE_ERROR_MESSAGES = (
 
 
 class XMLSerializerTest(SwaggerSpecsTestCase):
-    @staticmethod
-    def test_virtual_network_e2e():
-        resource_id = "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}"
-        cmd_resource = CMDResource({"id": resource_id, "version": "2021-05-01"})
-        generator = CommandGenerator(module_name=f"{PlaneEnum.Mgmt}/network")
-        resources = generator.load_resources([cmd_resource])
-        command_group = generator.create_draft_command_group(resources[resource_id])
 
-        model = CMDConfiguration({"resources": [cmd_resource], "command_group": command_group})
+    def test_virtual_network_e2e(self):
+        resource_id = "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}"
+
+        generator = CommandGenerator()
+        specs_manager = SwaggerSpecsManager()
+        resource = specs_manager.get_resource_in_version(
+            plane=PlaneEnum.Mgmt, mod_names="network", resource_id=resource_id, version="2021-05-01")
+
+        generator.load_resources([resource])
+        command_group = generator.create_draft_command_group(resource)
+
+        model = CMDConfiguration({"resources": [resource.to_cmd()], "command_group": command_group})
         with tempfile.TemporaryFile() as fp:
             xml = XMLSerializer(model).to_xml()
             fp.write(xml)
@@ -36,40 +41,34 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
             resource_provider_filter=lambda r: r.name == "Microsoft.Network"
         ):
             resource_map = rp.get_resource_map()
-            resource_ids = []
-            resource_versions = set()
+            generator = CommandGenerator()
+
             for r_id, r_version_map in resource_map.items():
-                resource_ids.append(r_id)
-                resource_versions.update(r_version_map.keys())
-            generator = CommandGenerator(module_name=str(rp.swagger_module))
-            for r_id in resource_ids:
-                for v in resource_versions:
-                    if v in resource_map[r_id]:
-                        cmd_resource = CMDResource({"id": r_id, "version": str(v)})
+                for v, resource in r_version_map.items():
+                    try:
+                        generator.load_resources([resource])
+                        command_group = generator.create_draft_command_group(resource)
+                    except exceptions.InvalidSwaggerValueError as err:
+                        if err.msg not in MUTE_ERROR_MESSAGES:
+                            print(err)
+                    except Exception:
+                        print(resource_map[r_id][v])
+                        raise
+                    else:
+                        total += 1
                         try:
-                            resources = generator.load_resources([cmd_resource])
-                            command_group = generator.create_draft_command_group(resources[r_id])
-                        except exceptions.InvalidSwaggerValueError as err:
-                            if err.msg not in MUTE_ERROR_MESSAGES:
-                                print(err)
+                            model = CMDConfiguration({"resources": [resource.to_cmd()], "command_group": command_group})
+                            with tempfile.TemporaryFile() as fp:
+                                xml = XMLSerializer(model).to_xml()
+                                fp.write(xml)
+                                fp.seek(0)
+                                deserialized_model = XMLSerializer(CMDConfiguration).from_xml(fp)
                         except Exception:
-                            print(resource_map[r_id][v])
-                            raise
+                            print(f"--module {rp.swagger_module.name} --resource-id {r_id} --version {v}")
                         else:
-                            total += 1
-                            try:
-                                model = CMDConfiguration({"resources": [cmd_resource], "command_group": command_group})
-                                with tempfile.TemporaryFile() as fp:
-                                    xml = XMLSerializer(model).to_xml()
-                                    fp.write(xml)
-                                    fp.seek(0)
-                                    deserialized_model = XMLSerializer(CMDConfiguration).from_xml(fp)
-                            except Exception:
-                                print(f"--module {rp.swagger_module.name} --resource-id {r_id} --version {v}")
+                            if xml == XMLSerializer(deserialized_model).to_xml():
+                                count += 1
                             else:
-                                if xml == XMLSerializer(deserialized_model).to_xml():
-                                    count += 1
-                                else:
-                                    print(f"--module {rp.swagger_module.name} --resource-id {r_id} --version {v}")
+                                print(f"--module {rp.swagger_module.name} --resource-id {r_id} --version {v}")
         coverage = count / total
         print(f"\nCoverage: {count} / {total} = {coverage:.2%}")

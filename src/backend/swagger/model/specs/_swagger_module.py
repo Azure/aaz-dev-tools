@@ -1,12 +1,14 @@
 import os
 
 from ._resource_provider import ResourceProvider
-from utils.constants import PlaneEnum
+from utils.plane import PlaneEnum
 
 
 class SwaggerModule:
 
-    def __init__(self, name, folder_path, parent=None):
+    def __init__(self, plane, name, folder_path, parent=None):
+        assert plane in PlaneEnum.choices()
+        self.plane = plane
         self.name = name
         self.folder_path = folder_path
         self._parent = parent
@@ -28,11 +30,10 @@ class SwaggerModule:
 
 
 class MgmtPlaneModule(SwaggerModule):
-    PREFIX = PlaneEnum.Mgmt
 
     def __str__(self):
         if self._parent is None:
-            return f'{self.PREFIX}/{super().__str__()}'
+            return f'{self.plane}/{super().__str__()}'
         else:
             return super(MgmtPlaneModule, self).__str__()
 
@@ -47,17 +48,16 @@ class MgmtPlaneModule(SwaggerModule):
                     rp.append(ResourceProvider(name, path, readme_path, swagger_module=self))
                 elif name.lower() != 'common':
                     # azsadmin module only
-                    sub_module = MgmtPlaneModule(name, path, parent=self)
+                    sub_module = MgmtPlaneModule(plane=self.plane, name=name, folder_path=path, parent=self)
                     rp.extend(sub_module.get_resource_providers())
         return rp
 
 
 class DataPlaneModule(SwaggerModule):
-    PREFIX = PlaneEnum.Data
 
     def __str__(self):
         if self._parent is None:
-            return f'{self.PREFIX}/{super().__str__()}'
+            return f'{self.plane}/{super().__str__()}'
         else:
             return super(DataPlaneModule, self).__str__()
 
@@ -82,7 +82,7 @@ class DataPlaneModule(SwaggerModule):
                             has_sub_module = False
                             break
                     if has_sub_module:
-                        sub_module = DataPlaneModule(name, path, parent=self)
+                        sub_module = DataPlaneModule(plane=self.plane, name=name, folder_path=path, parent=self)
                         rp.extend(sub_module.get_resource_providers())
                     else:
                         readme_path = _search_readme_md_path(path, search_parent=True)
