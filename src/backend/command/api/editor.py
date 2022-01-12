@@ -1,5 +1,3 @@
-from base64 import urlsafe_b64encode, urlsafe_b64decode
-
 from flask import Blueprint, jsonify, request, url_for
 from command.controller.config_editor import ConfigEditorWorkspaceManager
 from command.model.editor import CMDEditorWorkspace
@@ -20,7 +18,7 @@ def editor_workspaces():
         name = data['name']
         workspace = ConfigEditorWorkspaceManager.create_workspace(name)
         result = workspace.to_primitive()
-        path = ConfigEditorWorkspaceManager.get_ws_file_path(name)
+        path = ConfigEditorWorkspaceManager.get_ws_json_file_path(name)
         result.update({
             'url': url_for('editor.editor_workspace', name=workspace.name),
             'file': path,
@@ -59,10 +57,22 @@ def editor_workspace(name):
         raise NotImplementedError()
 
     result = workspace.to_primitive()
-    path = ConfigEditorWorkspaceManager.get_ws_file_path(name)
+    path = ConfigEditorWorkspaceManager.get_ws_json_file_path(name)
     result.update({
         'url': url_for('editor.editor_workspace', name=workspace.name),
         'file': path,
         'updated': os.path.getmtime(path)
     })
     return jsonify(result)
+
+
+@bp.route("/workspace/<name>/generate", methods=("Post", ))
+def editor_workspace_generate(name):
+    # generate code and command configurations in cli repos and aaz repo
+    raise NotImplementedError()
+
+
+@bp.route("/workspace/<name>/try", methods=("Post", ))
+def editor_workspace_try_cli(name):
+    # try current commands by installed as a try extension of cli
+    raise NotImplementedError()

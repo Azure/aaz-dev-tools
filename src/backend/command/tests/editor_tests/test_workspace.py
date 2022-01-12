@@ -1,14 +1,14 @@
 from command.controller.config_editor import ConfigEditorWorkspaceManager
 from command.tests.common import CommandTestCase
+import os
 
 
 class WorkspaceTest(CommandTestCase):
 
     def test_workspace_manager(self):
         name = f"{self.__class__.__name__}_test_workspace_manager_1"
-        file_name = ConfigEditorWorkspaceManager.get_ws_file_name(name)
-        assert file_name == f"{name}.ws.json"
-        file_path = ConfigEditorWorkspaceManager.get_ws_file_path(name)
+        file_path = ConfigEditorWorkspaceManager.get_ws_json_file_path(name)
+        assert file_path.endswith(os.path.join(name, "ws.json"))
 
         ws = ConfigEditorWorkspaceManager.create_workspace(name)
         ws2 = ConfigEditorWorkspaceManager.load_workspace(name)
