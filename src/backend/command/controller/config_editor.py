@@ -1,4 +1,7 @@
 from command.model.editor import CMDEditorWorkspace
+from swagger.controller.specs_manager import SwaggerSpecsManager
+from swagger.controller.command_generator import CommandGenerator
+from .specs_manager import AAZSpecsManager
 from utils.config import Config
 import os
 import json
@@ -102,13 +105,17 @@ class CommandConfigEditor:
 
     def __init__(self, workspace):
         self.workspace = workspace
-    
-    def add_resource_by_swagger(self):
+        self.swagger_manager = SwaggerSpecsManager()
+        self.swagger_command_generator = CommandGenerator()
+        self.specs_manager = AAZSpecsManager()
+
+    def add_resource_by_swagger(self, plane, mod_names, resource_id, version):
+        resource = self.swagger_manager.get_resource_in_version(plane, mod_names, resource_id, version)
+
         pass
 
-    def add_resource_by_cmd(self):
+    def add_resource_by_cmd(self, ):
         pass
-
 
     # def _load_cmd_config(self, config_path):
     #     # load command configuration from persistence layer

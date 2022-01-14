@@ -1,17 +1,9 @@
-from base64 import urlsafe_b64encode, urlsafe_b64decode
+from utils.base64 import b64decode_str, b64encode_str
 
 from flask import Blueprint, jsonify
 from swagger.controller.specs_manager import SwaggerSpecsManager
 
 bp = Blueprint('swagger', __name__, url_prefix='/swagger/specs')
-
-
-def b64encode_str(value):
-    return urlsafe_b64encode(value.encode()).decode()
-
-
-def b64decode_str(value):
-    return urlsafe_b64decode(value).decode()
 
 
 # modules

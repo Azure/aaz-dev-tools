@@ -25,3 +25,6 @@ class PlaneEnum:
         if not swagger_modules or module_name in swagger_modules:
             return True
         return False
+
+
+__all__ = ["PlaneEnum"]

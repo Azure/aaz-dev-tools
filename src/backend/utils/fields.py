@@ -9,3 +9,6 @@ class PlaneField(StringType):
             choices=PlaneEnum.choices(),
             *args, **kwargs
         )
+
+
+__all__ = ["PlaneField"]
