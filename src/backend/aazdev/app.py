@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from flask.cli import FlaskGroup, shell_command, routes_command
-from utils import Config, exceptions
+from utils import exceptions
+from utils.config import Config
 
 from .run import run_command
 

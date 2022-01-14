@@ -86,6 +86,9 @@ class ConfigEditorWorkspaceManager:
         ws = CMDEditorWorkspace({
             "name": name,
             "version": datetime.utcnow(),
+            "commandTree": {
+                "name": "aaz",
+            }
         })
         cls.save_workspace(name, ws)
         return ws
@@ -110,6 +113,8 @@ class CommandConfigEditor:
         self.specs_manager = AAZSpecsManager()
 
     def add_resource_by_swagger(self, plane, mod_names, resource_id, version):
+
+        self.specs_manager.find_related_resource_ids(plane, resource_id, version)
         resource = self.swagger_manager.get_resource_in_version(plane, mod_names, resource_id, version)
 
         pass

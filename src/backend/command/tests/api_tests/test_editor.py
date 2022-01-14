@@ -8,7 +8,7 @@ class EditorTest(CommandTestCase):
         name1 = f"{self.__class__.__name__}_test_ws_1"
         name2 = f"{self.__class__.__name__}_test_ws_2"
         with self.app.test_client() as c:
-            rv = c.post(f"/command/editor/workspaces", json={
+            rv = c.post(f"/aaz/editor/workspaces", json={
                 "name": name1
             })
             assert rv.status_code == 200
@@ -16,9 +16,10 @@ class EditorTest(CommandTestCase):
             assert ws1['name'] == name1
             assert ws1['version']
             assert ws1['url']
+            assert ws1['commandTree']['name'] == 'aaz'
             assert os.path.exists(ws1['file'])
 
-            rv = c.post(f"/command/editor/workspaces", json={
+            rv = c.post(f"/aaz/editor/workspaces", json={
                 "name": name2
             })
             assert rv.status_code == 200
@@ -28,7 +29,7 @@ class EditorTest(CommandTestCase):
             assert ws2['url']
             assert os.path.exists(ws2['file'])
 
-            rv = c.get(f"/command/editor/workspaces")
+            rv = c.get(f"/aaz/editor/workspaces")
             ws_list = rv.get_json()
             assert len(ws_list) == 2
             for ws_data in ws_list:
@@ -39,7 +40,7 @@ class EditorTest(CommandTestCase):
                     assert ws_data['url'] == ws2['url']
                     assert ws_data['file'] == ws2['file']
 
-            rv = c.post(f"/command/editor/workspaces", json={
+            rv = c.post(f"/aaz/editor/workspaces", json={
                 "name": name2
             })
             assert rv.status_code == 409
@@ -47,7 +48,7 @@ class EditorTest(CommandTestCase):
     def test_workspace(self):
         name1 = f"{self.__class__.__name__}_test_ws_1"
         with self.app.test_client() as c:
-            rv = c.post(f"/command/editor/workspaces", json={
+            rv = c.post(f"/aaz/editor/workspaces", json={
                 "name": name1
             })
             assert rv.status_code == 200
@@ -56,15 +57,15 @@ class EditorTest(CommandTestCase):
                 rv = c.get(ws['url'])
                 assert rv.status_code == 200
                 assert rv.get_json() == ws
-                rv = c.get(f"/command/editor/workspaces/{ws['name']}")
+                rv = c.get(f"/aaz/editor/workspaces/{ws['name']}")
                 assert rv.status_code == 200
                 assert rv.get_json() == ws
 
-            with self.app.test_client() as c:
-                rv = c.put(ws['url'], json=ws)
-                assert rv.status_code == 200
-                ws2 = rv.get_json()
-                assert ws2['version'] != ws['version']
+            # with self.app.test_client() as c:
+            #     rv = c.put(ws['url'], json=ws)
+            #     assert rv.status_code == 200
+            #     ws2 = rv.get_json()
+            #     assert ws2['version'] != ws['version']
 
             with self.app.test_client() as c:
                 rv = c.delete(ws['url'])

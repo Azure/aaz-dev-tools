@@ -2,7 +2,8 @@ from swagger.model.specs import SwaggerSpecs, ResourceProvider
 from utils.plane import PlaneEnum
 
 
-from utils import Config, exceptions
+from utils.config import Config
+from utils import exceptions
 from collections import OrderedDict
 
 
