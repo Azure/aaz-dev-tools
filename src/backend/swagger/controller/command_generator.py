@@ -105,8 +105,13 @@ class CommandGenerator:
 
         return command_group
 
+    @staticmethod
+    def generate_command_version(resource):
+        return resource.version
+
     def generate_command(self, path_item, resource, cmd_builder):
         command = CMDCommand()
+        command.version = self.generate_command_version(resource)
         command.resources = [
             resource.to_cmd()
         ]
@@ -114,7 +119,7 @@ class CommandGenerator:
         op = cmd_builder(path_item)
 
         assert isinstance(op, CMDHttpOperation)
-        if not self._set_api_version_parameter(op.http.request, api_version=resource.version.version):
+        if not self._set_api_version_parameter(op.http.request, api_version=resource.version):
             logger.warning(f"Cannot Find api version parameter: {cmd_builder.path}, '{cmd_builder.method}' : {path_item.traces}")
 
         output = self._generate_output(
@@ -138,6 +143,7 @@ class CommandGenerator:
 
     def generate_generic_update_command(self, path_item, resource, cmd_builder):
         command = CMDCommand()
+        command.version = self.generate_command_version(resource)
         command.resources = [
             resource.to_cmd()
         ]
@@ -148,9 +154,9 @@ class CommandGenerator:
         if put_op.http.request.body is None:
             return None
 
-        if not self._set_api_version_parameter(get_op.http.request, api_version=resource.version.version):
+        if not self._set_api_version_parameter(get_op.http.request, api_version=resource.version):
             logger.warning(f"Cannot Find api version parameter: {resource.path}, 'get' : {path_item.traces}")
-        if not self._set_api_version_parameter(put_op.http.request, api_version=resource.version.version):
+        if not self._set_api_version_parameter(put_op.http.request, api_version=resource.version):
             logger.warning(f"Cannot Find api version parameter: {resource.path}, 'put' : {path_item.traces}")
 
         output = self._generate_output(cmd_builder, put_op)

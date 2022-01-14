@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, url_for
-from command.controller.config_editor import ConfigEditorWorkspaceManager
+from command.controller.config_editor import ConfigEditorWorkspaceManager, WorkspaceEditor
 from utils import exceptions
 import os
 
@@ -12,10 +12,11 @@ def editor_workspaces():
         # create a new workspace
         # the name of workspace is required
         data = request.get_json()
-        if not data or not isinstance(data, dict) or 'name' not in data:
+        if not data or not isinstance(data, dict) or 'name' not in data or 'plane' not in data:
             raise exceptions.InvalidAPIUsage("Invalid request body")
         name = data['name']
-        workspace = ConfigEditorWorkspaceManager.create_workspace(name)
+        plane = data['plane']
+        workspace = ConfigEditorWorkspaceManager.create_workspace(name, plane)
         result = workspace.to_primitive()
         path = ConfigEditorWorkspaceManager.get_ws_json_file_path(name)
         result.update({
@@ -93,9 +94,42 @@ def editor_workspace_command_rename(name, command):
 def editor_workspace_resources(name):
     if request.method == "POST":
         # add new resource
-        pass
+        data = request.get_json()
+        if "swagger" in data and "aaz" in data:
+            raise exceptions.InvalidAPIUsage("Please add aaz resources and call reload swagger api")
+        elif "swagger" in data:
+            try:
+                plane = data['swagger']['plane']
+                mod_names = data['swagger']['module']
+                version = data['swagger']['version']
+                resource_ids = data['swagger']['resources']
+            except KeyError:
+                raise exceptions.InvalidAPIUsage("invalid request")
+            editor = WorkspaceEditor(name)
+            editor.add_resources_by_swagger(
+                plane=plane,
+                mod_names=mod_names,
+                version=version,
+                resource_ids=resource_ids,
+            )
+        elif "aaz" in data:
+            try:
+                plane = data['swagger']['plane'],
+                version = data['swagger']['version'],
+                resource_ids = data['swagger']['resources']
+            except KeyError:
+                raise exceptions.InvalidAPIUsage("invalid request")
+            editor = WorkspaceEditor(name)
+            editor.add_resources_by_aaz(
+                plane=plane,
+                version=version,
+                resource_ids=resource_ids,
+            )
+        else:
+            raise exceptions.InvalidAPIUsage("invalid request")
     elif request.method == "GET":
         # TODO: return the resource list
+        workspace = ConfigEditorWorkspaceManager.load_workspace(name)
         pass
     else:
         raise NotImplementedError(request.method)
@@ -116,10 +150,12 @@ def editor_workspace_resource(name, resource_id, version):
         raise NotImplementedError(request.method)
 
 
-@bp.route("/workspace/<name>/resources/<resource_id>/v/<version>/reloadSwagger", methods=("POST",))
-def editor_workspace_resource_reload_swagger(name, resource_id, version):
+@bp.route("/workspace/<name>/resources/reloadSwagger", methods=("POST",))
+def editor_workspace_resource_reload_swagger(name):
     # update resource by reloading swagger
-    pass
+    data = request.get_json()
+    # data = (resource_id, swagger_version)
+    # TODO:
 
 
 @bp.route("/workspace/<name>/generate", methods=("POST", ))

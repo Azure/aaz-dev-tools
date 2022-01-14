@@ -2,6 +2,7 @@ from schematics.models import Model
 from schematics.types import StringType, ModelType, UTCDateTimeType, ListType
 from command.model.configuration._fields import CMDCommandNameField
 from command.model.configuration import CMDStageField, CMDHelp, CMDResource
+from utils.fields import PlaneField
 
 
 class CMDCommandTreeLeaf(Model):
@@ -36,6 +37,7 @@ class CMDCommandTreeNode(Model):
 class CMDEditorWorkspace(Model):
     version = UTCDateTimeType(required=True)  # this property updated when workspace saved in file.
     name = StringType(required=True)
+    plane = PlaneField(required=True)
     command_tree = ModelType(
         CMDCommandTreeNode,
         required=True,
@@ -45,3 +47,17 @@ class CMDEditorWorkspace(Model):
 
     class Options:
         serialize_when_none = False
+
+    def command_tree_nodes(self):
+        nodes = [self.command_tree]   # add root node
+        i = 0
+        while i < len(nodes):
+            for node in (nodes[i].command_groups or []):
+                nodes.append(node)
+                yield node
+            i += 1
+
+    def command_tree_leaves(self):
+        for node in self.command_tree_nodes():
+            for leaf in (node.commands or []):
+                yield leaf

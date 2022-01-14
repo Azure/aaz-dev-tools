@@ -76,9 +76,8 @@ def get_resource_provider(plane, mod_names, rp_name):
                 "versions": []
             }
             for version, resource in version_map.items():
-                version = str(resource.version)
                 rs['versions'].append({
-                    "url": f"{rs_id}/v/{b64encode_str(version)}",
+                    "url": f"{rs_id}/v/{b64encode_str(resource.version)}",
                     "version": version,
                     "file": resource.file_path,
                     "path": resource.path,
@@ -105,9 +104,8 @@ def get_resources_by(plane, mod_names, rp_name):
                 "versions": []
             }
             for version, resource in version_map.items():
-                version = str(resource.version)
                 rs['versions'].append({
-                    "url": f"{rs_url}/v/{b64encode_str(version)}",
+                    "url": f"{rs_url}/v/{b64encode_str(resource.version)}",
                     "id": resource_id,
                     "version": version,
                     "file": resource.file_path,
@@ -136,9 +134,8 @@ def get_resource_in_rp(plane, mod_names, rp_name, resource_id):
         "versions": []
     }
     for version, resource in version_map.items():
-        version = str(resource.version)
         result['versions'].append({
-            "url": f"{rs_url}/v/{b64encode_str(version)}",
+            "url": f"{rs_url}/v/{b64encode_str(resource.version)}",
             "id": resource_id,
             "version": version,
             "file": resource.file_path,
@@ -165,9 +162,8 @@ def get_resource_in_module(plane, mod_names, resource_id):
         "versions": []
     }
     for version, resource in version_map.items():
-        version = str(resource.version)
         result['versions'].append({
-            "url": f"{rs_url}/v/{b64encode_str(version)}",
+            "url": f"{rs_url}/v/{b64encode_str(resource.version)}",
             "id": resource_id,
             "version": version,
             "file": resource.file_path,
@@ -187,10 +183,9 @@ def get_resource_version_in_rp(plane, mod_names, rp_name, resource_id, version):
     resource = specs_manager.get_resource_in_version(
         plane=plane, mod_names=mod_names, rp_name=rp_name, resource_id=resource_id, version=version
     )
-    version = str(resource.version)
     result = {
         "url": f"{bp.url_prefix}/{resource.resource_provider}/resources/"
-               f"{b64encode_str(resource.id)}/v/{b64encode_str(version)}",
+               f"{b64encode_str(resource.id)}/v/{b64encode_str(resource.version)}",
         "id": resource_id,
         "version": version,
         "file": resource.file_path,
@@ -208,10 +203,9 @@ def get_resource_version_in_module(plane, mod_names, resource_id, version):
     resource = specs_manager.get_resource_in_version(
         plane=plane, mod_names=mod_names, resource_id=resource_id, version=version
     )
-    version = str(resource.version)
     result = {
         "url": f"{bp.url_prefix}/{resource.resource_provider}/resources/"
-               f"{b64encode_str(resource.id)}/v/{b64encode_str(version)}",
+               f"{b64encode_str(resource.id)}/v/{b64encode_str(resource.version)}",
         "id": resource_id,
         "version": version,
         "file": resource.file_path,

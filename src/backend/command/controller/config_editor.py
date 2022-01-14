@@ -79,12 +79,13 @@ class ConfigEditorWorkspaceManager:
         return False
 
     @classmethod
-    def create_workspace(cls, name):
+    def create_workspace(cls, name, plane):
         path = cls.get_ws_json_file_path(name)
         if os.path.exists(path):
             raise exceptions.ResourceConflict(f"Workspace conflict: Workspace json file path exists: {path}")
         ws = CMDEditorWorkspace({
             "name": name,
+            "plane": plane,
             "version": datetime.utcnow(),
             "commandTree": {
                 "name": "aaz",
@@ -104,22 +105,39 @@ class ConfigEditorWorkspaceManager:
         return ws
 
 
-class CommandConfigEditor:
+class WorkspaceEditor:
 
-    def __init__(self, workspace):
-        self.workspace = workspace
-        self.swagger_manager = SwaggerSpecsManager()
+    def __init__(self, name):
+        self.ws = ConfigEditorWorkspaceManager.load_workspace(name)
+        self.swagger_specs = SwaggerSpecsManager()
         self.swagger_command_generator = CommandGenerator()
-        self.specs_manager = AAZSpecsManager()
+        self.aaz_specs = AAZSpecsManager()
 
-    def add_resource_by_swagger(self, plane, mod_names, resource_id, version):
+    def check_resource_exist(self, resource_id):
+        for leaf in self.ws.command_tree_leaves():
+            for resource in leaf.resources:
+                if resource.id == resource_id:
+                    return True
+        return False
 
-        self.specs_manager.find_related_resource_ids(plane, resource_id, version)
-        resource = self.swagger_manager.get_resource_in_version(plane, mod_names, resource_id, version)
+    def add_resources_by_swagger(self, plane, mod_names, version, resource_ids):
+        if plane != self.ws.plane:
+            raise exceptions.InvalidAPIUsage(f"Resource Plane not match Workspace Plane: '{plane}' != '{self.ws.plane}'")
+        resources = []
+        for resource_id in set(resource_ids):
+            if self.check_resource_exist(resource_id):
+                raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {resource_id}")
+            resources.append(self.swagger_specs.get_resource_in_version(plane, mod_names, resource_id, version))
+        self.swagger_command_generator.load_resources(resources)
+        for resource in resources:
+            command_group = self.swagger_command_generator.create_draft_command_group(resource)
 
-        pass
-
-    def add_resource_by_cmd(self, ):
+    def add_resources_by_aaz(self, plane, version, resource_ids):
+        if plane != self.ws.plane:
+            raise exceptions.InvalidAPIUsage(f"Resource Plane not match Workspace Plane: '{plane}' != '{self.ws.plane}'")
+        for resource_id in set(resource_ids):
+            if self.check_resource_exist(resource_id):
+                raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {resource_id}")
         pass
 
     # def _load_cmd_config(self, config_path):
