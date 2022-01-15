@@ -46,10 +46,13 @@ class SwaggerSpecsManager:
         return self._modules_cache[plane]
 
     def get_module(self, plane, mod_names):
+        if isinstance(mod_names, str):
+            mod_names = mod_names.split('/')
+
         if plane == PlaneEnum.Mgmt:
-            module = self.specs.get_mgmt_plane_module(*mod_names.split('/'), plane=plane)
+            module = self.specs.get_mgmt_plane_module(*mod_names, plane=plane)
         elif plane in PlaneEnum.choices():
-            module = self.specs.get_data_plane_module(*mod_names.split('/'), plane=plane)
+            module = self.specs.get_data_plane_module(*mod_names, plane=plane)
         else:
             raise exceptions.InvalidAPIUsage(f"invalid plane name '{plane}'")
 
@@ -58,6 +61,9 @@ class SwaggerSpecsManager:
         return module
 
     def get_resource_providers(self, plane, mod_names):
+        if isinstance(mod_names, str):
+            mod_names = mod_names.split('/')
+
         key = (plane, mod_names)
         if key not in self._rps_cache:
             module = self.get_module(plane, mod_names)
@@ -65,6 +71,9 @@ class SwaggerSpecsManager:
         return self._rps_cache[key]
 
     def get_resource_provider(self, plane, mod_names, rp_name):
+        if isinstance(mod_names, str):
+            mod_names = mod_names.split('/')
+
         rps = self.get_resource_providers(plane, mod_names)
         rp = None
         for v in rps:
@@ -76,6 +85,9 @@ class SwaggerSpecsManager:
         return rp
 
     def get_grouped_resource_map(self, plane, mod_names, rp_name):
+        if isinstance(mod_names, str):
+            mod_names = mod_names.split('/')
+
         key = (plane, mod_names, rp_name)
         if key in self._resource_op_group_map_cache:
             return self._resource_op_group_map_cache[key]
@@ -100,6 +112,9 @@ class SwaggerSpecsManager:
         return latest_resource.get_operation_group_name() or ""
 
     def get_resource_version_map(self, plane, mod_names, resource_id, rp_name=None):
+        if isinstance(mod_names, str):
+            mod_names = mod_names.split('/')
+
         if rp_name:
             rps = [self.get_resource_provider(plane, mod_names, rp_name)]
         else:
@@ -124,6 +139,9 @@ class SwaggerSpecsManager:
         return version_maps[0]
 
     def get_resource_in_version(self, plane, mod_names, resource_id, version, rp_name=None):
+        if isinstance(mod_names, str):
+            mod_names = mod_names.split('/')
+
         if rp_name:
             rps = [self.get_resource_provider(plane, mod_names, rp_name)]
         else:

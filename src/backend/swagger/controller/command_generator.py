@@ -180,7 +180,8 @@ class CommandGenerator:
         arguments = self._generate_command_arguments(command)
         command.arg_groups = self._group_arguments(arguments)
 
-        group_name = self._generate_command_group_name_by_resource(resource)
+        group_name = self.generate_command_group_name_by_resource(
+                        resource_path=resource.path, rp_name=resource.resource_provider.name)
         command.name = f"{group_name} update"
         return command
 
@@ -280,9 +281,8 @@ class CommandGenerator:
         return output
 
     @classmethod
-    def _generate_command_group_name_by_resource(cls, resource):
-        rp_name = resource.resource_provider.name
-        valid_parts = get_url_path_valid_parts(resource.path, rp_name)
+    def generate_command_group_name_by_resource(cls, resource_path, rp_name):
+        valid_parts = get_url_path_valid_parts(resource_path, rp_name)
 
         names = []
 
@@ -302,7 +302,8 @@ class CommandGenerator:
         return " ".join(names)
 
     def _generate_command_name(self, path_item, resource, method, output):
-        group_name = self._generate_command_group_name_by_resource(resource)
+        group_name = self.generate_command_group_name_by_resource(
+            resource_path=resource.path, rp_name=resource.resource_provider.name)
         url_path = resource.id.split("?")[0]
         if method == "get":
             if url_path.endswith("/{}"):

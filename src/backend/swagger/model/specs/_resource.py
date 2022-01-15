@@ -9,6 +9,7 @@ from fuzzywuzzy import fuzz
 
 from command.model.configuration import CMDResource
 from ._utils import map_path_2_repo
+from utils.base64 import b64encode_str, b64decode_str
 
 logger = logging.getLogger('backend')
 
@@ -134,7 +135,8 @@ class Resource:
         resource = CMDResource()
         resource.id = self.id
         resource.version = self.version
-        resource.provider = str(self.resource_provider)
+
+        resource.swagger = f"{self.resource_provider}/Paths/{b64encode_str(self.path)}/V/{b64encode_str(self.version)}"
         return resource
 
 

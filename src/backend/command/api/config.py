@@ -4,7 +4,7 @@ from command.model.configuration import XMLSerializer
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.config import Config
 
-bp = Blueprint('config', __name__, url_prefix='/aaz/config')
+bp = Blueprint('config', __name__, url_prefix='/AAZ/Config')
 
 
 def path_type(ctx, param, value):

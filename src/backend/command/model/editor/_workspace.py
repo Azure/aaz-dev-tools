@@ -1,6 +1,6 @@
 from schematics.models import Model
-from schematics.types import StringType, ModelType, UTCDateTimeType, ListType
-from command.model.configuration._fields import CMDCommandNameField
+from schematics.types import StringType, ModelType, UTCDateTimeType, ListType, DictType
+from command.model.configuration._fields import CMDCommandNameField, CMDVersionField
 from command.model.configuration import CMDStageField, CMDHelp, CMDResource
 from utils.fields import PlaneField
 
@@ -8,6 +8,7 @@ from utils.fields import PlaneField
 class CMDCommandTreeLeaf(Model):
     name = CMDCommandNameField(required=True)
     stage = CMDStageField()
+    version = CMDVersionField(required=True)
 
     help = ModelType(CMDHelp)
     resources = ListType(ModelType(CMDResource), min_size=1)  # the azure resources used in this command
@@ -21,13 +22,13 @@ class CMDCommandTreeNode(Model):
     stage = CMDStageField()
 
     help = ModelType(CMDHelp)
-    command_groups = ListType(
-        ModelType("CMDCommandTreeNode"),
+    command_groups = DictType(
+        field=ModelType("CMDCommandTreeNode"),
         serialized_name='commandGroups',
         deserialize_from='commandGroups'
     )
-    commands = ListType(
-        ModelType(CMDCommandTreeLeaf)
+    commands = DictType(
+        field=ModelType(CMDCommandTreeLeaf)
     )
 
     class Options:
@@ -47,17 +48,3 @@ class CMDEditorWorkspace(Model):
 
     class Options:
         serialize_when_none = False
-
-    def command_tree_nodes(self):
-        nodes = [self.command_tree]   # add root node
-        i = 0
-        while i < len(nodes):
-            for node in (nodes[i].command_groups or []):
-                nodes.append(node)
-                yield node
-            i += 1
-
-    def command_tree_leaves(self):
-        for node in self.command_tree_nodes():
-            for leaf in (node.commands or []):
-                yield leaf
