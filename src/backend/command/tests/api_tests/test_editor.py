@@ -20,7 +20,7 @@ class EditorTest(CommandTestCase):
             assert ws1['version']
             assert ws1['url']
             assert ws1['commandTree']['name'] == 'aaz'
-            assert os.path.exists(ws1['file'])
+            assert os.path.exists(ws1['folder'])
 
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": name2,
@@ -32,7 +32,7 @@ class EditorTest(CommandTestCase):
             assert ws2['plane'] == PlaneEnum.Mgmt
             assert ws2['version']
             assert ws2['url']
-            assert os.path.exists(ws2['file'])
+            assert os.path.exists(ws2['folder'])
 
             rv = c.get(f"/AAZ/Editor/Workspaces")
             ws_list = rv.get_json()
@@ -40,10 +40,10 @@ class EditorTest(CommandTestCase):
             for ws_data in ws_list:
                 if ws_data['name'] == name1:
                     assert ws_data['url'] == ws1['url']
-                    assert ws_data['file'] == ws1['file']
+                    assert ws_data['folder'] == ws1['folder']
                 elif ws_data['name'] == name2:
                     assert ws_data['url'] == ws2['url']
-                    assert ws_data['file'] == ws2['file']
+                    assert ws_data['folder'] == ws2['folder']
 
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": name2,

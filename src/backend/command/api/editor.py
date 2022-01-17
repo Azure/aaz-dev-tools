@@ -16,13 +16,13 @@ def editor_workspaces():
             raise exceptions.InvalidAPIUsage("Invalid request body")
         name = data['name']
         plane = data['plane']
-        workspace = ConfigEditorWorkspaceManager.create_workspace(name, plane)
-        result = workspace.to_primitive()
-        path = ConfigEditorWorkspaceManager.get_ws_json_file_path(name)
+        manager = ConfigEditorWorkspaceManager.new(name, plane)
+        manager.save()
+        result = manager.ws.to_primitive()
         result.update({
-            'url': url_for('editor.editor_workspace', name=workspace.name),
-            'file': path,
-            'updated': os.path.getmtime(path)
+            'url': url_for('editor.editor_workspace', name=manager.name),
+            'folder': manager.folder,
+            'updated': os.path.getmtime(manager.path)
         })
     elif request.method == "GET":
         result = []
@@ -39,29 +39,29 @@ def editor_workspaces():
 
 @bp.route("/Workspaces/<name>", methods=("GET", "DELETE"))
 def editor_workspace(name):
+    manager = ConfigEditorWorkspaceManager(name)
     if request.method == "GET":
-        workspace = ConfigEditorWorkspaceManager.load_workspace(name)
+        manager.load()
     # elif request.method == "PUT":
     #     data = request.get_json()
     #     if not isinstance(data, dict):
     #         raise exceptions.InvalidAPIUsage("invalid workspace data format")
-    #     data = dict((k, v) for k, v in data.items() if k not in ['file', 'url', 'updated'])
+    #     data = dict((k, v) for k, v in data.items() if k not in ['folder', 'url', 'updated'])
     #     workspace = CMDEditorWorkspace(data)
     #     workspace = ConfigEditorWorkspaceManager.update_workspace(name, workspace)
     elif request.method == "DELETE":
-        if ConfigEditorWorkspaceManager.delete_workspace(name):
+        if manager.delete():
             return '', 200
         else:
             return '', 204  # resource not found
     else:
         raise NotImplementedError()
 
-    result = workspace.to_primitive()
-    path = ConfigEditorWorkspaceManager.get_ws_json_file_path(name)
+    result = manager.ws.to_primitive()
     result.update({
-        'url': url_for('editor.editor_workspace', name=workspace.name),
-        'file': path,
-        'updated': os.path.getmtime(path)
+        'url': url_for('editor.editor_workspace', name=manager.name),
+        'folder': manager.folder,
+        'updated': os.path.getmtime(manager.path)
     })
     return jsonify(result)
 
