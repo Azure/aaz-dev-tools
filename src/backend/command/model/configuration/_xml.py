@@ -1,8 +1,5 @@
-# -----------------------------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License. See License.txt in the project root for
-# license information.
-# -----------------------------------------------------------------------------
+import inflect
+
 from lxml.builder import ElementMaker
 from lxml.etree import tostring
 from xmltodict import parse
@@ -15,6 +12,7 @@ XML_ROOT = "CodeGen"
 
 
 class XMLSerializer:
+
     def __init__(self, model):
         self.model = model
 
@@ -32,6 +30,9 @@ def build_xml(primitive, parent=None):
     linker = ElementMaker()
     if parent is None:
         parent = getattr(linker, XML_ROOT)()
+    # normalize element name
+    if singular := _inflect_engine.singular_noun(parent.tag):
+        parent.tag = singular
 
     for field_name, data in primitive.items():
         primitive_to_xml(field_name, data, parent)
@@ -61,10 +62,15 @@ def build_model(model, primitive):
         for field_name, field in model._field_list:
             if isinstance(field, Serializable):
                 continue
+            # obtain corresponding tag
             serialized_name = field.serialized_name or field_name
-            if serialized_name not in primitive:
+            if serialized_name in primitive:
+                curr_tag = serialized_name
+            elif (singular := _inflect_engine.singular_noun(serialized_name)) in primitive:
+                curr_tag = singular
+            else:
                 continue
-            data = primitive[serialized_name]
+            data = primitive[curr_tag]
             curr_field = unwrap(field)
             field_value = obtain_field_value(field, curr_field, data)
             setattr(instance, field_name, field_value)
@@ -102,3 +108,6 @@ def unwrap(field):
         return field.model_class
     else:
         return field
+
+
+_inflect_engine = inflect.engine()
