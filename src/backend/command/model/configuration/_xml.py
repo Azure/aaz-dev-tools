@@ -2,7 +2,7 @@ import inflect
 import re
 
 from lxml.builder import ElementMaker
-from lxml.etree import tostring
+from lxml.etree import Element, tostring
 from xmltodict import parse
 
 from schematics.types import ListType, ModelType
@@ -64,7 +64,16 @@ def primitive_to_xml(field_name, data, parent):
             curr = " ".join(sorted(f"{prev} {data}".split(), reverse=True))
             parent.set(field_name, curr)
         else:
-            parent.set(field_name, str(data))
+            if field_name == "short" and "\r\n" in data:
+                fields = [field.strip() for field in data.split("\r\n") if field.strip()]
+                short, *long = fields
+                parent.set(field_name, short)
+                for text in long:
+                    child = Element("p")
+                    child.text = text
+                    parent.append(child)
+            else:
+                parent.set(field_name, str(data))
 
 
 def build_model(model, primitive):
