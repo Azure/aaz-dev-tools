@@ -27,7 +27,7 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
         command_group = generator.create_draft_command_group(resource)
 
         model = CMDConfiguration({"resources": [resource.to_cmd()], "command_group": command_group})
-        with TemporaryFile("w+b") as fp:
+        with TemporaryFile("w+t", encoding="utf-8") as fp:
             xml = XMLSerializer(model).to_xml()
             fp.write(xml)
             fp.seek(0)
@@ -54,7 +54,7 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
                         total += 1
                         try:
                             model = CMDConfiguration({"resources": [resource.to_cmd()], "command_group": command_group})
-                            with TemporaryFile("w+b") as fp:
+                            with TemporaryFile("w+t", encoding="utf-8") as fp:
                                 xml = XMLSerializer(model).to_xml()
                                 fp.write(xml)
                                 fp.seek(0)

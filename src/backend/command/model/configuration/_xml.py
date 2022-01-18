@@ -1,4 +1,5 @@
 import inflect
+import re
 
 from lxml.builder import ElementMaker
 from lxml.etree import tostring
@@ -19,11 +20,21 @@ class XMLSerializer:
     def to_xml(self):
         primitive = self.model.to_primitive()
         root = build_xml(primitive)
-        return tostring(root, xml_declaration=True, pretty_print=True, encoding="utf-8")
+        return self._unescape(
+            tostring(root, xml_declaration=True, pretty_print=True, encoding="utf-8").decode()
+        )
 
-    def from_xml(self, xml):
-        primitive = parse(xml, attr_prefix="")
+    def from_xml(self, fp):
+        primitive = parse(self._escape(fp.read()), attr_prefix="")
         return build_model(self.model, primitive[XML_ROOT])
+
+    @classmethod
+    def _unescape(cls, s):
+        return re.sub(r'"array&lt;(.+)&gt;"', '"array<\\1>"', s)
+
+    @classmethod
+    def _escape(cls, s):
+        return re.sub(r'"array<(.+)>"', '"array&lt;\\1&gt;"', s)
 
 
 def build_xml(primitive, parent=None):
