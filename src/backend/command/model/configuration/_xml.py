@@ -40,9 +40,8 @@ class XMLSerializer:
 
 
 def build_xml(primitive, parent=None):
-    linker = ElementMaker()
     if parent is None:
-        parent = getattr(linker, XML_ROOT)()
+        parent = getattr(ElementMaker(), XML_ROOT)()
     # normalize element name
     if singular := _inflect_engine.singular_noun(parent.tag):
         parent.tag = singular
@@ -95,6 +94,8 @@ def build_model(model, primitive):
     else:
         # handle primitive field
         cast = model.primitive_type or str
+        if primitive == "0":
+            return 0
         return cast(primitive)
 
 
