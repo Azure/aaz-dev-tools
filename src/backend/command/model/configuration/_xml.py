@@ -9,6 +9,8 @@ from schematics.types import ListType, ModelType
 from schematics.types.compound import PolyModelType
 from schematics.types.serializable import Serializable
 
+from command.model.configuration import CMDHelp
+
 XML_ROOT = "CodeGen"
 
 
@@ -51,29 +53,24 @@ def build_xml(primitive, parent=None):
 
 
 def primitive_to_xml(field_name, data, parent):
-    linker = ElementMaker()
     if isinstance(data, dict):
-        _parent = getattr(linker, field_name)()
+        _parent = getattr(ElementMaker(), field_name)()
         parent.append(build_xml(data, _parent))
     elif isinstance(data, list):
         for d in data:
             primitive_to_xml(field_name, d, parent)
     else:
+        # handle long-summary
+        if field_name == "p":
+            child = Element("p")
+            child.text = str(data)
+            parent.append(child)
         # store metadata as attributes
-        if prev := parent.get(field_name):
-            curr = " ".join(sorted(f"{prev} {data}".split(), reverse=True))
+        elif prev := parent.get(field_name):
+            curr = " ".join(sorted(f"{prev} {data}".split(), key=len, reverse=True))
             parent.set(field_name, curr)
         else:
-            if field_name == "short" and "\r\n" in data:
-                fields = [field.strip() for field in data.split("\r\n") if field.strip()]
-                short, *long = fields
-                parent.set(field_name, short)
-                for text in long:
-                    child = Element("p")
-                    child.text = text
-                    parent.append(child)
-            else:
-                parent.set(field_name, str(data))
+            parent.set(field_name, str(data))
 
 
 def build_model(model, primitive):
@@ -104,7 +101,8 @@ def build_model(model, primitive):
 def obtain_field_value(prev, curr, data):
     if isinstance(prev, ListType):
         field_value = []
-        if " " in data:
+        # distinguish options and long-summary
+        if " " in data and not issubclass(curr.owner_model, CMDHelp):
             data = data.split()
         if isinstance(data, list):
             for d in data:
