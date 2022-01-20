@@ -125,9 +125,9 @@ class CMDArgBuilder:
                 sub_args.extend(results)
                 if results and not self._flatten_discriminators:
                     assert len(results) == 1
-                    if disc.prop not in discriminator_mapping:
-                        discriminator_mapping[disc.prop] = {}
-                    discriminator_mapping[disc.prop][disc.value] = results[0].var
+                    if disc.property not in discriminator_mapping:
+                        discriminator_mapping[disc.property] = {}
+                    discriminator_mapping[disc.property][disc.value] = results[0].var
         if self.schema.props:
             for prop in self.schema.props:
                 if prop.name in discriminator_mapping:

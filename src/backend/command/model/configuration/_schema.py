@@ -604,7 +604,7 @@ class CMDObjectSchemaDiscriminator(Model):
     ARG_TYPE = CMDObjectArg
 
     # properties as tags
-    prop = StringType(required=True)
+    property = StringType(required=True)
     value = StringType(required=True)
     frozen = CMDBooleanField()  # frozen schema will not be used
 
@@ -621,8 +621,8 @@ class CMDObjectSchemaDiscriminator(Model):
         diff = {}
 
         if level >= CMDDiffLevelEnum.BreakingChange:
-            if self.prop != old.prop:
-                diff["prop"] = f"{old.prop} != {self.prop}"
+            if self.property != old.property:
+                diff["property"] = f"{old.property} != {self.property}"
             if self.value != old.value:
                 diff["value"] = f"{old.value} != {self.value}"
 
