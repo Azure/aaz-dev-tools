@@ -69,6 +69,6 @@ def generate_config(config_path, module, resource_id, version):
         "resources": [resource.to_cmd()],
         "command_group": command_group
     })
-    with open(config_path, "wb") as fp:
+    with open(config_path, "w") as fp:
         fp.write(XMLSerializer(model).to_xml())
     return "Done."

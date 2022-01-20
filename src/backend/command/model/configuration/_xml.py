@@ -1,12 +1,15 @@
 import inflect
+import re
 
 from lxml.builder import ElementMaker
-from lxml.etree import tostring
+from lxml.etree import Element, tostring
 from xmltodict import parse
 
 from schematics.types import ListType, ModelType
 from schematics.types.compound import PolyModelType
 from schematics.types.serializable import Serializable
+
+from command.model.configuration import CMDHelp
 
 XML_ROOT = "CodeGen"
 
@@ -19,17 +22,26 @@ class XMLSerializer:
     def to_xml(self):
         primitive = self.model.to_primitive()
         root = build_xml(primitive)
-        return tostring(root, xml_declaration=True, pretty_print=True, encoding="utf-8")
+        return self._unescape(
+            tostring(root, xml_declaration=True, pretty_print=True, encoding="utf-8").decode()
+        )
 
-    def from_xml(self, xml):
-        primitive = parse(xml, attr_prefix="")
+    def from_xml(self, fp):
+        primitive = parse(self._escape(fp.read()), attr_prefix="")
         return build_model(self.model, primitive[XML_ROOT])
+
+    @classmethod
+    def _unescape(cls, s):
+        return re.sub(r'"array&lt;(.+)&gt;"', '"array<\\1>"', s)
+
+    @classmethod
+    def _escape(cls, s):
+        return re.sub(r'"array<(.+)>"', '"array&lt;\\1&gt;"', s)
 
 
 def build_xml(primitive, parent=None):
-    linker = ElementMaker()
     if parent is None:
-        parent = getattr(linker, XML_ROOT)()
+        parent = getattr(ElementMaker(), XML_ROOT)()
     # normalize element name
     if singular := _inflect_engine.singular_noun(parent.tag):
         parent.tag = singular
@@ -40,17 +52,21 @@ def build_xml(primitive, parent=None):
 
 
 def primitive_to_xml(field_name, data, parent):
-    linker = ElementMaker()
     if isinstance(data, dict):
-        _parent = getattr(linker, field_name)()
+        _parent = getattr(ElementMaker(), field_name)()
         parent.append(build_xml(data, _parent))
     elif isinstance(data, list):
         for d in data:
             primitive_to_xml(field_name, d, parent)
     else:
+        # handle long-summary
+        if field_name == "p":
+            child = Element("p")
+            child.text = str(data)
+            parent.append(child)
         # store metadata as attributes
-        if prev := parent.get(field_name):
-            curr = " ".join(sorted(f"{prev} {data}".split(), reverse=True))
+        elif prev := parent.get(field_name):
+            curr = " ".join(sorted(f"{prev} {data}".split(), key=len, reverse=True))
             parent.set(field_name, curr)
         else:
             parent.set(field_name, str(data))
@@ -78,13 +94,16 @@ def build_model(model, primitive):
     else:
         # handle primitive field
         cast = model.primitive_type or str
+        if primitive == "0":
+            return 0
         return cast(primitive)
 
 
 def obtain_field_value(prev, curr, data):
     if isinstance(prev, ListType):
         field_value = []
-        if " " in data:
+        # distinguish options and long-summary
+        if " " in data and not issubclass(curr.owner_model, CMDHelp):
             data = data.split()
         if isinstance(data, list):
             for d in data:
