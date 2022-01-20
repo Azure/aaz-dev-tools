@@ -1,5 +1,6 @@
 import click
 from flask import Blueprint
+
 from command.model.configuration import XMLSerializer
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.config import Config

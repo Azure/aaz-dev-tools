@@ -336,6 +336,7 @@ class CMDClsSchema(CMDSchema, CMDClsSchemaBase):
     )
 
     def _diff(self, old, level, diff):
+        # TODO: Handle Cls Schema compare with other Schema classes
         diff = super(CMDClsSchema, self)._diff(old, level, diff)
         if level >= CMDDiffLevelEnum.BreakingChange:
             if self.client_flatten != old.client_flatten:

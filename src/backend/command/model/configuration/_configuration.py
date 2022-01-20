@@ -19,3 +19,8 @@ class CMDConfiguration(Model):
 
     class Options:
         serialize_when_none = False
+
+    def iter_commands(self):
+        if self.command_group:
+            for command in self.command_group.iter_commands():
+                yield command

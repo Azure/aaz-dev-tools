@@ -424,6 +424,11 @@ class CMDObjectArgAdditionalProperties(Model):
         arg.item = builder.get_sub_item()
         return arg
 
+    # def iter_args(self):
+    #     if self.item and hasattr(self.item, "iter_args"):
+    #         for sub_arg in self.item.iter_args():
+    #             yield sub_arg
+
 
 class CMDObjectArgBase(CMDArgBase):
     TYPE_VALUE = "object"
@@ -451,6 +456,17 @@ class CMDObjectArgBase(CMDArgBase):
         arg.args = builder.get_sub_args()
         arg.additional_props = builder.get_additional_props()
         return arg
+
+    # def iter_args(self):
+    #     if self.args:
+    #         for arg in self.args:
+    #             yield arg
+    #             if hasattr(arg, "iter_args"):
+    #                 for sub_arg in arg.iter_args():
+    #                     yield sub_arg
+    #     if self.additional_props:
+    #         for arg in self.additional_props.iter_args():
+    #             yield arg
 
 
 class CMDObjectArg(CMDArg, CMDObjectArgBase):
@@ -486,6 +502,11 @@ class CMDArrayArgBase(CMDArgBase):
         arg.fmt = builder.get_fmt()
         arg.item = builder.get_sub_item()
         return arg
+
+    # def iter_args(self):
+    #     if self.item and hasattr(self.item, "iter_args"):
+    #         for sub_arg in self.item.iter_args():
+    #             yield sub_arg
 
 
 class CMDArrayArg(CMDArg, CMDArrayArgBase):

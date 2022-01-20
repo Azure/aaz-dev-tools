@@ -159,6 +159,10 @@ class CommandGenerator:
         if not self._set_api_version_parameter(put_op.http.request, api_version=resource.version):
             logger.warning(f"Cannot Find api version parameter: {resource.path}, 'put' : {path_item.traces}")
 
+        output = self._generate_output(cmd_builder, get_op)
+        if output is None:
+            return None
+
         output = self._generate_output(cmd_builder, put_op)
         if output is None:
             return None

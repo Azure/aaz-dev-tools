@@ -22,3 +22,12 @@ class CMDCommandGroup(Model):
 
     class Options:
         serialize_when_none = False
+
+    def iter_commands(self):
+        if self.commands:
+            for command in self.commands:
+                yield command
+        if self.command_groups:
+            for group in self.command_groups:
+                for command in group.iter_commands():
+                    yield command

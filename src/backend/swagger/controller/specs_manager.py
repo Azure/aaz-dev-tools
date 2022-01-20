@@ -64,7 +64,7 @@ class SwaggerSpecsManager:
         if isinstance(mod_names, str):
             mod_names = mod_names.split('/')
 
-        key = (plane, mod_names)
+        key = (plane, tuple(mod_names))
         if key not in self._rps_cache:
             module = self.get_module(plane, mod_names)
             self._rps_cache[key] = module.get_resource_providers()
@@ -88,7 +88,7 @@ class SwaggerSpecsManager:
         if isinstance(mod_names, str):
             mod_names = mod_names.split('/')
 
-        key = (plane, mod_names, rp_name)
+        key = (plane, tuple(mod_names), rp_name)
         if key in self._resource_op_group_map_cache:
             return self._resource_op_group_map_cache[key]
 
