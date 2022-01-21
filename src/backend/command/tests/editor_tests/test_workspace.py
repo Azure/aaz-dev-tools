@@ -75,6 +75,13 @@ class WorkspaceEditorTest(CommandTestCase):
         assert 'address' in manager.ws.command_tree.command_groups['edge-order'].command_groups
         address_cg = manager.ws.command_tree.command_groups['edge-order'].command_groups['address']
         assert 'list' in address_cg.commands
+        assert 'create' in address_cg.commands
         assert 'show' in address_cg.commands
         assert 'delete' in address_cg.commands
         assert 'update' in address_cg.commands
+
+        assert manager.load_command_cfg(address_cg.commands['list'])
+        assert manager.load_command_cfg(address_cg.commands['create'])
+        assert manager.load_command_cfg(address_cg.commands['show'])
+        assert manager.load_command_cfg(address_cg.commands['delete'])
+        assert manager.load_command_cfg(address_cg.commands['update'])

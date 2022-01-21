@@ -98,14 +98,10 @@ class Resource:
                     words[-1] = singular
             else:
                 words.append(part.replace('_', ""))
-        op_group_singular = self._inflect_engine.singular_noun(op_group_name)
-        if op_group_singular is False:
-            op_group_singular = op_group_name
+        op_group_singular = self._inflect_engine.singular_noun(op_group_name) or op_group_name
         words.reverse()  # search from tail
         for word in words:
-            word_singular = self._inflect_engine.singular_noun(word)
-            if word_singular is False:
-                word_singular = word
+            word_singular = self._inflect_engine.singular_noun(word) or word
             if len(word_singular) > 1 and op_group_singular.lower().endswith(word_singular.lower()):
                 if word == word_singular:
                     # use singular
