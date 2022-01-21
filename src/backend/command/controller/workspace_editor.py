@@ -22,9 +22,13 @@ class WorkspaceEditor:
         self.aaz_specs = AAZSpecsManager()
 
     def add_resources_by_aaz(self, version, resource_ids):
-        for resource_id in set(resource_ids):
+        used_resource_ids = set()
+        for resource_id in resource_ids:
+            if resource_id in used_resource_ids:
+                continue
             if self.manager.check_resource_exist(resource_id):
                 raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {resource_id}")
+            used_resource_ids.update(resource_id)
 
         raise NotImplementedError()
 
@@ -34,11 +38,15 @@ class WorkspaceEditor:
             raise exceptions.InvalidAPIUsage(f"Command Group not exist: '{' '.join(root_node_names)}'")
 
         swagger_resources = []
-        for resource_id in set(resource_ids):
+        used_resource_ids = set()
+        for resource_id in resource_ids:
+            if resource_id in used_resource_ids:
+                continue
             if self.manager.check_resource_exist(resource_id):
                 raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {resource_id}")
             swagger_resources.append(self.swagger_specs.get_resource_in_version(
                 self.manager.ws.plane, mod_names, resource_id, version))
+            used_resource_ids.update(resource_id)
 
         self.swagger_command_generator.load_resources(swagger_resources)
 
@@ -170,14 +178,14 @@ class WorkspaceEditor:
         if not main_200_response:
             return False
 
-        plus_operation_args = self._parse_operation_url_args(plus_command)
+        plus_op_required_args, plus_op_optional_args = self._parse_operation_url_args(plus_command)
         for main_command in main_get_commands:
-            main_operation_args = self._parse_operation_url_args(main_command)
-            for main_op_id, main_required_args in main_operation_args.items():
-                if main_op_id in plus_operation_args:
+            main_op_required_args, main_op_optional_args = self._parse_operation_url_args(main_command)
+            for main_op_id, main_required_args in main_op_required_args.items():
+                if main_op_id in plus_op_required_args:
                     # the operation id should be different with plus's
                     return False
-                for plus_required_args in plus_operation_args.values():
+                for plus_required_args in plus_op_required_args.values():
                     if plus_required_args == main_required_args:
                         # the required arguments should be different
                         return False
@@ -342,6 +350,7 @@ class WorkspaceEditor:
             condition = CMDCondition()
             condition.var = f"$Condition_{op_id}"
             condition.operator = CMDConditionAndOperator()
+            condition.operator.operators = []
             for has_arg in sorted(has_args):
                 has_operator = CMDConditionHasValueOperator()
                 has_operator.arg = has_arg
@@ -367,12 +376,15 @@ class WorkspaceEditor:
         plus_op_required_args, plus_op_optional_args = self._parse_operation_url_args(plus_command)
 
         main_cfg_cpy = main_cfg.__class__(main_cfg.to_primitive())  # generate a copy of main cfg
-        main_commands = [*self._iter_commands_by_operations(main_cfg, 'get')]
+        main_commands = [*self._iter_commands_by_operations(main_cfg_cpy, 'get')]
         for main_command in main_commands:
 
             # merge args
-            new_args = set(plus_op_required_args.keys())
-            new_args.update(plus_op_optional_args.keys())
+            new_args = set()
+            for args in plus_op_required_args.values():
+                new_args.update(args)
+            for args in plus_op_optional_args.values():
+                new_args.update(args)
             for arg_group in plus_command.arg_groups:
                 arg_group = self._filter_args_in_arg_group(arg_group, new_args, copy=True)
                 if arg_group:
@@ -387,8 +399,9 @@ class WorkspaceEditor:
             plus_operations = []
             for operation in plus_command.operations:
                 plus_operations.append(operation.__class__(operation.to_primitive()))
+            op_required_args = {**plus_op_required_args, **main_op_required_args}
             main_command.conditions, main_command.operations = self._command_merge_operations(
-                op_required_args={**plus_op_required_args, **main_op_required_args},
+                op_required_args,
                 *plus_operations, *main_command.operations
             )
             for resource in plus_command.resources:

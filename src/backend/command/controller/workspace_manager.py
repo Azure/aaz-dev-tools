@@ -92,7 +92,7 @@ class WorkspaceManager:
                 remove_folders.append(self.get_resource_cfg_folder(resource_id))
                 used_resources.add(resource_id)
             elif isinstance(cfg, CMDConfiguration):
-                cfg.resources = sorted(cfg.resources)
+                cfg.resources = sorted(cfg.resources, key=lambda r: r.id)
                 main_resource = cfg.resources[0]
                 update_files.append((
                     self.get_resource_cfg_path(main_resource.id),
@@ -110,7 +110,7 @@ class WorkspaceManager:
             assert resource_id in used_resources
 
         # verify ws timestamps
-        # TODO: 加写锁
+        # TODO: add write lock for path file
         if os.path.exists(self.path):
             with open(self.path, 'r') as f:
                 data = json.load(f)
@@ -190,14 +190,14 @@ class WorkspaceManager:
         return node
 
     def check_resource_exist(self, resource_id, *root_node_names):
-        for leaf in self.ws.command_tree_leaves(*root_node_names):
+        for leaf in self.iter_command_tree_leaves(*root_node_names):
             for resource in leaf.resources:
                 if resource.id == resource_id:
                     return True
         return False
 
     def add_resource_cfg(self, cfg):
-        cfg.resources = sorted(cfg.resources)
+        cfg.resources = sorted(cfg.resources, key=lambda r: r.id)
         main_resource = cfg.resources[0]
         for resource in cfg.resources[1:]:
             self._modified_cfgs[resource.id] = {
@@ -206,17 +206,29 @@ class WorkspaceManager:
         self._modified_cfgs[main_resource.id] = cfg
 
         # update command tree
-        node_names = cfg.command_group.name.split(" ")
-        node = self.create_command_tree_nodes(*node_names)
-        for command in cfg.command_group.commands:
-            assert command.name not in node.commands
-            node.commands[command.name] = CMDCommandTreeLeaf({
-                "name": command.name,
-                "stage": node.stage,
-                "help": command.help.to_primitive(),
-                "version": command.version.to_primitive(),
-                "resources": [r.to_primitive() for r in command.resources]
-            })
+        groups = [(cfg.command_group.name.split(" "), cfg.command_group)]
+        idx = 0
+        while idx < len(groups):
+            node_names, command_group = groups[idx]
+            assert isinstance(command_group, CMDCommandGroup)
+            node = self.create_command_tree_nodes(*node_names)
+            if command_group.commands:
+                for command in command_group.commands:
+                    if node.commands is None:
+                        node.commands = {}
+                    assert command.name not in node.commands
+                    node.commands[command.name] = CMDCommandTreeLeaf({
+                        "name": command.name,
+                        "stage": node.stage,
+                        "help": command.help.to_primitive(),
+                        "version": command.version,
+                        "resources": [r.to_primitive() for r in command.resources]
+                    })
+
+            if command_group.command_groups:
+                for group in command_group.command_groups:
+                    groups.append(([*node_names, *group.name.split(" ")], group))
+            idx += 1
 
     def remove_resource_cfg(self, cfg):
         for resource in cfg.resources:
