@@ -4,7 +4,7 @@ import os
 import shutil
 from datetime import datetime
 
-from command.model.configuration import CMDConfiguration, CMDCommandGroup
+from command.model.configuration import CMDConfiguration, CMDCommandGroup, CMDHelp
 from command.model.editor import CMDEditorWorkspace, CMDCommandTreeNode, CMDCommandTreeLeaf
 from utils import exceptions
 from utils.base64 import b64encode_str
@@ -182,12 +182,24 @@ class WorkspaceManager:
                 if not node.command_groups:
                     node.command_groups = {}
                 node.command_groups[name] = CMDCommandTreeNode({
-                    "name": name,
+                    "name": " ".join(node_names[:idx+1]),
                     "stage": node.stage,
                 })
             node = node.command_groups[name]
             idx += 1
         return node
+
+    def delete_command_tree_node(self, *node_names):
+        for _ in self.iter_command_tree_nodes(*node_names):
+            raise exceptions.ResourceConflict("Cannot delete command group with commands")
+        parent = self.find_command_tree_node(*node_names[:-1])
+        name = node_names[-1]
+        if not parent or not parent.command_groups or name not in parent.command_groups:
+            return False
+        del parent.command_groups[name]
+        if not parent.command_groups:
+            parent.command_groups = None
+        return True
 
     def check_resource_exist(self, resource_id, *root_node_names):
         for leaf in self.iter_command_tree_leaves(*root_node_names):
@@ -218,7 +230,7 @@ class WorkspaceManager:
                         node.commands = {}
                     assert command.name not in node.commands
                     node.commands[command.name] = CMDCommandTreeLeaf({
-                        "name": command.name,
+                        "name": f'{node.name} {command.name}',
                         "stage": node.stage,
                         "help": command.help.to_primitive(),
                         "version": command.version,
@@ -287,3 +299,68 @@ class WorkspaceManager:
 
     def load_command_cfg(self, cmd):
         return self.load_resource_cfg(cmd.resources[0].id, cmd.resources[0].version)
+
+    def find_command_in_cfg(self, cfg, command_name):
+        assert isinstance(cfg, CMDConfiguration)
+        name = command_name
+        prefix = cfg.command_group.name + " "
+        if not name.startswith(prefix):
+            return None
+
+        name = name[len(prefix):]
+        command_group = cfg.command_group
+        while " " in name:
+            if not command_group.command_groups:
+                return None
+            find = False
+            for sub_group in command_group.command_groups:
+                prefix = sub_group.name + " "
+                if name.startswith(prefix):
+                    name = name[len(prefix):]
+                    command_group = sub_group
+                    find = True
+            if not find:
+                return None
+        for command in command_group.commands:
+            if command.name == name:
+                return command
+        return None
+
+    def update_command_tree_node_help(self, node, help):
+        if isinstance(help, CMDHelp):
+            help = help.to_primitive()
+        else:
+            assert isinstance(help, dict)
+        node.help = CMDHelp(help)
+
+    def update_command_tree_node_stage(self, node, stage):
+        if node.stage == stage:
+            return
+        node.stage = stage
+        if node.command_groups:
+            for sub_node in node.command_groups.values():
+                self.update_command_tree_node_stage(sub_node, stage)
+        if node.commands:
+            for leaf in node.commands.values():
+                self.update_command_tree_leaf_stage(leaf, stage)
+
+    def update_command_tree_leaf_stage(self, leaf, stage):
+        if leaf.stage == stage:
+            return
+        cfg = self.load_command_cfg(leaf)
+
+        command = self.find_command_in_cfg(cfg, leaf.name)
+        if command is None:
+            raise exceptions.ResourceConflict(f"Cannot find definition for command '{leaf.name}'")
+        leaf.stage = stage
+        command.stage = stage
+
+        # update cfg into modified cfg
+        cfg.resources = sorted(cfg.resources, key=lambda r: r.id)
+        main_resource = cfg.resources[0]
+        for resource in cfg.resources[1:]:
+            self._modified_cfgs[resource.id] = {
+                "$ref": main_resource.id
+            }
+        self._modified_cfgs[main_resource.id] = cfg
+

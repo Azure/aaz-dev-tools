@@ -6,7 +6,7 @@ from utils.fields import PlaneField
 
 
 class CMDCommandTreeLeaf(Model):
-    name = CMDCommandNameField(required=True)
+    name = CMDCommandNameField(required=True)   # full name of a command
     stage = CMDStageField()
     version = CMDVersionField(required=True)
 
@@ -18,7 +18,7 @@ class CMDCommandTreeLeaf(Model):
 
 
 class CMDCommandTreeNode(Model):
-    name = CMDCommandNameField(required=True)
+    name = CMDCommandNameField(required=True)   # full name of a command group
     stage = CMDStageField()
 
     help = ModelType(CMDHelp)

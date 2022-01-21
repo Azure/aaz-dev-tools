@@ -69,7 +69,7 @@ def editor_workspace_generate(name):
 
 
 # command tree operations
-@bp.route("/Workspace/<name>/CommandTree/Nodes/<path:command_group>", methods=("GET", "PUT", "DELETE"))
+@bp.route("/Workspace/<name>/CommandTree/Nodes/<path:command_group>", methods=("GET", "PATCH", "DELETE"))
 def editor_workspace_command_tree_node(name, command_group):
     root_node_names = command_group.split('/')
     if root_node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
@@ -78,10 +78,30 @@ def editor_workspace_command_tree_node(name, command_group):
 
     manager = WorkspaceManager(name)
     manager.load()
-    if not manager.find_command_tree_node(*root_node_names):
+    node = manager.find_command_tree_node(*root_node_names)
+    if not node:
         raise exceptions.ResourceNotFind("Command group not exist")
 
-    raise NotImplementedError()
+    if request.method == "GET":
+        result = node.to_primitive()
+    elif request.method == "PATCH":
+        data = request.get_json()
+        if 'help' in data:
+            manager.update_command_tree_node_help(*root_node_names, help=data['help'])
+        if 'stage' in data and node.stage != data['stage']:
+            manager.update_command_tree_node_stage(node, data['stage'])
+        manager.save()
+        result = node.to_primitive()
+    elif request.method == "DELETE":
+        if len(root_node_names) < 1:
+            raise exceptions.InvalidAPIUsage("Not support to delete command tree root")
+        if manager.delete_command_tree_node(*root_node_names):
+            return '', 200
+        else:
+            return '', 204  # resource not found
+    else:
+        raise NotImplementedError()
+    return result
 
 
 @bp.route("/Workspace/<name>/CommandTree/Nodes/<path:command_group>/Rename", methods=("POST",))
