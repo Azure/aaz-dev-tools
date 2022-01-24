@@ -1,5 +1,5 @@
 from command.controller.workspace_manager import WorkspaceManager
-from command.controller.workspace_editor import WorkspaceEditor
+from command.controller.workspace_cfg_editor import WorkspaceCfgEditor
 from command.tests.common import CommandTestCase
 from utils.plane import PlaneEnum
 import os
@@ -57,8 +57,7 @@ class WorkspaceEditorTest(CommandTestCase):
 
         mod_names = "edgeorder"
 
-        editor = WorkspaceEditor(manager)
-        editor.add_resources_by_swagger(
+        manager.add_new_resources_by_swagger(
             mod_names=mod_names,
             version='2021-12-01',
             resource_ids=[

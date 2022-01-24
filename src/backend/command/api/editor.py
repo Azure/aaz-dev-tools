@@ -2,7 +2,6 @@ import os
 
 from flask import Blueprint, jsonify, request, url_for
 
-from command.controller.workspace_editor import WorkspaceEditor
 from command.controller.workspace_manager import WorkspaceManager
 from utils import exceptions
 
@@ -194,16 +193,14 @@ def editor_workspace_swagger_resources(name, command_group):
     except KeyError:
         raise exceptions.InvalidAPIUsage("Invalid request")
 
-    editor = WorkspaceEditor(manager=manager)
-
-    editor.add_resources_by_swagger(
+    manager.add_new_resources_by_swagger(
         mod_names=mod_names,
         version=version,
         resource_ids=resource_ids,
         *root_node_names
     )
     manager.save()
-    return "Success"
+    return "", 200
 
 
 @bp.route("/Workspace/<name>/Resources", methods=("GET",))

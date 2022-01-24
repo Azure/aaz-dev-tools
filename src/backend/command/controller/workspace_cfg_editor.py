@@ -48,7 +48,7 @@ class WorkspaceCfgEditor:
         return self.cfg.resources
 
     def iter_cfg_files_data(self):
-        main_resource = self.cfg.resource[0]
+        main_resource = self.cfg.resources[0]
         data = None if self.deleted else json.dumps(self.cfg.to_primitive(), ensure_ascii=False)
         yield main_resource.id, data
         for resource in self.cfg.resources[1:]:
@@ -322,7 +322,7 @@ class WorkspaceCfgEditor:
         return operation_required_args, operation_optional_args
 
     def _can_merge(self, plus_cfg_editor):
-        if len([*plus_cfg_editor.iter_commands]) != 1:
+        if len([*plus_cfg_editor.iter_commands()]) != 1:
             return False
         plus_commands = [command for _, command in plus_cfg_editor.iter_commands_by_operations('get')]
         if len(plus_commands) != 1:

@@ -99,7 +99,7 @@ class WorkspaceManager:
         for resource_id, cfg_editor in self._cfg_editors.items():
             if resource_id in used_resources:
                 continue
-            for r_id, data in cfg_editor.iter_cfg_files():
+            for r_id, data in cfg_editor.iter_cfg_files_data():
                 assert r_id not in used_resources
                 if data is None:
                     remove_folders.append(WorkspaceCfgEditor.get_cfg_folder(self.folder, r_id))
