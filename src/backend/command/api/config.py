@@ -68,7 +68,7 @@ def generate_config(config_path, module, resource_id, version):
     model = CMDConfiguration({
         "plane": PlaneEnum.Mgmt,
         "resources": [resource.to_cmd()],
-        "command_group": command_group
+        "commandGroups": [command_group],
     })
     with open(config_path, "w") as fp:
         fp.write(XMLSerializer(model).to_xml())

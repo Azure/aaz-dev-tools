@@ -11,16 +11,11 @@ class CMDConfiguration(Model):
     plane = PlaneField(required=True)
 
     resources = ListType(ModelType(CMDResource), min_size=1, required=True)  # resources contained in configuration file
-    command_group = ModelType(
-        CMDCommandGroup,
+    command_groups = ListType(
+        ModelType(CMDCommandGroup),
         serialized_name='commandGroups',
         deserialize_from='commandGroups',
     )
 
     class Options:
         serialize_when_none = False
-
-    def iter_commands(self):
-        if self.command_group:
-            for command in self.command_group.iter_commands():
-                yield command

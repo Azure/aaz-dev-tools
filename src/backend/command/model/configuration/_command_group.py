@@ -9,10 +9,10 @@ from ._help import CMDHelp
 class CMDCommandGroup(Model):
     # properties as tags
     name = CMDCommandGroupNameField(required=True)
-    stage = CMDStageField()
+    # stage = CMDStageField()
 
     # properties as nodes
-    help = ModelType(CMDHelp, required=True)
+    # help = ModelType(CMDHelp, required=True)
     commands = ListType(ModelType(CMDCommand))  # sub commands
     command_groups = ListType(
         ModelType("CMDCommandGroup"),
@@ -23,11 +23,3 @@ class CMDCommandGroup(Model):
     class Options:
         serialize_when_none = False
 
-    def iter_commands(self):
-        if self.commands:
-            for command in self.commands:
-                yield command
-        if self.command_groups:
-            for group in self.command_groups:
-                for command in group.iter_commands():
-                    yield command

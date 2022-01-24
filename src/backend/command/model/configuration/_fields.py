@@ -106,13 +106,17 @@ class CMDResourceIdField(StringType):
 class CMDCommandNameField(StringType):
 
     def __init__(self, *args, **kwargs):
-        super(CMDCommandNameField, self).__init__(min_length=1, *args, **kwargs)
+        super(CMDCommandNameField, self).__init__(
+            regex=r'^[a-z0-9]+(-[a-z0-9]+)*$',
+            min_length=1, *args, **kwargs)
 
 
 class CMDCommandGroupNameField(StringType):
 
     def __init__(self, *args, **kwargs):
-        super(CMDCommandGroupNameField, self).__init__(min_length=1, *args, **kwargs)
+        super(CMDCommandGroupNameField, self).__init__(
+            regex=r'^[a-z0-9]+(-[a-z0-9]+)*( [a-z0-9]+(-[a-z0-9]+)*)*$',
+            min_length=1, *args, **kwargs)
 
 
 class CMDURLPathField(StringType):

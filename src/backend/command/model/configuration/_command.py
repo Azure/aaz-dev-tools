@@ -31,9 +31,3 @@ class CMDCommand(Model):
     class Options:
         serialize_when_none = False
 
-    # def iter_args(self):
-    #     if self.arg_groups:
-    #         for arg_group in self.arg_groups:
-    #             for arg in arg_group.iter_args():
-    #                 yield arg
-

@@ -80,8 +80,8 @@ class WorkspaceEditorTest(CommandTestCase):
         assert 'delete' in address_cg.commands
         assert 'update' in address_cg.commands
 
-        assert manager.load_command_cfg(address_cg.commands['list'])
-        assert manager.load_command_cfg(address_cg.commands['create'])
-        assert manager.load_command_cfg(address_cg.commands['show'])
-        assert manager.load_command_cfg(address_cg.commands['delete'])
-        assert manager.load_command_cfg(address_cg.commands['update'])
+        assert manager.load_cfg_editor_by_command(address_cg.commands['list'])
+        assert manager.load_cfg_editor_by_command(address_cg.commands['create'])
+        assert manager.load_cfg_editor_by_command(address_cg.commands['show'])
+        assert manager.load_cfg_editor_by_command(address_cg.commands['delete'])
+        assert manager.load_cfg_editor_by_command(address_cg.commands['update'])

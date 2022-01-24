@@ -4,11 +4,15 @@ import os
 import shutil
 from datetime import datetime
 
-from command.model.configuration import CMDConfiguration, CMDCommandGroup, CMDHelp
+from command.model.configuration import CMDConfiguration, CMDHelp
 from command.model.editor import CMDEditorWorkspace, CMDCommandTreeNode, CMDCommandTreeLeaf
 from utils import exceptions
-from utils.base64 import b64encode_str
 from utils.config import Config
+from .workspace_cfg_editor import WorkspaceCfgEditor
+from swagger.controller.command_generator import CommandGenerator
+from swagger.controller.specs_manager import SwaggerSpecsManager
+from .specs_manager import AAZSpecsManager
+
 
 logger = logging.getLogger('backend')
 
@@ -44,7 +48,7 @@ class WorkspaceManager:
             "plane": plane,
             "version": datetime.utcnow(),
             "commandTree": {
-                "name": cls.COMMAND_TREE_ROOT_NAME,
+                "names": [cls.COMMAND_TREE_ROOT_NAME],
             }
         })
         return manager
@@ -60,7 +64,11 @@ class WorkspaceManager:
         self.path = os.path.join(self.folder, 'ws.json')
 
         self.ws = None
-        self._modified_cfgs = {}
+        self._cfg_editors = {}
+
+        self.swagger_specs = SwaggerSpecsManager()
+        self.swagger_command_generator = CommandGenerator()
+        self.aaz_specs = AAZSpecsManager()
 
     def load(self):
         # TODO: handle exception
@@ -69,7 +77,8 @@ class WorkspaceManager:
         with open(self.path, 'r') as f:
             data = json.load(f)
             self.ws = CMDEditorWorkspace(raw_data=data)
-        self._modified_cfgs = {}
+
+        self._cfg_editors = {}
 
     def delete(self):
         if os.path.exists(self.path):
@@ -83,31 +92,21 @@ class WorkspaceManager:
     def save(self):
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
-        update_files = []
+
         remove_folders = []
+        update_files = []
         used_resources = set()
-        for resource_id, cfg in self._modified_cfgs.items():
-            if cfg is None:
-                assert resource_id not in used_resources
-                remove_folders.append(self.get_resource_cfg_folder(resource_id))
-                used_resources.add(resource_id)
-            elif isinstance(cfg, CMDConfiguration):
-                cfg.resources = sorted(cfg.resources, key=lambda r: r.id)
-                main_resource = cfg.resources[0]
-                update_files.append((
-                    self.get_resource_cfg_path(main_resource.id),
-                    json.dumps(cfg.to_primitive(), ensure_ascii=False)))
-                assert main_resource.id not in used_resources
-                used_resources.add(main_resource.id)
-                for resource in cfg.resources[1:]:
-                    assert resource.version == main_resource.version
-                    update_files.append((
-                        self.get_resource_cfg_path(resource.id),
-                        json.dumps({"$ref": main_resource.id}, ensure_ascii=False)))
-                    assert resource.id not in used_resources
-                    used_resources.add(resource.id)
-        for resource_id in self._modified_cfgs:
-            assert resource_id in used_resources
+        for resource_id, cfg_editor in self._cfg_editors.items():
+            if resource_id in used_resources:
+                continue
+            for r_id, data in cfg_editor.iter_cfg_files():
+                assert r_id not in used_resources
+                if data is None:
+                    remove_folders.append(WorkspaceCfgEditor.get_cfg_folder(self.folder, r_id))
+                else:
+                    update_files.append((WorkspaceCfgEditor.get_cfg_path(self.folder, r_id), data))
+                used_resources.add(r_id)
+        assert set(self._cfg_editors.keys()) == used_resources
 
         # verify ws timestamps
         # TODO: add write lock for path file
@@ -131,7 +130,7 @@ class WorkspaceManager:
             with open(file_name, 'w') as f:
                 f.write(data)
 
-        self._modified_cfgs = {}
+        self._cfg_editors = {}
 
     def find_command_tree_node(self, *node_names):
         node = self.ws.command_tree
@@ -182,7 +181,7 @@ class WorkspaceManager:
                 if not node.command_groups:
                     node.command_groups = {}
                 node.command_groups[name] = CMDCommandTreeNode({
-                    "name": " ".join(node_names[:idx+1]),
+                    "names": node_names[:idx+1],
                     "stage": node.stage,
                 })
             node = node.command_groups[name]
@@ -208,159 +207,320 @@ class WorkspaceManager:
                     return True
         return False
 
-    def add_resource_cfg(self, cfg):
-        cfg.resources = sorted(cfg.resources, key=lambda r: r.id)
-        main_resource = cfg.resources[0]
-        for resource in cfg.resources[1:]:
-            self._modified_cfgs[resource.id] = {
-                "$ref": main_resource.id
-            }
-        self._modified_cfgs[main_resource.id] = cfg
+    def add_cfg(self, cfg_editor):
+        cfg_editor.deleted = False
+        for resource in cfg_editor.resources:
+            self._cfg_editors[resource.id] = cfg_editor
 
         # update command tree
-        groups = [(cfg.command_group.name.split(" "), cfg.command_group)]
-        idx = 0
-        while idx < len(groups):
-            node_names, command_group = groups[idx]
-            assert isinstance(command_group, CMDCommandGroup)
-            node = self.create_command_tree_nodes(*node_names)
-            if command_group.commands:
-                for command in command_group.commands:
-                    if node.commands is None:
-                        node.commands = {}
-                    assert command.name not in node.commands
-                    node.commands[command.name] = CMDCommandTreeLeaf({
-                        "name": f'{node.name} {command.name}',
-                        "stage": node.stage,
-                        "help": command.help.to_primitive(),
-                        "version": command.version,
-                        "resources": [r.to_primitive() for r in command.resources]
-                    })
+        for cmd_names, command in cfg_editor.iter_commands():
+            node = self.create_command_tree_nodes(*cmd_names[:-1])
+            name = cmd_names[-1]
+            if node.commands is None:
+                node.commands = {}
+            assert name not in node.commands
+            if node.command_groups:
+                assert name not in node.command_groups
+            node.commands[name] = CMDCommandTreeLeaf({
+                "names": [*node.names, name],
+                "stage": command.stage,
+                "help": command.help.to_primitive(),
+                "version": command.version,
+                "resources": [r.to_primitive() for r in command.resources]
+            })
 
-            if command_group.command_groups:
-                for group in command_group.command_groups:
-                    groups.append(([*node_names, *group.name.split(" ")], group))
-            idx += 1
-
-    def remove_resource_cfg(self, cfg):
-        for resource in cfg.resources:
-            self._modified_cfgs[resource.id] = None
+    def remove_cfg(self, cfg_editor):
+        cfg_editor.deleted = True
+        for resource in cfg_editor.resources:
+            self._cfg_editors[resource.id] = cfg_editor
 
         # update command tree
-        groups = [(cfg.command_group.name.split(" "), cfg.command_group)]
-        idx = 0
-        while idx < len(groups):
-            node_names, command_group = groups[idx]
-            assert isinstance(command_group, CMDCommandGroup)
-            node = self.find_command_tree_node(*node_names)
-            if command_group.commands:
-                for command in command_group.commands:
-                    if command.name in node.commands:
-                        del node.commands[command.name]
+        for cmd_names, _ in cfg_editor.iter_commands():
+            node = self.find_command_tree_node(*cmd_names[:-1])
+            name = cmd_names[-1]
+            if node and node.commands and name in node.commands:
+                del node.commands[name]
 
-            if command_group.command_groups:
-                for group in command_group.command_groups:
-                    groups.append(([*node_names, *group.name.split(" ")], group))
-
-            idx += 1
-
-    def get_resource_cfg_folder(self, resource_id):
-        return os.path.join(self.folder, "Resources", b64encode_str(resource_id))
-
-    def get_resource_cfg_path(self, resource_id):
-        return os.path.join(self.get_resource_cfg_folder(resource_id), f"cfg.json")
-
-    def load_resource_cfg(self, resource_id, version):
-        if resource_id in self._modified_cfgs:
+    def load_cfg_editor_by_resource(self, resource_id, version):
+        if resource_id in self._cfg_editors:
             # load from modified dict
-            return self._modified_cfgs[resource_id]
-
-        path = self.get_resource_cfg_path(resource_id)
+            return self._cfg_editors[resource_id]
         try:
-            with open(path, 'r') as f:
-                data = json.load(f)
-            if '$ref' in data:
-                ref_resource_id = data['$ref']
-                if ref_resource_id in self._modified_cfgs:
-                    # load from modified dict
-                    return self._modified_cfgs[ref_resource_id]
-                path = self.get_resource_cfg_path(ref_resource_id)
-                with open(path, 'r') as f:
-                    data = json.load(f)
-            cfg = CMDConfiguration(data)
-            for resource in cfg.resources:
-                if resource.id == resource_id and resource.version != version:
-                    raise ValueError(
-                        f"Resource version not match error: {resource_id} : {version} != {resource.version}")
-            return cfg
+            cfg_editor = WorkspaceCfgEditor.load_resource(self.folder, resource_id, version)
+            for resource in cfg_editor.resources:
+                self._cfg_editors[resource.id] = cfg_editor
+            return cfg_editor
         except Exception as e:
             logger.error(f"load workspace resource cfg failed: {e}: {self.name} {resource_id} {version}")
             return None
 
-    def load_command_cfg(self, cmd):
-        return self.load_resource_cfg(cmd.resources[0].id, cmd.resources[0].version)
+    def load_cfg_editor_by_command(self, cmd):
+        return self.load_cfg_editor_by_resource(cmd.resources[0].id, cmd.resources[0].version)
 
-    def find_command_in_cfg(self, cfg, command_name):
-        assert isinstance(cfg, CMDConfiguration)
-        name = command_name
-        prefix = cfg.command_group.name + " "
-        if not name.startswith(prefix):
-            return None
+    def update_command_tree_node_help(self, *node_names, help):
+        node = self.find_command_tree_node(*node_names)
+        if not node:
+            raise exceptions.ResourceNotFind(f"Command Tree Node not found: '{' '.join(node_names)}'")
 
-        name = name[len(prefix):]
-        command_group = cfg.command_group
-        while " " in name:
-            if not command_group.command_groups:
-                return None
-            find = False
-            for sub_group in command_group.command_groups:
-                prefix = sub_group.name + " "
-                if name.startswith(prefix):
-                    name = name[len(prefix):]
-                    command_group = sub_group
-                    find = True
-            if not find:
-                return None
-        for command in command_group.commands:
-            if command.name == name:
-                return command
-        return None
-
-    def update_command_tree_node_help(self, node, help):
         if isinstance(help, CMDHelp):
             help = help.to_primitive()
         else:
             assert isinstance(help, dict)
         node.help = CMDHelp(help)
+        return node
 
-    def update_command_tree_node_stage(self, node, stage):
+    def update_command_tree_node_stage(self, *node_names, stage):
+        node = self.find_command_tree_node(*node_names)
+        if not node:
+            raise exceptions.ResourceNotFind(f"Command Tree Node not found: '{' '.join(node_names)}'")
+
         if node.stage == stage:
             return
         node.stage = stage
-        if node.command_groups:
-            for sub_node in node.command_groups.values():
-                self.update_command_tree_node_stage(sub_node, stage)
-        if node.commands:
-            for leaf in node.commands.values():
-                self.update_command_tree_leaf_stage(leaf, stage)
 
-    def update_command_tree_leaf_stage(self, leaf, stage):
+        if node.command_groups:
+            for sub_node_name in node.command_groups:
+                self.update_command_tree_node_stage(*node_names, sub_node_name, stage=stage)
+
+        if node.commands:
+            for leaf_name in node.commands:
+                self.update_command_tree_leaf_stage(*node_names, leaf_name, stage=stage)
+
+    def update_command_tree_leaf_stage(self, *leaf_names, stage):
+        leaf = self.find_command_tree_leaf(*leaf_names)
+        if not leaf:
+            raise exceptions.ResourceNotFind(f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
+
         if leaf.stage == stage:
             return
-        cfg = self.load_command_cfg(leaf)
-
-        command = self.find_command_in_cfg(cfg, leaf.name)
-        if command is None:
-            raise exceptions.ResourceConflict(f"Cannot find definition for command '{leaf.name}'")
         leaf.stage = stage
-        command.stage = stage
 
-        # update cfg into modified cfg
-        cfg.resources = sorted(cfg.resources, key=lambda r: r.id)
-        main_resource = cfg.resources[0]
-        for resource in cfg.resources[1:]:
-            self._modified_cfgs[resource.id] = {
-                "$ref": main_resource.id
-            }
-        self._modified_cfgs[main_resource.id] = cfg
+        cfg_editor = self.load_cfg_editor_by_command(leaf)
+        cfg_editor.update_command_stage(*leaf.names, stage=stage)
+        return leaf
 
+    def rename_command_tree_node(self, *node_names, new_node_names):
+        new_name = ' '.join(new_node_names)
+        if not new_name:
+            raise exceptions.InvalidAPIUsage(f"Invalid new command name: {new_name}")
+
+        node = self.find_command_tree_node(*node_names)
+        if not node:
+            raise exceptions.ResourceNotFind(f"Command Tree Node not found: '{' '.join(node_names)}'")
+
+        if node.names == new_node_names:
+            return
+
+        parent = self.find_command_tree_node(*node.names[:-1])
+        name = node.names[-1]
+        if not parent or not parent.command_groups or name not in parent.command_groups or \
+                node != parent.command_groups[name]:
+            raise exceptions.ResourceConflict(f"Command Tree node not exist: '{' '.join(node.names)}'")
+
+        self._pop_command_tree_node(parent, name)
+
+        parent = self.create_command_tree_nodes(*new_node_names[:-1])
+        return self._add_command_tree_node(parent, node, new_node_names[-1])
+
+    def rename_command_tree_leaf(self, *leaf_names, new_leaf_names):
+        new_name = ' '.join(new_leaf_names)
+        if not new_name:
+            raise exceptions.InvalidAPIUsage(f"Invalid new command name: {new_name}")
+
+        leaf = self.find_command_tree_leaf(*leaf_names)
+        if not leaf:
+            raise exceptions.ResourceNotFind(f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
+
+        if leaf.names == new_leaf_names:
+            return
+
+        parent = self.find_command_tree_node(*leaf.names[:-1])
+        name = leaf.names[-1]
+        if not parent or not parent.commands or name not in parent.commands or leaf != parent.commands[name]:
+            raise exceptions.ResourceConflict(f"Command Tree leaf not exist: '{' '.join(leaf.names)}")
+
+        self._pop_command_tree_leaf(parent, name)
+
+        parent = self.create_command_tree_nodes(*new_leaf_names[:-1])
+        return self._add_command_tree_leaf(parent, leaf, new_leaf_names[-1])
+
+    def generate_unique_name(self, *node_names, name):
+        node = self.find_command_tree_node(*node_names)
+        if not node:
+            raise exceptions.ResourceConflict(f"Command Tree node not exist: '{' '.join(node_names)}'")
+        if (not node.commands or name not in node.commands) and (not node.command_groups or name not in node.command_groups):
+            return name
+        idx = 1
+        new_name = f"{name}-untitled{idx}"
+        while node.commands and new_name in node.commands or node.command_groups and new_name in node.command_groups:
+            idx += 1
+            new_name = f"{name}-untitled{idx}"
+        return new_name
+
+    def add_new_resources_by_swagger(self, mod_names, version, resource_ids, *root_node_names):
+        root_node = self.find_command_tree_node(*root_node_names)
+        if not root_node:
+            raise exceptions.InvalidAPIUsage(f"Command Group not exist: '{' '.join(root_node_names)}'")
+
+        swagger_resources = []
+        used_resource_ids = set()
+        for resource_id in resource_ids:
+            if resource_id in used_resource_ids:
+                continue
+            if self.check_resource_exist(resource_id):
+                raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {resource_id}")
+            swagger_resources.append(self.swagger_specs.get_resource_in_version(
+                self.ws.plane, mod_names, resource_id, version))
+            used_resource_ids.update(resource_id)
+
+        self.swagger_command_generator.load_resources(swagger_resources)
+
+        cfg_editors = []
+        for resource in swagger_resources:
+            cfg = CMDConfiguration()
+            cfg.plane = self.ws.plane
+            cfg.resources = [resource.to_cmd()]
+            command_group = self.swagger_command_generator.create_draft_command_group(resource)
+            cfg.command_groups = [command_group]
+            assert not command_group.command_groups, "The logic to support sub command groups is not supported"
+            cfg_editors.append(WorkspaceCfgEditor(cfg))
+
+        if len(root_node_names) > 0:
+            cg_names = self._calculate_cfgs_common_command_group(cfg_editors, *root_node_names)
+            for cfg_editor in cfg_editors:
+                cfg_editor.rename_command_group(*cg_names, new_cg_names=root_node_names)
+
+        for cfg_editor in cfg_editors:
+            merged = False
+            for cmd_names, command in cfg_editor.iter_commands():
+                cur_cmd = self.find_command_tree_leaf(*cmd_names)
+                if cur_cmd is None:
+                    continue
+                if cur_cmd.version == command.version:
+                    cur_cfg_editor = self.load_cfg_editor_by_command(cur_cmd)
+                    merged_cfg_editor = cur_cfg_editor.merge(cfg_editor)
+                    if merged_cfg_editor:
+                        self.remove_cfg(cur_cfg_editor)
+                        self.add_cfg(merged_cfg_editor)
+                        merged = True
+                        break
+                new_name = self.generate_unique_name(*cmd_names[:-1], name=cmd_names[-1])
+                cfg_editor.rename_command(*cmd_names, new_cmd_names=[*cmd_names[:-1], new_name])
+            if not merged:
+                self.add_cfg(cfg_editor)
+
+    def _calculate_cfgs_common_command_group(self, cfg_editors, *node_names):
+        # calculate common cg name prefix
+        groups_names = []
+        for cfg_editor in cfg_editors:
+            for group in cfg_editor.cfg.command_groups:
+                cg_names = group.name.split(" ")
+                groups_names.append(cg_names)
+
+        root_node = self.find_command_tree_node(*node_names)
+        if len(node_names):
+            # should also include the existing commands
+            for leaf in (root_node.commands or []):
+                for leaf_resource in leaf.resources:
+                    # cannot find match resource of resource_id with current mod_names and version
+                    cg_names = self.swagger_command_generator.generate_command_group_name_by_resource(
+                        resource_path=leaf_resource.swagger_path, rp_name=leaf_resource.rp_name)
+                    cg_names = cg_names.split(" ")
+                    groups_names.append(cg_names)
+
+        common_prefix = groups_names[0]
+        for names in groups_names[1:]:
+            if len(names) < len(common_prefix):
+                common_prefix = common_prefix[:len(names)]
+            for i, k in enumerate(names):
+                if i >= len(common_prefix):
+                    break
+                if common_prefix[i] != k:
+                    common_prefix = common_prefix[:i]
+                    break
+        return common_prefix
+
+    def add_new_resources_by_aaz(self, version, resource_ids):
+        used_resource_ids = set()
+        for resource_id in resource_ids:
+            if resource_id in used_resource_ids:
+                continue
+            if self.check_resource_exist(resource_id):
+                raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {resource_id}")
+            used_resource_ids.update(resource_id)
+        raise NotImplementedError()
+
+    def remove_resources(self):
+        raise NotImplementedError()
+
+    def merge_resources(self):
+        raise NotImplementedError()
+
+    @staticmethod
+    def _pop_command_tree_node(parent, name):
+        if not parent.command_groups or name not in parent.command_groups:
+            raise IndexError(f"Command Tree node '{' '.join(parent.names)}' don't contain '{name}' sub node")
+        return parent.command_groups.pop(name)
+
+    @staticmethod
+    def _pop_command_tree_leaf(parent, name):
+        if not parent.commands or name not in parent.commands:
+            raise IndexError(f"Command Tree node '{' '.join(parent.names)}' don't contain '{name}' leaf")
+        return parent.commands.pop(name)
+
+    def _add_command_tree_node(self, parent, node, name):
+
+        command_groups = node.command_groups
+        commands = node.commands
+
+        node.command_groups = None
+        node.commands = None
+
+        # when it's conflict with command name, generate a unique name
+        if parent.commands and name in parent.commands:
+            new_name = self.generate_unique_name(*parent.names, name=name)
+            logger.warning(f"Command Group name conflict with Command name: '{' '.join([*parent.names, name])}' : "
+                           f"Use '{' '.join([*parent.names, new_name])}' instead")
+            name = new_name
+
+        if not parent.command_groups or name not in parent.command_groups:
+            if not parent.command_groups:
+                parent.command_groups = {}
+            parent.command_groups[name] = node
+            node.names = [*parent.names, name]
+        else:
+            # merge with existing command group
+            node = parent.command_groups[name]
+
+        # add sub node and sub leaf
+        for sub_name, sub_node in command_groups.items():
+            self._add_command_tree_node(node, sub_node, sub_name)
+        for sub_name, sub_leaf in commands.items():
+            self._add_command_tree_leaf(node, sub_leaf, sub_name)
+        return node
+
+    def _add_command_tree_leaf(self, parent, leaf, name):
+        cfg_editor = self.load_cfg_editor_by_command(leaf)
+
+        # when it's conflict with command group name, generate a unique name
+        if parent.command_groups and name in parent.command_groups:
+            new_name = self.generate_unique_name(*parent.names, name=name)
+            logger.warning(f"Command name conflict with Command Group name: '{' '.join([*parent.names, name])}' : "
+                           f"Use '{' '.join([*parent.names, new_name])}' instead")
+            name = new_name
+
+        if parent.commands and name in parent.commands:
+            assert leaf != parent.commands[name]
+            new_name = self.generate_unique_name(*parent.names, name=name)
+            logger.warning(f"Command name conflict with another Command's: '{' '.join([*parent.names, name])}' : "
+                           f"Use '{' '.join([*parent.names, new_name])}' instead")
+            name = new_name
+
+        if not parent.commands:
+            parent.commands = {}
+        assert name not in parent.commands
+        parent.commands[name] = leaf
+        old_names = leaf.names
+        leaf.names = [*parent.names, name]
+        cfg_editor.rename_command(*old_names, new_cmd_names=leaf)
+        return leaf

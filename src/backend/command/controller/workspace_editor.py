@@ -56,8 +56,9 @@ class WorkspaceEditor:
             cfg = CMDConfiguration()
             cfg.plane = self.manager.ws.plane
             cfg.resources = [resource.to_cmd()]
-            cfg.command_group = self.swagger_command_generator.create_draft_command_group(resource)
-            assert not cfg.command_group.command_groups, "The logic to support sub command groups is not supported"
+            command_group = self.swagger_command_generator.create_draft_command_group(resource)
+            cfg.command_groups = [command_group]
+            assert not command_group.command_groups, "The logic to support sub command groups is not supported"
             cfgs.append(cfg)
 
         if len(root_node_names) > 0:
