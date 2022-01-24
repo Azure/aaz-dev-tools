@@ -397,10 +397,10 @@ class WorkspaceManager:
                 if cur_cmd is None:
                     continue
                 if cur_cmd.version == command.version:
-                    cur_cfg_editor = self.load_cfg_editor_by_command(cur_cmd)
-                    merged_cfg_editor = cur_cfg_editor.merge(cfg_editor)
+                    main_cfg_editor = self.load_cfg_editor_by_command(cur_cmd)
+                    merged_cfg_editor = main_cfg_editor.merge(cfg_editor)
                     if merged_cfg_editor:
-                        self.remove_cfg(cur_cfg_editor)
+                        self.remove_cfg(main_cfg_editor)
                         self.add_cfg(merged_cfg_editor)
                         merged = True
                         break
@@ -461,11 +461,22 @@ class WorkspaceManager:
         resources = sorted(resources, key=lambda r: r.id)
         return resources
 
-    def remove_resources(self):
-        raise NotImplementedError()
+    def remove_resource(self, resource_id, version):
+        cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
+        if not cfg_editor:
+            return False
+        self.remove_cfg(cfg_editor)
+        return True
 
-    def merge_resources(self):
-        raise NotImplementedError()
+    def merge_resources(self, main_resource_id, main_resource_version, plus_resource_id, plus_resource_version):
+        main_cfg_editor = self.load_cfg_editor_by_resource(main_resource_id, main_resource_version)
+        plus_cfg_editor = self.load_cfg_editor_by_resource(plus_resource_id, plus_resource_version)
+        merged_cfg_editor = main_cfg_editor.merge(plus_cfg_editor)
+        if merged_cfg_editor:
+            self.remove_cfg(main_cfg_editor)
+            self.add_cfg(merged_cfg_editor)
+            return True
+        return False
 
     @staticmethod
     def _pop_command_tree_node(parent, name):

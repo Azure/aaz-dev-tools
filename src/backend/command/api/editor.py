@@ -3,6 +3,7 @@ import os
 from flask import Blueprint, jsonify, request, url_for
 
 from command.controller.workspace_manager import WorkspaceManager
+from command.model.configuration import CMDResource
 from utils import exceptions
 
 bp = Blueprint('editor', __name__, url_prefix='/AAZ/Editor')
@@ -225,16 +226,31 @@ def editor_workspace_resources(name, command_group):
     return jsonify(result)
 
 
-@bp.route("/Workspace/<name>/Resources/<resource_id>/V/<version>", methods=("GET", "DELETE"))
+@bp.route("/Workspace/<name>/Resources/Merge", methods=("Post", ))
+def editor_workspace_resources_merge(name):
+    manager = WorkspaceManager(name)
+    manager.load()
+    data = request.get_json()
+    if "mainResource" not in data or "plusResource" not in data:
+        raise exceptions.InvalidAPIUsage("Invalid request")
+    main_resource_id = data["mainResource"]["resourceId"]
+    main_resource_version = data["mainResource"]["version"]
+    plus_resource_id = data["plusResource"]["resourceId"]
+    plus_resource_version = data["plusResource"]["version"]
+    if not manager.merge_resources(main_resource_id, main_resource_version, plus_resource_id, plus_resource_version):
+        raise exceptions.ResourceConflict("Cannot merge resources")
+    manager.save()
+    return "", 200
+
+
+@bp.route("/Workspace/<name>/Resources/<resource_id>/V/<version>", methods=("DELETE", ))
 def editor_workspace_resource(name, resource_id, version):
-    if request.method == "GET":
-        # return the resource configuration
-        pass
-    elif request.method == "DELETE":
-        # delete the resource configuration
-        pass
-    else:
-        raise NotImplementedError(request.method)
+    manager = WorkspaceManager(name)
+    manager.load()
+    if not manager.remove_resource(resource_id, version):
+        return "", 204
+    manager.save()
+    return "", 200
 
 
 @bp.route("/Workspace/<name>/CommandTree/Nodes/<path:command_group>/Resources/ReloadSwagger", methods=("POST",))
