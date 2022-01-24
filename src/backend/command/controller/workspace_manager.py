@@ -450,6 +450,17 @@ class WorkspaceManager:
             used_resource_ids.update(resource_id)
         raise NotImplementedError()
 
+    def get_resources(self, *root_node_names):
+        resources = []
+        used_resources = set()
+        for leaf in self.iter_command_tree_leaves(*root_node_names):
+            for resource in leaf.resources:
+                if resource.id not in used_resources:
+                    used_resources.add(resource.id)
+                    resources.append(resource)
+        resources = sorted(resources, key=lambda r: r.id)
+        return resources
+
     def remove_resources(self):
         raise NotImplementedError()
 
