@@ -7,7 +7,7 @@ class CMDHelp(Model):
     short = StringType(required=True)  # short-summary
 
     # properties as nodes
-    long = ListType(StringType())  # long-summary separated by lines
+    p = ListType(StringType())  # long-summary separated by lines
 
     class Options:
         serialize_when_none = False

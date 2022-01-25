@@ -434,7 +434,7 @@ class Schema(Model, Linkable):
                         # discriminator child already in trace, break reference loop
                         continue
                     disc = CMDObjectSchemaDiscriminator()
-                    disc.prop = disc_prop
+                    disc.property = disc_prop
                     disc.value = disc_value
 
                     if disc_prop not in prop_dict:

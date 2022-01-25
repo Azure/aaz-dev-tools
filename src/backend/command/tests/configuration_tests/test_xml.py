@@ -27,7 +27,7 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
         command_group = generator.create_draft_command_group(resource)
 
         model = CMDConfiguration({"resources": [resource.to_cmd()], "command_group": command_group})
-        with TemporaryFile("w+b") as fp:
+        with TemporaryFile("w+t", encoding="utf-8") as fp:
             xml = XMLSerializer(model).to_xml()
             fp.write(xml)
             fp.seek(0)
@@ -36,7 +36,10 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
 
     def test_all_mgmt_modules_coverage(self):
         total = count = 0
-        for rp in self.get_mgmt_plane_resource_providers():
+        for rp in self.get_mgmt_plane_resource_providers(
+            module_filter=lambda m: m.name == "network",
+            resource_provider_filter=lambda r: r.name == "Microsoft.Network"
+        ):
             resource_map = rp.get_resource_map()
             generator = CommandGenerator()
 
@@ -54,7 +57,7 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
                         total += 1
                         try:
                             model = CMDConfiguration({"resources": [resource.to_cmd()], "command_group": command_group})
-                            with TemporaryFile("w+b") as fp:
+                            with TemporaryFile("w+t", encoding="utf-8") as fp:
                                 xml = XMLSerializer(model).to_xml()
                                 fp.write(xml)
                                 fp.seek(0)
