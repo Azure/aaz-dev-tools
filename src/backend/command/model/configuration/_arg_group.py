@@ -11,9 +11,7 @@ class CMDArgGroup(Model):
     # properties as nodes
     args = ListType(PolyModelType(CMDArg, allow_subclasses=True), min_size=1)
 
-    # def iter_args(self):
-    #     for arg in self.args:
-    #         yield arg
-    #         if hasattr(arg, "iter_args"):
-    #             for sub_arg in arg.iter_args():
-    #                 yield sub_arg
+    def reformat(self):
+        for arg in self.args:
+            arg.reformat()
+        self.args = sorted(self.args, key=lambda a: a.var)

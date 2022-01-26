@@ -36,7 +36,20 @@ class WorkspaceCfgEditor:
         for resource in cfg.resources:
             if resource.version != version:
                 raise ValueError(f"Resource version not match: {version} != {resource.version}")
-        return cls(cfg)
+        cfg_editor = cls(cfg)
+        cfg_editor.reformat()
+        return cfg_editor
+
+    @classmethod
+    def new_cfg(cls, plane, resources, command_groups):
+        assert len(resources) and len(command_groups)
+        cfg = CMDConfiguration()
+        cfg.plane = plane
+        cfg.resources = resources
+        cfg.command_groups = command_groups
+        cfg_editor = cls(cfg)
+        cfg_editor.reformat()
+        return cfg_editor
 
     def __init__(self, cfg, deleted=False):
         assert isinstance(cfg, CMDConfiguration)
@@ -103,6 +116,8 @@ class WorkspaceCfgEditor:
     def find_command(self, *cmd_names):
         if len(cmd_names) < 2:
             return None
+        cmd_names = [*cmd_names]
+
         command_group, tail_names, _, _ = self.find_command_group(*cmd_names[:-1])
         if command_group is None or tail_names:
             # group is not match cmd_names[:-1]
@@ -126,6 +141,7 @@ class WorkspaceCfgEditor:
         parent = parent or self.cfg
         if not cg_names:
             return None, None, parent, []
+        cg_names = [*cg_names]
 
         group = None
         names = None
@@ -152,6 +168,9 @@ class WorkspaceCfgEditor:
             raise exceptions.InvalidAPIUsage(f"Invalid command group name, it's empty")
         if len(new_cg_names) < 1:
             raise exceptions.InvalidAPIUsage(f"Invalid new command group name, it's empty")
+
+        cg_names = [*cg_names]
+        new_cg_names = [*new_cg_names]
 
         group, tail_names, parent, remain_names = self.find_command_group(*cg_names)
 
@@ -190,6 +209,10 @@ class WorkspaceCfgEditor:
             raise exceptions.InvalidAPIUsage(f"Invalid command name, it's empty")
         if len(new_cmd_names) < 2:
             raise exceptions.InvalidAPIUsage(f"Invalid new command name, it's empty")
+
+        cmd_names = [*cmd_names]
+        new_cmd_names = [*new_cmd_names]
+
         command = self.find_command(*cmd_names)
         if command is None:
             raise exceptions.ResourceNotFind(f"Cannot find definition for command '{' '.join(cmd_names)}'")
@@ -248,10 +271,10 @@ class WorkspaceCfgEditor:
             return None
 
         _, plus_command = [*plus_cfg_editor.iter_commands_by_operations('get')][0]
-        plus_op_required_args, plus_op_optional_args = self._parse_operation_url_args(plus_command)
+        plus_op_required_args, plus_op_optional_args = plus_cfg_editor._parse_command_http_op_url_args(plus_command)
 
-        main_cfg_cpy = self.cfg.__class__(self.cfg.to_primitive())  # generate a copy of main cfg
-        main_commands = [command for _, command in self.iter_commands_by_operations('get')]
+        main_editor = WorkspaceCfgEditor(self.cfg.__class__(self.cfg.to_primitive()))  # generate a copy of main cfg
+        main_commands = [command for _, command in main_editor.iter_commands_by_operations('get')]
         for main_command in main_commands:
             # merge args
             new_args = set()
@@ -264,18 +287,18 @@ class WorkspaceCfgEditor:
                 arg_group = plus_cfg_editor.filter_args_in_arg_group(arg_group, new_args, copy=True)
                 if arg_group:
                     try:
-                        self._command_merge_arg_group(main_command, arg_group)
+                        main_editor._command_merge_arg_group(main_command, arg_group)
                     except exceptions.InvalidAPIUsage as ex:
                         logger.error(ex)
                         return None
 
             # create conditions
-            main_op_required_args, _ = self._parse_operation_url_args(main_command)
+            main_op_required_args, _ = main_editor._parse_command_http_op_url_args(main_command)
             plus_operations = []
             for operation in plus_command.operations:
                 plus_operations.append(operation.__class__(operation.to_primitive()))
             op_required_args = {**plus_op_required_args, **main_op_required_args}
-            main_command.conditions, main_command.operations = self._command_merge_operations(
+            main_command.conditions, main_command.operations = main_editor._merge_command_operations(
                 op_required_args,
                 *plus_operations, *main_command.operations
             )
@@ -284,16 +307,14 @@ class WorkspaceCfgEditor:
                     resource.__class__(resource.to_primitive())
                 )
         for resource in plus_cfg_editor.resources:
-            main_cfg_cpy.resources.append(
+            main_editor.cfg.resources.append(
                 resource.__class__(resource.to_primitive())
             )
 
-        editor = WorkspaceCfgEditor(main_cfg_cpy)
-        editor.reformat()
+        main_editor.reformat()
+        return main_editor
 
-        return editor
-
-    def _parse_operation_url_args(self, command):
+    def _parse_command_http_op_url_args(self, command):
         operation_required_args = {}
         operation_optional_args = {}
         for http_op in command.operations:
@@ -370,9 +391,9 @@ class WorkspaceCfgEditor:
         if not main_200_response:
             return False
 
-        plus_op_required_args, plus_op_optional_args = self._parse_operation_url_args(plus_command)
+        plus_op_required_args, plus_op_optional_args = self._parse_command_http_op_url_args(plus_command)
         for main_command in main_get_commands:
-            main_op_required_args, main_op_optional_args = self._parse_operation_url_args(main_command)
+            main_op_required_args, main_op_optional_args = self._parse_command_http_op_url_args(main_command)
             for main_op_id, main_required_args in main_op_required_args.items():
                 if main_op_id in plus_op_required_args:
                     # the operation id should be different with plus's
@@ -470,7 +491,15 @@ class WorkspaceCfgEditor:
                 remain_args.append(arg)
         if remain_args:
             arg_group.args = remain_args
-            command.arg_groups.append(arg_group)
+            match_ag = None
+            for ag in command.arg_groups:
+                if ag.name == arg_group.name:
+                    match_ag = ag
+                    break
+            if match_ag:
+                match_ag.args.extend(arg_group.args)
+            else:
+                command.arg_groups.append(arg_group)
 
     def _arg_group_merge_arg(self, arg_group, arg):
         for cmd_arg in arg_group.args:
@@ -482,7 +511,7 @@ class WorkspaceCfgEditor:
             # TODO: handle merge complex args
         return arg
 
-    def _command_merge_operations(self, op_required_args, *operations):
+    def _merge_command_operations(self, op_required_args, *operations):
         arg_ops_map = {}
         for op_id, required_args in op_required_args.items():
             for arg in required_args:
@@ -532,32 +561,4 @@ class WorkspaceCfgEditor:
         return conditions, new_operations
 
     def reformat(self):
-        self.cfg.resources = sorted(self.cfg.resources, key=lambda r: r.id)
-        for group in self.cfg.command_groups:
-            self._reformat_command_group(group)
-        self.cfg.command_groups = sorted(
-            [group for group in self.cfg.command_groups if group.commands or group.command_groups],
-            key=lambda g: g.name
-        )
-
-    def _reformat_command_group(self, command_group):
-        if command_group.command_groups:
-            for group in command_group.command_groups:
-                self._reformat_command_group(group)
-            command_group.command_groups = sorted(
-                [group for group in command_group.command_groups if group.commands or group.command_groups],
-                key=lambda g: g.name
-            )
-        if command_group.commands:
-            for command in command_group.commands:
-                self._reformat_command(command)
-        else:
-            if len(command_group.command_groups) == 1:
-                sub_group = command_group.coommand_groups[0]
-                command_group.name += ' ' + sub_group.name
-                command_group.command_groups = sub_group.command_groups
-                command_group.commands = sub_group.commands
-                del sub_group
-
-    def _reformat_command(self, command):
-        command.resources = sorted(command.resources, key=lambda r: r.id)
+        self.cfg.reformat()

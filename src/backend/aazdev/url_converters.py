@@ -1,4 +1,5 @@
-from werkzeug.routing import BaseConverter
+from werkzeug.routing import BaseConverter, PathConverter
+
 from utils.base64 import b64decode_str, b64encode_str
 
 
@@ -12,12 +13,10 @@ class Base64Converter(BaseConverter):
 
 
 class NameConverter(BaseConverter):
-
     regex = r"[a-z0-9]+(-[a-z0-9]+)*"
 
 
 class NamesPathConverter(BaseConverter):
-
     regex = r"[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+(-[a-z0-9]+)*)*"
     weight = 200
 
@@ -30,4 +29,15 @@ class NamesPathConverter(BaseConverter):
         return '/'.join(super(NamesPathConverter, self).to_url(value) for value in values)
 
 
-__all__ = ["Base64Converter", "NameConverter", "NamesPathConverter"]
+class ListPathConvertor(PathConverter):
+
+    def to_python(self, value):
+        return value.split('/')
+
+    def to_url(self, values):
+        if isinstance(values, str):
+            return super(ListPathConvertor, self).to_url(values)
+        return '/'.join(super(ListPathConvertor, self).to_url(value) for value in values)
+
+
+__all__ = ["Base64Converter", "NameConverter", "NamesPathConverter", "ListPathConvertor"]

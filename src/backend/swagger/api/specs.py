@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, url_for
+
 from swagger.controller.specs_manager import SwaggerSpecsManager
 
 bp = Blueprint('swagger', __name__, url_prefix='/Swagger/Specs')
@@ -19,7 +20,7 @@ def get_modules_by(plane):
     return jsonify(result)
 
 
-@bp.route("/<plane>/<names_path:mod_names>", methods=("GET",))
+@bp.route("/<plane>/<list_path:mod_names>", methods=("GET",))
 def get_module(plane, mod_names):
     specs_manager = SwaggerSpecsManager()
     module = specs_manager.get_module(plane, mod_names)
@@ -39,7 +40,7 @@ def get_module(plane, mod_names):
 
 
 # resource providers
-@bp.route("/<plane>/<names_path:mod_names>/ResourceProviders", methods=("GET",))
+@bp.route("/<plane>/<list_path:mod_names>/ResourceProviders", methods=("GET",))
 def get_resource_providers_by(plane, mod_names):
     specs_manager = SwaggerSpecsManager()
     result = []
@@ -52,7 +53,7 @@ def get_resource_providers_by(plane, mod_names):
     return jsonify(result)
 
 
-@bp.route("/<plane>/<names_path:mod_names>/ResourceProviders/<rp_name>", methods=("GET",))
+@bp.route("/<plane>/<list_path:mod_names>/ResourceProviders/<rp_name>", methods=("GET",))
 def get_resource_provider(plane, mod_names, rp_name):
     specs_manager = SwaggerSpecsManager()
     rp = specs_manager.get_resource_provider(plane, mod_names, rp_name)
@@ -87,7 +88,7 @@ def get_resource_provider(plane, mod_names, rp_name):
 
 
 # resources
-@bp.route("/<plane>/<names_path:mod_names>/ResourceProviders/<rp_name>/Resources", methods=("GET",))
+@bp.route("/<plane>/<list_path:mod_names>/ResourceProviders/<rp_name>/Resources", methods=("GET",))
 def get_resources_by(plane, mod_names, rp_name):
     specs_manager = SwaggerSpecsManager()
     result = []
@@ -118,7 +119,7 @@ def get_resources_by(plane, mod_names, rp_name):
 
 
 # resource
-@bp.route("/<plane>/<names_path:mod_names>/ResourceProviders/<rp_name>/Resources/<base64:resource_id>",
+@bp.route("/<plane>/<list_path:mod_names>/ResourceProviders/<rp_name>/Resources/<base64:resource_id>",
           methods=("GET",))
 def get_resource_in_rp(plane, mod_names, rp_name, resource_id):
     specs_manager = SwaggerSpecsManager()
@@ -148,7 +149,7 @@ def get_resource_in_rp(plane, mod_names, rp_name, resource_id):
     return jsonify(result)
 
 
-@bp.route("/<plane>/<names_path:mod_names>/Resources/<base64:resource_id>", methods=("GET",))
+@bp.route("/<plane>/<list_path:mod_names>/Resources/<base64:resource_id>", methods=("GET",))
 def get_resource_in_module(plane, mod_names, resource_id):
     specs_manager = SwaggerSpecsManager()
     version_map = specs_manager.get_resource_version_map(
@@ -179,7 +180,7 @@ def get_resource_in_module(plane, mod_names, resource_id):
 
 # resource version
 @bp.route(
-    "/<plane>/<names_path:mod_names>/ResourceProviders/<rp_name>/Resources/<base64:resource_id>/V/<base64:version>",
+    "/<plane>/<list_path:mod_names>/ResourceProviders/<rp_name>/Resources/<base64:resource_id>/V/<base64:version>",
     methods=("GET",)
 )
 def get_resource_version_in_rp(plane, mod_names, rp_name, resource_id, version):
@@ -200,7 +201,7 @@ def get_resource_version_in_rp(plane, mod_names, rp_name, resource_id, version):
     return jsonify(result)
 
 
-@bp.route("/<plane>/<names_path:mod_names>/Resources/<base64:resource_id>/V/<base64:version>", methods=("GET",))
+@bp.route("/<plane>/<list_path:mod_names>/Resources/<base64:resource_id>/V/<base64:version>", methods=("GET",))
 def get_resource_version_in_module(plane, mod_names, resource_id, version):
     specs_manager = SwaggerSpecsManager()
     resource = specs_manager.get_resource_in_version(

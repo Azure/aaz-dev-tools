@@ -378,13 +378,13 @@ class WorkspaceManager:
 
         cfg_editors = []
         for resource in swagger_resources:
-            cfg = CMDConfiguration()
-            cfg.plane = self.ws.plane
-            cfg.resources = [resource.to_cmd()]
             command_group = self.swagger_command_generator.create_draft_command_group(resource)
-            cfg.command_groups = [command_group]
             assert not command_group.command_groups, "The logic to support sub command groups is not supported"
-            cfg_editors.append(WorkspaceCfgEditor(cfg))
+            cfg_editors.append(WorkspaceCfgEditor.new_cfg(
+                plane=self.ws.plane,
+                resources=[resource.to_cmd()],
+                command_groups=[command_group]
+            ))
 
         if len(root_node_names) > 0:
             cg_names = self._calculate_cfgs_common_command_group(cfg_editors, *root_node_names)

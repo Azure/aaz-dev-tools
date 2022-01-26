@@ -1,6 +1,7 @@
 from command.tests.common import CommandTestCase, workspace_name
 from utils.plane import PlaneEnum
 import os
+from swagger.utils.tools import swagger_resource_path_to_resource_id
 
 
 class APIEditorTest(CommandTestCase):
@@ -89,4 +90,96 @@ class APIEditorTest(CommandTestCase):
             node = rv.get_json()
             assert node['names'] == ['aaz']
 
-            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger")
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': 'edgeorder',
+                'version': '2021-12-01',
+                'resources': [
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}'),
+                ]
+            })
+            assert rv.status_code == 200
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            assert rv.status_code == 200
+            node = rv.get_json()
+            cg = node['commandGroups']
+            assert len(cg) == 1 and 'edge-order' in cg
+            assert cg['edge-order']['names'] == ['edge-order']
+            cg = cg['edge-order']['commandGroups']
+            assert len(cg) == 1 and 'address' in cg
+            assert cg['address']['names'] == ['edge-order', 'address']
+            commands = cg['address']['commands']
+            assert len(commands) == 5 and set(commands.keys()) == {'create', 'delete', 'list', 'show', 'update'}
+            for cmd_name in ('create', 'delete', 'show', 'update'):
+                assert len(commands[cmd_name]['resources']) == 1
+                assert commands[cmd_name]['resources'][0]['version'] == '2021-12-01'
+                assert commands[cmd_name]['resources'][0]['id'] == swagger_resource_path_to_resource_id(
+                    '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}')
+            assert len(commands['list']['resources']) == 2
+            assert commands['list']['resources'][0]['id'] == swagger_resource_path_to_resource_id(
+                '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses')
+            assert commands['list']['resources'][0]['version'] == '2021-12-01'
+            assert commands['list']['resources'][1]['id'] == swagger_resource_path_to_resource_id(
+                '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses')
+            assert commands['list']['resources'][1]['version'] == '2021-12-01'
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address/Leaves/list")
+            assert rv.status_code == 200
+            command = rv.get_json()
+            assert command['names'] == ['edge-order', 'address', 'list']
+            assert len(command['conditions']) == 2
+            assert len(command['argGroups']) == 1
+            assert len(command['argGroups'][0]['args']) == 4
+            assert len(command['operations']) == 2
+            assert len(command['outputs']) == 1
+            assert len(command['resources']) == 2
+            assert command['version'] == '2021-12-01'
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address/Leaves/show")
+            assert rv.status_code == 200
+            command = rv.get_json()
+            assert command['names'] == ['edge-order', 'address', 'show']
+            assert len(command['argGroups']) == 1
+            assert 'conditions' not in command
+            assert len(command['operations']) == 1
+            assert len(command['outputs']) == 1
+            assert len(command['resources']) == 1
+            assert command['version'] == '2021-12-01'
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address/Leaves/delete")
+            assert rv.status_code == 200
+            command = rv.get_json()
+            assert command['names'] == ['edge-order', 'address', 'delete']
+            assert len(command['argGroups']) == 1
+            assert 'conditions' not in command
+            assert len(command['operations']) == 1
+            assert 'outputs' not in command
+            assert len(command['resources']) == 1
+            assert command['version'] == '2021-12-01'
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address/Leaves/create")
+            assert rv.status_code == 200
+            command = rv.get_json()
+            assert command['names'] == ['edge-order', 'address', 'create']
+            assert len(command['argGroups']) == 1
+            assert 'conditions' not in command
+            assert len(command['operations']) == 1
+            assert len(command['outputs']) == 1
+            assert len(command['resources']) == 1
+            assert command['version'] == '2021-12-01'
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address/Leaves/update")
+            assert rv.status_code == 200
+            command = rv.get_json()
+            assert command['names'] == ['edge-order', 'address', 'update']
+            assert len(command['argGroups']) == 2
+            assert 'conditions' not in command
+            assert len(command['operations']) == 4  # Get, InstanceUpdate, GenericUpdate, Put
+            assert len(command['outputs']) == 1
+            assert len(command['resources']) == 1
+            assert command['version'] == '2021-12-01'

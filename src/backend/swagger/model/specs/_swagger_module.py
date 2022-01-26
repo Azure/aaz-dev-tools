@@ -1,7 +1,7 @@
 import os
 
-from ._resource_provider import ResourceProvider
 from utils.plane import PlaneEnum
+from ._resource_provider import ResourceProvider
 
 
 class SwaggerModule:

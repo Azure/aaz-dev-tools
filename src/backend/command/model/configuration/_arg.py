@@ -43,6 +43,9 @@ class CMDArgEnum(Model):
             enum.items.append(item)
         return enum
 
+    def reformat(self):
+        self.items = sorted(self.items, key=lambda it: it.name)
+
 
 class CMDArgDefault(Model):
     """ The argument value if an argument is not used """
@@ -116,6 +119,12 @@ class CMDArgBase(Model):
     def build_arg_base(cls, builder):
         return cls()
 
+    def _reformat_base(self):
+        pass
+
+    def reformat(self):
+        self._reformat_base()
+
 
 class CMDArg(CMDArgBase):
     # properties as tags
@@ -164,6 +173,13 @@ class CMDArg(CMDArgBase):
 
         arg.hide = builder.get_hide()
         return arg
+
+    def _reformat(self):
+        self.options = sorted(self.options, key=lambda op: (len(op), op))
+
+    def reformat(self):
+        self._reformat_base()
+        self._reformat()
 
 
 #cls
@@ -216,6 +232,11 @@ class CMDStringArgBase(CMDArgBase):
         arg.fmt = builder.get_fmt()
         arg.enum = builder.get_enum()
         return arg
+
+    def _reformat_base(self):
+        super()._reformat_base()
+        if self.enum:
+            self.enum.reformat()
 
 
 class CMDStringArg(CMDArg, CMDStringArgBase):
@@ -335,6 +356,11 @@ class CMDIntegerArgBase(CMDArgBase):
         arg.enum = builder.get_enum()
         return arg
 
+    def _reformat_base(self):
+        super()._reformat_base()
+        if self.enum:
+            self.enum.reformat()
+
 
 class CMDIntegerArg(CMDArg, CMDIntegerArgBase):
     pass
@@ -386,6 +412,11 @@ class CMDFloatArgBase(CMDArgBase):
         arg.enum = builder.get_enum()
         return arg
 
+    def _reformat_base(self):
+        super()._reformat_base()
+        if self.enum:
+            self.enum.reformat()
+
 
 class CMDFloatArg(CMDArg, CMDFloatArgBase):
     pass
@@ -410,7 +441,6 @@ class CMDFloat64Arg(CMDFloatArg, CMDFloat64ArgBase):
 
 
 # object
-
 class CMDObjectArgAdditionalProperties(Model):
     # properties as nodes
     item = PolyModelType(CMDArgBase, allow_subclasses=True)
@@ -424,10 +454,9 @@ class CMDObjectArgAdditionalProperties(Model):
         arg.item = builder.get_sub_item()
         return arg
 
-    # def iter_args(self):
-    #     if self.item and hasattr(self.item, "iter_args"):
-    #         for sub_arg in self.item.iter_args():
-    #             yield sub_arg
+    def reformat(self):
+        if self.item:
+            self.item.reformat()
 
 
 class CMDObjectArgBase(CMDArgBase):
@@ -457,16 +486,14 @@ class CMDObjectArgBase(CMDArgBase):
         arg.additional_props = builder.get_additional_props()
         return arg
 
-    # def iter_args(self):
-    #     if self.args:
-    #         for arg in self.args:
-    #             yield arg
-    #             if hasattr(arg, "iter_args"):
-    #                 for sub_arg in arg.iter_args():
-    #                     yield sub_arg
-    #     if self.additional_props:
-    #         for arg in self.additional_props.iter_args():
-    #             yield arg
+    def _reformat_base(self):
+        super()._reformat_base()
+        if self.args:
+            for arg in self.args:
+                arg.reformat()
+            self.args = sorted(self.args, key=lambda a: a.var)
+        if self.additional_props:
+            self.additional_props.reformat()
 
 
 class CMDObjectArg(CMDArg, CMDObjectArgBase):
@@ -503,10 +530,9 @@ class CMDArrayArgBase(CMDArgBase):
         arg.item = builder.get_sub_item()
         return arg
 
-    # def iter_args(self):
-    #     if self.item and hasattr(self.item, "iter_args"):
-    #         for sub_arg in self.item.iter_args():
-    #             yield sub_arg
+    def _reformat_base(self):
+        super()._reformat_base()
+        self.item.reformat()
 
 
 class CMDArrayArg(CMDArg, CMDArrayArgBase):
@@ -526,3 +552,8 @@ class CMDArrayArg(CMDArg, CMDArrayArgBase):
         arg.singular_options = builder.get_singular_options()
         arg.cls = builder.get_cls()
         return arg
+
+    def _reformat(self):
+        super()._reformat()
+        if self.singular_options:
+            self.singular_options = sorted(self.singular_options, key=lambda op: (len(op), op))

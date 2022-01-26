@@ -63,11 +63,11 @@ class WorkspaceEditorTest(CommandTestCase):
         assert 'edge-order' in manager.ws.command_tree.command_groups
         assert 'address' in manager.ws.command_tree.command_groups['edge-order'].command_groups
         address_cg = manager.ws.command_tree.command_groups['edge-order'].command_groups['address']
-        assert 'list' in address_cg.commands
-        assert 'create' in address_cg.commands
-        assert 'show' in address_cg.commands
-        assert 'delete' in address_cg.commands
-        assert 'update' in address_cg.commands
+        assert 'list' in address_cg.commands and len(address_cg.commands['list'].resources) == 2
+        assert 'create' in address_cg.commands and len(address_cg.commands['create'].resources) == 1
+        assert 'show' in address_cg.commands and len(address_cg.commands['show'].resources) == 1
+        assert 'delete' in address_cg.commands and len(address_cg.commands['delete'].resources) == 1
+        assert 'update' in address_cg.commands and len(address_cg.commands['update'].resources) == 1
 
         assert manager.load_cfg_editor_by_command(address_cg.commands['list'])
         assert manager.load_cfg_editor_by_command(address_cg.commands['create'])

@@ -1,10 +1,9 @@
-from swagger.model.specs import SwaggerSpecs, ResourceProvider
-from utils.plane import PlaneEnum
-
-
-from utils.config import Config
-from utils import exceptions
 from collections import OrderedDict
+
+from swagger.model.specs import SwaggerSpecs, ResourceProvider
+from utils import exceptions
+from utils.config import Config
+from utils.plane import PlaneEnum
 
 
 class SwaggerSpecsManager:
