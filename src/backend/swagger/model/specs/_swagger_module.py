@@ -28,6 +28,13 @@ class SwaggerModule:
     def __hash__(self):
         return hash(str(self))
 
+    @property
+    def names(self):
+        if self._parent is None:
+            return [self.name]
+        else:
+            return [*self._parent.names, self.name]
+
 
 class MgmtPlaneModule(SwaggerModule):
 

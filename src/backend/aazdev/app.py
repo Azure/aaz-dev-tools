@@ -21,6 +21,12 @@ def create_app():
     def invalid_api_usage(e):
         return jsonify(e.to_dict()), e.status_code
 
+    # register url converters
+    from .url_converters import Base64Converter, NameConverter, NamesPathConverter
+    app.url_map.converters['base64'] = Base64Converter
+    app.url_map.converters['name'] = NameConverter
+    app.url_map.converters['names_path'] = NamesPathConverter
+
     # register routes of swagger module
     from swagger.api import register_blueprints
     register_blueprints(app)

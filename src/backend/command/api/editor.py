@@ -1,9 +1,7 @@
 import os
 
-from flask import Blueprint, jsonify, request, url_for
-
 from command.controller.workspace_manager import WorkspaceManager
-from command.model.configuration import CMDResource
+from flask import Blueprint, jsonify, request, url_for
 from utils import exceptions
 
 bp = Blueprint('editor', __name__, url_prefix='/AAZ/Editor')
@@ -62,23 +60,22 @@ def editor_workspace(name):
     return jsonify(result)
 
 
-@bp.route("/Workspace/<name>/Generate", methods=("POST",))
+@bp.route("/Workspaces/<name>/Generate", methods=("POST",))
 def editor_workspace_generate(name):
     # generate code and command configurations in cli repos and aaz repo
     raise NotImplementedError()
 
 
 # command tree operations
-@bp.route("/Workspace/<name>/CommandTree/Nodes/<path:command_group>", methods=("GET", "PATCH", "DELETE"))
-def editor_workspace_command_tree_node(name, command_group):
-    root_node_names = command_group.split('/')
-    if root_node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>", methods=("GET", "PATCH", "DELETE"))
+def editor_workspace_command_tree_node(name, node_names):
+    if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command group not exist")
-    root_node_names = root_node_names[1:]
+    node_names = node_names[1:]
 
     manager = WorkspaceManager(name)
     manager.load()
-    node = manager.find_command_tree_node(*root_node_names)
+    node = manager.find_command_tree_node(*node_names)
     if not node:
         raise exceptions.ResourceNotFind("Command group not exist")
 
@@ -87,15 +84,15 @@ def editor_workspace_command_tree_node(name, command_group):
     elif request.method == "PATCH":
         data = request.get_json()
         if 'help' in data:
-            node = manager.update_command_tree_node_help(*root_node_names, help=data['help'])
+            node = manager.update_command_tree_node_help(*node_names, help=data['help'])
         if 'stage' in data and node.stage != data['stage']:
-            node = manager.update_command_tree_node_stage(*root_node_names, stage=data['stage'])
+            node = manager.update_command_tree_node_stage(*node_names, stage=data['stage'])
         manager.save()
         result = node.to_primitive()
     elif request.method == "DELETE":
-        if len(root_node_names) < 1:
+        if len(node_names) < 1:
             raise exceptions.InvalidAPIUsage("Not support to delete command tree root")
-        if manager.delete_command_tree_node(*root_node_names):
+        if manager.delete_command_tree_node(*node_names):
             return '', 200
         else:
             return '', 204  # resource not found
@@ -104,12 +101,13 @@ def editor_workspace_command_tree_node(name, command_group):
     return jsonify(result)
 
 
-@bp.route("/Workspace/<name>/CommandTree/Nodes/<path:command_group>/Rename", methods=("POST",))
-def editor_workspace_command_tree_node_rename(name, command_group):
-    node_names = command_group.split('/')
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Rename", methods=("POST",))
+def editor_workspace_command_tree_node_rename(name, node_names):
     if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command group not exist")
     node_names = node_names[1:]
+    if not node_names:
+        raise exceptions.InvalidAPIUsage("Cannot Rename root node")
 
     manager = WorkspaceManager(name)
     manager.load()
@@ -127,16 +125,15 @@ def editor_workspace_command_tree_node_rename(name, command_group):
     return jsonify(result)
 
 
-@bp.route("/Workspace/<name>/CommandTree/Nodes/<path:command_group>/Leaves/<command>", methods=("GET", ))
-def editor_workspace_command(name, command_group, command):
-    root_node_names = command_group.split('/')
-    if root_node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>", methods=("GET",))
+def editor_workspace_command(name, node_names, leaf_name):
+    if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command not exist")
-    root_node_names = root_node_names[1:]
+    node_names = node_names[1:]
 
     manager = WorkspaceManager(name)
     manager.load()
-    leaf = manager.find_command_tree_leaf(*root_node_names, command)
+    leaf = manager.find_command_tree_leaf(*node_names, leaf_name)
     if not leaf:
         raise exceptions.ResourceNotFind("Command not exist")
 
@@ -150,16 +147,15 @@ def editor_workspace_command(name, command_group, command):
     return jsonify(result)
 
 
-@bp.route("/Workspace/<name>/CommandTree/Nodes/<path:command_group>/Leaves/<command>/Rename", methods=("POST",))
-def editor_workspace_command_rename(name, command_group, command):
-    node_names = command_group.split('/')
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Rename", methods=("POST",))
+def editor_workspace_command_rename(name, node_names, leaf_name):
     if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command not exist")
     node_names = node_names[1:]
 
     manager = WorkspaceManager(name)
     manager.load()
-    if not manager.find_command_tree_leaf(*node_names, command):
+    if not manager.find_command_tree_leaf(*node_names, leaf_name):
         raise exceptions.ResourceNotFind("Command not exist")
 
     data = request.get_json()
@@ -168,22 +164,21 @@ def editor_workspace_command_rename(name, command_group, command):
         raise exceptions.InvalidAPIUsage("Invalid request")
 
     new_leaf_names = new_name.split(' ')
-    manager.rename_command_tree_leaf(*node_names, command, new_leaf_names=new_leaf_names)
+    manager.rename_command_tree_leaf(*node_names, leaf_name, new_leaf_names=new_leaf_names)
     manager.save()
     return "", 200
 
 
 # command tree resource operations
-@bp.route("/Workspace/<name>/CommandTree/Nodes/<path:command_group>/AddSwagger", methods=("POST",))
-def editor_workspace_tree_node_resources(name, command_group):
-    root_node_names = command_group.split('/')
-    if root_node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/AddSwagger", methods=("POST",))
+def editor_workspace_tree_node_resources(name, node_names):
+    if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command group not exist")
-    root_node_names = root_node_names[1:]
+    node_names = node_names[1:]
 
     manager = WorkspaceManager(name)
     manager.load()
-    if not manager.find_command_tree_node(*root_node_names):
+    if not manager.find_command_tree_node(*node_names):
         raise exceptions.ResourceNotFind("Command group not exist")
 
     # add new resource
@@ -202,31 +197,30 @@ def editor_workspace_tree_node_resources(name, command_group):
         mod_names=mod_names,
         version=version,
         resource_ids=resource_ids,
-        *root_node_names
+        *node_names
     )
     manager.save()
     return "", 200
 
 
-@bp.route("/Workspace/<name>/CommandTree/Nodes/<path:command_group>/Resources", methods=("GET",))
-def editor_workspace_resources(name, command_group):
-    root_node_names = command_group.split('/')
-    if root_node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Resources", methods=("GET",))
+def editor_workspace_resources(name, node_names):
+    if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command group not exist")
-    root_node_names = root_node_names[1:]
+    node_names = node_names[1:]
 
     manager = WorkspaceManager(name)
     manager.load()
-    if not manager.find_command_tree_node(*root_node_names):
+    if not manager.find_command_tree_node(*node_names):
         raise exceptions.ResourceNotFind("Command group not exist")
 
-    resources = manager.get_resources(*root_node_names)
+    resources = manager.get_resources(*node_names)
 
     result = [r.to_primitive() for r in resources]
     return jsonify(result)
 
 
-@bp.route("/Workspace/<name>/Resources/Merge", methods=("Post", ))
+@bp.route("/Workspaces/<name>/Resources/Merge", methods=("Post",))
 def editor_workspace_resources_merge(name):
     manager = WorkspaceManager(name)
     manager.load()
@@ -243,7 +237,7 @@ def editor_workspace_resources_merge(name):
     return "", 200
 
 
-@bp.route("/Workspace/<name>/Resources/<resource_id>/V/<version>", methods=("DELETE", ))
+@bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>", methods=("DELETE",))
 def editor_workspace_resource(name, resource_id, version):
     manager = WorkspaceManager(name)
     manager.load()
@@ -253,8 +247,8 @@ def editor_workspace_resource(name, resource_id, version):
     return "", 200
 
 
-@bp.route("/Workspace/<name>/CommandTree/Nodes/<path:command_group>/Resources/ReloadSwagger", methods=("POST",))
-def editor_workspace_resource_reload_swagger(name, command_group):
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Resources/ReloadSwagger", methods=("POST",))
+def editor_workspace_resource_reload_swagger(name, node_names):
     # update resource by reloading swagger
     data = request.get_json()
     # data = (resource_id, swagger_version)
@@ -262,32 +256,30 @@ def editor_workspace_resource_reload_swagger(name, command_group):
     raise NotImplementedError()
 
 
-@bp.route("/Workspace/<name>/CommandTree/Nodes/<path:command_group>/Try", methods=("POST",))
-def editor_workspace_try_command_group(name, command_group):
-    root_node_names = command_group.split('/')
-    if root_node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Try", methods=("POST",))
+def editor_workspace_try_command_group(name, node_names):
+    if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command group not exist")
-    root_node_names = root_node_names[1:]
+    node_names = node_names[1:]
 
     manager = WorkspaceManager(name)
     manager.load()
-    if not manager.find_command_tree_node(*root_node_names):
+    if not manager.find_command_tree_node(*node_names):
         raise exceptions.ResourceNotFind("Command group not exist")
 
     # try sub commands by installed as a try extension of cli
     raise NotImplementedError()
 
 
-@bp.route("/Workspace/<name>/CommandTree/Nodes/<path:command_group>/Leaves/<command>/Try", methods=("POST",))
-def editor_workspace_try_command(name, command_group, command):
-    root_node_names = command_group.split('/')
-    if root_node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Try", methods=("POST",))
+def editor_workspace_try_command(name, node_names, leaf_name):
+    if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command not exist")
-    root_node_names = root_node_names[1:]
+    node_names = node_names[1:]
 
     manager = WorkspaceManager(name)
     manager.load()
-    if not manager.find_command_tree_leaf(*root_node_names, command):
+    if not manager.find_command_tree_leaf(*node_names, leaf_name):
         raise exceptions.ResourceNotFind("Command not exist")
 
     # try command by installed as a try extension of cli

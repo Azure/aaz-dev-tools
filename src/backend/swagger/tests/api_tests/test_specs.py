@@ -2,7 +2,7 @@ from swagger.tests.common import SwaggerSpecsTestCase
 import os
 import time
 from utils.plane import PlaneEnum
-from swagger.api.specs import b64encode_str
+from utils.base64 import b64encode_str
 
 
 class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):

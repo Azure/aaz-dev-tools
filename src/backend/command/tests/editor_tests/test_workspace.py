@@ -1,6 +1,5 @@
 from command.controller.workspace_manager import WorkspaceManager
-from command.controller.workspace_cfg_editor import WorkspaceCfgEditor
-from command.tests.common import CommandTestCase
+from command.tests.common import CommandTestCase, workspace_name
 from utils.plane import PlaneEnum
 import os
 import json
@@ -8,40 +7,31 @@ from utils import exceptions
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 
 
-def workspace_name(suffix):
-    def decorator(func):
-        def wrapper(self, **kwargs):
-            name = f"{self.__class__.__name__}_{func.__name__}_{suffix}"
-            return func(self, **kwargs, name=name)
-        return wrapper
-    return decorator
-
-
 class WorkspaceManagerTest(CommandTestCase):
 
-    @workspace_name("1")
-    def test_workspace_manager(self, name):
-        manager = WorkspaceManager(name)
-        assert manager.path.endswith(os.path.join(name, "ws.json"))
+    @workspace_name("test_workspace_manager")
+    def test_workspace_manager(self, ws_name):
+        manager = WorkspaceManager(ws_name)
+        assert manager.path.endswith(os.path.join(ws_name, "ws.json"))
 
-        manager = WorkspaceManager.new(name, plane=PlaneEnum.Mgmt)
+        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt)
         manager.save()
         assert os.path.exists(manager.path)
         with open(manager.path, 'r') as f:
             data = json.load(f)
-        assert data['name'] == name
+        assert data['name'] == ws_name
         assert data['plane'] == PlaneEnum.Mgmt
         assert data['version']
         assert data['commandTree'] == {
-            "name": WorkspaceManager.COMMAND_TREE_ROOT_NAME
+            "names": [WorkspaceManager.COMMAND_TREE_ROOT_NAME]
         }
 
-        manager_2 = WorkspaceManager(name)
+        manager_2 = WorkspaceManager(ws_name)
         manager_2.load()
-        assert manager_2.ws.name == name
+        assert manager_2.ws.name == ws_name
         assert manager_2.ws.plane == PlaneEnum.Mgmt
         assert manager_2.ws.version == manager.ws.version
-        assert manager_2.ws.command_tree.name == WorkspaceManager.COMMAND_TREE_ROOT_NAME
+        assert manager_2.ws.command_tree.names == [WorkspaceManager.COMMAND_TREE_ROOT_NAME]
         manager_2.save()
 
         with self.assertRaises(exceptions.InvalidAPIUsage):
@@ -50,9 +40,9 @@ class WorkspaceManagerTest(CommandTestCase):
 
 class WorkspaceEditorTest(CommandTestCase):
 
-    @workspace_name("1")
-    def test_workspace_editor_add_resources_by_swagger(self, name):
-        manager = WorkspaceManager.new(name, plane=PlaneEnum.Mgmt)
+    @workspace_name("test_workspace_editor_add_resources_by_swagger")
+    def test_workspace_editor_add_resources_by_swagger(self, ws_name):
+        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt)
         manager.save()
 
         mod_names = "edgeorder"
@@ -68,7 +58,7 @@ class WorkspaceEditorTest(CommandTestCase):
         )
         manager.save()
 
-        manager = WorkspaceManager(name)
+        manager = WorkspaceManager(ws_name)
         manager.load()
         assert 'edge-order' in manager.ws.command_tree.command_groups
         assert 'address' in manager.ws.command_tree.command_groups['edge-order'].command_groups

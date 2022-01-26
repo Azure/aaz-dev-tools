@@ -1,13 +1,13 @@
-from command.tests.common import CommandTestCase
+from command.tests.common import CommandTestCase, workspace_name
 from utils.plane import PlaneEnum
 import os
 
 
-class EditorTest(CommandTestCase):
+class APIEditorTest(CommandTestCase):
 
-    def test_workspaces(self):
-        name1 = f"{self.__class__.__name__}_test_ws_1"
-        name2 = f"{self.__class__.__name__}_test_ws_2"
+    @workspace_name("test_workspaces_1", arg_name="name1")
+    @workspace_name("test_workspaces_2", arg_name="name2")
+    def test_workspaces(self, name1, name2):
         with self.app.test_client() as c:
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": name1,
@@ -19,7 +19,7 @@ class EditorTest(CommandTestCase):
             assert ws1['plane'] == PlaneEnum.Mgmt
             assert ws1['version']
             assert ws1['url']
-            assert ws1['commandTree']['name'] == 'aaz'
+            assert ws1['commandTree']['names'] == ['aaz']
             assert os.path.exists(ws1['folder'])
 
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
@@ -51,31 +51,42 @@ class EditorTest(CommandTestCase):
             })
             assert rv.status_code == 409
 
-    def test_workspace(self):
-        name1 = f"{self.__class__.__name__}_test_ws_1"
+    @workspace_name("test_workspace_1")
+    def test_workspace(self, ws_name):
         with self.app.test_client() as c:
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
-                "name": name1,
+                "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
             })
             assert rv.status_code == 200
             ws = rv.get_json()
-            with self.app.test_client() as c:
-                rv = c.get(ws['url'])
-                assert rv.status_code == 200
-                assert rv.get_json() == ws
-                rv = c.get(f"/AAZ/Editor/Workspaces/{ws['name']}")
-                assert rv.status_code == 200
-                assert rv.get_json() == ws
 
-            # with self.app.test_client() as c:
-            #     rv = c.put(ws['url'], json=ws)
-            #     assert rv.status_code == 200
-            #     ws2 = rv.get_json()
-            #     assert ws2['version'] != ws['version']
+            rv = c.get(ws['url'])
+            assert rv.status_code == 200
+            assert rv.get_json() == ws
+            rv = c.get(f"/AAZ/Editor/Workspaces/{ws['name']}")
+            assert rv.status_code == 200
+            assert rv.get_json() == ws
 
-            with self.app.test_client() as c:
-                rv = c.delete(ws['url'])
-                assert rv.status_code == 200
-                rv = c.delete(ws['url'])
-                assert rv.status_code == 204
+            rv = c.delete(ws['url'])
+            assert rv.status_code == 200
+            rv = c.delete(ws['url'])
+            assert rv.status_code == 204
+
+    @workspace_name("test_workspace_add_swagger")
+    def test_workspace_add_swagger(self, ws_name):
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum.Mgmt,
+            })
+            assert rv.status_code == 200
+            ws = rv.get_json()
+            ws_url = ws['url']
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            assert rv.status_code == 200
+            node = rv.get_json()
+            assert node['names'] == ['aaz']
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger")

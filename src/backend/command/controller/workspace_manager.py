@@ -6,13 +6,13 @@ from datetime import datetime
 
 from command.model.configuration import CMDConfiguration, CMDHelp
 from command.model.editor import CMDEditorWorkspace, CMDCommandTreeNode, CMDCommandTreeLeaf
-from utils import exceptions
-from utils.config import Config
-from .workspace_cfg_editor import WorkspaceCfgEditor
 from swagger.controller.command_generator import CommandGenerator
 from swagger.controller.specs_manager import SwaggerSpecsManager
-from .specs_manager import AAZSpecsManager
+from utils import exceptions
+from utils.config import Config
 
+from .specs_manager import AAZSpecsManager
+from .workspace_cfg_editor import WorkspaceCfgEditor
 
 logger = logging.getLogger('backend')
 
@@ -181,7 +181,7 @@ class WorkspaceManager:
                 if not node.command_groups:
                     node.command_groups = {}
                 node.command_groups[name] = CMDCommandTreeNode({
-                    "names": node_names[:idx+1],
+                    "names": node_names[:idx + 1],
                     "stage": node.stage,
                 })
             node = node.command_groups[name]
@@ -348,7 +348,8 @@ class WorkspaceManager:
         node = self.find_command_tree_node(*node_names)
         if not node:
             raise exceptions.ResourceConflict(f"Command Tree node not exist: '{' '.join(node_names)}'")
-        if (not node.commands or name not in node.commands) and (not node.command_groups or name not in node.command_groups):
+        if (not node.commands or name not in node.commands) and (
+                not node.command_groups or name not in node.command_groups):
             return name
         idx = 1
         new_name = f"{name}-untitled{idx}"

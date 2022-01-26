@@ -1,13 +1,13 @@
+import json
+import logging
+import os
 
 from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDDiffLevelEnum, \
     CMDInstanceUpdateOperation, CMDHttpRequest, CMDArgGroup, CMDObjectArg, CMDArrayArg, \
     CMDObjectArgBase, CMDArrayArgBase, CMDCondition, CMDConditionNotOperator, CMDConditionHasValueOperator, \
     CMDConditionAndOperator, CMDCommandGroup
-import json
-from utils.base64 import b64encode_str
-import os
-import logging
 from utils import exceptions
+from utils.base64 import b64encode_str
 
 logger = logging.getLogger('backend')
 
@@ -133,7 +133,7 @@ class WorkspaceCfgEditor:
             for sub_group in parent.command_groups:
                 sub_names = sub_group.name.split(" ")
                 if len(sub_names) < len(cg_names) and sub_names == cg_names[:len(sub_names)] or \
-                            len(sub_names) >= len(cg_names) and sub_names[:len(cg_names)] == cg_names:
+                        len(sub_names) >= len(cg_names) and sub_names[:len(cg_names)] == cg_names:
                     assert group is None and names is None, "multiple match found"
                     group = sub_group
                     names = sub_names
@@ -532,7 +532,7 @@ class WorkspaceCfgEditor:
         return conditions, new_operations
 
     def reformat(self):
-        self.cfg.resources = sorted(self.cfg.resources, key=lambda r:r.id)
+        self.cfg.resources = sorted(self.cfg.resources, key=lambda r: r.id)
         for group in self.cfg.command_groups:
             self._reformat_command_group(group)
         self.cfg.command_groups = sorted(
