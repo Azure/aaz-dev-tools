@@ -306,6 +306,24 @@ class CMDPasswordArg(CMDStringArg, CMDPasswordArgBase):
     pass
 
 
+# subscription
+class CMDSubscriptionIdArgBase(CMDStringArgBase):
+    TYPE_VALUE = "subscriptionId"
+
+
+class CMDSubscriptionIdArg(CMDStringArg, CMDSubscriptionIdArgBase):
+    pass
+
+
+# resourceGroupName
+class CMDResourceGroupNameArgBase(CMDStringArgBase):
+    TYPE_VALUE = "resourceGroupName"
+
+
+class CMDResourceGroupNameArg(CMDStringArg, CMDResourceGroupNameArgBase):
+    pass
+
+
 # resourceId
 class CMDResourceIdArgBase(CMDStringArgBase):
     TYPE_VALUE = "resourceId"
@@ -317,7 +335,7 @@ class CMDResourceIdArgBase(CMDStringArgBase):
     )
 
 
-class CMDResourceIdArg(CMDResourceIdArgBase, CMDStringArg):
+class CMDResourceIdArg(CMDStringArg, CMDResourceIdArgBase):
     pass
 
 

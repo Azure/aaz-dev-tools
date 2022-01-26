@@ -9,7 +9,7 @@ from ._fields import CMDVariantField, CMDBooleanField, CMDURLPathField, CMDDescr
 from ._http_body import CMDHttpBody
 from ._schema import CMDSchemaField
 from ._arg_builder import CMDArgBuilder
-from ._arg import CMDClsArg, CMDResourceLocationArg
+from ._arg import CMDResourceGroupNameArg, CMDSubscriptionIdArg, CMDResourceLocationArg
 from ._utils import CMDDiffLevelEnum
 from msrestazure.tools import parse_resource_id, is_valid_resource_id
 
@@ -45,17 +45,15 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                         break
 
                 if id_part == 'subscription' or param.name == 'subscriptionId':
-                    arg = CMDClsArg({
-                        'var': f'{var_prefix}.subscription',
-                        'type': '@Subscription',
+                    arg = CMDSubscriptionIdArg({
+                        'var': f'{var_prefix}.subscriptionId',
                         'options': ['subscription'],
                     })
                     param.arg = arg.var
                     arg.ref_schema = param
                 elif id_part == 'resource_group' or param.name == 'resourceGroupName':
-                    arg = CMDClsArg({
-                        'var': f'{var_prefix}.resourceGroup',
-                        'type': '@ResourceGroup',
+                    arg = CMDResourceGroupNameArg({
+                        'var': f'{var_prefix}.resourceGroupName',
                         'options': ['resource-group', 'g'],
                     })
                     param.arg = arg.var
