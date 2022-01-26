@@ -67,7 +67,7 @@ def editor_workspace_generate(name):
 
 
 # command tree operations
-@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>", methods=("GET", "PATCH", "DELETE"))
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>", methods=("GET", "POST", "PATCH", "DELETE"))
 def editor_workspace_command_tree_node(name, node_names):
     if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command group not exist")
@@ -76,12 +76,23 @@ def editor_workspace_command_tree_node(name, node_names):
     manager = WorkspaceManager(name)
     manager.load()
     node = manager.find_command_tree_node(*node_names)
-    if not node:
+    if not node and request.method != "DELETE":
         raise exceptions.ResourceNotFind("Command group not exist")
 
     if request.method == "GET":
+        # get current node
+        result = node.to_primitive()
+    elif request.method == "POST":
+        # create sub node
+        data = request.get_json()
+        if 'name' not in data or not data['name']:
+            raise exceptions.InvalidAPIUsage("Invalid request")
+        sub_node_names = data['name'].split(' ')
+        node = manager.create_command_tree_nodes(*node_names, *sub_node_names)
+        manager.save()
         result = node.to_primitive()
     elif request.method == "PATCH":
+        # update help or stage of node
         data = request.get_json()
         if 'help' in data:
             node = manager.update_command_tree_node_help(*node_names, help=data['help'])
@@ -90,12 +101,13 @@ def editor_workspace_command_tree_node(name, node_names):
         manager.save()
         result = node.to_primitive()
     elif request.method == "DELETE":
+        # delete node
         if len(node_names) < 1:
             raise exceptions.InvalidAPIUsage("Not support to delete command tree root")
-        if manager.delete_command_tree_node(*node_names):
-            return '', 200
-        else:
+        if not manager.delete_command_tree_node(*node_names):
             return '', 204  # resource not found
+        manager.save()
+        return '', 200
     else:
         raise NotImplementedError()
     return jsonify(result)
@@ -122,6 +134,7 @@ def editor_workspace_command_tree_node_rename(name, node_names):
     new_node_names = new_name.split(' ')
     node = manager.rename_command_tree_node(*node_names, new_node_names=new_node_names)
     result = node.to_primitive()
+    manager.save()
     return jsonify(result)
 
 
@@ -164,9 +177,15 @@ def editor_workspace_command_rename(name, node_names, leaf_name):
         raise exceptions.InvalidAPIUsage("Invalid request")
 
     new_leaf_names = new_name.split(' ')
-    manager.rename_command_tree_leaf(*node_names, leaf_name, new_leaf_names=new_leaf_names)
+    new_leaf = manager.rename_command_tree_leaf(*node_names, leaf_name, new_leaf_names=new_leaf_names)
+    cfg_editor = manager.load_cfg_editor_by_command(new_leaf)
+    command = cfg_editor.find_command(*new_leaf.names)
+    result = command.to_primitive()
+    del result['name']
+    result['names'] = new_leaf.names
+
     manager.save()
-    return "", 200
+    return jsonify(result)
 
 
 # command tree resource operations

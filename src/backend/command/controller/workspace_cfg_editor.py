@@ -245,7 +245,9 @@ class WorkspaceCfgEditor:
                 remain_names = remain_names[len(cg_names):]
 
             new_command_group = CMDCommandGroup()
-            new_command_group.name = ' '.join(remain_names[len(cg_names):])
+            new_command_group.name = ' '.join(remain_names)
+            if parent.command_groups is None:
+                parent.command_groups = []
             parent.command_groups.append(new_command_group)
             command_group = new_command_group
 
@@ -262,6 +264,7 @@ class WorkspaceCfgEditor:
         if command_group.commands is None:
             command_group.commands = []
 
+        command.name = new_cmd_names[-1]
         command_group.commands.append(command)
 
         self.reformat()

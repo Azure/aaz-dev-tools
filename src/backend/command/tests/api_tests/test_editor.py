@@ -1,3 +1,5 @@
+import json
+
 from command.tests.common import CommandTestCase, workspace_name
 from utils.plane import PlaneEnum
 import os
@@ -185,13 +187,13 @@ class APIEditorTest(CommandTestCase):
             assert command['version'] == '2021-12-01'
 
     @workspace_name("test_workspace_command_rename")
-    def test_workspace_command_rename(self, ws_name):
+    def test_workspace_rename(self, ws_name):
         with self.app.test_client() as c:
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
             })
-            assert rv.status_code == 200
+            self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
             ws_url = ws['url']
 
@@ -235,7 +237,67 @@ class APIEditorTest(CommandTestCase):
             self.assertTrue(rv.status_code == 200)
             command_tree = rv.get_json()
 
-            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/Leaves/show")
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/Leaves/list-product-family")
             self.assertTrue(rv.status_code == 200)
             command = rv.get_json()
-            print(command)
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/Leaves/list-product-family/Rename", json={
+                'name': "edge-order product-family list"
+            })
+            self.assertTrue(rv.status_code == 200)
+            command = rv.get_json()
+            self.assertTrue(command['names'] == ['edge-order', 'product-family', 'list'])
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order")
+            self.assertTrue(rv.status_code == 200)
+            edge_order_node = rv.get_json()
+            self.assertTrue('product-family' in edge_order_node['commandGroups'])
+            product_family_node = edge_order_node['commandGroups']['product-family']
+            self.assertTrue(product_family_node['names'] == ['edge-order', 'product-family'])
+            self.assertTrue('list' in product_family_node['commands'])
+            list_leaf = product_family_node['commands']['list']
+            self.assertTrue(list_leaf['names'] == ['edge-order', 'product-family', 'list'])
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/product-family/Leaves/list")
+            self.assertTrue(rv.status_code == 200)
+            command = rv.get_json()
+            self.assertTrue(command['names'] == ['edge-order', 'product-family', 'list'])
+            self.assertTrue(command['resources'][0]['id'] == swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies'))
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/Leaves/product-families-metadatum/Rename", json={
+                'name': "edge-order product-family list-metadata"
+            })
+            self.assertTrue(rv.status_code == 200)
+            command = rv.get_json()
+            self.assertTrue(command['names'] == ['edge-order', 'product-family', 'list-metadata'])
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order-item/Rename", json={
+                'name': "edge-order order item"
+            })
+            self.assertTrue(rv.status_code == 200)
+            order_item_node = rv.get_json()
+            self.assertTrue(order_item_node["names"] == ['edge-order', 'order', 'item'])
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order")
+            self.assertTrue(rv.status_code == 200)
+            order_node = rv.get_json()
+            self.assertTrue(order_node["names"] == ['edge-order', 'order'])
+            self.assertTrue(len(order_node["commands"]) == 2)
+            self.assertTrue(len(order_node["commandGroups"]) == 1)
+            order_item_node = order_node["commandGroups"]['item']
+            self.assertTrue(len(order_item_node['commands']) == 7)
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/edge-order", json={
+                "name": "product item"
+            })
+            self.assertTrue(rv.status_code == 200)
+            product_item_node = rv.get_json()
+            self.assertTrue(product_item_node["names"] == ["edge-order", "product", "item"])
+            rv = c.delete(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order")
+            self.assertTrue(rv.status_code == 409)
+            rv = c.delete(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/product")
+            self.assertTrue(rv.status_code == 200)
+            rv = c.delete(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/product/item")
+            self.assertTrue(rv.status_code == 204)
+
+
+

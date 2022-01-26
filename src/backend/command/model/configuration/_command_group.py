@@ -33,9 +33,9 @@ class CMDCommandGroup(Model):
         if self.commands:
             for command in self.commands:
                 command.reformat()
-        else:
+        elif self.command_groups:
             if len(self.command_groups) == 1:
-                sub_group = self.coommand_groups[0]
+                sub_group = self.command_groups[0]
                 self.name += ' ' + sub_group.name
                 self.command_groups = sub_group.command_groups
                 self.commands = sub_group.commands

@@ -189,7 +189,7 @@ class WorkspaceManager:
         return node
 
     def delete_command_tree_node(self, *node_names):
-        for _ in self.iter_command_tree_nodes(*node_names):
+        for _ in self.iter_command_tree_leaves(*node_names):
             raise exceptions.ResourceConflict("Cannot delete command group with commands")
         parent = self.find_command_tree_node(*node_names[:-1])
         name = node_names[-1]
@@ -492,7 +492,6 @@ class WorkspaceManager:
         return parent.commands.pop(name)
 
     def _add_command_tree_node(self, parent, node, name):
-
         command_groups = node.command_groups
         commands = node.commands
 
@@ -516,10 +515,12 @@ class WorkspaceManager:
             node = parent.command_groups[name]
 
         # add sub node and sub leaf
-        for sub_name, sub_node in command_groups.items():
-            self._add_command_tree_node(node, sub_node, sub_name)
-        for sub_name, sub_leaf in commands.items():
-            self._add_command_tree_leaf(node, sub_leaf, sub_name)
+        if command_groups:
+            for sub_name, sub_node in command_groups.items():
+                self._add_command_tree_node(node, sub_node, sub_name)
+        if commands:
+            for sub_name, sub_leaf in commands.items():
+                self._add_command_tree_leaf(node, sub_leaf, sub_name)
         return node
 
     def _add_command_tree_leaf(self, parent, leaf, name):
@@ -544,6 +545,7 @@ class WorkspaceManager:
         assert name not in parent.commands
         parent.commands[name] = leaf
         old_names = leaf.names
-        leaf.names = [*parent.names, name]
-        cfg_editor.rename_command(*old_names, new_cmd_names=leaf)
+        new_cmd_names = [*parent.names, name]
+        leaf.names = [*new_cmd_names]
+        cfg_editor.rename_command(*old_names, new_cmd_names=new_cmd_names)
         return leaf
