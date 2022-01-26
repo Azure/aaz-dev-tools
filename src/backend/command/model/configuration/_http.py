@@ -9,7 +9,7 @@ from ._fields import CMDVariantField, CMDBooleanField, CMDURLPathField, CMDDescr
 from ._http_body import CMDHttpBody
 from ._schema import CMDSchemaField
 from ._arg_builder import CMDArgBuilder
-from ._arg import CMDClsArg
+from ._arg import CMDClsArg, CMDResourceLocationArg
 from ._utils import CMDDiffLevelEnum
 from msrestazure.tools import parse_resource_id, is_valid_resource_id
 
@@ -43,7 +43,8 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                     if name == placeholder:
                         id_part = part
                         break
-                if id_part == 'subscription':
+
+                if id_part == 'subscription' or param.name == 'subscriptionId':
                     arg = CMDClsArg({
                         'var': f'{var_prefix}.subscription',
                         'type': '@Subscription',
@@ -51,11 +52,18 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                     })
                     param.arg = arg.var
                     arg.ref_schema = param
-                elif id_part == 'resource_group':
+                elif id_part == 'resource_group' or param.name == 'resourceGroupName':
                     arg = CMDClsArg({
                         'var': f'{var_prefix}.resourceGroup',
                         'type': '@ResourceGroup',
                         'options': ['resource-group', 'g'],
+                    })
+                    param.arg = arg.var
+                    arg.ref_schema = param
+                elif param.name == 'location':
+                    arg = CMDResourceLocationArg({
+                        'var': f'{var_prefix}.location',
+                        'options': ['location', 'l'],
                     })
                     param.arg = arg.var
                     arg.ref_schema = param
@@ -65,8 +73,8 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                     assert len(result) == 1
                     arg = result[0]
 
-                if resource_name == placeholder:
-                    arg.options = list({*arg.options, "name", "n"})
+                    if resource_name == placeholder:
+                        arg.options = list({*arg.options, "name", "n"})
 
                 arg.required = True
                 arg.id_part = id_part

@@ -151,7 +151,7 @@ class WorkspaceManager:
         if not node:
             return None
         name = leaf_names[-1]
-        if name not in node.commands:
+        if not node.commands or name not in node.commands:
             return None
         leaf = node.commands[name]
         return leaf
@@ -421,7 +421,7 @@ class WorkspaceManager:
         root_node = self.find_command_tree_node(*node_names)
         if len(node_names):
             # should also include the existing commands
-            for leaf in (root_node.commands or []):
+            for leaf in (root_node.commands or {}).values():
                 for leaf_resource in leaf.resources:
                     # cannot find match resource of resource_id with current mod_names and version
                     cg_names = self.swagger_command_generator.generate_command_group_name_by_resource(
