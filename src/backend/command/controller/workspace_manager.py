@@ -495,6 +495,7 @@ class WorkspaceManager:
         plus_cfg_editor = self.load_cfg_editor_by_resource(plus_resource_id, plus_resource_version)
         merged_cfg_editor = main_cfg_editor.merge(plus_cfg_editor)
         if merged_cfg_editor:
+            self.remove_cfg(plus_cfg_editor)
             self.remove_cfg(main_cfg_editor)
             self.add_cfg(merged_cfg_editor)
             return True

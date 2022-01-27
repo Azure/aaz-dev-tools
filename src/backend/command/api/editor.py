@@ -1,7 +1,8 @@
 import os
 
-from command.controller.workspace_manager import WorkspaceManager
 from flask import Blueprint, jsonify, request, url_for
+
+from command.controller.workspace_manager import WorkspaceManager
 from utils import exceptions
 
 bp = Blueprint('editor', __name__, url_prefix='/AAZ/Editor')
@@ -138,7 +139,8 @@ def editor_workspace_command_tree_node_rename(name, node_names):
     return jsonify(result)
 
 
-@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>", methods=("GET", "PATCH"))
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>",
+          methods=("GET", "PATCH"))
 def editor_workspace_command(name, node_names, leaf_name):
     if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command not exist")
@@ -174,7 +176,8 @@ def editor_workspace_command(name, node_names, leaf_name):
     return jsonify(result)
 
 
-@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Rename", methods=("POST",))
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Rename",
+          methods=("POST",))
 def editor_workspace_command_rename(name, node_names, leaf_name):
     if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command not exist")
@@ -260,9 +263,9 @@ def editor_workspace_resources_merge(name):
     data = request.get_json()
     if "mainResource" not in data or "plusResource" not in data:
         raise exceptions.InvalidAPIUsage("Invalid request")
-    main_resource_id = data["mainResource"]["resourceId"]
+    main_resource_id = data["mainResource"]["id"]
     main_resource_version = data["mainResource"]["version"]
-    plus_resource_id = data["plusResource"]["resourceId"]
+    plus_resource_id = data["plusResource"]["id"]
     plus_resource_version = data["plusResource"]["version"]
     if not manager.merge_resources(main_resource_id, main_resource_version, plus_resource_id, plus_resource_version):
         raise exceptions.ResourceConflict("Cannot merge resources")
