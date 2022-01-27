@@ -1,6 +1,9 @@
+import json
 import os
 
 from command.model.configuration import CMDStageEnum
+from command.controller.workspace_cfg_editor import WorkspaceCfgEditor
+from command.controller.workspace_manager import WorkspaceManager
 from command.tests.common import CommandTestCase, workspace_name
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.plane import PlaneEnum
@@ -408,4 +411,23 @@ class APIEditorTest(CommandTestCase):
             rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address")
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
-            self.assertTrue(len(data['commands']) == 1 and 'list' in data['commands'])
+            self.assertTrue(len(data['commands']) == 1 and 'list' in data['commands'] and len(data['commands']['list']['resources']) == 2)
+
+            manager = WorkspaceManager(name=ws_name)
+            path_main = WorkspaceCfgEditor.get_cfg_path(
+                manager.folder,
+                swagger_resource_path_to_resource_id(
+                    '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
+            )
+            with open(path_main, 'r') as f:
+                data = json.load(f)
+                self.assertTrue("$ref" not in data)
+            path_plus = WorkspaceCfgEditor.get_cfg_path(
+                manager.folder,
+                swagger_resource_path_to_resource_id(
+                    '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses')
+            )
+            with open(path_plus, 'r') as f:
+                data = json.load(f)
+                self.assertTrue("$ref" in data)
+
