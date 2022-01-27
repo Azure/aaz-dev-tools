@@ -1,6 +1,7 @@
 import json
 
 from command.tests.common import CommandTestCase, workspace_name
+from command.model.configuration import CMDStageEnum
 from utils.plane import PlaneEnum
 import os
 from swagger.utils.tools import swagger_resource_path_to_resource_id
@@ -299,5 +300,47 @@ class APIEditorTest(CommandTestCase):
             rv = c.delete(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/product/item")
             self.assertTrue(rv.status_code == 204)
 
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/Resources")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(len(data) == 14)
 
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item", json={
+                "help": {
+                    "short": "This is a short help",
+                },
+                "stage": CMDStageEnum.Preview
+            })
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(data['names'] == ["edge-order", "order", "item"])
+            self.assertTrue(data['help']['short'] == "This is a short help")
+            self.assertTrue(data['stage'] == CMDStageEnum.Preview)
+            self.assertTrue(data['commands']['create']['stage'] == CMDStageEnum.Preview)
 
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item/Leaves/create")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(data['names'] == ['edge-order', 'order', 'item', 'create'])
+            self.assertTrue(data['stage'] == CMDStageEnum.Preview)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item/Leaves/create", json={
+                "help": {
+                    "short": "This is command help",
+                    "long": [
+                        "help line 1",
+                        "help line 2"
+                    ]
+                },
+                "stage": CMDStageEnum.Experimental
+            })
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(data['stage'] == CMDStageEnum.Experimental)
+            self.assertTrue(data['help']['short'] == "This is command help")
+            self.assertTrue(data['help']['long'] == ["help line 1", "help line 2"])
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(data['commands']['create']['stage'] == CMDStageEnum.Experimental)

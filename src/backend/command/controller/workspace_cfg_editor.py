@@ -5,7 +5,7 @@ import os
 from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDDiffLevelEnum, \
     CMDInstanceUpdateOperation, CMDHttpRequest, CMDArgGroup, CMDObjectArg, CMDArrayArg, \
     CMDObjectArgBase, CMDArrayArgBase, CMDCondition, CMDConditionNotOperator, CMDConditionHasValueOperator, \
-    CMDConditionAndOperator, CMDCommandGroup
+    CMDConditionAndOperator, CMDCommandGroup, CMDHelp
 from utils import exceptions
 from utils.base64 import b64encode_str
 
@@ -135,6 +135,13 @@ class WorkspaceCfgEditor:
             raise exceptions.ResourceNotFind(f"Cannot find definition for command '{' '.join(cmd_names)}'")
         if command.stage != stage:
             command.stage = stage
+        return command
+
+    def update_command_help(self, *cmd_names, help):
+        command = self.find_command(*cmd_names)
+        if command is None:
+            raise exceptions.ResourceNotFind(f"Cannot find definition for command '{' '.join(cmd_names)}'")
+        command.help = CMDHelp(help)
         return command
 
     def find_command_group(self, *cg_names, parent=None):

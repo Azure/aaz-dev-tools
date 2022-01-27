@@ -138,7 +138,7 @@ def editor_workspace_command_tree_node_rename(name, node_names):
     return jsonify(result)
 
 
-@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>", methods=("GET",))
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>", methods=("GET", "PATCH"))
 def editor_workspace_command(name, node_names, leaf_name):
     if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command not exist")
@@ -150,10 +150,24 @@ def editor_workspace_command(name, node_names, leaf_name):
     if not leaf:
         raise exceptions.ResourceNotFind("Command not exist")
 
-    # get the command configuration
-    cfg_editor = manager.load_cfg_editor_by_command(leaf)
-    command = cfg_editor.find_command(*leaf.names)
-    result = command.to_primitive()
+    if request.method == "GET":
+        # get the command configuration
+        cfg_editor = manager.load_cfg_editor_by_command(leaf)
+        command = cfg_editor.find_command(*leaf.names)
+        result = command.to_primitive()
+    elif request.method == "PATCH":
+        # update help or stage of node
+        data = request.get_json()
+        if 'help' in data:
+            leaf = manager.update_command_tree_leaf_help(*leaf.names, help=data['help'])
+        if 'stage' in data and leaf.stage != data['stage']:
+            leaf = manager.update_command_tree_leaf_stage(*leaf.names, stage=data['stage'])
+        cfg_editor = manager.load_cfg_editor_by_command(leaf)
+        command = cfg_editor.find_command(*leaf.names)
+        result = command.to_primitive()
+        manager.save()
+    else:
+        raise NotImplementedError()
 
     del result['name']
     result['names'] = leaf.names
@@ -239,7 +253,7 @@ def editor_workspace_resources(name, node_names):
     return jsonify(result)
 
 
-@bp.route("/Workspaces/<name>/Resources/Merge", methods=("Post",))
+@bp.route("/Workspaces/<name>/Resources/Merge", methods=("POST",))
 def editor_workspace_resources_merge(name):
     manager = WorkspaceManager(name)
     manager.load()

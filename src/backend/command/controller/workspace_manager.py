@@ -157,14 +157,16 @@ class WorkspaceManager:
         return leaf
 
     def iter_command_tree_nodes(self, *root_node_names):
+        """ Including the root node
+        """
         root = self.find_command_tree_node(*root_node_names)
         if root:
             nodes = [root]  # add root node
             i = 0
             while i < len(nodes):
+                yield nodes[i]
                 for node in (nodes[i].command_groups or {}).values():
                     nodes.append(node)
-                    yield node
                 i += 1
 
     def iter_command_tree_leaves(self, *root_node_names):
@@ -269,6 +271,21 @@ class WorkspaceManager:
         node.help = CMDHelp(help)
         return node
 
+    def update_command_tree_leaf_help(self, *leaf_names, help):
+        leaf = self.find_command_tree_leaf(*leaf_names)
+        if not leaf:
+            raise exceptions.ResourceNotFind(f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
+
+        if isinstance(help, CMDHelp):
+            help = help.to_primitive()
+        else:
+            assert isinstance(help, dict)
+        leaf.help = CMDHelp(help)
+
+        cfg_editor = self.load_cfg_editor_by_command(leaf)
+        cfg_editor.update_command_help(*leaf.names, help=help)
+        return leaf
+
     def update_command_tree_node_stage(self, *node_names, stage):
         node = self.find_command_tree_node(*node_names)
         if not node:
@@ -285,6 +302,7 @@ class WorkspaceManager:
         if node.commands:
             for leaf_name in node.commands:
                 self.update_command_tree_leaf_stage(*node_names, leaf_name, stage=stage)
+        return node
 
     def update_command_tree_leaf_stage(self, *leaf_names, stage):
         leaf = self.find_command_tree_leaf(*leaf_names)
@@ -466,6 +484,9 @@ class WorkspaceManager:
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if not cfg_editor:
             return False
+        if len(cfg_editor.resources) > 1:
+            # TODO: handler to remove one resource from multiple resource cfg_editor
+            pass
         self.remove_cfg(cfg_editor)
         return True
 
