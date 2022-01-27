@@ -4,7 +4,7 @@ import webbrowser
 import click
 from flask.cli import pass_script_info, show_server_banner, DispatchingApp, SeparatedPathType
 from flask.helpers import get_debug_flag, get_env
-from utils import Config
+from utils.config import Config
 
 
 @click.command("run", short_help="Run a development server.")

@@ -178,6 +178,15 @@ class CMDSchemaBase(Model):
                     diff["default"] = default_diff
         return diff
 
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        if self.frozen and old.frozen:
+            return None
+        diff = {}
+        diff = self._diff_base(old, level, diff)
+        return diff
+
 
 class CMDSchemaBaseField(PolyModelType):
 
@@ -336,6 +345,7 @@ class CMDClsSchema(CMDSchema, CMDClsSchemaBase):
     )
 
     def _diff(self, old, level, diff):
+        # TODO: Handle Cls Schema compare with other Schema classes
         diff = super(CMDClsSchema, self)._diff(old, level, diff)
         if level >= CMDDiffLevelEnum.BreakingChange:
             if self.client_flatten != old.client_flatten:

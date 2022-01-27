@@ -1,1 +1,1 @@
-from ._workspace import CMDEditorWorkspace
+from ._workspace import CMDEditorWorkspace, CMDCommandTreeLeaf, CMDCommandTreeNode

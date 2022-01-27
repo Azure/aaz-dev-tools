@@ -11,11 +11,20 @@ class CMDConfiguration(Model):
     plane = PlaneField(required=True)
 
     resources = ListType(ModelType(CMDResource), min_size=1, required=True)  # resources contained in configuration file
-    command_group = ModelType(
-        CMDCommandGroup,
+    command_groups = ListType(
+        ModelType(CMDCommandGroup),
         serialized_name='commandGroups',
         deserialize_from='commandGroups',
     )
 
     class Options:
         serialize_when_none = False
+
+    def reformat(self):
+        self.resources = sorted(self.resources, key=lambda r: r.id)
+        for group in self.command_groups:
+            group.reformat()
+        self.command_groups = sorted(
+            [group for group in self.command_groups if group.commands or group.command_groups],
+            key=lambda g: g.name
+        )

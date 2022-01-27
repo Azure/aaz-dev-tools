@@ -1,7 +1,7 @@
 import os
 
-from ._resource_provider import ResourceProvider
 from utils.plane import PlaneEnum
+from ._resource_provider import ResourceProvider
 
 
 class SwaggerModule:
@@ -27,6 +27,13 @@ class SwaggerModule:
 
     def __hash__(self):
         return hash(str(self))
+
+    @property
+    def names(self):
+        if self._parent is None:
+            return [self.name]
+        else:
+            return [*self._parent.names, self.name]
 
 
 class MgmtPlaneModule(SwaggerModule):

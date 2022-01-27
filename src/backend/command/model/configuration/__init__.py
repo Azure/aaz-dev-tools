@@ -9,6 +9,8 @@ from ._arg import CMDArgEnumItem, CMDArgEnum, \
     CMDDateTimeArgBase, CMDDateTimeArg, \
     CMDUuidArgBase, CMDUuidArg, \
     CMDPasswordArgBase, CMDPasswordArg, \
+    CMDSubscriptionIdArgBase, CMDSubscriptionIdArg, \
+    CMDResourceGroupNameArgBase, CMDResourceGroupNameArg, \
     CMDResourceIdArgBase, CMDResourceIdArg, \
     CMDResourceLocationArgBase, CMDResourceLocationArg, \
     CMDIntegerArgBase, CMDIntegerArg, \
