@@ -71,7 +71,7 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
 
   getModules = () => {
     const plane = this.state.mgmtPlane ? 'mgmt-plane' : 'mgmt-plane'
-    axios.get(`/swagger/specs/${plane}`)
+    axios.get(`/Swagger/Specs/${plane}`)
       .then((res) => {
         const modules: DictType = {}
         res.data.map((module: Instance) => {
@@ -108,7 +108,7 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
     }
     const moduleName: string = eventKey
     const moduleUrl = this.state.modules[moduleName]
-    axios.get(`${moduleUrl}/resource-providers`)
+    axios.get(`${moduleUrl}/ResourceProviders`)
       .then((res) => {
         const resourceProviders: DictType = {}
         res.data.map((resourceProvider: Instance) => {
@@ -128,7 +128,7 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
     const resourceProviderName: string = eventKey
     const resourceProviderUrl = this.state.resourceProviders[resourceProviderName]
     this.setState({ loadingResources: true })
-    axios.get(`${resourceProviderUrl}/resources`)
+    axios.get(`${resourceProviderUrl}/Resources`)
       .then((res) => {
         const resources: Resources = {}
         res.data.map((resource: Resource) => {
