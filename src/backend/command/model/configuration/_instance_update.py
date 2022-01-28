@@ -62,19 +62,23 @@ class CMDGenericInstanceUpdateMethod(Model):
         args = [
             CMDClsArg({
                 'var': self.add,
-                'type': "@GenericUpdateAdd"
+                'type': "@GenericUpdateAdd",
+                'options': ['add']
             }),
             CMDClsArg({
                 'var': self.set,
-                'type': "@GenericUpdateSet"
+                'type': "@GenericUpdateSet",
+                'options': ['set']
             }),
             CMDClsArg({
                 'var': self.remove,
-                'type': "@GenericUpdateRemove"
+                'type': "@GenericUpdateRemove",
+                'options': ['remove']
             }),
             CMDClsArg({
                 'var': self.force_string,
-                'type': "@GenericUpdateForceString"
+                'type': "@GenericUpdateForceString",
+                'options': ['force-string'],
             })
         ]
         for arg in args:

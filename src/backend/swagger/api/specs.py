@@ -1,27 +1,18 @@
-from base64 import urlsafe_b64encode, urlsafe_b64decode
+from flask import Blueprint, jsonify, url_for
 
-from flask import Blueprint, jsonify
 from swagger.controller.specs_manager import SwaggerSpecsManager
 
-bp = Blueprint('swagger', __name__, url_prefix='/swagger/specs')
-
-
-def b64encode_str(value):
-    return urlsafe_b64encode(value.encode()).decode()
-
-
-def b64decode_str(value):
-    return urlsafe_b64decode(value).decode()
+bp = Blueprint('swagger', __name__, url_prefix='/Swagger/Specs')
 
 
 # modules
-@bp.route("/<plane>", methods=("Get",))
+@bp.route("/<plane>", methods=("GET",))
 def get_modules_by(plane):
     specs_manager = SwaggerSpecsManager()
     result = []
     for module in specs_manager.get_modules(plane):
         m = {
-            "url": f"{bp.url_prefix}/{module}",
+            "url": url_for('swagger.get_module', plane=plane, mod_names=module.names),
             "name": module.name,
             "folder": module.folder_path,
         }
@@ -29,19 +20,19 @@ def get_modules_by(plane):
     return jsonify(result)
 
 
-@bp.route("/<plane>/<path:mod_names>", methods=("Get",))
+@bp.route("/<plane>/<list_path:mod_names>", methods=("GET",))
 def get_module(plane, mod_names):
     specs_manager = SwaggerSpecsManager()
     module = specs_manager.get_module(plane, mod_names)
     result = {
-        "url": f"{bp.url_prefix}/{module}",
+        "url": url_for('swagger.get_module', plane=plane, mod_names=mod_names),
         "name": module.name,
         "folder": module.folder_path,
         "resourceProviders": []
     }
     for rp in specs_manager.get_resource_providers(plane, mod_names):
         result['resourceProviders'].append({
-            "url": f"{bp.url_prefix}/{rp}",
+            "url": url_for('swagger.get_resource_provider', plane=plane, mod_names=mod_names, rp_name=rp.name),
             "name": rp.name,
             "folder": rp.folder_path,
         })
@@ -49,25 +40,25 @@ def get_module(plane, mod_names):
 
 
 # resource providers
-@bp.route("/<plane>/<path:mod_names>/resource-providers", methods=("Get",))
+@bp.route("/<plane>/<list_path:mod_names>/ResourceProviders", methods=("GET",))
 def get_resource_providers_by(plane, mod_names):
     specs_manager = SwaggerSpecsManager()
     result = []
     for rp in specs_manager.get_resource_providers(plane, mod_names):
         result.append({
-            "url": f"{bp.url_prefix}/{rp}",
+            "url": url_for('swagger.get_resource_provider', plane=plane, mod_names=mod_names, rp_name=rp.name),
             "name": rp.name,
             "folder": rp.folder_path,
         })
     return jsonify(result)
 
 
-@bp.route("/<plane>/<path:mod_names>/resource-providers/<rp_name>", methods=("Get",))
+@bp.route("/<plane>/<list_path:mod_names>/ResourceProviders/<rp_name>", methods=("GET",))
 def get_resource_provider(plane, mod_names, rp_name):
     specs_manager = SwaggerSpecsManager()
     rp = specs_manager.get_resource_provider(plane, mod_names, rp_name)
     result = {
-        "url": f"{bp.url_prefix}/{rp}",
+        "url": url_for('swagger.get_resource_provider', plane=plane, mod_names=mod_names, rp_name=rp.name),
         "name": rp.name,
         "folder": rp.folder_path,
         "resources": []
@@ -75,18 +66,18 @@ def get_resource_provider(plane, mod_names, rp_name):
     resource_op_group_map = specs_manager.get_grouped_resource_map(plane, mod_names, rp_name)
     for op_group_name, resource_map in resource_op_group_map.items():
         for resource_id, version_map in resource_map.items():
-
-            rs_id = f"{bp.url_prefix}/{rp}/resources/{b64encode_str(resource_id)}"
             rs = {
                 "opGroup": op_group_name,
-                "url": rs_id,
+                "url": url_for('swagger.get_resource_in_rp',
+                               plane=plane, mod_names=mod_names, rp_name=rp.name, resource_id=resource_id),
                 "id": resource_id,
                 "versions": []
             }
             for version, resource in version_map.items():
-                version = str(resource.version)
                 rs['versions'].append({
-                    "url": f"{rs_id}/v/{b64encode_str(version)}",
+                    "url": url_for('swagger.get_resource_version_in_rp',
+                                   plane=plane, mod_names=mod_names, rp_name=rp.name,
+                                   resource_id=resource.id, version=resource.version),
                     "version": version,
                     "file": resource.file_path,
                     "path": resource.path,
@@ -97,7 +88,7 @@ def get_resource_provider(plane, mod_names, rp_name):
 
 
 # resources
-@bp.route("/<plane>/<path:mod_names>/resource-providers/<rp_name>/resources", methods=("Get",))
+@bp.route("/<plane>/<list_path:mod_names>/ResourceProviders/<rp_name>/Resources", methods=("GET",))
 def get_resources_by(plane, mod_names, rp_name):
     specs_manager = SwaggerSpecsManager()
     result = []
@@ -105,17 +96,18 @@ def get_resources_by(plane, mod_names, rp_name):
     resource_op_group_map = specs_manager.get_grouped_resource_map(plane, mod_names, rp_name)
     for op_group_name, resource_map in resource_op_group_map.items():
         for resource_id, version_map in resource_map.items():
-            rs_url = f"{bp.url_prefix}/{rp}/resources/{b64encode_str(resource_id)}"
             rs = {
-                "url": rs_url,
                 "opGroup": op_group_name,
+                "url": url_for('swagger.get_resource_in_rp',
+                               plane=plane, mod_names=mod_names, rp_name=rp.name, resource_id=resource_id),
                 "id": resource_id,
                 "versions": []
             }
             for version, resource in version_map.items():
-                version = str(resource.version)
                 rs['versions'].append({
-                    "url": f"{rs_url}/v/{b64encode_str(version)}",
+                    "url": url_for('swagger.get_resource_version_in_rp',
+                                   plane=plane, mod_names=mod_names, rp_name=rp.name,
+                                   resource_id=resource.id, version=resource.version),
                     "id": resource_id,
                     "version": version,
                     "file": resource.file_path,
@@ -127,26 +119,27 @@ def get_resources_by(plane, mod_names, rp_name):
 
 
 # resource
-@bp.route("/<plane>/<path:mod_names>/resource-providers/<rp_name>/resources/<resource_id>", methods=("Get",))
+@bp.route("/<plane>/<list_path:mod_names>/ResourceProviders/<rp_name>/Resources/<base64:resource_id>",
+          methods=("GET",))
 def get_resource_in_rp(plane, mod_names, rp_name, resource_id):
     specs_manager = SwaggerSpecsManager()
-    resource_id = b64decode_str(resource_id)
     version_map = specs_manager.get_resource_version_map(
         plane=plane, mod_names=mod_names, resource_id=resource_id, rp_name=rp_name
     )
     rp = list(version_map.values())[0].resource_provider
     op_group_name = specs_manager.get_resource_op_group_name(version_map)
-    rs_url = f"{bp.url_prefix}/{rp}/resources/{b64encode_str(resource_id)}"
     result = {
-        "url": rs_url,
         "opGroup": op_group_name,
+        "url": url_for('swagger.get_resource_in_rp',
+                       plane=plane, mod_names=mod_names, rp_name=rp.name, resource_id=resource_id),
         "id": resource_id,
         "versions": []
     }
     for version, resource in version_map.items():
-        version = str(resource.version)
         result['versions'].append({
-            "url": f"{rs_url}/v/{b64encode_str(version)}",
+            "url": url_for('swagger.get_resource_version_in_rp',
+                           plane=plane, mod_names=mod_names, rp_name=rp.name,
+                           resource_id=resource.id, version=resource.version),
             "id": resource_id,
             "version": version,
             "file": resource.file_path,
@@ -156,26 +149,26 @@ def get_resource_in_rp(plane, mod_names, rp_name, resource_id):
     return jsonify(result)
 
 
-@bp.route("/<plane>/<path:mod_names>/resources/<resource_id>", methods=("Get",))
+@bp.route("/<plane>/<list_path:mod_names>/Resources/<base64:resource_id>", methods=("GET",))
 def get_resource_in_module(plane, mod_names, resource_id):
     specs_manager = SwaggerSpecsManager()
-    resource_id = b64decode_str(resource_id)
     version_map = specs_manager.get_resource_version_map(
         plane=plane, mod_names=mod_names, resource_id=resource_id
     )
     rp = list(version_map.values())[0].resource_provider
     op_group_name = specs_manager.get_resource_op_group_name(version_map)
-    rs_url = f"{bp.url_prefix}/{rp}/resources/{b64encode_str(resource_id)}"
     result = {
-        "url": rs_url,
         "opGroup": op_group_name,
+        "url": url_for('swagger.get_resource_in_rp',
+                       plane=plane, mod_names=mod_names, rp_name=rp.name, resource_id=resource_id),
         "id": resource_id,
         "versions": []
     }
     for version, resource in version_map.items():
-        version = str(resource.version)
         result['versions'].append({
-            "url": f"{rs_url}/v/{b64encode_str(version)}",
+            "url": url_for('swagger.get_resource_version_in_rp',
+                           plane=plane, mod_names=mod_names, rp_name=rp.name,
+                           resource_id=resource.id, version=resource.version),
             "id": resource_id,
             "version": version,
             "file": resource.file_path,
@@ -186,19 +179,19 @@ def get_resource_in_module(plane, mod_names, resource_id):
 
 
 # resource version
-@bp.route("/<plane>/<path:mod_names>/resource-providers/<rp_name>/resources/<resource_id>/v/<version>",
-          methods=("Get",))
+@bp.route(
+    "/<plane>/<list_path:mod_names>/ResourceProviders/<rp_name>/Resources/<base64:resource_id>/V/<base64:version>",
+    methods=("GET",)
+)
 def get_resource_version_in_rp(plane, mod_names, rp_name, resource_id, version):
     specs_manager = SwaggerSpecsManager()
-    resource_id = b64decode_str(resource_id)
-    version = b64decode_str(version)
     resource = specs_manager.get_resource_in_version(
         plane=plane, mod_names=mod_names, rp_name=rp_name, resource_id=resource_id, version=version
     )
-    version = str(resource.version)
     result = {
-        "url": f"{bp.url_prefix}/{resource.resource_provider}/resources/"
-               f"{b64encode_str(resource.id)}/v/{b64encode_str(version)}",
+        "url": url_for('swagger.get_resource_version_in_rp',
+                       plane=plane, mod_names=mod_names, rp_name=resource.resource_provider.name,
+                       resource_id=resource.id, version=resource.version),
         "id": resource_id,
         "version": version,
         "file": resource.file_path,
@@ -208,18 +201,16 @@ def get_resource_version_in_rp(plane, mod_names, rp_name, resource_id, version):
     return jsonify(result)
 
 
-@bp.route("/<plane>/<path:mod_names>/resources/<resource_id>/v/<version>", methods=("Get",))
+@bp.route("/<plane>/<list_path:mod_names>/Resources/<base64:resource_id>/V/<base64:version>", methods=("GET",))
 def get_resource_version_in_module(plane, mod_names, resource_id, version):
     specs_manager = SwaggerSpecsManager()
-    resource_id = b64decode_str(resource_id)
-    version = b64decode_str(version)
     resource = specs_manager.get_resource_in_version(
         plane=plane, mod_names=mod_names, resource_id=resource_id, version=version
     )
-    version = str(resource.version)
     result = {
-        "url": f"{bp.url_prefix}/{resource.resource_provider}/resources/"
-               f"{b64encode_str(resource.id)}/v/{b64encode_str(version)}",
+        "url": url_for('swagger.get_resource_version_in_rp',
+                       plane=plane, mod_names=mod_names, rp_name=resource.resource_provider.name,
+                       resource_id=resource.id, version=resource.version),
         "id": resource_id,
         "version": version,
         "file": resource.file_path,

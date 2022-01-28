@@ -22,6 +22,9 @@ class CMDHttpBody(Model):
     def generate_args(self):
         raise NotImplementedError()
 
+    def diff(self, old, level):
+        raise NotImplementedError()
+
 
 class CMDHttpJsonBody(CMDHttpBody):
     POLYMORPHIC_KEY = "json"
@@ -30,3 +33,8 @@ class CMDHttpJsonBody(CMDHttpBody):
 
     def generate_args(self):
         return self.json.generate_args()
+
+    def diff(self, old, level):
+        if not isinstance(old, self.__class__):
+            return f"Response type changed: '{type(old)}' != '{self.__class__}'"
+        return self.json.diff(old.json, level)

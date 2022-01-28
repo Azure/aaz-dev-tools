@@ -61,3 +61,6 @@ class Config:
         if not os.path.exists(cls.CLI_EXTENSION_PATH):
             raise ValueError(f"Path '{cls.CLI_EXTENSION_PATH}' does not exist.")
         return cls.CLI_EXTENSION_PATH
+
+
+__all__ = ["Config"]

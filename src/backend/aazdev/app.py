@@ -1,7 +1,8 @@
 from flask import Flask, jsonify
 from flask.cli import FlaskGroup, shell_command, routes_command
-from utils import Config, exceptions
 
+from utils import exceptions
+from utils.config import Config
 from .run import run_command
 
 
@@ -19,6 +20,13 @@ def create_app():
     @app.errorhandler(exceptions.InvalidAPIUsage)
     def invalid_api_usage(e):
         return jsonify(e.to_dict()), e.status_code
+
+    # register url converters
+    from .url_converters import Base64Converter, NameConverter, NamesPathConverter, ListPathConvertor
+    app.url_map.converters['base64'] = Base64Converter
+    app.url_map.converters['name'] = NameConverter
+    app.url_map.converters['names_path'] = NamesPathConverter
+    app.url_map.converters['list_path'] = ListPathConvertor
 
     # register routes of swagger module
     from swagger.api import register_blueprints

@@ -208,7 +208,7 @@ class CMDArgBuilder:
         if not isinstance(self.schema, CMDArraySchema):
             raise NotImplementedError()
         opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
-        singular_opt_name = self._inflect_engine.singular_noun(opt_name)
+        singular_opt_name = self._inflect_engine.singular_noun(opt_name) or opt_name
         if singular_opt_name != opt_name:
             return [singular_opt_name, ]
         return None

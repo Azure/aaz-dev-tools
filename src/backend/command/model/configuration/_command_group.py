@@ -2,17 +2,16 @@ from schematics.models import Model
 from schematics.types import ModelType, ListType
 
 from ._command import CMDCommand
-from ._fields import CMDStageField, CMDCommandGroupNameField
-from ._help import CMDHelp
+from ._fields import CMDCommandGroupNameField
 
 
 class CMDCommandGroup(Model):
     # properties as tags
     name = CMDCommandGroupNameField(required=True)
-    stage = CMDStageField()
+    # stage = CMDStageField()
 
     # properties as nodes
-    help = ModelType(CMDHelp, required=True)
+    # help = ModelType(CMDHelp, required=True)
     commands = ListType(ModelType(CMDCommand))  # sub commands
     command_groups = ListType(
         ModelType("CMDCommandGroup"),
@@ -22,3 +21,22 @@ class CMDCommandGroup(Model):
 
     class Options:
         serialize_when_none = False
+
+    def reformat(self):
+        if self.command_groups:
+            for group in self.command_groups:
+                group.reformat()
+            self.command_groups = sorted(
+                [group for group in self.command_groups if group.commands or group.command_groups],
+                key=lambda g: g.name
+            )
+        if self.commands:
+            for command in self.commands:
+                command.reformat()
+        elif self.command_groups:
+            if len(self.command_groups) == 1:
+                sub_group = self.command_groups[0]
+                self.name += ' ' + sub_group.name
+                self.command_groups = sub_group.command_groups
+                self.commands = sub_group.commands
+                del sub_group

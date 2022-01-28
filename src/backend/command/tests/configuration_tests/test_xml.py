@@ -26,20 +26,17 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
         generator.load_resources([resource])
         command_group = generator.create_draft_command_group(resource)
 
-        model = CMDConfiguration({"resources": [resource.to_cmd()], "command_group": command_group})
+        model = CMDConfiguration({"resources": [resource.to_cmd()], "commandGroups": [command_group]})
         with TemporaryFile("w+t", encoding="utf-8") as fp:
             xml = XMLSerializer(model).to_xml()
             fp.write(xml)
             fp.seek(0)
-            deserialized_model = XMLSerializer(CMDConfiguration).from_xml(fp)
+            deserialized_model = XMLSerializer(CMDConfiguration).from_xml(fp.read())
             assert xml == XMLSerializer(deserialized_model).to_xml()
 
     def test_all_mgmt_modules_coverage(self):
         total = count = 0
-        for rp in self.get_mgmt_plane_resource_providers(
-            module_filter=lambda m: m.name == "network",
-            resource_provider_filter=lambda r: r.name == "Microsoft.Network"
-        ):
+        for rp in self.get_mgmt_plane_resource_providers():
             resource_map = rp.get_resource_map()
             generator = CommandGenerator()
 
@@ -56,12 +53,12 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
                     else:
                         total += 1
                         try:
-                            model = CMDConfiguration({"resources": [resource.to_cmd()], "command_group": command_group})
+                            model = CMDConfiguration({"resources": [resource.to_cmd()], "commandGroups": [command_group]})
                             with TemporaryFile("w+t", encoding="utf-8") as fp:
                                 xml = XMLSerializer(model).to_xml()
                                 fp.write(xml)
                                 fp.seek(0)
-                                deserialized_model = XMLSerializer(CMDConfiguration).from_xml(fp)
+                                deserialized_model = XMLSerializer(CMDConfiguration).from_xml(fp.read())
                         except Exception:
                             print(f"--module {rp.swagger_module.name} --resource-id {r_id} --version {v}")
                         else:
@@ -69,5 +66,6 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
                                 count += 1
                             else:
                                 print(f"--module {rp.swagger_module.name} --resource-id {r_id} --version {v}")
+
         coverage = count / total
         print(f"\nCoverage: {count} / {total} = {coverage:.2%}")

@@ -9,7 +9,8 @@ from ._fields import CMDVariantField, CMDBooleanField, CMDURLPathField, CMDDescr
 from ._http_body import CMDHttpBody
 from ._schema import CMDSchemaField
 from ._arg_builder import CMDArgBuilder
-from ._arg import CMDClsArg
+from ._arg import CMDResourceGroupNameArg, CMDSubscriptionIdArg, CMDResourceLocationArg
+from ._utils import CMDDiffLevelEnum
 from msrestazure.tools import parse_resource_id, is_valid_resource_id
 
 
@@ -42,19 +43,25 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                     if name == placeholder:
                         id_part = part
                         break
-                if id_part == 'subscription':
-                    arg = CMDClsArg({
-                        'var': f'{var_prefix}.subscription',
-                        'type': '@Subscription',
+
+                if id_part == 'subscription' or param.name == 'subscriptionId':
+                    arg = CMDSubscriptionIdArg({
+                        'var': f'{var_prefix}.subscriptionId',
                         'options': ['subscription'],
                     })
                     param.arg = arg.var
                     arg.ref_schema = param
-                elif id_part == 'resource_group':
-                    arg = CMDClsArg({
-                        'var': f'{var_prefix}.resourceGroup',
-                        'type': '@ResourceGroup',
+                elif id_part == 'resource_group' or param.name == 'resourceGroupName':
+                    arg = CMDResourceGroupNameArg({
+                        'var': f'{var_prefix}.resourceGroupName',
                         'options': ['resource-group', 'g'],
+                    })
+                    param.arg = arg.var
+                    arg.ref_schema = param
+                elif param.name == 'location':
+                    arg = CMDResourceLocationArg({
+                        'var': f'{var_prefix}.location',
+                        'options': ['location', 'l'],
                     })
                     param.arg = arg.var
                     arg.ref_schema = param
@@ -64,8 +71,8 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                     assert len(result) == 1
                     arg = result[0]
 
-                if resource_name == placeholder:
-                    arg.options = list({*arg.options, "name", "n"})
+                    if resource_name == placeholder:
+                        arg.options = list({*arg.options, "name", "n"})
 
                 arg.required = True
                 arg.id_part = id_part
@@ -89,7 +96,7 @@ class CMDHttpRequestHeader(CMDHttpRequestArgs):
     client_request_id = StringType(
         serialized_name="clientRequestId",
         deserialize_from="clientRequestId",
-    )    # specifies the header parameter to be used instead of `x-ms-client-request-id`
+    )  # specifies the header parameter to be used instead of `x-ms-client-request-id`
 
     def generate_args(self):
         args = []
@@ -133,6 +140,20 @@ class CMDHttpResponseHeaderItem(Model):
     class Options:
         serialize_when_none = False
 
+    def diff(self, old, level):
+        diff = {}
+
+        if level >= CMDDiffLevelEnum.Structure:
+            if old.var and not self.var:
+                diff["var"] = "Miss variant"
+            if self.var and not old.var:
+                diff["var"] = "New variant"
+
+        if level >= CMDDiffLevelEnum.Associate:
+            if self.var != old.var:
+                diff["var"] = f"{old.var} != {self.var}"
+        return diff
+
 
 class CMDHttpResponseHeader(Model):
     # properties as nodes
@@ -141,6 +162,30 @@ class CMDHttpResponseHeader(Model):
     class Options:
         serialize_when_none = False
 
+    def diff(self, old, level):
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            items_dict = {item.name: item for item in self.items}
+            for old_item in old.items:
+                if old_item.name not in items_dict:
+                    diff[old_item.name] = "Miss header item"
+                else:
+                    item = items_dict.pop(old_item.name)
+                    item_diff = item.diff(old_item, level)
+                    if item_diff:
+                        diff[old_item.name] = item_diff
+
+        if level >= CMDDiffLevelEnum.Structure:
+            old_items_dict = {item.name: item for item in old.items}
+            for item in self.items:
+                if item.name not in old_items_dict:
+                    diff[item.name] = "New header item"
+                else:
+                    old_items_dict.pop(item.name)
+            for old_item in old_items_dict.values():
+                diff[old_item.name] = "Miss header item"
+        return diff
+
 
 class CMDHttpResponse(Model):
     # properties as tags
@@ -148,7 +193,7 @@ class CMDHttpResponse(Model):
         IntType(),
         serialized_name='statusCode',
         deserialize_from='statusCode',
-    )   # if status_codes is None, then it's the default response.
+    )  # if status_codes is None, then it's the default response.
     is_error = CMDBooleanField(
         serialized_name='isError',
         deserialize_from='isError'
@@ -161,6 +206,45 @@ class CMDHttpResponse(Model):
 
     class Options:
         serialize_when_none = False
+
+    def diff(self, old, level):
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if (self.status_codes is not None) != (old.status_codes is not None):
+                diff["status_codes"] = f"{old.status_codes} != {self.status_codes}"
+            elif self.status_codes and set(self.status_codes) != set(old.status_codes):
+                diff["status_codes"] = f"{old.status_codes} != {self.status_codes}"
+
+            if self.is_error != old.is_error:
+                diff["is_error"] = f"{old.is_error} != {self.is_error}"
+
+            if old.header is not None:
+                if self.header is None:
+                    diff["header"] = "Miss header"
+                else:
+                    header_diff = self.header.diff(old.header, level)
+                    if header_diff:
+                        diff["header"] = header_diff
+
+            if old.body is not None:
+                if self.body is None:
+                    diff["body"] = "Miss response body"
+                else:
+                    body_diff = self.body.diff(old.body, level)
+                    if body_diff:
+                        diff["body"] = body_diff
+
+        if level >= CMDDiffLevelEnum.Structure:
+            if self.header is not None and old.header is None:
+                diff["header"] = "New header"
+            if self.body is not None and old.body is None:
+                diff["body"] = "New response body"
+
+        if level >= CMDDiffLevelEnum.All:
+            if self.description != old.description:
+                diff["description"] = f"'{old.description}' != '{self.description}'"
+
+        return diff
 
 
 class CMDHttpAction(Model):

@@ -57,4 +57,5 @@ def get_url_path_valid_parts(url_path, rp_name):
             if part.lower() == "resourcegroups":
                 valid_idx = idx + 1
 
-    return parts[valid_idx:]
+    parts = [part for part in parts[valid_idx:] if part not in ('locations', )]
+    return parts

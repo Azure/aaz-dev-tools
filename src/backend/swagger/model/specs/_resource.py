@@ -9,6 +9,7 @@ from fuzzywuzzy import fuzz
 
 from command.model.configuration import CMDResource
 from ._utils import map_path_2_repo
+from utils.base64 import b64encode_str, b64decode_str
 
 logger = logging.getLogger('backend')
 
@@ -20,7 +21,7 @@ class Resource:
     def __init__(self, resource_id, path, version, file_path, resource_provider, body):
         self.path = path
         self.id = resource_id
-        self.version = ResourceVersion(version)
+        self._version = ResourceVersion(version)
         self.file_path = file_path
         self.resource_provider = resource_provider
         self.file_path_version = self._get_file_path_version(file_path)
@@ -30,6 +31,10 @@ class Resource:
             if isinstance(v, dict) and 'operationId' in v:
                 operations[v['operationId']] = method
         self.operations = operations
+
+    @property
+    def version(self):
+        return self._version.version
 
     def __str__(self):
         return f"{self.path} {self.version}"
@@ -93,14 +98,10 @@ class Resource:
                     words[-1] = singular
             else:
                 words.append(part.replace('_', ""))
-        op_group_singular = self._inflect_engine.singular_noun(op_group_name)
-        if op_group_singular is False:
-            op_group_singular = op_group_name
+        op_group_singular = self._inflect_engine.singular_noun(op_group_name) or op_group_name
         words.reverse()  # search from tail
         for word in words:
-            word_singular = self._inflect_engine.singular_noun(word)
-            if word_singular is False:
-                word_singular = word
+            word_singular = self._inflect_engine.singular_noun(word) or word
             if len(word_singular) > 1 and op_group_singular.lower().endswith(word_singular.lower()):
                 if word == word_singular:
                     # use singular
@@ -129,8 +130,9 @@ class Resource:
     def to_cmd(self, **kwargs):
         resource = CMDResource()
         resource.id = self.id
-        resource.version = self.version.version
-        resource.provider = str(self.resource_provider)
+        resource.version = self.version
+
+        resource.swagger = f"{self.resource_provider}/Paths/{b64encode_str(self.path)}/V/{b64encode_str(self.version)}"
         return resource
 
 

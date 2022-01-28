@@ -1,10 +1,11 @@
 import click
 from flask import Blueprint
+
 from command.model.configuration import XMLSerializer
 from swagger.utils.tools import swagger_resource_path_to_resource_id
-from utils import Config
+from utils.config import Config
 
-bp = Blueprint('config', __name__, url_prefix='/command/config')
+bp = Blueprint('config', __name__, url_prefix='/AAZ/Config')
 
 
 def path_type(ctx, param, value):
@@ -67,7 +68,7 @@ def generate_config(config_path, module, resource_id, version):
     model = CMDConfiguration({
         "plane": PlaneEnum.Mgmt,
         "resources": [resource.to_cmd()],
-        "command_group": command_group
+        "commandGroups": [command_group],
     })
     with open(config_path, "w") as fp:
         fp.write(XMLSerializer(model).to_xml())
