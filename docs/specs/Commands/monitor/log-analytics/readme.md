@@ -1,4 +1,4 @@
-# monitor log-analytics `[Group]`
+# GROUP: monitor log-analytics
 
 Manage Azure log analytics.
 
