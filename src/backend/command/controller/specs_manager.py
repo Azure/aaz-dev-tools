@@ -6,6 +6,7 @@ from command.model.configuration import CMDConfiguration
 from utils.base64 import b64encode_str
 from utils.config import Config
 from command.model.specs import CMDSpecsCommandTreeNode, CMDSpecsCommandTreeLeaf
+from command.templates import get_templates
 
 
 class AAZSpecsUpdater:
@@ -15,6 +16,7 @@ class AAZSpecsUpdater:
         self.updated_nodes = {}
         self.updated_leaves = {}
         self.updated_resources = {}
+        self.templates = get_templates()
 
     def add_command_tree_node(self, node):
         self.manager.get_command_tree_node(*node.names)

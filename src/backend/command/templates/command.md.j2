@@ -1,12 +1,12 @@
-# [Command] _{{ names|join(' ') }}_
+# [Command] _{{ command.names|join(' ') }}_
 
-{{ help.long }}
+{{ command.help.short }}
 
-{{ help.lines|join('\\\n')}}
+{{ command.help.lines|join('\\\n')}}
 
 ## Versions
-{% for version in versions %}
-### [{{ version.name }}](/Resources/{{ version.resource.plane }}/{{ version.resource.id }}/{{ version.resource.version}}.xml)
+{% for version in command.versions %}
+### [{{ version.name }}]({{ version.resources|first|resource_cfg_path }}) {{ version.stage|stage_label }}
 
 {% for resource in version.resources %}
 <!-- {{ resource.plane }} {{ resource.id }} {{ resource.version }} -->
