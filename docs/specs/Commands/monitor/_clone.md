@@ -1,14 +1,11 @@
 # monitor clone
 `Command`
 
----
 Clone metrics alert rules from one resource to another resource.
 
 Long Summery Line 1\
 Long Summery Line 2\
 Long Summery End Line
-
----
 
 ## Versions
 

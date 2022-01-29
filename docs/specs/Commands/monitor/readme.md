@@ -1,13 +1,11 @@
 # monitor
 `Command Group`
 
----
 Manage the Azure Monitor Service.
 
 Command Group Long Summery Line1\
 Command Group Long Summery End Line
 
----
 
 ## Subgroups
 
