@@ -1,3 +1,3 @@
-# [Group] `monitor action-group`
+# monitor action-group `[Group]`
 
 Manage Action Groups.

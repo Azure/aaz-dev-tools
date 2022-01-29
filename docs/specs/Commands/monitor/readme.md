@@ -1,4 +1,4 @@
-# [Group] `monitor`
+# monitor `[Group]`
 
 Manage the Azure Monitor Service.
 
