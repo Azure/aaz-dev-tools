@@ -1,4 +1,4 @@
-# COMMAND: monitor clone
+# [Command] _monitor clone_
 
 Clone metrics alert rules from one resource to another resource.
 

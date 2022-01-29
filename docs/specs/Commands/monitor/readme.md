@@ -1,4 +1,4 @@
-# GROUP: monitor
+# [Group] _monitor_
 
 Manage the Azure Monitor Service.
 
