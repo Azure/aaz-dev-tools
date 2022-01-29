@@ -1,18 +1,16 @@
-from command.model.configuration import CMDStageField, CMDHelp
-from command.model.configuration._fields import CMDCommandNameField, CMDResourceIdField, CMDVersionField
+from command.model.configuration import CMDStageField, CMDHelp, CMDCommandExample
+from command.model.configuration._fields import CMDCommandNameField, CMDVersionField
 from schematics.models import Model
-from schematics.types import ModelType, ListType, DictType
+from schematics.types import ModelType, ListType, StringType
 
-
-class CMDSpecsCommandTreeLeafResource(Model):
-    id = CMDResourceIdField(required=True)
-    version = CMDVersionField(required=True)
+from ._resource import CMDSpecsResource
 
 
 class CMDSpecsCommandTreeLeafVersion(Model):
-    version = CMDVersionField(required=True)
+    name = CMDVersionField(required=True)
     stage = CMDStageField()
-    resource = ModelType(CMDSpecsCommandTreeLeafResource)
+    resources = ListType(ModelType(CMDSpecsResource), required=True, min_size=1)
+    examples = ListType(ModelType(CMDCommandExample))
 
 
 class CMDSpecsCommandTreeLeaf(Model):
@@ -25,16 +23,14 @@ class CMDSpecsCommandTreeLeaf(Model):
 
 
 class CMDSpecsCommandTreeNode(Model):
-    names = ListType(field=CMDCommandNameField(), required=True)  # full name of a command group
+    names = ListType(field=CMDCommandNameField(), required=True, min_size=1)  # full name of a command group
     stage = CMDStageField()
     help = ModelType(CMDHelp)
 
-    command_groups = DictType(
+    command_groups = ListType(
         field=ModelType("CMDSpecsCommandTreeNode"),
-        serialized_name='commandGroups',
-        deserialize_from='commandGroups'
     )
-    commands = DictType(
+    commands = ListType(
         field=ModelType(CMDSpecsCommandTreeLeaf)
     )
 

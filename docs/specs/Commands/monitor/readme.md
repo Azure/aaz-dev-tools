@@ -13,4 +13,4 @@ Command Group Long Summery End Line
 
 ## Commands
 
-- [monitor clone](/docs/specs/Commands/monitor/_clone.md)
+- [monitor clone](./_clone.md)

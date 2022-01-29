@@ -1,7 +1,7 @@
 from schematics.models import Model
 from schematics.types import StringType, ModelType, UTCDateTimeType, ListType, DictType
 from command.model.configuration._fields import CMDCommandNameField, CMDVersionField
-from command.model.configuration import CMDStageField, CMDHelp, CMDResource
+from command.model.configuration import CMDStageField, CMDHelp, CMDResource, CMDCommandExample
 from utils.fields import PlaneField
 
 
@@ -12,6 +12,7 @@ class CMDCommandTreeLeaf(Model):
 
     help = ModelType(CMDHelp)
     resources = ListType(ModelType(CMDResource), min_size=1)  # the azure resources used in this command
+    examples = ListType(ModelType(CMDCommandExample))  # TODO: support for editor
 
     class Options:
         serialize_when_none = False

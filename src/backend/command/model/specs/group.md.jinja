@@ -1,0 +1,21 @@
+# [Group] _{{ names|join(' ') }}_
+
+{{ help.long }}
+
+{{ help.lines|join('\\\n')}}
+
+{% if command_gorups is not none and command_gorups|length %}
+## Subgroups
+
+{% for sub_group in command_gorups %}
+- [{{ sub_group.names|join(' ') }}](/Commands/{{ sub_group.names|join('/') }}/readme.md)
+{% endfor %}
+{% endif %}
+
+{% if commands is not none and commands|length %}
+## Commands
+
+{% for command in commands %}
+- [{{ command.names|join(' ') }}](./_{{ command.names|last }.md})
+{% endfor %}
+{% endif %}
