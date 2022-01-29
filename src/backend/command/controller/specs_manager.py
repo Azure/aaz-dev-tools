@@ -5,16 +5,19 @@ import re
 from command.model.configuration import CMDConfiguration
 from utils.base64 import b64encode_str
 from utils.config import Config
+from command.model.specs import CMDSpecsCommandTreeNode, CMDSpecsCommandTreeLeaf
 
 
 class AAZSpecsUpdater:
 
     def __init__(self, manager):
         self.manager = manager
-        self.updated_command_groups = {}
-        self.updated_commands = {}
+        self.updated_nodes = {}
+        self.updated_leaves = {}
+        self.updated_resources = {}
 
     def add_command_tree_node(self, node):
+        self.manager.get_command_tree_node(*node.names)
         pass
 
     def add_command_tree_leaf(self, leaf, cfg_editor):
@@ -47,18 +50,28 @@ class AAZSpecsManager:
         file_name = os.path.join(self.get_resource_configs_folder(plane, resource_id), version)
         return file_name + ".md"
 
-    def get_command_group_folder(self, *cg_names):
-        return os.path.join(self.commands_folder, *cg_names)
+    def get_command_tree_node_folder(self, *node_names):
+        return os.path.join(self.commands_folder, *node_names)
 
-    def get_command_group_file(self, *cg_names):
-        return os.path.join(self.get_command_group_folder(*cg_names), "readme.md")
+    def get_command_tree_node_file(self, *node_names):
+        return os.path.join(self.get_command_tree_node_folder(*node_names), "readme.md")
 
-    def get_command_file(self, *cmd_names):
-        assert len(cmd_names) > 0
-        return os.path.join(self.get_command_group_folder(*cmd_names[:-1]), f"{cmd_names[-1]}.md")
+    def get_command_tree_leaf_file(self, *leaf_names):
+        assert len(leaf_names) > 0
+        return os.path.join(self.get_command_tree_node_folder(*leaf_names[:-1]), f"{leaf_names[-1]}.md")
 
     def new_updater(self):
         return AAZSpecsUpdater(manager=self)
+
+    def get_command_tree_node(self, *node_names):
+        node_file = self.get_command_tree_node_file(*node_names)
+        if not os.path.exists(node_file):
+            return None
+
+        with open(node_file, 'r') as f:
+            data = f.read()
+            node = CMDSpecsCommandTreeNode
+
 
     # def verify_command_tree_node(self, node):
     #     pass

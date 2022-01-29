@@ -329,7 +329,7 @@ class APIEditorTest(CommandTestCase):
             rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item/Leaves/create", json={
                 "help": {
                     "short": "This is command help",
-                    "long": [
+                    "lines": [
                         "help line 1",
                         "help line 2"
                     ]
@@ -340,7 +340,7 @@ class APIEditorTest(CommandTestCase):
             data = rv.get_json()
             self.assertTrue(data['stage'] == CMDStageEnum.Experimental)
             self.assertTrue(data['help']['short'] == "This is command help")
-            self.assertTrue(data['help']['long'] == ["help line 1", "help line 2"])
+            self.assertTrue(data['help']['lines'] == ["help line 1", "help line 2"])
 
             rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item")
             self.assertTrue(rv.status_code == 200)

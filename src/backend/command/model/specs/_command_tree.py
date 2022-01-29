@@ -1,9 +1,7 @@
 from command.model.configuration import CMDStageField, CMDHelp
-from command.model.configuration._fields import CMDCommandNameField
+from command.model.configuration._fields import CMDCommandNameField, CMDResourceIdField, CMDVersionField
 from schematics.models import Model
 from schematics.types import ModelType, ListType, DictType
-
-from ._fields import CMDResourceIdField, CMDVersionField
 
 
 class CMDSpecsCommandTreeLeafResource(Model):
@@ -14,7 +12,7 @@ class CMDSpecsCommandTreeLeafResource(Model):
 class CMDSpecsCommandTreeLeafVersion(Model):
     version = CMDVersionField(required=True)
     stage = CMDStageField()
-    resource = ModelType(CMDSpecsCommandTreeResource)
+    resource = ModelType(CMDSpecsCommandTreeLeafResource)
 
 
 class CMDSpecsCommandTreeLeaf(Model):
@@ -32,12 +30,12 @@ class CMDSpecsCommandTreeNode(Model):
     help = ModelType(CMDHelp)
 
     command_groups = DictType(
-        field=ModelType("CMDCommandTreeNode"),
+        field=ModelType("CMDSpecsCommandTreeNode"),
         serialized_name='commandGroups',
         deserialize_from='commandGroups'
     )
     commands = DictType(
-        field=ModelType(CMDCommandTreeLeaf)
+        field=ModelType(CMDSpecsCommandTreeLeaf)
     )
 
     class Options:

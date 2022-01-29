@@ -1,0 +1,1919 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<?schema 0.1 ?>
+<config >
+    <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+    <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules" version="2021-04-01"/>
+    <resource id="/subscriptions/{}/providers/microsoft.insights/datacollectionrules" version="2021-04-01"/>
+
+    <commandGroup name="monitor data-collection rule">
+        <help short="Manage data collection rule"/>
+
+        <!--  monitor data-collection rule create  -->
+        <command name="create" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+            <help short="Manage data collection endpoint for monitor control service."/>
+            <argGroup name="">
+                <arg var="$name" options="--name -n" required="true" type="string">
+                     <help short="The name of the data collection rule. The name is case insensitive."/>
+                </arg>
+                <arg var="$resourceGroup" type="@ResourceGroup" required="true"/>
+                <arg var="$description" options="--description" type="string">
+                    <help short="Description of the data collection rule."/>
+                </arg>
+                <arg var="$location" options="--location -l" type="string">
+                    <help short="Location."/>
+                </arg>
+                <arg var="$tags" type="object">
+                    <help short=""/>
+                    <additionalProperty>
+
+                    </additionalProperty>
+                </arg>
+            </argGroup>
+            <argGroup name="Data Flow">
+                <arg var="$dataFlows" options="--data-flows" type="array<object>" nargs="*">
+                    <help short="The specification of data flows.">
+                        <p>The specification of data flows.</p>
+                        <p>Multiple actions can be specified by using more than one --data-flows argument.</p>
+                    </help>
+                    <array>
+                        <arg var="$dataFlows[].streams" required="true" options="streams" type="array<string>" nargs="+">
+                            <help short="List of streams for this data flow."/>
+                            <format unique="true"/>
+                            <array>
+                                <enum>
+                                    <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                    <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                    <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                    <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                    <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                        <arg var="$dataFlows[].destinations" required="true" options="destinations" type="array<string>" nargs="+">
+                            <help short="List of destinations for this data flow."/>
+                        </arg>
+                    </array>
+                </arg>
+            </argGroup>
+            <argGroup name="Data Sources">
+                <arg var="$performanceCounters" options="--performance-counters" type="array<object>" nargs="*">
+                    <help short="The list of performance counter data source configurations.">
+                        <p>The list of performance counter data source configurations.</p>
+                        <p>Multiple actions can be specified by using more than one --performance-counters argument.</p>
+                    </help>
+                    <array>
+                        <arg var="$performanceCounters[].streams" required="true" options="streams" type="array<string>" nargs="+">
+                            <help short="List of streams that this data source will be sent to.">
+                                <p>A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.</p>
+                            </help>
+                            <array>
+                                <enum>
+                                    <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                    <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                        <arg var="$performanceCounters[].samplingFrequencyInSeconds" required="true" options="sampling-frequency" type="int32">
+                            <help short="The number of seconds between consecutive counter measurements"/>
+                        </arg>
+                        <arg var="$performanceCounters[].counterSpecifiers" required="true" options="counter-specifiers" type="array<string>" nargs="+">
+                            <help short="A list of specifier names of the performance counters you want to collect.">
+                                <p>Use a wildcard (*) to collect a counter for all instances.</p>
+                                <p>To get a list of performance counters on Windows, run the command 'typeperf'.</p>
+                            </help>
+                        </arg>
+                        <arg var="$performanceCounters[].name" required="true" options="name" type="string">
+                            <help short="A friendly name for the data source.">
+                                <p>This name should be unique across all data sources (regardless of type) within the data collection rule.</p>
+                            </help>
+                        </arg>
+                    </array>
+                </arg>
+                <arg var="$windowsEventLogs" options="--windows-event-logs" type="array<object>" nargs="*">
+                    <help short="The list of Windows Event Log data source configurations."/>
+                    <array>
+                        <arg var="$windowsEventLogs[].streams" required="true" options="streams" type="array<string>" nargs="+">
+                            <help short="List of streams that this data source will be sent to.">
+                                <p>A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.</p>
+                            </help>
+                            <array de-duplication="true">
+                                <enum>
+                                    <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                    <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                        <arg var="$windowsEventLogs[].xPathQueries" required="true" options="x-path-queries" type="array<string>" nargs="+">
+                            <help short="A list of Windows Event Log queries in XPATH format."/>
+                        </arg>
+                        <arg var="$windowsEventLogs[].name" required="true" options="name" type="string">
+                            <help short="A friendly name for the data source.">
+                                <p>This name should be unique across all data sources (regardless of type) within the data collection rule.</p>
+                            </help>
+                        </arg>
+                    </array>
+                </arg>
+                <arg var="$syslog" options="--syslog" type="array<object>" nargs="*">
+                    <help short="The list of Syslog data source configurations."/>
+                    <array>
+                        <arg var="$syslog[].streams" required="true" options="streams" type="array<string>" nargs="+">
+                            <help short="List of streams that this data source will be sent to.">
+                                <p>A stream indicates  what schema will be used for this data and usually what table in Log Analytics the data will</p>
+                            </help>
+                            <array de-duplication="true">
+                                <enum>
+                                    <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                        <arg var="$syslog[].facilityNames" required="true" options="facility-names" type="array<string>" nargs="+">
+                            <help short="The list of facility names."/>
+                            <array de-duplication="true">
+                                <enum>
+                                    <enum-item name="auth">"auth"</enum-item>
+                                    <enum-item name="authpriv">"authpriv"</enum-item>
+                                    <enum-item name="cron">"cron"</enum-item>
+                                    <enum-item name="daemon">"daemon"</enum-item>
+                                    <enum-item name="kern">"kern"</enum-item>
+                                    <enum-item name="lpr">"lpr"</enum-item>
+                                    <enum-item name="mail">"mail"</enum-item>
+                                    <enum-item name="mark">"mark"</enum-item>
+                                    <enum-item name="news">"news"</enum-item>
+                                    <enum-item name="syslog">"syslog"</enum-item>
+                                    <enum-item name="user">"user"</enum-item>
+                                    <enum-item name="uucp">"uucp"</enum-item>
+                                    <enum-item name="local0">"local0"</enum-item>
+                                    <enum-item name="local1">"local1"</enum-item>
+                                    <enum-item name="local2">"local2"</enum-item>
+                                    <enum-item name="local3">"local3"</enum-item>
+                                    <enum-item name="local4">"local4"</enum-item>
+                                    <enum-item name="local5">"local5"</enum-item>
+                                    <enum-item name="local6">"local6"</enum-item>
+                                    <enum-item name="local7">"local7"</enum-item>
+                                    <enum-item name="*">"*"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                        <arg var="$syslog[].name" required="true" options="name" type="string">
+                            <help short="A friendly name for the data source.">
+                                <p>This name should be unique across all data sources (regardless of type) within the data collection rule.</p>
+                            </help>
+                        </arg>
+                        <arg var="$syslog[].logLevels" options="log-levels" type="array<string>" nargs="*">
+                            <help short="The log levels to collect."/>
+                            <array de-duplication="true">
+                                <enum>
+                                    <enum-item name="Debug">"Debug"</enum-item>
+                                    <enum-item name="Info">"Info"</enum-item>
+                                    <enum-item name="Notice">"Notice"</enum-item>
+                                    <enum-item name="Warning">"Warning"</enum-item>
+                                    <enum-item name="Error">"Error"</enum-item>
+                                    <enum-item name="Critical">"Critical"</enum-item>
+                                    <enum-item name="Alert">"Alert"</enum-item>
+                                    <enum-item name="Emergency">"Emergency"</enum-item>
+                                    <enum-item name="*">"*"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                    </array>
+                </arg>
+                <arg var="$extensions" options="--extensions" type="array<object>" nargs="*">
+                    <help short="The list of Azure VM extension data source configurations."/>
+                    <!--  use empty array for blank value  -->
+                    <blank>[]</blank>
+                    <array>
+                        <arg var="$extensions[].streams" required="true" options="streams" type="array<string>" nargs="+">
+                            <help short="List of streams that this data source will be sent to.">
+                                <p>A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.</p>
+                            </help>
+                            <array de-duplication="true">
+                                <enum>
+                                    <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                    <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                    <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                    <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                    <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                        <arg var="$extensions[].extensionName" required="true" options="extension-name" type="string">
+                            <help short="The name of the VM extension."/>
+                        </arg>
+                        <arg var="$extensions[].extensionSettings" required="true" options="extension-settings" type="object">
+                            <help short="The extension settings. The format is specific for particular extension."/>
+                        </arg>
+                        <arg var="$extensions[].inputDataSources" required="true" options="input-data-sources" type="array<string>">
+                            <help short="The list of data sources this extension needs data from."/>
+                        </arg>
+                        <arg var="$extensions[].name" required="true" options="name" type="string">
+                            <help short="A friendly name for the data source.">
+                                <p>This name should be unique across all data sources (regardless of type) within the data collection rule.</p>
+                            </help>
+                        </arg>
+                    </array>
+                </arg>
+            </argGroup>
+            <argGroup name="Destinations">
+                <arg var="$logAnalytics" options="--log-analytics" type="array<object>" nargs="*">
+                    <help short="List of Log Analytics destinations."/>
+                    <array>
+                        <arg var="$logAnalytics[].workspaceResourceId" options="workspace" type="@ResourceID">
+                            <help short="The resource ID of the Log Analytics workspace."/>
+                            <format convenientProp="name">
+                                <prop name="subscription" default="$subscription"/>
+                                <prop name="resourceGroup" default="$resourceGroup"/>
+                                <prop name="namespace" default="Microsoft.OperationalInsights"/>
+                                <prop name="type" default="workspaces"/>
+                            </format>
+                        </arg>
+                        <arg var="$logAnalytics[].name" required="true" options="name" type="string">
+                            <help short="A friendly name for the destination.">
+                                <p>This name should be unique across all destinations (regardless of type) within the data collection rule.</p>
+                            </help>
+                        </arg>
+                    </array>
+                </arg>
+                <arg var="$azureMonitorMetrics" options="--monitor-metrics" type="object" >
+                    <help short="Azure Monitor Metrics destination."/>
+                    <arg var="$azureMonitorMetrics.name" required="true" options="name" type="string">
+                        <help short="A friendly name for the destination.">
+                            <p>This name should be unique across all destinations (regardless of type) within the data collection rule.</p>
+                        </help>
+                    </arg>
+                </arg>
+            </argGroup>
+            <argGroup name="Global">
+                <arg var="$subscription" type="@Subscription" required="true"/>
+            </argGroup>
+            <operation longRunning="false">
+                <http clientType="@MgmtClient" path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                    <request method="put">
+                        <path>
+                            <param name="subscriptionId" arg="$subscription"/>
+                            <param name="resourceGroupName" arg="$resourceGroup"/>
+                            <param name="dataCollectionRuleName" arg="$name"/>
+                        </path>
+                        <query>
+                            <const name="api-version" value="2021-04-01"/>
+                        </query>
+                        <header>
+                            <const name="Content-Type" value="application/json"/>
+                        </header>
+                        <body>
+                            <json type="object">
+                                <prop name="location" type="string" required="true" arg="$location"/>
+                                <prop name="tags" type="dict" arg="$tags"/>
+                                <prop name="kind" type="string">
+                                    <enum>
+                                        <enum-item name="Linux">"Linux"</enum-item>
+                                        <enum-item name="Windows">"Windows"</enum-item>
+                                    </enum>
+                                </prop>
+                                <prop name="properties" type="object">
+                                    <prop name="description" type="string" arg="$description"/>
+                                    <prop name="dataSources" type="object">
+                                        <prop name="performanceCounters" type="array<object>" arg="$performanceCounters">
+                                            <array>
+                                                <prop name="streams" type="array<string>" arg="$performanceCounters[].streams">
+                                                    <array>
+                                                        <enum>
+                                                            <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                                            <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                                        </enum>
+                                                    </array>
+                                                </prop>
+                                                <prop name="samplingFrequencyInSeconds" type="integer" format="int32" arg="$performanceCounters[].samplingFrequencyInSeconds"/>
+                                                <prop name="counterSpecifiers" type="array<string>" arg="$performanceCounters[].counterSpecifiers"/>
+                                                <prop name="name" type="string" arg="$performanceCounters[].name"/>
+                                            </array>
+                                        </prop>
+                                        <prop name="windowsEventLogs" type="array<object>" arg="$windowsEventLogs">
+                                            <array>
+                                                <prop name="streams" type="array<string>" arg="$windowsEventLogs[].streams">
+                                                    <array>
+                                                        <enum>
+                                                            <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                                            <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                                        </enum>
+                                                    </array>
+                                                </prop>
+                                                <prop name="xPathQueries" type="array<string>" arg="$windowsEventLogs[].xPathQueries"/>
+                                                <prop name="name" type="string" arg="$windowsEventLogs[].name"/>
+                                            </array>
+                                        </prop>
+                                        <prop name="syslog" type="array<object>" arg="$syslog">
+                                            <array>
+                                                <prop name="streams" type="array<string>" arg="$syslog[].streams">
+                                                    <array>
+                                                        <enum>
+                                                            <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                                        </enum>
+                                                    </array>
+                                                </prop>
+                                                <prop name="facilityNames" type="array<string>" arg="$syslog[].facilityNames">
+                                                    <array>
+                                                        <enum>
+                                                            <enum-item name="auth">"auth"</enum-item>
+                                                            <enum-item name="authpriv">"authpriv"</enum-item>
+                                                            <enum-item name="cron">"cron"</enum-item>
+                                                            <enum-item name="daemon">"daemon"</enum-item>
+                                                            <enum-item name="kern">"kern"</enum-item>
+                                                            <enum-item name="lpr">"lpr"</enum-item>
+                                                            <enum-item name="mail">"mail"</enum-item>
+                                                            <enum-item name="mark">"mark"</enum-item>
+                                                            <enum-item name="news">"news"</enum-item>
+                                                            <enum-item name="syslog">"syslog"</enum-item>
+                                                            <enum-item name="user">"user"</enum-item>
+                                                            <enum-item name="uucp">"uucp"</enum-item>
+                                                            <enum-item name="local0">"local0"</enum-item>
+                                                            <enum-item name="local1">"local1"</enum-item>
+                                                            <enum-item name="local2">"local2"</enum-item>
+                                                            <enum-item name="local3">"local3"</enum-item>
+                                                            <enum-item name="local4">"local4"</enum-item>
+                                                            <enum-item name="local5">"local5"</enum-item>
+                                                            <enum-item name="local6">"local6"</enum-item>
+                                                            <enum-item name="local7">"local7"</enum-item>
+                                                            <enum-item name="*">"*"</enum-item>
+                                                        </enum>
+                                                    </array>
+                                                </prop>
+                                                <prop name="logLevels" type="array<string>" arg="$syslog[].logLevels">
+                                                    <array>
+                                                        <enum>
+                                                            <enum-item name="Debug">"Debug"</enum-item>
+                                                            <enum-item name="Info">"Info"</enum-item>
+                                                            <enum-item name="Notice">"Notice"</enum-item>
+                                                            <enum-item name="Warning">"Warning"</enum-item>
+                                                            <enum-item name="Error">"Error"</enum-item>
+                                                            <enum-item name="Critical">"Critical"</enum-item>
+                                                            <enum-item name="Alert">"Alert"</enum-item>
+                                                            <enum-item name="Emergency">"Emergency"</enum-item>
+                                                            <enum-item name="*">"*"</enum-item>
+                                                        </enum>
+                                                    </array>
+                                                </prop>
+                                                <prop name="name" type="string" arg="$syslog[].name"/>
+                                            </array>
+                                        </prop>
+                                        <prop name="extensions" type="array<object>" arg="$extensions">
+                                            <array>
+                                                <prop name="streams" type="array<string>" arg="$extensions[].streams">
+                                                    <array>
+                                                        <enum>
+                                                            <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                                            <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                                            <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                                            <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                                            <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                                        </enum>
+                                                    </array>
+                                                </prop>
+                                                <prop name="extensionName" type="string" arg="$extensions[].extensionName"/>
+                                                <prop name="extensionSettings" type="object" arg="$extensions[].extensionSettings"/>
+                                                <prop name="inputDataSources" type="array<string>" arg="$extensions[].inputDataSources"/>
+                                                <prop name="name" type="string" arg="$extensions[].name"/>
+                                            </array>
+                                        </prop>
+                                    </prop>
+                                    <prop name="destinations" type="object">
+                                        <prop name="logAnalytics" type="array<object>" arg="$logAnalytics">
+                                            <array>
+                                                <prop name="workspaceResourceId" type="string"/>
+                                                <prop name="name" type="string"/>
+                                            </array>
+                                        </prop>
+                                        <prop name="azureMonitorMetrics" type="object" arg="$azureMonitorMetrics">
+                                            <prop name="name" type="string" arg="$azureMonitorMetrics.name"/>
+                                        </prop>
+                                    </prop>
+                                    <prop name="dataFlows" type="array<object>">
+                                        <array>
+                                            <prop name="streams" type="array<string>" arg="$dataFlows[].streams">
+                                                <array>
+                                                    <enum>
+                                                        <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                                        <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                                        <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                                        <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                                        <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                                    </enum>
+                                                </array>
+                                            </prop>
+                                            <prop name="destinations" type="array<string>" arg="$dataFlows[].destinations"/>
+                                        </array>
+                                    </prop>
+                                </prop>
+                            </json>
+                        </body>
+                    </request>
+                    <response statusCodes="200 201">
+                        <header>
+                        </header>
+                        <body>
+                            <json var="$instance" type="object" cls="@DataCollectionRuleResource">
+                                <prop name="location" type="string" readonly="true"/>
+                                <prop name="tags" type="dict"/>
+                                <prop name="kind" type="string">
+                                    <enum>
+                                        <enum-item name="Linux">"Linux"</enum-item>
+                                        <enum-item name="Windows">"Windows"</enum-item>
+                                    </enum>
+                                </prop>
+                                <prop name="id" type="string" readonly="true"/>
+                                <prop name="name" type="string" readonly="true"/>
+                                <prop name="type" type="string" readonly="true"/>
+                                <prop name="etag" type="string" readonly="true"/>
+                                <prop name="createdBy" type="string" readonly="true"/>
+                                <prop name="createdByType" type="string" readonly="true">
+                                    <enum>
+                                        <enum-item name="User">"User"</enum-item>
+                                        <enum-item name="Application">"Application"</enum-item>
+                                        <enum-item name="ManagedIdentity">"ManagedIdentity"</enum-item>
+                                        <enum-item name="Key">"Key"</enum-item>
+                                    </enum>
+                                </prop>
+                                <prop name="createdAt" type="string" format="date-time" readonly="true"/>
+                                <prop name="lastModifiedBy" type="string" readonly="true"/>
+                                <prop name="lastModifiedByType" type="string" readonly="true">
+                                    <enum>
+                                        <enum-item name="User">"User"</enum-item>
+                                        <enum-item name="Application">"Application"</enum-item>
+                                        <enum-item name="ManagedIdentity">"ManagedIdentity"</enum-item>
+                                        <enum-item name="Key">"Key"</enum-item>
+                                    </enum>
+                                </prop>
+                                <prop name="lastModifiedAt" type="string" format="date-time" readonly="true"/>
+                                <prop name="properties" type="object" clientFlatten="true">
+                                    <prop name="description" type="string"/>
+                                    <prop name="immutableId" type="string" readonly="true"/>
+                                    <prop name="dataSources" type="object">
+                                        <prop name="performanceCounters" type="array<object>">
+                                            <array>
+                                                <prop name="streams" type="array<string>">
+                                                    <array>
+                                                        <enum>
+                                                            <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                                            <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                                        </enum>
+                                                    </array>
+                                                </prop>
+                                                <prop name="samplingFrequencyInSeconds" type="integer" format="int32"/>
+                                                <prop name="counterSpecifiers" type="array<string>"/>
+                                                <prop name="name" type="string"/>
+                                            </array>
+                                        </prop>
+                                        <prop name="windowsEventLogs" type="array<object>">
+                                            <array>
+                                                <prop name="streams" type="array<string>">
+                                                    <array>
+                                                        <enum>
+                                                            <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                                            <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                                        </enum>
+                                                    </array>
+                                                </prop>
+                                                <prop name="xPathQueries" type="array<string>"/>
+                                                <prop name="name" type="string"/>
+                                            </array>
+                                        </prop>
+                                        <prop name="syslog" type="array<object>">
+                                            <array>
+                                                <prop name="streams" type="array<string>">
+                                                    <array>
+                                                        <enum>
+                                                            <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                                        </enum>
+                                                    </array>
+                                                </prop>
+                                                <prop name="facilityNames" type="array<string>">
+                                                    <array>
+                                                        <enum>
+                                                            <enum-item name="auth">"auth"</enum-item>
+                                                            <enum-item name="authpriv">"authpriv"</enum-item>
+                                                            <enum-item name="cron">"cron"</enum-item>
+                                                            <enum-item name="daemon">"daemon"</enum-item>
+                                                            <enum-item name="kern">"kern"</enum-item>
+                                                            <enum-item name="lpr">"lpr"</enum-item>
+                                                            <enum-item name="mail">"mail"</enum-item>
+                                                            <enum-item name="mark">"mark"</enum-item>
+                                                            <enum-item name="news">"news"</enum-item>
+                                                            <enum-item name="syslog">"syslog"</enum-item>
+                                                            <enum-item name="user">"user"</enum-item>
+                                                            <enum-item name="uucp">"uucp"</enum-item>
+                                                            <enum-item name="local0">"local0"</enum-item>
+                                                            <enum-item name="local1">"local1"</enum-item>
+                                                            <enum-item name="local2">"local2"</enum-item>
+                                                            <enum-item name="local3">"local3"</enum-item>
+                                                            <enum-item name="local4">"local4"</enum-item>
+                                                            <enum-item name="local5">"local5"</enum-item>
+                                                            <enum-item name="local6">"local6"</enum-item>
+                                                            <enum-item name="local7">"local7"</enum-item>
+                                                            <enum-item name="*">"*"</enum-item>
+                                                        </enum>
+                                                    </array>
+                                                </prop>
+                                                <prop name="logLevels" type="array<string>">
+                                                    <array>
+                                                        <enum>
+                                                            <enum-item name="Debug">"Debug"</enum-item>
+                                                            <enum-item name="Info">"Info"</enum-item>
+                                                            <enum-item name="Notice">"Notice"</enum-item>
+                                                            <enum-item name="Warning">"Warning"</enum-item>
+                                                            <enum-item name="Error">"Error"</enum-item>
+                                                            <enum-item name="Critical">"Critical"</enum-item>
+                                                            <enum-item name="Alert">"Alert"</enum-item>
+                                                            <enum-item name="Emergency">"Emergency"</enum-item>
+                                                            <enum-item name="*">"*"</enum-item>
+                                                        </enum>
+                                                    </array>
+                                                </prop>
+                                                <prop name="name" type="string"/>
+                                            </array>
+                                        </prop>
+                                        <prop name="extensions" type="array<object>">
+                                            <array>
+                                                <prop name="streams" type="array<string>">
+                                                    <array>
+                                                        <enum>
+                                                            <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                                            <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                                            <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                                            <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                                            <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                                        </enum>
+                                                    </array>
+                                                </prop>
+                                                <prop name="extensionName" type="string"/>
+                                                <prop name="extensionSettings" type="object"/>
+                                                <prop name="inputDataSources" type="array<string>"/>
+                                                <prop name="name" type="string"/>
+                                            </array>
+                                        </prop>
+                                    </prop>
+                                    <prop name="destinations" type="object">
+                                        <prop name="logAnalytics" type="array<object>">
+                                            <array>
+                                                <prop name="workspaceResourceId" type="string"/>
+                                                <prop name="workspaceId" type="string" readonly="true"/>
+                                                <prop name="name" type="string"/>
+                                            </array>
+                                        </prop>
+                                        <prop name="azureMonitorMetrics" type="object">
+                                            <prop name="name" type="string"/>
+                                        </prop>
+                                    </prop>
+                                    <prop name="dataFlows" type="array<object>">
+                                        <array>
+                                            <prop name="streams" type="array<string>">
+                                                <array>
+                                                    <enum>
+                                                        <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                                        <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                                        <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                                        <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                                        <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                                    </enum>
+                                                </array>
+                                            </prop>
+                                            <prop name="destinations" type="array<string>"/>
+                                        </array>
+                                    </prop>
+                                    <prop name="provisioningState" type="string" readonly="true">
+                                        <enum>
+                                            <enum-item name="Creating">"Creating"</enum-item>
+                                            <enum-item name="Updating">"Updating"</enum-item>
+                                            <enum-item name="Deleting">"Deleting"</enum-item>
+                                            <enum-item name="Succeeded">"Succeeded"</enum-item>
+                                            <enum-item name="Failed">"Failed"</enum-item>
+                                        </enum>
+                                    </prop>
+                                </prop>
+                            </json>
+                        </body>
+                    </response>
+                    <response errorResponse="true">
+                        <header>
+                            <prop name="x-ms-request-id"/>
+                        </header>
+                        <body content-type="application/json">
+                            <json type="object" cls="@ErrorResponseCommonV2">
+                                <prop name="error" type="object" cls="@ErrorDetail">
+                                    <prop name="code" type="string" readonly="true"/>
+                                    <prop name="message" type="string" readonly="true"/>
+                                    <prop name="target" type="string" readonly="true"/>
+                                    <!-- loop reference expression -->
+                                    <prop name="details" type="array<@ErrorDetail>" readonly="true"/>
+                                    <prop name="additionalInfo" type="array<object>" readonly="true">
+                                        <array>
+                                            <prop name="type" type="string" readonly="true"/>
+                                            <prop name="info" type="object" readonly="true"/>
+                                        </array>
+                                    </prop>
+                                </prop>
+                            </json>
+                        </body>
+                    </response>
+                </http>
+            </operation>
+            <output type="object" ref="$instance" clientclientFlatten="true"/>
+        </command>
+
+        <!--  monitor data-collection rule delete  -->
+        <!--  More details about idPart: https://github.com/Azure/msrestazure-for-python/blob/master/msrestazure/tools.py#L115-L129 -->
+        <command name="delete" version="2021-04-01" stage="Preview" confirmation="true">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+            <help short="Delete a data collection rule."/>
+            <argGroup name="Resource Id">
+                <!--  TODO: how to express ids?  -->
+                <arg var="$ids" options="--ids" type="array<@ResourceID>" nargs="*" multiExe="true"/>
+                <arg var="$name" options="--name -n" required="true" type="string" idPart="$ids[].name">
+                     <help short="The name of the data collection rule. The name is case insensitive."/>
+                </arg>
+                <arg var="$resourceGroup" type="@ResourceGroup" required="true" idPart="$ids[].resourceGroup"/>
+                <arg var="$subscription" type="@Subscription" required="true" idPart="$ids[].subscription"/>
+            </argGroup>
+            <operation>
+                <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                    <request method="delete">
+                        <path>
+                            <param name="subscriptionId" arg="$subscription"/>
+                            <param name="resourceGroupName" arg="$resourceGroup"/>
+                            <param name="dataCollectionRuleName" arg="$name"/>
+                        </path>
+                        <query>
+                            <const name="api-version" value="2021-04-01"/>
+                        </query>
+                        <header>
+                        </header>
+                    </request>
+                    <response statusCodes="200 204">
+                    </response>
+                    <response errorResponse="true">
+                        <header>
+                            <prop name="x-ms-request-id"/>
+                        </header>
+                        <body content-type="application/json">
+                            <json type="@ErrorResponseCommonV2"/>
+                        </body>
+                    </response>
+                </http>
+            </operation>
+            <output type="string" value="Delete Success"/>
+        </command>
+
+        <!--  monitor data-collection rule show  -->
+        <command name="show" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+            <help short="Show the specified data collection rule."/>
+            <argGroup name="Resource Id">
+                <arg var="$ids" options="--ids" type="array<@ResourceID>" nargs="*" multiExe="true"/>
+                <arg var="$name" options="--name -n" required="true" type="string" idPart="$ids[].name">
+                     <help short="The name of the data collection rule. The name is case insensitive."/>
+                </arg>
+                <arg var="$resourceGroup" type="@ResourceGroup" required="true" idPart="$ids[].resourceGroup"/>
+                <arg var="$subscription" type="@Subscription" required="true" idPart="$ids[].subscription"/>
+            </argGroup>
+            <operation>
+                <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                    <request method="get">
+                        <path>
+                            <param name="subscriptionId" arg="$subscription"/>
+                            <param name="resourceGroupName" arg="$resourceGroup"/>
+                            <param name="dataCollectionRuleName" arg="$name"/>
+                        </path>
+                        <query>
+                            <const name="api-version" value="2021-04-01"/>
+                        </query>
+                        <header>
+                        </header>
+                    </request>
+                    <response statusCodes="200">
+                        <header>
+                        </header>
+                        <body>
+                            <json var="$instance" type="@DataCollectionRuleResource"/>
+                        </body>
+                    </response>
+                    <response errorResponse="true">
+                        <header>
+                            <prop name="x-ms-request-id"/>
+                        </header>
+                        <body>
+                            <json type="@ErrorResponseCommonV2"/>
+                        </body>
+                    </response>
+                </http>
+            </operation>
+            <output type="object" ref="$instance" clientFlatten="true"/>
+        </command>
+
+        <!--  monitor data-collection rule update  -->
+        <command name="update" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+            <help short="Update a data collection rule."/>
+            <argGroup name="">
+                <arg var="$description" options="--description" type="string">
+                    <help short="Description of the data collection rule."/>
+                </arg>
+                <arg var="$tags" type="@Tags"/>
+            </argGroup>
+            <argGroup name="Resource Id">
+                <arg var="$ids" options="--ids" type="array<@ResourceID>" nargs="*" multiExe="true"/>
+                <arg var="$name" options="--name -n" required="true" type="string" idPart="$ids[].name">
+                     <help short="The name of the data collection rule. The name is case insensitive."/>
+                </arg>
+                <arg var="$resourceGroup" type="@ResourceGroup" required="true" idPart="$ids[].resourceGroup"/>
+                <arg var="$subscription" type="@Subscription" required="true" idPart="$ids[].subscription"/>
+            </argGroup>
+            <argGroup name="Data Flow">
+                <arg var="$dataFlows" options="--data-flows" type="array<object>" nargs="*">
+                    <help short="The specification of data flows.">
+                        <p>The specification of data flows.</p>
+                        <p>Multiple actions can be specified by using more than one --data-flows argument.</p>
+                    </help>
+                    <array>
+                        <arg var="$dataFlows[].streams" required="true" options="streams" type="array<string>" nargs="+">
+                            <help short="List of streams for this data flow."/>
+                            <array de-duplication="true">
+                                <enum>
+                                    <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                    <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                    <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                    <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                    <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                        <arg var="$dataFlows[].destinations" required="true" options="destinations" type="array<string>" nargs="+">
+                            <help short="List of destinations for this data flow."/>
+                        </arg>
+                    </array>
+                </arg>
+            </argGroup>
+            <argGroup name="Data Sources">
+                <arg var="$performanceCounters" options="--performance-counters" type="array<object>" nargs="*">
+                    <help short="The list of performance counter data source configurations.">
+                        <p>The list of performance counter data source configurations.</p>
+                        <p>Multiple actions can be specified by using more than one --performance-counters argument.</p>
+                    </help>
+                    <array>
+                        <arg var="$performanceCounters[].streams" required="true" options="streams" type="array<string>" nargs="+">
+                            <help short="List of streams that this data source will be sent to.">
+                                <p>A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.</p>
+                            </help>
+                            <array de-duplication="true">
+                                <enum>
+                                    <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                    <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                        <arg var="$performanceCounters[].samplingFrequencyInSeconds" required="true" options="sampling-frequency" type="int32">
+                            <help short="The number of seconds between consecutive counter measurements"/>
+                        </arg>
+                        <arg var="$performanceCounters[].counterSpecifiers" required="true" options="counter-specifiers" type="array<string>" nargs="+">
+                            <help short="A list of specifier names of the performance counters you want to collect.">
+                                <p>Use a wildcard (*) to collect a counter for all instances.</p>
+                                <p>To get a list of performance counters on Windows, run the command 'typeperf'.</p>
+                            </help>
+                        </arg>
+                        <arg var="$performanceCounters[].name" required="true" options="name" type="string">
+                            <help short="A friendly name for the data source.">
+                                <p>This name should be unique across all data sources (regardless of type) within the data collection rule.</p>
+                            </help>
+                        </arg>
+                    </array>
+                </arg>
+                <arg var="$windowsEventLogs" options="--windows-event-logs" type="array<object>" nargs="*">
+                    <help short="The list of Windows Event Log data source configurations."/>
+                    <array>
+                        <arg var="$windowsEventLogs[].streams" required="true" options="streams" type="array<string>" nargs="+">
+                            <help short="List of streams that this data source will be sent to.">
+                                <p>A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.</p>
+                            </help>
+                            <array de-duplication="true">
+                                <enum>
+                                    <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                    <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                        <arg var="$windowsEventLogs[].xPathQueries" required="true" options="x-path-queries" type="array<string>" nargs="+">
+                            <help short="A list of Windows Event Log queries in XPATH format."/>
+                        </arg>
+                        <arg var="$windowsEventLogs[].name" required="true" options="name" type="string">
+                            <help short="A friendly name for the data source.">
+                                <p>This name should be unique across all data sources (regardless of type) within the data collection rule.</p>
+                            </help>
+                        </arg>
+                    </array>
+                </arg>
+                <arg var="$syslog" options="--syslog" type="array<object>" nargs="*">
+                    <help short="The list of Syslog data source configurations."/>
+                    <array>
+                        <arg var="$syslog[].streams" required="true" options="streams" type="array<string>" nargs="+">
+                            <help short="List of streams that this data source will be sent to.">
+                                <p>A stream indicates  what schema will be used for this data and usually what table in Log Analytics the data will</p>
+                            </help>
+                            <array de-duplication="true">
+                                <enum>
+                                    <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                        <arg var="$syslog[].facilityNames" required="true" options="facility-names" type="array<string>" nargs="+">
+                            <help short="The list of facility names."/>
+                            <array de-duplication="true">
+                                <enum>
+                                    <enum-item name="auth">"auth"</enum-item>
+                                    <enum-item name="authpriv">"authpriv"</enum-item>
+                                    <enum-item name="cron">"cron"</enum-item>
+                                    <enum-item name="daemon">"daemon"</enum-item>
+                                    <enum-item name="kern">"kern"</enum-item>
+                                    <enum-item name="lpr">"lpr"</enum-item>
+                                    <enum-item name="mail">"mail"</enum-item>
+                                    <enum-item name="mark">"mark"</enum-item>
+                                    <enum-item name="news">"news"</enum-item>
+                                    <enum-item name="syslog">"syslog"</enum-item>
+                                    <enum-item name="user">"user"</enum-item>
+                                    <enum-item name="uucp">"uucp"</enum-item>
+                                    <enum-item name="local0">"local0"</enum-item>
+                                    <enum-item name="local1">"local1"</enum-item>
+                                    <enum-item name="local2">"local2"</enum-item>
+                                    <enum-item name="local3">"local3"</enum-item>
+                                    <enum-item name="local4">"local4"</enum-item>
+                                    <enum-item name="local5">"local5"</enum-item>
+                                    <enum-item name="local6">"local6"</enum-item>
+                                    <enum-item name="local7">"local7"</enum-item>
+                                    <enum-item name="*">"*"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                        <arg var="$syslog[].name" required="true" options="name" type="string">
+                            <help short="A friendly name for the data source.">
+                                <p>This name should be unique across all data sources (regardless of type) within the data collection rule.</p>
+                            </help>
+                        </arg>
+                        <arg var="$syslog[].logLevels" options="log-levels" type="array<string>" nargs="*">
+                            <help short="The log levels to collect."/>
+                            <array de-duplication="true">
+                                <enum>
+                                    <enum-item name="Debug">"Debug"</enum-item>
+                                    <enum-item name="Info">"Info"</enum-item>
+                                    <enum-item name="Notice">"Notice"</enum-item>
+                                    <enum-item name="Warning">"Warning"</enum-item>
+                                    <enum-item name="Error">"Error"</enum-item>
+                                    <enum-item name="Critical">"Critical"</enum-item>
+                                    <enum-item name="Alert">"Alert"</enum-item>
+                                    <enum-item name="Emergency">"Emergency"</enum-item>
+                                    <enum-item name="*">"*"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                    </array>
+                </arg>
+                <arg var="$extensions" options="--extensions" type="array<object>" nargs="*">
+                    <help short="The list of Azure VM extension data source configurations."/>
+                    <array>
+                        <arg var="$extensions[].streams" required="true" options="streams" type="array<string>" nargs="+">
+                            <help short="List of streams that this data source will be sent to.">
+                                <p>A stream indicates what schema will be used for this data and usually what table in Log Analytics the data will be sent to.</p>
+                            </help>
+                            <array de-duplication="true">
+                                <enum>
+                                    <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                    <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                    <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                    <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                    <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                </enum>
+                            </array>
+                        </arg>
+                        <arg var="$extensions[].extensionName" required="true" options="extension-name" type="string">
+                            <help short="The name of the VM extension."/>
+                        </arg>
+                        <arg var="$extensions[].extensionSettings" required="true" options="extension-settings" type="object">
+                            <help short="The extension settings. The format is specific for particular extension."/>
+                        </arg>
+                        <arg var="$extensions[].inputDataSources" required="true" options="input-data-sources" type="array<string>">
+                            <help short="The list of data sources this extension needs data from."/>
+                        </arg>
+                        <arg var="$extensions[].name" required="true" options="name" type="string">
+                            <help short="A friendly name for the data source.">
+                                <p>This name should be unique across all data sources (regardless of type) within the data collection rule.</p>
+                            </help>
+                        </arg>
+                    </array>
+                </arg>
+            </argGroup>
+            <argGroup name="Destinations">
+                <arg var="$logAnalytics" options="--log-analytics" type="array<object>" nargs="*">
+                    <help short="List of Log Analytics destinations."/>
+                    <array>
+                        <arg var="$logAnalytics[].workspaceResourceId" options="workspace" type="@ResourceID">
+                            <help short="The resource ID of the Log Analytics workspace."/>
+                            <format convenientProp="name">
+                                <prop name="subscription" default="$subscription"/>
+                                <prop name="resourceGroup" default="$resourceGroup"/>
+                                <prop name="namespace" default="Microsoft.OperationalInsights"/>
+                                <prop name="type" default="workspaces"/>
+                            </format>
+                        </arg>
+                        <arg var="$logAnalytics[].name" required="true" options="name" type="string">
+                            <help short="A friendly name for the destination.">
+                                <p>This name should be unique across all destinations (regardless of type) within the data collection rule.</p>
+                            </help>
+                        </arg>
+                    </array>
+                </arg>
+                <arg var="$azureMonitorMetrics" options="--monitor-metrics" type="object" >
+                    <help short="Azure Monitor Metrics destination."/>
+                    <arg var="$azureMonitorMetrics.name" required="true" options="name" type="string">
+                        <help short="A friendly name for the destination.">
+                            <p>This name should be unique across all destinations (regardless of type) within the data collection rule.</p>
+                        </help>
+                    </arg>
+                </arg>
+            </argGroup>
+
+            <argGroup name="Generic Update">
+                <arg var="$add" type="@GenericUpdateAdd"/>
+                <arg var="$remove" type="@GenericUpdateRemove"/>
+                <arg var="$set" type="@GenericUpdateSet"/>
+                <arg var="$forceString" type="@GenericUpdateForceString"/>
+            </argGroup>
+
+            <condition var="$condition_1">
+                <hasValue arg="$tags"/>
+            </condition>
+
+            <condition var="$condition_2">
+                <or>
+                    <hasValue arg="$dataFlows"/>
+                    <hasValue arg="$performanceCounters"/>
+                    <hasValue arg="$windowsEventLogs"/>
+                    <hasValue arg="$syslog"/>
+                    <hasValue arg="$extensions"/>
+                    <hasValue arg="$logAnalytics"/>
+                    <hasValue arg="$azureMonitorMetrics"/>
+                </or>
+            </condition>
+
+            <condition var="$condition_3">
+                <or>
+                    <hasValue arg="$add"/>
+                    <hasValue arg="$remove"/>
+                    <hasValue arg="$set"/>
+                </or>
+            </condition>
+
+            <condition var="$condition_4">
+                <and>
+                    <not>
+                        <hasValue arg="$tags"/>
+                    </not>
+                    <or>
+                        <condition ref="$condition_2"/>
+                        <condition ref="$condition_3"/>
+                    </or>
+                </and>
+            </condition>
+
+            <operation when="$condition_1">
+                <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                    <request method="patch">
+                        <path>
+                            <param name="subscriptionId" arg="$subscription"/>
+                            <param name="resourceGroupName" arg="$resourceGroup"/>
+                            <param name="dataCollectionRuleName" arg="$name"/>
+                        </path>
+                        <query>
+                            <const name="api-version" value="2021-04-01"/>
+                        </query>
+                        <header>
+                        </header>
+                        <body>
+                            <json type="object">
+                                <prop name="tags" type="dict" arg="$tags"/>
+                            </json>
+                        </body>
+                    </request>
+                    <response statusCodes="200">
+                        <header>
+                        </header>
+                        <body>
+                            <json var="$instance" type="@DataCollectionRuleResource"/>
+                        </body>
+                    </response>
+                    <response errorResponse="true">
+                        <header>
+                            <prop name="x-ms-request-id"/>
+                        </header>
+                        <body content-type="application/json">
+                            <json type="object" cls="@ErrorResponseCommonV2">
+                                <prop name="error" type="object" cls="@ErrorDetail">
+                                    <prop name="code" type="string" readonly="true"/>
+                                    <prop name="message" type="string" readonly="true"/>
+                                    <prop name="target" type="string" readonly="true"/>
+                                    <!-- loop reference expression -->
+                                    <prop name="details" type="array<@ErrorDetail>" readonly="true"/>
+                                    <prop name="additionalInfo" type="array<object>" readonly="true">
+                                        <array>
+                                            <prop name="type" type="string" readonly="true"/>
+                                            <prop name="info" type="object" readonly="true"/>
+                                        </array>
+                                    </prop>
+                                </prop>
+                            </json>
+                        </body>
+                    </response>
+                </http>
+            </operation>
+
+            <operation when="$condition_2 $condition_3">
+                <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                    <request method="get">
+                        <path>
+                            <param name="subscriptionId" arg="$subscription"/>
+                            <param name="resourceGroupName" arg="$resourceGroup"/>
+                            <param name="dataCollectionRuleName" arg="$name"/>
+                        </path>
+                        <query>
+                            <const name="api-version" value="2021-04-01"/>
+                        </query>
+                        <header>
+                        </header>
+                    </request>
+                    <response statusCodes="200">
+                        <header>
+                        </header>
+                        <body>
+                            <json var="$instance" type="@DataCollectionRuleResource"/>
+                        </body>
+                    </response>
+                    <response errorResponse="true">
+                        <header>
+                            <prop name="x-ms-request-id"/>
+                        </header>
+                        <body>
+                            <json type="@ErrorResponseCommonV2"/>
+                        </body>
+                    </response>
+                </http>
+            </operation>
+
+            <operation when="$condition_2">
+                <instanceUpdate instance="$instance">
+                    <!-- patch instance properties -->
+                    <json type="object">
+                        <prop name="properties" type="object">
+                            <prop name="description" type="string" arg="$description"/>
+                            <prop name="dataSources" type="object">
+                                <prop name="performanceCounters" type="array<object>" arg="$performanceCounters">
+                                    <array>
+                                        <prop name="streams" type="array<string>" arg="$performanceCounters[].streams">
+                                            <array>
+                                                <enum>
+                                                    <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                                    <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                                </enum>
+                                            </array>
+                                        </prop>
+                                        <prop name="samplingFrequencyInSeconds" type="integer" format="int32" arg="$performanceCounters[].samplingFrequencyInSeconds"/>
+                                        <prop name="counterSpecifiers" type="array<string>" arg="$performanceCounters[].counterSpecifiers"/>
+                                        <prop name="name" type="string" arg="$performanceCounters[].name"/>
+                                    </array>
+                                </prop>
+                                <prop name="windowsEventLogs" type="array<object>" arg="$windowsEventLogs">
+                                    <array>
+                                        <prop name="streams" type="array<string>" arg="$windowsEventLogs[].streams">
+                                            <array>
+                                                <enum>
+                                                    <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                                    <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                                </enum>
+                                            </array>
+                                        </prop>
+                                        <prop name="xPathQueries" type="array<string>" arg="$windowsEventLogs[].xPathQueries"/>
+                                        <prop name="name" type="string" arg="$windowsEventLogs[].name"/>
+                                    </array>
+                                </prop>
+                                <prop name="syslog" type="array<object>" arg="$syslog">
+                                    <array>
+                                        <prop name="streams" type="array<string>" arg="$syslog[].streams">
+                                            <array>
+                                                <enum>
+                                                    <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                                </enum>
+                                            </array>
+                                        </prop>
+                                        <prop name="facilityNames" type="array<string>" arg="$syslog[].facilityNames">
+                                            <array>
+                                                <enum>
+                                                    <enum-item name="auth">"auth"</enum-item>
+                                                    <enum-item name="authpriv">"authpriv"</enum-item>
+                                                    <enum-item name="cron">"cron"</enum-item>
+                                                    <enum-item name="daemon">"daemon"</enum-item>
+                                                    <enum-item name="kern">"kern"</enum-item>
+                                                    <enum-item name="lpr">"lpr"</enum-item>
+                                                    <enum-item name="mail">"mail"</enum-item>
+                                                    <enum-item name="mark">"mark"</enum-item>
+                                                    <enum-item name="news">"news"</enum-item>
+                                                    <enum-item name="syslog">"syslog"</enum-item>
+                                                    <enum-item name="user">"user"</enum-item>
+                                                    <enum-item name="uucp">"uucp"</enum-item>
+                                                    <enum-item name="local0">"local0"</enum-item>
+                                                    <enum-item name="local1">"local1"</enum-item>
+                                                    <enum-item name="local2">"local2"</enum-item>
+                                                    <enum-item name="local3">"local3"</enum-item>
+                                                    <enum-item name="local4">"local4"</enum-item>
+                                                    <enum-item name="local5">"local5"</enum-item>
+                                                    <enum-item name="local6">"local6"</enum-item>
+                                                    <enum-item name="local7">"local7"</enum-item>
+                                                    <enum-item name="*">"*"</enum-item>
+                                                </enum>
+                                            </array>
+                                        </prop>
+                                        <prop name="logLevels" type="array<string>" arg="$syslog[].logLevels">
+                                            <array>
+                                                <enum>
+                                                    <enum-item name="Debug">"Debug"</enum-item>
+                                                    <enum-item name="Info">"Info"</enum-item>
+                                                    <enum-item name="Notice">"Notice"</enum-item>
+                                                    <enum-item name="Warning">"Warning"</enum-item>
+                                                    <enum-item name="Error">"Error"</enum-item>
+                                                    <enum-item name="Critical">"Critical"</enum-item>
+                                                    <enum-item name="Alert">"Alert"</enum-item>
+                                                    <enum-item name="Emergency">"Emergency"</enum-item>
+                                                    <enum-item name="*">"*"</enum-item>
+                                                </enum>
+                                            </array>
+                                        </prop>
+                                        <prop name="name" type="string" arg="$syslog[].name"/>
+                                    </array>
+                                </prop>
+                                <prop name="extensions" type="array<object>" arg="$extensions">
+                                    <array>
+                                        <prop name="streams" type="array<string>" arg="$extensions[].streams">
+                                            <array>
+                                                <enum>
+                                                    <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                                    <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                                    <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                                    <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                                    <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                                </enum>
+                                            </array>
+                                        </prop>
+                                        <prop name="extensionName" type="string" arg="$extensions[].extensionName"/>
+                                        <prop name="extensionSettings" type="object" arg="$extensions[].extensionSettings"/>
+                                        <prop name="inputDataSources" type="array<string>" arg="$extensions[].inputDataSources"/>
+                                        <prop name="name" type="string" arg="$extensions[].name"/>
+                                    </array>
+                                </prop>
+                            </prop>
+                            <prop name="destinations" type="object">
+                                <prop name="logAnalytics" type="array<object>" arg="$logAnalytics">
+                                    <array>
+                                        <prop name="workspaceResourceId" type="string" arg="$logAnalytics[].workspaceResourceId"/>
+                                        <prop name="name" type="string" arg="$logAnalytics[].name"/>
+                                    </array>
+                                </prop>
+                                <prop name="azureMonitorMetrics" type="object" arg="$azureMonitorMetrics">
+                                    <prop name="name" type="string" arg="$azureMonitorMetrics.name"/>
+                                </prop>
+                            </prop>
+                            <prop name="dataFlows" type="array<object>" arg="$dataFlows">
+                                <array>
+                                    <prop name="streams" type="array<string>" arg="$dataFlows[].streams">
+                                        <array>
+                                            <enum>
+                                                <enum-item name="Microsoft-Event">"Microsoft-Event"</enum-item>
+                                                <enum-item name="Microsoft-InsightsMetrics">"Microsoft-InsightsMetrics"</enum-item>
+                                                <enum-item name="Microsoft-Perf">"Microsoft-Perf"</enum-item>
+                                                <enum-item name="Microsoft-Syslog">"Microsoft-Syslog"</enum-item>
+                                                <enum-item name="Microsoft-WindowsEvent">"Microsoft-WindowsEvent"</enum-item>
+                                            </enum>
+                                        </array>
+                                    </prop>
+                                    <prop name="destinations" type="array<string>" arg="$dataFlows[].destinations"/>
+                                </array>
+                            </prop>
+                        </prop>
+                    </json>
+                </instanceUpdate>
+            </operation>
+
+            <operation when="$condition_3">
+                <instanceUpdate instance="$instance" clientclientFlatten="true">
+                    <generic add="$add" set="$set" remove="$remove" forceString="$forceString"/>
+                </instanceUpdate>
+            </operation>
+
+            <operation when="$condition_2 $condition_3">
+                <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                    <request method="put">
+                        <path>
+                            <param name="subscriptionId" arg="$subscription"/>
+                            <param name="resourceGroupName" arg="$resourceGroup"/>
+                            <param name="dataCollectionRuleName" arg="$name"/>
+                        </path>
+                        <query>
+                            <const name="api-version" value="2021-04-01"/>
+                        </query>
+                        <header>
+                            <const name="Content-Type" value="application/json"/>
+                        </header>
+                        <body>
+                            <json type="object" ref="$instance"/>
+                        </body>
+                    </request>
+                    <response statusCodes="200 201">
+                        <header>
+                        </header>
+                        <body>
+                            <json var="$instance" type="@DataCollectionRuleResource"/>
+                        </body>
+                    </response>
+                    <response errorResponse="true">
+                        <header>
+                            <prop name="x-ms-request-id"/>
+                        </header>
+                        <body>
+                            <json type="@ErrorResponseCommonV2"/>
+                        </body>
+                    </response>
+                </http>
+            </operation>
+
+            <output type="object" ref="$instance" clientFlatten="true"/>
+        </command>
+
+        <!--  monitor data-collection rule list  -->
+        <command name="list" version="2021-04-01" stage="Preview">
+            <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules" version="2021-04-01"/>
+            <resource id="/subscriptions/{}/providers/microsoft.insights/datacollectionrules" version="2021-04-01"/>
+
+            <help short="List all data collection rules."/>
+            <argGroup name="">
+                <arg var="$resourceGroup" type="@ResourceGroup"/>
+            </argGroup>
+            <argGroup name="Global">
+                <arg var="$subscription" type="@Subscription" required="true"/>
+            </argGroup>
+            <condition var="$condition_1">
+                <hasValue arg="$resourceGroup"/>
+            </condition>
+            <condition var="$condition_2">
+                <not><condition ref="$condition_1"/></not>
+            </condition>
+
+            <operation when="$condition_1">
+                <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules">
+                    <request method="get">
+                        <path>
+                            <param name="subscriptionId" arg="$subscription"/>
+                            <param name="resourceGroupName" arg="$resourceGroup"/>
+                        </path>
+                        <query>
+                            <const name="api-version" value="2021-04-01"/>
+                        </query>
+                        <header>
+                        </header>
+                    </request>
+                    <response statusCodes="200">
+                        <header>
+                        </header>
+                        <body>
+                            <json var="$instance" type="object" cls="@DataCollectionRuleResourceListResult">
+                                <prop name="value" type="array<@DataCollectionRuleResource>"/>
+                                <prop name="nextLink" type="string" format="url"/>
+                            </json>
+                        </body>
+                    </response>
+                    <response errorResponse="true">
+                        <header>
+                            <prop name="x-ms-request-id"/>
+                        </header>
+                        <body>
+                            <json type="@ErrorResponseCommonV2"/>
+                        </body>
+                    </response>
+                </http>
+            </operation>
+            <operation when="$condition_2">
+                <http path="/subscriptions/{subscriptionId}/providers/Microsoft.Insights/dataCollectionRules">
+                    <request method="get">
+                        <path>
+                            <param name="subscriptionId" arg="$subscription"/>
+                        </path>
+                        <query>
+                            <const name="api-version" value="2021-04-01"/>
+                        </query>
+                        <header>
+                        </header>
+                    </request>
+                    <response statusCodes="200">
+                        <header>
+                        </header>
+                        <body>
+                            <json var="$instance" type="@DataCollectionRuleResourceListResult"/>
+                        </body>
+                    </response>
+                    <response errorResponse="true">
+                        <header>
+                            <prop name="x-ms-request-id"/>
+                        </header>
+                        <body>
+                            <json type="@ErrorResponseCommonV2"/>
+                        </body>
+                    </response>
+                </http>
+            </operation>
+
+            <output type="array<object>" ref="$instance.value" nextLink="$instance.nextLink" />
+        </command>
+
+        <!--  monitor data-collection rule data-flow  -->
+        <commandGroup name="data-flow">
+
+            <!--  monitor data-collection rule data-flow add  -->
+            <command name="add" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Add a data flow."/>
+            </command>
+
+            <!--  monitor data-collection rule data-flow list  -->
+            <command name="list" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="List data flows."/>
+            </command>
+        </commandGroup>
+
+        <!--  monitor data-collection rule log-analytics  -->
+        <commandGroup name="log-analytics">
+
+            <!--  monitor data-collection rule log-analytics add  -->
+            <command name="add" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Add Log Analytics destinations of a data collection rule."/>
+                <argGroup name="">
+                    <arg var="$name" options="--name -n" required="true" type="string"/>
+                    <arg var="$workspaceResourceId" options="--workspace" type="@ResourceID">
+                        <format convenientProp="name">
+                            <prop name="subscription" default="$subscription"/>
+                            <prop name="resourceGroup" default="$resourceGroup"/>
+                            <prop name="namespace" default="Microsoft.OperationalInsights"/>
+                            <prop name="type" default="workspaces"/>
+                        </format>
+                    </arg>
+                </argGroup>
+
+                <argGroup name="Resource Id">
+                    <arg var="$resourceId" options="--id" type="@ResourceID">
+                        <option name="--ids" hidden="true"/>
+                    </arg>
+                    <arg var="$dataCollectionRuleName" options="--rule-name" required="true" idPart="$resourceId.name"/>
+                    <arg var="$resourceGroup" type="@ResourceGroup" required="true" idPart="$resourceId.resourceGroup"/>
+                    <arg var="$subscription" type="@Subscription" required="true" idPart="$resourceId.subscription"/>
+                </argGroup>
+
+                <operation>
+                    <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                        <response method="get">
+                            <path>
+                                <param name="subscriptionId" arg="$subscription"/>
+                                <param name="resourceGroupName" arg="$resourceGroup"/>
+                                <param name="dataCollectionRuleName" arg="$dataCollectionRuleName"/>
+                            </path>
+                            <query>
+                                <const name="api-version" value="2021-04-01"/>
+                            </query>
+                            <header>
+                            </header>
+                        </response>
+                        <response statusCodes="200">
+                            <header>
+                            </header>
+                            <body>
+                                <json var="$instance" type="@DataCollectionRuleResource"/>
+                            </body>
+                        </response>
+                        <response errorResponse="true">
+                            <header>
+                                <prop name="x-ms-request-id"/>
+                            </header>
+                            <body>
+                                <json type="@ErrorResponseCommonV2"/>
+                            </body>
+                        </response>
+                    </http>
+                </operation>
+
+                <operation>
+                    <instanceUpdate instance="$instance.properties.destinations.logAnalytics">
+                        <add>
+                            <json type="object">
+                                <prop name="workspaceResourceId" type="string" arg="$workspaceResourceId"/>
+                                <prop name="name" type="string" arg="$name"/>
+                            </json>
+                        </add>
+                    </instanceUpdate>
+                </operation>
+
+                <operation>
+                    <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                        <request method="put">
+                            <path>
+                                <param name="subscriptionId" arg="$subscription"/>
+                                <param name="resourceGroupName" arg="$resourceGroup"/>
+                                <param name="dataCollectionRuleName" arg="$name"/>
+                            </path>
+                            <query>
+                                <const name="api-version" value="2021-04-01"/>
+                            </query>
+                            <header>
+                                <const name="Content-Type" value="application/json"/>
+                            </header>
+                            <body>
+                                <json type="object" ref="$instance"/>
+                            </body>
+                        </request>
+                        <response statusCodes="200 201">
+                            <header>
+                            </header>
+                            <body>
+                                <json var="$instance" type="@DataCollectionRuleResource"/>
+                            </body>
+                        </response>
+                        <response errorResponse="true">
+                            <header>
+                                <prop name="x-ms-request-id"/>
+                            </header>
+                            <body>
+                                <json type="@ErrorResponseCommonV2"/>
+                            </body>
+                        </response>
+                    </http>
+                </operation>
+
+                <operation>
+                    <buildFilter var="$index" idx="-1"/>
+                </operation>
+                <output type="object" ref="$instance.properties.destinations.logAnalytics[$index]" clientFlatten="true"/>
+            </command>
+
+            <!--  monitor data-collection rule log-analytics remove  -->
+            <command name="remove" alias="delete" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Delete a Log Analytics destinations of a data collection rule."/>
+                <argGroup name="Property Filter">
+                    <arg var="$name" options="--name -n" type="string"/>
+                    <arg var="$index" options="--index" type="@Index"/>
+                </argGroup>
+                <argGroup name="Resource Id">
+                    <arg var="$resourceId" options="--id" type="@ResourceID">
+                        <option name="--ids" hidden="true"/>
+                    </arg>
+                    <arg var="$dataCollectionRuleName" options="--rule-name" required="true" idPart="$resourceId.name"/>
+                    <arg var="$resourceGroup" type="@ResourceGroup" required="true" idPart="$resourceId.resourceGroup"/>
+                    <arg var="$subscription" type="@Subscription" required="true" idPart="$resourceId.subscription"/>
+                </argGroup>
+                <condition var="$condition_1">
+                    <not><hasValue arg="$index"/></not>
+                    <and/>
+                    <hasValue arg="$name"/>
+                </condition>
+
+                <operation>
+                    <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                        <response method="get">
+                            <path>
+                                <param name="subscriptionId" arg="$subscription"/>
+                                <param name="resourceGroupName" arg="$resourceGroup"/>
+                                <param name="dataCollectionRuleName" arg="$dataCollectionRuleName"/>
+                            </path>
+                            <query>
+                                <const name="api-version" value="2021-04-01"/>
+                            </query>
+                            <header>
+                            </header>
+                        </response>
+                        <response statusCodes="200">
+                            <header>
+                            </header>
+                            <body>
+                                <json var="$instance" type="@DataCollectionRuleResource"/>
+                            </body>
+                        </response>
+                        <response errorResponse="true">
+                            <header>
+                                <prop name="x-ms-request-id"/>
+                            </header>
+                            <body>
+                                <json type="@ErrorResponseCommonV2"/>
+                            </body>
+                        </response>
+                    </http>
+                </operation>
+
+                <operation when="$condition_1">
+                    <buildFilter var="$index">
+                        <prop name="name" type="string" arg="$name"/>
+                    </buildFilter>
+                </operation>
+
+                <operation>
+                    <instanceUpdate instance="$instance.properties.destinations.logAnalytics">
+                        <remove index="$index"/>
+                    </instanceUpdate>
+                </operation>
+
+                <operation>
+                    <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                        <request method="put">
+                            <path>
+                                <param name="subscriptionId" arg="$subscription"/>
+                                <param name="resourceGroupName" arg="$resourceGroup"/>
+                                <param name="dataCollectionRuleName" arg="$name"/>
+                            </path>
+                            <query>
+                                <const name="api-version" value="2021-04-01"/>
+                            </query>
+                            <header>
+                                <const name="Content-Type" value="application/json"/>
+                            </header>
+                            <body>
+                                <json type="object" ref="$instance"/>
+                            </body>
+                        </request>
+                        <response statusCodes="200 201">
+                            <header>
+                            </header>
+                            <body>
+                                <json var="$instance" type="@DataCollectionRuleResource"/>
+                            </body>
+                        </response>
+                        <response errorResponse="true">
+                            <header>
+                                <prop name="x-ms-request-id"/>
+                            </header>
+                            <body>
+                                <json type="@ErrorResponseCommonV2"/>
+                            </body>
+                        </response>
+                    </http>
+                </operation>
+
+                <output type="string" ref="Remove Success"/>
+            </command>
+
+            <!--  monitor data-collection rule log-analytics list  -->
+            <command name="list" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="List Log Analytics destinations of a data collection rule."/>
+                <argGroup name="Resource Id">
+                    <arg var="$resourceId" options="--id" type="@ResourceID">
+                        <option name="--ids" hidden="true"/>
+                    </arg>
+                    <arg var="$dataCollectionRuleName" options="--rule-name" required="true" idPart="$resourceId.name"/>
+                    <arg var="$resourceGroup" type="@ResourceGroup" required="true" idPart="$resourceId.resourceGroup"/>
+                    <arg var="$subscription" type="@Subscription" required="true" idPart="$resourceId.subscription"/>
+                </argGroup>
+
+                <operation>
+                    <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                        <response method="get">
+                            <path>
+                                <param name="subscriptionId" arg="$subscription"/>
+                                <param name="resourceGroupName" arg="$resourceGroup"/>
+                                <param name="dataCollectionRuleName" arg="$dataCollectionRuleName"/>
+                            </path>
+                            <query>
+                                <const name="api-version" value="2021-04-01"/>
+                            </query>
+                            <header>
+                            </header>
+                        </response>
+                        <response statusCodes="200">
+                            <header>
+                            </header>
+                            <body>
+                                <json var="$instance" type="@DataCollectionRuleResource"/>
+                            </body>
+                        </response>
+                        <response errorResponse="true">
+                            <header>
+                                <prop name="x-ms-request-id"/>
+                            </header>
+                            <body>
+                                <json type="@ErrorResponseCommonV2"/>
+                            </body>
+                        </response>
+                    </http>
+                </operation>
+
+                <output type="array<object>" ref="$instance.properties.destinations.logAnalytics" clientclientFlatten="true"/>
+            </command>
+
+            <!--  monitor data-collection rule log-analytics show  -->
+            <command name="show" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Show a Log Analytics destination of a data collection rule."/>
+                <argGroup name="Property Filter">
+                    <arg var="$name" options="--name -n" type="string"/>
+                    <arg var="$index" options="--index" type="@Index"/>
+                </argGroup>
+                <argGroup name="Resource Id">
+                    <arg var="$resourceId" options="--id" type="@ResourceID">
+                        <option name="--ids" hidden="true"/>
+                    </arg>
+                    <arg var="$dataCollectionRuleName" options="--rule-name" required="true" idPart="$resourceId.name"/>
+                    <arg var="$resourceGroup" type="@ResourceGroup" required="true" idPart="$resourceId.resourceGroup"/>
+                    <arg var="$subscription" type="@Subscription" required="true" idPart="$resourceId.subscription"/>
+                </argGroup>
+                <condition var="$condition_1">
+                    <not><hasValue arg="$index"/></not>
+                    <and/>
+                    <hasValue arg="$name"/>
+                </condition>
+
+                <operation>
+                    <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                        <response method="get">
+                            <path>
+                                <param name="subscriptionId" arg="$subscription"/>
+                                <param name="resourceGroupName" arg="$resourceGroup"/>
+                                <param name="dataCollectionRuleName" arg="$dataCollectionRuleName"/>
+                            </path>
+                            <query>
+                                <const name="api-version" value="2021-04-01"/>
+                            </query>
+                            <header>
+                            </header>
+                        </response>
+                        <response statusCodes="200">
+                            <header>
+                            </header>
+                            <body>
+                                <json var="$instance" type="@DataCollectionRuleResource"/>
+                            </body>
+                        </response>
+                        <response errorResponse="true">
+                            <header>
+                                <prop name="x-ms-request-id"/>
+                            </header>
+                            <body>
+                                <json type="@ErrorResponseCommonV2"/>
+                            </body>
+                        </response>
+                    </http>
+                </operation>
+
+                <operation when="$condition_1">
+                    <buildFilter var="$index">
+                        <prop name="name" type="string" arg="$name"/>
+                    </buildFilter>
+                </operation>
+
+                <output type="object" ref="$instance.properties.destinations.logAnalytics[$index]" clientclientFlatten="true"/>
+            </command>
+
+            <!--  monitor data-collection rule log-analytics set  -->
+            <command name="set" alias="update" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Update a Log Analytics destination of a data collection rule."/>
+                <argGroup name="Property Filter">
+                    <arg var="$name" options="--name -n" type="string"/>
+                    <arg var="$index" options="--index" type="integer"/>
+                </argGroup>
+                <argGroup name="Resource Id">
+                    <arg var="$resourceId" options="--id" type="@ResourceID">
+                        <option name="--ids" hidden="true"/>
+                    </arg>
+                    <arg var="$dataCollectionRuleName" options="--rule-name" required="true" idPart="$resourceId.name"/>
+                    <arg var="$resourceGroup" type="@ResourceGroup" required="true" idPart="$resourceId.resourceGroup"/>
+                    <arg var="$subscription" type="@Subscription" required="true" idPart="$resourceId.subscription"/>
+                </argGroup>
+
+                <argGroup name="Generic Update">
+                    <arg var="$add" type="@GenericUpdateAdd"/>
+                    <arg var="$remove" type="@GenericUpdateRemove"/>
+                    <arg var="$set" type="@GenericUpdateSet"/>
+                    <arg var="$forceString" type="@GenericUpdateForceString"/>
+                </argGroup>
+
+                <argGroup name="">
+                    <arg var="$workspaceResourceId" options="--workspace" type="@ResourceID">
+                        <format convenientProp="name">
+                            <prop name="subscription" default="$subscription"/>
+                            <prop name="resourceGroup" default="$resourceGroup"/>
+                            <prop name="namespace" default="Microsoft.OperationalInsights"/>
+                            <prop name="type" default="workspaces"/>
+                        </format>
+                    </arg>
+                </argGroup>
+
+                <condition var="$condition_1">
+                    <not><hasValue arg="$index"/></not>
+                    <and/>
+                    <hasValue arg="$name"/>
+                </condition>
+
+                <condition var="$condition_2">
+                    <hasValue arg="$add"/>
+                    <or/>
+                    <hasValue arg="$remove"/>
+                    <or/>
+                    <hasValue arg="$set"/>
+                </condition>
+
+                <operation>
+                    <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                        <response method="get">
+                            <path>
+                                <param name="subscriptionId" arg="$subscription"/>
+                                <param name="resourceGroupName" arg="$resourceGroup"/>
+                                <param name="dataCollectionRuleName" arg="$dataCollectionRuleName"/>
+                            </path>
+                            <query>
+                                <const name="api-version" value="2021-04-01"/>
+                            </query>
+                            <header>
+                            </header>
+                        </response>
+                        <response statusCodes="200">
+                            <header>
+                            </header>
+                            <body>
+                                <json var="$instance" type="@DataCollectionRuleResource"/>
+                            </body>
+                        </response>
+                        <response errorResponse="true">
+                            <header>
+                                <prop name="x-ms-request-id"/>
+                            </header>
+                            <body>
+                                <json type="@ErrorResponseCommonV2"/>
+                            </body>
+                        </response>
+                    </http>
+                </operation>
+
+                <operation when="$condition_1">
+                    <buildFilter var="$index">
+                        <prop name="name" type="string" arg="$name"/>
+                    </buildFilter>
+                </operation>
+
+                <operation>
+                    <instanceUpdate instance="$instance.properties.destinations.logAnalytics[$index]">
+                        <json type="object">
+                            <prop name="workspaceResourceId" type="string" arg="$workspaceResourceId"/>
+                            <prop name="name" type="string" arg="$name"/>
+                        </json>
+                    </instanceUpdate>
+                </operation>
+
+                <operation when="$condition_2">
+                    <instanceUpdate instance="$instance.properties.destinations.logAnalytics[$index]">
+                        <generic add="$add" set="$set" remove="$remove" forceString="$forceString"/>
+                    </instanceUpdate>
+                </operation>
+
+                <operation>
+                    <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Insights/dataCollectionRules/{dataCollectionRuleName}">
+                        <request method="put">
+                            <path>
+                                <param name="subscriptionId" arg="$subscription"/>
+                                <param name="resourceGroupName" arg="$resourceGroup"/>
+                                <param name="dataCollectionRuleName" arg="$name"/>
+                            </path>
+                            <query>
+                                <const name="api-version" value="2021-04-01"/>
+                            </query>
+                            <header>
+                                <const name="Content-Type" value="application/json"/>
+                            </header>
+                            <body>
+                                <json type="object" ref="$instance"/>
+                            </body>
+                        </request>
+                        <response statusCodes="200 201">
+                            <header>
+                            </header>
+                            <body>
+                                <json var="$instance" type="@DataCollectionRuleResource"/>
+                            </body>
+                        </response>
+                        <response errorResponse="true">
+                            <header>
+                                <prop name="x-ms-request-id"/>
+                            </header>
+                            <body>
+                                <json type="@ErrorResponseCommonV2"/>
+                            </body>
+                        </response>
+                    </http>
+                </operation>
+                <output type="object" ref="$instance.properties.destinations.logAnalytics[$index]" clientclientFlatten="true"/>
+            </command>
+
+        </commandGroup>
+
+        <!--  monitor data-collection rule performance-counter  -->
+        <commandGroup name="performance-counter">
+
+            <!--  monitor data-collection rule performance-counter add  -->
+            <command name="add" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Add a Log performance counter data source."/>
+            </command>
+            <!--  monitor data-collection rule performance-counter delete  -->
+            <command name="delete" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Delete a Log performance counter data source."/>
+            </command>
+            <!--  monitor data-collection rule performance-counter list  -->
+            <command name="list" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="List Log performance counter data sources."/>
+            </command>
+            <!--  monitor data-collection rule performance-counter show  -->
+            <command name="show" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Show a Log performance counter data source."/>
+            </command>
+            <!--  monitor data-collection rule performance-counter update  -->
+            <command name="update" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Update a Log performance counter data source."/>
+            </command>
+        </commandGroup>
+
+        <!--  monitor data-collection rule windows-event-log  -->
+        <commandGroup name="windows-event-log">
+
+            <!--  monitor data-collection rule windows-event-log add  -->
+            <command name="add" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Add a Windows Event Log data source."/>
+            </command>
+            <!--  monitor data-collection rule windows-event-log delete  -->
+            <command name="delete" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Delete a Windows Event Log data source."/>
+            </command>
+            <!--  monitor data-collection rule windows-event-log list  -->
+            <command name="list" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="List Windows Event Log data sources."/>
+            </command>
+            <!--  monitor data-collection rule windows-event-log show  -->
+            <command name="show" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Show a Windows Event Log data source."/>
+            </command>
+            <!--  monitor data-collection rule windows-event-log update  -->
+            <command name="update" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Update a Windows Event Log data source."/>
+            </command>
+        </commandGroup>
+
+        <!--  monitor data-collection rule syslog  -->
+        <commandGroup name="syslog">
+
+            <!--  monitor data-collection rule syslog add  -->
+            <command name="add" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Add a Syslog data source."/>
+            </command>
+            <!--  monitor data-collection rule syslog delete  -->
+            <command name="delete" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Delete a Syslog data source."/>
+            </command>
+            <!--  monitor data-collection rule syslog list  -->
+            <command name="list" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="List Syslog data sources."/>
+            </command>
+            <!--  monitor data-collection rule syslog show  -->
+            <command name="show" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Show a Syslog data source."/>
+            </command>
+            <!--  monitor data-collection rule syslog update  -->
+            <command name="update" version="2021-04-01" stage="Preview">
+                <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.insights/datacollectionrules/{}" version="2021-04-01"/>
+                <help short="Update a Syslog data source."/>
+            </command>
+        </commandGroup>
+
+    </commandGroup>
+
+</config>
+
+
