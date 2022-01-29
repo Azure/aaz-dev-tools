@@ -1,4 +1,3 @@
-# monitor action-group
-`Command Group`
+# [Group] `monitor action-group`
 
 Manage Action Groups.

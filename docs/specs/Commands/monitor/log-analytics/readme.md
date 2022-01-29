@@ -1,5 +1,4 @@
-# monitor log-analytics
-`Command Group`
+# [Group] `monitor log-analytics`
 
 Manage Azure log analytics.
 
