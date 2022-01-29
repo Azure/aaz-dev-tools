@@ -1,4 +1,4 @@
-import React, { Component} from "react";
+import React, { Component } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom"
 import { ListGroup, Row, Col, Button, Dropdown, DropdownButton, Spinner } from "react-bootstrap"
@@ -21,7 +21,8 @@ type SpecSelectState = {
   loadingResources: boolean,
   currentResource: string,
   selectedResources: DictBooleanType,
-  selectedVersion: DictType
+  versions: Versions,
+  selectedVersion: string
 }
 
 type Instance = {
@@ -41,6 +42,10 @@ type Version = {
 
 type DictType = {
   [name: string]: string
+}
+
+type Versions = {
+  [version: string]: string[]
 }
 
 type DictBooleanType = {
@@ -65,7 +70,8 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
       loadingResources: false,
       currentResource: "",
       selectedResources: {},
-      selectedVersion: {}
+      versions: {},
+      selectedVersion: ""
     }
   }
 
@@ -90,7 +96,8 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
     this.setState({
       resources: {},
       currentResource: "",
-      selectedVersion: {}
+      selectedVersion: "",
+      versions: {}
     })
 
   }
@@ -130,20 +137,34 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
     this.setState({ loadingResources: true })
     axios.get(`${resourceProviderUrl}/Resources`)
       .then((res) => {
+
         const resources: Resources = {}
+        const versions: Versions = {}
+        let selectedVersion: string = ""
         res.data.map((resource: Resource) => {
           resource.versions.sort((a, b) => a.version.localeCompare(b.version))
           resource.versions.reverse()
+          selectedVersion = resource.versions[0].version
           resources[resource.id] = resource.versions
+          resource.versions.map((versionObj: Version) => {
+            const version = versionObj.version
+            if (!(version in versions)) {
+              versions[version] = []
+            }
+            versions[version].push(resource.id)
+          })
         })
-        this.setState({ resources: resources, selectedResourceProvider: resourceProviderName, loadingResources: false })
+        this.setState({ resources: resources, versions: versions, selectedVersion: selectedVersion, selectedResourceProvider: resourceProviderName, loadingResources: false })
       })
       .catch((err) => console.log(err));
   }
 
-  listInstances = (instanceDict: {}) => {
+  listInstances = (instanceDict: {}, sortDesc: boolean = false) => {
     let instanceNames = Object.keys(instanceDict)
     instanceNames.sort((a, b) => a.localeCompare(b))
+    if (sortDesc) {
+      instanceNames.reverse()
+    }
     return <div>
       {instanceNames.map((instanceName) => {
         return <Dropdown.Item eventKey={instanceName} key={instanceName}>{instanceName}</Dropdown.Item>
@@ -172,10 +193,8 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
   }
 
   handleSelectVersion = (eventKey: any) => {
-    // console.log(eventKey)
-    // console.log(this.state.currentResource)
     const version: string = eventKey
-    this.state.selectedVersion[this.state.currentResource] = version
+    this.setState({ selectedVersion: version })
   }
 
   handleSelectResource = (event: any) => {
@@ -183,38 +202,57 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
     this.state.selectedResources[resourceId] = event.target.checked
   }
 
-  ListResourcesAndVersion = () => {
-    let resourceIds = Object.keys(this.state.resources)
+  ListVersions = () => {
+    return this.listInstances(this.state.versions, true)
+  }
+
+  ListResources = () => {
+    if (!this.state.selectedVersion) {
+      return <></>
+    }
+    let resourceIds = this.state.versions[this.state.selectedVersion]
     resourceIds.sort((a, b) => a.localeCompare(b))
     return <div>
       <ListGroup>
         {resourceIds.map((resourceId) => {
-          if (!(resourceId in this.state.selectedVersion)){
-            this.state.selectedVersion[resourceId] = this.state.resources[resourceId][0].version
-          }
-          
-          return <Row key={resourceId}>
-            <Col lg='10'>
-              <ListGroup.Item><input type="checkbox" onChange={this.handleSelectResource} id={resourceId} />  {resourceId}</ListGroup.Item>
-            </Col>
-            <Col lg='2'>
-              <DropdownButton id={resourceId} title={this.state.selectedVersion[resourceId]} onSelect={this.handleSelectVersion} onClick={this.handleToggleVersion} drop='end'>
-                {this.state.resources[resourceId].map((version, index) => {
-                  return <Dropdown.Item eventKey={version.version} key={index} active={false}>{version.version}</Dropdown.Item>
-                })}
-              </DropdownButton>
-            </Col>
-          </Row>
+          return <ListGroup.Item key={resourceId}><input type="checkbox" onChange={this.handleSelectResource} id={resourceId} /> {resourceId}</ListGroup.Item>
         })}
       </ListGroup>
     </div>
   }
 
+  // ListResourcesAndVersion = () => {
+  //   let resourceIds = Object.keys(this.state.resources)
+  //   resourceIds.sort((a, b) => a.localeCompare(b))
+  //   return <div>
+  //     <ListGroup>
+  //       {resourceIds.map((resourceId) => {
+  //         if (!(resourceId in this.state.selectedVersion)){
+  //           this.state.selectedVersion[resourceId] = this.state.resources[resourceId][0].version
+  //         }
+
+  //         return <Row key={resourceId}>
+  //           <Col lg='10'>
+  //             <ListGroup.Item><input type="checkbox" onChange={this.handleSelectResource} id={resourceId} />  {resourceId}</ListGroup.Item>
+  //           </Col>
+  //           <Col lg='2'>
+  //             <DropdownButton id={resourceId} title={this.state.selectedVersion[resourceId]} onSelect={this.handleSelectVersion} onClick={this.handleToggleVersion} drop='end'>
+  //               {this.state.resources[resourceId].map((version, index) => {
+  //                 return <Dropdown.Item eventKey={version.version} key={index} active={false}>{version.version}</Dropdown.Item>
+  //               })}
+  //             </DropdownButton>
+  //           </Col>
+  //         </Row>
+  //       })}
+  //     </ListGroup>
+  //   </div>
+  // }
+
   saveResourcesAndVersion = () => {
-    const finalResources:DictType = {}
-    Object.keys(this.state.selectedResources).map(resourceId=>{
-      if (this.state.selectedResources[resourceId]){
-        finalResources[resourceId] = this.state.selectedVersion[resourceId]
+    const finalResources: DictType = {}
+    Object.keys(this.state.selectedResources).map(resourceId => {
+      if (this.state.selectedResources[resourceId]) {
+        finalResources[resourceId] = this.state.selectedVersion
       }
     })
     console.log(finalResources)
@@ -229,7 +267,7 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
           </h1>
         </Col>
         <Col lg='2'>
-        <Button onClick={this.saveResourcesAndVersion}>Save</Button>
+          <Button onClick={this.saveResourcesAndVersion}>Save</Button>
         </Col>
 
       </Row>
@@ -256,11 +294,16 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
             <span className="visually-hidden">Loading...</span>
           </Spinner>
         </Col>) : <></>}
+        <Col xs="auto">
+          <DropdownButton title={this.state.selectedVersion === "" ? "Please select a version" : this.state.selectedVersion} onSelect={this.handleSelectVersion} >
+            <this.ListVersions />
+          </DropdownButton>
+        </Col>
       </Row>
       <br />
       <Row>
         <Col>
-          <this.ListResourcesAndVersion />
+          <this.ListResources />
         </Col>
       </Row>
 

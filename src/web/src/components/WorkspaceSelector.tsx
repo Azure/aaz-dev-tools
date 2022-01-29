@@ -36,7 +36,7 @@ export default class WorkspaceSelector extends Component<{}, workspaceSelectorSt
   }
 
   loadWorkspaces = () => {
-    axios.get("/command/editor/workspaces")
+    axios.get("/AAZ/Editor/Workspaces")
       .then((res) => {
         this.setState({
           workspaces: res.data.map((workspace: any) => {
@@ -100,10 +100,11 @@ export default class WorkspaceSelector extends Component<{}, workspaceSelectorSt
     event.stopPropagation();
     const form = event.currentTarget;
     this.setState({validated: true})
-    
+
     if (form.checkValidity()===true){
-      axios.post('/command/editor/workspaces', {
-        name: event.target[0].value
+      axios.post('/AAZ/Editor/Workspaces', {
+        name: event.target[0].value,
+        plane: 'mgmt-plane'
       })
         .then(() => {
           this.handleClose()
