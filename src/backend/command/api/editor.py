@@ -63,8 +63,10 @@ def editor_workspace(name):
 
 @bp.route("/Workspaces/<name>/Generate", methods=("POST",))
 def editor_workspace_generate(name):
-    # generate code and command configurations in cli repos and aaz repo
-    raise NotImplementedError()
+    manager = WorkspaceManager(name)
+    manager.load()
+    manager.generate_to_aaz()
+    return "", 200
 
 
 # command tree operations

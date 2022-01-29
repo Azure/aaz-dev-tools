@@ -570,3 +570,17 @@ class WorkspaceManager:
         leaf.names = [*new_cmd_names]
         cfg_editor.rename_command(*old_names, new_cmd_names=new_cmd_names)
         return leaf
+
+    def generate_to_aaz(self):
+        updater = self.aaz_specs.new_updater()
+        generate_timestamp = datetime.utcnow()
+        for leaf in self.iter_command_tree_leaves():
+            # load cfg editor and update timestamp
+            editor = self.load_cfg_editor_by_command(leaf)
+            editor.cfg.timestamp = generate_timestamp
+            # verify configuration
+            updater.add_command_tree_leaf(leaf, editor)
+        for node in self.iter_command_tree_nodes():
+            # verify node
+            updater.add_command_tree_node(node)
+        updater.save()
