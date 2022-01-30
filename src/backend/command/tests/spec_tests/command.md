@@ -19,6 +19,7 @@ Long help end of line
     ```bash
         edge-order order list
     ```
+
 - List order of a resource group
     ```bash
         edge-order order list \
@@ -36,6 +37,7 @@ Long help end of line
     ```bash
         edge-order order list
     ```
+
 - List order of a resource group
     ```bash
         edge-order order list \

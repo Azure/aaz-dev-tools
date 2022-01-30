@@ -6,11 +6,34 @@ import json
 from utils import exceptions
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from command.templates import get_templates
-from command.model.specs import CMDSpecsCommandGroup, CMDSpecsCommand, CMDSpecsCommandVersion, CMDSpecsResource
+from command.model.specs import CMDSpecsCommandGroup, CMDSpecsCommand, CMDSpecsCommandVersion, CMDSpecsResource, CMDSpecsCommandTree
 from command.model.configuration import CMDHelp, CMDStageEnum, CMDCommandExample
 
 
 class TemplateRenderTest(CommandTestCase):
+
+    def test_render_tree_template(self):
+        tmpl = get_templates()['tree']
+        command_tree = CMDSpecsCommandTree()
+
+        command_tree.command_groups = {}
+        group_1 = CMDSpecsCommandGroup()
+        group_1.names = ["edge-order"]
+        group_1.help = CMDHelp()
+        group_1.help.short = "Manager edge order."
+        command_tree.command_groups["edge-order"] = group_1
+
+        group_2 = CMDSpecsCommandGroup()
+        group_2.names = ["network"]
+        group_2.help = CMDHelp()
+        group_2.help.short = "Manager network."
+        command_tree.command_groups["network"] = group_2
+
+        data = tmpl.render(tree=command_tree)
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tree.md")
+        with open(output_path, 'w') as f:
+            f.write(data)
 
     def test_render_group_template(self):
         tmpl = get_templates()['group']
@@ -24,35 +47,34 @@ class TemplateRenderTest(CommandTestCase):
             "Long help end of line"
         ]
 
-        command_group.command_groups = []
+        command_group.command_groups = {}
         sub_group_1 = CMDSpecsCommandGroup()
         sub_group_1.names = ["edge-order", "order", "item"]
-        sub_group_1.stage = CMDStageEnum.Preview
         sub_group_1.help = CMDHelp()
         sub_group_1.help.short = "Manager order item of edge."
-        command_group.command_groups.append(sub_group_1)
+        command_group.command_groups["item"] = sub_group_1
         sub_group_2 = CMDSpecsCommandGroup()
         sub_group_2.names = ["edge-order", "order", "address"]
         sub_group_2.help = CMDHelp()
         sub_group_2.help.short = "Manager order address of edge."
-        command_group.command_groups.append(sub_group_2)
+        command_group.command_groups["address"] = sub_group_2
 
-        command_group.commands = []
+        command_group.commands = {}
         command_1 = CMDSpecsCommand()
         command_1.names = ["edge-order", "order", "list"]
         command_1.help = CMDHelp()
         command_1.help.short = "List available orders of an edge."
-        command_group.commands.append(command_1)
+        command_group.commands["list"] = command_1
 
         command_2 = CMDSpecsCommand()
         command_2.names = ["edge-order", "order", "show"]
         command_2.help = CMDHelp()
         command_2.help.short = "Show an order of an edge"
-        command_group.commands.append(command_2)
+        command_group.commands["show"] = command_2
 
         data = tmpl.render(group=command_group)
 
-        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "command_group.md")
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "group.md")
         with open(output_path, 'w') as f:
             f.write(data)
 

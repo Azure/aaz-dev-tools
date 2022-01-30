@@ -8,3 +8,5 @@ class CMDSpecsResource(Model):
     id = CMDResourceIdField(required=True)
     version = CMDVersionField(required=True)
 
+    class Options:
+        serialize_when_none = False

@@ -1,5 +1,4 @@
 # [Group] _{{ group.names|join(' ') }}_
-{{ group.stage|stage_label }}
 
 {{ group.help.short }}
 {%- if group.help.lines is not none and group.help.lines|length %}
@@ -9,16 +8,16 @@
 {%- if group.command_groups is not none and group.command_groups|length %}
 
 ## Subgroups
-{%- for sub_group in group.command_groups %}
+{%- for sub_group in group.command_groups.values() %}
 
 - [{{ sub_group.names|last }}]({{ sub_group.names|command_group_readme_path }})
-: {{ sub_group.stage|stage_label }} {{ sub_group.help.short }}
+: {{ sub_group.help.short }}
 {%- endfor %}
 {%- endif %}
 {%- if group.commands is not none and group.commands|length %}
 
 ## Commands
-{%- for command in group.commands %}
+{%- for command in group.commands.values() %}
 
 - [{{ command.names|last }}]({{ command.names|command_readme_path }})
 : {{ command.help.short }}

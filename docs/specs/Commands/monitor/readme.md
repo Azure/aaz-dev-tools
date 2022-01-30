@@ -8,9 +8,9 @@ Command Group Long Summery End Line
 
 ## Subgroups
 
-- [monitor action-group](/docs/specs/Commands/monitor/action-group/readme.md)
-- [monitor log-analytics](/docs/specs/Commands/monitor/log-analytics/readme.md)
+- [action-group](/docs/specs/Commands/monitor/action-group/readme.md)
+- [log-analytics](/docs/specs/Commands/monitor/log-analytics/readme.md)
 
 ## Commands
 
-- [monitor clone](./_clone.md)
+- [clone](/docs/specs/Commands/monitor/_clone.md)

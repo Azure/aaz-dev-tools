@@ -1,5 +1,4 @@
 # [Group] _edge-order order_
-**Stable**
 
 This is a short help.
 
@@ -10,10 +9,10 @@ Long help end of line
 ## Subgroups
 
 - [item](/Commands/edge-order/order/item/readme.md)
-: **Preview** Manager order item of edge.
+: Manager order item of edge.
 
 - [address](/Commands/edge-order/order/address/readme.md)
-: **Stable** Manager order address of edge.
+: Manager order address of edge.
 
 ## Commands
 

@@ -16,7 +16,8 @@
 {%- if version.examples is not none and version.examples|length %}
 
 #### examples
-{% for example in version.examples %}
+{%- for example in version.examples %}
+
 - {{ example.name }}
     ```bash
     {%- for line in example.lines %}
