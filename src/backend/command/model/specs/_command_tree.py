@@ -6,32 +6,32 @@ from schematics.types import ModelType, ListType, StringType
 from ._resource import CMDSpecsResource
 
 
-class CMDSpecsCommandTreeLeafVersion(Model):
+class CMDSpecsCommandVersion(Model):
     name = CMDVersionField(required=True)
     stage = CMDStageField()
     resources = ListType(ModelType(CMDSpecsResource), required=True, min_size=1)
     examples = ListType(ModelType(CMDCommandExample))
 
 
-class CMDSpecsCommandTreeLeaf(Model):
+class CMDSpecsCommand(Model):
     names = ListType(field=CMDCommandNameField(), min_size=1, required=True)  # full name of a command
     help = ModelType(CMDHelp, required=True)
-    versions = ListType(ModelType(CMDSpecsCommandTreeLeafVersion), required=True, min_size=1)
+    versions = ListType(ModelType(CMDSpecsCommandVersion), required=True, min_size=1)
 
     class Options:
         serialize_when_none = False
 
 
-class CMDSpecsCommandTreeNode(Model):
+class CMDSpecsCommandGroup(Model):
     names = ListType(field=CMDCommandNameField(), required=True, min_size=1)  # full name of a command group
     stage = CMDStageField()
     help = ModelType(CMDHelp)
 
     command_groups = ListType(
-        field=ModelType("CMDSpecsCommandTreeNode"),
+        field=ModelType("CMDSpecsCommandGroup"),
     )
     commands = ListType(
-        field=ModelType(CMDSpecsCommandTreeLeaf)
+        field=ModelType(CMDSpecsCommand)
     )
 
     class Options:

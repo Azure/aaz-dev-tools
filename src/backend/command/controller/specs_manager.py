@@ -5,7 +5,7 @@ import re
 from command.model.configuration import CMDConfiguration
 from utils.base64 import b64encode_str
 from utils.config import Config
-from command.model.specs import CMDSpecsCommandTreeNode, CMDSpecsCommandTreeLeaf
+from command.model.specs import CMDSpecsCommandGroup, CMDSpecsCommand
 from command.templates import get_templates
 
 
@@ -72,7 +72,7 @@ class AAZSpecsManager:
 
         with open(node_file, 'r') as f:
             data = f.read()
-            node = CMDSpecsCommandTreeNode
+            node = CMDSpecsCommandGroup
 
 
     # def verify_command_tree_node(self, node):
