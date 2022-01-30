@@ -31,7 +31,7 @@ class TemplateRenderTest(CommandTestCase):
 
         data = tmpl.render(tree=command_tree)
 
-        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tree.md")
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_tree.md")
         with open(output_path, 'w') as f:
             f.write(data)
 
@@ -74,7 +74,7 @@ class TemplateRenderTest(CommandTestCase):
 
         data = tmpl.render(group=command_group)
 
-        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "group.md")
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_group.md")
         with open(output_path, 'w') as f:
             f.write(data)
 
@@ -172,6 +172,22 @@ class TemplateRenderTest(CommandTestCase):
         command.versions.append(v_2)
 
         data = tmpl.render(command=command)
-        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "command.md")
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_command.md")
+        with open(output_path, 'w') as f:
+            f.write(data)
+
+    def test_render_resource_ref(self):
+        tmpl = get_templates()['resource_ref']
+
+        ref_resource = CMDSpecsResource(
+            {
+                "plane": PlaneEnum.Mgmt,
+                "id": "/subscriptions/{}/providers/microsoft.edgeorder/orders",
+                "version": "2020-12-01-preview",
+            }
+        )
+
+        data = tmpl.render(ref_resource=ref_resource)
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_resource_ref.md")
         with open(output_path, 'w') as f:
             f.write(data)

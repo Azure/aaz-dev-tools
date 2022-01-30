@@ -54,7 +54,7 @@ class WorkspaceManager:
 
     def __init__(self, name):
         self.name = name
-        if os.path.exists(Config.AAZ_DEV_WORKSPACE_FOLDER) and not os.path.isdir(Config.AAZ_DEV_WORKSPACE_FOLDER):
+        if not Config.AAZ_DEV_WORKSPACE_FOLDER or os.path.exists(Config.AAZ_DEV_WORKSPACE_FOLDER) and not os.path.isdir(Config.AAZ_DEV_WORKSPACE_FOLDER):
             raise ValueError(
                 f"Invalid AAZ_DEV_WORKSPACE_FOLDER: Expect a folder path: {Config.AAZ_DEV_WORKSPACE_FOLDER}")
         self.folder = os.path.join(Config.AAZ_DEV_WORKSPACE_FOLDER, name)
@@ -65,9 +65,9 @@ class WorkspaceManager:
         self.ws = None
         self._cfg_editors = {}
 
+        self.aaz_specs = AAZSpecsManager()
         self.swagger_specs = SwaggerSpecsManager()
         self.swagger_command_generator = CommandGenerator()
-        self.aaz_specs = AAZSpecsManager()
 
     def load(self):
         # TODO: handle exception

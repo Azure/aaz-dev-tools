@@ -13,4 +13,5 @@ def get_templates():
         _templates['tree'] = env.get_template("tree.md.j2")
         _templates['group'] = env.get_template("group.md.j2")
         _templates['command'] = env.get_template("command.md.j2")
+        _templates['resource_ref'] = env.get_template("resource_ref.md.j2")
     return _templates
