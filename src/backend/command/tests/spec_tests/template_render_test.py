@@ -1,13 +1,11 @@
-from command.controller.workspace_manager import WorkspaceManager
-from command.tests.common import CommandTestCase, workspace_name
-from utils.plane import PlaneEnum
 import os
-import json
-from utils import exceptions
-from swagger.utils.tools import swagger_resource_path_to_resource_id
+
+from command.model.configuration import CMDHelp, CMDCommandExample, CMDStageEnum
+from command.model.specs import CMDSpecsCommandGroup, CMDSpecsCommand, CMDSpecsCommandVersion, CMDSpecsResource, \
+    CMDSpecsCommandTree
 from command.templates import get_templates
-from command.model.specs import CMDSpecsCommandGroup, CMDSpecsCommand, CMDSpecsCommandVersion, CMDSpecsResource, CMDSpecsCommandTree
-from command.model.configuration import CMDHelp, CMDStageEnum, CMDCommandExample
+from command.tests.common import CommandTestCase
+from utils.plane import PlaneEnum
 
 
 class TemplateRenderTest(CommandTestCase):
@@ -82,7 +80,7 @@ class TemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['command']
         command = CMDSpecsCommand()
         command.names = ["edge-order", "order", "list"]
-        
+
         command.help = CMDHelp()
         command.help.short = "List order"
         command.help.lines = [
@@ -90,7 +88,7 @@ class TemplateRenderTest(CommandTestCase):
             "Long help line 2",
             "Long help end of line"
         ]
-        
+
         command.versions = []
         v_1 = CMDSpecsCommandVersion()
         v_1.name = "2021-12-01"
