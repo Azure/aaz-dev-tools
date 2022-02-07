@@ -10,10 +10,11 @@ from command.model.specs import CMDSpecsCommandTree, CMDSpecsCommandGroup, CMDSp
 from command.templates import get_templates
 from utils import exceptions
 from .cfg_reader import CfgReader
+from .cfg_validator import CfgValidator
 
 
 class AAZSpecsManager:
-    REFERENCE_LINE = re.compile(r"^Reference\s*\[(.*) (.*)\]\((.*)\)\s*$")
+    REFERENCE_LINE = re.compile(r"^Reference\s*\[(.*) (.*)]\((.*)\)\s*$")
 
     def __init__(self):
         if not Config.AAZ_PATH or not os.path.exists(Config.AAZ_PATH) or not os.path.isdir(Config.AAZ_PATH):
@@ -27,7 +28,6 @@ class AAZSpecsManager:
         self._modified_commands = set()
         self._modified_resource_cfgs = {}
 
-    def load(self):
         tree_path = self.get_tree_file_path()
         if not os.path.exists(tree_path):
             self.tree = CMDSpecsCommandTree()
@@ -86,7 +86,7 @@ class AAZSpecsManager:
         return node
 
     def find_command(self, *cmd_names):
-        if len(cmd_names) < 1:
+        if len(cmd_names) < 2:
             raise exceptions.InvalidAPIUsage(f"Invalid command name: '{' '.join(cmd_names)}'")
 
         node = self.find_command_group(*cmd_names[:-1])
@@ -111,9 +111,10 @@ class AAZSpecsManager:
 
     def iter_commands(self, *root_node_names):
         for node in self.iter_command_groups(*root_node_names):
+            if node == self.tree:
+                continue
             for leaf in (node.commands or {}).values():
-                if leaf.versions:
-                    yield leaf
+                yield leaf
 
     def load_resource_cfg(self, plane, resource_id, version):
         key = (plane, resource_id, version)
@@ -136,6 +137,9 @@ class AAZSpecsManager:
             if not path or not os.path.exists(path):
                 raise ValueError(f"Invalid reference file: {ref_path}")
 
+        if not os.path.isfile(path):
+            raise ValueError(f"Invalid file path: {path}")
+
         with open(path, 'r') as f:
             # TODO: use xml
             data = json.load(f)
@@ -150,7 +154,7 @@ class AAZSpecsManager:
         idx = 0
         while idx < len(cg_names):
             name = cg_names[idx]
-            if node.commands and name in node.commands:
+            if node != self.tree and node.commands and name in node.commands:
                 raise exceptions.InvalidAPIUsage(f"Invalid Command Group name: conflict with Command name: "
                                                  f"'{' '.join(cg_names[:idx+1])}'")
             if not node.command_groups or name not in node.command_groups:
@@ -174,11 +178,11 @@ class AAZSpecsManager:
                 command_group.help.short = ws_node.help.short
             if ws_node.help.lines:
                 command_group.help.lines = [*ws_node.help.lines]
-        self._modified_command_groups.add(tuple(*ws_node.names))
+        self._modified_command_groups.add(tuple([*ws_node.names]))
         return command_group
 
     def delete_command_group(self, *cg_names):
-        for _ in self.iter_command_groups(*cg_names):
+        for _ in self.iter_commands(*cg_names):
             raise exceptions.ResourceConflict("Cannot delete command group with commands")
         parent = self.find_command_group(*cg_names[:-1])
         name = cg_names[-1]
@@ -199,7 +203,9 @@ class AAZSpecsManager:
         if node.command_groups and name in node.command_groups:
             raise exceptions.InvalidAPIUsage(f"Invalid Command name: conflict with Command Group name: "
                                              f"'{' '.join(cmd_names)}'")
-        if name in node.commands:
+        if not node.commands:
+            node.commands = {}
+        elif name in node.commands:
             return node.commands[name]
 
         command = CMDSpecsCommand()
@@ -233,7 +239,7 @@ class AAZSpecsManager:
         if not command or not command.versions:
             return False
         match_idx = None
-        for idx, v in command.versions:
+        for idx, v in enumerate(command.versions):
             if v.name == version:
                 match_idx = idx
                 break
@@ -282,11 +288,14 @@ class AAZSpecsManager:
 
         # update command tree
         for cmd_names, cmd in cfg_reader.iter_commands():
-            self.delete_command_version(*cmd_names, version=cmd.versions)
+            self.delete_command_version(*cmd_names, version=cmd.version)
 
     def update_resource_cfg(self, cfg):
         cfg_reader = CfgReader(cfg=cfg)
-        # TODO: verify cfg
+
+        cfg_verifier = CfgValidator(cfg_reader)
+        # TODO: implement verify configuration
+        cfg_verifier.verify()
 
         # remove previous cfg
         for resource in cfg_reader.resources:
@@ -343,7 +352,29 @@ class AAZSpecsManager:
         self._modified_commands.add(tuple(command.names))
         return command
 
+    def verify_command_tree(self):
+        details = {}
+        for group in self.iter_command_groups():
+            if group == self.tree:
+                continue
+            if not group.help or not group.help.short:
+                details[' '.join(group.names)] = {
+                    'type': 'group',
+                    'help': "Miss short summery."
+                }
+
+        for cmd in self.iter_commands():
+            if not cmd.help or not cmd.help.short:
+                details[' '.join(cmd.names)] = {
+                    'type': 'command',
+                    'help': "Miss short summery."
+                }
+        if details:
+            raise exceptions.VerificationError(message="Invalid Command Tree", details=details)
+
     def save(self):
+        self.verify_command_tree()
+
         remove_files = []
         remove_folders = []
         update_files = {}
@@ -443,9 +474,3 @@ class AAZSpecsManager:
         # TODO: use xml
         data = cfg.to_primitive()
         return json.dumps(data, ensure_ascii=False)
-
-    # def verify_command_tree_node(self, node):
-    #     pass
-    #
-    # def verify_command_tree_leaf(self, leaf, cfg_editor):
-    #     pass

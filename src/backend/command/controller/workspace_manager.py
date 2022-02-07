@@ -572,15 +572,15 @@ class WorkspaceManager:
         return leaf
 
     def generate_to_aaz(self):
-        updater = self.aaz_specs.new_updater()
         generate_timestamp = datetime.utcnow()
-        for leaf in self.iter_command_tree_leaves():
-            # load cfg editor and update timestamp
-            editor = self.load_cfg_editor_by_command(leaf)
-            editor.cfg.timestamp = generate_timestamp
-            # verify configuration
-            updater.add_command_tree_leaf(leaf, editor)
-        for node in self.iter_command_tree_nodes():
-            # verify node
-            updater.add_command_tree_node(node)
-        updater.save()
+        for ws_leaf in self.iter_command_tree_leaves():
+            editor = self.load_cfg_editor_by_command(ws_leaf)
+            cfg = editor.cfg
+            cfg.timestamp = generate_timestamp
+            self.aaz_specs.update_resource_cfg(cfg)
+            self.aaz_specs.update_command_by_ws(ws_leaf)
+        for ws_node in self.iter_command_tree_nodes():
+            if ws_node == self.ws.command_tree:
+                continue
+            self.aaz_specs.update_command_group_by_ws(ws_node)
+        self.aaz_specs.save()
