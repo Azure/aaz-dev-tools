@@ -35,7 +35,7 @@ class XMLSerializer:
         lines = re.findall(r"<(.+)>", data)
         for line in lines:
             # handle long-summary
-            if line.startswith("p>"):
+            if line.startswith("line>"):
                 ret += "<" + line + ">" + "\n"
                 continue
             line = line.replace("&", "&amp;")
@@ -65,8 +65,8 @@ def primitive_to_xml(field_name, data, parent):
             primitive_to_xml(field_name, d, parent)
     else:
         # handle long-summary
-        if field_name == "p":
-            child = Element("p")
+        if field_name == "line":
+            child = Element("line")
             child.text = str(data)
             parent.append(child)
         # store metadata as attributes
@@ -106,7 +106,7 @@ def obtain_field_value(prev, curr, data):
     if isinstance(prev, ListType):
         field_value = []
         # filter long-summary and singular options
-        if " " in data and curr.parent_field.name not in {"p", "singular_options"}:
+        if " " in data and curr.parent_field.name not in {"lines", "singular_options"}:
             data = data.split()
         if isinstance(data, list):
             for d in data:
