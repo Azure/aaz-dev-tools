@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import { Modal, Button, ListGroup, Row, Col, Form, Alert } from "react-bootstrap";
 import axios from "axios";
 import { Url } from "url";
-import { Outlet } from "react-router-dom";
 
 type workspaceSelectorState = {
   creatingNew: boolean,
@@ -54,7 +53,7 @@ export default class WorkspaceSelector extends Component<{}, workspaceSelectorSt
   WorkspaceList = () => {
     return <>{
       this.state.workspaces.map((workspace: Workspace, index) => {
-        return <ListGroup.Item key={index}>
+        return <ListGroup.Item key={index} action href={'workspace/' + workspace.name}>
           <Row>
             <Col>{workspace.name}</Col>
             <Col>{workspace.lastModified.toLocaleString()}</Col>
@@ -99,17 +98,18 @@ export default class WorkspaceSelector extends Component<{}, workspaceSelectorSt
     event.preventDefault();
     event.stopPropagation();
     const form = event.currentTarget;
-    this.setState({validated: true})
+    this.setState({ validated: true })
 
-    if (form.checkValidity()===true){
+    if (form.checkValidity() === true) {
+      const workspaceName = event.target[0].value
       axios.post('/AAZ/Editor/Workspaces', {
-        name: event.target[0].value,
+        name: workspaceName,
         plane: 'mgmt-plane'
       })
         .then(() => {
           this.handleClose()
           this.loadWorkspaces()
-          this.setState({ showAlert: false, alertText: "", validated: false})
+          this.setState({ showAlert: false, alertText: "", validated: false })
         })
         .catch(error => {
           console.log(error);
@@ -129,7 +129,7 @@ export default class WorkspaceSelector extends Component<{}, workspaceSelectorSt
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form id='newWorkspaceForm' onSubmit={this.handleSubmit}  noValidate validated={this.state.validated}>
+          <Form id='newWorkspaceForm' onSubmit={this.handleSubmit} noValidate validated={this.state.validated}>
             <Form.Group controlId="workspaceName">
               <Form.Label>Workspace Name</Form.Label>
               <Form.Control type="text" placeholder="Name" required />
