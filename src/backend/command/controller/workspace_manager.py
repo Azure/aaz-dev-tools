@@ -4,7 +4,7 @@ import os
 import shutil
 from datetime import datetime
 
-from command.model.configuration import CMDHelp
+from command.model.configuration import CMDHelp, CMDResource
 from command.model.editor import CMDEditorWorkspace, CMDCommandTreeNode, CMDCommandTreeLeaf
 from swagger.controller.command_generator import CommandGenerator
 from swagger.controller.specs_manager import SwaggerSpecsManager
@@ -64,6 +64,7 @@ class WorkspaceManager:
 
         self.ws = None
         self._cfg_editors = {}
+        self._reusable_leaves = {}
 
         self.aaz_specs = AAZSpecsManager()
         self.swagger_specs = SwaggerSpecsManager()
@@ -181,10 +182,19 @@ class WorkspaceManager:
             if not node.command_groups or name not in node.command_groups:
                 if not node.command_groups:
                     node.command_groups = {}
-                node.command_groups[name] = CMDCommandTreeNode({
-                    "names": node_names[:idx + 1],
-                    "stage": node.stage,
-                })
+                aaz_node = self.aaz_specs.find_command_group(*node_names[:idx + 1])
+                if aaz_node is not None:
+                    new_node = CMDCommandTreeNode({
+                        "names": node_names[:idx + 1],
+                        "stage": aaz_node.stage,
+                        "help": aaz_node.help.to_primitive()
+                    })
+                else:
+                    new_node = CMDCommandTreeNode({
+                        "names": node_names[:idx + 1],
+                        "stage": node.stage,
+                    })
+                node.command_groups[name] = new_node
             node = node.command_groups[name]
             idx += 1
         return node
@@ -222,15 +232,29 @@ class WorkspaceManager:
             assert name not in node.commands
             if node.command_groups:
                 assert name not in node.command_groups
-            node.commands[name] = CMDCommandTreeLeaf({
-                "names": [*node.names, name],
-                "stage": node.stage,
-                "help": {
-                    "short": command.description
-                },
-                "version": command.version,
-                "resources": [r.to_primitive() for r in command.resources]
-            })
+            reusable_leaf = self._reusable_leaves.pop(tuple(cmd_names), None)
+            if reusable_leaf:
+                new_cmd = reusable_leaf
+
+            else:
+                aaz_leaf = self.aaz_specs.find_command(*cmd_names)
+                if aaz_leaf:
+                    new_cmd = CMDCommandTreeLeaf({
+                        "names": [*cmd_names],
+                        "stage": aaz_leaf.stage,
+                        "help": aaz_leaf.help.to_primitive(),
+                    })
+                else:
+                    new_cmd = CMDCommandTreeLeaf({
+                        "names": [*cmd_names],
+                        "stage": node.stage,
+                        "help": {
+                            "short": command.description or ""
+                        },
+                    })
+            new_cmd.version = command.version
+            new_cmd.resources = [CMDResource(r.to_primitive()) for r in command.resources]
+            node.commands[name] = new_cmd
 
     def remove_cfg(self, cfg_editor):
         cfg_editor.deleted = True
@@ -242,7 +266,8 @@ class WorkspaceManager:
             node = self.find_command_tree_node(*cmd_names[:-1])
             name = cmd_names[-1]
             if node and node.commands and name in node.commands:
-                del node.commands[name]
+                # add into reusable leaves in case it's added in add_cfg again.
+                self._reusable_leaves[tuple(cmd_names)] = node.commands.pop(name)
 
     def load_cfg_editor_by_resource(self, resource_id, version):
         if resource_id in self._cfg_editors:
@@ -398,6 +423,8 @@ class WorkspaceManager:
                 resources=[resource.to_cmd()],
                 command_groups=[command_group]
             ))
+
+        # TODO: apply the command name used in aaz specs
 
         if len(root_node_names) > 0:
             cg_names = self._calculate_cfgs_common_command_group(cfg_editors, *root_node_names)
