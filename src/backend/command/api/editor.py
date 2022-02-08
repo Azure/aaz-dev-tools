@@ -177,8 +177,10 @@ def editor_workspace_command(name, node_names, leaf_name):
     result.update({
         'names': leaf.names,
         'help': leaf.help.to_primitive(),
-        'stage': leaf.stage
+        'stage': leaf.stage,
     })
+    if leaf.examples:
+        result['examples'] = leaf.examples.to_primitive()
 
     return jsonify(result)
 
@@ -212,6 +214,8 @@ def editor_workspace_command_rename(name, node_names, leaf_name):
         'help': new_leaf.help.to_primitive(),
         'stage': new_leaf.stage
     })
+    if new_leaf.examples:
+        result['examples'] = new_leaf.examples.to_primitive()
 
     manager.save()
     return jsonify(result)

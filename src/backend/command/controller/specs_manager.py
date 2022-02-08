@@ -118,7 +118,7 @@ class AAZSpecsManager:
             for leaf in (node.commands or {}).values():
                 yield leaf
 
-    def load_resource_cfg(self, plane, resource_id, version):
+    def load_resource_cfg_reader(self, plane, resource_id, version):
         key = (plane, resource_id, version)
         if key in self._modified_resource_cfgs:
             return self._modified_resource_cfgs[key]
@@ -146,7 +146,23 @@ class AAZSpecsManager:
             # TODO: use xml
             data = json.load(f)
             cfg = CMDConfiguration(data)
-        return cfg
+        return CfgReader(cfg)
+
+    def load_resource_cfg_reader_by_command_with_version(self, cmd, version):
+        if isinstance(version, CMDSpecsCommandVersion):
+            version_name = version.name
+        else:
+            assert isinstance(version, str)
+            version_name = version
+        version = None
+        for v in cmd.versions or []:
+            if v.name == version_name:
+                version = v
+                break
+        if not version:
+            return None
+        resource = version.resources[0]
+        return self.load_resource_cfg_reader(resource.plane, resource.id, resource.version)
 
     # command tree
     def create_command_group(self, *cg_names):
@@ -301,8 +317,8 @@ class AAZSpecsManager:
 
         # remove previous cfg
         for resource in cfg_reader.resources:
-            pre_cfg = self.load_resource_cfg(cfg.plane, resource_id=resource.id, version=resource.version)
-            if pre_cfg:
+            pre_cfg_reader = self.load_resource_cfg_reader(cfg.plane, resource_id=resource.id, version=resource.version)
+            if pre_cfg_reader:
                 self._remove_cfg(cfg)
 
         # add new command version
@@ -381,6 +397,9 @@ class AAZSpecsManager:
         remove_folders = []
         update_files = {}
         command_groups = set()
+
+        tree_path = self.get_tree_file_path()
+        update_files[tree_path] = json.dumps(self.tree.to_primitive(), indent=2)
 
         # command
         for cmd_names in sorted(self._modified_commands):

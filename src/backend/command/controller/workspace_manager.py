@@ -4,7 +4,7 @@ import os
 import shutil
 from datetime import datetime
 
-from command.model.configuration import CMDHelp, CMDResource
+from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample
 from command.model.editor import CMDEditorWorkspace, CMDCommandTreeNode, CMDCommandTreeLeaf
 from swagger.controller.command_generator import CommandGenerator
 from swagger.controller.specs_manager import SwaggerSpecsManager
@@ -241,9 +241,15 @@ class WorkspaceManager:
                 if aaz_leaf:
                     new_cmd = CMDCommandTreeLeaf({
                         "names": [*cmd_names],
-                        "stage": aaz_leaf.stage,
+                        "stage": node.stage,
                         "help": aaz_leaf.help.to_primitive(),
                     })
+                    for v in (aaz_leaf.versions or []):
+                        if v.name == command.version:
+                            new_cmd.stage = v.stage
+                            if v.examples:
+                                new_cmd.examples = [CMDCommandExample(example.to_primitive()) for example in v.examples]
+                            break
                 else:
                     new_cmd = CMDCommandTreeLeaf({
                         "names": [*cmd_names],
@@ -450,6 +456,10 @@ class WorkspaceManager:
             if not merged:
                 self.add_cfg(cfg_editor)
 
+    def add_new_command_by_aaz(self, *cmd_names, version):
+        # TODO: add support to load from aaz
+        raise NotImplementedError()
+
     def _calculate_cfgs_common_command_group(self, cfg_editors, *node_names):
         # calculate common cg name prefix
         groups_names = []
@@ -480,16 +490,6 @@ class WorkspaceManager:
                     common_prefix = common_prefix[:i]
                     break
         return common_prefix
-
-    def add_new_resources_by_aaz(self, version, resource_ids):
-        used_resource_ids = set()
-        for resource_id in resource_ids:
-            if resource_id in used_resource_ids:
-                continue
-            if self.check_resource_exist(resource_id):
-                raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {resource_id}")
-            used_resource_ids.update(resource_id)
-        raise NotImplementedError()
 
     def get_resources(self, *root_node_names):
         resources = []
