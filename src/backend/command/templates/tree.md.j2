@@ -1,8 +1,8 @@
 # Atomic Azure CLI Commands
-{%- if tree.command_groups is not none and tree.command_groups|length %}
+{%- if tree.root.command_groups is not none and tree.root.command_groups|length %}
 
 ## Groups
-{%- for group in tree.command_groups.values() %}
+{%- for group in tree.root.command_groups.values() %}
 
 - [{{ group.names|last }}]({{ group.names|command_group_readme_path }})
 : {{ group.help.short }}

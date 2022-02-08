@@ -26,7 +26,7 @@ class CMDSpecsCommand(Model):
 
 
 class CMDSpecsCommandGroup(Model):
-    names = ListType(field=CMDCommandNameField(), required=True, min_size=1)  # full name of a command group
+    names = ListType(field=CMDCommandNameField(), min_size=1, required=True)  # full name of a command group
     help = ModelType(CMDHelp)
 
     command_groups = DictType(
@@ -43,11 +43,9 @@ class CMDSpecsCommandGroup(Model):
 
 
 class CMDSpecsCommandTree(Model):
-    command_groups = DictType(
-        field=ModelType("CMDSpecsCommandGroup"),
-        serialized_name="commandGroups",
-        deserialize_from="commandGroups"
-    )
+    root = ModelType(
+        CMDSpecsCommandGroup
+    )   # the root node
 
     class Options:
         serialize_when_none = False

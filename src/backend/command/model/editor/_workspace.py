@@ -19,7 +19,7 @@ class CMDCommandTreeLeaf(Model):
 
 
 class CMDCommandTreeNode(Model):
-    names = ListType(field=CMDCommandNameField(), required=True)   # full name of a command group
+    names = ListType(field=CMDCommandNameField(), min_size=1, required=True)   # full name of a command group
     stage = CMDStageField()
 
     help = ModelType(CMDHelp)
@@ -45,7 +45,7 @@ class CMDEditorWorkspace(Model):
         required=True,
         serialized_name='commandTree',
         deserialize_from='commandTree'
-    )
+    )   # the root node
 
     class Options:
         serialize_when_none = False

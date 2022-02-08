@@ -604,6 +604,7 @@ class WorkspaceManager:
             self.aaz_specs.update_command_by_ws(ws_leaf)
         for ws_node in self.iter_command_tree_nodes():
             if ws_node == self.ws.command_tree:
+                # ignore root node
                 continue
             self.aaz_specs.update_command_group_by_ws(ws_node)
         self.aaz_specs.save()

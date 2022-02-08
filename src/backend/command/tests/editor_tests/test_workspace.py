@@ -23,7 +23,7 @@ class WorkspaceManagerTest(CommandTestCase):
         assert data['plane'] == PlaneEnum.Mgmt
         assert data['version']
         assert data['commandTree'] == {
-            "names": [WorkspaceManager.COMMAND_TREE_ROOT_NAME]
+            "names": []
         }
 
         manager_2 = WorkspaceManager(ws_name)
@@ -31,7 +31,7 @@ class WorkspaceManagerTest(CommandTestCase):
         assert manager_2.ws.name == ws_name
         assert manager_2.ws.plane == PlaneEnum.Mgmt
         assert manager_2.ws.version == manager.ws.version
-        assert manager_2.ws.command_tree.names == [WorkspaceManager.COMMAND_TREE_ROOT_NAME]
+        assert manager_2.ws.command_tree.names == []
         manager_2.save()
 
         with self.assertRaises(exceptions.InvalidAPIUsage):

@@ -13,19 +13,21 @@ class TemplateRenderTest(CommandTestCase):
     def test_render_tree_template(self):
         tmpl = get_templates()['tree']
         command_tree = CMDSpecsCommandTree()
+        command_tree.root = CMDSpecsCommandGroup()
+        command_tree.root.names = ["aaz"]
 
-        command_tree.command_groups = {}
+        command_tree.root.command_groups = {}
         group_1 = CMDSpecsCommandGroup()
         group_1.names = ["edge-order"]
         group_1.help = CMDHelp()
         group_1.help.short = "Manager edge order."
-        command_tree.command_groups["edge-order"] = group_1
+        command_tree.root.command_groups["edge-order"] = group_1
 
         group_2 = CMDSpecsCommandGroup()
         group_2.names = ["network"]
         group_2.help = CMDHelp()
         group_2.help.short = "Manager network."
-        command_tree.command_groups["network"] = group_2
+        command_tree.root.command_groups["network"] = group_2
 
         data = tmpl.render(tree=command_tree)
 

@@ -14,6 +14,8 @@ from .cfg_validator import CfgValidator
 
 
 class AAZSpecsManager:
+    COMMAND_TREE_ROOT_NAME = "aaz"
+
     REFERENCE_LINE = re.compile(r"^Reference\s*\[(.*) (.*)]\((.*)\)\s*$")
 
     def __init__(self):
@@ -31,7 +33,9 @@ class AAZSpecsManager:
         tree_path = self.get_tree_file_path()
         if not os.path.exists(tree_path):
             self.tree = CMDSpecsCommandTree()
-            self.tree.command_groups = {}
+            self.tree.root = CMDSpecsCommandGroup({
+                "names": [self.COMMAND_TREE_ROOT_NAME]
+            })
             return
 
         if not os.path.isfile(tree_path):
@@ -75,7 +79,7 @@ class AAZSpecsManager:
 
     # Command Tree
     def find_command_group(self, *cg_names):
-        node = self.tree
+        node = self.tree.root
         idx = 0
         while idx < len(cg_names):
             name = cg_names[idx]
@@ -111,8 +115,6 @@ class AAZSpecsManager:
 
     def iter_commands(self, *root_node_names):
         for node in self.iter_command_groups(*root_node_names):
-            if node == self.tree:
-                continue
             for leaf in (node.commands or {}).values():
                 yield leaf
 
@@ -150,11 +152,11 @@ class AAZSpecsManager:
     def create_command_group(self, *cg_names):
         if len(cg_names) < 1:
             raise exceptions.InvalidAPIUsage(f"Invalid Command Group name: '{' '.join(cg_names)}'")
-        node = self.tree
+        node = self.tree.root
         idx = 0
         while idx < len(cg_names):
             name = cg_names[idx]
-            if node != self.tree and node.commands and name in node.commands:
+            if node.commands and name in node.commands:
                 raise exceptions.InvalidAPIUsage(f"Invalid Command Group name: conflict with Command name: "
                                                  f"'{' '.join(cg_names[:idx+1])}'")
             if not node.command_groups or name not in node.command_groups:
@@ -355,7 +357,7 @@ class AAZSpecsManager:
     def verify_command_tree(self):
         details = {}
         for group in self.iter_command_groups():
-            if group == self.tree:
+            if group == self.tree.root:
                 continue
             if not group.help or not group.help.short:
                 details[' '.join(group.names)] = {
@@ -405,8 +407,8 @@ class AAZSpecsManager:
             else:
                 # update command group readme
                 file_path = self.get_command_group_readme_path(*cg_names)
-                if cg == self.tree:
-                    update_files[file_path] = self.render_command_tree_readme(cg)
+                if cg == self.tree.root:
+                    update_files[file_path] = self.render_command_tree_readme(self.tree)
                 else:
                     update_files[file_path] = self.render_command_group_readme(cg)
 

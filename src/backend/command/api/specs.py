@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request, url_for
 from utils import exceptions
+from command.controller.specs_manager import AAZSpecsManager
+
 
 bp = Blueprint('specs', __name__, url_prefix='/AAZ/Specs')
 
