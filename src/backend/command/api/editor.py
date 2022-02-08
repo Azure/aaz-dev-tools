@@ -174,7 +174,12 @@ def editor_workspace_command(name, node_names, leaf_name):
         raise NotImplementedError()
 
     del result['name']
-    result['names'] = leaf.names
+    result.update({
+        'names': leaf.names,
+        'help': leaf.help.to_primitive(),
+        'stage': leaf.stage
+    })
+
     return jsonify(result)
 
 
@@ -199,9 +204,14 @@ def editor_workspace_command_rename(name, node_names, leaf_name):
     new_leaf = manager.rename_command_tree_leaf(*node_names, leaf_name, new_leaf_names=new_leaf_names)
     cfg_editor = manager.load_cfg_editor_by_command(new_leaf)
     command = cfg_editor.find_command(*new_leaf.names)
+
     result = command.to_primitive()
     del result['name']
-    result['names'] = new_leaf.names
+    result.update({
+        'names': new_leaf.names,
+        'help': new_leaf.help.to_primitive(),
+        'stage': new_leaf.stage
+    })
 
     manager.save()
     return jsonify(result)

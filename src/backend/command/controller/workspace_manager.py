@@ -224,8 +224,10 @@ class WorkspaceManager:
                 assert name not in node.command_groups
             node.commands[name] = CMDCommandTreeLeaf({
                 "names": [*node.names, name],
-                "stage": command.stage,
-                "help": command.help.to_primitive(),
+                "stage": node.stage,
+                "help": {
+                    "short": command.description
+                },
                 "version": command.version,
                 "resources": [r.to_primitive() for r in command.resources]
             })
@@ -280,9 +282,6 @@ class WorkspaceManager:
         else:
             assert isinstance(help, dict)
         leaf.help = CMDHelp(help)
-
-        cfg_editor = self.load_cfg_editor_by_command(leaf)
-        cfg_editor.update_command_help(*leaf.names, help=help)
         return leaf
 
     def update_command_tree_node_stage(self, *node_names, stage):
@@ -311,9 +310,6 @@ class WorkspaceManager:
         if leaf.stage == stage:
             return
         leaf.stage = stage
-
-        cfg_editor = self.load_cfg_editor_by_command(leaf)
-        cfg_editor.update_command_stage(*leaf.names, stage=stage)
         return leaf
 
     def rename_command_tree_node(self, *node_names, new_node_names):

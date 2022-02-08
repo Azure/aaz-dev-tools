@@ -1,7 +1,6 @@
 from unittest import TestCase
 from aazdev.app import create_app
 from utils.config import Config
-import os
 import shutil
 import os
 
@@ -12,7 +11,6 @@ class ApiTestCase(TestCase):
 
     def __init__(self, *args, **kwargs):
         self.cleanup_dev_folder()
-        os.makedirs(self.AAZ_FOLDER, exist_ok=True)
         Config.AAZ_PATH = self.AAZ_FOLDER
         Config.AAZ_DEV_FOLDER = self.AAZ_DEV_FOLDER
         Config.AAZ_DEV_WORKSPACE_FOLDER = os.path.join(self.AAZ_DEV_FOLDER, 'workspaces')
@@ -26,3 +24,7 @@ class ApiTestCase(TestCase):
             shutil.rmtree(self.AAZ_DEV_FOLDER)
         if os.path.exists(self.AAZ_FOLDER):
             shutil.rmtree(self.AAZ_FOLDER)
+
+    def setUp(self):
+        os.makedirs(self.AAZ_FOLDER, exist_ok=True)
+
