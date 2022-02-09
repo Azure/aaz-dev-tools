@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom"
 import { ListGroup, Row, Col, Button, Dropdown, DropdownButton, Spinner } from "react-bootstrap"
+import { Set } from "typescript";
+import { resourceUsage } from "process";
 
 type ParamsType = {
   workspaceName: String
@@ -15,14 +17,18 @@ type SpecSelectState = {
   mgmtPlane: boolean,
   modules: DictType,
   selectedModule: string,
+  prevModule: string,
   resourceProviders: DictType,
   selectedResourceProvider: string,
+  prevResourceProvider: string,
   resources: Resources,
   loadingResources: boolean,
-  currentResource: string,
-  selectedResources: DictBooleanType,
+  selectedResources: Set<string>,
+  prevResources: Set<string>,
   versions: Versions,
-  selectedVersion: string
+  selectedVersion: string,
+  prevVersion: string,
+  altered: boolean
 }
 
 type Instance = {
@@ -48,12 +54,14 @@ type Versions = {
   [version: string]: string[]
 }
 
-type DictBooleanType = {
-  [name: string]: boolean
-}
-
 type Resources = {
   [id: string]: Version[]
+}
+
+type Swagger = {
+  module: string,
+  version: string,
+  resources: string[]
 }
 
 
@@ -64,20 +72,24 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
       mgmtPlane: true,
       modules: {},
       selectedModule: "",
+      prevModule: "",
       resourceProviders: {},
       selectedResourceProvider: "",
+      prevResourceProvider: "",
       resources: {},
       loadingResources: false,
-      currentResource: "",
-      selectedResources: {},
+      selectedResources: new Set<string>(),
+      prevResources: new Set<string>(),
       versions: {},
-      selectedVersion: ""
+      selectedVersion: "",
+      prevVersion: "",
+      altered: false
     }
   }
 
   getModules = () => {
     const plane = this.state.mgmtPlane ? 'mgmt-plane' : 'mgmt-plane'
-    axios.get(`/Swagger/Specs/${plane}`)
+    return axios.get(`/Swagger/Specs/${plane}`)
       .then((res) => {
         const modules: DictType = {}
         res.data.map((module: Instance) => {
@@ -85,21 +97,78 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
         })
         this.setState({ modules: modules })
       })
+      .catch((err) => console.log(err.response.message));
+  }
+
+  getSwagger = () => {
+    let module = "";
+    let resourceProvider = "";
+    let version = "";
+    let resources = new Set<string>();
+
+    return axios.get(`/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/Resources`)
+      .then(res => {
+        console.log(res.data)
+        if (Array.isArray(res.data)) {
+
+          module = res.data[0].swagger.split('/')[1]
+          resourceProvider = res.data[0].swagger.split('/')[3]
+          version = res.data[0].version
+          this.setState({
+            prevModule: module,
+            prevResourceProvider: resourceProvider,
+            prevVersion: version
+          })
+          return this.handleSelectModule(module)
+            .then(() => {
+              return this.handleSelectResourceProvider(resourceProvider)
+            })
+            .then(() => {
+              this.handleSelectVersion(version)
+              for (let resource of res.data) {
+                resources.add(resource.id)
+                let checkbox = document.getElementById(resource.id)
+                if (checkbox) {
+                  checkbox.click()
+                }
+              }
+              this.setState({ selectedResources: resources, prevResources: new Set<string>(resources)})
+              this.setState({altered: this.checkAltered()})
+            })
+        }
+      })
       .catch((err) => console.log(err));
   }
 
+  resetResourcesAndVersion = () => {
+    console.log("reset")
+  }
+
   componentDidMount() {
-    this.getModules();
+    this.getModules()
+      .then(() => {
+        this.getSwagger()
+      })
+
   }
 
   clearResourcesAndVersions = () => {
     this.setState({
       resources: {},
-      currentResource: "",
+      selectedResources: new Set<string>(),
       selectedVersion: "",
       versions: {}
     })
 
+  }
+
+  checkAltered = () => {
+    let altered = this.state.selectedModule !== this.state.prevModule
+    altered = altered || this.state.selectedResourceProvider !== this.state.prevResourceProvider
+    altered = altered || this.state.selectedVersion !== this.state.prevVersion
+    let areSetsEqual = (a:any, b:any) => a.size === b.size && [...a].every(value => b.has(value));
+    altered = altered || !areSetsEqual(this.state.selectedResources, this.state.prevResources)
+    return altered
   }
 
   handleTogglePlane = (eventKey: any) => {
@@ -111,31 +180,36 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
 
   handleSelectModule = (eventKey: any) => {
     if (eventKey === this.state.selectedModule) {
-      return
+      return Promise.resolve();
     }
     const moduleName: string = eventKey
     const moduleUrl = this.state.modules[moduleName]
-    axios.get(`${moduleUrl}/ResourceProviders`)
+    return axios.get(`${moduleUrl}/ResourceProviders`)
       .then((res) => {
         const resourceProviders: DictType = {}
         res.data.map((resourceProvider: Instance) => {
           resourceProviders[resourceProvider.name] = resourceProvider.url
         })
-        this.setState({ resourceProviders: resourceProviders, selectedModule: moduleName, selectedResourceProvider: "" })
+        this.setState({
+          resourceProviders: resourceProviders,
+          selectedModule: moduleName,
+          selectedResourceProvider: "",
+          altered: this.checkAltered()
+        })
         this.clearResourcesAndVersions()
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.log(err.response.message));
   }
 
 
   handleSelectResourceProvider = (eventKey: any) => {
     if (eventKey === this.state.selectedResourceProvider) {
-      return
+      return Promise.resolve();
     }
     const resourceProviderName: string = eventKey
     const resourceProviderUrl = this.state.resourceProviders[resourceProviderName]
     this.setState({ loadingResources: true })
-    axios.get(`${resourceProviderUrl}/Resources`)
+    return axios.get(`${resourceProviderUrl}/Resources`)
       .then((res) => {
 
         const resources: Resources = {}
@@ -154,9 +228,16 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
             versions[version].push(resource.id)
           })
         })
-        this.setState({ resources: resources, versions: versions, selectedVersion: selectedVersion, selectedResourceProvider: resourceProviderName, loadingResources: false })
+        this.setState({ 
+          resources: resources, 
+          versions: versions, 
+          selectedVersion: selectedVersion, 
+          selectedResourceProvider: resourceProviderName, 
+          loadingResources: false, 
+          altered: this.checkAltered() 
+        })
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.log(err.response.message));
   }
 
   listInstances = (instanceDict: {}, sortDesc: boolean = false) => {
@@ -186,20 +267,22 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
     return this.listInstances(this.state.resourceProviders)
   }
 
-  handleToggleVersion = (event: any) => {
-    // console.log(event.target.id)
-    const resourceId: string = event.target.id
-    this.setState({ currentResource: resourceId })
-  }
-
   handleSelectVersion = (eventKey: any) => {
     const version: string = eventKey
-    this.setState({ selectedVersion: version })
+    this.setState({ selectedVersion: version, altered: this.checkAltered()})
   }
 
   handleSelectResource = (event: any) => {
     const resourceId: string = event.target.id
-    this.state.selectedResources[resourceId] = event.target.checked
+    if(event.target.checked){
+      this.state.selectedResources.add(resourceId)
+    } else {
+      this.state.selectedResources.delete(resourceId)
+    }
+    
+    this.setState({
+      altered: this.checkAltered()
+    })
   }
 
   ListVersions = () => {
@@ -221,53 +304,44 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
     </div>
   }
 
-  // ListResourcesAndVersion = () => {
-  //   let resourceIds = Object.keys(this.state.resources)
-  //   resourceIds.sort((a, b) => a.localeCompare(b))
-  //   return <div>
-  //     <ListGroup>
-  //       {resourceIds.map((resourceId) => {
-  //         if (!(resourceId in this.state.selectedVersion)){
-  //           this.state.selectedVersion[resourceId] = this.state.resources[resourceId][0].version
-  //         }
-
-  //         return <Row key={resourceId}>
-  //           <Col lg='10'>
-  //             <ListGroup.Item><input type="checkbox" onChange={this.handleSelectResource} id={resourceId} />  {resourceId}</ListGroup.Item>
-  //           </Col>
-  //           <Col lg='2'>
-  //             <DropdownButton id={resourceId} title={this.state.selectedVersion[resourceId]} onSelect={this.handleSelectVersion} onClick={this.handleToggleVersion} drop='end'>
-  //               {this.state.resources[resourceId].map((version, index) => {
-  //                 return <Dropdown.Item eventKey={version.version} key={index} active={false}>{version.version}</Dropdown.Item>
-  //               })}
-  //             </DropdownButton>
-  //           </Col>
-  //         </Row>
-  //       })}
-  //     </ListGroup>
-  //   </div>
-  // }
-
   saveResourcesAndVersion = () => {
-    const finalResources: DictType = {}
-    Object.keys(this.state.selectedResources).map(resourceId => {
-      if (this.state.selectedResources[resourceId]) {
-        finalResources[resourceId] = this.state.selectedVersion
-      }
+    const finalResources: Swagger = {
+      module: this.state.selectedModule,
+      version: this.state.selectedVersion,
+      resources: []
+    }
+    this.state.selectedResources.forEach(resourceId=>{
+      finalResources.resources.push(resourceId)
     })
     console.log(finalResources)
+    console.log(this.state.selectedResources)
+    this.addSwagger(finalResources)
   }
+
+  addSwagger = (requestBody: Swagger) => {
+    axios.post(`/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/AddSwagger`, requestBody)
+      .then(() => {
+        axios.get(`/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz`)
+          .then((res) => {
+            console.log(res.data)
+          })
+
+      })
+      .catch((err) => console.log(err.response));
+  }
+
+
 
   render() {
     return <div className="m-1 p-1">
       <Row>
-        <Col lg='10'>
+        <Col lg='11'>
           <h1>
             Workspace Name: {this.props.params.workspaceName}
           </h1>
         </Col>
-        <Col lg='2'>
-          <Button onClick={this.saveResourcesAndVersion}>Save</Button>
+        <Col lg="auto">
+          {this.state.altered?<Button onClick={this.saveResourcesAndVersion}>Save</Button>:<Button onClick={this.resetResourcesAndVersion}>Cancel</Button>}
         </Col>
 
       </Row>

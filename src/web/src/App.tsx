@@ -40,7 +40,7 @@ class App extends Component {
           <Route path="/" element={<this.ModeSelection />}/>
           <Route path="workspace" element={<Workspace />}>
             <Route index element={<WorkspaceSelector/>}/>
-            <Route path=":workspaceName" element={<SpecSelector />}/>
+            <Route path=":workspaceName/resourceSelection" element={<SpecSelector />}/>
           </Route>
           <Route path="generator" element={<Generator />} />
           <Route path="specs" element={<Specifications />} />
