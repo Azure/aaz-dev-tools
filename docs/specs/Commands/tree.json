@@ -1,0 +1,27 @@
+{
+  "commandGroups": {
+    "monitor": {
+      "names": ["monitor"],
+      "help": {
+        "short": "Manage the Azure Monitor Service.",
+        "lines": [
+          "Command Group Long Summery Line1",
+          "Command Group Long Summery End Line"
+        ]
+      },
+      "commandGroups": {
+        "action-group": {
+
+        },
+        "log-analytics": {
+
+        }
+      },
+      "commands": {
+        "clone": {
+
+        }
+      }
+    }
+  }
+}
