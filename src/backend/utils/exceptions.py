@@ -14,9 +14,19 @@ class InvalidAPIUsage(Exception):
         return rv
 
 
+class VerificationError(InvalidAPIUsage):
+
+    def __init__(self, message, details, status_code=None):
+        super().__init__(message=message, status_code=status_code, payload={
+            'details': details
+        })
+
+
 class ResourceNotFind(InvalidAPIUsage):
     status_code = 404
 
 
 class ResourceConflict(InvalidAPIUsage):
     status_code = 409
+
+

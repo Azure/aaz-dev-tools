@@ -329,7 +329,7 @@ class APIEditorTest(CommandTestCase):
             rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item/Leaves/create", json={
                 "help": {
                     "short": "This is command help",
-                    "long": [
+                    "lines": [
                         "help line 1",
                         "help line 2"
                     ]
@@ -340,7 +340,7 @@ class APIEditorTest(CommandTestCase):
             data = rv.get_json()
             self.assertTrue(data['stage'] == CMDStageEnum.Experimental)
             self.assertTrue(data['help']['short'] == "This is command help")
-            self.assertTrue(data['help']['long'] == ["help line 1", "help line 2"])
+            self.assertTrue(data['help']['lines'] == ["help line 1", "help line 2"])
 
             rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item")
             self.assertTrue(rv.status_code == 200)
@@ -430,4 +430,159 @@ class APIEditorTest(CommandTestCase):
             with open(path_plus, 'r') as f:
                 data = json.load(f)
                 self.assertTrue("$ref" in data)
+
+    @workspace_name("test_workspace_aaz_generate")
+    def test_workspace_aaz_generate(self, ws_name):
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum.Mgmt,
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws = rv.get_json()
+            ws_url = ws['url']
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': 'edgeorder',
+                'version': '2021-12-01',
+                'resources': [
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orderItems'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orders'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/locations/{location}/orders/{orderName}'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return'),
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/Leaves/list-product-family/Rename", json={
+                'name': "edge-order product-family list"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/Leaves/product-families-metadatum/Rename", json={
+                'name': "edge-order product-family list-metadata"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order-item/Rename", json={
+                'name': "edge-order order item"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order", json={
+                "help": {
+                    "short": "Manage edge order.",
+                },
+                "stage": CMDStageEnum.Preview
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address", json={
+                "help": {
+                    "short": "Manage the address of edge order.",
+                },
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order", json={
+                "help": {
+                    "short": "Manage the order of edge order.",
+                },
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/product-family", json={
+                "help": {
+                    "short": "Manage the product family of edge order.",
+                },
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item", json={
+                "help": {
+                    "short": "Manage the order item of edge order.",
+                },
+                "stage": CMDStageEnum.Preview
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/Leaves/list-configuration", json={
+                "help": {
+                    "short": "List the configuration of the edge order.",
+                    "lines": [
+                        "Provides the list of configurations for the given product family, product line and product.",
+                    ]
+                },
+                "stage": CMDStageEnum.Experimental
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address/Leaves/list", json={
+                "help": {
+                    "short": "List the addresses of the edge order.",
+                },
+                "stage": CMDStageEnum.Experimental
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/Leaves/list", json={
+                "help": {
+                    "short": "List the orders of the edge order.",
+                },
+                "stage": CMDStageEnum.Experimental
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/product-family/Leaves/list", json={
+                "help": {
+                    "short": "List the product families of the edge order.",
+                },
+                "stage": CMDStageEnum.Experimental
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/product-family/Leaves/list-metadata", json={
+                "help": {
+                    "short": "List the product families metadata of the edge order.",
+                },
+                "stage": CMDStageEnum.Experimental
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item/Leaves/list", json={
+                "help": {
+                    "short": "List order item of edge order.",
+                },
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/Generate")
+            self.assertTrue(rv.status_code == 200)
 

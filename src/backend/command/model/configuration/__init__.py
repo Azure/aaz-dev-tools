@@ -29,6 +29,7 @@ from ._condition import CMDConditionOperator, \
     CMDCondition
 from ._configuration import CMDConfiguration
 from ._content import CMDJson
+from ._example import CMDCommandExample
 from ._fields import CMDBooleanField, CMDStageEnum, CMDStageField, CMDVariantField, CMDClassField, \
     CMDPrimitiveField, CMDRegularExpressionField, CMDVersionField, CMDResourceIdField, CMDCommandNameField, \
     CMDCommandGroupNameField, CMDURLPathField

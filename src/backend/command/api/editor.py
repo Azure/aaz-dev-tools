@@ -63,8 +63,10 @@ def editor_workspace(name):
 
 @bp.route("/Workspaces/<name>/Generate", methods=("POST",))
 def editor_workspace_generate(name):
-    # generate code and command configurations in cli repos and aaz repo
-    raise NotImplementedError()
+    manager = WorkspaceManager(name)
+    manager.load()
+    manager.generate_to_aaz()
+    return "", 200
 
 
 # command tree operations
@@ -172,7 +174,14 @@ def editor_workspace_command(name, node_names, leaf_name):
         raise NotImplementedError()
 
     del result['name']
-    result['names'] = leaf.names
+    result.update({
+        'names': leaf.names,
+        'help': leaf.help.to_primitive(),
+        'stage': leaf.stage,
+    })
+    if leaf.examples:
+        result['examples'] = leaf.examples.to_primitive()
+
     return jsonify(result)
 
 
@@ -197,9 +206,16 @@ def editor_workspace_command_rename(name, node_names, leaf_name):
     new_leaf = manager.rename_command_tree_leaf(*node_names, leaf_name, new_leaf_names=new_leaf_names)
     cfg_editor = manager.load_cfg_editor_by_command(new_leaf)
     command = cfg_editor.find_command(*new_leaf.names)
+
     result = command.to_primitive()
     del result['name']
-    result['names'] = new_leaf.names
+    result.update({
+        'names': new_leaf.names,
+        'help': new_leaf.help.to_primitive(),
+        'stage': new_leaf.stage
+    })
+    if new_leaf.examples:
+        result['examples'] = new_leaf.examples.to_primitive()
 
     manager.save()
     return jsonify(result)

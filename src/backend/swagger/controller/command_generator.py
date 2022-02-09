@@ -1,20 +1,19 @@
 import logging
 
+import inflect
 from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, \
     CMDSchemaDefault, CMDHttpJsonBody, CMDObjectOutput, CMDArrayOutput, CMDGenericInstanceUpdateAction, \
-    CMDGenericInstanceUpdateMethod, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, CMDJson, CMDHelp, \
-    CMDArgGroup, CMDDiffLevelEnum, CMDClsSchemaBase, \
+    CMDGenericInstanceUpdateMethod, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, CMDJson, CMDArgGroup, \
+    CMDDiffLevelEnum, CMDClsSchemaBase, \
     CMDObjectSchema, CMDArraySchema, CMDStringSchema, CMDObjectSchemaBase, CMDArraySchemaBase, CMDStringSchemaBase, \
     CMDStringOutput
+from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
 from swagger.model.schema.x_ms_pageable import XmsPageable
-from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.specs import SwaggerLoader
 from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case, get_url_path_valid_parts
-import inflect
 from swagger.utils import exceptions
-
 
 logger = logging.getLogger('backend')
 
@@ -28,7 +27,6 @@ class BuildInVariants:
 
 
 class CommandGenerator:
-
     _inflect_engine = inflect.engine()
 
     def __init__(self):
@@ -120,7 +118,8 @@ class CommandGenerator:
 
         assert isinstance(op, CMDHttpOperation)
         if not self._set_api_version_parameter(op.http.request, api_version=resource.version):
-            logger.warning(f"Cannot Find api version parameter: {cmd_builder.path}, '{cmd_builder.method}' : {path_item.traces}")
+            logger.warning(
+                f"Cannot Find api version parameter: {cmd_builder.path}, '{cmd_builder.method}' : {path_item.traces}")
 
         output = self._generate_output(
             cmd_builder,
@@ -133,7 +132,7 @@ class CommandGenerator:
 
         command.name = self._generate_command_name(path_item, resource, cmd_builder.method, output)
 
-        command.help = self._generate_command_help(op.description)
+        command.description = op.description
         command.operations = [op]
 
         arguments = self._generate_command_arguments(command)
@@ -171,7 +170,7 @@ class CommandGenerator:
 
         command.outputs = []
         command.outputs.append(output)
-        command.help = self._generate_command_help(put_op.description)
+        command.description = put_op.description
 
         json_update_op, generic_update_op = self._generate_instance_update_operations(put_op)
         command.operations = [
@@ -185,7 +184,7 @@ class CommandGenerator:
         command.arg_groups = self._group_arguments(arguments)
 
         group_name = self.generate_command_group_name_by_resource(
-                        resource_path=resource.path, rp_name=resource.resource_provider.name)
+            resource_path=resource.path, rp_name=resource.resource_provider.name)
         command.name = f"{group_name} update"
         return command
 
@@ -296,7 +295,7 @@ class CommandGenerator:
                 continue
             names.append(camel_case_to_snake_case(rp_part, '-'))
 
-        for part in valid_parts[1:]:    # ignore first part to avoid include resource provider
+        for part in valid_parts[1:]:  # ignore first part to avoid include resource provider
             if part.startswith('{'):
                 continue
             name = camel_case_to_snake_case(part, '-')
@@ -378,13 +377,6 @@ class CommandGenerator:
         else:
             raise NotImplementedError()
         return command_name
-
-    @staticmethod
-    def _generate_command_help(op_description):
-        # TODO:
-        h = CMDHelp()
-        h.short = op_description
-        return h
 
     def _generate_command_arguments(self, command):
         arguments = {}
