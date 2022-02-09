@@ -32,7 +32,8 @@ class CMDCommand(Model):
 
     def reformat(self):
         self.resources = sorted(self.resources, key=lambda r: r.id)
-        for arg_group in self.arg_groups:
-            arg_group.reformat()
-        self.arg_groups = sorted(self.arg_groups, key=lambda a: a.name)
+        if self.arg_groups:
+            for arg_group in self.arg_groups:
+                arg_group.reformat()
+            self.arg_groups = sorted(self.arg_groups, key=lambda a: a.name)
 
