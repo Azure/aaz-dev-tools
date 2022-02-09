@@ -20,6 +20,14 @@ class Config:
     STATIC_FOLDER = '../../web/build'
     STATIC_URL_PATH = '/'
 
+    CLI_PROFILES = [
+        "latest",
+        "2020-09-01-hybrid",
+        "2019-03-01-hybrid",
+        "2018-03-01-hybrid",
+        "2017-03-09-profile",
+    ]
+
     @classmethod
     def validate_and_setup_host(cls, ctx, param, value):
         cls.HOST = value

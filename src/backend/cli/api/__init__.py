@@ -1,5 +1,4 @@
 
 def register_blueprints(app):
-    # from . import specs
-    # app.register_blueprint(specs.bp)
-    pass
+    from . import az
+    app.register_blueprint(az.bp)

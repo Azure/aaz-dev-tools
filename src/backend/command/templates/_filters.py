@@ -17,6 +17,7 @@ def command_readme_path(env, names):
 def resource_cfg_path(env, resource):
     return '/'.join(["", "Resources", resource.plane, b64encode_str(resource.id), f"{resource.version}.xml"])
 
+
 @environmentfilter
 def stage_label(env, stage, bold=True):
     text = stage
@@ -25,6 +26,7 @@ def stage_label(env, stage, bold=True):
     if bold:
         text = f"**{text}**"
     return text
+
 
 custom_filters = {
     "command_group_readme_path": command_group_readme_path,

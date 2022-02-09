@@ -22,9 +22,10 @@ def create_app():
         return jsonify(e.to_dict()), e.status_code
 
     # register url converters
-    from .url_converters import Base64Converter, NameConverter, NamesPathConverter, ListPathConvertor
+    from .url_converters import Base64Converter, NameConverter, NameWithCapitalConverter, NamesPathConverter, ListPathConvertor
     app.url_map.converters['base64'] = Base64Converter
     app.url_map.converters['name'] = NameConverter
+    app.url_map.converters['Name'] = NameWithCapitalConverter
     app.url_map.converters['names_path'] = NamesPathConverter
     app.url_map.converters['list_path'] = ListPathConvertor
 
