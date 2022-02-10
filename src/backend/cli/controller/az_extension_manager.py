@@ -90,15 +90,15 @@ class AzExtensionManager:
                 })
         return modules
 
-    # def list_aaz(self, mod_name):
-    #     raise NotImplementedError()
-
     def create_new_mod(self, mod_name):
         if self.folder_is_module:
             raise exceptions.ResourceConflict(
                 f"Cannot create a new module in cli extension repo('{Config.CLI_EXTENSION_PATH}'), "
                 f"because the repo is an extension module"
             )
+        mod_path = self.get_mod_path(mod_name)
+        if os.path.exists(os.path.join(mod_path, '__init__.py')):
+            raise exceptions.ResourceConflict(f"Module already exist in path: '{mod_path}'")
 
         raise NotImplementedError()
 

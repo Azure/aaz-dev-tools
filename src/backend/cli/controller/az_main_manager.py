@@ -1,6 +1,8 @@
 from utils.config import Config
 import os
 import pkgutil
+from utils import exceptions
+from cli.templates import get_templates
 
 
 class AzMainManager:
@@ -31,6 +33,12 @@ class AzMainManager:
 
         return sorted(modules, key=lambda a: a['name'])
 
+    def create_new_mod(self, mod_name):
+        mod_path = self.get_mod_path(mod_name)
+        if os.path.exists(os.path.join(mod_path, '__init__.py')):
+            raise exceptions.ResourceConflict(f"Module already exist in path: '{mod_path}'")
+
+        raise NotImplementedError()
+
     def load_module(self, mod_name):
         pass
-
