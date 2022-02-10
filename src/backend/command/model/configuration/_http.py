@@ -6,7 +6,8 @@ from schematics.models import Model
 from schematics.types import StringType, ModelType, ListType, PolyModelType, IntType
 
 from ._fields import CMDVariantField, CMDBooleanField, CMDURLPathField, CMDDescriptionField
-from ._http_body import CMDHttpBody
+from ._http_request_body import CMDHttpRequestBody
+from ._http_response_body import CMDHttpResponseBody
 from ._schema import CMDSchemaField
 from ._arg_builder import CMDArgBuilder
 from ._arg import CMDResourceGroupNameArg, CMDSubscriptionIdArg, CMDResourceLocationArg
@@ -114,7 +115,7 @@ class CMDHttpRequest(Model):
     path = ModelType(CMDHttpRequestPath)
     query = ModelType(CMDHttpRequestQuery)
     header = ModelType(CMDHttpRequestHeader)
-    body = PolyModelType(CMDHttpBody, allow_subclasses=True)
+    body = PolyModelType(CMDHttpRequestBody, allow_subclasses=True)
 
     class Options:
         serialize_when_none = False
@@ -202,7 +203,7 @@ class CMDHttpResponse(Model):
 
     # properties as nodes
     header = ModelType(CMDHttpResponseHeader)
-    body = PolyModelType(CMDHttpBody, allow_subclasses=True)
+    body = PolyModelType(CMDHttpResponseBody, allow_subclasses=True)
 
     class Options:
         serialize_when_none = False

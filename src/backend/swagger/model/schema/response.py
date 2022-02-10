@@ -1,9 +1,9 @@
 from schematics.models import Model
 from schematics.types import BaseType, StringType, ModelType, DictType, PolyModelType
 
-from command.model.configuration import CMDHttpResponse, CMDHttpResponseHeader, CMDHttpJsonBody, CMDObjectSchemaBase, \
+from command.model.configuration import CMDHttpResponse, CMDHttpResponseHeader, CMDHttpResponseJsonBody, CMDObjectSchemaBase, \
     CMDArraySchemaBase, CMDHttpResponseHeaderItem, CMDClsSchemaBase
-from command.model.configuration import CMDJson, CMDBooleanSchemaBase, CMDStringSchemaBase, CMDFloatSchemaBase, \
+from command.model.configuration import CMDResponseJson, CMDBooleanSchemaBase, CMDStringSchemaBase, CMDFloatSchemaBase, \
     CMDIntegerSchemaBase
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.utils import exceptions
@@ -86,7 +86,7 @@ class Response(Model, Linkable):
                     CMDIntegerSchemaBase,
                     CMDClsSchemaBase,
             )):
-                model = CMDJson()
+                model = CMDResponseJson()
                 model.schema = v
             else:
                 raise exceptions.InvalidSwaggerValueError(
@@ -95,8 +95,8 @@ class Response(Model, Linkable):
                     value=v.type
                 )
 
-            if isinstance(model, CMDJson):
-                response.body = CMDHttpJsonBody()
+            if isinstance(model, CMDResponseJson):
+                response.body = CMDHttpResponseJsonBody()
                 response.body.json = model
             else:
                 raise NotImplementedError()
