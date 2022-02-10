@@ -190,14 +190,13 @@ class CMDSchemaBase(Model):
 
 class CMDSchemaBaseField(PolyModelType):
 
-    def __init__(self, support_schema=False, **kwargs):
+    def __init__(self, **kwargs):
         super(CMDSchemaBaseField, self).__init__(
             model_spec=CMDSchemaBase,
             allow_subclasses=True,
             serialize_when_none=False,
             **kwargs
         )
-        self.support_schema = support_schema
 
     def export(self, value, format, context=None):
         if value.frozen:
@@ -215,12 +214,9 @@ class CMDSchemaBaseField(PolyModelType):
         fallback = None
         matching_classes = set()
         for kls in self._get_candidates():
-            if self.support_schema:
-                if not issubclass(kls, CMDSchema) and "name" in data:
-                    continue
-            else:
-                if issubclass(kls, CMDSchema):
-                    continue
+            if issubclass(kls, CMDSchema):
+                continue
+
             try:
                 kls_claim = kls._claim_polymorphic
             except AttributeError:

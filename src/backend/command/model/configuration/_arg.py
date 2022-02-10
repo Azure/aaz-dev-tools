@@ -128,14 +128,13 @@ class CMDArgBase(Model):
 
 class CMDArgBaseField(PolyModelType):
 
-    def __init__(self, support_arg=False, **kwargs):
+    def __init__(self, **kwargs):
         super(CMDArgBaseField, self).__init__(
             model_spec=CMDArgBase,
             allow_subclasses=True,
             serialize_when_none=False,
             **kwargs
         )
-        self.support_arg = support_arg
 
     def find_model(self, data):
         if self.claim_function:
@@ -147,12 +146,9 @@ class CMDArgBaseField(PolyModelType):
         fallback = None
         matching_classes = set()
         for kls in self._get_candidates():
-            if self.support_arg:
-                if not issubclass(kls, CMDArg) and "var" in data:
-                    continue
-            else:
-                if issubclass(kls, CMDArg):
-                    continue
+            if issubclass(kls, CMDArg):
+                continue
+
             try:
                 kls_claim = kls._claim_polymorphic
             except AttributeError:
