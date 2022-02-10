@@ -6,7 +6,7 @@ from schematics.models import Model
 from schematics.types import ModelType
 
 from ._fields import CMDVariantField, CMDBooleanField
-from ._content import CMDJson
+from ._content import CMDRequestJson
 from ._arg import CMDClsArg
 
 
@@ -36,7 +36,7 @@ class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
     POLYMORPHIC_KEY = "json"
 
     # properties as nodes
-    json = ModelType(CMDJson, required=True)
+    json = ModelType(CMDRequestJson, required=True)
 
     def generate_args(self):
         return self.json.generate_args()

@@ -1,10 +1,10 @@
 from schematics.models import Model
 from schematics.types import ModelType
 
-from ._content import CMDJson
+from ._content import CMDRequestJson
 
 
-class CMDHttpBody(Model):
+class CMDHttpRequestBody(Model):
     POLYMORPHIC_KEY = None
 
     @classmethod
@@ -14,7 +14,7 @@ class CMDHttpBody(Model):
 
         if isinstance(data, dict):
             return cls.POLYMORPHIC_KEY in data
-        elif isinstance(data, CMDHttpBody):
+        elif isinstance(data, CMDHttpRequestBody):
             return hasattr(data, cls.POLYMORPHIC_KEY)
 
         return False
@@ -26,10 +26,10 @@ class CMDHttpBody(Model):
         raise NotImplementedError()
 
 
-class CMDHttpJsonBody(CMDHttpBody):
+class CMDHttpRequestJsonBody(CMDHttpRequestBody):
     POLYMORPHIC_KEY = "json"
 
-    json = ModelType(CMDJson, required=True)
+    json = ModelType(CMDRequestJson, required=True)
 
     def generate_args(self):
         return self.json.generate_args()

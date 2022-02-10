@@ -1,6 +1,6 @@
 import logging
 
-from command.model.configuration import CMDJson, CMDBooleanSchema, CMDStringSchema, CMDObjectSchema, \
+from command.model.configuration import CMDRequestJson, CMDBooleanSchema, CMDStringSchema, CMDObjectSchema, \
     CMDArraySchema, CMDFloatSchema, CMDIntegerSchema
 from schematics.models import Model
 from schematics.types import StringType, BooleanType, ModelType, PolyModelType, BaseType
@@ -97,13 +97,6 @@ class QueryParameter(Items, ParameterBase):
 
         return model
 
-    # def to_cmd_model(self, mutability):
-    #     param = self.to_cmd_param(mutability)
-    #
-    #     param.name = self.name
-    #     param.required = self.required
-    #     param.description = self.description
-
 
 class HeaderParameter(Items, ParameterBase):
     """Custom headers that are expected as part of the request."""
@@ -125,21 +118,6 @@ class HeaderParameter(Items, ParameterBase):
         builder.setup_description(model, self)
         return model
 
-    # def to_cmd_model(self, mutability):
-    #     param = self.to_cmd_param(mutability)
-    #
-    #     param.name = self.name
-    #     param.required = self.required
-    #     param.description = self.description
-    #
-    #     if self.x_ms_client_default is not None:
-    #         param.default = CMDSchemaDefault()
-    #         param.default.value = self.x_ms_client_default
-    #     if self.description and isinstance(param, CMDSchema):
-    #         param.description = self.description
-    #
-    #     return param
-
 
 class PathParameter(Items, ParameterBase):
     """Used together with Path Templating, where the parameter value is actually part of the operation's URL. This does not include the host or base path of the API. For example, in /items/{itemId}, the path parameter is itemId."""
@@ -160,24 +138,6 @@ class PathParameter(Items, ParameterBase):
             model.skip_url_encoding = False
 
         return model
-
-    # def to_cmd_model(self, mutability):
-    #     param = self.to_cmd_param(mutability)
-    #     param.name = self.name
-    #     param.required = self.required
-    #     param.description = self.description
-    #
-    #     if self.x_ms_skip_url_encoding:
-    #         param.skip_url_encoding = False
-    #
-    #     if self.x_ms_client_default is not None:
-    #         param.default = CMDSchemaDefault()
-    #         param.default.value = self.x_ms_client_default
-    #
-    #     if self.description and isinstance(param, CMDSchema):
-    #         param.description = self.description
-    #
-    #     return param
 
 
 class FormDataParameter(Items, ParameterBase):
@@ -248,7 +208,7 @@ class BodyParameter(ParameterBase, Linkable):
                 CMDFloatSchema,
                 CMDIntegerSchema
         )):
-            model = CMDJson()
+            model = CMDRequestJson()
             model.schema = v
             if isinstance(v, CMDObjectSchema):
                 # flatten body parameter

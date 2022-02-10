@@ -335,7 +335,7 @@ class CMDClsSchemaBase(CMDSchemaBase):
         return False
 
 
-class CMDClsSchema(CMDSchema, CMDClsSchemaBase):
+class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
     ARG_TYPE = CMDClsArg
 
     # properties as tags
@@ -380,7 +380,7 @@ class CMDStringSchemaBase(CMDSchemaBase):
         return diff
 
 
-class CMDStringSchema(CMDSchema, CMDStringSchemaBase):
+class CMDStringSchema(CMDStringSchemaBase, CMDSchema):
     ARG_TYPE = CMDStringArg
 
 
@@ -390,7 +390,7 @@ class CMDByteSchemaBase(CMDStringSchemaBase):
     ARG_TYPE = CMDByteArgBase
 
 
-class CMDByteSchema(CMDStringSchema, CMDByteSchemaBase):
+class CMDByteSchema(CMDByteSchemaBase, CMDStringSchema):
     ARG_TYPE = CMDByteArg
 
 
@@ -400,7 +400,7 @@ class CMDBinarySchemaBase(CMDStringSchemaBase):
     ARG_TYPE = CMDBinaryArgBase
 
 
-class CMDBinarySchema(CMDStringSchema, CMDBinarySchemaBase):
+class CMDBinarySchema(CMDBinarySchemaBase, CMDStringSchema):
     ARG_TYPE = CMDBinaryArg
 
 
@@ -410,7 +410,7 @@ class CMDDurationSchemaBase(CMDStringSchemaBase):
     ARG_TYPE = CMDDurationArgBase
 
 
-class CMDDurationSchema(CMDStringSchema, CMDDurationSchemaBase):
+class CMDDurationSchema(CMDDurationSchemaBase, CMDStringSchema):
     ARG_TYPE = CMDDurationArg
 
 
@@ -420,7 +420,7 @@ class CMDDateSchemaBase(CMDStringSchemaBase):
     ARG_TYPE = CMDDateArgBase
 
 
-class CMDDateSchema(CMDStringSchema, CMDDateSchemaBase):
+class CMDDateSchema(CMDDateSchemaBase, CMDStringSchema):
     ARG_TYPE = CMDDateArg
 
 
@@ -430,7 +430,7 @@ class CMDDateTimeSchemaBase(CMDStringSchemaBase):
     ARG_TYPE = CMDDateTimeArgBase
 
 
-class CMDDateTimeSchema(CMDStringSchema, CMDDateTimeSchemaBase):
+class CMDDateTimeSchema(CMDDateTimeSchemaBase, CMDStringSchema):
     ARG_TYPE = CMDDateTimeArg
 
 
@@ -440,7 +440,7 @@ class CMDUuidSchemaBase(CMDStringSchemaBase):
     ARG_TYPE = CMDUuidArgBase
 
 
-class CMDUuidSchema(CMDStringSchema, CMDUuidSchemaBase):
+class CMDUuidSchema(CMDUuidSchemaBase, CMDStringSchema):
     ARG_TYPE = CMDUuidArg
 
 
@@ -450,7 +450,7 @@ class CMDPasswordSchemaBase(CMDStringSchemaBase):
     ARG_TYPE = CMDPasswordArgBase
 
 
-class CMDPasswordSchema(CMDStringSchema, CMDPasswordSchemaBase):
+class CMDPasswordSchema(CMDPasswordSchemaBase, CMDStringSchema):
     ARG_TYPE = CMDPasswordArg
 
 
@@ -466,7 +466,7 @@ class CMDResourceIdSchemaBase(CMDStringSchemaBase):
     )
 
 
-class CMDResourceIdSchema(CMDResourceIdSchemaBase, CMDStringSchema,):
+class CMDResourceIdSchema(CMDResourceIdSchemaBase, CMDStringSchema):
     ARG_TYPE = CMDResourceIdArg
 
 
@@ -476,7 +476,7 @@ class CMDResourceLocationSchemaBase(CMDStringSchemaBase):
     ARG_TYPE = CMDResourceLocationArgBase
 
 
-class CMDResourceLocationSchema(CMDStringSchema, CMDResourceLocationSchemaBase):
+class CMDResourceLocationSchema(CMDResourceLocationSchemaBase, CMDStringSchema):
     ARG_TYPE = CMDResourceLocationArg
 
 
@@ -506,7 +506,7 @@ class CMDIntegerSchemaBase(CMDSchemaBase):
         return diff
 
 
-class CMDIntegerSchema(CMDSchema, CMDIntegerSchemaBase):
+class CMDIntegerSchema(CMDIntegerSchemaBase, CMDSchema):
     ARG_TYPE = CMDIntegerArg
 
 
@@ -516,7 +516,7 @@ class CMDInteger32SchemaBase(CMDIntegerSchemaBase):
     ARG_TYPE = CMDInteger32ArgBase
 
 
-class CMDInteger32Schema(CMDIntegerSchema, CMDInteger32SchemaBase):
+class CMDInteger32Schema(CMDInteger32SchemaBase, CMDIntegerSchema):
     ARG_TYPE = CMDInteger32Arg
 
 
@@ -526,7 +526,7 @@ class CMDInteger64SchemaBase(CMDIntegerSchemaBase):
     ARG_TYPE = CMDInteger64ArgBase
 
 
-class CMDInteger64Schema(CMDIntegerSchema, CMDInteger64SchemaBase):
+class CMDInteger64Schema(CMDInteger64SchemaBase, CMDIntegerSchema):
     ARG_TYPE = CMDInteger64Arg
 
 
@@ -536,7 +536,7 @@ class CMDBooleanSchemaBase(CMDSchemaBase):
     ARG_TYPE = CMDBooleanArgBase
 
 
-class CMDBooleanSchema(CMDSchema, CMDBooleanSchemaBase):
+class CMDBooleanSchema(CMDBooleanSchemaBase, CMDSchema):
     ARG_TYPE = CMDBooleanArg
 
 
@@ -566,7 +566,7 @@ class CMDFloatSchemaBase(CMDSchemaBase):
         return diff
 
 
-class CMDFloatSchema(CMDSchema, CMDFloatSchemaBase):
+class CMDFloatSchema(CMDFloatSchemaBase, CMDSchema):
     ARG_TYPE = CMDFloatArg
 
 
@@ -576,7 +576,7 @@ class CMDFloat32SchemaBase(CMDFloatSchemaBase):
     ARG_TYPE = CMDFloat32ArgBase
 
 
-class CMDFloat32Schema(CMDFloatSchema, CMDFloat32SchemaBase):
+class CMDFloat32Schema(CMDFloat32SchemaBase, CMDFloatSchema):
     ARG_TYPE = CMDFloat32Arg
 
 
@@ -586,7 +586,7 @@ class CMDFloat64SchemaBase(CMDFloatSchemaBase):
     ARG_TYPE = CMDFloat64ArgBase
 
 
-class CMDFloat64Schema(CMDFloatSchema, CMDFloat64SchemaBase):
+class CMDFloat64Schema(CMDFloat64SchemaBase, CMDFloatSchema):
     ARG_TYPE = CMDFloat64Arg
 
 
@@ -769,7 +769,7 @@ class CMDObjectSchemaBase(CMDSchemaBase):
         return diff
 
 
-class CMDObjectSchema(CMDSchema, CMDObjectSchemaBase):
+class CMDObjectSchema(CMDObjectSchemaBase, CMDSchema):
     ARG_TYPE = CMDObjectArg
 
     # properties as tags
@@ -831,7 +831,7 @@ class CMDArraySchemaBase(CMDSchemaBase):
         return diff
 
 
-class CMDArraySchema(CMDSchema, CMDArraySchemaBase):
+class CMDArraySchema(CMDArraySchemaBase, CMDSchema):
     ARG_TYPE = CMDArrayArg
 
     def _diff(self, old, level, diff):

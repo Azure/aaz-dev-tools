@@ -1,12 +1,11 @@
 import logging
 
 import inflect
-from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, \
-    CMDSchemaDefault, CMDHttpJsonBody, CMDObjectOutput, CMDArrayOutput, CMDGenericInstanceUpdateAction, \
-    CMDGenericInstanceUpdateMethod, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, CMDJson, CMDArgGroup, \
-    CMDDiffLevelEnum, CMDClsSchemaBase, \
-    CMDObjectSchema, CMDArraySchema, CMDStringSchema, CMDObjectSchemaBase, CMDArraySchemaBase, CMDStringSchemaBase, \
-    CMDStringOutput
+from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, CMDSchemaDefault, \
+    CMDHttpResponseJsonBody, CMDObjectOutput, CMDArrayOutput, CMDGenericInstanceUpdateAction, \
+    CMDGenericInstanceUpdateMethod, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, CMDRequestJson, \
+    CMDArgGroup, CMDDiffLevelEnum, CMDClsSchemaBase, CMDArraySchema, CMDStringSchema, CMDObjectSchemaBase, \
+    CMDArraySchemaBase, CMDStringSchemaBase, CMDStringOutput
 from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
@@ -216,9 +215,9 @@ class CommandGenerator:
             for resp in op.http.responses:
                 if resp.is_error:
                     continue
-                if not isinstance(resp.body, CMDHttpJsonBody):
+                if not isinstance(resp.body, CMDHttpResponseJsonBody):
                     continue
-                if not isinstance(resp.body.json.schema, CMDObjectSchema):
+                if not isinstance(resp.body.json.schema, CMDObjectSchemaBase):
                     continue
                 body_schema = resp.body.json.schema
                 if not body_schema.props:
@@ -241,7 +240,7 @@ class CommandGenerator:
                 continue
             if resp.body is None:
                 continue
-            if isinstance(resp.body, CMDHttpJsonBody):
+            if isinstance(resp.body, CMDHttpResponseJsonBody):
                 body_json = resp.body.json
                 body_json.var = BuildInVariants.Instance
                 if pageable and pageable.item_name:
@@ -472,7 +471,7 @@ class CommandGenerator:
         json_update_op = CMDInstanceUpdateOperation()
         json_update_op.instance_update = CMDJsonInstanceUpdateAction()
         json_update_op.instance_update.instance = BuildInVariants.Instance
-        json_update_op.instance_update.json = CMDJson()
+        json_update_op.instance_update.json = CMDRequestJson()
         json_update_op.instance_update.json.schema = put_op.http.request.body.json.schema
 
         generic_update_op = CMDInstanceUpdateOperation()

@@ -6,8 +6,7 @@ from ._schema import CMDSchemaBaseField, CMDSchema, CMDSchemaBase
 from ._utils import CMDDiffLevelEnum
 
 
-# json
-class CMDJson(Model):
+class CMDRequestJson(Model):
     # properties as tags
     var = CMDVariantField()
     ref = CMDVariantField()
@@ -47,4 +46,27 @@ class CMDJson(Model):
                 diff["var"] = f"{old.var} != {self.var}"
             if self.ref != old.ref:
                 diff["ref"] = f"{old.ref} != {self.ref}"
+        return diff
+
+
+class CMDResponseJson(Model):
+    # properties as tags
+    var = CMDVariantField()
+
+    # properties as nodes
+    schema = CMDSchemaBaseField(required=True)
+
+    class Options:
+        serialize_when_none = False
+
+    def diff(self, old, level):
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            schema_diff = self.schema.diff(old.schema, level)
+            if schema_diff:
+                diff["schema"] = schema_diff
+
+        if level >= CMDDiffLevelEnum.Associate:
+            if self.var != old.var:
+                diff["var"] = f"{old.var} != {self.var}"
         return diff

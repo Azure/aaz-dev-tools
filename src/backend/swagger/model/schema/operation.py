@@ -2,7 +2,7 @@ from schematics.models import Model
 from schematics.types import StringType, ModelType, ListType, DictType, BooleanType, PolyModelType
 
 from command.model.configuration import CMDHttpOperation, CMDHttpAction, CMDHttpRequest, CMDHttpRequestPath, \
-    CMDHttpRequestQuery, CMDHttpRequestHeader, CMDHttpJsonBody, CMDJson, CMDHttpOperationLongRunning
+    CMDHttpRequestQuery, CMDHttpRequestHeader, CMDHttpRequestJsonBody, CMDRequestJson, CMDHttpOperationLongRunning
 from swagger.utils import exceptions
 from swagger.utils.tools import swagger_resource_path_to_resource_id_template
 from .external_documentation import ExternalDocumentation
@@ -191,8 +191,8 @@ class Operation(Model, Linkable):
                     value=[builder.path, builder.method, builder.mutability, *param_models[BodyParameter.IN_VALUE].keys()]
                 )
             model = [*param_models[BodyParameter.IN_VALUE].values()][0]
-            if isinstance(model, CMDJson):
-                request.body = CMDHttpJsonBody()
+            if isinstance(model, CMDRequestJson):
+                request.body = CMDHttpRequestJsonBody()
                 request.body.json = model
             else:
                 raise NotImplementedError()
