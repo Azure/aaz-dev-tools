@@ -102,6 +102,9 @@ class AzExtensionManager:
 
         raise NotImplementedError()
 
+    def setup_aaz_folder(self, mod_name):
+        pass
+
     def load_module(self, mod_name):
         pass
 

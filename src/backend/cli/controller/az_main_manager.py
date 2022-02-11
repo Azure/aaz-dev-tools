@@ -17,18 +17,22 @@ class AzMainManager:
 
         self.folder = module_folder
 
+    @staticmethod
+    def pkg_name(mod_name):
+        return mod_name.replace('-', '_').lower()
+
     def get_mod_path(self, mod_name):
-        return os.path.join(self.folder, mod_name)
+        return os.path.join(self.folder, self.pkg_name(mod_name))
 
     def get_aaz_path(self, mod_name):
         return os.path.join(self.get_mod_path(mod_name), 'aaz')
 
     def list_modules(self):
         modules = []
-        for _, modname, _ in pkgutil.iter_modules(path=[self.folder]):
+        for _, pkg_name, _ in pkgutil.iter_modules(path=[self.folder]):
             modules.append({
-                "name": modname,
-                "folder": os.path.join(self.folder, modname)
+                "name": pkg_name.replace('_', '-'),
+                "folder": os.path.join(self.folder, pkg_name)
             })
 
         return sorted(modules, key=lambda a: a['name'])
@@ -37,8 +41,14 @@ class AzMainManager:
         mod_path = self.get_mod_path(mod_name)
         if os.path.exists(os.path.join(mod_path, '__init__.py')):
             raise exceptions.ResourceConflict(f"Module already exist in path: '{mod_path}'")
+        mod_path = self.get_mod_path(mod_name)
+        if os.path.exists(os.path.join(mod_path, '__init__.py')):
+            raise exceptions.ResourceConflict(f"Module already exist in path: '{mod_path}'")
 
         raise NotImplementedError()
+
+    def setup_aaz_folder(self, mod_name):
+        pass
 
     def load_module(self, mod_name):
         pass

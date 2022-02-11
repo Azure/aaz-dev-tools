@@ -1,0 +1,11 @@
+{% extends "python.j2" %}
+{% block imports %}
+# pylint: disable=too-many-lines
+# pylint: disable=too-many-statements
+
+from knack.log import get_logger
+{% endblock %}
+{% block code %}
+
+logger = get_logger(__name__)
+{% endblock %}
