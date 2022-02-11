@@ -53,7 +53,7 @@ export default class WorkspaceSelector extends Component<{}, workspaceSelectorSt
   WorkspaceList = () => {
     return <>{
       this.state.workspaces.map((workspace: Workspace, index) => {
-        return <ListGroup.Item key={index} action href={`workspace/${workspace.name}/resourceSelection`}>
+        return <ListGroup.Item key={index} action href={`/workspace/${workspace.name}/resourceSelection`}>
           <Row>
             <Col>{workspace.name}</Col>
             <Col>{workspace.lastModified.toLocaleString()}</Col>

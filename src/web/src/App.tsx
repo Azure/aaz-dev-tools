@@ -7,6 +7,7 @@ import WorkspaceSelector from "./components/WorkspaceSelector"
 import Specifications from "./components/Specifications";
 import {SpecSelector} from "./components/SpecSelector";
 import Workspace from "./components/Workspace";
+import {ConfigEditor} from "./components/ConfigEditor";
 
 class App extends Component {
   ModeSelection = () => {
@@ -41,6 +42,7 @@ class App extends Component {
           <Route path="workspace" element={<Workspace />}>
             <Route index element={<WorkspaceSelector/>}/>
             <Route path=":workspaceName/resourceSelection" element={<SpecSelector />}/>
+            <Route path=":workspaceName/editor" element={<ConfigEditor />} />
           </Route>
           <Route path="generator" element={<Generator />} />
           <Route path="specs" element={<Specifications />} />

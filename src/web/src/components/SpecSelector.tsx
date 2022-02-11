@@ -1,15 +1,14 @@
 import React, { Component } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom"
-import { ListGroup, Row, Col, Button, Dropdown, DropdownButton, Spinner } from "react-bootstrap"
+import { ListGroup, Row, Col, Button, Dropdown, DropdownButton, Spinner, Navbar, Nav, Container } from "react-bootstrap"
 import { Set } from "typescript";
-import { resourceUsage } from "process";
 
 type ParamsType = {
   workspaceName: String
 }
 
-type SpecSelectorProp = {
+type WrapperProp = {
   params: ParamsType
 }
 
@@ -65,7 +64,7 @@ type Swagger = {
 }
 
 
-class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
+class SpecSelector extends Component<WrapperProp, SpecSelectState> {
   constructor(props: any) {
     super(props);
     this.state = {
@@ -105,11 +104,9 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
     let resourceProvider = "";
     let version = "";
     let resources = new Set<string>();
-
     return axios.get(`/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/Resources`)
       .then(res => {
-        console.log(res.data)
-        if (Array.isArray(res.data)) {
+        if (res.data && Array.isArray(res.data) && res.data.length > 0) {
 
           module = res.data[0].swagger.split('/')[1]
           resourceProvider = res.data[0].swagger.split('/')[3]
@@ -132,8 +129,9 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
                   checkbox.click()
                 }
               }
-              this.setState({ selectedResources: resources, prevResources: new Set<string>(resources)})
-              this.setState({altered: this.checkAltered()})
+              this.setState({ prevResources: resources })
+              this.state.selectedResources.clear()
+              this.setState({ altered: this.checkAltered() })
             })
         }
       })
@@ -163,10 +161,11 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
   }
 
   checkAltered = () => {
+    return true
     let altered = this.state.selectedModule !== this.state.prevModule
     altered = altered || this.state.selectedResourceProvider !== this.state.prevResourceProvider
     altered = altered || this.state.selectedVersion !== this.state.prevVersion
-    let areSetsEqual = (a:any, b:any) => a.size === b.size && [...a].every(value => b.has(value));
+    let areSetsEqual = (a: any, b: any) => a.size === b.size && [...a].every(value => b.has(value));
     altered = altered || !areSetsEqual(this.state.selectedResources, this.state.prevResources)
     return altered
   }
@@ -228,13 +227,13 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
             versions[version].push(resource.id)
           })
         })
-        this.setState({ 
-          resources: resources, 
-          versions: versions, 
-          selectedVersion: selectedVersion, 
-          selectedResourceProvider: resourceProviderName, 
-          loadingResources: false, 
-          altered: this.checkAltered() 
+        this.setState({
+          resources: resources,
+          versions: versions,
+          selectedVersion: selectedVersion,
+          selectedResourceProvider: resourceProviderName,
+          loadingResources: false,
+          altered: this.checkAltered()
         })
       })
       .catch((err) => console.log(err.response.message));
@@ -269,17 +268,17 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
 
   handleSelectVersion = (eventKey: any) => {
     const version: string = eventKey
-    this.setState({ selectedVersion: version, altered: this.checkAltered()})
+    this.setState({ selectedVersion: version, altered: this.checkAltered() })
   }
 
   handleSelectResource = (event: any) => {
     const resourceId: string = event.target.id
-    if(event.target.checked){
+    if (event.target.checked) {
       this.state.selectedResources.add(resourceId)
     } else {
       this.state.selectedResources.delete(resourceId)
     }
-    
+
     this.setState({
       altered: this.checkAltered()
     })
@@ -298,7 +297,7 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
     return <div>
       <ListGroup>
         {resourceIds.map((resourceId) => {
-          return <ListGroup.Item key={resourceId}><input type="checkbox" onChange={this.handleSelectResource} id={resourceId} /> {resourceId}</ListGroup.Item>
+          return <ListGroup.Item key={resourceId}><input type="checkbox" checked={this.state.prevResources.has(resourceId) || this.state.selectedResources.has(resourceId)} disabled={this.state.prevResources.has(resourceId)} onChange={this.handleSelectResource} id={resourceId} /> {resourceId}</ListGroup.Item>
         })}
       </ListGroup>
     </div>
@@ -310,11 +309,10 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
       version: this.state.selectedVersion,
       resources: []
     }
-    this.state.selectedResources.forEach(resourceId=>{
+    this.state.selectedResources.forEach(resourceId => {
       finalResources.resources.push(resourceId)
     })
     console.log(finalResources)
-    console.log(this.state.selectedResources)
     this.addSwagger(finalResources)
   }
 
@@ -324,6 +322,7 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
         axios.get(`/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz`)
           .then((res) => {
             console.log(res.data)
+            window.location.reload();
           })
 
       })
@@ -334,6 +333,14 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
 
   render() {
     return <div className="m-1 p-1">
+      <Navbar bg="primary" variant="dark">
+        <Container>
+          <Navbar.Brand href="editor">Editor</Navbar.Brand>
+          <Navbar.Brand href="resourceSelection">Resource Selection</Navbar.Brand>
+          <Nav className="me-auto">
+          </Nav>
+        </Container>
+      </Navbar>
       <Row>
         <Col lg='11'>
           <h1>
@@ -341,7 +348,7 @@ class SpecSelector extends Component<SpecSelectorProp, SpecSelectState> {
           </h1>
         </Col>
         <Col lg="auto">
-          {this.state.altered?<Button onClick={this.saveResourcesAndVersion}>Save</Button>:<Button onClick={this.resetResourcesAndVersion}>Cancel</Button>}
+          {this.state.altered ? <Button onClick={this.saveResourcesAndVersion}>Save</Button> : <Button onClick={this.resetResourcesAndVersion}>Cancel</Button>}
         </Col>
 
       </Row>
@@ -392,3 +399,4 @@ const SpecSelectorWrapper = (props: any) => {
 }
 
 export { SpecSelectorWrapper as SpecSelector };
+export type { WrapperProp }
