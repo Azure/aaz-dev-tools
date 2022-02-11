@@ -126,6 +126,46 @@ class CMDArgBase(Model):
         self._reformat_base()
 
 
+class CMDArgBaseField(PolyModelType):
+
+    def __init__(self, **kwargs):
+        super(CMDArgBaseField, self).__init__(
+            model_spec=CMDArgBase,
+            allow_subclasses=True,
+            serialize_when_none=False,
+            **kwargs
+        )
+
+    def find_model(self, data):
+        if self.claim_function:
+            kls = self.claim_function(self, data)
+            if not kls:
+                raise Exception("Input for polymorphic field did not match any model")
+            return kls
+
+        fallback = None
+        matching_classes = set()
+        for kls in self._get_candidates():
+            if issubclass(kls, CMDArg):
+                continue
+
+            try:
+                kls_claim = kls._claim_polymorphic
+            except AttributeError:
+                if not fallback:
+                    fallback = kls
+            else:
+                if kls_claim(data):
+                    matching_classes.add(kls)
+
+        if not matching_classes and fallback:
+            return fallback
+        elif len(matching_classes) != 1:
+            raise Exception("Got ambiguous input for polymorphic field")
+
+        return matching_classes.pop()
+
+
 class CMDArg(CMDArgBase):
     # properties as tags
     var = CMDVariantField(required=True)
@@ -210,7 +250,7 @@ class CMDClsArgBase(CMDArgBase):
         return arg
 
 
-class CMDClsArg(CMDArg, CMDClsArgBase):
+class CMDClsArg(CMDClsArgBase, CMDArg):
     pass
 
 
@@ -239,7 +279,7 @@ class CMDStringArgBase(CMDArgBase):
             self.enum.reformat()
 
 
-class CMDStringArg(CMDArg, CMDStringArgBase):
+class CMDStringArg(CMDStringArgBase, CMDArg):
     pass
 
 
@@ -248,7 +288,7 @@ class CMDByteArgBase(CMDStringArgBase):
     TYPE_VALUE = "byte"
 
 
-class CMDByteArg(CMDStringArg, CMDByteArgBase):
+class CMDByteArg(CMDByteArgBase, CMDStringArg):
     pass
 
 
@@ -257,7 +297,7 @@ class CMDBinaryArgBase(CMDStringArgBase):
     TYPE_VALUE = "binary"
 
 
-class CMDBinaryArg(CMDStringArg, CMDBinaryArgBase):
+class CMDBinaryArg(CMDBinaryArgBase, CMDStringArg):
     pass
 
 
@@ -266,7 +306,7 @@ class CMDDurationArgBase(CMDStringArgBase):
     TYPE_VALUE = "duration"
 
 
-class CMDDurationArg(CMDStringArg, CMDDurationArgBase):
+class CMDDurationArg(CMDDurationArgBase, CMDStringArg):
     pass
 
 
@@ -275,7 +315,7 @@ class CMDDateArgBase(CMDStringArgBase):
     TYPE_VALUE = "date"
 
 
-class CMDDateArg(CMDStringArg, CMDDateArgBase):
+class CMDDateArg(CMDDateArgBase, CMDStringArg):
     pass
 
 
@@ -284,7 +324,7 @@ class CMDDateTimeArgBase(CMDStringArgBase):
     TYPE_VALUE = "dateTime"
 
 
-class CMDDateTimeArg(CMDStringArg, CMDDateTimeArgBase):
+class CMDDateTimeArg(CMDDateTimeArgBase, CMDStringArg):
     pass
 
 
@@ -293,7 +333,7 @@ class CMDUuidArgBase(CMDStringArgBase):
     TYPE_VALUE = "uuid"
 
 
-class CMDUuidArg(CMDStringArg, CMDUuidArgBase):
+class CMDUuidArg(CMDUuidArgBase, CMDStringArg):
     pass
 
 
@@ -302,7 +342,7 @@ class CMDPasswordArgBase(CMDStringArgBase):
     TYPE_VALUE = "password"
 
 
-class CMDPasswordArg(CMDStringArg, CMDPasswordArgBase):
+class CMDPasswordArg(CMDPasswordArgBase, CMDStringArg):
     pass
 
 
@@ -311,7 +351,7 @@ class CMDSubscriptionIdArgBase(CMDStringArgBase):
     TYPE_VALUE = "subscriptionId"
 
 
-class CMDSubscriptionIdArg(CMDStringArg, CMDSubscriptionIdArgBase):
+class CMDSubscriptionIdArg(CMDSubscriptionIdArgBase, CMDStringArg):
     pass
 
 
@@ -320,7 +360,7 @@ class CMDResourceGroupNameArgBase(CMDStringArgBase):
     TYPE_VALUE = "resourceGroupName"
 
 
-class CMDResourceGroupNameArg(CMDStringArg, CMDResourceGroupNameArgBase):
+class CMDResourceGroupNameArg(CMDResourceGroupNameArgBase, CMDStringArg):
     pass
 
 
@@ -335,7 +375,7 @@ class CMDResourceIdArgBase(CMDStringArgBase):
     )
 
 
-class CMDResourceIdArg(CMDStringArg, CMDResourceIdArgBase):
+class CMDResourceIdArg(CMDResourceIdArgBase, CMDStringArg):
     pass
 
 
@@ -344,7 +384,7 @@ class CMDResourceLocationArgBase(CMDStringArgBase):
     TYPE_VALUE = "resourceLocation"
 
 
-class CMDResourceLocationArg(CMDStringArg, CMDResourceLocationArgBase):
+class CMDResourceLocationArg(CMDResourceLocationArgBase, CMDStringArg):
 
     @classmethod
     def build_arg(cls, builder):
@@ -380,7 +420,7 @@ class CMDIntegerArgBase(CMDArgBase):
             self.enum.reformat()
 
 
-class CMDIntegerArg(CMDArg, CMDIntegerArgBase):
+class CMDIntegerArg(CMDIntegerArgBase, CMDArg):
     pass
 
 
@@ -389,7 +429,7 @@ class CMDInteger32ArgBase(CMDIntegerArgBase):
     TYPE_VALUE = "integer32"
 
 
-class CMDInteger32Arg(CMDIntegerArg, CMDInteger32ArgBase):
+class CMDInteger32Arg(CMDInteger32ArgBase, CMDIntegerArg):
     pass
 
 
@@ -398,7 +438,7 @@ class CMDInteger64ArgBase(CMDIntegerArgBase):
     TYPE_VALUE = "integer64"
 
 
-class CMDInteger64Arg(CMDIntegerArg, CMDInteger64ArgBase):
+class CMDInteger64Arg(CMDInteger64ArgBase, CMDIntegerArg):
     pass
 
 
@@ -407,7 +447,7 @@ class CMDBooleanArgBase(CMDArgBase):
     TYPE_VALUE = "boolean"
 
 
-class CMDBooleanArg(CMDArg, CMDBooleanArgBase):
+class CMDBooleanArg(CMDBooleanArgBase, CMDArg):
     pass
 
 
@@ -436,7 +476,7 @@ class CMDFloatArgBase(CMDArgBase):
             self.enum.reformat()
 
 
-class CMDFloatArg(CMDArg, CMDFloatArgBase):
+class CMDFloatArg(CMDFloatArgBase, CMDArg):
     pass
 
 
@@ -445,7 +485,7 @@ class CMDFloat32ArgBase(CMDFloatArgBase):
     TYPE_VALUE = "float32"
 
 
-class CMDFloat32Arg(CMDFloatArg, CMDFloat32ArgBase):
+class CMDFloat32Arg(CMDFloat32ArgBase, CMDFloatArg):
     pass
 
 
@@ -454,14 +494,14 @@ class CMDFloat64ArgBase(CMDFloatArgBase):
     TYPE_VALUE = "float64"
 
 
-class CMDFloat64Arg(CMDFloatArg, CMDFloat64ArgBase):
+class CMDFloat64Arg(CMDFloat64ArgBase, CMDFloatArg):
     pass
 
 
 # object
 class CMDObjectArgAdditionalProperties(Model):
     # properties as nodes
-    item = PolyModelType(CMDArgBase, allow_subclasses=True)
+    item = CMDArgBaseField()
 
     class Options:
         serialize_when_none = False
@@ -514,7 +554,7 @@ class CMDObjectArgBase(CMDArgBase):
             self.additional_props.reformat()
 
 
-class CMDObjectArg(CMDArg, CMDObjectArgBase):
+class CMDObjectArg(CMDObjectArgBase, CMDArg):
 
     cls = CMDClassField()  # define a class which can be used by loop
 
@@ -535,7 +575,8 @@ class CMDArrayArgBase(CMDArgBase):
         serialized_name='format',
         deserialize_from='format',
     )
-    item = PolyModelType(CMDArgBase, allow_subclasses=True, required=True)
+
+    item = CMDArgBaseField(required=True)
 
     def _get_type(self):
         return f"{self.TYPE_VALUE}<{self.item.type}>"
@@ -553,7 +594,7 @@ class CMDArrayArgBase(CMDArgBase):
         self.item.reformat()
 
 
-class CMDArrayArg(CMDArg, CMDArrayArgBase):
+class CMDArrayArg(CMDArrayArgBase, CMDArg):
 
     singular_options = ListType(
         StringType(),

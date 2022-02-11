@@ -586,3 +586,53 @@ class APIEditorTest(CommandTestCase):
             rv = c.post(f"{ws_url}/Generate")
             self.assertTrue(rv.status_code == 200)
 
+    @workspace_name("test_workspace_aaz_generate_for_operation_api")
+    def test_workspace_aaz_generate_for_operation_api(self, ws_name):
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum.Mgmt,
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws = rv.get_json()
+            ws_url = ws['url']
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': 'edgeorder',
+                'version': '2021-12-01',
+                'resources': [
+                    swagger_resource_path_to_resource_id(
+                        '/providers/Microsoft.EdgeOrder/operations'),
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order", json={
+                "help": {
+                    "short": "Manage edge order.",
+                },
+                "stage": CMDStageEnum.Preview
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/operation", json={
+                "help": {
+                    "short": "Manage edge order.",
+                },
+                "stage": CMDStageEnum.Preview
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/operation/Leaves/list", json={
+                "help": {
+                    "short": "Manage edge order.",
+                },
+                "stage": CMDStageEnum.Preview
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/Generate")
+            self.assertTrue(rv.status_code == 200)
