@@ -8,7 +8,7 @@ from command.tests.common import CommandTestCase
 from utils.plane import PlaneEnum
 
 
-class TemplateRenderTest(CommandTestCase):
+class AAZSpecTemplateRenderTest(CommandTestCase):
 
     def test_render_tree_template(self):
         tmpl = get_templates()['tree']

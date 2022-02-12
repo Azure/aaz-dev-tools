@@ -2,9 +2,10 @@
 {% block imports %}
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-statements
+
+from knack.log import get_logger
 {% endblock %}
 {% block code %}
 
-def load_arguments(self, _):  # pylint: disable=unused-argument
-    pass
+logger = get_logger(__name__)
 {% endblock %}

@@ -9,7 +9,7 @@ def camel_case(env, name):
 
 
 @environmentfilter
-def snack_case(env, name):
+def snake_case(env, name):
     parts = name.replace('-', ' ').replace('_', ' ').split()
     parts = [p.lower() for p in parts if p]
     return "_".join(parts)
@@ -17,5 +17,5 @@ def snack_case(env, name):
 
 custom_filters = {
     "camel_case": camel_case,
-    "snack_case": snack_case,
+    "snake_case": snake_case,
 }

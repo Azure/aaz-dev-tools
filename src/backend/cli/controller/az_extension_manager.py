@@ -1,7 +1,10 @@
 from utils.config import Config
 import os
+import json
 from utils import exceptions
 import glob
+from cli.templates import get_templates
+from packaging import version
 
 _folder = None
 _folder_is_module = None
@@ -54,8 +57,11 @@ class AzExtensionManager:
             return os.path.join(self.folder, mod_name)
 
     @staticmethod
-    def _generate_mod_ext_name(mod_name):
-        return 'azext_' + mod_name.replace('-', '_').lower()
+    def pkg_name(mod_name):
+        return mod_name.replace('-', '_').lower()
+
+    def _generate_mod_ext_name(self, mod_name):
+        return 'azext_' + self.pkg_name(mod_name)
 
     @staticmethod
     def _get_module_name_by_path(path):
@@ -90,6 +96,22 @@ class AzExtensionManager:
                 })
         return modules
 
+    def create_mod_azext_metadata(self, mod_name):
+        ext_path = self.get_mod_ext_path(mod_name)
+        metadata_path = os.path.join(ext_path, 'azext_metadata.json')
+        if os.path.exists(metadata_path):
+            with open(metadata_path, 'r') as f:
+                metadata = json.load(f)
+            if "azext.minCliCoreVersion" not in metadata or \
+                    version.parse(metadata["azext.minCliCoreVersion"]) < Config.MIN_CLI_CORE_VERSION:
+                metadata["azext.minCliCoreVersion"] = str(Config.MIN_CLI_CORE_VERSION)
+        else:
+            metadata = {
+                "azext.isExperimental": True,
+                "azext.minCliCoreVersion": str(Config.MIN_CLI_CORE_VERSION),
+            }
+        return metadata
+
     def create_new_mod(self, mod_name):
         if self.folder_is_module:
             raise exceptions.ResourceConflict(
@@ -97,14 +119,126 @@ class AzExtensionManager:
                 f"because the repo is an extension module"
             )
         mod_path = self.get_mod_path(mod_name)
-        if os.path.exists(os.path.join(mod_path, '__init__.py')):
-            raise exceptions.ResourceConflict(f"Module already exist in path: '{mod_path}'")
+        templates = get_templates()['extension']
+        new_files = {}
 
-        raise NotImplementedError()
+        # render HISTORY.rst
+        file_path = os.path.join(mod_path, 'HISTORY.rst')
+        if os.path.exists(file_path):
+            raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
+        tmpl = templates['HISTORY.rst']
+        new_files[file_path] = tmpl.render()
+
+        # render readme.md
+        file_path = os.path.join(mod_path, 'readme.md')
+        if os.path.exists(file_path):
+            raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
+        tmpl = templates['readme.md']
+        new_files[file_path] = tmpl.render(
+            mod_name=mod_name
+        )
+
+        # render setup.cfg
+        file_path = os.path.join(mod_path, 'setup.cfg')
+        if os.path.exists(file_path):
+            raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
+        tmpl = templates['setup.cfg']
+        new_files[file_path] = tmpl.render()
+
+        # render setup.py
+        file_path = os.path.join(mod_path, 'setup.py')
+        if os.path.exists(file_path):
+            raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
+        tmpl = templates['setup.py']
+        new_files[file_path] = tmpl.render(
+            mod_name=mod_name
+        )
+
+        # azext_* folder
+        ext_path = self.get_mod_ext_path(mod_name)
+        ext_templates = templates['azext_']
+
+        # render __init__.py
+        file_path = os.path.join(ext_path, '__init__.py')
+        if os.path.exists(file_path):
+            raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
+        tmpl = ext_templates['__init__.py']
+        new_files[file_path] = tmpl.render(
+            mod_name=mod_name
+        )
+
+        # render _help.py
+        file_path = os.path.join(ext_path, '_help.py')
+        if os.path.exists(file_path):
+            raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
+        tmpl = ext_templates['_help.py']
+        new_files[file_path] = tmpl.render()
+
+        # render _params.py
+        file_path = os.path.join(ext_path, '_params.py')
+        if os.path.exists(file_path):
+            raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
+        tmpl = ext_templates['_params.py']
+        new_files[file_path] = tmpl.render()
+
+        # render commands.py
+        file_path = os.path.join(ext_path, 'commands.py')
+        if os.path.exists(file_path):
+            raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
+        tmpl = ext_templates['commands.py']
+        new_files[file_path] = tmpl.render()
+
+        # render custom.py
+        file_path = os.path.join(ext_path, 'custom.py')
+        if os.path.exists(file_path):
+            raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
+        tmpl = ext_templates['custom.py']
+        new_files[file_path] = tmpl.render()
+
+        # azext_metadata.json
+        file_path = os.path.join(ext_path, 'azext_metadata.json')
+        if os.path.exists(file_path):
+            raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
+        ext_metadata = self.create_mod_azext_metadata(mod_name)
+        new_files[file_path] = json.dumps(ext_metadata, indent=4, sort_keys=True)
+
+        # test_folder
+        t_path = os.path.join(ext_path, 'tests')
+        t_templates = ext_templates['tests']
+
+        # render __init__.py
+        file_path = os.path.join(t_path, '__init__.py')
+        if os.path.exists(file_path):
+            raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
+        tmpl = t_templates['__init__.py']
+        new_files[file_path] = tmpl.render()
+
+        profile = Config.CLI_DEFAULT_PROFILE
+        tp_path = os.path.join(t_path, profile)
+        tp_templates = t_templates['profile']
+
+        # render __init__.py
+        file_path = os.path.join(tp_path, '__init__.py')
+        if os.path.exists(file_path):
+            raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
+        tmpl = tp_templates['__init__.py']
+        new_files[file_path] = tmpl.render()
+
+        # render test_*.py
+        file_path = os.path.join(tp_path, f'test_{self.pkg_name(mod_name)}.py')
+        if os.path.exists(file_path):
+            raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
+        tmpl = tp_templates['test_.py']
+        new_files[file_path] = tmpl.render(name=mod_name)
+
+        # written files
+        for path, data in new_files.items():
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, 'w') as f:
+                f.write(data)
 
     def setup_aaz_folder(self, mod_name):
         pass
 
     def load_module(self, mod_name):
         pass
-

@@ -12,5 +12,5 @@
 # from azure.cli.core.profiles import ResourceType
 
 
-def load_command_table(self, _):
+def load_command_table(self, _):  # pylint: disable=unused-argument
     pass
