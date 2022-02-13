@@ -17,7 +17,7 @@ Long help end of line
 
 - List order of current subscription
     ```bash
-        edge-order order list
+        edge-order order list --network-manager-name "testNetworkManager" --commit-type "SecurityAdmin" --configuration-ids "/subscriptions/subscriptionC/resourceGroups/resoureGroupSample/providers/Microsoft.Network/networkManagers/testNetworkManager/securityConfigurations/SampleSecurityConfig" --target-locations "eastus" --resource-group "resoureGroupSample"
     ```
 
 - List order of a resource group
