@@ -1,10 +1,16 @@
-import React, { Component } from "react";
+import React, { Component, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom"
 import { Row, Col, Navbar, Nav, Container, ListGroup } from "react-bootstrap"
-import { isThisTypeNode, Set } from "typescript";
 import type { WrapperProp } from "./SpecSelector"
-import { List } from "reactstrap";
+import { Set } from "typescript";
+
+
+import { Tree, NodeModel, DragLayerMonitorProps } from "@minoru/react-dnd-treeview";
+import { CustomData } from "./TreeView/types";
+import { CustomNode } from "./TreeView/CustomNode";
+import { CustomDragPreview } from "./TreeView/CustomDragPreview";
+import styles from "./TreeView/App.module.css";
 
 type Command = {
   help: { short: string },
@@ -31,7 +37,7 @@ type DepthMap = {
   [name: string]: number
 }
 
-type DepthToName = {
+type NumberMap = {
   [depth: number]: string
 }
 
@@ -39,16 +45,31 @@ type NameMap = {
   [name: string]: CommandGroups
 }
 
+type treeNode = {
+  id: number,
+  parent: number,
+  droppable: boolean,
+  text: string,
+  data: {
+    hasChildren: boolean
+  }
+}
+
+type treeDataType = treeNode[]
+
 type ConfigEditorState = {
   commandGroups: CommandGroups,
   commandGroupNameToDepth: DepthMap,
   commandGroupNameToChildren: NameMap,
   commandNameToDepth: DepthMap,
   selectedCommandGroupName: string,
-  selectedCommandGroupNameForDepth: DepthToName,
+  selectedCommandGroupNameForDepth: NumberMap,
   nameToCommandGroup: CommandGroups,
   currentNode: string,
-  maxDepth: number
+  maxDepth: number,
+  treeData: treeDataType,
+  currentIndex: number,
+  indexToCommandGroupName: NumberMap
 }
 
 class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
@@ -63,21 +84,37 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       selectedCommandGroupNameForDepth: {},
       nameToCommandGroup: {},
       currentNode: "",
-      maxDepth: 0
+      maxDepth: 0,
+      treeData: [],
+      currentIndex: 0,
+      indexToCommandGroupName: {}
     }
   }
 
-  parseCommandGroup = (depth: number, parentName: string, commandGroups?: CommandGroups) => {
+  parseCommandGroup = (depth: number, parentName: string, parentIndex: number, commandGroups?: CommandGroups) => {
     if (!commandGroups) {
       return
     }
+
     this.state.commandGroupNameToChildren[parentName] = commandGroups
     this.setState({ maxDepth: Math.max(depth, this.state.maxDepth) })
     Object.keys(commandGroups).map(commandGroupName => {
       let namesJoined = commandGroups[commandGroupName].names.join('/')
       this.state.commandGroupNameToDepth[namesJoined] = depth
       this.state.nameToCommandGroup[namesJoined] = commandGroups[commandGroupName]
-      this.parseCommandGroup(depth + 1, namesJoined, commandGroups[commandGroupName].commandGroups)
+      this.setState({ currentIndex: this.state.currentIndex + 1 })
+      this.state.indexToCommandGroupName[this.state.currentIndex] = namesJoined
+
+      let treeNode: treeNode = {
+        id: this.state.currentIndex,
+        parent: parentIndex,
+        text: commandGroupName,
+        droppable: true,
+        data: {hasChildren: true}
+      }
+      this.state.treeData.push(treeNode)
+
+      this.parseCommandGroup(depth + 1, namesJoined, this.state.currentIndex, commandGroups[commandGroupName].commandGroups)
       let commands = commandGroups[commandGroupName].commands
       if (!commands) {
         return
@@ -87,7 +124,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         this.state.commandNameToDepth[namesJoined] = depth
       })
     })
-    console.log(this.state)
+    this.markHasChildren()
 
   }
 
@@ -101,7 +138,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         let commandGroups: CommandGroups = res.data.commandTree.commandGroups
         this.setState({ commandGroups: commandGroups })
         let depth = 0
-        this.parseCommandGroup(depth, 'aaz', commandGroups)
+        this.parseCommandGroup(depth, 'aaz', 0, commandGroups)
         console.log(this.state)
       })
       .catch((err) => console.log(err));
@@ -164,10 +201,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       {list.map((depth) => {
         return this.displayCommandGroupForDepth(depth)
       })}
-      {/* {this.displayCommandGroupForDepth(1)} */}
     </Row>
-
-
   }
 
   displayCommandDetail = () => {
@@ -175,7 +209,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     if (!namesJoined) {
       return <div></div>
     }
-    let name = namesJoined.split('/').pop()
+    console.log(namesJoined)
     let commands = this.state.nameToCommandGroup[namesJoined].commands
     let commandsSection;
     if (!commands) {
@@ -198,14 +232,57 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     }
 
     return <div>
-      <p>Name: {name}</p>
+      <p>Name: aaz {namesJoined.replaceAll('/',' ')}</p>
       {commandsSection}
+    </div>
+  }
+
+  markHasChildren = () => {
+    let hasChildren = new Set()
+    this.state.treeData.map(node => {
+      hasChildren.add(node.parent)
+    })
+    this.state.treeData.map(node=>{
+      node.data.hasChildren = hasChildren.has(node.id)
+    })
+  }
+
+  handleDrop = (newTreeData: any) => {
+    console.log(newTreeData)
+    this.setState({ treeData: newTreeData })
+    this.markHasChildren()
+  }
+
+  handleClick = (id: NodeModel["id"]) => {
+    id = Number(id)
+    // console.log(this.state.indexToCommandGroupName[id])
+    this.setState({selectedCommandGroupName: this.state.indexToCommandGroupName[id]})    
+  }
+
+  displayCommandGroupsTree = () => {
+    return <div className={styles.app}>
+      <Tree
+        tree={this.state.treeData}
+        rootId={0}
+        render={(node: NodeModel<CustomData>, { depth, isOpen, onToggle }) => (
+          <CustomNode node={node} depth={depth} isOpen={isOpen} onToggle={onToggle} onClick={this.handleClick} />
+        )}
+        dragPreviewRender={(
+          monitorProps: DragLayerMonitorProps<CustomData>
+        ) => <CustomDragPreview monitorProps={monitorProps} />}
+        onDrop={this.handleDrop}
+        classes={{
+          root: styles.treeRoot,
+          draggingSource: styles.draggingSource,
+          dropTarget: styles.dropTarget,
+        }}
+      />
     </div>
   }
 
   render() {
     return <div className="m-1 p-1">
-      <Navbar bg="primary" variant="dark">
+      <Navbar bg="dark" variant="dark">
         <Container>
           <Navbar.Brand href="editor">Editor</Navbar.Brand>
           <Navbar.Brand href="resourceSelection">Resource Selection</Navbar.Brand>
@@ -223,7 +300,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       <Row>
         <Col lg="auto">
           {/* {this.displayCommandGroups(this.state.commandGroups)} */}
-          
+          <this.displayCommandGroupsTree/>
         </Col>
         <Col>
           <this.displayCommandDetail />

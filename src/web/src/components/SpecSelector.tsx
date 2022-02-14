@@ -333,7 +333,7 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
 
   render() {
     return <div className="m-1 p-1">
-      <Navbar bg="primary" variant="dark">
+      <Navbar bg="dark" variant="dark">
         <Container>
           <Navbar.Brand href="editor">Editor</Navbar.Brand>
           <Navbar.Brand href="resourceSelection">Resource Selection</Navbar.Brand>
@@ -348,25 +348,25 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
           </h1>
         </Col>
         <Col lg="auto">
-          {this.state.altered ? <Button onClick={this.saveResourcesAndVersion}>Save</Button> : <Button onClick={this.resetResourcesAndVersion}>Cancel</Button>}
+          {this.state.altered ? <Button variant="dark" onClick={this.saveResourcesAndVersion}>Save</Button> : <Button onClick={this.resetResourcesAndVersion}>Cancel</Button>}
         </Col>
 
       </Row>
 
       <Row>
         <Col xs="auto">
-          <DropdownButton title={this.state.mgmtPlane ? 'Management Plane' : 'Data Plane'} onSelect={this.handleTogglePlane} >
+          <DropdownButton variant="dark" title={this.state.mgmtPlane ? 'Management Plane' : 'Data Plane'} onSelect={this.handleTogglePlane} >
             <Dropdown.Item eventKey='mgmtPlane'>Management Plane</Dropdown.Item>
             <Dropdown.Item eventKey='dataPlane' disabled>Data Plane</Dropdown.Item>
           </DropdownButton>
         </Col>
         <Col xs="auto">
-          <DropdownButton title={this.state.selectedModule === "" ? "Please select a module" : this.state.selectedModule} onSelect={this.handleSelectModule} >
+          <DropdownButton variant="dark" title={this.state.selectedModule === "" ? "Please select a module" : this.state.selectedModule} onSelect={this.handleSelectModule} >
             <this.ListModules />
           </DropdownButton>
         </Col>
         <Col xs="auto">
-          <DropdownButton title={this.state.selectedResourceProvider === "" ? "Please select a resource provider" : this.state.selectedResourceProvider} onSelect={this.handleSelectResourceProvider} >
+          <DropdownButton variant="dark" title={this.state.selectedResourceProvider === "" ? "Please select a resource provider" : this.state.selectedResourceProvider} onSelect={this.handleSelectResourceProvider} >
             <this.ListResourceProviders />
           </DropdownButton>
         </Col>
@@ -376,7 +376,7 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
           </Spinner>
         </Col>) : <></>}
         <Col xs="auto">
-          <DropdownButton title={this.state.selectedVersion === "" ? "Please select a version" : this.state.selectedVersion} onSelect={this.handleSelectVersion} >
+          <DropdownButton variant="dark" title={this.state.selectedVersion === "" ? "Please select a version" : this.state.selectedVersion} onSelect={this.handleSelectVersion} >
             <this.ListVersions />
           </DropdownButton>
         </Col>
