@@ -5,21 +5,15 @@ import ListAltIcon from "@mui/icons-material/ListAlt";
 import DescriptionIcon from "@mui/icons-material/Description";
 
 type Props = {
-  droppable?: boolean;
-  fileType?: string;
+  hasChildren?: boolean;
 };
 
 export const TypeIcon: React.FC<Props> = (props) => {
-  return <FolderIcon />;
-  if (props.droppable) {
+
+  
+  if (props.hasChildren) {
     return <FolderIcon />;
-  }
-
-
-  switch (props.fileType) {
-    case "image": return <ImageIcon />;
-    case "csv": return <ListAltIcon />;
-    case "text": return <DescriptionIcon />;
-    default: return null;
+  } else {
+    return <DescriptionIcon/>
   }
 };

@@ -15,7 +15,7 @@ type Props = {
 
 export const CustomNode: React.FC<Props> = (props) => {
   const { id, droppable, data } = props.node;
-  const indent = props.depth * 5;
+  const indent = props.depth * 12;
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -36,15 +36,15 @@ export const CustomNode: React.FC<Props> = (props) => {
       {...dragOverProps}
       onClick={handleClick}
     >
-      <div className={`${styles.expandIconWrapper} ${props.isOpen ? styles.isOpen : ""}`} onClick={handleToggle}>
-        {props.node.droppable && props.node.data?.hasChildren && (
+     {props.node.droppable && props.node.data?.hasChildren && (<div className={`${styles.expandIconWrapper} ${props.isOpen ? styles.isOpen : ""}`} onClick={handleToggle}>
+        {(
           <div >
             <ArrowRightIcon />
           </div>
         )}
-      </div>
+      </div>)}
       <div>
-        <TypeIcon droppable={droppable} />
+        <TypeIcon hasChildren={props.node.data?.hasChildren} />
       </div>
       <div className={styles.labelGridItem}>
         {props.node.text}
