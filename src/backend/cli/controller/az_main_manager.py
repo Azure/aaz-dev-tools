@@ -1,8 +1,10 @@
-from utils.config import Config
 import os
 import pkgutil
-from utils import exceptions
+
+from cli.model.atomic import CLIAtomicProfile
 from cli.templates import get_templates
+from utils import exceptions
+from utils.config import Config
 
 
 class AzMainManager:
@@ -113,6 +115,17 @@ class AzMainManager:
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, 'w') as f:
                 f.write(data)
+
+        profile = CLIAtomicProfile()
+        profile.name = Config.CLI_DEFAULT_PROFILE
+
+        return {
+            "name": mod_name,
+            "folder": mod_path,
+            "profiles": [
+                profile.to_primitive()
+            ],
+        }
 
     def setup_aaz_folder(self, mod_name):
         pass

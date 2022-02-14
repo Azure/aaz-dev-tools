@@ -114,7 +114,7 @@ class AAZSpecTemplateRenderTest(CommandTestCase):
             CMDCommandExample(
                 {
                     "name": "List order of current subscription",
-                    "lines": [
+                    "commands": [
                         "edge-order order list"
                     ]
                 }
@@ -122,9 +122,8 @@ class AAZSpecTemplateRenderTest(CommandTestCase):
             CMDCommandExample(
                 {
                     "name": "List order of a resource group",
-                    "lines": [
-                        "edge-order order list \\",
-                        "-g {resource_group_name}"
+                    "commands": [
+                        "edge-order order list -g {resource_group_name}"
                     ]
                 }
             )
@@ -154,7 +153,7 @@ class AAZSpecTemplateRenderTest(CommandTestCase):
             CMDCommandExample(
                 {
                     "name": "List order of current subscription",
-                    "lines": [
+                    "commands": [
                         "edge-order order list"
                     ]
                 }
@@ -162,9 +161,8 @@ class AAZSpecTemplateRenderTest(CommandTestCase):
             CMDCommandExample(
                 {
                     "name": "List order of a resource group",
-                    "lines": [
-                        "edge-order order list \\",
-                        "-g {resource_group_name}"
+                    "commands": [
+                        "edge-order order list -g {resource_group_name}"
                     ]
                 }
             )

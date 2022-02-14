@@ -1,10 +1,12 @@
-from utils.config import Config
-import os
-import json
-from utils import exceptions
 import glob
+import json
+import os
+
+from cli.model.atomic import CLIAtomicProfile
 from cli.templates import get_templates
 from packaging import version
+from utils import exceptions
+from utils.config import Config
 
 _folder = None
 _folder_is_module = None
@@ -38,7 +40,8 @@ class AzExtensionManager:
             else:
                 folders = list(set([os.path.dirname(path) for path in module_paths]))
                 if len(folders) > 1:
-                    raise ValueError(f"Invalid Cli Extension Repo: '{cli_ext_folder}', Modules in multi folders: {folders}")
+                    raise ValueError(
+                        f"Invalid Cli Extension Repo: '{cli_ext_folder}', Modules in multi folders: {folders}")
                 _folder = folders[0]
                 assert _folder.startswith(cli_ext_folder) and len(_folder) > len(cli_ext_folder)
                 _folder_is_module = False
@@ -236,6 +239,17 @@ class AzExtensionManager:
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, 'w') as f:
                 f.write(data)
+
+        profile = CLIAtomicProfile()
+        profile.name = Config.CLI_DEFAULT_PROFILE
+
+        return {
+            "name": mod_name,
+            "folder": mod_path,
+            "profiles": [
+                profile.to_primitive()
+            ],
+        }
 
     def setup_aaz_folder(self, mod_name):
         pass

@@ -1,7 +1,7 @@
 from command.model.configuration import CMDStageField, CMDHelp, CMDCommandExample
 from command.model.configuration._fields import CMDCommandNameField, CMDVersionField
 from schematics.models import Model
-from schematics.types import ModelType, ListType, StringType, DictType
+from schematics.types import ModelType, ListType, DictType
 
 from ._resource import CMDSpecsResource
 
@@ -45,7 +45,7 @@ class CMDSpecsCommandGroup(Model):
 class CMDSpecsCommandTree(Model):
     root = ModelType(
         CMDSpecsCommandGroup
-    )   # the root node
+    )  # the root node
 
     class Options:
         serialize_when_none = False
