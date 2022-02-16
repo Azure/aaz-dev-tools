@@ -6,11 +6,13 @@ import type { WrapperProp } from "./SpecSelector"
 import { Set } from "typescript";
 
 
-import { Tree, NodeModel, DragLayerMonitorProps } from "@minoru/react-dnd-treeview";
+import { Tree, NodeModel, DragLayerMonitorProps, DropOptions } from "@minoru/react-dnd-treeview";
 import { CustomData } from "./TreeView/types";
 import { CustomNode } from "./TreeView/CustomNode";
 import { CustomDragPreview } from "./TreeView/CustomDragPreview";
 import styles from "./TreeView/App.module.css";
+
+import { CommandGroupDetails } from "./CommandGroupDetails"
 
 type Command = {
   help: { short: string },
@@ -63,9 +65,7 @@ type ConfigEditorState = {
   commandGroupNameToChildren: NameMap,
   commandNameToDepth: DepthMap,
   selectedCommandGroupName: string,
-  selectedCommandGroupNameForDepth: NumberMap,
   nameToCommandGroup: CommandGroups,
-  currentNode: string,
   maxDepth: number,
   treeData: treeDataType,
   currentIndex: number,
@@ -81,9 +81,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       commandGroupNameToChildren: {},
       commandNameToDepth: {},
       selectedCommandGroupName: "",
-      selectedCommandGroupNameForDepth: {},
       nameToCommandGroup: {},
-      currentNode: "",
       maxDepth: 0,
       treeData: [],
       currentIndex: 0,
@@ -110,7 +108,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         parent: parentIndex,
         text: commandGroupName,
         droppable: true,
-        data: {hasChildren: true}
+        data: { hasChildren: true }
       }
       this.state.treeData.push(treeNode)
 
@@ -133,13 +131,13 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     let resourceProvider = "";
     let version = "";
     let resources = new Set<string>();
-    axios.get(`/AAZ/Editor/Workspaces/${this.props.params.workspaceName}`)
+    return axios.get(`/AAZ/Editor/Workspaces/${this.props.params.workspaceName}`)
       .then(res => {
+        // console.log(res.data)
         let commandGroups: CommandGroups = res.data.commandTree.commandGroups
         this.setState({ commandGroups: commandGroups })
         let depth = 0
         this.parseCommandGroup(depth, 'aaz', 0, commandGroups)
-        console.log(this.state)
       })
       .catch((err) => console.log(err));
   }
@@ -148,93 +146,62 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     this.getSwagger()
   }
 
-  handleSelectCommandGroup = (eventKey: any) => {
-    // console.log(eventKey)
-    // console.log(this.state.nameToCommandGroup[eventKey])
-    if (this.state.selectedCommandGroupName === eventKey) {
-      return
-    }
-    this.setState({ selectedCommandGroupName: eventKey })
-    let depth = this.state.commandGroupNameToDepth[eventKey]
-
-    this.state.selectedCommandGroupNameForDepth[depth] = eventKey
-    while (++depth <= this.state.maxDepth) {
-      this.state.selectedCommandGroupNameForDepth[depth] = ""
-    }
-    this.forceUpdate()
-    // console.log(this.state.selectedCommandGroupNameForDepth)
+  refreshAll = () => {
+    this.setState({
+      commandGroups: {},
+      commandGroupNameToDepth: {},
+      commandGroupNameToChildren: {},
+      commandNameToDepth: {},
+      selectedCommandGroupName: "",
+      nameToCommandGroup: {},
+      maxDepth: 0,
+      treeData: [],
+      currentIndex: 0,
+      indexToCommandGroupName: {}
+    })
   }
 
-  displayCommandGroupForDepth = (depth: number) => {
-    let commandGroups: CommandGroups = {}
-    // console.log(depth,this.state.selectedCommandGroupNameForDepth)
-    if (depth == 0) {
-      commandGroups = this.state.commandGroups
-    } else {
-      let selectedParent = this.state.selectedCommandGroupNameForDepth[depth - 1]
-      // console.log(selectedParent)
-      if (!selectedParent) {
-        return <Col key={depth} lg="auto"></Col>
-      }
-      commandGroups = this.state.commandGroupNameToChildren[selectedParent]
-    }
-    if (!commandGroups) {
-      return <Col key={depth} lg="auto"></Col>
-    }
-    return <Col key={depth} lg="auto">
-      <ListGroup onSelect={this.handleSelectCommandGroup}>
-        {Object.keys(commandGroups).map(commandGroupName => {
-          let namesJoined = commandGroups[commandGroupName].names.join('/')
-          return <ListGroup.Item action active={this.state.selectedCommandGroupNameForDepth[depth] === namesJoined} eventKey={namesJoined} key={namesJoined}>{commandGroupName}</ListGroup.Item>
-        })}
-      </ListGroup>
-    </Col>
+  handleNameChange = (id: NodeModel["id"], newName: string) => {
+    let oldName = this.state.indexToCommandGroupName[Number(id)]
+    let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${oldName}/Rename`
+    let oldNameSplit = oldName.split('/')
+    oldNameSplit[oldNameSplit.length-1] = newName
+    let newNameJoined = oldNameSplit.join(' ')
 
+    axios.post(url, {name:newNameJoined})
+      .then(res => {
+        this.refreshAll()
+        return this.getSwagger()
+      })
+      .then(()=>{
+        this.setState({selectedCommandGroupName: newNameJoined.split(' ').join('/')})
+      })
+      .catch(err => {
+        console.error(err.response)
+      })
   }
 
-  displayCommandGroups = (commandGroups: CommandGroups) => {
-    let list = []
-    for (let i = 0; i <= this.state.maxDepth; i++) {
-      list.push(i)
-    }
-    return <Row className='g-1'>
-      {list.map((depth) => {
-        return this.displayCommandGroupForDepth(depth)
-      })}
-    </Row>
+  handleHelpChange = (name: string, help: string) => {
+    name = name.split(' ').join('/')
+    let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${name}/Rename`
+    // console.log(url)
+    // console.log(newName)
+    axios.post(url, {help:help})
+      .then(res => {
+        console.log(res)
+        window.location.reload();
+      })
+      .catch(err => {
+        console.error(err.response)
+      })
   }
+
 
   displayCommandDetail = () => {
-    let namesJoined = this.state.selectedCommandGroupName
-    if (!namesJoined) {
+    if (!this.state.selectedCommandGroupName) {
       return <div></div>
     }
-    console.log(namesJoined)
-    let commands = this.state.nameToCommandGroup[namesJoined].commands
-    let commandsSection;
-    if (!commands) {
-      commandsSection = <div></div>
-    } else {
-      commandsSection = <div>
-        <p>Commands: </p>
-        <ListGroup>
-          {commands && Object.keys(commands).map(commandName => {
-            let namesJoined = commands![commandName].names.join('/')
-            return <ListGroup.Item eventKey={namesJoined} key={namesJoined}>
-              <ListGroup>
-                <ListGroup.Item>{commandName}</ListGroup.Item>
-                <ListGroup.Item>Help: {commands![commandName].help.short}</ListGroup.Item>
-              </ListGroup>
-            </ListGroup.Item>
-          })}
-        </ListGroup>
-      </div>
-    }
-
-    return <div>
-      <p>Name: aaz {namesJoined.replaceAll('/',' ')}</p>
-      {commandsSection}
-    </div>
+    return <CommandGroupDetails commandGroup={this.state.nameToCommandGroup[this.state.selectedCommandGroupName]} onNameChange={this.handleNameChange} onHelpChange={this.handleHelpChange}/>
   }
 
   markHasChildren = () => {
@@ -242,13 +209,20 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     this.state.treeData.map(node => {
       hasChildren.add(node.parent)
     })
-    this.state.treeData.map(node=>{
+    this.state.treeData.map(node => {
       node.data.hasChildren = hasChildren.has(node.id)
     })
   }
 
-  handleDrop = (newTreeData: any) => {
-    console.log(newTreeData)
+  handleDrop = (newTreeData: any, dropOptions: DropOptions) => {
+    // console.log(dropOptions.dragSourceId, dropOptions.dropTargetId)
+    let index = Number(dropOptions.dragSourceId)
+
+    let namesJoined = this.state.indexToCommandGroupName[index]
+
+    // let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesJoined}`
+    // console.log(url)
+
     this.setState({ treeData: newTreeData })
     this.markHasChildren()
   }
@@ -256,7 +230,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   handleClick = (id: NodeModel["id"]) => {
     id = Number(id)
     // console.log(this.state.indexToCommandGroupName[id])
-    this.setState({selectedCommandGroupName: this.state.indexToCommandGroupName[id]})    
+    this.setState({ selectedCommandGroupName: this.state.indexToCommandGroupName[id] })
   }
 
   displayCommandGroupsTree = () => {
@@ -265,7 +239,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         tree={this.state.treeData}
         rootId={0}
         render={(node: NodeModel<CustomData>, { depth, isOpen, onToggle }) => (
-          <CustomNode node={node} depth={depth} isOpen={isOpen} onToggle={onToggle} onClick={this.handleClick} />
+          <CustomNode node={node} depth={depth} isOpen={isOpen} onToggle={onToggle} onClick={this.handleClick} onSubmit={this.handleNameChange}/>
         )}
         dragPreviewRender={(
           monitorProps: DragLayerMonitorProps<CustomData>
@@ -299,8 +273,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       </Row>
       <Row>
         <Col lg="auto">
-          {/* {this.displayCommandGroups(this.state.commandGroups)} */}
-          <this.displayCommandGroupsTree/>
+          <this.displayCommandGroupsTree />
         </Col>
         <Col>
           <this.displayCommandDetail />
@@ -319,3 +292,5 @@ const ConfigEditorWrapper = (props: any) => {
 }
 
 export { ConfigEditorWrapper as ConfigEditor };
+
+export type { CommandGroup as CommandGroup };

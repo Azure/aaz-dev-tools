@@ -1,30 +1,63 @@
-import React from "react";
+import React, { useState } from "react";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import { NodeModel, useDragOver } from "@minoru/react-dnd-treeview";
 import { CustomData } from "./types";
 import { TypeIcon } from "./TypeIcon";
+import IconButton from "@mui/material/IconButton";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import styles from "./CustomNode.module.css";
+
 
 type Props = {
   node: NodeModel<CustomData>;
   depth: number;
   isOpen: boolean;
   onToggle: (id: NodeModel["id"]) => void;
-  onClick: (id: NodeModel["id"])=>void
+  onClick: (id: NodeModel["id"]) => void
+  onSubmit: (id: NodeModel["id"], newName: string) => void
 };
 
 export const CustomNode: React.FC<Props> = (props) => {
-  const { id, droppable, data } = props.node;
+  const { id, droppable, data, text } = props.node;
   const indent = props.depth * 12;
+
+  const [editing, setEditing] = useState(false)
+  const [nodeName, setNodeName] = useState(text)
+  const [changingName, setChangingName] = useState(nodeName)
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    props.onToggle(props.node.id);
+    props.onToggle(id);
   };
 
-  const handleClick = (e: React.MouseEvent) =>{
+  const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    props.onClick(props.node.id);
+    props.onClick(id);
+  }
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!editing){
+      setEditing(true)
+      setChangingName(nodeName)
+    }
+
+  }
+
+  const handleChangeName = (event: any) => {
+    setChangingName(event.target.value)
+  }
+
+  const handleSubmit = (event: any) => {
+    setEditing(false)
+    setNodeName(changingName.trim())
+    props.onSubmit(id, changingName.trim())
+  }
+
+  const handleCancel = (event: any) => {
+    setEditing(false)
+    setChangingName(nodeName)
   }
 
   const dragOverProps = useDragOver(id, props.isOpen, props.onToggle);
@@ -36,7 +69,7 @@ export const CustomNode: React.FC<Props> = (props) => {
       {...dragOverProps}
       onClick={handleClick}
     >
-     {props.node.droppable && props.node.data?.hasChildren && (<div className={`${styles.expandIconWrapper} ${props.isOpen ? styles.isOpen : ""}`} onClick={handleToggle}>
+      {droppable && data?.hasChildren && (<div className={`${styles.expandIconWrapper} ${props.isOpen ? styles.isOpen : ""}`} onClick={handleToggle}>
         {(
           <div >
             <ArrowRightIcon />
@@ -44,10 +77,27 @@ export const CustomNode: React.FC<Props> = (props) => {
         )}
       </div>)}
       <div>
-        <TypeIcon hasChildren={props.node.data?.hasChildren} />
+        <TypeIcon hasChildren={data?.hasChildren} />
       </div>
-      <div className={styles.labelGridItem}>
-        {props.node.text}
+      <div className={styles.labelGridItem} onDoubleClick={handleDoubleClick}>
+        {!editing ? nodeName :
+          (
+          <div className={styles.inputWrapper}>
+            <input value={changingName}
+              onChange={handleChangeName}></input>
+            <IconButton
+              className={styles.editButton}
+              onClick={handleSubmit}
+              disabled={changingName === ""}
+            >
+              <CheckIcon className={styles.editIcon} />
+            </IconButton>
+            <IconButton className={styles.editButton} onClick={handleCancel}>
+              <CloseIcon className={styles.editIcon} />
+            </IconButton>
+          </div>
+          )
+        }
       </div>
     </div>
   );
