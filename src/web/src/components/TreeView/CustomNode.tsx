@@ -38,7 +38,7 @@ export const CustomNode: React.FC<Props> = (props) => {
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!editing){
+    if (!editing) {
       setEditing(true)
       setChangingName(nodeName)
     }
@@ -77,25 +77,26 @@ export const CustomNode: React.FC<Props> = (props) => {
         )}
       </div>)}
       <div>
-        <TypeIcon hasChildren={data?.hasChildren} />
+        <TypeIcon type={data?.type} />
       </div>
       <div className={styles.labelGridItem} onDoubleClick={handleDoubleClick}>
         {!editing ? nodeName :
           (
-          <div className={styles.inputWrapper}>
-            <input value={changingName}
-              onChange={handleChangeName}></input>
-            <IconButton
-              className={styles.editButton}
-              onClick={handleSubmit}
-              disabled={changingName === ""}
-            >
-              <CheckIcon className={styles.editIcon} />
-            </IconButton>
-            <IconButton className={styles.editButton} onClick={handleCancel}>
-              <CloseIcon className={styles.editIcon} />
-            </IconButton>
-          </div>
+            <div className={styles.inputWrapper}>
+              <input style={{ width: `${Math.max(20, changingName.length)}ch` }}
+                value={changingName}
+                onChange={handleChangeName}></input>
+              <IconButton
+                className={styles.editButton}
+                onClick={handleSubmit}
+                disabled={changingName === ""}
+              >
+                <CheckIcon className={styles.editIcon} />
+              </IconButton>
+              <IconButton className={styles.editButton} onClick={handleCancel}>
+                <CloseIcon className={styles.editIcon} />
+              </IconButton>
+            </div>
           )
         }
       </div>

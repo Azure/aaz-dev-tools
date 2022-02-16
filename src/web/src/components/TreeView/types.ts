@@ -1,4 +1,5 @@
 export type CustomData = {
-    hasChildren: boolean
+    hasChildren: boolean,
+    type: string
   };
   

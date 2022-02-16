@@ -9,15 +9,11 @@ import type { CommandGroup } from "./ConfigEditor"
 
 type Props = {
     commandGroup: CommandGroup,
-    onNameChange: (name: string, newName: string) => void
     onHelpChange: (name: string, help: string) => void
 };
 
 export const CommandGroupDetails: React.FC<Props> = (props) => {
     const { names, commands } = props.commandGroup;
-
-
-    const onNameChange = props.onNameChange
     const onHelpChange = props.onHelpChange
 
 
@@ -92,36 +88,28 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
         )
     }
 
-
-
-
-
-    const commandDetails = (
-        commands ? (<div>
-            <p>Commands: </p>
-            <ListGroup>
-                {commands && Object.keys(commands).map(commandName => {
-                    let namesJoined = commands![commandName].names.join('/')
-                    return <ListGroup.Item key={namesJoined}>
-                        <ListGroup>
-                            <ListGroup.Item><NameInputArea name={commands![commandName].names.join(' ')} prefix="aaz" initEditing={false} onSubmit={onNameChange} /></ListGroup.Item>
-                            <ListGroup.Item>Help: {commands![commandName].help.short}</ListGroup.Item>
-                        </ListGroup>
-                    </ListGroup.Item>
-                })}
-            </ListGroup>
-        </div>) : <div></div>
-
-    )
+    // const commandDetails = (
+    //     commands ? (<div>
+    //         <p>Commands: </p>
+    //         <ListGroup>
+    //             {commands && Object.keys(commands).map(commandName => {
+    //                 let namesJoined = commands![commandName].names.join('/')
+    //                 return <ListGroup.Item key={namesJoined}>
+    //                     <ListGroup>
+    //                         <ListGroup.Item><NameInputArea name={commands![commandName].names.join(' ')} prefix="aaz" initEditing={false} onSubmit={onNameChange} /></ListGroup.Item>
+    //                         <ListGroup.Item>Help: {commands![commandName].help.short}</ListGroup.Item>
+    //                     </ListGroup>
+    //                 </ListGroup.Item>
+    //             })}
+    //         </ListGroup>
+    //     </div>) : <div></div>
+    // )
+    
     return (<div>
         <div>
             {/* <NameInputArea name={names.join(' ')} prefix="Name: aaz" initEditing={false} onSubmit={onNameChange} editable={false}/> */}
             Name: aaz {names.join(' ')}
             <NameInputArea name={""} prefix="Short Help: " initEditing={true} onSubmit={onHelpChange} />
-        </div>
-
-        <div>
-            {commandDetails}
         </div>
     </div>
     );

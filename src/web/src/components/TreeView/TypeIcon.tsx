@@ -5,13 +5,14 @@ import ListAltIcon from "@mui/icons-material/ListAlt";
 import DescriptionIcon from "@mui/icons-material/Description";
 
 type Props = {
-  hasChildren?: boolean;
+  
+  type?: string;
 };
 
 export const TypeIcon: React.FC<Props> = (props) => {
 
   
-  if (props.hasChildren) {
+  if (props.type==="commandGroup") {
     return <FolderIcon />;
   } else {
     return <DescriptionIcon/>
