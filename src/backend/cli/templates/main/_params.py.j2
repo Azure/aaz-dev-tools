@@ -1,8 +1,9 @@
 {% extends "python.j2" %}
-{% block imports %}
+{% block pylint %}
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-statements
 {% endblock %}
+
 {% block code %}
 
 def load_arguments(self, _):  # pylint: disable=unused-argument

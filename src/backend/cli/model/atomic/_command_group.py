@@ -13,7 +13,12 @@ class CLIAtomicCommandGroupRegisterInfo(Model):
 class CLIAtomicCommandGroup(Model):
     names = ListType(field=CLICommandNameField(), min_size=1, required=True)  # full name of a command group
     help = ModelType(CLICommandGroupHelp, required=True)
-    register_info = ModelType(CLIAtomicCommandGroupRegisterInfo, required=False)  # register info in command group table. If it's not registered in command group table, this field is None
+    register_info = ModelType(
+        CLIAtomicCommandGroupRegisterInfo,
+        required=False,
+        serialized_name="registerInfo",
+        deserialize_from="registerInfo"
+    )  # register info in command group table. If it's not registered in command group table, this field is None
 
     command_groups = DictType(
         field=ModelType("CLIAtomicCommandGroup"),

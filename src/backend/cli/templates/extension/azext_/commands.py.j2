@@ -1,8 +1,10 @@
 {% extends "python.j2" %}
-{% block imports %}
+{% block pylint %}
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-statements
+{% endblock %}
 
+{% block imports %}
 # from azure.cli.core.commands import CliCommandType
 {% endblock %}
 {% block code %}

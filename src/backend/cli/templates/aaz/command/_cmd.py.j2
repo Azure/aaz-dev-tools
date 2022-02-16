@@ -1,0 +1,44 @@
+{% extends "python.j2" %}
+{% block pylint %}
+# pylint: disable=line-too-long
+# pylint: disable=too-many-lines
+{% endblock %}
+
+{% block imports %}
+from azure.cli.core.aaz import *
+{% endblock %}
+
+{% block code %}
+{{ "" }}
+{%- if leaf.register_info is not none %}
+@register_command(
+    "{{ leaf.names|join(' ') }}",
+    {%- if leaf.register_info.stage|is_preview %}
+    is_preview=True,
+    {%- endif %}
+    {%- if leaf.register_info.stage|is_experimental %}
+    is_experimental=True,
+    {%- endif %}
+)
+{%- endif %}
+class {{ leaf.names[-1]|camel_case }}(AAZCommand):
+    """{{ leaf.help.short }}
+    {%- if leaf.help.long is not none and leaf.help.long|length %}
+
+    {{ leaf.help.long.split('\n')|join('\n    ') }}
+    {%- endif %}
+    {%- if leaf.help.examples is not none and leaf.help.examples|length %}
+    {%- for example in leaf.help.examples %}
+
+    :example: {{ example.name }}
+        {%- for command in example.commands %}
+        az {{ command }}
+        {%- endfor %}
+    {%- endfor %}
+    {%- endif %}
+    """
+    pass
+
+
+__all__ = ["{{ leaf.names[-1]|camel_case }}"]
+{% endblock %}

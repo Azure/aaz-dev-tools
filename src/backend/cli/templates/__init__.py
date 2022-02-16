@@ -11,6 +11,19 @@ def get_templates():
         env = Environment(loader=FileSystemLoader(searchpath=os.path.dirname(os.path.abspath(__file__))))
         env.filters.update(custom_filters)
         _templates = {
+            'aaz': {
+                '__init__.py': env.get_template("aaz/__init__.py.j2"),
+                'profile': {
+                    '__init__.py': env.get_template("aaz/profile/__init__.py.j2"),
+                },
+                'group': {
+                    '__cmd_group.py': env.get_template("aaz/group/__cmd_group.py.j2"),
+                    '__init__.py': env.get_template("aaz/group/__init__.py.j2"),
+                },
+                'command': {
+                    '_cmd.py': env.get_template("aaz/command/_cmd.py.j2"),
+                }
+            },
             'extension': {
                 "HISTORY.rst": env.get_template("extension/HISTORY.rst.j2"),
                 "readme.md": env.get_template("extension/readme.md.j2"),

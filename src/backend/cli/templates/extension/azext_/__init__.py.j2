@@ -1,8 +1,10 @@
 {% extends "python.j2" %}
+
 {% block imports %}
 from azure.cli.core import AzCommandsLoader
 from azext_{{ mod_name|snake_case }}._help import helps  # pylint: disable=unused-import
 {% endblock %}
+
 {% block code %}
 
 class {{ mod_name|camel_case }}CommandsLoader(AzCommandsLoader):
