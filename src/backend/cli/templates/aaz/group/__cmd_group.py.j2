@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block imports %}
-from azure.cli.core.aaz._command import AAZCommandGroup{% if node.register_info is not none %}, register_command_group{% endif %}
+from azure.cli.core.aaz import *
 {% endblock %}
 
 {% block code %}
