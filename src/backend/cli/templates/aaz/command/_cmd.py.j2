@@ -12,7 +12,7 @@ from azure.cli.core.aaz import *
 {{ "" }}
 {%- if leaf.register_info is not none %}
 @register_command(
-    "{{ leaf.names|join(' ') }}",
+    "{{ leaf.name }}",
     {%- if leaf.register_info.stage|is_preview %}
     is_preview=True,
     {%- endif %}
@@ -21,7 +21,7 @@ from azure.cli.core.aaz import *
     {%- endif %}
 )
 {%- endif %}
-class {{ leaf.names[-1]|camel_case }}(AAZCommand):
+class {{ leaf.cls_name }}(AAZCommand):
     """{{ leaf.help.short }}
     {%- if leaf.help.long is not none and leaf.help.long|length %}
 
@@ -40,5 +40,5 @@ class {{ leaf.names[-1]|camel_case }}(AAZCommand):
     pass
 
 
-__all__ = ["{{ leaf.names[-1]|camel_case }}"]
+__all__ = ["{{ leaf.cls_name }}"]
 {% endblock %}

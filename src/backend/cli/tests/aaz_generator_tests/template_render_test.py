@@ -3,6 +3,7 @@ import os
 from cli.templates import get_templates
 from cli.tests.common import CommandTestCase
 from cli.model.atomic import CLIAtomicCommandGroup, CLIStageEnum, CLIAtomicCommand
+from cli.controller.az_command_generator import AzCommandGenerator
 
 
 class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
@@ -74,7 +75,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         })
 
         data = tmpl.render(
-            leaf=leaf
+            leaf=AzCommandGenerator(leaf)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", "vnet", "_show.py")
