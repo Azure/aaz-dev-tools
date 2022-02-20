@@ -1,12 +1,13 @@
-from cli.model.atomic._fields import CLICommandNameField, CLIStageField, CLIVersionField, CLICommandConfigurationField
+from cli.model.atomic._fields import CLICommandNameField, CLIVersionField, CLICommandConfigurationField
 from cli.model.atomic._help import CLICommandHelp
 from cli.model.atomic._resource import CLISpecsResource
 from schematics.models import Model
+from utils.stage import AAZStageField
 from schematics.types import ModelType, ListType
 
 
 class CLIAtomicCommandRegisterInfo(Model):
-    stage = CLIStageField(required=True)
+    stage = AAZStageField(required=True)
     # TODO: add support for deprecate_info
 
 

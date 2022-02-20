@@ -1,5 +1,5 @@
 from jinja2.filters import environmentfilter
-from cli.model.atomic import CLIStageEnum
+from utils.stage import AAZStageEnum
 from utils.case import to_camel_case, to_snack_case
 
 
@@ -15,17 +15,17 @@ def snake_case(env, name):
 
 @environmentfilter
 def is_experimental(env, stage):
-    return stage == CLIStageEnum.Experimental
+    return stage == AAZStageEnum.Experimental
 
 
 @environmentfilter
 def is_preview(env, stage):
-    return stage == CLIStageEnum.Preview
+    return stage == AAZStageEnum.Preview
 
 
 @environmentfilter
 def is_stable(env, stage):
-    return stage == CLIStageEnum.Stable
+    return stage == AAZStageEnum.Stable
 
 
 custom_filters = {

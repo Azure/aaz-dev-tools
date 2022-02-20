@@ -36,24 +36,6 @@ class CLICommandConfigurationField(ModelType):
         return None  # return None when value is false to hide field with `serialize_when_none=False`
 
 
-class CLIStageEnum:
-    Experimental = "Experimental"
-    Preview = "Preview"
-    Stable = "Stable"
-
-
-class CLIStageField(StringType):
-
-    def __init__(self, *args, **kwargs):
-        super(CLIStageField, self).__init__(
-            choices=(CLIStageEnum.Experimental, CLIStageEnum.Preview, CLIStageEnum.Stable),
-            default=CLIStageEnum.Stable,
-            serialize_when_none=False,
-            *args,
-            **kwargs
-        )
-
-
 class CLIVersionField(StringType):
 
     def __init__(self, *args, **kwargs):

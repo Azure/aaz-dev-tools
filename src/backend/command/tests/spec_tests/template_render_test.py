@@ -1,6 +1,7 @@
 import os
 
-from command.model.configuration import CMDHelp, CMDCommandExample, CMDStageEnum
+from command.model.configuration import CMDHelp, CMDCommandExample
+from utils.stage import AAZStageEnum
 from command.model.specs import CMDSpecsCommandGroup, CMDSpecsCommand, CMDSpecsCommandVersion, CMDSpecsResource, \
     CMDSpecsCommandTree
 from command.templates import get_templates
@@ -132,7 +133,7 @@ class AAZSpecTemplateRenderTest(CommandTestCase):
 
         v_2 = CMDSpecsCommandVersion()
         v_2.name = "2020-12-01-preview"
-        v_2.stage = CMDStageEnum.Preview
+        v_2.stage = AAZStageEnum.Preview
         v_2.resources = [
             CMDSpecsResource(
                 {

@@ -37,8 +37,57 @@ class {{ leaf.cls_name }}(AAZCommand):
     {%- endfor %}
     {%- endif %}
     """
-    pass
+    {%- if leaf.support_no_wait %}
+    {{ "" }}
+    AZ_SUPPORT_NO_WAIT = True
+    {%- endif %}
 
+    def _handler(self, command_args):
+        super()._handler(command_args)
+        {%- if leaf.lro_counts > 0 %}
+        return self.build_lro_poller(self._execute_operations(), result_callback={% if leaf.has_outputs() %}self._output{% else %}None{% endif %})
+        {%- else %}
+        self._execute_operations()
+        return {% if leaf.has_outputs() %}self._output(){% else %}None{% endif %}
+        {%- endif %}
+
+    {%- if leaf.has_arguments() %}
+    {{ "" }}
+    @classmethod
+    def _build_arguments_schema(cls, *args, **kwargs):
+        pass
+    {%- endif %}
+
+    def _execute_operations(self):
+        {%- for var, name, condition in leaf.conditions %}
+        {{ name }} = {{ leaf.render_condition(condition) }}
+        {%- endfor %}
+        {%- for op_cls_name, is_long_running, operation in leaf.operations %}
+
+        {%- if operation.when is not none and operation.when|length %}
+        if {{ leaf.render_operation_when(operation) }}:
+        {{ "    " }}
+        {%- else %}
+        {{ "" }}
+        {%- endif %}
+        {%- if is_long_running %}yield {% endif %}self.{{ op_cls_name }}(ctx=self.ctx)()
+        {%- endfor %}
+    {%- if leaf.has_outputs() %}
+    {{ "" }}
+    def _output(self, *args, **kwargs):
+        pass
+    {%- endif %}
+    {%- for op_cls_name, is_long_running, operation in leaf.http_operations %}
+
+    class {{ op_cls_name }}(AAZHttpOperation):
+        CLIENT_TYPE = "{{ leaf.client_type }}"
+        ERROR_FORMAT = "{{ leaf.get_error_format(operation) }}"
+
+
+    {%- endfor %}
+    {%- for op_cls_name, operation in leaf.instance_update_operations %}
+
+    {%- endfor %}
 
 __all__ = ["{{ leaf.cls_name }}"]
 {% endblock %}

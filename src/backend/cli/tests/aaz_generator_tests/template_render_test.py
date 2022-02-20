@@ -2,7 +2,8 @@ import os
 
 from cli.templates import get_templates
 from cli.tests.common import CommandTestCase
-from cli.model.atomic import CLIAtomicCommandGroup, CLIStageEnum, CLIAtomicCommand
+from cli.model.atomic import CLIAtomicCommandGroup, CLIAtomicCommand
+from utils.stage import AAZStageEnum
 from cli.controller.az_command_generator import AzCommandGenerator
 
 
@@ -17,7 +18,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
                 "long": "To learn more about Virtual Networks visit\nhttps://docs.microsoft.com/azure/virtual-network/virtual-network-manage-network."
             },
             "registerInfo": {
-                "stage": CLIStageEnum.Experimental
+                "stage": AAZStageEnum.Experimental
             }
         })
         data = tmpl.render(
@@ -70,7 +71,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
                 ]
             },
             "registerInfo": {
-                "stage": CLIStageEnum.Stable
+                "stage": AAZStageEnum.Stable
             }
         })
 

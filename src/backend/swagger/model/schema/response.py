@@ -1,12 +1,12 @@
 from schematics.models import Model
 from schematics.types import BaseType, StringType, ModelType, DictType, PolyModelType
 
-from command.model.configuration import CMDHttpResponse, CMDHttpResponseHeader, CMDHttpResponseJsonBody, CMDObjectSchemaBase, \
-    CMDArraySchemaBase, CMDHttpResponseHeaderItem, CMDClsSchemaBase
-from command.model.configuration import CMDResponseJson, CMDBooleanSchemaBase, CMDStringSchemaBase, CMDFloatSchemaBase, \
-    CMDIntegerSchemaBase
+from command.model.configuration import CMDHttpResponse, CMDHttpResponseHeader, CMDHttpResponseJsonBody, \
+    CMDObjectSchemaBase, CMDArraySchemaBase, CMDHttpResponseHeaderItem, CMDClsSchemaBase, CMDResponseJson, \
+    CMDBooleanSchemaBase, CMDStringSchemaBase, CMDFloatSchemaBase, CMDIntegerSchemaBase
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.utils import exceptions
+from utils.error_format import AAZErrorFormatEnum
 from .fields import XmsExamplesField, XmsErrorResponseField, XNullableField
 from .header import Header
 from .reference import Linkable
@@ -16,7 +16,8 @@ from .schema import Schema, ReferenceSchema, schema_and_reference_schema_claim_f
 class Response(Model, Linkable):
     """Describes a single response from an API Operation."""
 
-    description = StringType(required=True)  # A short description of the response. GFM syntax can be used for rich text representation.
+    description = StringType(
+        required=True)  # A short description of the response. GFM syntax can be used for rich text representation.
     schema = PolyModelType(
         [ModelType(Schema), ModelType(ReferenceSchema)],
         claim_function=schema_and_reference_schema_claim_function
@@ -27,7 +28,8 @@ class Response(Model, Linkable):
     x_ms_examples = XmsExamplesField()  # TODO:
     x_ms_error_response = XmsErrorResponseField()
 
-    x_nullable = XNullableField(default=False)  # TODO: # when true, specifies that null is a valid value for the associated schema
+    x_nullable = XNullableField(
+        default=False)  # TODO: # when true, specifies that null is a valid value for the associated schema
 
     def link(self, swagger_loader, *traces, **kwargs):
         if self.is_linked():
@@ -56,8 +58,9 @@ class Response(Model, Linkable):
         return False
 
     def to_cmd(self, builder, is_error=False, status_codes=None, **kwargs):
+        is_error = self.x_ms_error_response or is_error
         response = CMDHttpResponse()
-        response.is_error = self.x_ms_error_response or is_error
+        response.is_error = is_error
         response.status_codes = sorted(status_codes or [])
         builder.setup_description(response, self)
 
@@ -70,7 +73,12 @@ class Response(Model, Linkable):
                 response.header.items.append(header.name)
 
         if self.schema:
-            v = builder(self.schema, mutability=MutabilityEnum.Read, in_base=True, support_cls_schema=True)
+            v = builder(
+                self.schema,
+                mutability=MutabilityEnum.Read,
+                in_base=True,
+                support_cls_schema=True,
+            )
             if v.frozen:
                 raise exceptions.InvalidSwaggerValueError(
                     msg="Invalid Response Schema. It's None.",
@@ -87,6 +95,19 @@ class Response(Model, Linkable):
                     CMDClsSchemaBase,
             )):
                 model = CMDResponseJson()
+                if is_error:
+                    error_format = AAZErrorFormatEnum.classify_error_format(builder, v)
+                    if error_format:
+                        err_schema = CMDClsSchemaBase()
+                        err_schema.read_only = v.read_only
+                        err_schema.frozen = v.frozen
+                        err_schema._type = f"@{error_format}"
+                        v = err_schema
+                    else:
+                        raise exceptions.InvalidSwaggerValueError(
+                            msg="Error response schema is not supported yet.",
+                            key=self.traces,
+                        )
                 model.schema = v
             else:
                 raise exceptions.InvalidSwaggerValueError(

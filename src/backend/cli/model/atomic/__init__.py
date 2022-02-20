@@ -4,4 +4,4 @@ from ._example import CLICommandExample
 from ._help import CLICommandHelp, CLICommandGroupHelp
 from ._profile import CLIAtomicProfile
 from ._resource import CLISpecsResource
-from ._fields import CLIStageEnum
+from utils.stage import AAZStageEnum

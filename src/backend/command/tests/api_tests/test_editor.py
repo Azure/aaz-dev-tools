@@ -1,7 +1,7 @@
 import json
 import os
 
-from command.model.configuration import CMDStageEnum
+from utils.stage import AAZStageEnum
 from command.controller.workspace_cfg_editor import WorkspaceCfgEditor
 from command.controller.workspace_manager import WorkspaceManager
 from command.tests.common import CommandTestCase, workspace_name
@@ -311,20 +311,20 @@ class APIEditorTest(CommandTestCase):
                 "help": {
                     "short": "This is a short help",
                 },
-                "stage": CMDStageEnum.Preview,
+                "stage": AAZStageEnum.Preview,
             })
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
             self.assertTrue(data['names'] == ["edge-order", "order", "item"])
             self.assertTrue(data['help']['short'] == "This is a short help")
-            self.assertTrue(data['stage'] == CMDStageEnum.Preview)
-            self.assertTrue(data['commands']['create']['stage'] == CMDStageEnum.Preview)
+            self.assertTrue(data['stage'] == AAZStageEnum.Preview)
+            self.assertTrue(data['commands']['create']['stage'] == AAZStageEnum.Preview)
 
             rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item/Leaves/create")
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
             self.assertTrue(data['names'] == ['edge-order', 'order', 'item', 'create'])
-            self.assertTrue(data['stage'] == CMDStageEnum.Preview)
+            self.assertTrue(data['stage'] == AAZStageEnum.Preview)
 
             rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item/Leaves/create", json={
                 "help": {
@@ -334,11 +334,11 @@ class APIEditorTest(CommandTestCase):
                         "help line 2"
                     ]
                 },
-                "stage": CMDStageEnum.Experimental,
+                "stage": AAZStageEnum.Experimental,
                 "examples": [
                     {
                         "name": "create edge order item",
-                        "lines": [
+                        "commands": [
                             "edge-order order item create -g {}"
                         ]
                     }
@@ -346,13 +346,13 @@ class APIEditorTest(CommandTestCase):
             })
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
-            self.assertTrue(data['stage'] == CMDStageEnum.Experimental)
+            self.assertTrue(data['stage'] == AAZStageEnum.Experimental)
             self.assertTrue(data['help']['short'] == "This is command help")
             self.assertTrue(data['help']['lines'] == ["help line 1", "help line 2"])
             self.assertTrue(data['examples'] == [
                 {
                     "name": "create edge order item",
-                    "lines": [
+                    "commands": [
                         "edge-order order item create -g {}"
                     ]
                 }
@@ -361,7 +361,7 @@ class APIEditorTest(CommandTestCase):
             rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item")
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
-            self.assertTrue(data['commands']['create']['stage'] == CMDStageEnum.Experimental)
+            self.assertTrue(data['commands']['create']['stage'] == AAZStageEnum.Experimental)
 
     @workspace_name("test_workspace_command_merge")
     def test_workspace_command_merge(self, ws_name):
@@ -516,7 +516,7 @@ class APIEditorTest(CommandTestCase):
                 "help": {
                     "short": "Manage edge order.",
                 },
-                "stage": CMDStageEnum.Preview
+                "stage": AAZStageEnum.Preview
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -545,7 +545,7 @@ class APIEditorTest(CommandTestCase):
                 "help": {
                     "short": "Manage the order item of edge order.",
                 },
-                "stage": CMDStageEnum.Preview
+                "stage": AAZStageEnum.Preview
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -556,7 +556,7 @@ class APIEditorTest(CommandTestCase):
                         "Provides the list of configurations for the given product family, product line and product.",
                     ]
                 },
-                "stage": CMDStageEnum.Experimental
+                "stage": AAZStageEnum.Experimental
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -564,7 +564,7 @@ class APIEditorTest(CommandTestCase):
                 "help": {
                     "short": "List the addresses of the edge order.",
                 },
-                "stage": CMDStageEnum.Experimental
+                "stage": AAZStageEnum.Experimental
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -572,7 +572,7 @@ class APIEditorTest(CommandTestCase):
                 "help": {
                     "short": "List the orders of the edge order.",
                 },
-                "stage": CMDStageEnum.Experimental
+                "stage": AAZStageEnum.Experimental
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -580,7 +580,7 @@ class APIEditorTest(CommandTestCase):
                 "help": {
                     "short": "List the product families of the edge order.",
                 },
-                "stage": CMDStageEnum.Experimental
+                "stage": AAZStageEnum.Experimental
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -588,7 +588,7 @@ class APIEditorTest(CommandTestCase):
                 "help": {
                     "short": "List the product families metadata of the edge order.",
                 },
-                "stage": CMDStageEnum.Experimental
+                "stage": AAZStageEnum.Experimental
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -691,7 +691,7 @@ class APIEditorTest(CommandTestCase):
                 "help": {
                     "short": "Manage edge order.",
                 },
-                "stage": CMDStageEnum.Preview
+                "stage": AAZStageEnum.Preview
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -699,7 +699,7 @@ class APIEditorTest(CommandTestCase):
                 "help": {
                     "short": "Manage edge order.",
                 },
-                "stage": CMDStageEnum.Preview
+                "stage": AAZStageEnum.Preview
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -707,7 +707,7 @@ class APIEditorTest(CommandTestCase):
                 "help": {
                     "short": "Manage edge order.",
                 },
-                "stage": CMDStageEnum.Preview
+                "stage": AAZStageEnum.Preview
             })
             self.assertTrue(rv.status_code == 200)
 
