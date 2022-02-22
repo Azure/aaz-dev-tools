@@ -230,12 +230,15 @@ class CMDBuilder:
             return model
 
         if name not in self.cls_definitions:
-            self.cls_definitions[name] = {"count": 1}   # register in cls_definitions first in case of loop reference below
-            model = self(schema.ref_instance, **kwargs)
-            if isinstance(model, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-                self.cls_definitions[name]['model'] = model  # when self.cls_definitions[name]['count'] > 1, the loop reference exist
+            if support_cls_schema:
+                self.cls_definitions[name] = {"count": 1}   # register in cls_definitions first in case of loop reference below
+                model = self(schema.ref_instance, **kwargs)
+                if isinstance(model, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                    self.cls_definitions[name]['model'] = model  # when self.cls_definitions[name]['count'] > 1, the loop reference exist
+                else:
+                    del self.cls_definitions[name]
             else:
-                del self.cls_definitions[name]
+                model = self(schema.ref_instance, **kwargs)
         else:
             if support_cls_schema:
                 self.cls_definitions[name]['count'] += 1
