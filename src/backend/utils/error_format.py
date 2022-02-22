@@ -6,6 +6,10 @@ class AAZErrorFormatEnum:
     MgmtErrorFormat = "MgmtErrorFormat"  # registered in azure.cli.core.aaz._error_format
 
     @classmethod
+    def validate(cls, format):
+        return format in (cls.ODataV4Format, cls.MgmtErrorFormat)
+
+    @classmethod
     def classify_error_format(cls, builder, schema):
         from command.model.configuration import CMDObjectSchemaBase, CMDObjectSchema, CMDClsSchemaBase
         if isinstance(schema, CMDClsSchemaBase):

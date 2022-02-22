@@ -38,7 +38,7 @@ class {{ leaf.cls_name }}(AAZCommand):
     {%- endif %}
     """
     {%- if leaf.support_no_wait %}
-    {{ "" }}
+
     AZ_SUPPORT_NO_WAIT = True
     {%- endif %}
 
@@ -50,11 +50,11 @@ class {{ leaf.cls_name }}(AAZCommand):
         self._execute_operations()
         return {% if leaf.has_outputs() %}self._output(){% else %}None{% endif %}
         {%- endif %}
-
     {%- if leaf.has_arguments() %}
-    {{ "" }}
+
     @classmethod
     def _build_arguments_schema(cls, *args, **kwargs):
+        # TODO:
         pass
     {%- endif %}
 
@@ -62,30 +62,144 @@ class {{ leaf.cls_name }}(AAZCommand):
         {%- for var, name, condition in leaf.conditions %}
         {{ name }} = {{ leaf.render_condition(condition) }}
         {%- endfor %}
-        {%- for op_cls_name, is_long_running, operation in leaf.operations %}
+        {%- for operation in leaf.operations %}
 
         {%- if operation.when is not none and operation.when|length %}
-        if {{ leaf.render_operation_when(operation) }}:
+        if {{ leaf.render_operation_when(operation.when) }}:
         {{ "    " }}
         {%- else %}
         {{ "" }}
         {%- endif %}
-        {%- if is_long_running %}yield {% endif %}self.{{ op_cls_name }}(ctx=self.ctx)()
+        {%- if operation.is_long_running %}yield {% endif %}self.{{ operation.name }}(ctx=self.ctx)()
         {%- endfor %}
     {%- if leaf.has_outputs() %}
-    {{ "" }}
+
     def _output(self, *args, **kwargs):
         pass
     {%- endif %}
-    {%- for op_cls_name, is_long_running, operation in leaf.http_operations %}
+    {%- for operation in leaf.http_operations %}
 
-    class {{ op_cls_name }}(AAZHttpOperation):
+    class {{ operation.name }}(AAZHttpOperation):
         CLIENT_TYPE = "{{ leaf.client_type }}"
-        ERROR_FORMAT = "{{ leaf.get_error_format(operation) }}"
+        ERROR_FORMAT = "{{ operation.error_format }}"
 
+        def __call__(self, *args, **kwargs):
+            request = self.make_request()
+            session = self.client.send_request(request=request, stream=False, **kwargs)
+            {%- for response in self.success_responses %}
+            if session.http_response.status_code in {{ response.status_codes|constant_convert }}:
+                {%- if operation.is_long_running %}
+                return self.client.build_lro_polling(
+                    {% if leaf.support_no_wait %}self.ctx.args.no_wait{% else %}False{% endif %},
+                    session,
+                    deserialization_callback=self.{{ response.callback_name }},
+                    lro_options={{ operation.lro_options|constant_convert }},
+                    path_format_arguments=self.url_parameters,
+                )
+                {%- else %}
+                return self.{{ response.callback_name }}(session)
+                {%- endif %}
+            {%- endfor %}
+            return self.on_error(session)
+
+        @property
+        def url(self):
+            return self.client.format_url(
+                "{{ operation.url }}",
+                **self.url_parameters
+            )
+
+        @property
+        def method(self):
+            return "{{ operation.method }}"
+        {%- if operation.url_parameters is not none and operation.url_parameters | length %}
+
+        @property
+        def url_parameters(self):
+            parameters = {
+                {%- for name, data, is_constant in self.url_parameters %}
+                {%- if is_constant %}
+                **self.serialize_url_param("{{ name }}", {{ data|constant_convert }}),
+                {%- else %}
+                **self.serialize_url_param("{{ name }}", {{ data }}),
+                {%- endfor %}
+            }
+            return parameters
+        {%- endif %}
+        {%- if operation.query_parameters is not none and operation.query_parameters | length %}
+
+        @property
+        def query_parameters(self):
+            parameters = {
+                {%- for name, data, is_constant in self.query_parameters %}
+                {%- if is_constant %}
+                **self.serialize_query_param("{{ name }}", {{ data|constant_convert }}),
+                {%- else %}
+                **self.serialize_query_param("{{ name }}", {{ data }}),
+                {%- endfor %}
+            }
+            return parameters
+        {%- endif %}
+        {%- if operation.header_parameters is not none and operation.header_parameters | length %}
+
+        @property
+        def header_parameters(self):
+            parameters = {
+                {%- for name, data, is_constant in self.header_parameters %}
+                {%- if is_constant %}
+                **self.serialize_header_param("{{ name }}", {{ data|constant_convert }}),
+                {%- else %}
+                **self.serialize_header_param("{{ name }}", {{ data }}),
+                {%- endfor %}
+            }
+            return parameters
+        {%- endif %}
+        {%- if operation.content is not none %}
+
+        @property
+        def content(self):
+            # TODO:
+            return None
+        {%- endif %}
+        {%- if operation.form_content is not none %}
+
+        @property
+        def form_content(self):
+            # TODO:
+            return None
+        {%- endif %}
+        {%- if operation.stream_content is not none %}
+
+        @property
+        def stream_content(self):
+            # TODO:
+            return None
+        {%- endif %}
+        {%- for response in self.success_responses %}
+
+        def {{ response.callback_name }}(self, session):
+            {%- if response.variant_name is not none %}
+            data = self.deserialize_http_content(session)
+            self.ctx.set_var(
+                '{{ response.variant_name }}',
+                data,
+                schema_builder=self.{{ response.schema_builder }}
+            )
+            {%- else %}
+            pass
+            {%- endif %}
+        {%- if response.variant_name is not none %}
+
+        def {{ response.schema_builder }}():
+            # TODO:
+            pass
+        {%- endif %}
+        {%- endfor %}
+    {%- endfor %}
+    {%- for operation in leaf.json_update_operations %}
 
     {%- endfor %}
-    {%- for op_cls_name, operation in leaf.instance_update_operations %}
+    {%- for operation in leaf.generic_update_operations %}
 
     {%- endfor %}
 

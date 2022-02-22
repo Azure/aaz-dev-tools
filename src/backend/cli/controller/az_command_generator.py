@@ -5,6 +5,8 @@ from command.model.configuration import CMDCommand, CMDHttpOperation, CMDConditi
 from utils.case import to_camel_case
 from utils import exceptions
 from utils.plane import PlaneEnum
+from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator, \
+    AzGenericUpdateOperationGenerator
 
 
 class AzCommandGenerator:
@@ -20,8 +22,16 @@ class AzCommandGenerator:
             for idx, condition in self.cmd.cfg.conditions:
                 self.conditions.append((condition.var, f"condition_{idx}", condition))
 
+        self._arguments = {}
+        self._variants = {}
+
         self.lro_counts = 0
+
         self.operations = []
+        self.http_operations = []
+        self.json_update_operations = []
+        self.generic_update_operations = []
+
         json_update_counts = 0
         generic_update_counts = 0
         for operation in self.cmd.cfg.operations:
@@ -30,16 +40,22 @@ class AzCommandGenerator:
                 op_cls_name = to_camel_case(operation.operation_id)
                 if operation.long_running:
                     lr = True
+                op = AzHttpOperationGenerator(op_cls_name, self._arguments, self._variants, operation)
+                self.http_operations.append(op)
             elif isinstance(operation, CMDInstanceUpdateOperation):
                 if isinstance(operation.instance_update, CMDJsonInstanceUpdateAction):
                     op_cls_name = f'InstanceUpdateByJson'
                     if json_update_counts > 0:
                         op_cls_name += f'_{json_update_counts}'
+                    op = AzJsonUpdateOperationGenerator(op_cls_name, self._arguments, self._variants, operation)
+                    self.json_update_operations.append(op)
                     json_update_counts += 1
                 elif isinstance(operation.instance_update, CMDGenericInstanceUpdateAction):
                     op_cls_name = f'InstanceUpdateByGeneric'
                     if generic_update_counts > 0:
                         op_cls_name += f'_{generic_update_counts}'
+                    op = AzGenericUpdateOperationGenerator(op_cls_name, self._arguments, self._variants, operation)
+                    self.generic_update_operations.append(op)
                     generic_update_counts += 1
                 else:
                     raise NotImplementedError()
@@ -47,7 +63,7 @@ class AzCommandGenerator:
                 raise NotImplementedError()
             if lr:
                 self.lro_counts += 1
-            self.operations.append([op_cls_name, lr, operation])
+            self.operations.append(op)
 
         self.support_no_wait = self.lro_counts == 1  # not support no wait if there are multiple long running operations
 
@@ -59,8 +75,6 @@ class AzCommandGenerator:
                 raise ValueError(f"Find multiple planes in a command: {resource.plane}, {self.plane}")
 
         self.client_type = PlaneEnum.http_client(self.plane)
-
-        self._variants = {}
 
     @property
     def help(self):
@@ -119,12 +133,11 @@ class AzCommandGenerator:
             raise NotImplementedError()
         return result
 
-    def render_operation_when(self, operation):
-        assert isinstance(operation, CMDOperation) and operation.when
+    def render_operation_when(self, when):
         results = []
-        for condition_var in operation.when:
+        for condition_var in when:
             condition_name = None
-            for c_v, c_name, _ in self.operations:
+            for c_v, c_name, _ in self.conditions:
                 if c_v == condition_var:
                     condition_name = c_name
                     break
