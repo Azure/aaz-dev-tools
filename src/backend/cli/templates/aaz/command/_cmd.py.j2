@@ -50,12 +50,36 @@ class {{ leaf.cls_name }}(AAZCommand):
         self._execute_operations()
         return {% if leaf.has_outputs() %}self._output(){% else %}None{% endif %}
         {%- endif %}
-    {%- if leaf.has_arguments() %}
+    {%- if leaf.arg_groups is not none and leaf.arg_groups|length %}
+
+    {{ leaf.ARGS_SCHEMA_NAME }} = None
 
     @classmethod
     def _build_arguments_schema(cls, *args, **kwargs):
-        # TODO:
-        pass
+        if cls.{{ leaf.ARGS_SCHEMA_NAME }} is not None:
+            return cls.{{ leaf.ARGS_SCHEMA_NAME }}
+        cls.{{ leaf.ARGS_SCHEMA_NAME }} = super()._build_arguments_schema(*args, **kwargs)
+
+        {%- for arg_group in leaf.arg_groups %}
+
+        # define Arg Group "{{ arg_group.name }}"
+        {%- for scope, scope_define, arguments in arg_group.iter_scopes():
+
+        {{ scope }} = {{ scope_define }}
+
+        {%- for arg_name, arg_type, arg_kwargs, cls_builder_name in arguments %}
+        {{ scope }}.{{ arg_name }} = {{ arg_type }}(
+            {%- for key, value in arg_kwargs.items() %}
+            {{ key }}={{ value|constant_convert }},
+            {%- endfor %}
+        )
+        {%- if cls_builder_name is not none %}
+        {{ cls_builder_name }}({{ scope }})
+        {%- endif %}
+        {%- endfor %}
+
+        {%- endfor %}
+        return {{ leaf.ARGS_SCHEMA_NAME }}
     {%- endif %}
 
     def _execute_operations(self):
@@ -75,6 +99,7 @@ class {{ leaf.cls_name }}(AAZCommand):
     {%- if leaf.has_outputs() %}
 
     def _output(self, *args, **kwargs):
+        # TODO:
         pass
     {%- endif %}
     {%- for operation in leaf.http_operations %}

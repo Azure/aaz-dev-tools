@@ -1,6 +1,7 @@
 from ._arg import CMDArgEnumItem, CMDArgEnum, \
     CMDArgDefault, CMDArgBlank, \
     CMDArgBase, CMDArg, \
+    CMDClsArgBase, CMDClsArg, \
     CMDStringArgBase, CMDStringArg, \
     CMDByteArgBase, CMDByteArg, \
     CMDBinaryArgBase, CMDBinaryArg, \

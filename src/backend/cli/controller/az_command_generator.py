@@ -7,9 +7,12 @@ from utils import exceptions
 from utils.plane import PlaneEnum
 from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator, \
     AzGenericUpdateOperationGenerator
+from .az_arg_group_generator import AzArgGroupGenerator
 
 
 class AzCommandGenerator:
+
+    ARGS_SCHEMA_NAME = "_args_schema"
 
     def __init__(self, cmd: CLIAtomicCommand):
         self.cmd = cmd
@@ -22,9 +25,20 @@ class AzCommandGenerator:
             for idx, condition in self.cmd.cfg.conditions:
                 self.conditions.append((condition.var, f"condition_{idx}", condition))
 
-        self._arguments = {}
         self._variants = {}
 
+        # prepare arguments
+        self._arguments = {}
+
+        self.arg_groups = []
+        self._arg_cls_reference = {}    # shared in arg_groups
+        if self.cmd.cfg.arg_groups:
+            for arg_group in self.cmd.cfg.arg_groups:
+                if arg_group.args:
+                    self.arg_groups.append(AzArgGroupGenerator(
+                        self.ARGS_SCHEMA_NAME, self._arguments, self._arg_cls_reference, arg_group))
+
+        # prepare operations
         self.lro_counts = 0
 
         self.operations = []
@@ -87,8 +101,7 @@ class AzCommandGenerator:
     def has_outputs(self):
         if self.cmd.cfg.outputs:
             return True
-        else:
-            return False
+        return False
 
     def render_condition(self, condition):
         assert isinstance(condition, CMDCondition)

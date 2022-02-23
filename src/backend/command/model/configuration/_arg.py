@@ -251,7 +251,19 @@ class CMDClsArgBase(CMDArgBase):
 
 
 class CMDClsArg(CMDClsArgBase, CMDArg):
-    pass
+    singular_options = ListType(
+        StringType(),
+        serialized_name='singularOptions',
+        deserialize_from='singularOptions',
+    )  # for list use only
+
+    @classmethod
+    def build_arg(cls, builder):
+        arg = super().build_arg(builder)
+        assert isinstance(arg, CMDClsArg)
+        # TODO: if cls referenced to a list argument, then support get_singular_options
+        # arg.singular_options = builder.get_singular_options()
+        return arg
 
 
 # string

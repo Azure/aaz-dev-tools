@@ -6,8 +6,8 @@ def to_camel_case(name):
     return "".join(parts)
 
 
-def to_snack_case(name):
+def to_snack_case(name, separator='_'):
     assert isinstance(name, str)
     parts = name.replace('-', ' ').replace('_', ' ').split()
     parts = [p.lower() for p in parts if p]
-    return "_".join(parts)
+    return separator.join(parts)

@@ -234,6 +234,7 @@ class CMDBuilder:
                 self.cls_definitions[name] = {"count": 1}   # register in cls_definitions first in case of loop reference below
                 model = self(schema.ref_instance, **kwargs)
                 if isinstance(model, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                    # Important: only support object and array schema to defined as cls
                     self.cls_definitions[name]['model'] = model  # when self.cls_definitions[name]['count'] > 1, the loop reference exist
                 else:
                     del self.cls_definitions[name]
