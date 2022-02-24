@@ -63,10 +63,9 @@ class {{ leaf.cls_name }}(AAZCommand):
         {%- for arg_group in leaf.arg_groups %}
 
         # define Arg Group "{{ arg_group.name }}"
-        {%- for scope, scope_define, arguments in arg_group.iter_scopes():
+        {%- for scope, scope_define, arguments in arg_group.iter_scopes() %}
 
         {{ scope }} = {{ scope_define }}
-
         {%- for arg_name, arg_type, arg_kwargs, cls_builder_name in arguments %}
         {{ scope }}.{{ arg_name }} = {{ arg_type }}(
             {%- for key, value in arg_kwargs.items() %}
@@ -77,10 +76,48 @@ class {{ leaf.cls_name }}(AAZCommand):
         {{ cls_builder_name }}({{ scope }})
         {%- endif %}
         {%- endfor %}
-
         {%- endfor %}
         return {{ leaf.ARGS_SCHEMA_NAME }}
     {%- endif %}
+
+    {%- for arg_cls in leaf.get_arg_clses() %}
+
+    {{ arg_cls.args_schema_name }} = None
+
+    @classmethod
+    def {{ arg_cls.builder_name }}(cls, schema):
+        if cls.{{ arg_cls.args_schema_name }} is not None:
+            {%- for prop_name in arg_cls.props %}
+            schema.{{ prop_name }} = cls.{{ arg_cls.args_schema_name }}.{{ prop_name }}
+            {%- endfor %}
+            return
+
+        cls.{{ arg_cls.args_schema_name }} = {{ arg_cls.arg_type }}(
+            {%- for key, value in arg_cls.arg_kwargs.items() %}
+            {{ key }}={{ value|constant_convert }},
+            {%- endfor %}
+        )
+
+        {%- for scope, scope_define, arguments in arg_cls.iter_scopes() %}
+
+        {{ scope }} = {{ scope_define }}
+        {%- for arg_name, arg_type, arg_kwargs, cls_builder_name in arguments %}
+        {{ scope }}.{{ arg_name }} = {{ arg_type }}(
+            {%- for key, value in arg_kwargs.items() %}
+            {{ key }}={{ value|constant_convert }},
+            {%- endfor %}
+        )
+        {%- if cls_builder_name is not none %}
+        {{ cls_builder_name }}({{ scope }})
+        {%- endif %}
+        {%- endfor %}
+        {%- endfor %}
+        {{- "\n" }}
+        {%- for prop_name in arg_cls.props %}
+        schema.{{ prop_name }} = cls.{{ arg_cls.args_schema_name }}.{{ prop_name }}
+        {%- endfor %}
+
+    {%- endfor %}
 
     def _execute_operations(self):
         {%- for var, name, condition in leaf.conditions %}

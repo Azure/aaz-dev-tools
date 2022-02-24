@@ -7,7 +7,7 @@ from utils import exceptions
 from utils.plane import PlaneEnum
 from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator, \
     AzGenericUpdateOperationGenerator
-from .az_arg_group_generator import AzArgGroupGenerator
+from .az_arg_group_generator import AzArgGroupGenerator, AzArgClsGenerator
 
 
 class AzCommandGenerator:
@@ -31,12 +31,12 @@ class AzCommandGenerator:
         self._arguments = {}
 
         self.arg_groups = []
-        self._arg_cls_reference = {}    # shared in arg_groups
+        self._arg_cls_map = {}    # shared between arg_groups
         if self.cmd.cfg.arg_groups:
             for arg_group in self.cmd.cfg.arg_groups:
                 if arg_group.args:
                     self.arg_groups.append(AzArgGroupGenerator(
-                        self.ARGS_SCHEMA_NAME, self._arguments, self._arg_cls_reference, arg_group))
+                        self.ARGS_SCHEMA_NAME, self._arguments, self._arg_cls_map, arg_group))
 
         # prepare operations
         self.lro_counts = 0
@@ -97,6 +97,9 @@ class AzCommandGenerator:
     @property
     def register_info(self):
         return self.cmd.register_info
+
+    def get_arg_clses(self):
+        return sorted(self._arg_cls_map.values(), key=lambda a: a.name)
 
     def has_outputs(self):
         if self.cmd.cfg.outputs:
