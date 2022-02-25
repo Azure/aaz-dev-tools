@@ -14,7 +14,18 @@ import styles from "./TreeView/App.module.css";
 
 import { CommandGroupDetails } from "./CommandGroupDetails"
 
+type Argument = {
+  idPart: string,
+  help?: { short: string },
+  options: string[],
+  required: boolean,
+  type: string
+}
+
+type Args = Argument[]
+
 type Command = {
+  argGroups?: Args[],
   help: { short: string },
   names: string[],
   resources: {},
@@ -28,26 +39,28 @@ type Commands = {
 type CommandGroup = {
   commandGroups?: CommandGroups,
   commands?: Commands,
-  names: string[]
+  names: string[],
+  help?: { short: string }
 }
 
 type CommandGroups = {
   [name: string]: CommandGroup
 }
 
-type DepthMap = {
-  [name: string]: number
+type NumberToString = {
+  [index: number]: string
 }
 
-type NumberMap = {
-  [depth: number]: string
+type NumberToTreeNode = {
+  [index: number]: TreeNode
 }
 
-type NameMap = {
-  [name: string]: CommandGroups
+type NumberToCommandGroup = {
+  [index: number]: CommandGroup
 }
 
-type treeNode = {
+
+type TreeNode = {
   id: number,
   parent: number,
   droppable: boolean,
@@ -58,15 +71,16 @@ type treeNode = {
   }
 }
 
-type treeDataType = treeNode[]
+type TreeDataType = TreeNode[]
 
 type ConfigEditorState = {
   commandGroups: CommandGroups,
-  selectedCommandGroupName: string,
-  nameToCommandGroup: CommandGroups,
-  treeData: treeDataType,
+  selectedIndex: number,
+  treeData: TreeDataType,
   currentIndex: number,
-  indexToCommandGroupName: NumberMap
+  indexToCommandGroupName: NumberToString,
+  indexToCommandGroup: NumberToCommandGroup,
+  indexToTreeNode: NumberToTreeNode,
 }
 
 class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
@@ -74,73 +88,89 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     super(props);
     this.state = {
       commandGroups: {},
-      selectedCommandGroupName: "",
-      nameToCommandGroup: {},
+      selectedIndex: -1,
       treeData: [],
       currentIndex: 0,
-      indexToCommandGroupName: {}
+      indexToCommandGroupName: {},
+      indexToCommandGroup: {},
+      indexToTreeNode: {}
     }
   }
 
   parseCommandGroup = (depth: number, parentName: string, parentIndex: number, commandGroups?: CommandGroups) => {
     if (!commandGroups) {
-      return
+      return Promise.resolve()
     }
-    Object.keys(commandGroups).map(commandGroupName => {
+    let totalPromise:Promise<any>[] = Object.keys(commandGroups).map(commandGroupName => {
       let namesJoined = commandGroups[commandGroupName].names.join('/')
-      this.state.nameToCommandGroup[namesJoined] = commandGroups[commandGroupName]
       this.setState({ currentIndex: this.state.currentIndex + 1 })
       this.state.indexToCommandGroupName[this.state.currentIndex] = namesJoined
+      this.state.indexToCommandGroup[this.state.currentIndex] = commandGroups[commandGroupName]
 
-      let treeNode: treeNode = {
+      let treeNode: TreeNode = {
         id: this.state.currentIndex,
         parent: parentIndex,
         text: commandGroupName,
         droppable: true,
-        data: { hasChildren: true, type: 'commandGroup' }
+        data: { hasChildren: true, type: 'CommandGroup' }
       }
       this.state.treeData.push(treeNode)
+      this.state.indexToTreeNode[this.state.currentIndex] = treeNode
 
       let commandGroupIndex = this.state.currentIndex
-      this.parseCommandGroup(depth + 1, namesJoined, this.state.currentIndex, commandGroups[commandGroupName].commandGroups)
+      let commandGroupPromise: Promise<any> = this.parseCommandGroup(depth + 1, namesJoined, this.state.currentIndex, commandGroups[commandGroupName].commandGroups)
       let commands = commandGroups[commandGroupName].commands
       if (!commands) {
-        return
+        return commandGroupPromise
       }
-      
-      Object.keys(commands).map(commandName => {
+
+      let commandPromises = Object.keys(commands).map(commandName => {
         if (!commands)
-          return
+          return Promise.resolve()
+        const names = commands[commandName].names
         let namesJoined = commands[commandName].names.join('/')
         this.setState({ currentIndex: this.state.currentIndex + 1 })
-        let treeNode: treeNode = {
+        let treeNode: TreeNode = {
           id: this.state.currentIndex,
           parent: commandGroupIndex,
           text: commandName,
           droppable: false,
-          data: { hasChildren: false, type: 'command' }
+          data: { hasChildren: false, type: 'Command' }
         }
-        this.state.nameToCommandGroup[namesJoined] = commands[commandName]
-        this.state.indexToCommandGroupName[this.state.currentIndex] = namesJoined
+        const currentIndex = this.state.currentIndex
+        this.state.indexToCommandGroupName[currentIndex] = namesJoined
         this.state.treeData.push(treeNode)
+        this.state.indexToTreeNode[currentIndex] = treeNode
+        return this.getCommand(currentIndex, names.slice(0, names.length - 1).join('/'), names[names.length - 1])
       })
+
+      return Promise.all([commandGroupPromise,commandPromises])
     })
     this.markHasChildren()
+    return Promise.all([totalPromise])
+  }
 
+  getCommand = (currentIndex: number, namesPath: string, commandName: string) => {
+    let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesPath}/Leaves/${commandName}`
+    // console.log(url)
+    return axios.get(url)
+      .then(res => {
+        const command = res.data
+        this.state.indexToCommandGroup[currentIndex] = command
+        return res.data
+      })
+      .catch((err) => console.log(err));
   }
 
   getSwagger = () => {
-    let module = "";
-    let resourceProvider = "";
-    let version = "";
-    let resources = new Set<string>();
     return axios.get(`/AAZ/Editor/Workspaces/${this.props.params.workspaceName}`)
       .then(res => {
-        console.log(res.data)
+        // console.log(res.data)
         let commandGroups: CommandGroups = res.data.commandTree.commandGroups
         this.setState({ commandGroups: commandGroups })
         let depth = 0
         this.parseCommandGroup(depth, 'aaz', 0, commandGroups)
+        console.log(this.state)
       })
       .catch((err) => console.log(err));
   }
@@ -152,18 +182,25 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   refreshAll = () => {
     this.setState({
       commandGroups: {},
-      selectedCommandGroupName: "",
-      nameToCommandGroup: {},
+      selectedIndex: -1,
       treeData: [],
       currentIndex: 0,
-      indexToCommandGroupName: {}
+      indexToCommandGroupName: {},
+      indexToCommandGroup: {},
+      indexToTreeNode: {}
     })
   }
 
   handleNameChange = (id: NodeModel["id"], newName: string) => {
     let oldName = this.state.indexToCommandGroupName[Number(id)]
+    const oldNameSplit = oldName.split('/')
+    const type = this.state.indexToTreeNode[Number(id)].data.type
     let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${oldName}/Rename`
-    let oldNameSplit = oldName.split('/')
+    if (type === 'Command') {
+      const namesPath = oldNameSplit.slice(0, oldNameSplit.length - 1).join('/')
+      const commandName = oldNameSplit[oldNameSplit.length - 1]
+      url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesPath}/Leaves/${commandName}/Rename`
+    }
     oldNameSplit[oldNameSplit.length - 1] = newName
     let newNameJoined = oldNameSplit.join(' ')
 
@@ -175,22 +212,39 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         return this.getSwagger()
       })
       .then(() => {
-        this.setState({ selectedCommandGroupName: newNameJoined.split(' ').join('/') })
+        this.setState({ selectedIndex: Number(id) })
       })
       .catch(err => {
         console.error(err.response)
       })
   }
 
-  handleHelpChange = (name: string, help: string) => {
-    name = name.split(' ').join('/')
-    let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${name}/Rename`
+  handleShortHelpChange = (id: NodeModel["id"], help: string) => {
+    id = Number(id)
+    const namesJoined = this.state.indexToCommandGroupName[id]
+    const names = namesJoined.split('/')
+
+    const type = this.state.indexToTreeNode[id].data.type
+
+    let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesJoined}`
+    if (type === 'Command') {
+      const namesPath = names.slice(0, names.length - 1).join('/')
+      const commandName = names[names.length - 1]
+      url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesPath}/Leaves/${commandName}`
+    }
     // console.log(url)
-    // console.log(newName)
-    axios.post(url, { help: help })
+    // console.log(help)
+    axios.patch(url, {
+      help: {
+        short: help
+      }
+    })
       .then(res => {
-        console.log(res)
-        window.location.reload();
+        this.refreshAll()
+        return this.getSwagger()
+      })
+      .then(() => {
+        this.setState({ selectedIndex: Number(id) })
       })
       .catch(err => {
         console.error(err.response)
@@ -199,10 +253,13 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
 
 
   displayCommandDetail = () => {
-    if (!this.state.selectedCommandGroupName) {
-      return <div></div>
+    // console.log(this.state.selectedIndex)
+    // console.log(this.state.indexToCommandGroup)
+    // console.log(this.state.indexToCommandGroup[this.state.selectedIndex])
+    if (this.state.selectedIndex!==-1 && this.state.indexToCommandGroup[this.state.selectedIndex]) {
+      return <CommandGroupDetails commandGroup={this.state.indexToCommandGroup[this.state.selectedIndex]} id={this.state.selectedIndex} onHelpChange={this.handleShortHelpChange} />
     }
-    return <CommandGroupDetails commandGroup={this.state.nameToCommandGroup[this.state.selectedCommandGroupName]} onHelpChange={this.handleHelpChange}/>
+    return <div></div>
   }
 
   markHasChildren = () => {
@@ -216,22 +273,50 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   }
 
   handleDrop = (newTreeData: any, dropOptions: DropOptions) => {
-    // console.log(dropOptions.dragSourceId, dropOptions.dropTargetId)
-    let index = Number(dropOptions.dragSourceId)
+    let {dragSourceId, dropTargetId} = dropOptions
 
-    let namesJoined = this.state.indexToCommandGroupName[index]
+    dragSourceId = Number(dragSourceId)
+    dropTargetId = Number(dropTargetId)
+    const type = this.state.indexToTreeNode[dragSourceId].data.type
+    const sourceNamesJoined = this.state.indexToCommandGroupName[dragSourceId]
+    const targetNamesJoined = this.state.indexToCommandGroupName[dropTargetId]
+    const sourceNames = sourceNamesJoined.split('/')
+    let targetNames = targetNamesJoined.split('/')
+    let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${sourceNamesJoined}/Rename`
+    if (type==='Command'){
+      const namesPath = sourceNames.slice(0, sourceNames.length - 1).join('/')
+      const commandName = sourceNames[sourceNames.length - 1]
+      url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesPath}/Leaves/${commandName}/Rename`
+    }
+    targetNames.push(sourceNames[sourceNames.length-1])
+    let newNameJoined = targetNames.join(' ')
 
-    // let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesJoined}`
     // console.log(url)
+    // console.log(newNameJoined)
 
-    this.setState({ treeData: newTreeData })
-    this.markHasChildren()
+    axios.post(url, { name: newNameJoined })
+      .then(res => {
+        this.refreshAll()
+        return this.getSwagger()
+      })
+      .then(() => {
+        // console.log(this.state)
+        this.setState({ selectedIndex: Number(dragSourceId) })
+        // console.log(this.state.selectedIndex)
+      })
+      .catch(err => {
+        console.error(err.response)
+      })
+
+    // this.setState({ treeData: newTreeData })
+    // this.markHasChildren()
+
   }
 
   handleClick = (id: NodeModel["id"]) => {
     id = Number(id)
     // console.log(this.state.indexToCommandGroupName[id])
-    this.setState({ selectedCommandGroupName: this.state.indexToCommandGroupName[id] })
+    this.setState({ selectedIndex: id })
   }
 
   displayCommandGroupsTree = () => {

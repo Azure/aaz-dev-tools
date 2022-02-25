@@ -12,7 +12,7 @@ type Props = {
 export const TypeIcon: React.FC<Props> = (props) => {
 
   
-  if (props.type==="commandGroup") {
+  if (props.type==="CommandGroup") {
     return <FolderIcon />;
   } else {
     return <DescriptionIcon/>
