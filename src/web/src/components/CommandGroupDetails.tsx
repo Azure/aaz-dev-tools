@@ -6,20 +6,23 @@ import TextareaAutosize from '@mui/base/TextareaAutosize';
 import styles from "./TreeView/CustomNode.module.css";
 import { NodeModel, useDragOver } from "@minoru/react-dnd-treeview";
 import { Row, Col, ListGroup } from "react-bootstrap"
-import type { CommandGroup, HelpType } from "./ConfigEditor"
+import type { CommandGroup, HelpType, ExampleType } from "./ConfigEditor"
 
 
 
 type Props = {
     commandGroup: CommandGroup,
     id: NodeModel["id"],
-    onHelpChange: (id: NodeModel["id"], help: HelpType) => void
+    isCommand: boolean,
+    onHelpChange: (id: NodeModel["id"], help: HelpType) => void,
+    onExampleChange: (id: NodeModel["id"], example: ExampleType) => void
 };
 
 export const CommandGroupDetails: React.FC<Props> = (props) => {
-    const { names, help } = props.commandGroup;
+    const { names, help, example } = props.commandGroup;
 
     const id = Number(props.id)
+    const isCommand = props.isCommand
     let shortHelp = ""
     let longHelp = ""
     if (help) {
@@ -31,11 +34,22 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
         }
     }
 
+    let exampleName = ""
+    let exampleContent = ""
+    if (example) {
+        if (example.name) {
+            exampleName = example.name
+        }
+        if (example.lines) {
+            exampleContent = example.lines.join('\n')
+        }
+    }
+
     const onShortHelpChange = (shortHelp: string) => {
         let helpObj: HelpType = {
             short: shortHelp,
         }
-        if (help && help!.lines){
+        if (help && help.lines) {
             helpObj.lines = help.lines
         }
         props.onHelpChange(id, helpObj)
@@ -43,11 +57,31 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
 
     const onLongHelpChange = (longHelp: string) => {
         let helpObj: HelpType = {
-            short: ""
+            short: "",
+            lines: longHelp.split("\n")
         }
-        helpObj.short = (help && help.short)?shortHelp:""
-        helpObj.lines = longHelp.split("\n")
+        helpObj.short = (help && help.short) ? shortHelp : ""
         props.onHelpChange(id, helpObj)
+    }
+
+    const onExampleNameChange = (exampleName: string) => {
+        let exampleObj: ExampleType = {
+            name: exampleName,
+            lines: []
+        }
+        if (example && example.lines) {
+            exampleObj.lines = example.lines
+        }
+        props.onExampleChange(id, exampleObj)
+    }
+
+    const onExampleContentChange = (exampleContent: string) => {
+        let exampleObj: ExampleType = {
+            name: "",
+            lines: exampleContent.split('\n')
+        }
+        exampleObj.name = (example && example.name) ? exampleName : ""
+        props.onExampleChange(id, exampleObj)
     }
 
     type InputAreaProps = {
@@ -55,7 +89,7 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
         value: string,
         initEditing: boolean,
         minRow: number,
-        onSubmit: (help: string) => void
+        onSubmit: (value: string) => void
     }
 
     const InputArea: React.FC<InputAreaProps> = (props) => {
@@ -153,6 +187,14 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
             Name: aaz {names.join(' ')}
             <InputArea value={shortHelp} prefix="Short Help: " initEditing={shortHelp === ""} onSubmit={onShortHelpChange} minRow={1} />
             <InputArea value={longHelp} prefix="Long Help: " initEditing={longHelp === ""} onSubmit={onLongHelpChange} minRow={3} />
+            {isCommand &&
+                <div>
+                    Examples:
+                    <InputArea value={exampleName} prefix="Name: " initEditing={exampleName === ""} onSubmit={onExampleNameChange} minRow={1} />
+                    <InputArea value={exampleContent} prefix="Content" initEditing={exampleContent === ""} onSubmit={onExampleContentChange} minRow={3} />
+                </div>
+            }
+
         </div>
     </div>
     );

@@ -40,10 +40,8 @@ type CommandGroup = {
   commandGroups?: CommandGroups,
   commands?: Commands,
   names: string[],
-  help?: { 
-    short: string,
-    lines?: string[] 
-  }
+  help?: HelpType,
+  example?: ExampleType
 }
 
 type CommandGroups = {
@@ -79,6 +77,11 @@ type TreeDataType = TreeNode[]
 type HelpType = {
   short: string,
   lines?: string[]
+}
+
+type ExampleType = {
+  name: string,
+  lines: string[]
 }
 
 type ConfigEditorState = {
@@ -201,9 +204,8 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   handleNameChange = (id: NodeModel["id"], newName: string) => {
     let oldName = this.state.indexToCommandGroupName[Number(id)]
     const oldNameSplit = oldName.split('/')
-    const type = this.state.indexToTreeNode[Number(id)].data.type
     let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${oldName}/Rename`
-    if (type === 'Command') {
+    if (this.isCommand(id)) {
       const namesPath = oldNameSplit.slice(0, oldNameSplit.length - 1).join('/')
       const commandName = oldNameSplit[oldNameSplit.length - 1]
       url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesPath}/Leaves/${commandName}/Rename`
@@ -232,10 +234,8 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     const namesJoined = this.state.indexToCommandGroupName[id]
     const names = namesJoined.split('/')
 
-    const type = this.state.indexToTreeNode[id].data.type
-
     let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesJoined}`
-    if (type === 'Command') {
+    if (this.isCommand(id)) {
       const namesPath = names.slice(0, names.length - 1).join('/')
       const commandName = names[names.length - 1]
       url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesPath}/Leaves/${commandName}`
@@ -255,12 +255,44 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       })
   }
 
+  handleExampleChange = (id: NodeModel["id"], example: ExampleType) => {
+    id = Number(id)
+    const namesJoined = this.state.indexToCommandGroupName[id]
+    const names = namesJoined.split('/')
+
+    let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesJoined}`
+    if (this.isCommand(id)) {
+      const namesPath = names.slice(0, names.length - 1).join('/')
+      const commandName = names[names.length - 1]
+      url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesPath}/Leaves/${commandName}`
+    }
+    console.log(url, example)
+    axios.patch(url, {
+      example: example
+    })
+      .then(res => {
+        this.refreshAll()
+        return this.getSwagger()
+      })
+      .then(() => {
+        this.setState({ selectedIndex: Number(id) })
+      })
+      .catch(err => {
+        console.error(err.response)
+      })
+  }
+
+  isCommand = (id: NodeModel["id"])=>{
+    const type = this.state.indexToTreeNode[Number(id)].data.type 
+    return type==='Command'
+  }
+
   displayCommandDetail = () => {
     // console.log(this.state.selectedIndex)
     // console.log(this.state.indexToCommandGroup)
     // console.log(this.state.indexToCommandGroup[this.state.selectedIndex])
     if (this.state.selectedIndex!==-1 && this.state.indexToCommandGroup[this.state.selectedIndex]) {
-      return <CommandGroupDetails commandGroup={this.state.indexToCommandGroup[this.state.selectedIndex]} id={this.state.selectedIndex} onHelpChange={this.handleHelpChange}/>
+      return <CommandGroupDetails commandGroup={this.state.indexToCommandGroup[this.state.selectedIndex]} id={this.state.selectedIndex} onHelpChange={this.handleHelpChange} onExampleChange={this.handleExampleChange} isCommand={this.isCommand(this.state.selectedIndex)}/>
     }
     return <div></div>
   }
@@ -378,4 +410,4 @@ const ConfigEditorWrapper = (props: any) => {
 
 export { ConfigEditorWrapper as ConfigEditor };
 
-export type { CommandGroup, HelpType};
+export type { CommandGroup, HelpType, ExampleType};
