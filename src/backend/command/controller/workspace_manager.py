@@ -572,7 +572,10 @@ class WorkspaceManager:
             if not parent.command_groups:
                 parent.command_groups = {}
             parent.command_groups[name] = node
-            node.names = [*parent.names, name]
+            if parent == self.ws.command_tree:
+                node.names = [name]
+            else:
+                node.names = [*parent.names, name]
         else:
             # merge with existing command group
             node = parent.command_groups[name]
@@ -608,7 +611,10 @@ class WorkspaceManager:
         assert name not in parent.commands
         parent.commands[name] = leaf
         old_names = leaf.names
-        new_cmd_names = [*parent.names, name]
+        if parent != self.ws.command_tree:
+            new_cmd_names = [*parent.names, name]
+        else:
+            new_cmd_names = [name]
         leaf.names = [*new_cmd_names]
         cfg_editor.rename_command(*old_names, new_cmd_names=new_cmd_names)
         return leaf
