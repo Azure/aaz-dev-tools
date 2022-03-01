@@ -12,7 +12,7 @@ class CMDCommandTreeLeaf(Model):
 
     help = ModelType(CMDHelp)
     resources = ListType(ModelType(CMDResource), min_size=1)  # the azure resources used in this command
-    examples = ListType(ModelType(CMDCommandExample))  # TODO: support for editor
+    examples = ListType(ModelType(CMDCommandExample))
 
     class Options:
         serialize_when_none = False
