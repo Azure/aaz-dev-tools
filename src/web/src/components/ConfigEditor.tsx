@@ -112,7 +112,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     if (!commandGroups) {
       return Promise.resolve()
     }
-    let totalPromise:Promise<any>[] = Object.keys(commandGroups).map(commandGroupName => {
+    let totalPromise: Promise<any>[] = Object.keys(commandGroups).map(commandGroupName => {
       let namesJoined = commandGroups[commandGroupName].names.join('/')
       this.setState({ currentIndex: this.state.currentIndex + 1 })
       this.state.indexToCommandGroupName[this.state.currentIndex] = namesJoined
@@ -155,7 +155,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         return this.getCommand(currentIndex, names.slice(0, names.length - 1).join('/'), names[names.length - 1])
       })
 
-      return Promise.all([commandGroupPromise,commandPromises])
+      return Promise.all([commandGroupPromise, commandPromises])
     })
     return Promise.all([totalPromise])
   }
@@ -267,32 +267,33 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesPath}/Leaves/${commandName}`
     }
     console.log(url, example)
-    axios.patch(url, {
-      example: example
-    })
-      .then(res => {
-        this.refreshAll()
-        return this.getSwagger()
-      })
-      .then(() => {
-        this.setState({ selectedIndex: Number(id) })
-      })
-      .catch(err => {
-        console.error(err.response)
-      })
+    //   axios.patch(url, {
+    //     example: example
+    //   })
+    //     .then(res => {
+    //       this.refreshAll()
+    //       return this.getSwagger()
+    //     })
+    //     .then(() => {
+    //       this.setState({ selectedIndex: Number(id) })
+    //       console.log(this.state.indexToCommandGroup[this.state.selectedIndex])
+    //     })
+    //     .catch(err => {
+    //       console.error(err.response)
+    //     })
   }
 
-  isCommand = (id: NodeModel["id"])=>{
-    const type = this.state.indexToTreeNode[Number(id)].data.type 
-    return type==='Command'
+  isCommand = (id: NodeModel["id"]) => {
+    const type = this.state.indexToTreeNode[Number(id)].data.type
+    return type === 'Command'
   }
 
   displayCommandDetail = () => {
     // console.log(this.state.selectedIndex)
     // console.log(this.state.indexToCommandGroup)
     // console.log(this.state.indexToCommandGroup[this.state.selectedIndex])
-    if (this.state.selectedIndex!==-1 && this.state.indexToCommandGroup[this.state.selectedIndex]) {
-      return <CommandGroupDetails commandGroup={this.state.indexToCommandGroup[this.state.selectedIndex]} id={this.state.selectedIndex} onHelpChange={this.handleHelpChange} onExampleChange={this.handleExampleChange} isCommand={this.isCommand(this.state.selectedIndex)}/>
+    if (this.state.selectedIndex !== -1 && this.state.indexToCommandGroup[this.state.selectedIndex]) {
+      return <CommandGroupDetails commandGroup={this.state.indexToCommandGroup[this.state.selectedIndex]} id={this.state.selectedIndex} onHelpChange={this.handleHelpChange} onExampleChange={this.handleExampleChange} isCommand={this.isCommand(this.state.selectedIndex)} />
     }
     return <div></div>
   }
@@ -308,23 +309,28 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   }
 
   handleDrop = (newTreeData: any, dropOptions: DropOptions) => {
-    let {dragSourceId, dropTargetId} = dropOptions
+    let { dragSourceId, dropTargetId } = dropOptions
 
     dragSourceId = Number(dragSourceId)
     dropTargetId = Number(dropTargetId)
     const type = this.state.indexToTreeNode[dragSourceId].data.type
     const sourceNamesJoined = this.state.indexToCommandGroupName[dragSourceId]
     const targetNamesJoined = this.state.indexToCommandGroupName[dropTargetId]
+    // console.log(sourceNamesJoined)
+    // console.log(targetNamesJoined)
     const sourceNames = sourceNamesJoined.split('/')
-    let targetNames = targetNamesJoined.split('/')
     let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${sourceNamesJoined}/Rename`
-    if (type==='Command'){
+    if (type === 'Command') {
       const namesPath = sourceNames.slice(0, sourceNames.length - 1).join('/')
       const commandName = sourceNames[sourceNames.length - 1]
       url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesPath}/Leaves/${commandName}/Rename`
     }
-    targetNames.push(sourceNames[sourceNames.length-1])
-    let newNameJoined = targetNames.join(' ')
+    let targetNames: string[] = [];
+    if (targetNamesJoined) {
+      targetNames = targetNamesJoined.split('/')
+    }
+    targetNames.push(sourceNames[sourceNames.length - 1])
+    const newNameJoined = targetNames.join(' ')
 
     // console.log(url)
     // console.log(newNameJoined)
@@ -337,7 +343,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       .then(() => {
         // console.log(this.state)
         this.setState({ selectedIndex: Number(dragSourceId) })
-//         console.log(this.state)
+        //         console.log(this.state)
       })
       .catch(err => {
         console.error(err.response)
@@ -410,4 +416,4 @@ const ConfigEditorWrapper = (props: any) => {
 
 export { ConfigEditorWrapper as ConfigEditor };
 
-export type { CommandGroup, HelpType, ExampleType};
+export type { CommandGroup, HelpType, ExampleType };
