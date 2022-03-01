@@ -11,14 +11,14 @@ from utils.stage import AAZStageEnum
 
 class AzArgGroupGenerator:
 
-    def __init__(self, args_schema_name, arguments, cls_map, arg_group):
-        assert isinstance(arguments, dict)
+    def __init__(self, args_schema_name, cmd_ctx, cls_map, arg_group):
         assert isinstance(arg_group, CMDArgGroup)
         assert arg_group.name is not None   # empty string is valid
         self.name = arg_group.name
         self._cls_map = cls_map
         self._arg_group = arg_group
         self._args_schema_name = args_schema_name
+        self._cmd_ctx = cmd_ctx
         # update the cls_reference
         for arg in self._iter_args():
             if getattr(arg, 'cls', None):

@@ -10,12 +10,9 @@ from utils.error_format import AAZErrorFormatEnum
 
 class AzOperationGenerator:
 
-    def __init__(self, name, arguments, variants, operation):
-        assert isinstance(arguments, dict)
-        assert isinstance(variants, dict)
+    def __init__(self, name, cmd_ctx, operation):
         self._name = name
-        self._arguments = arguments
-        self._variants = variants
+        self._cmd_ctx = cmd_ctx
         self._operation = operation
         self.is_long_running = False
 
@@ -26,9 +23,8 @@ class AzOperationGenerator:
 
 class AzHttpResponseGenerator:
 
-    def __init__(self, variants, response):
-        assert isinstance(variants, dict)
-        self._variants = variants
+    def __init__(self, cmd_ctx, response):
+        self._cmd_ctx = cmd_ctx
         self._response = response
         self.status_codes = response.status_codes
         self.callback_name = "on_" + "_".join(str(code) for code in response.status_codes)
@@ -37,13 +33,11 @@ class AzHttpResponseGenerator:
         if response.body is not None and isinstance(response.body, CMDHttpResponseJsonBody) and \
                 response.body.json is not None and response.body.json.var is not None:
             variant = response.body.json.var
-            if variant not in self._variants:
-                var_name = to_snack_case(variant[1:])
-                assert '.' not in var_name
-                var_name = f"self.ctx.vars.{var_name}"
-                self._variants[variant] = var_name
-            self.variant_name = self._variants[variant]
-            self.schema_builder = "_build_schema_on_" + "_".join(str(code) for code in response.status_codes)
+            var_name = self._cmd_ctx.get_variant(variant)
+            if not var_name:
+                var_name = self._cmd_ctx.new_variant(variant)
+            self.variant_name = var_name
+            self.schema_builder = f"_build_schema_{self.callback_name}"
             self.schema = response.body.json.schema
 
 
@@ -64,7 +58,7 @@ class AzHttpOperationGenerator(AzOperationGenerator):
         error_format = None
         for response in self._operation.http.responses:
             if not response.is_error:
-                self.success_responses.append(AzHttpResponseGenerator(self._variants, response))
+                self.success_responses.append(AzHttpResponseGenerator(self._cmd_ctx, response))
             else:
                 if not isinstance(response.body, CMDHttpResponseJsonBody):
                     raise NotImplementedError()
@@ -98,7 +92,7 @@ class AzHttpOperationGenerator(AzOperationGenerator):
             for param in path.params:
                 parameters.append([
                     param.name,
-                    self._arguments[param.arg],
+                    self._cmd_ctx.get_argument(param.arg),
                     False,
                 ])
         if path.consts:
@@ -121,7 +115,7 @@ class AzHttpOperationGenerator(AzOperationGenerator):
             for param in query.params:
                 parameters.append([
                     param.name,
-                    self._arguments[param.arg],
+                    self._cmd_ctx.get_argument(param.arg),
                     False,
                 ])
         if query.consts:
@@ -144,7 +138,7 @@ class AzHttpOperationGenerator(AzOperationGenerator):
             for param in header.params:
                 parameters.append([
                     param.name,
-                    self._arguments[param.arg],
+                    self._cmd_ctx.get_argument(param.arg),
                     False,
                 ])
         if header.consts:

@@ -10,6 +10,26 @@ from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperat
 from .az_arg_group_generator import AzArgGroupGenerator, AzArgClsGenerator
 
 
+class AzCommandCtx:
+
+    def __init__(self):
+        self._variants = {}
+
+    def get_argument(self, arg_var):
+        pass
+
+    def get_variant(self, variant):
+        if variant.startswith('$'):
+            variant = variant[1:]
+        return self._variants.get(variant, None)
+
+    def new_variant(self, variant):
+        if variant.startswith('$'):
+            variant = variant[1:]
+        self._variants[variant] = f'self.ctx.vars.{variant}'
+        return self._variants[variant]
+
+
 class AzCommandGenerator:
 
     ARGS_SCHEMA_NAME = "_args_schema"
@@ -19,24 +39,22 @@ class AzCommandGenerator:
         self.name = ' '.join(self.cmd.names)
         self.cls_name = to_camel_case(self.cmd.names[-1])
 
+        self.cmd_ctx = AzCommandCtx()
+
         assert isinstance(self.cmd.cfg, CMDCommand)
         self.conditions = []
         if self.cmd.cfg.conditions:
             for idx, condition in self.cmd.cfg.conditions:
                 self.conditions.append((condition.var, f"condition_{idx}", condition))
 
-        self._variants = {}
-
         # prepare arguments
-        self._arguments = {}
-
         self.arg_groups = []
         self._arg_cls_map = {}    # shared between arg_groups
         if self.cmd.cfg.arg_groups:
             for arg_group in self.cmd.cfg.arg_groups:
                 if arg_group.args:
                     self.arg_groups.append(AzArgGroupGenerator(
-                        self.ARGS_SCHEMA_NAME, self._arguments, self._arg_cls_map, arg_group))
+                        self.ARGS_SCHEMA_NAME, self.cmd_ctx, self._arg_cls_map, arg_group))
 
         # prepare operations
         self.lro_counts = 0
@@ -54,21 +72,21 @@ class AzCommandGenerator:
                 op_cls_name = to_camel_case(operation.operation_id)
                 if operation.long_running:
                     lr = True
-                op = AzHttpOperationGenerator(op_cls_name, self._arguments, self._variants, operation)
+                op = AzHttpOperationGenerator(op_cls_name, self.cmd_ctx, operation)
                 self.http_operations.append(op)
             elif isinstance(operation, CMDInstanceUpdateOperation):
                 if isinstance(operation.instance_update, CMDJsonInstanceUpdateAction):
                     op_cls_name = f'InstanceUpdateByJson'
                     if json_update_counts > 0:
                         op_cls_name += f'_{json_update_counts}'
-                    op = AzJsonUpdateOperationGenerator(op_cls_name, self._arguments, self._variants, operation)
+                    op = AzJsonUpdateOperationGenerator(op_cls_name, self.cmd_ctx, operation)
                     self.json_update_operations.append(op)
                     json_update_counts += 1
                 elif isinstance(operation.instance_update, CMDGenericInstanceUpdateAction):
                     op_cls_name = f'InstanceUpdateByGeneric'
                     if generic_update_counts > 0:
                         op_cls_name += f'_{generic_update_counts}'
-                    op = AzGenericUpdateOperationGenerator(op_cls_name, self._arguments, self._variants, operation)
+                    op = AzGenericUpdateOperationGenerator(op_cls_name, self.cmd_ctx, operation)
                     self.generic_update_operations.append(op)
                     generic_update_counts += 1
                 else:
