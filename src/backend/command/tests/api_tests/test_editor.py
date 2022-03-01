@@ -311,7 +311,7 @@ class APIEditorTest(CommandTestCase):
                 "help": {
                     "short": "This is a short help",
                 },
-                "stage": CMDStageEnum.Preview
+                "stage": CMDStageEnum.Preview,
             })
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
@@ -334,13 +334,29 @@ class APIEditorTest(CommandTestCase):
                         "help line 2"
                     ]
                 },
-                "stage": CMDStageEnum.Experimental
+                "stage": CMDStageEnum.Experimental,
+                "examples": [
+                    {
+                        "name": "create edge order item",
+                        "lines": [
+                            "edge-order order item create -g {}"
+                        ]
+                    }
+                ]
             })
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
             self.assertTrue(data['stage'] == CMDStageEnum.Experimental)
             self.assertTrue(data['help']['short'] == "This is command help")
             self.assertTrue(data['help']['lines'] == ["help line 1", "help line 2"])
+            self.assertTrue(data['examples'] == [
+                {
+                    "name": "create edge order item",
+                    "lines": [
+                        "edge-order order item create -g {}"
+                    ]
+                }
+            ])
 
             rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item")
             self.assertTrue(rv.status_code == 200)

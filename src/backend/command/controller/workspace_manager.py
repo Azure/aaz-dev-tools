@@ -12,6 +12,7 @@ from utils import exceptions
 from utils.config import Config
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor
+from command.model.configuration import CMDStageField, CMDHelp, CMDResource, CMDCommandExample
 
 logger = logging.getLogger('backend')
 
@@ -341,6 +342,24 @@ class WorkspaceManager:
         if leaf.stage == stage:
             return
         leaf.stage = stage
+        return leaf
+
+    def update_command_tree_leaf_examples(self, *leaf_names, examples):
+        leaf = self.find_command_tree_leaf(*leaf_names)
+        if not leaf:
+            raise exceptions.ResourceNotFind(f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
+        if not examples:
+            leaf.examples = None
+        else:
+            leaf.examples = []
+            for example in examples:
+                example = CMDCommandExample(example)
+                try:
+                    example.validate()
+                except Exception as err:
+                # if not example.get('name', None) or not isinstance(example['name'], str):
+                    raise exceptions.InvalidAPIUsage(f"Invalid example data: {err}")
+                leaf.examples.append(example)
         return leaf
 
     def rename_command_tree_node(self, *node_names, new_node_names):
