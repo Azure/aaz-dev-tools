@@ -12,6 +12,7 @@ from utils import exceptions
 from utils.config import Config
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor
+from command.model.configuration import CMDStageField, CMDHelp, CMDResource, CMDCommandExample
 
 logger = logging.getLogger('backend')
 
@@ -343,6 +344,24 @@ class WorkspaceManager:
         leaf.stage = stage
         return leaf
 
+    def update_command_tree_leaf_examples(self, *leaf_names, examples):
+        leaf = self.find_command_tree_leaf(*leaf_names)
+        if not leaf:
+            raise exceptions.ResourceNotFind(f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
+        if not examples:
+            leaf.examples = None
+        else:
+            leaf.examples = []
+            for example in examples:
+                example = CMDCommandExample(example)
+                try:
+                    example.validate()
+                except Exception as err:
+                # if not example.get('name', None) or not isinstance(example['name'], str):
+                    raise exceptions.InvalidAPIUsage(f"Invalid example data: {err}")
+                leaf.examples.append(example)
+        return leaf
+
     def rename_command_tree_node(self, *node_names, new_node_names):
         new_name = ' '.join(new_node_names)
         if not new_name:
@@ -553,7 +572,10 @@ class WorkspaceManager:
             if not parent.command_groups:
                 parent.command_groups = {}
             parent.command_groups[name] = node
-            node.names = [*parent.names, name]
+            if parent == self.ws.command_tree:
+                node.names = [name]
+            else:
+                node.names = [*parent.names, name]
         else:
             # merge with existing command group
             node = parent.command_groups[name]
@@ -589,7 +611,10 @@ class WorkspaceManager:
         assert name not in parent.commands
         parent.commands[name] = leaf
         old_names = leaf.names
-        new_cmd_names = [*parent.names, name]
+        if parent != self.ws.command_tree:
+            new_cmd_names = [*parent.names, name]
+        else:
+            new_cmd_names = [name]
         leaf.names = [*new_cmd_names]
         cfg_editor.rename_command(*old_names, new_cmd_names=new_cmd_names)
         return leaf
