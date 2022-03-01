@@ -2,39 +2,66 @@ import React, { useRef, useState } from "react";
 import IconButton from "@mui/material/IconButton";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import TextareaAutosize from '@mui/base/TextareaAutosize';
 import styles from "./TreeView/CustomNode.module.css";
 import { NodeModel, useDragOver } from "@minoru/react-dnd-treeview";
 import { Row, Col, ListGroup } from "react-bootstrap"
-import type { CommandGroup } from "./ConfigEditor"
+import type { CommandGroup, HelpType } from "./ConfigEditor"
+
 
 
 type Props = {
     commandGroup: CommandGroup,
     id: NodeModel["id"],
-    onHelpChange: (id: NodeModel["id"], help: string) => void
+    onHelpChange: (id: NodeModel["id"], help: HelpType) => void
 };
 
 export const CommandGroupDetails: React.FC<Props> = (props) => {
     const { names, help } = props.commandGroup;
-    const onHelpChange = props.onHelpChange
+
     const id = Number(props.id)
     let shortHelp = ""
-    if (help){
-        shortHelp = help!.short
+    let longHelp = ""
+    if (help) {
+        if (help!.short) {
+            shortHelp = help!.short
+        }
+        if (help!.lines) {
+            longHelp = help.lines.join('\n')
+        }
     }
 
+    const onShortHelpChange = (shortHelp: string) => {
+        let helpObj: HelpType = {
+            short: shortHelp,
+        }
+        if (help && help!.lines){
+            helpObj.lines = help.lines
+        }
+        props.onHelpChange(id, helpObj)
+    }
+
+    const onLongHelpChange = (longHelp: string) => {
+        let helpObj: HelpType = {
+            short: ""
+        }
+        helpObj.short = (help && help.short)?shortHelp:""
+        helpObj.lines = longHelp.split("\n")
+        props.onHelpChange(id, helpObj)
+    }
 
     type InputAreaProps = {
         prefix: string,
         value: string,
         initEditing: boolean,
-        onSubmit: (id: number, newName: string) => void
+        minRow: number,
+        onSubmit: (help: string) => void
     }
 
     const InputArea: React.FC<InputAreaProps> = (props) => {
         const { value, prefix } = props;
-        const [displayName, setDisplayName] = useState(value)
-        const [changingName, setChangingName] = useState(displayName)
+        const [displayValue, setDisplayValue] = useState(value)
+        const [changingValue, setChangingValue] = useState(displayValue)
         const [editing, setEditing] = useState(props.initEditing)
 
 
@@ -42,50 +69,56 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
             event.stopPropagation();
             if (!editing) {
                 setEditing(true)
-                setChangingName(displayName)
+                setChangingValue(displayValue)
             }
         }
 
-        const handleChangeName = (event: any) => {
-            setChangingName(event.target.value)
+        const handleChangeValue = (event: any) => {
+            setChangingValue(event.target.value)
         }
 
         const handleSubmit = (event: any) => {
             setEditing(false)
-            setDisplayName(changingName.trim())
-            props.onSubmit(id, changingName.trim())
+            setDisplayValue(changingValue.trim())
+            props.onSubmit(changingValue.trim())
         }
 
         const handleCancel = (event: any) => {
             setEditing(false)
-            setChangingName(displayName)
+            setChangingValue(displayValue)
         }
 
 
 
         return (
             <div >
-                <Row className="g-1 align-items-center">
+                <Row className="g-1 align-items-top">
                     <Col lg="auto"> {prefix}</Col>
                     {!editing
                         ?
-                        (<Col onDoubleClick={handleDoubleClick}> {displayName}</Col>)
+                        (<Col onDoubleClick={handleDoubleClick}>
+                            {displayValue.split('\n').map((line, index) => {
+                                return <div key={index}>
+                                    {line}
+                                </div>
+                            })}
+                        </Col>)
                         :
                         (
-                            <Col lg="auto" style={{ position: `relative`, top: `2px` }}>
-                                <input style={{ width: `${Math.max(20, changingName.length)}ch` }}
-                                    value={changingName}
-                                    onChange={handleChangeName}
+                            <Col lg="auto">
+                                <TextareaAutosize minRows={props.minRow} style={{ width: `45em` }}
+                                    value={changingValue}
+                                    onChange={handleChangeValue}
                                 />
                                 <IconButton
                                     onClick={handleSubmit}
-                                    disabled={changingName === ""}
+                                    disabled={displayValue === changingValue}
                                 >
                                     <CheckIcon />
                                 </IconButton>
                                 <IconButton
                                     onClick={handleCancel}
-                                    disabled={displayName === ""}
+                                    disabled={displayValue === ""}
                                 >
                                     <CloseIcon />
                                 </IconButton>
@@ -118,7 +151,8 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
         <div>
             {/* <InputArea name={names.join(' ')} prefix="Name: aaz" initEditing={false} onSubmit={onNameChange} editable={false}/> */}
             Name: aaz {names.join(' ')}
-            <InputArea value={shortHelp} prefix="Short Help: " initEditing={shortHelp===""} onSubmit={onHelpChange} />
+            <InputArea value={shortHelp} prefix="Short Help: " initEditing={shortHelp === ""} onSubmit={onShortHelpChange} minRow={1} />
+            <InputArea value={longHelp} prefix="Long Help: " initEditing={longHelp === ""} onSubmit={onLongHelpChange} minRow={3} />
         </div>
     </div>
     );

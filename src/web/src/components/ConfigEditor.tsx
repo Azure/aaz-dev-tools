@@ -40,7 +40,10 @@ type CommandGroup = {
   commandGroups?: CommandGroups,
   commands?: Commands,
   names: string[],
-  help?: { short: string }
+  help?: { 
+    short: string,
+    lines?: string[] 
+  }
 }
 
 type CommandGroups = {
@@ -72,6 +75,11 @@ type TreeNode = {
 }
 
 type TreeDataType = TreeNode[]
+
+type HelpType = {
+  short: string,
+  lines?: string[]
+}
 
 type ConfigEditorState = {
   commandGroups: CommandGroups,
@@ -146,7 +154,6 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
 
       return Promise.all([commandGroupPromise,commandPromises])
     })
-    this.markHasChildren()
     return Promise.all([totalPromise])
   }
 
@@ -170,6 +177,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         this.setState({ commandGroups: commandGroups })
         let depth = 0
         this.parseCommandGroup(depth, 'aaz', 0, commandGroups)
+        this.markHasChildren()
         console.log(this.state)
       })
       .catch((err) => console.log(err));
@@ -182,7 +190,6 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   refreshAll = () => {
     this.setState({
       commandGroups: {},
-      selectedIndex: -1,
       treeData: [],
       currentIndex: 0,
       indexToCommandGroupName: {},
@@ -204,22 +211,23 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     oldNameSplit[oldNameSplit.length - 1] = newName
     let newNameJoined = oldNameSplit.join(' ')
 
-    console.log(url)
-    console.log(newNameJoined)
+    // console.log(url)
+    // console.log(newNameJoined)
     axios.post(url, { name: newNameJoined })
       .then(res => {
         this.refreshAll()
         return this.getSwagger()
       })
       .then(() => {
-        this.setState({ selectedIndex: Number(id) })
+        // this.setState({ selectedIndex: Number(id) })
+        // console.log('actuallydone')
       })
       .catch(err => {
         console.error(err.response)
       })
   }
 
-  handleShortHelpChange = (id: NodeModel["id"], help: string) => {
+  handleHelpChange = (id: NodeModel["id"], help: HelpType) => {
     id = Number(id)
     const namesJoined = this.state.indexToCommandGroupName[id]
     const names = namesJoined.split('/')
@@ -232,12 +240,8 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       const commandName = names[names.length - 1]
       url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesPath}/Leaves/${commandName}`
     }
-    // console.log(url)
-    // console.log(help)
     axios.patch(url, {
-      help: {
-        short: help
-      }
+      help: help
     })
       .then(res => {
         this.refreshAll()
@@ -251,13 +255,12 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       })
   }
 
-
   displayCommandDetail = () => {
     // console.log(this.state.selectedIndex)
     // console.log(this.state.indexToCommandGroup)
     // console.log(this.state.indexToCommandGroup[this.state.selectedIndex])
     if (this.state.selectedIndex!==-1 && this.state.indexToCommandGroup[this.state.selectedIndex]) {
-      return <CommandGroupDetails commandGroup={this.state.indexToCommandGroup[this.state.selectedIndex]} id={this.state.selectedIndex} onHelpChange={this.handleShortHelpChange} />
+      return <CommandGroupDetails commandGroup={this.state.indexToCommandGroup[this.state.selectedIndex]} id={this.state.selectedIndex} onHelpChange={this.handleHelpChange}/>
     }
     return <div></div>
   }
@@ -294,7 +297,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     // console.log(url)
     // console.log(newNameJoined)
 
-    axios.post(url, { name: newNameJoined })
+    return axios.post(url, { name: newNameJoined })
       .then(res => {
         this.refreshAll()
         return this.getSwagger()
@@ -302,15 +305,11 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       .then(() => {
         // console.log(this.state)
         this.setState({ selectedIndex: Number(dragSourceId) })
-        // console.log(this.state.selectedIndex)
+//         console.log(this.state)
       })
       .catch(err => {
         console.error(err.response)
       })
-
-    // this.setState({ treeData: newTreeData })
-    // this.markHasChildren()
-
   }
 
   handleClick = (id: NodeModel["id"]) => {
@@ -379,4 +378,4 @@ const ConfigEditorWrapper = (props: any) => {
 
 export { ConfigEditorWrapper as ConfigEditor };
 
-export type { CommandGroup as CommandGroup };
+export type { CommandGroup, HelpType};
