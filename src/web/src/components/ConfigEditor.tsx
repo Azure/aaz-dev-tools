@@ -136,10 +136,8 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       }
 
       let commandPromises = Object.keys(commands).map(commandName => {
-        if (!commands)
-          return Promise.resolve()
-        const names = commands[commandName].names
-        let namesJoined = commands[commandName].names.join('/')
+        const names = commands![commandName].names
+        let namesJoined = commands![commandName].names.join('/')
         this.setState({ currentIndex: this.state.currentIndex + 1 })
         let treeNode: TreeNode = {
           id: this.state.currentIndex,
@@ -155,9 +153,9 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         return this.getCommand(currentIndex, names.slice(0, names.length - 1).join('/'), names[names.length - 1])
       })
 
-      return Promise.all([commandGroupPromise, commandPromises])
+      return Promise.all([commandGroupPromise, ...commandPromises])
     })
-    return Promise.all([totalPromise])
+    return Promise.all(totalPromise)
   }
 
   getCommand = (currentIndex: number, namesPath: string, commandName: string) => {
@@ -179,11 +177,23 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         let commandGroups: CommandGroups = res.data.commandTree.commandGroups
         this.setState({ commandGroups: commandGroups })
         let depth = 0
-        this.parseCommandGroup(depth, 'aaz', 0, commandGroups)
-        this.markHasChildren()
-        console.log(this.state)
+        return this.parseCommandGroup(depth, 'aaz', 0, commandGroups)
+          .then(() => {
+            this.markHasChildren()
+            return Promise.resolve()
+          })
       })
       .catch((err) => console.log(err));
+  }
+
+  markHasChildren = () => {
+    let hasChildren = new Set()
+    this.state.treeData.map(node => {
+      hasChildren.add(node.parent)
+    })
+    this.state.treeData.map(node => {
+      node.data.hasChildren = hasChildren.has(node.id)
+    })
   }
 
   componentDidMount() {
@@ -215,14 +225,17 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
 
     // console.log(url)
     // console.log(newNameJoined)
-    axios.post(url, { name: newNameJoined })
+    return axios.post(url, { name: newNameJoined })
       .then(res => {
+        console.log(this.state.indexToCommandGroup[this.state.selectedIndex])
         this.refreshAll()
         return this.getSwagger()
       })
       .then(() => {
-        // this.setState({ selectedIndex: Number(id) })
-        // console.log('actuallydone')
+        // console.log(Object.keys(this.state.indexToCommandGroup).length)
+        // console.log(this.state.selectedIndex, Number(id))
+        // console.log(this.state.indexToCommandGroup[this.state.selectedIndex].names)
+        this.setState({ selectedIndex: Number(id) })
       })
       .catch(err => {
         console.error(err.response)
@@ -297,16 +310,6 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       return <CommandGroupDetails commandGroup={this.state.indexToCommandGroup[this.state.selectedIndex]} id={this.state.selectedIndex} onHelpChange={this.handleHelpChange} onExampleChange={this.handleExampleChange} isCommand={this.isCommand(this.state.selectedIndex)} />
     }
     return <div></div>
-  }
-
-  markHasChildren = () => {
-    let hasChildren = new Set()
-    this.state.treeData.map(node => {
-      hasChildren.add(node.parent)
-    })
-    this.state.treeData.map(node => {
-      node.data.hasChildren = hasChildren.has(node.id)
-    })
   }
 
   handleDrop = (newTreeData: any, dropOptions: DropOptions) => {
