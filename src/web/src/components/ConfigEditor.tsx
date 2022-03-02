@@ -41,7 +41,7 @@ type CommandGroup = {
   commands?: Commands,
   names: string[],
   help?: HelpType,
-  example?: ExampleType
+  examples?: ExampleType[]
 }
 
 type CommandGroups = {
@@ -255,7 +255,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       })
   }
 
-  handleExampleChange = (id: NodeModel["id"], example: ExampleType) => {
+  handleExampleChange = (id: NodeModel["id"], examples: ExampleType[]) => {
     id = Number(id)
     const namesJoined = this.state.indexToCommandGroupName[id]
     const names = namesJoined.split('/')
@@ -266,21 +266,22 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       const commandName = names[names.length - 1]
       url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesPath}/Leaves/${commandName}`
     }
-    console.log(url, example)
-    //   axios.patch(url, {
-    //     example: example
-    //   })
-    //     .then(res => {
-    //       this.refreshAll()
-    //       return this.getSwagger()
-    //     })
-    //     .then(() => {
-    //       this.setState({ selectedIndex: Number(id) })
-    //       console.log(this.state.indexToCommandGroup[this.state.selectedIndex])
-    //     })
-    //     .catch(err => {
-    //       console.error(err.response)
-    //     })
+    console.log(url)
+    console.log(examples)
+    axios.patch(url, {
+      examples: examples
+    })
+      .then(res => {
+        this.refreshAll()
+        return this.getSwagger()
+      })
+      .then(() => {
+        this.setState({ selectedIndex: Number(id) })
+        // console.log(this.state.indexToCommandGroup[this.state.selectedIndex])
+      })
+      .catch(err => {
+        console.error(err.response)
+      })
   }
 
   isCommand = (id: NodeModel["id"]) => {
@@ -313,14 +314,16 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
 
     dragSourceId = Number(dragSourceId)
     dropTargetId = Number(dropTargetId)
-    const type = this.state.indexToTreeNode[dragSourceId].data.type
+    if (this.isCommand(dragSourceId) && dropTargetId === 0) {
+      return
+    }
     const sourceNamesJoined = this.state.indexToCommandGroupName[dragSourceId]
     const targetNamesJoined = this.state.indexToCommandGroupName[dropTargetId]
     // console.log(sourceNamesJoined)
     // console.log(targetNamesJoined)
     const sourceNames = sourceNamesJoined.split('/')
     let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${sourceNamesJoined}/Rename`
-    if (type === 'Command') {
+    if (this.isCommand(dragSourceId)) {
       const namesPath = sourceNames.slice(0, sourceNames.length - 1).join('/')
       const commandName = sourceNames[sourceNames.length - 1]
       url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesPath}/Leaves/${commandName}/Rename`

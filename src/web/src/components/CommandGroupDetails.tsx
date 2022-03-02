@@ -2,10 +2,12 @@ import React, { useRef, useState } from "react";
 import IconButton from "@mui/material/IconButton";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import TextareaAutosize from '@mui/base/TextareaAutosize';
 import styles from "./TreeView/CustomNode.module.css";
 import { NodeModel, useDragOver } from "@minoru/react-dnd-treeview";
-import { Row, Col, ListGroup } from "react-bootstrap"
+import { Row, Col, ListGroup, Form, Button } from "react-bootstrap"
 import type { CommandGroup, HelpType, ExampleType } from "./ConfigEditor"
 
 
@@ -15,33 +17,24 @@ type Props = {
     id: NodeModel["id"],
     isCommand: boolean,
     onHelpChange: (id: NodeModel["id"], help: HelpType) => void,
-    onExampleChange: (id: NodeModel["id"], example: ExampleType) => void
+    onExampleChange: (id: NodeModel["id"], examples: ExampleType[]) => void
 };
 
 export const CommandGroupDetails: React.FC<Props> = (props) => {
-    const { names, help, example } = props.commandGroup;
-
+    const { names, help } = props.commandGroup;
+    let { examples } = props.commandGroup
     const id = Number(props.id)
     const isCommand = props.isCommand
     let shortHelp = ""
     let longHelp = ""
+    const [creatingExample, setCreatingExample] = useState(false)
+
     if (help) {
         if (help!.short) {
             shortHelp = help!.short
         }
         if (help!.lines) {
             longHelp = help.lines.join('\n')
-        }
-    }
-
-    let exampleName = ""
-    let exampleContent = ""
-    if (example) {
-        if (example.name) {
-            exampleName = example.name
-        }
-        if (example.lines) {
-            exampleContent = example.lines.join('\n')
         }
     }
 
@@ -64,36 +57,49 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
         props.onHelpChange(id, helpObj)
     }
 
-    const onExampleNameChange = (exampleName: string) => {
+    const onExampleNameChange = (exampleName: string, index: number) => {
         let exampleObj: ExampleType = {
             name: exampleName,
-            lines: []
+            lines: examples![index].lines
         }
-        if (example && example.lines) {
-            exampleObj.lines = example.lines
-        }
-        props.onExampleChange(id, exampleObj)
+        examples![index] = exampleObj
+        props.onExampleChange(id, examples!)
     }
 
-    const onExampleContentChange = (exampleContent: string) => {
+    const onExampleContentChange = (exampleContent: string, index: number) => {
         let exampleObj: ExampleType = {
-            name: "",
+            name: examples![index].name,
             lines: exampleContent.split('\n')
         }
-        exampleObj.name = (example && example.name) ? exampleName : ""
-        props.onExampleChange(id, exampleObj)
+        examples![index] = exampleObj
+        props.onExampleChange(id, examples!)
     }
+
+    const onExampleCreate = (example: ExampleType) => {
+        if (!examples) {
+            examples = []
+        }
+        examples.push(example)
+        props.onExampleChange(id, examples!)
+    }
+
+    const onExampleDelete = (index: number) => {
+        examples?.splice(index, 1)
+        props.onExampleChange(id, examples!)
+    }
+
 
     type InputAreaProps = {
         prefix: string,
         value: string,
+        width: string,
         initEditing: boolean,
         minRow: number,
         onSubmit: (value: string) => void
     }
 
     const InputArea: React.FC<InputAreaProps> = (props) => {
-        const { value, prefix } = props;
+        const { value, prefix, width } = props;
         const [displayValue, setDisplayValue] = useState(value)
         const [changingValue, setChangingValue] = useState(displayValue)
         const [editing, setEditing] = useState(props.initEditing)
@@ -127,7 +133,9 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
         return (
             <div >
                 <Row className="g-1 align-items-top">
-                    <Col lg="auto"> {prefix}</Col>
+                    <Col lg="auto">
+                        <h6>{prefix}</h6>
+                    </Col>
                     {!editing
                         ?
                         (<Col onDoubleClick={handleDoubleClick}>
@@ -140,7 +148,7 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
                         :
                         (
                             <Col lg="auto">
-                                <TextareaAutosize minRows={props.minRow} style={{ width: `45em` }}
+                                <TextareaAutosize minRows={props.minRow} style={{ width: width }}
                                     value={changingValue}
                                     onChange={handleChangeValue}
                                 />
@@ -164,34 +172,73 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
         )
     }
 
-    // const commandDetails = (
-    //     commands ? (<div>
-    //         <p>Commands: </p>
-    //         <ListGroup>
-    //             {commands && Object.keys(commands).map(commandName => {
-    //                 let namesJoined = commands![commandName].names.join('/')
-    //                 return <ListGroup.Item key={namesJoined}>
-    //                     <ListGroup>
-    //                         <ListGroup.Item><InputArea name={commands![commandName].names.join(' ')} prefix="aaz" initEditing={false} onSubmit={onNameChange} /></ListGroup.Item>
-    //                         <ListGroup.Item>Help: {commands![commandName].help.short}</ListGroup.Item>
-    //                     </ListGroup>
-    //                 </ListGroup.Item>
-    //             })}
-    //         </ListGroup>
-    //     </div>) : <div></div>
-    // )
+    const ExampleList = () => {
+        return examples ? (<div>
+            {examples.map((example, index) => {
+                const name = example.name
+                const content = example.lines.join('\n')
+                return <div key={index}>
+                    <Row>
+                        <Col xxl='11'>
+                            <InputArea value={name} prefix="Name: " initEditing={name === ""} onSubmit={(exampleName: string) => { onExampleNameChange(exampleName, index) }} minRow={1} width="40em" />
+                            <InputArea value={content} prefix="Commands:" initEditing={content === ""} onSubmit={(exampleContent: string) => { onExampleContentChange(exampleContent, index) }} minRow={3} width="40em" />
+                        </Col>
+                        <Col xxl='1'>
+                            <IconButton onClick={() => { onExampleDelete(index) }}>
+                                <RemoveIcon />
+                            </IconButton>
+                        </Col>
+                    </Row>
+                </div>
+            })}
+        </div>) : <></>
+    }
+
+    const CreateNewExample = () => {
+        const [name, setName] = useState("")
+        const [commands, setCommands] = useState("")
+
+        const handleSubmitExample = () => {
+            // console.log(name)
+            // console.log(commands)
+            setCreatingExample(false)
+            onExampleCreate({
+                name: name,
+                lines: commands.split('\n')
+            })
+        }
+
+        const handleCancelExample = () => {
+            setCreatingExample(false)
+        }
+
+        return <div>
+            <TextareaAutosize minRows={1} style={{ width: `50em` }} value={name} onChange={e => setName(e.target.value)} />
+            <TextareaAutosize minRows={3} style={{ width: `50em` }} value={commands} onChange={e => setCommands(e.target.value)} />
+            <IconButton onClick={handleSubmitExample} disabled={name === "" || commands === ""}>
+                <CheckIcon />
+            </IconButton>
+            <IconButton onClick={handleCancelExample}>
+                <CloseIcon />
+            </IconButton>
+        </div>
+    }
+
 
     return (<div>
         <div>
             {/* <InputArea name={names.join(' ')} prefix="Name: aaz" initEditing={false} onSubmit={onNameChange} editable={false}/> */}
-            Name: aaz {names.join(' ')}
-            <InputArea value={shortHelp} prefix="Short Help: " initEditing={shortHelp === ""} onSubmit={onShortHelpChange} minRow={1} />
-            <InputArea value={longHelp} prefix="Long Help: " initEditing={longHelp === ""} onSubmit={onLongHelpChange} minRow={3} />
+            <h5>Name: aaz {names.join(' ')}</h5>
+            <InputArea value={shortHelp} prefix="Short Help: " initEditing={shortHelp === ""} onSubmit={onShortHelpChange} minRow={1} width="45em" />
+            <InputArea value={longHelp} prefix="Long Help: " initEditing={longHelp === ""} onSubmit={onLongHelpChange} minRow={3} width="45em" />
             {isCommand &&
                 <div>
-                    Examples:
-                    <InputArea value={exampleName} prefix="Name: " initEditing={exampleName === ""} onSubmit={onExampleNameChange} minRow={1} />
-                    <InputArea value={exampleContent} prefix="Content" initEditing={exampleContent === ""} onSubmit={onExampleContentChange} minRow={3} />
+                    <h5>Examples:</h5>
+                    <ExampleList></ExampleList>
+                    {!creatingExample && <IconButton onClick={() => { setCreatingExample(true) }}>
+                        <AddIcon></AddIcon>
+                    </IconButton>}
+                    {creatingExample && <CreateNewExample></CreateNewExample>}
                 </div>
             }
 
