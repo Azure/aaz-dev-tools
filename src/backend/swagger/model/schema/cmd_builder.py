@@ -234,6 +234,7 @@ class CMDBuilder:
                 self.cls_definitions[name] = {"count": 1}   # register in cls_definitions first in case of loop reference below
                 model = self(schema.ref_instance, **kwargs)
                 if isinstance(model, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+
                     # Important: only support object and array schema to defined as cls
                     self.cls_definitions[name]['model'] = model  # when self.cls_definitions[name]['count'] > 1, the loop reference exist
                 else:
@@ -248,7 +249,7 @@ class CMDBuilder:
                 else:
                     model = CMDClsSchema()
                 model.read_only = self.read_only
-                model.frozen = self.frozen
+                model.frozen = self.frozen or self.cls_definitions[name]['model'].frozen  # need to combine with the model frozen, especially for _create model with all ready_only properties
                 model._type = f"@{name}"
             else:
                 if 'model' not in self.cls_definitions[name]:
