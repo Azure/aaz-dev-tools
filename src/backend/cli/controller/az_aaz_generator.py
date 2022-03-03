@@ -2,6 +2,7 @@ import os
 from cli.templates import get_templates
 from command.model.configuration import CMDCommand
 from utils.case import to_snack_case
+from .az_command_generator import AzCommandGenerator
 
 
 class AzAAZGenerator:
@@ -50,32 +51,33 @@ class AzAAZGenerator:
     def _generate_by_command_group(self, profile_name, command_group):
         assert command_group.command_groups or command_group.commands
 
-        remain_folders, remain_files = self._list_package(profile_name, *command_group.names)
+        cur_folders, cur_files = self._list_package(profile_name, *command_group.names)
 
+        folders = set()
         if command_group.command_groups:
             for sub_group in command_group.command_groups:
                 assert sub_group.names[:-1] == command_group.names, f"Invalid command group name: {sub_group.names}"
                 self._generate_by_command_group(profile_name=profile_name, command_group=sub_group)
-                if sub_group.names[-1] in remain_folders:
-                    remain_folders.remove(sub_group.names[-1])
+                folders.add(sub_group.names[-1])
 
         # delete other folders
-        for name in remain_folders:
+        del_folders = cur_folders.difference(folders)
+        for name in del_folders:
             self._delete_folder(profile_name, *command_group.names, name)
 
-        group_py_names = set()
+        files = set()
         if command_group.commands:
             for command in command_group.commands:
                 assert command.names[:-1] == command_group.names, f"Invalid command name: {command.names}"
                 cmd_file_name = self._command_file_name(command.names[-1])
-                if cmd_file_name in remain_files:
+                if cmd_file_name in cur_files:
                     if command.cfg:
                         # configuration attached, that means to update command file
                         self._generate_by_command(profile_name, command)
                 else:
                     assert command.cfg is not None
                     self._generate_by_command(profile_name, command)
-                group_py_names.add(cmd_file_name)
+                files.add(cmd_file_name)
 
         # update __cmd_group.py file
         file_name = '__cmd_group.py'
@@ -84,27 +86,30 @@ class AzAAZGenerator:
             node=command_group
         )
         self._update_file(profile_name, *command_group.names, file_name, data=data)
-        group_py_names.add(file_name)
+        files.add(file_name)
 
         # update __init__.py file
         file_name = '__init__.py'
         tmpl = get_templates()['aaz']['group'][file_name]
         data = tmpl.render(
-            file_names=sorted(group_py_names)
+            file_names=sorted(files)
         )
         self._update_file(profile_name, *command_group.names, file_name, data=data)
-        group_py_names.add(file_name)
+        files.add(file_name)
 
         # delete other files
-        for name in remain_files.difference(group_py_names):
+        del_files = cur_files.difference(files)
+        for name in del_files:
             self._delete_file(profile_name, *command_group.names, name)
 
     def _generate_by_command(self, profile_name, command):
         assert isinstance(command.cfg, CMDCommand)
         file_name = self._command_file_name(command.names[-1])
-        # TODO:
-        # data = None
-        # self._update_file(profile_name, *command.names[:-1], file_name, data=data)
+        tmpl = get_templates()['aaz']['command']['_cmd.py.j2']
+        data = tmpl.render(
+            leaf=AzCommandGenerator(command)
+        )
+        self._update_file(profile_name, *command.names[:-1], file_name, data=data)
 
     # folder operations
     def _get_path(self, *names):

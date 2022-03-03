@@ -2,7 +2,7 @@ from command.model.configuration import CMDStringArgBase, CMDByteArgBase, CMDBin
     CMDDateArgBase, CMDDateTimeArgBase, CMDUuidArgBase, CMDPasswordArgBase, \
     CMDSubscriptionIdArgBase, CMDResourceGroupNameArgBase, CMDResourceIdArgBase, CMDResourceLocationArgBase, \
     CMDIntegerArgBase, CMDInteger32ArgBase, CMDInteger64ArgBase, CMDBooleanArgBase, CMDFloatArgBase, \
-    CMDFloat32ArgBase, CMDFloat64ArgBase, CMDObjectArgBase, CMDArrayArgBase, CMDClsArgBase, CMDObjectArg, CMDArrayArg
+    CMDFloat32ArgBase, CMDFloat64ArgBase, CMDObjectArgBase, CMDArrayArgBase, CMDClsArgBase, CMDSubscriptionIdArg
 from command.model.configuration import CMDArgGroup, CMDArgumentHelp
 from utils.case import to_camel_case, to_snack_case
 from utils import exceptions
@@ -33,7 +33,7 @@ class AzArgGroupGenerator:
             yield arg
             if isinstance(arg, CMDObjectArgBase):
                 if arg.args:
-                    args.extend(*arg.args)
+                    args.extend(arg.args)
                 if arg.additional_props and arg.additional_props.item:
                     args.append(arg.additional_props.item)
             elif isinstance(arg, CMDArrayArgBase):
@@ -49,6 +49,9 @@ class AzArgGroupGenerator:
         for a in self._arg_group.args:
             if a.hide:
                 # escape hide argument
+                continue
+            if isinstance(a, CMDSubscriptionIdArg):
+                # ignore subscription id
                 continue
             a_name = parse_arg_name(a)
             a_type, a_kwargs, cls_builder_name = render_arg(a, self._cls_map, arg_group=self.name)
@@ -92,7 +95,7 @@ class AzArgClsGenerator:
         self.props = sorted(self.props)
 
     def iter_scopes(self):
-        for scopes in _iter_scopes_by_arg_base(self.arg, self.name, f"cls.{self.args_schema_name}", self._cls_map):
+        for scopes in _iter_scopes_by_arg_base(self.arg, to_snack_case(self.name), f"cls.{self.args_schema_name}", self._cls_map):
             yield scopes
 
 
@@ -144,7 +147,7 @@ def _iter_scopes_by_arg_base(arg, name, scope_define, cls_map):
 
 
 def parse_cls_builder_name(cls_name):
-    return f"_build_args_{to_camel_case(cls_name)}"
+    return f"_build_args_{to_snack_case(cls_name)}"
 
 
 def parse_arg_help(help):
@@ -230,6 +233,7 @@ def render_arg(arg, cls_map, arg_group=None):
 
 
 def render_arg_base(arg, cls_map, arg_kwargs=None):
+    # TODO: add format in argument
     if isinstance(arg, CMDClsArgBase):
         cls_name = arg.type[1:]
         arg = cls_map[cls_name].arg
@@ -257,11 +261,13 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
                 # it's default value
                 del arg_kwargs['id_part']
         elif isinstance(arg, CMDResourceIdArgBase):
-            # TODO:
-            raise NotImplementedError()
+            arg_type = "AAZResourceIdArg"
+            # TODO: add format for it
         elif isinstance(arg, CMDResourceLocationArgBase):
-            # TODO:
-            raise NotImplementedError()
+            arg_type = "AAZResourceLocationArg"
+            if 'options' in arg_kwargs and set(arg_kwargs['options']) == {'--location', '-l'}:
+                # it's default value
+                del arg_kwargs['options']
         elif isinstance(arg, CMDByteArgBase):
             raise NotImplementedError()
         elif isinstance(arg, CMDBinaryArgBase):
@@ -273,7 +279,8 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
         elif isinstance(arg, CMDDateTimeArgBase):
             raise NotImplementedError()
         elif isinstance(arg, CMDUuidArgBase):
-            raise NotImplementedError()
+            arg_type = "AAZStrType"
+            # TODO: add format for it
         elif isinstance(arg, CMDPasswordArgBase):
             raise NotImplementedError()
 

@@ -22,7 +22,7 @@ class Create(AAZCommand):
         az databricks workspace create --resource-group MyResourceGroup --name MyWorkspace --location westus --sku standard
 
     :example: Create a workspace with managed identity for storage account
-        az az databricks workspace create --resource-group MyResourceGroup --name MyWorkspace --location eastus2euap --sku premium --prepare-encryption
+        az databricks workspace create --resource-group MyResourceGroup --name MyWorkspace --location eastus2euap --sku premium --prepare-encryption
     """
 
     AZ_SUPPORT_NO_WAIT = True
@@ -66,7 +66,7 @@ class Create(AAZCommand):
         )
         _args_schema.parameters = AAZObjectArg(
             options=['--parameters'],
-            help='The workspace's custom parameters.',
+            help='The workspace\'s custom parameters.',
         )
         _args_schema.ui_definition_uri = AAZStrType(
             options=['--ui-definition-uri'],
@@ -91,52 +91,52 @@ class Create(AAZCommand):
             options=['aml-workspace-id'],
             help='The ID of a Azure Machine Learning workspace to link with Databricks workspace',
         )
-        _build_args_WorkspaceCustomStringParameterCreate(parameters)
+        cls._build_args_workspace_custom_string_parameter_create(parameters.aml_workspace_id)
         parameters.custom_virtual_network_id = AAZObjectArg(
             options=['custom-virtual-network-id'],
             help='The ID of a Virtual Network where this Databricks Cluster should be created',
         )
-        _build_args_WorkspaceCustomStringParameterCreate(parameters)
+        cls._build_args_workspace_custom_string_parameter_create(parameters.custom_virtual_network_id)
         parameters.custom_public_subnet_name = AAZObjectArg(
             options=['custom-public-subnet-name'],
             help='The name of a Public Subnet within the Virtual Network',
         )
-        _build_args_WorkspaceCustomStringParameterCreate(parameters)
+        cls._build_args_workspace_custom_string_parameter_create(parameters.custom_public_subnet_name)
         parameters.custom_private_subnet_name = AAZObjectArg(
             options=['custom-private-subnet-name'],
             help='The name of the Private Subnet within the Virtual Network',
         )
-        _build_args_WorkspaceCustomStringParameterCreate(parameters)
+        cls._build_args_workspace_custom_string_parameter_create(parameters.custom_private_subnet_name)
         parameters.enable_no_public_ip = AAZObjectArg(
             options=['enable-no-public-ip'],
             help='Should the Public IP be Disabled?',
         )
-        _build_args_WorkspaceCustomBooleanParameterCreate(parameters)
+        cls._build_args_workspace_custom_boolean_parameter_create(parameters.enable_no_public_ip)
         parameters.load_balancer_backend_pool_name = AAZObjectArg(
             options=['load-balancer-backend-pool-name'],
             help='Name of the outbound Load Balancer Backend Pool for Secure Cluster Connectivity (No Public IP).',
         )
-        _build_args_WorkspaceCustomStringParameterCreate(parameters)
+        cls._build_args_workspace_custom_string_parameter_create(parameters.load_balancer_backend_pool_name)
         parameters.load_balancer_id = AAZObjectArg(
             options=['load-balancer-id'],
             help='Resource URI of Outbound Load balancer for Secure Cluster Connectivity (No Public IP) workspace.',
         )
-        _build_args_WorkspaceCustomStringParameterCreate(parameters)
+        cls._build_args_workspace_custom_string_parameter_create(parameters.load_balancer_id)
         parameters.nat_gateway_name = AAZObjectArg(
             options=['nat-gateway-name'],
             help='Name of the NAT gateway for Secure Cluster Connectivity (No Public IP) workspace subnets.',
         )
-        _build_args_WorkspaceCustomStringParameterCreate(parameters)
+        cls._build_args_workspace_custom_string_parameter_create(parameters.nat_gateway_name)
         parameters.public_ip_name = AAZObjectArg(
             options=['public-ip-name'],
             help='Name of the Public IP for No Public IP workspace with managed vNet.',
         )
-        _build_args_WorkspaceCustomStringParameterCreate(parameters)
+        cls._build_args_workspace_custom_string_parameter_create(parameters.public_ip_name)
         parameters.prepare_encryption = AAZObjectArg(
             options=['prepare-encryption'],
             help='Prepare the workspace for encryption. Enables the Managed Identity for managed storage account.',
         )
-        _build_args_WorkspaceCustomBooleanParameterCreate(parameters)
+        cls._build_args_workspace_custom_boolean_parameter_create(parameters.prepare_encryption)
         parameters.encryption = AAZObjectArg(
             options=['encryption'],
             help='Contains the encryption details for Customer-Managed Key (CMK) enabled workspace.',
@@ -145,22 +145,22 @@ class Create(AAZCommand):
             options=['require-infrastructure-encryption'],
             help='A boolean indicating whether or not the DBFS root file system will be enabled with secondary layer of encryption with platform managed keys for data at rest.',
         )
-        _build_args_WorkspaceCustomBooleanParameterCreate(parameters)
+        cls._build_args_workspace_custom_boolean_parameter_create(parameters.require_infrastructure_encryption)
         parameters.storage_account_name = AAZObjectArg(
             options=['storage-account-name'],
             help='Default DBFS storage account name.',
         )
-        _build_args_WorkspaceCustomStringParameterCreate(parameters)
+        cls._build_args_workspace_custom_string_parameter_create(parameters.storage_account_name)
         parameters.storage_account_sku_name = AAZObjectArg(
             options=['storage-account-sku-name'],
             help='Storage account SKU name, ex: Standard_GRS, Standard_LRS. Refer https://aka.ms/storageskus for valid inputs.',
         )
-        _build_args_WorkspaceCustomStringParameterCreate(parameters)
+        cls._build_args_workspace_custom_string_parameter_create(parameters.storage_account_sku_name)
         parameters.vnet_address_prefix = AAZObjectArg(
             options=['vnet-address-prefix'],
             help='Address prefix for Managed virtual network. Default value for this input is 10.139.',
         )
-        _build_args_WorkspaceCustomStringParameterCreate(parameters)
+        cls._build_args_workspace_custom_string_parameter_create(parameters.vnet_address_prefix)
 
         encryption = cls._args_schema.parameters.encryption
         encryption.value = AAZObjectArg(
@@ -195,12 +195,12 @@ class Create(AAZCommand):
         Element = cls._args_schema.authorizations.Element
         Element.principal_id = AAZStrType(
             options=['principal-id'],
-            help='The provider's principal identifier. This is the identity that the provider will use to call ARM to manage the workspace resources.',
+            help='The provider\'s principal identifier. This is the identity that the provider will use to call ARM to manage the workspace resources.',
             required=True,
         )
         Element.role_definition_id = AAZStrType(
             options=['role-definition-id'],
-            help='The provider's role definition identifier. This role will define all the permissions that the provider must have on the workspace's container resource group. This role definition cannot have permission to delete the resource group.',
+            help='The provider\'s role definition identifier. This role will define all the permissions that the provider must have on the workspace\'s container resource group. This role definition cannot have permission to delete the resource group.',
             required=True,
         )
 
@@ -216,60 +216,68 @@ class Create(AAZCommand):
         )
         return _args_schema
 
-    _args_workspacecustombooleanparameter_create = None
+    _args_workspace_custom_boolean_parameter_create = None
 
     @classmethod
-    def _build_args_workspacecustombooleanparameter_create(cls, schema):
-        if cls._args_workspacecustombooleanparameter_create is not None:
-            schema.value = cls._args_workspacecustombooleanparameter_create.value
+    def _build_args_workspace_custom_boolean_parameter_create(cls, schema):
+        if cls._args_workspace_custom_boolean_parameter_create is not None:
+            schema.value = cls._args_workspace_custom_boolean_parameter_create.value
             return
 
-        cls._args_workspacecustombooleanparameter_create = AAZObjectArg(
+        cls._args_workspace_custom_boolean_parameter_create = AAZObjectArg(
         )
 
-        WorkspaceCustomBooleanParameter_create = cls._args_workspacecustombooleanparameter_create
-        WorkspaceCustomBooleanParameter_create.value = AAZBoolArg(
+        workspace_custom_boolean_parameter_create = cls._args_workspace_custom_boolean_parameter_create
+        workspace_custom_boolean_parameter_create.value = AAZBoolArg(
             options=['value'],
             help='The value which should be used for this field.',
             required=True,
         )
 
-        schema.value = cls._args_workspacecustombooleanparameter_create.value
+        schema.value = cls._args_workspace_custom_boolean_parameter_create.value
 
-    _args_workspacecustomstringparameter_create = None
+    _args_workspace_custom_string_parameter_create = None
 
     @classmethod
-    def _build_args_workspacecustomstringparameter_create(cls, schema):
-        if cls._args_workspacecustomstringparameter_create is not None:
-            schema.value = cls._args_workspacecustomstringparameter_create.value
+    def _build_args_workspace_custom_string_parameter_create(cls, schema):
+        if cls._args_workspace_custom_string_parameter_create is not None:
+            schema.value = cls._args_workspace_custom_string_parameter_create.value
             return
 
-        cls._args_workspacecustomstringparameter_create = AAZObjectArg(
+        cls._args_workspace_custom_string_parameter_create = AAZObjectArg(
         )
 
-        WorkspaceCustomStringParameter_create = cls._args_workspacecustomstringparameter_create
-        WorkspaceCustomStringParameter_create.value = AAZStrType(
+        workspace_custom_string_parameter_create = cls._args_workspace_custom_string_parameter_create
+        workspace_custom_string_parameter_create.value = AAZStrType(
             options=['value'],
             help='The value which should be used for this field.',
             required=True,
         )
 
-        schema.value = cls._args_workspacecustomstringparameter_create.value
+        schema.value = cls._args_workspace_custom_string_parameter_create.value
 
     def _execute_operations(self):
-        yield self.(ctx=self.ctx)()
+        yield self.WorkspacesCreateOrUpdate(ctx=self.ctx)()
 
     def _output(self, *args, **kwargs):
-        # TODO:
-        pass
+        result = self.deserialize_output(self.ctx.vars.instance, client_flatten=True)
+        return result
 
-    class (AAZHttpOperation):
+    class WorkspacesCreateOrUpdate(AAZHttpOperation):
         CLIENT_TYPE = "MgmtClient"
         ERROR_FORMAT = "ODataV4Format"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
             session = self.client.send_request(request=request, stream=False, **kwargs)
+            if session.http_response.status_code in [200, 201]:
+                return self.client.build_lro_polling(
+                    self.ctx.args.no_wait,
+                    session,
+                    deserialization_callback=self.on_200_201,
+                    lro_options={'final-state-via': 'azure-async-operation'},
+                    path_format_arguments=self.url_parameters,
+                )
             return self.on_error(session)
 
         @property
@@ -281,7 +289,7 @@ class Create(AAZCommand):
 
         @property
         def method(self):
-            return "put"
+            return "PUT"
 
         @property
         def url_parameters(self):
@@ -294,5 +302,6 @@ class Create(AAZCommand):
             parameters = {
             }
             return parameters
+
 
 __all__ = ["Create"]

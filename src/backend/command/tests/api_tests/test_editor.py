@@ -670,7 +670,7 @@ class APIEditorTest(CommandTestCase):
                     {
                         "name": "Create a workspace with managed identity for storage account",
                         "commands": [
-                            "az databricks workspace create --resource-group MyResourceGroup --name MyWorkspace --location eastus2euap --sku premium --prepare-encryption"
+                            "databricks workspace create --resource-group MyResourceGroup --name MyWorkspace --location eastus2euap --sku premium --prepare-encryption"
                         ]
                     }
                 ]

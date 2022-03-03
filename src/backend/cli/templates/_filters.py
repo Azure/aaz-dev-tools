@@ -32,7 +32,7 @@ def is_stable(env, stage):
 @environmentfilter
 def constant_convert(env, data):
     if isinstance(data, str):
-        return f"'{data}'"
+        return f"'%s'" % data.replace('\'', '\\\'')
     elif isinstance(data, (int, float, bool)):
         return f"{data}"
     elif data is None:

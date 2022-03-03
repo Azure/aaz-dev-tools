@@ -2,32 +2,27 @@ from cli.model.atomic import CLIAtomicCommand
 from command.model.configuration import CMDCommand, CMDHttpOperation, CMDCondition, CMDConditionAndOperator, \
     CMDConditionOrOperator, CMDConditionNotOperator, CMDConditionHasValueOperator, CMDInstanceUpdateOperation, \
     CMDJsonInstanceUpdateAction, CMDGenericInstanceUpdateAction, CMDOperation
-from utils.case import to_camel_case
-from utils import exceptions
+from utils.case import to_camel_case, to_snack_case
 from utils.plane import PlaneEnum
 from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator, \
     AzGenericUpdateOperationGenerator
 from .az_arg_group_generator import AzArgGroupGenerator, AzArgClsGenerator
+from .az_output_generator import AzOutputGenerator
 
 
 class AzCommandCtx:
 
-    def __init__(self):
-        self._variants = {}
+    def get_argument(self, arg_var, ref_var=None):
+        pass
 
-    def get_argument(self, arg_var):
+    def set_argument(self, arg_var, name, cls_name=None):
         pass
 
     def get_variant(self, variant):
         if variant.startswith('$'):
             variant = variant[1:]
-        return self._variants.get(variant, None)
-
-    def new_variant(self, variant):
-        if variant.startswith('$'):
-            variant = variant[1:]
-        self._variants[variant] = f'self.ctx.vars.{variant}'
-        return self._variants[variant]
+        variant = variant[0].lower() + variant[1:]
+        return f'self.ctx.vars.{variant}'
 
 
 class AzCommandGenerator:
@@ -108,6 +103,14 @@ class AzCommandGenerator:
 
         self.client_type = PlaneEnum.http_client(self.plane)
 
+        # prepare outputs
+        self.outputs = []
+        for output in self.cmd.cfg.outputs:
+            self.outputs.append(AzOutputGenerator(output, self.cmd_ctx))
+        if len(self.outputs) > 1:
+            # TODO: add support for output larger than 1
+            raise NotImplementedError()
+
     @property
     def help(self):
         return self.cmd.help
@@ -120,9 +123,7 @@ class AzCommandGenerator:
         return sorted(self._arg_cls_map.values(), key=lambda a: a.name)
 
     def has_outputs(self):
-        if self.cmd.cfg.outputs:
-            return True
-        return False
+        return len(self.outputs) > 0
 
     def render_condition(self, condition):
         assert isinstance(condition, CMDCondition)

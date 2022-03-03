@@ -1,6 +1,6 @@
 from cli.model.atomic import CLIAtomicCommand
 from command.model.configuration import CMDCommand, CMDHttpOperation, CMDCondition, CMDConditionAndOperator, \
-    CMDConditionOrOperator, CMDConditionNotOperator, CMDConditionHasValueOperator, CMDInstanceUpdateOperation, \
+    CMDConditionOrOperator, CMDHttpRequestJsonBody, CMDConditionHasValueOperator, CMDInstanceUpdateOperation, \
     CMDJsonInstanceUpdateAction, CMDGenericInstanceUpdateAction, CMDHttpResponseJsonBody, CMDClsSchemaBase
 from utils.case import to_camel_case, to_snack_case
 from utils import exceptions
@@ -11,7 +11,7 @@ from utils.error_format import AAZErrorFormatEnum
 class AzOperationGenerator:
 
     def __init__(self, name, cmd_ctx, operation):
-        self._name = name
+        self.name = name
         self._cmd_ctx = cmd_ctx
         self._operation = operation
         self.is_long_running = False
@@ -33,12 +33,16 @@ class AzHttpResponseGenerator:
         if response.body is not None and isinstance(response.body, CMDHttpResponseJsonBody) and \
                 response.body.json is not None and response.body.json.var is not None:
             variant = response.body.json.var
-            var_name = self._cmd_ctx.get_variant(variant)
-            if not var_name:
-                var_name = self._cmd_ctx.new_variant(variant)
-            self.variant_name = var_name
+            self.variant_name = self._cmd_ctx.get_variant(variant)
             self.schema_builder = f"_build_schema_{self.callback_name}"
             self.schema = response.body.json.schema
+
+
+class AzHttpRequestContentGenerator:
+
+    def __init__(self, cmd_ctx, body):
+        self._cmd_ctx = cmd_ctx
+        self._body = body
 
 
 class AzHttpOperationGenerator(AzOperationGenerator):
@@ -74,13 +78,24 @@ class AzHttpOperationGenerator(AzOperationGenerator):
             raise exceptions.InvalidAPIUsage(f"Invalid error format: {error_format}")
         self.error_format = error_format
 
+        # specify content
+        self.content = None
+        self.form_content = None
+        self.stream_content = None
+        if self._operation.http.request.body:
+            body = self._operation.http.request.body
+            if isinstance(body, CMDHttpRequestJsonBody):
+                self.content = AzHttpRequestContentGenerator(self._cmd_ctx, body)
+            else:
+                raise NotImplementedError()
+
     @property
     def url(self):
         return self._operation.http.path
 
     @property
     def method(self):
-        return self._operation.http.request.method
+        return self._operation.http.request.method.upper()
 
     @property
     def url_parameters(self):
@@ -150,24 +165,6 @@ class AzHttpOperationGenerator(AzOperationGenerator):
                     True
                 ])
         return parameters
-
-    @property
-    def content(self):
-        body = self._operation.http.request.body
-        if not body:
-            return None
-        # TODO:
-        return None
-
-    @property
-    def form_content(self):
-        # TODO:
-        return None
-
-    @property
-    def stream_content(self):
-        # TODO:
-        return None
 
 
 class AzJsonUpdateOperationGenerator(AzOperationGenerator):

@@ -1,0 +1,400 @@
+{
+  "root": {
+    "names": [
+      "aaz"
+    ],
+    "commandGroups": {
+      "databricks": {
+        "names": [
+          "databricks"
+        ],
+        "help": {
+          "short": "Manage databricks workspaces."
+        },
+        "commandGroups": {
+          "workspace": {
+            "names": [
+              "databricks",
+              "workspace"
+            ],
+            "help": {
+              "short": "Commands to manage databricks workspace."
+            },
+            "commandGroups": {
+              "vnet-peering": {
+                "names": [
+                  "databricks",
+                  "workspace",
+                  "vnet-peering"
+                ],
+                "help": {
+                  "short": "Commands to manage databricks workspace vnet peering."
+                },
+                "commands": {
+                  "show": {
+                    "names": [
+                      "databricks",
+                      "workspace",
+                      "vnet-peering",
+                      "show"
+                    ],
+                    "help": {
+                      "short": "Show the vnet peering."
+                    },
+                    "versions": [
+                      {
+                        "name": "2018-04-01",
+                        "stage": "Preview",
+                        "resources": [
+                          {
+                            "plane": "mgmt-plane",
+                            "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}",
+                            "version": "2018-04-01"
+                          }
+                        ],
+                        "examples": [
+                          {
+                            "name": "Show the vnet peering.",
+                            "commands": [
+                              "databricks workspace vnet-peering show --resource-group MyResourceGroup --workspace-name MyWorkspace -n MyPeering"
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "delete": {
+                    "names": [
+                      "databricks",
+                      "workspace",
+                      "vnet-peering",
+                      "delete"
+                    ],
+                    "help": {
+                      "short": "Delete the vnet peering."
+                    },
+                    "versions": [
+                      {
+                        "name": "2018-04-01",
+                        "stage": "Preview",
+                        "resources": [
+                          {
+                            "plane": "mgmt-plane",
+                            "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}",
+                            "version": "2018-04-01"
+                          }
+                        ],
+                        "examples": [
+                          {
+                            "name": "Delete the vnet peering.",
+                            "commands": [
+                              "databricks workspace vnet-peering delete --resource-group MyResourceGroup --workspace-name MyWorkspace -n MyPeering"
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "create": {
+                    "names": [
+                      "databricks",
+                      "workspace",
+                      "vnet-peering",
+                      "create"
+                    ],
+                    "help": {
+                      "short": "Create a vnet peering for a workspace."
+                    },
+                    "versions": [
+                      {
+                        "name": "2018-04-01",
+                        "stage": "Preview",
+                        "resources": [
+                          {
+                            "plane": "mgmt-plane",
+                            "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}",
+                            "version": "2018-04-01"
+                          }
+                        ],
+                        "examples": [
+                          {
+                            "name": "Create a vnet peering for a workspace",
+                            "commands": [
+                              "databricks workspace vnet-peering create --resource-group MyResourceGroup --workspace-name MyWorkspace -n MyPeering --remote-vnet /subscriptions/000000-0000-0000/resourceGroups/MyRG/providers/Microsoft.Network/virtualNetworks/MyVNet"
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "update": {
+                    "names": [
+                      "databricks",
+                      "workspace",
+                      "vnet-peering",
+                      "update"
+                    ],
+                    "help": {
+                      "short": "Update the vnet peering."
+                    },
+                    "versions": [
+                      {
+                        "name": "2018-04-01",
+                        "stage": "Preview",
+                        "resources": [
+                          {
+                            "plane": "mgmt-plane",
+                            "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}",
+                            "version": "2018-04-01"
+                          }
+                        ],
+                        "examples": [
+                          {
+                            "name": "Update the vnet peering (enable gateway transit and disable virtual network access).",
+                            "commands": [
+                              "databricks workspace vnet-peering update --resource-group MyResourceGroup --workspace-name MyWorkspace -n MyPeering --allow-gateway-transit --allow-virtual-network-access false"
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "list": {
+                    "names": [
+                      "databricks",
+                      "workspace",
+                      "vnet-peering",
+                      "list"
+                    ],
+                    "help": {
+                      "short": "List vnet peerings under a workspace."
+                    },
+                    "versions": [
+                      {
+                        "name": "2018-04-01",
+                        "stage": "Preview",
+                        "resources": [
+                          {
+                            "plane": "mgmt-plane",
+                            "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings",
+                            "version": "2018-04-01"
+                          }
+                        ],
+                        "examples": [
+                          {
+                            "name": "List vnet peerings under a workspace.",
+                            "commands": [
+                              "databricks workspace vnet-peering list --resource-group MyResourceGroup --workspace-name MyWorkspace"
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "commands": {
+              "show": {
+                "names": [
+                  "databricks",
+                  "workspace",
+                  "show"
+                ],
+                "help": {
+                  "short": "Show the workspace."
+                },
+                "versions": [
+                  {
+                    "name": "2018-04-01",
+                    "stage": "Preview",
+                    "resources": [
+                      {
+                        "plane": "mgmt-plane",
+                        "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}",
+                        "version": "2018-04-01"
+                      }
+                    ],
+                    "examples": [
+                      {
+                        "name": "Show the workspace.",
+                        "commands": [
+                          "databricks workspace show --resource-group MyResourceGroup --name MyWorkspace"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "delete": {
+                "names": [
+                  "databricks",
+                  "workspace",
+                  "delete"
+                ],
+                "help": {
+                  "short": "Delete the workspace."
+                },
+                "versions": [
+                  {
+                    "name": "2018-04-01",
+                    "stage": "Preview",
+                    "resources": [
+                      {
+                        "plane": "mgmt-plane",
+                        "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}",
+                        "version": "2018-04-01"
+                      }
+                    ],
+                    "examples": [
+                      {
+                        "name": "Delete the workspace.",
+                        "commands": [
+                          "databricks workspace delete --resource-group MyResourceGroup --name MyWorkspace"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "create": {
+                "names": [
+                  "databricks",
+                  "workspace",
+                  "create"
+                ],
+                "help": {
+                  "short": "Create a new workspace."
+                },
+                "versions": [
+                  {
+                    "name": "2018-04-01",
+                    "stage": "Preview",
+                    "resources": [
+                      {
+                        "plane": "mgmt-plane",
+                        "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}",
+                        "version": "2018-04-01"
+                      }
+                    ],
+                    "examples": [
+                      {
+                        "name": "Create a workspace",
+                        "commands": [
+                          "databricks workspace create --resource-group MyResourceGroup --name MyWorkspace --location westus --sku standard"
+                        ]
+                      },
+                      {
+                        "name": "Create a workspace with managed identity for storage account",
+                        "commands": [
+                          "databricks workspace create --resource-group MyResourceGroup --name MyWorkspace --location eastus2euap --sku premium --prepare-encryption"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "update": {
+                "names": [
+                  "databricks",
+                  "workspace",
+                  "update"
+                ],
+                "help": {
+                  "short": "Update the workspace."
+                },
+                "versions": [
+                  {
+                    "name": "2018-04-01",
+                    "stage": "Preview",
+                    "resources": [
+                      {
+                        "plane": "mgmt-plane",
+                        "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}",
+                        "version": "2018-04-01"
+                      }
+                    ],
+                    "examples": [
+                      {
+                        "name": "Update the workspace's tags.",
+                        "commands": [
+                          "databricks workspace update --resource-group MyResourceGroup --name MyWorkspace --tags {key1:value1,key2:value2}"
+                        ]
+                      },
+                      {
+                        "name": "Clean the workspace's tags.",
+                        "commands": [
+                          "databricks workspace update --resource-group MyResourceGroup --name MyWorkspace --tags {}"
+                        ]
+                      },
+                      {
+                        "name": "Prepare for CMK encryption by assigning identity for storage account.",
+                        "commands": [
+                          "databricks workspace update --resource-group MyResourceGroup --name MyWorkspace --prepare-encryption"
+                        ]
+                      },
+                      {
+                        "name": "Configure CMK encryption.",
+                        "commands": [
+                          "databricks workspace update --resource-group MyResourceGroup --name MyWorkspace --key-source Microsoft.KeyVault -key-name MyKey --key-vault https://myKeyVault.vault.azure.net/ --key-version 00000000000000000000000000000000"
+                        ]
+                      },
+                      {
+                        "name": "Revert encryption to Microsoft Managed Keys.",
+                        "commands": [
+                          "databricks workspace update --resource-group MyResourceGroup --name MyWorkspace --key-source Default"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "list": {
+                "names": [
+                  "databricks",
+                  "workspace",
+                  "list"
+                ],
+                "help": {
+                  "short": "Get all the workspaces."
+                },
+                "versions": [
+                  {
+                    "name": "2018-04-01",
+                    "stage": "Preview",
+                    "resources": [
+                      {
+                        "plane": "mgmt-plane",
+                        "id": "/subscriptions/{}/providers/microsoft.databricks/workspaces",
+                        "version": "2018-04-01"
+                      },
+                      {
+                        "plane": "mgmt-plane",
+                        "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces",
+                        "version": "2018-04-01"
+                      }
+                    ],
+                    "examples": [
+                      {
+                        "name": "List workspaces within a resource group.",
+                        "commands": [
+                          "databricks workspace list --resource-group MyResourceGroup"
+                        ]
+                      },
+                      {
+                        "name": "List workspaces within the default subscription.",
+                        "commands": [
+                          "databricks workspace list"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
