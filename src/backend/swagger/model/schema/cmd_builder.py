@@ -249,7 +249,10 @@ class CMDBuilder:
                 else:
                     model = CMDClsSchema()
                 model.read_only = self.read_only
-                model.frozen = self.frozen or self.cls_definitions[name]['model'].frozen  # need to combine with the model frozen, especially for _create model with all ready_only properties
+                if 'model' in self.cls_definitions[name]:
+                    model.frozen = self.frozen or self.cls_definitions[name]['model'].frozen  # need to combine with the model frozen, especially for _create model with all ready_only properties
+                else:
+                    model.frozen = self.frozen
                 model._type = f"@{name}"
             else:
                 if 'model' not in self.cls_definitions[name]:
