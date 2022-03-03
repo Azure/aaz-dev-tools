@@ -200,6 +200,7 @@ class CommandGenerator:
                     param.default = CMDSchemaDefault()
                     param.default.value = api_version
                     param.read_only = True
+                    param.const = True
                     if query.consts is None:
                         query.consts = []
                     query.consts.append(param)
