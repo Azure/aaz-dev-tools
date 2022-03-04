@@ -1,14 +1,12 @@
-import React, { Component } from "react";
+import {Component} from "react";
+import {Outlet} from "react-router-dom";
 
 export default class Generator extends Component {
-
-  constructor(props: any) {
-    super(props);
-  }
-
   render() {
-    return <div>
-      <p>Generator</p>
-    </div>
+    return (
+      <div>
+        <Outlet/>
+      </div>
+    )
   }
-} 
+}

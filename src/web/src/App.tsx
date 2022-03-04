@@ -4,7 +4,7 @@ import { Modal, Button } from "react-bootstrap"
 
 import Generator from "./components/Generator"
 import WorkspaceSelector from "./components/WorkspaceSelector"
-import Specifications from "./components/Specifications";
+import TargetSelector from "./components/TargetSelector"
 import {SpecSelector} from "./components/SpecSelector";
 import Workspace from "./components/Workspace";
 import {ConfigEditor} from "./components/ConfigEditor";
@@ -44,8 +44,9 @@ class App extends Component {
             <Route path=":workspaceName/resourceSelection" element={<SpecSelector />}/>
             <Route path=":workspaceName/editor" element={<ConfigEditor />} />
           </Route>
-          <Route path="generator" element={<Generator />} />
-          <Route path="specs" element={<Specifications />} />
+          <Route path="generator" element={<Generator/>}>
+            <Route index element={<TargetSelector/>}/>
+          </Route>
         </Routes>
       </main>
     );
