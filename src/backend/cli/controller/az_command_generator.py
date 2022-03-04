@@ -21,7 +21,7 @@ class AzCommandCtx:
     def get_variant(self, variant):
         if variant.startswith('$'):
             variant = variant[1:]
-        variant = variant[0].lower() + variant[1:]
+        variant = to_snack_case(variant)
         return f'self.ctx.vars.{variant}'
 
 
@@ -53,7 +53,8 @@ class AzCommandGenerator:
 
         # prepare operations
         self.lro_counts = 0
-
+        self._op_update_cls_map = {}    # shared between operation request and instance update
+        self._op_response_cls_map = {}   # shared between operation response
         self.operations = []
         self.http_operations = []
         self.json_update_operations = []
@@ -67,14 +68,14 @@ class AzCommandGenerator:
                 op_cls_name = to_camel_case(operation.operation_id)
                 if operation.long_running:
                     lr = True
-                op = AzHttpOperationGenerator(op_cls_name, self.cmd_ctx, operation)
+                op = AzHttpOperationGenerator(op_cls_name, self.cmd_ctx, operation, self._op_update_cls_map, self._op_response_cls_map)
                 self.http_operations.append(op)
             elif isinstance(operation, CMDInstanceUpdateOperation):
                 if isinstance(operation.instance_update, CMDJsonInstanceUpdateAction):
                     op_cls_name = f'InstanceUpdateByJson'
                     if json_update_counts > 0:
                         op_cls_name += f'_{json_update_counts}'
-                    op = AzJsonUpdateOperationGenerator(op_cls_name, self.cmd_ctx, operation)
+                    op = AzJsonUpdateOperationGenerator(op_cls_name, self.cmd_ctx, operation, self._op_update_cls_map)
                     self.json_update_operations.append(op)
                     json_update_counts += 1
                 elif isinstance(operation.instance_update, CMDGenericInstanceUpdateAction):

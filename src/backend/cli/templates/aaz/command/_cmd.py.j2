@@ -137,14 +137,14 @@ class {{ leaf.cls_name }}(AAZCommand):
 
         {%- for operation in leaf.operations %}
 
-        {%- if operation.when is not none and operation.when|length %}
-        if {{ leaf.render_operation_when(operation.when) }}:
+        {%- if op.when is not none and op.when|length %}
+        if {{ leaf.render_operation_when(op.when) }}:
         {{ "    " }}
         {%- else %}
         {{ "" }}
         {%- endif %}
 
-        {%- if operation.is_long_running %}yield {% endif %}self.{{ operation.name }}(ctx=self.ctx)()
+        {%- if op.is_long_running %}yield {% endif %}self.{{ op.name }}(ctx=self.ctx)()
 
         {%- endfor %}
 
@@ -161,24 +161,24 @@ class {{ leaf.cls_name }}(AAZCommand):
         return result
     {%- endif %}
 
-    {%- for operation in leaf.http_operations %}
+    {%- for op in leaf.http_operations %}
 
-    class {{ operation.name }}(AAZHttpOperation):
+    class {{ op.name }}(AAZHttpOperation):
         CLIENT_TYPE = "{{ leaf.client_type }}"
-        ERROR_FORMAT = "{{ operation.error_format }}"
+        ERROR_FORMAT = "{{ op.error_format }}"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
             session = self.client.send_request(request=request, stream=False, **kwargs)
 
-            {%- for response in operation.success_responses %}
+            {%- for response in op.success_responses %}
             if session.http_response.status_code in {{ response.status_codes|constant_convert }}:
-                {%- if operation.is_long_running %}
+                {%- if op.is_long_running %}
                 return self.client.build_lro_polling(
                     {% if leaf.support_no_wait %}self.ctx.args.no_wait{% else %}False{% endif %},
                     session,
                     deserialization_callback=self.{{ response.callback_name }},
-                    lro_options={{ operation.lro_options|constant_convert }},
+                    lro_options={{ op.lro_options|constant_convert }},
                     path_format_arguments=self.url_parameters,
                 )
                 {%- else %}
@@ -190,15 +190,15 @@ class {{ leaf.cls_name }}(AAZCommand):
         @property
         def url(self):
             return self.client.format_url(
-                "{{ operation.url }}",
+                "{{ op.url }}",
                 **self.url_parameters
             )
 
         @property
         def method(self):
-            return "{{ operation.method }}"
+            return "{{ op.method }}"
 
-        {%- if operation.url_parameters is not none and operation.url_parameters | length %}
+        {%- if op.url_parameters is not none and op.url_parameters | length %}
 
         @property
         def url_parameters(self):
@@ -214,7 +214,7 @@ class {{ leaf.cls_name }}(AAZCommand):
             return parameters
         {%- endif %}
 
-        {%- if operation.query_parameters is not none and operation.query_parameters | length %}
+        {%- if op.query_parameters is not none and op.query_parameters | length %}
 
         @property
         def query_parameters(self):
@@ -230,7 +230,7 @@ class {{ leaf.cls_name }}(AAZCommand):
             return parameters
         {%- endif %}
 
-        {%- if operation.header_parameters is not none and operation.header_parameters | length %}
+        {%- if op.header_parameters is not none and op.header_parameters | length %}
 
         @property
         def header_parameters(self):
@@ -246,15 +246,47 @@ class {{ leaf.cls_name }}(AAZCommand):
             return parameters
         {%- endif %}
 
-        {%- if operation.content is not none %}
+        {%- if op.content is not none %}
 
         @property
         def content(self):
+            {{ op.content.VALUE_NAME}}, {{ op.content.BUILDER_NAME }} = self.new_content(
+                self.ctx.args,
+                {%- if op.content.ref is not none %}
+                value={{ op.content.ref }},
+                {%- else %}
+                typ={{ op.content.typ }},
+                {%- endif %}
+            )
 
-            return None
+            {%- if op.content.cls_builder_name is not none %}
+            {{ op.content.cls_builder_name }}({{ op.content.BUILDER_NAME }})
+            {%- endif %}
+
+            {%- for scope, scope_define, props in op.content.iter_scopes() %}
+
+            {%- if scope_define is not none %}
+            {{ scope }} = {{ op.content.BUILDER_NAME }}.get({{ scope_define|constant_convert }})
+            if {{ scope }} is not None:
+            {%- endif %}
+
+            {%- for prop_name, prop_type, arg_key, cls_builder_name in props %}
+            {% if scope_define is not none %}{{ "    " }}{% endif %}
+            {%- if cls_builder_name is not none %}{{ cls_builder_name }}({% endif %}
+            {%- if prop_name is not None -%}
+            {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}{% if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %})
+            {%- else -%}
+            {{ scope }}.set_elements({{ prop_type }}{% if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %})
+            {%- endif %}
+            {%- if cls_builder_name is not none %}){% endif %}
+            {%- endfor %}
+
+            {%- endfor %}
+
+            return self.serialize_content({{ op.content.VALUE_NAME }})
         {%- endif %}
 
-        {%- if operation.form_content is not none %}
+        {%- if op.form_content is not none %}
 
         @property
         def form_content(self):
@@ -262,7 +294,7 @@ class {{ leaf.cls_name }}(AAZCommand):
             return None
         {%- endif %}
 
-        {%- if operation.stream_content is not none %}
+        {%- if op.stream_content is not none %}
 
         @property
         def stream_content(self):
@@ -278,7 +310,7 @@ class {{ leaf.cls_name }}(AAZCommand):
             self.ctx.set_var(
                 '{{ response.variant_name }}',
                 data,
-                schema_builder=self.{{ response.schema_builder }}
+                schema_builder=self.{{ response.schema.builder_name }}
             )
             {%- else %}
             pass
@@ -286,9 +318,37 @@ class {{ leaf.cls_name }}(AAZCommand):
 
         {%- if response.variant_name is not none %}
 
-        def {{ response.schema_builder }}():
-            # TODO:
-            pass
+        {{ response.schema.name }} = None
+
+        @classmethod
+        def {{ response.schema.builder_name }}(cls):
+            if cls.{{ response.schema.name }} is not None:
+                return cls.{{ response.schema.name }}
+
+            cls.{{ response.schema.name }} = {{ response.schema.type }} (
+                {%- for key, value in response.schema.kwargs.items() %}
+                {{ key }}={{ value|constant_convert }},
+                {%- endfor %}
+            )
+
+            {%- for scope, scope_define, props in response.schema.iter_scopes() %}
+
+            {{ scope }} = {{ scope_define }}
+
+            {%- for prop_name, prop_type, prop_kwargs, cls_builder_name in props %}
+            {{ scope }}.{{ prop_name }} = {{ prop_type }}(
+                {%- for key, value in prop_kwargs.items() %}
+                {{ key }}={{ value|constant_convert }},
+                {%- endfor %}
+            )
+            {%- if cls_builder_name is not none %}
+            {{ cls_builder_name }}({{ scope }}.{{ prop_name }})
+            {%- endif %}
+            {%- endfor %}
+
+            {%- endfor %}
+
+            return cls.{{ response.schema.name }}
         {%- endif %}
 
         {%- endfor %}
@@ -303,6 +363,77 @@ class {{ leaf.cls_name }}(AAZCommand):
 
     {%- endfor %}
 
+{%- for update_cls in op.get_update_clses() %}
+{{ "" }}
+{{ "" }}
+def {{ update_cls.builder_name }}({{ update_cls.BUILDER_NAME }}):
+    if {{ update_cls.BUILDER_NAME }} is None:
+        return
 
-__all__ = ["{{ leaf.cls_name }}"]
+    {%- for scope, scope_define, props in update_cls.iter_scopes() %}
+
+    {%- if scope_define is not none %}
+    {{ scope }} = {{ update_cls.BUILDER_NAME }}.get({{ scope_define|constant_convert }})
+    if {{ scope }} is not None:
+    {%- endif %}
+
+    {%- for prop_name, prop_type, arg_key, cls_builder_name in props %}
+    {% if scope_define is not none %}{{ "    " }}{% endif %}
+    {%- if cls_builder_name is not none %}{{ cls_builder_name }}({% endif %}
+    {%- if prop_name is not None -%}
+    {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}{% if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %})
+    {%- else -%}
+    {{ scope }}.set_elements({{ prop_type }}{% if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %})
+    {%- endif %}
+    {%- if cls_builder_name is not none %}){% endif %}
+    {%- endfor %}
+
+    {%- endfor %}
+
+
+{%- endfor %}
+
+{%- for resp_cls in op.get_response_clses() %}
+{{ "" }}
+{{ resp_cls.schema_name }} = None
+{{ "" }}
+{{ "" }}
+def {{ resp_cls.builder_name }}(schema):
+    if {{ resp_cls.schema_name }} is not None:
+        {%- for prop_name in resp_cls.props %}
+        schema.{{ prop_name }} = {{ resp_cls.schema_name }}.{{ prop_name }}
+        {%- endfor %}
+        return
+
+    {{ resp_cls.schema_name }} = {{ resp_cls.prop_type }}(
+        {%- for key, value in resp_cls.kwargs.items() %}
+        {{ key }}={{ value|constant_convert }}
+        {%- endfor %}
+    )
+
+    {%- for scope, scope_define, props in resp_cls.iter_scopes() %}
+
+    {{ scope }} = {{ scope_define }}
+
+    {%- for prop_name, prop_type, prop_kwargs, cls_builder_name in props %}
+    {{ scope }}.{{ prop_name }} = {{ prop_type }}(
+        {%- for key, value in prop_kwargs.items() %}
+        {{ key }}={{ value|constant_convert }},
+        {%- endfor %}
+    )
+    {%- if cls_builder_name is not none %}
+    {{ cls_builder_name }}({{ scope }}.{{ prop_name }})
+    {%- endif %}
+    {%- endfor %}
+
+    {%- endfor %}
+    {{- "\n" }}
+    {%- for prop_name in resp_cls.props %}
+    schema.{{ prop_name }} = {{ resp_cls.schema_name }}.{{ prop_name }}
+    {%- endfor %}
+
+{%- endfor %}
+
+
+__all__ = [{{ leaf.cls_name|constant_convert }}]
 {% endblock %}

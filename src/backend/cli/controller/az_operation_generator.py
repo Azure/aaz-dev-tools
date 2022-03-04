@@ -1,7 +1,11 @@
 from cli.model.atomic import CLIAtomicCommand
 from command.model.configuration import CMDCommand, CMDHttpOperation, CMDCondition, CMDConditionAndOperator, \
     CMDConditionOrOperator, CMDHttpRequestJsonBody, CMDConditionHasValueOperator, CMDInstanceUpdateOperation, \
-    CMDJsonInstanceUpdateAction, CMDGenericInstanceUpdateAction, CMDHttpResponseJsonBody, CMDClsSchemaBase
+    CMDRequestJson, CMDGenericInstanceUpdateAction, CMDHttpResponseJsonBody, CMDClsSchemaBase
+
+from command.model.configuration import CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase, \
+    CMDBooleanSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction, CMDGenericInstanceUpdateAction
+
 from utils.case import to_camel_case, to_snack_case
 from utils import exceptions
 from utils.plane import PlaneEnum
@@ -40,16 +44,28 @@ class AzHttpResponseGenerator:
 
 class AzHttpRequestContentGenerator:
 
+    VALUE_NAME = "_content_value"
+    BUILDER_NAME = "_builder"
+
     def __init__(self, cmd_ctx, body):
         self._cmd_ctx = cmd_ctx
-        self._body = body
+        assert isinstance(body.json, CMDRequestJson)
+        self._json = body.json
+        self.ref = self._cmd_ctx.get_variant(self.ref) if self._json.ref else None
+        self.typ = None  # TODO:
+
+    def iter_scopes(self):
+        scope = self.BUILDER_NAME
+        scope_define = None
 
 
 class AzHttpOperationGenerator(AzOperationGenerator):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, name, cmd_ctx, operation, request_cls_map, response_cls_map):
+        super().__init__(name, cmd_ctx, operation)
         assert isinstance(self._operation, CMDHttpOperation)
+        self._request_cls_map = request_cls_map
+        self._response_cls_map = response_cls_map
 
         if self._operation.long_running is not None:
             self.is_long_running = True
@@ -168,8 +184,25 @@ class AzHttpOperationGenerator(AzOperationGenerator):
 
 
 class AzJsonUpdateOperationGenerator(AzOperationGenerator):
-    pass
+
+    def __init__(self, name, cmd_ctx, operation, update_cls_map):
+        super().__init__(name, cmd_ctx, operation)
+        assert isinstance(self._operation, CMDInstanceUpdateOperation)
+        assert isinstance(self._operation.instance_update, CMDJsonInstanceUpdateAction)
+        self._update_cls_map = update_cls_map
 
 
 class AzGenericUpdateOperationGenerator(AzOperationGenerator):
+
+    def __init__(self, name, cmd_ctx, operation):
+        super().__init__(name, cmd_ctx, operation)
+        assert isinstance(self._operation, CMDInstanceUpdateOperation)
+        assert isinstance(self._operation.instance_update, CMDGenericInstanceUpdateAction)
+
+
+def render_schema(prop, cls_map):
+    pass
+
+
+def render_schema_base(prop, cls_map):
     pass
