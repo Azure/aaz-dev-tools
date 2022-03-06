@@ -47,10 +47,9 @@ class CMDArgBuilder:
                         raise NotImplementedError()
             else:
                 raise NotImplementedError()
-            if getattr(parent.schema, 'cls', None):
-                arg_var = arg_var.replace(parent._arg_var, '')
-                if not arg_var.startswith('.'):
-                    arg_var = f'.{arg_var}'
+            cls_name = getattr(parent.schema, 'cls', None)
+            if cls_name is not None:
+                arg_var = arg_var.replace(parent._arg_var, f"@{cls_name}")
 
         return cls(schema=schema, arg_var=arg_var, parent=parent)
 

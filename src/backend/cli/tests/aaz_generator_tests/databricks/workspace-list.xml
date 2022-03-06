@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<CodeGen timestamp="2022-03-03T11:18:32.305755Z" plane="mgmt-plane">
+<CodeGen timestamp="2022-03-06T08:20:27.764872Z" plane="mgmt-plane">
   <resource id="/subscriptions/{}/providers/microsoft.databricks/workspaces" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9wcm92aWRlcnMvTWljcm9zb2Z0LkRhdGFicmlja3Mvd29ya3NwYWNlcw==/V/MjAxOC0wNC0wMQ=="/>
   <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2Vz/V/MjAxOC0wNC0wMQ=="/>
   <commandGroup name="databricks workspace">
@@ -7,8 +7,8 @@
       <resource id="/subscriptions/{}/providers/microsoft.databricks/workspaces" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9wcm92aWRlcnMvTWljcm9zb2Z0LkRhdGFicmlja3Mvd29ya3NwYWNlcw==/V/MjAxOC0wNC0wMQ=="/>
       <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2Vz/V/MjAxOC0wNC0wMQ=="/>
       <argGroup name="">
-        <arg type="resourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True"/>
-        <arg type="subscriptionId" var="$Path.subscriptionId" options="subscription" required="True"/>
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True"/>
       </argGroup>
       <condition var="$Condition_Workspaces_ListBySubscription">
         <operator type="and">
@@ -42,7 +42,7 @@
                 <schema type="object">
                   <prop type="array<object>" name="value">
                     <item type="object">
-                      <prop readOnly="True" type="resourceId" name="id">
+                      <prop readOnly="True" type="ResourceId" name="id">
                         <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"/>
                       </prop>
                       <prop readOnly="True" type="string" name="name"/>
@@ -52,7 +52,7 @@
                           <item type="string"/>
                         </additionalProp>
                       </prop>
-                      <prop type="resourceLocation" name="location" required="True"/>
+                      <prop type="ResourceLocation" name="location" required="True"/>
                       <prop type="object" name="properties" required="True" clientFlatten="True">
                         <prop type="string" name="managedResourceGroupId" required="True"/>
                         <prop type="object" name="parameters">
@@ -200,7 +200,7 @@
                 <schema type="object">
                   <prop type="array<object>" name="value">
                     <item type="object">
-                      <prop readOnly="True" type="resourceId" name="id">
+                      <prop readOnly="True" type="ResourceId" name="id">
                         <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"/>
                       </prop>
                       <prop readOnly="True" type="string" name="name"/>
@@ -210,7 +210,7 @@
                           <item type="string"/>
                         </additionalProp>
                       </prop>
-                      <prop type="resourceLocation" name="location" required="True"/>
+                      <prop type="ResourceLocation" name="location" required="True"/>
                       <prop type="object" name="properties" required="True" clientFlatten="True">
                         <prop type="string" name="managedResourceGroupId" required="True"/>
                         <prop type="object" name="parameters">

@@ -360,7 +360,7 @@ class CMDPasswordArg(CMDPasswordArgBase, CMDStringArg):
 
 # subscription
 class CMDSubscriptionIdArgBase(CMDStringArgBase):
-    TYPE_VALUE = "subscriptionId"
+    TYPE_VALUE = "SubscriptionId"
 
 
 class CMDSubscriptionIdArg(CMDSubscriptionIdArgBase, CMDStringArg):
@@ -369,7 +369,7 @@ class CMDSubscriptionIdArg(CMDSubscriptionIdArgBase, CMDStringArg):
 
 # resourceGroupName
 class CMDResourceGroupNameArgBase(CMDStringArgBase):
-    TYPE_VALUE = "resourceGroupName"
+    TYPE_VALUE = "ResourceGroupName"
 
 
 class CMDResourceGroupNameArg(CMDResourceGroupNameArgBase, CMDStringArg):
@@ -378,7 +378,7 @@ class CMDResourceGroupNameArg(CMDResourceGroupNameArgBase, CMDStringArg):
 
 # resourceId
 class CMDResourceIdArgBase(CMDStringArgBase):
-    TYPE_VALUE = "resourceId"
+    TYPE_VALUE = "ResourceId"
 
     fmt = ModelType(
         CMDResourceIdFormat,
@@ -393,7 +393,7 @@ class CMDResourceIdArg(CMDResourceIdArgBase, CMDStringArg):
 
 # resourceLocation
 class CMDResourceLocationArgBase(CMDStringArgBase):
-    TYPE_VALUE = "resourceLocation"
+    TYPE_VALUE = "ResourceLocation"
 
 
 class CMDResourceLocationArg(CMDResourceLocationArgBase, CMDStringArg):

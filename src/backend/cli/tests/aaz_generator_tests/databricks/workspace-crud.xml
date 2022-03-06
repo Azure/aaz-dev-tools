@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='utf-8'?>
-<CodeGen timestamp="2022-03-03T11:18:32.305755Z" plane="mgmt-plane">
+<CodeGen timestamp="2022-03-06T08:20:27.764872Z" plane="mgmt-plane">
   <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfQ==/V/MjAxOC0wNC0wMQ=="/>
   <commandGroup name="databricks workspace">
     <command name="show" version="2018-04-01">
       <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfQ==/V/MjAxOC0wNC0wMQ=="/>
       <argGroup name="">
-        <arg type="resourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
-        <arg type="subscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
         <arg type="string" var="$Path.workspaceName" options="workspace-name name n" required="True" idPart="name">
           <help short="The name of the workspace."/>
           <format maxLength="64" minLength="3"/>
@@ -34,7 +34,7 @@
             <body>
               <json var="$Instance">
                 <schema type="object">
-                  <prop readOnly="True" type="resourceId" name="id">
+                  <prop readOnly="True" type="ResourceId" name="id">
                     <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"/>
                   </prop>
                   <prop readOnly="True" type="string" name="name"/>
@@ -44,7 +44,7 @@
                       <item type="string"/>
                     </additionalProp>
                   </prop>
-                  <prop type="resourceLocation" name="location" required="True"/>
+                  <prop type="ResourceLocation" name="location" required="True"/>
                   <prop type="object" name="properties" required="True" clientFlatten="True">
                     <prop type="string" name="managedResourceGroupId" required="True"/>
                     <prop type="object" name="parameters">
@@ -173,8 +173,8 @@
     <command name="delete" version="2018-04-01">
       <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfQ==/V/MjAxOC0wNC0wMQ=="/>
       <argGroup name="">
-        <arg type="resourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
-        <arg type="subscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
         <arg type="string" var="$Path.workspaceName" options="workspace-name name n" required="True" idPart="name">
           <help short="The name of the workspace."/>
           <format maxLength="64" minLength="3"/>
@@ -213,13 +213,13 @@
     <command name="create" version="2018-04-01">
       <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfQ==/V/MjAxOC0wNC0wMQ=="/>
       <argGroup name="">
-        <arg type="resourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
-        <arg type="subscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
         <arg type="string" var="$Path.workspaceName" options="workspace-name name n" required="True" idPart="name">
           <help short="The name of the workspace."/>
           <format maxLength="64" minLength="3"/>
         </arg>
-        <arg type="resourceLocation" var="$parameters.location" options="location l" required="True">
+        <arg type="ResourceLocation" var="$parameters.location" options="location l" required="True">
           <help short="The geo-location where the resource lives"/>
         </arg>
         <arg type="array<object>" var="$parameters.properties.authorizations" options="authorizations" singularOptions="authorization">
@@ -240,7 +240,7 @@
           <help short="The workspace's custom parameters."/>
           <arg type="object" var="$parameters.properties.parameters.amlWorkspaceId" options="aml-workspace-id" cls="WorkspaceCustomStringParameter_create">
             <help short="The ID of a Azure Machine Learning workspace to link with Databricks workspace"/>
-            <arg type="string" var="$parameters.properties.parameters.amlWorkspaceId.value" options="value" required="True">
+            <arg type="string" var="@WorkspaceCustomStringParameter_create.value" options="value" required="True">
               <help short="The value which should be used for this field."/>
             </arg>
           </arg>
@@ -255,7 +255,7 @@
           </arg>
           <arg type="object" var="$parameters.properties.parameters.enableNoPublicIp" options="enable-no-public-ip" cls="WorkspaceCustomBooleanParameter_create">
             <help short="Should the Public IP be Disabled?"/>
-            <arg type="boolean" var="$parameters.properties.parameters.enableNoPublicIp.value" options="value" required="True">
+            <arg type="boolean" var="@WorkspaceCustomBooleanParameter_create.value" options="value" required="True">
               <help short="The value which should be used for this field."/>
             </arg>
           </arg>
@@ -355,18 +355,18 @@
                       <item type="string"/>
                     </additionalProp>
                   </prop>
-                  <prop type="resourceLocation" name="location" arg="$parameters.location" required="True"/>
+                  <prop type="ResourceLocation" name="location" arg="$parameters.location" required="True"/>
                   <prop type="object" name="properties" required="True" clientFlatten="True">
                     <prop type="string" name="managedResourceGroupId" arg="$parameters.properties.managedResourceGroupId" required="True"/>
                     <prop type="object" name="parameters" arg="$parameters.properties.parameters">
                       <prop type="object" name="amlWorkspaceId" arg="$parameters.properties.parameters.amlWorkspaceId" cls="WorkspaceCustomStringParameter_create">
-                        <prop type="string" name="value" arg="$parameters.properties.parameters.amlWorkspaceId.value" required="True"/>
+                        <prop type="string" name="value" arg="@WorkspaceCustomStringParameter_create.value" required="True"/>
                       </prop>
                       <prop type="@WorkspaceCustomStringParameter_create" name="customVirtualNetworkId" arg="$parameters.properties.parameters.customVirtualNetworkId"/>
                       <prop type="@WorkspaceCustomStringParameter_create" name="customPublicSubnetName" arg="$parameters.properties.parameters.customPublicSubnetName"/>
                       <prop type="@WorkspaceCustomStringParameter_create" name="customPrivateSubnetName" arg="$parameters.properties.parameters.customPrivateSubnetName"/>
                       <prop type="object" name="enableNoPublicIp" arg="$parameters.properties.parameters.enableNoPublicIp" cls="WorkspaceCustomBooleanParameter_create">
-                        <prop type="boolean" name="value" arg="$parameters.properties.parameters.enableNoPublicIp.value" required="True"/>
+                        <prop type="boolean" name="value" arg="@WorkspaceCustomBooleanParameter_create.value" required="True"/>
                       </prop>
                       <prop type="@WorkspaceCustomStringParameter_create" name="loadBalancerBackendPoolName" arg="$parameters.properties.parameters.loadBalancerBackendPoolName"/>
                       <prop type="@WorkspaceCustomStringParameter_create" name="loadBalancerId" arg="$parameters.properties.parameters.loadBalancerId"/>
@@ -412,7 +412,7 @@
             <body>
               <json var="$Instance">
                 <schema type="object">
-                  <prop readOnly="True" type="resourceId" name="id">
+                  <prop readOnly="True" type="ResourceId" name="id">
                     <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"/>
                   </prop>
                   <prop readOnly="True" type="string" name="name"/>
@@ -422,7 +422,7 @@
                       <item type="string"/>
                     </additionalProp>
                   </prop>
-                  <prop type="resourceLocation" name="location" required="True"/>
+                  <prop type="ResourceLocation" name="location" required="True"/>
                   <prop type="object" name="properties" required="True" clientFlatten="True">
                     <prop type="string" name="managedResourceGroupId" required="True"/>
                     <prop type="object" name="parameters">
@@ -551,8 +551,8 @@
     <command name="update" version="2018-04-01">
       <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfQ==/V/MjAxOC0wNC0wMQ=="/>
       <argGroup name="">
-        <arg type="resourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
-        <arg type="subscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
         <arg type="string" var="$Path.workspaceName" options="workspace-name name n" required="True" idPart="name">
           <help short="The name of the workspace."/>
           <format maxLength="64" minLength="3"/>
@@ -575,7 +575,7 @@
           <help short="The workspace's custom parameters."/>
           <arg type="object" var="$parameters.properties.parameters.amlWorkspaceId" options="aml-workspace-id" cls="WorkspaceCustomStringParameter_update">
             <help short="The ID of a Azure Machine Learning workspace to link with Databricks workspace"/>
-            <arg type="string" var="$parameters.properties.parameters.amlWorkspaceId.value" options="value" required="True">
+            <arg type="string" var="@WorkspaceCustomStringParameter_update.value" options="value" required="True">
               <help short="The value which should be used for this field."/>
             </arg>
           </arg>
@@ -590,7 +590,7 @@
           </arg>
           <arg type="object" var="$parameters.properties.parameters.enableNoPublicIp" options="enable-no-public-ip" cls="WorkspaceCustomBooleanParameter_update">
             <help short="Should the Public IP be Disabled?"/>
-            <arg type="boolean" var="$parameters.properties.parameters.enableNoPublicIp.value" options="value" required="True">
+            <arg type="boolean" var="@WorkspaceCustomBooleanParameter_update.value" options="value" required="True">
               <help short="The value which should be used for this field."/>
             </arg>
           </arg>
@@ -692,7 +692,7 @@
             <body>
               <json var="$Instance">
                 <schema type="object" cls="Workspace_read">
-                  <prop readOnly="True" type="resourceId" name="id">
+                  <prop readOnly="True" type="ResourceId" name="id">
                     <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"/>
                   </prop>
                   <prop readOnly="True" type="string" name="name"/>
@@ -702,7 +702,7 @@
                       <item type="string"/>
                     </additionalProp>
                   </prop>
-                  <prop type="resourceLocation" name="location" required="True"/>
+                  <prop type="ResourceLocation" name="location" required="True"/>
                   <prop type="object" name="properties" required="True" clientFlatten="True">
                     <prop type="string" name="managedResourceGroupId" required="True"/>
                     <prop type="object" name="parameters">
@@ -839,13 +839,13 @@
                 <prop type="string" name="managedResourceGroupId" arg="$parameters.properties.managedResourceGroupId" required="True"/>
                 <prop type="object" name="parameters" arg="$parameters.properties.parameters">
                   <prop type="object" name="amlWorkspaceId" arg="$parameters.properties.parameters.amlWorkspaceId" cls="WorkspaceCustomStringParameter_update">
-                    <prop type="string" name="value" arg="$parameters.properties.parameters.amlWorkspaceId.value" required="True"/>
+                    <prop type="string" name="value" arg="@WorkspaceCustomStringParameter_update.value" required="True"/>
                   </prop>
                   <prop type="@WorkspaceCustomStringParameter_update" name="customVirtualNetworkId" arg="$parameters.properties.parameters.customVirtualNetworkId"/>
                   <prop type="@WorkspaceCustomStringParameter_update" name="customPublicSubnetName" arg="$parameters.properties.parameters.customPublicSubnetName"/>
                   <prop type="@WorkspaceCustomStringParameter_update" name="customPrivateSubnetName" arg="$parameters.properties.parameters.customPrivateSubnetName"/>
                   <prop type="object" name="enableNoPublicIp" arg="$parameters.properties.parameters.enableNoPublicIp" cls="WorkspaceCustomBooleanParameter_update">
-                    <prop type="boolean" name="value" arg="$parameters.properties.parameters.enableNoPublicIp.value" required="True"/>
+                    <prop type="boolean" name="value" arg="@WorkspaceCustomBooleanParameter_update.value" required="True"/>
                   </prop>
                   <prop type="@WorkspaceCustomStringParameter_update" name="loadBalancerBackendPoolName" arg="$parameters.properties.parameters.loadBalancerBackendPoolName"/>
                   <prop type="@WorkspaceCustomStringParameter_update" name="loadBalancerId" arg="$parameters.properties.parameters.loadBalancerId"/>

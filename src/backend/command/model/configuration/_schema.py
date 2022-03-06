@@ -452,7 +452,7 @@ class CMDPasswordSchema(CMDPasswordSchemaBase, CMDStringSchema):
 
 # ResourceId
 class CMDResourceIdSchemaBase(CMDStringSchemaBase):
-    TYPE_VALUE = "resourceId"
+    TYPE_VALUE = "ResourceId"
     ARG_TYPE = CMDResourceIdArgBase
 
     fmt = ModelType(
@@ -468,7 +468,7 @@ class CMDResourceIdSchema(CMDResourceIdSchemaBase, CMDStringSchema):
 
 # ResourceLocation
 class CMDResourceLocationSchemaBase(CMDStringSchemaBase):
-    TYPE_VALUE = "resourceLocation"
+    TYPE_VALUE = "ResourceLocation"
     ARG_TYPE = CMDResourceLocationArgBase
 
 

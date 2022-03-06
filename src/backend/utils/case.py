@@ -1,5 +1,6 @@
 import re
 
+
 def to_camel_case(name):
     assert isinstance(name, str)
     parts = name.replace('-', ' ').replace('_', ' ').split()
