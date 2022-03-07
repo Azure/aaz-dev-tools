@@ -1,13 +1,18 @@
-.modal-width {
+.target-dialog {
     width: 60%;
+    height: 500px;
     max-width: none!important;
 }
 
-.modal-header {
+.target-content {
+    height: 45%;
+}
+
+.target-header {
     height:0em;
 }
 
-.modal-title {
+.target-title {
     font: 1em sans-serif;
-    margin-left: 35%;
+    margin-left: 38%;
 }
