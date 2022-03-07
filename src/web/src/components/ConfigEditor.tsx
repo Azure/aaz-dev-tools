@@ -1,8 +1,10 @@
 import React, { Component, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom"
-import { Row, Col, Navbar, Nav, Container, ListGroup } from "react-bootstrap"
+import { Row, Col, Navbar, Nav, Container, ListGroup, Button } from "react-bootstrap"
 import type { WrapperProp } from "./SpecSelector"
+import {SpecSelector} from "./SpecSelector";
+
 import { Set } from "typescript";
 
 
@@ -92,6 +94,7 @@ type ConfigEditorState = {
   indexToCommandGroupName: NumberToString,
   indexToCommandGroup: NumberToCommandGroup,
   indexToTreeNode: NumberToTreeNode,
+  showSpecSelectorModal: boolean
 }
 
 class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
@@ -104,7 +107,8 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       currentIndex: 0,
       indexToCommandGroupName: {},
       indexToCommandGroup: {},
-      indexToTreeNode: {}
+      indexToTreeNode: {},
+      showSpecSelectorModal: false,
     }
   }
 
@@ -173,8 +177,12 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   getSwagger = () => {
     return axios.get(`/AAZ/Editor/Workspaces/${this.props.params.workspaceName}`)
       .then(res => {
-        // console.log(res.data)
+        console.log(res.data)
         let commandGroups: CommandGroups = res.data.commandTree.commandGroups
+        if (!commandGroups){
+          this.setState({showSpecSelectorModal: true})
+          return 
+        }
         this.setState({ commandGroups: commandGroups })
         let depth = 0
         return this.parseCommandGroup(depth, 'aaz', 0, commandGroups)
@@ -386,8 +394,12 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   render() {
     return <div className="m-1 p-1">
       <Navbar bg="dark" variant="dark">
-          <Navbar.Brand href="editor">Editor</Navbar.Brand>
-          <Navbar.Brand href="resourceSelection">Resource Selection</Navbar.Brand>
+          <Navbar.Brand href={window.location.href} >Editor</Navbar.Brand>
+          <Navbar.Brand>
+            <Button variant='dark' onClick={()=>{this.setState({showSpecSelectorModal:true})}}>
+              Resource Selection
+            </Button>
+          </Navbar.Brand>
           <Nav className="me-auto"/>
       </Navbar>
       <Row>
@@ -404,8 +416,8 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         <Col xxl="9">
           <this.displayCommandDetail />
         </Col>
-
       </Row>
+      {this.state.showSpecSelectorModal?<SpecSelector/>:<></>}
 
     </div>
   }

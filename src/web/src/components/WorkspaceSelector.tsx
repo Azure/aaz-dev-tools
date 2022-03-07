@@ -53,7 +53,7 @@ export default class WorkspaceSelector extends Component<{}, workspaceSelectorSt
   WorkspaceList = () => {
     return <>{
       this.state.workspaces.map((workspace: Workspace, index) => {
-        return <ListGroup.Item key={index} action href={`/workspace/${workspace.name}/resourceSelection`}>
+        return <ListGroup.Item key={index} action href={`/workspace/${workspace.name}`}>
           <Row>
             <Col>{workspace.name}</Col>
             <Col>{workspace.lastModified.toLocaleString()}</Col>
@@ -107,9 +107,10 @@ export default class WorkspaceSelector extends Component<{}, workspaceSelectorSt
         plane: 'mgmt-plane'
       })
         .then(() => {
-          this.handleClose()
-          this.loadWorkspaces()
-          this.setState({ showAlert: false, alertText: "", validated: false })
+          // this.handleClose()
+          // this.loadWorkspaces()
+          // this.setState({ showAlert: false, alertText: "", validated: false })
+          window.location.href = `/workspace/${workspaceName}`
         })
         .catch(error => {
           console.log(error);

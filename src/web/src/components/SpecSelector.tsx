@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom"
-import { ListGroup, Row, Col, Button, Dropdown, DropdownButton, Spinner, Navbar, Nav, Container } from "react-bootstrap"
+import { ListGroup, Row, Col, Button, Dropdown, DropdownButton, Spinner, Modal, Navbar, Nav } from "react-bootstrap"
 import { Set } from "typescript";
 
 type ParamsType = {
@@ -136,10 +136,6 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
         }
       })
       .catch((err) => console.log(err));
-  }
-
-  resetResourcesAndVersion = () => {
-    console.log("reset")
   }
 
   componentDidMount() {
@@ -312,7 +308,7 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
     this.state.selectedResources.forEach(resourceId => {
       finalResources.resources.push(resourceId)
     })
-    console.log(finalResources)
+    // console.log(finalResources)
     this.addSwagger(finalResources)
   }
 
@@ -321,35 +317,20 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
       .then(() => {
         axios.get(`/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz`)
           .then((res) => {
-            console.log(res.data)
-            window.location.reload();
+            // console.log(res.data)
+            window.location.href = `/workspace/${this.props.params.workspaceName}`
           })
 
       })
       .catch((err) => console.log(err.response));
   }
 
+  resetResourcesAndVersion = () => {
+    window.location.href = `/workspace/${this.props.params.workspaceName}`
+  }
 
-
-  render() {
-    return <div className="m-1 p-1">
-      <Navbar bg="dark" variant="dark">
-          <Navbar.Brand href="editor">Editor</Navbar.Brand>
-          <Navbar.Brand href="resourceSelection">Resource Selection</Navbar.Brand>
-          <Nav className="me-auto"/>
-      </Navbar>
-      <Row>
-        <Col lg='11'>
-          <h1>
-            Workspace Name: {this.props.params.workspaceName}
-          </h1>
-        </Col>
-        <Col lg="auto">
-          {this.state.altered ? <Button variant="dark" onClick={this.saveResourcesAndVersion}>Save</Button> : <Button onClick={this.resetResourcesAndVersion}>Cancel</Button>}
-        </Col>
-
-      </Row>
-
+  DropdownButtonRow = () => {
+    return (
       <Row>
         <Col xs="auto">
           <DropdownButton variant="dark" title={this.state.mgmtPlane ? 'Management Plane' : 'Data Plane'} onSelect={this.handleTogglePlane} >
@@ -377,14 +358,23 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
             <this.ListVersions />
           </DropdownButton>
         </Col>
-      </Row>
-      <br />
-      <Row>
-        <Col>
-          <this.ListResources />
+        <Col lg="auto">
+          <Button variant="secondary" onClick={this.saveResourcesAndVersion}>Save</Button>
+          <> </>
+          <Button variant="secondary" onClick={this.resetResourcesAndVersion}>Cancel</Button>
         </Col>
       </Row>
+    )
+  }
 
+  render() {
+    return <div className="m-1 p-1">
+      <Modal show={true} backdrop="static" size='xl'>
+        <Modal.Body>
+          <this.DropdownButtonRow />
+          <this.ListResources />
+        </Modal.Body>
+      </Modal>
     </div>
   }
 }
