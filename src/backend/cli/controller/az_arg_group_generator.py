@@ -85,7 +85,7 @@ class AzArgClsGenerator:
         self.arg = arg
         self.name = name
         self.args_schema_name = f"_args_{to_snack_case(name)}"
-        self.builder_name = f"_build{self.args_schema_name}"
+        self.builder_name = parse_cls_builder_name(name)
         self._cls_map = cls_map
         self.arg_type, self.arg_kwargs, _ = render_arg_base(self.arg, self._cls_map)
 

@@ -44,7 +44,7 @@ class AzRequestClsGenerator:
         self._cmd_ctx = cmd_ctx
         self.schema = schema
         self.name = name
-        self.builder_name = f"_build_schema_{to_snack_case(name)}"
+        self.builder_name = parse_cls_builder_name(name)
         self._request_cls_map = request_cls_map
 
     def iter_scopes(self):
