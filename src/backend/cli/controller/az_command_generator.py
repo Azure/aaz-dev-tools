@@ -32,7 +32,10 @@ class AzCommandCtx:
                 self._cls_arg_maps[map_name] = {}
             self._cls_arg_maps[map_name][var_name] = ('.'.join(keys), hide)
         else:
-            self._ctx_arg_map[var_name] = ('.'.join([ctx_namespace, *keys]), hide)
+            self._ctx_arg_map[var_name] = (
+                '.'.join([ctx_namespace, *keys]).replace('.[', '[').replace('.{', '{'),
+                hide
+            )
 
     def get_argument(self, var_name):
         if var_name.startswith('@'):

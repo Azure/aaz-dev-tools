@@ -325,10 +325,10 @@ class Create(AAZCommand):
                 self.ctx.args,
                 typ=AAZObjectType,
             )
-            _builder.set_prop('tags', AAZDictType, '.')
-            _builder.set_prop('location', AAZStrType, '.', typ_kwargs={'flags': {'required': True}})
+            _builder.set_prop('tags', AAZDictType, '.tags')
+            _builder.set_prop('location', AAZStrType, '.location', typ_kwargs={'flags': {'required': True}})
             _builder.set_prop('properties', AAZObjectType, '.', typ_kwargs={'flags': {'required': True, 'client_flatten': True}})
-            _builder.set_prop('sku', AAZObjectType, '.')
+            _builder.set_prop('sku', AAZObjectType, '.sku')
 
             tags = _builder.get('.tags')
             if tags is not None:
@@ -336,53 +336,53 @@ class Create(AAZCommand):
 
             properties = _builder.get('.properties')
             if properties is not None:
-                properties.set_prop('managedResourceGroupId', AAZStrType, '.', typ_kwargs={'flags': {'required': True}})
-                properties.set_prop('parameters', AAZObjectType, '.')
-                properties.set_prop('uiDefinitionUri', AAZStrType, '.')
-                properties.set_prop('authorizations', AAZListType, '.')
+                properties.set_prop('managedResourceGroupId', AAZStrType, '.managed_resource_group_id', typ_kwargs={'flags': {'required': True}})
+                properties.set_prop('parameters', AAZObjectType, '.parameters')
+                properties.set_prop('uiDefinitionUri', AAZStrType, '.ui_definition_uri')
+                properties.set_prop('authorizations', AAZListType, '.authorizations')
 
             parameters = _builder.get('.properties.parameters')
             if parameters is not None:
-                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('amlWorkspaceId', AAZObjectType, '.'))
-                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('customVirtualNetworkId', AAZObjectType, '.'))
-                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('customPublicSubnetName', AAZObjectType, '.'))
-                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('customPrivateSubnetName', AAZObjectType, '.'))
-                _build_schema_workspace_custom_boolean_parameter_create(parameters.set_prop('enableNoPublicIp', AAZObjectType, '.'))
-                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('loadBalancerBackendPoolName', AAZObjectType, '.'))
-                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('loadBalancerId', AAZObjectType, '.'))
-                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('natGatewayName', AAZObjectType, '.'))
-                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('publicIpName', AAZObjectType, '.'))
-                _build_schema_workspace_custom_boolean_parameter_create(parameters.set_prop('prepareEncryption', AAZObjectType, '.'))
-                parameters.set_prop('encryption', AAZObjectType, '.')
-                _build_schema_workspace_custom_boolean_parameter_create(parameters.set_prop('requireInfrastructureEncryption', AAZObjectType, '.'))
-                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('storageAccountName', AAZObjectType, '.'))
-                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('storageAccountSkuName', AAZObjectType, '.'))
-                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('vnetAddressPrefix', AAZObjectType, '.'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('amlWorkspaceId', AAZObjectType, '.aml_workspace_id'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('customVirtualNetworkId', AAZObjectType, '.custom_virtual_network_id'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('customPublicSubnetName', AAZObjectType, '.custom_public_subnet_name'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('customPrivateSubnetName', AAZObjectType, '.custom_private_subnet_name'))
+                _build_schema_workspace_custom_boolean_parameter_create(parameters.set_prop('enableNoPublicIp', AAZObjectType, '.enable_no_public_ip'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('loadBalancerBackendPoolName', AAZObjectType, '.load_balancer_backend_pool_name'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('loadBalancerId', AAZObjectType, '.load_balancer_id'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('natGatewayName', AAZObjectType, '.nat_gateway_name'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('publicIpName', AAZObjectType, '.public_ip_name'))
+                _build_schema_workspace_custom_boolean_parameter_create(parameters.set_prop('prepareEncryption', AAZObjectType, '.prepare_encryption'))
+                parameters.set_prop('encryption', AAZObjectType, '.encryption')
+                _build_schema_workspace_custom_boolean_parameter_create(parameters.set_prop('requireInfrastructureEncryption', AAZObjectType, '.require_infrastructure_encryption'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('storageAccountName', AAZObjectType, '.storage_account_name'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('storageAccountSkuName', AAZObjectType, '.storage_account_sku_name'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('vnetAddressPrefix', AAZObjectType, '.vnet_address_prefix'))
 
             encryption = _builder.get('.properties.parameters.encryption')
             if encryption is not None:
-                encryption.set_prop('value', AAZObjectType, '.')
+                encryption.set_prop('value', AAZObjectType, '.value')
 
             value = _builder.get('.properties.parameters.encryption.value')
             if value is not None:
-                value.set_prop('keySource', AAZStrType, '.')
-                value.set_prop('KeyName', AAZStrType, '.')
-                value.set_prop('keyversion', AAZStrType, '.')
-                value.set_prop('keyvaulturi', AAZStrType, '.')
+                value.set_prop('keySource', AAZStrType, '.key_source')
+                value.set_prop('KeyName', AAZStrType, '.key_name')
+                value.set_prop('keyversion', AAZStrType, '.keyversion')
+                value.set_prop('keyvaulturi', AAZStrType, '.keyvaulturi')
 
             authorizations = _builder.get('.properties.authorizations')
             if authorizations is not None:
-                authorizations.set_elements(AAZObjectType, '.')
+                authorizations.set_elements(AAZObjectType)
 
             _elements = _builder.get('.properties.authorizations[]')
             if _elements is not None:
-                _elements.set_prop('principalId', AAZStrType, '.', typ_kwargs={'flags': {'required': True}})
-                _elements.set_prop('roleDefinitionId', AAZStrType, '.', typ_kwargs={'flags': {'required': True}})
+                _elements.set_prop('principalId', AAZStrType, '.principal_id', typ_kwargs={'flags': {'required': True}})
+                _elements.set_prop('roleDefinitionId', AAZStrType, '.role_definition_id', typ_kwargs={'flags': {'required': True}})
 
             sku = _builder.get('.sku')
             if sku is not None:
-                sku.set_prop('name', AAZStrType, '.', typ_kwargs={'flags': {'required': True}})
-                sku.set_prop('tier', AAZStrType, '.')
+                sku.set_prop('name', AAZStrType, '.name', typ_kwargs={'flags': {'required': True}})
+                sku.set_prop('tier', AAZStrType, '.tier')
 
             return self.serialize_content(_content_value)
 
@@ -390,13 +390,13 @@ class Create(AAZCommand):
 def _build_schema_workspace_custom_boolean_parameter_create(_builder):
     if _builder is None:
         return
-    _builder.set_prop('value', AAZBoolType, '.', typ_kwargs={'flags': {'required': True}})
+    _builder.set_prop('value', AAZBoolType, '.value', typ_kwargs={'flags': {'required': True}})
 
 
 def _build_schema_workspace_custom_string_parameter_create(_builder):
     if _builder is None:
         return
-    _builder.set_prop('value', AAZStrType, '.', typ_kwargs={'flags': {'required': True}})
+    _builder.set_prop('value', AAZStrType, '.value', typ_kwargs={'flags': {'required': True}})
 
 
 __all__ = ['Create']
