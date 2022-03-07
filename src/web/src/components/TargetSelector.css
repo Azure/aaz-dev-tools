@@ -1,0 +1,13 @@
+.modal-width {
+    width: 60%;
+    max-width: none!important;
+}
+
+.modal-header {
+    height:0em;
+}
+
+.modal-title {
+    font: 1em sans-serif;
+    margin-left: 35%;
+}
