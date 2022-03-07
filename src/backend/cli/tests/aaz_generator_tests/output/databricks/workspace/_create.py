@@ -45,21 +45,22 @@ class Create(AAZCommand):
         _args_schema.resource_group = AAZResourceGroupNameArg(
             required=True,
         )
-        _args_schema.workspace_name = AAZStrType(
+        _args_schema.workspace_name = AAZStrArg(
             options=['--workspace-name', '--name', '-n'],
             help='The name of the workspace.',
             required=True,
             id_part='name',
         )
-        _args_schema.tags = AAZDictArg(
-            options=['--tags'],
-            help='Resource tags.',
-        )
         _args_schema.location = AAZResourceLocationArg(
             help='The geo-location where the resource lives',
             required=True,
         )
-        _args_schema.managed_resource_group_id = AAZStrType(
+        _args_schema.authorizations = AAZListArg(
+            options=['--authorizations'],
+            singular_options=['--authorization'],
+            help='The workspace provider authorizations.',
+        )
+        _args_schema.managed_resource_group_id = AAZStrArg(
             options=['--managed-resource-group-id'],
             help='The managed resource group Id.',
             required=True,
@@ -68,22 +69,33 @@ class Create(AAZCommand):
             options=['--parameters'],
             help='The workspace\'s custom parameters.',
         )
-        _args_schema.ui_definition_uri = AAZStrType(
+        _args_schema.ui_definition_uri = AAZStrArg(
             options=['--ui-definition-uri'],
             help='The blob URI where the UI definition file is located.',
-        )
-        _args_schema.authorizations = AAZListArg(
-            options=['--authorizations'],
-            singular_options=['--authorization'],
-            help='The workspace provider authorizations.',
         )
         _args_schema.sku = AAZObjectArg(
             options=['--sku'],
             help='The SKU of the resource.',
         )
+        _args_schema.tags = AAZDictArg(
+            options=['--tags'],
+            help='Resource tags.',
+        )
 
-        tags = cls._args_schema.tags
-        tags.Element = AAZStrType(
+        authorizations = cls._args_schema.authorizations
+        authorizations.Element = AAZObjectArg(
+        )
+
+        Element = cls._args_schema.authorizations.Element
+        Element.principal_id = AAZStrType(
+            options=['principal-id'],
+            help='The provider\'s principal identifier. This is the identity that the provider will use to call ARM to manage the workspace resources.',
+            required=True,
+        )
+        Element.role_definition_id = AAZStrType(
+            options=['role-definition-id'],
+            help='The provider\'s role definition identifier. This role will define all the permissions that the provider must have on the workspace\'s container resource group. This role definition cannot have permission to delete the resource group.',
+            required=True,
         )
 
         parameters = cls._args_schema.parameters
@@ -92,26 +104,30 @@ class Create(AAZCommand):
             help='The ID of a Azure Machine Learning workspace to link with Databricks workspace',
         )
         cls._build_args_workspace_custom_string_parameter_create(parameters.aml_workspace_id)
-        parameters.custom_virtual_network_id = AAZObjectArg(
-            options=['custom-virtual-network-id'],
-            help='The ID of a Virtual Network where this Databricks Cluster should be created',
-        )
-        cls._build_args_workspace_custom_string_parameter_create(parameters.custom_virtual_network_id)
-        parameters.custom_public_subnet_name = AAZObjectArg(
-            options=['custom-public-subnet-name'],
-            help='The name of a Public Subnet within the Virtual Network',
-        )
-        cls._build_args_workspace_custom_string_parameter_create(parameters.custom_public_subnet_name)
         parameters.custom_private_subnet_name = AAZObjectArg(
             options=['custom-private-subnet-name'],
             help='The name of the Private Subnet within the Virtual Network',
         )
         cls._build_args_workspace_custom_string_parameter_create(parameters.custom_private_subnet_name)
+        parameters.custom_public_subnet_name = AAZObjectArg(
+            options=['custom-public-subnet-name'],
+            help='The name of a Public Subnet within the Virtual Network',
+        )
+        cls._build_args_workspace_custom_string_parameter_create(parameters.custom_public_subnet_name)
+        parameters.custom_virtual_network_id = AAZObjectArg(
+            options=['custom-virtual-network-id'],
+            help='The ID of a Virtual Network where this Databricks Cluster should be created',
+        )
+        cls._build_args_workspace_custom_string_parameter_create(parameters.custom_virtual_network_id)
         parameters.enable_no_public_ip = AAZObjectArg(
             options=['enable-no-public-ip'],
             help='Should the Public IP be Disabled?',
         )
         cls._build_args_workspace_custom_boolean_parameter_create(parameters.enable_no_public_ip)
+        parameters.encryption = AAZObjectArg(
+            options=['encryption'],
+            help='Contains the encryption details for Customer-Managed Key (CMK) enabled workspace.',
+        )
         parameters.load_balancer_backend_pool_name = AAZObjectArg(
             options=['load-balancer-backend-pool-name'],
             help='Name of the outbound Load Balancer Backend Pool for Secure Cluster Connectivity (No Public IP).',
@@ -127,20 +143,16 @@ class Create(AAZCommand):
             help='Name of the NAT gateway for Secure Cluster Connectivity (No Public IP) workspace subnets.',
         )
         cls._build_args_workspace_custom_string_parameter_create(parameters.nat_gateway_name)
-        parameters.public_ip_name = AAZObjectArg(
-            options=['public-ip-name'],
-            help='Name of the Public IP for No Public IP workspace with managed vNet.',
-        )
-        cls._build_args_workspace_custom_string_parameter_create(parameters.public_ip_name)
         parameters.prepare_encryption = AAZObjectArg(
             options=['prepare-encryption'],
             help='Prepare the workspace for encryption. Enables the Managed Identity for managed storage account.',
         )
         cls._build_args_workspace_custom_boolean_parameter_create(parameters.prepare_encryption)
-        parameters.encryption = AAZObjectArg(
-            options=['encryption'],
-            help='Contains the encryption details for Customer-Managed Key (CMK) enabled workspace.',
+        parameters.public_ip_name = AAZObjectArg(
+            options=['public-ip-name'],
+            help='Name of the Public IP for No Public IP workspace with managed vNet.',
         )
+        cls._build_args_workspace_custom_string_parameter_create(parameters.public_ip_name)
         parameters.require_infrastructure_encryption = AAZObjectArg(
             options=['require-infrastructure-encryption'],
             help='A boolean indicating whether or not the DBFS root file system will be enabled with secondary layer of encryption with platform managed keys for data at rest.',
@@ -169,50 +181,38 @@ class Create(AAZCommand):
         )
 
         value = cls._args_schema.parameters.encryption.value
-        value.key_source = AAZStrType(
+        value.key_name = AAZStrArg(
+            options=['key-name'],
+            help='The name of KeyVault key.',
+        )
+        value.key_source = AAZStrArg(
             options=['key-source'],
             help='The encryption keySource (provider). Possible values (case-insensitive):  Default, Microsoft.Keyvault',
             default='Default',
             enum={'Default': 'Default', 'Microsoft.Keyvault': 'Microsoft.Keyvault'},
         )
-        value.key_name = AAZStrType(
-            options=['key-name'],
-            help='The name of KeyVault key.',
-        )
-        value.keyversion = AAZStrType(
-            options=['keyversion'],
-            help='The version of KeyVault key.',
-        )
-        value.keyvaulturi = AAZStrType(
+        value.keyvaulturi = AAZStrArg(
             options=['keyvaulturi'],
             help='The Uri of KeyVault.',
         )
-
-        authorizations = cls._args_schema.authorizations
-        authorizations.Element = AAZObjectArg(
-        )
-
-        Element = cls._args_schema.authorizations.Element
-        Element.principal_id = AAZStrType(
-            options=['principal-id'],
-            help='The provider\'s principal identifier. This is the identity that the provider will use to call ARM to manage the workspace resources.',
-            required=True,
-        )
-        Element.role_definition_id = AAZStrType(
-            options=['role-definition-id'],
-            help='The provider\'s role definition identifier. This role will define all the permissions that the provider must have on the workspace\'s container resource group. This role definition cannot have permission to delete the resource group.',
-            required=True,
+        value.keyversion = AAZStrArg(
+            options=['keyversion'],
+            help='The version of KeyVault key.',
         )
 
         sku = cls._args_schema.sku
-        sku.name = AAZStrType(
+        sku.name = AAZStrArg(
             options=['name'],
             help='The SKU name.',
             required=True,
         )
-        sku.tier = AAZStrType(
+        sku.tier = AAZStrArg(
             options=['tier'],
             help='The SKU tier.',
+        )
+
+        tags = cls._args_schema.tags
+        tags.Element = AAZStrArg(
         )
         return _args_schema
 
@@ -248,7 +248,7 @@ class Create(AAZCommand):
         )
 
         workspace_custom_string_parameter_create = cls._args_workspace_custom_string_parameter_create
-        workspace_custom_string_parameter_create.value = AAZStrType(
+        workspace_custom_string_parameter_create.value = AAZStrArg(
             options=['value'],
             help='The value which should be used for this field.',
             required=True,
@@ -294,14 +294,109 @@ class Create(AAZCommand):
         @property
         def url_parameters(self):
             parameters = {
+                **self.serialize_url_param(
+                    "resourceGroupName", self.ctx.args.resource_group,
+                    required=True,
+                ),
+                **self.serialize_url_param(
+                    "subscriptionId", self.ctx.subscription_id,
+                    required=True,
+                ),
+                **self.serialize_url_param(
+                    "workspaceName", self.ctx.args.workspace_name,
+                    required=True,
+                ),
             }
             return parameters
 
         @property
         def query_parameters(self):
             parameters = {
+                **self.serialize_query_param(
+                    "api-version", '2018-04-01',
+                    required=True,
+                ),
             }
             return parameters
 
+        @property
+        def content(self):
+            _content_value, _builder = self.new_content(
+                self.ctx.args,
+                typ=AAZObjectType,
+            )
+            _builder.set_prop('tags', AAZDictType, '.')
+            _builder.set_prop('location', AAZStrType, '.', typ_kwargs={'flags': {'required': True}})
+            _builder.set_prop('properties', AAZObjectType, '.', typ_kwargs={'flags': {'required': True, 'client_flatten': True}})
+            _builder.set_prop('sku', AAZObjectType, '.')
 
-__all__ = ["Create"]
+            tags = _builder.get('.tags')
+            if tags is not None:
+                tags.set_elements(AAZStrType, '.')
+
+            properties = _builder.get('.properties')
+            if properties is not None:
+                properties.set_prop('managedResourceGroupId', AAZStrType, '.', typ_kwargs={'flags': {'required': True}})
+                properties.set_prop('parameters', AAZObjectType, '.')
+                properties.set_prop('uiDefinitionUri', AAZStrType, '.')
+                properties.set_prop('authorizations', AAZListType, '.')
+
+            parameters = _builder.get('.properties.parameters')
+            if parameters is not None:
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('amlWorkspaceId', AAZObjectType, '.'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('customVirtualNetworkId', AAZObjectType, '.'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('customPublicSubnetName', AAZObjectType, '.'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('customPrivateSubnetName', AAZObjectType, '.'))
+                _build_schema_workspace_custom_boolean_parameter_create(parameters.set_prop('enableNoPublicIp', AAZObjectType, '.'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('loadBalancerBackendPoolName', AAZObjectType, '.'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('loadBalancerId', AAZObjectType, '.'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('natGatewayName', AAZObjectType, '.'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('publicIpName', AAZObjectType, '.'))
+                _build_schema_workspace_custom_boolean_parameter_create(parameters.set_prop('prepareEncryption', AAZObjectType, '.'))
+                parameters.set_prop('encryption', AAZObjectType, '.')
+                _build_schema_workspace_custom_boolean_parameter_create(parameters.set_prop('requireInfrastructureEncryption', AAZObjectType, '.'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('storageAccountName', AAZObjectType, '.'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('storageAccountSkuName', AAZObjectType, '.'))
+                _build_schema_workspace_custom_string_parameter_create(parameters.set_prop('vnetAddressPrefix', AAZObjectType, '.'))
+
+            encryption = _builder.get('.properties.parameters.encryption')
+            if encryption is not None:
+                encryption.set_prop('value', AAZObjectType, '.')
+
+            value = _builder.get('.properties.parameters.encryption.value')
+            if value is not None:
+                value.set_prop('keySource', AAZStrType, '.')
+                value.set_prop('KeyName', AAZStrType, '.')
+                value.set_prop('keyversion', AAZStrType, '.')
+                value.set_prop('keyvaulturi', AAZStrType, '.')
+
+            authorizations = _builder.get('.properties.authorizations')
+            if authorizations is not None:
+                authorizations.set_elements(AAZObjectType, '.')
+
+            _elements = _builder.get('.properties.authorizations[]')
+            if _elements is not None:
+                _elements.set_prop('principalId', AAZStrType, '.', typ_kwargs={'flags': {'required': True}})
+                _elements.set_prop('roleDefinitionId', AAZStrType, '.', typ_kwargs={'flags': {'required': True}})
+
+            sku = _builder.get('.sku')
+            if sku is not None:
+                sku.set_prop('name', AAZStrType, '.', typ_kwargs={'flags': {'required': True}})
+                sku.set_prop('tier', AAZStrType, '.')
+
+            return self.serialize_content(_content_value)
+
+
+def _build_schema_workspace_custom_boolean_parameter_create(_builder):
+    if _builder is None:
+        return
+    _builder.set_prop('value', AAZBoolType, '.', typ_kwargs={'flags': {'required': True}})
+
+
+def _build_schema_workspace_custom_string_parameter_create(_builder):
+    if _builder is None:
+        return
+    _builder.set_prop('value', AAZStrType, '.', typ_kwargs={'flags': {'required': True}})
+
+
+__all__ = ['Create']

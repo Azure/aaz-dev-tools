@@ -2,7 +2,7 @@ from command.model.configuration import CMDStringArgBase, CMDByteArgBase, CMDBin
     CMDDateArgBase, CMDDateTimeArgBase, CMDUuidArgBase, CMDPasswordArgBase, \
     CMDSubscriptionIdArgBase, CMDResourceGroupNameArgBase, CMDResourceIdArgBase, CMDResourceLocationArgBase, \
     CMDIntegerArgBase, CMDInteger32ArgBase, CMDInteger64ArgBase, CMDBooleanArgBase, CMDFloatArgBase, \
-    CMDFloat32ArgBase, CMDFloat64ArgBase, CMDObjectArgBase, CMDArrayArgBase, CMDClsArgBase, CMDSubscriptionIdArg
+    CMDFloat32ArgBase, CMDFloat64ArgBase, CMDObjectArgBase, CMDArrayArgBase, CMDClsArgBase, CMDSubscriptionIdArg, CMDArg
 from command.model.configuration import CMDArgGroup, CMDArgumentHelp
 from utils.case import to_camel_case, to_snack_case
 from utils import exceptions
@@ -19,26 +19,36 @@ class AzArgGroupGenerator:
         self._arg_group = arg_group
         self._args_schema_name = args_schema_name
         self._cmd_ctx = cmd_ctx
-        # update the cls_reference
-        for arg in self._iter_args():
+
+        # update args
+        idx = 0
+        args = [([parse_arg_name(arg)], arg) for arg in self._arg_group.args]
+        while idx < len(args):
+            arg_keys, arg = args[idx]
+            if isinstance(arg, CMDArg):
+                if isinstance(arg, CMDSubscriptionIdArg) \
+                        and arg_keys == ['subscription'] and arg.options == ['subscription']:
+                    # use self.ctx.subscription_id
+                    self._cmd_ctx.set_argument(['subscription_id'], arg.var, arg.hide, ctx_namespace='self.ctx')
+                else:
+                    self._cmd_ctx.set_argument(arg_keys, arg.var, arg.hide)
+
             if getattr(arg, 'cls', None):
                 assert arg.cls not in self._cls_map
                 self._cls_map[arg.cls] = AzArgClsGenerator(arg.cls, cls_map, arg)
+                self._cmd_ctx.set_argument_cls(arg.cls)
 
-    def _iter_args(self):
-        idx = 0
-        args = [*self._arg_group.args]
-        while idx < len(args):
-            arg = args[idx]
-            yield arg
+                arg_keys = [f"@{arg.cls}"]  # prepare for cls sub property use
+
             if isinstance(arg, CMDObjectArgBase):
                 if arg.args:
-                    args.extend(arg.args)
+                    for sub_arg in arg.args:
+                        args.append(([*arg_keys, parse_arg_name(sub_arg)], sub_arg))
                 if arg.additional_props and arg.additional_props.item:
-                    args.append(arg.additional_props.item)
+                    args.append(([*arg_keys, '{}'], arg.additional_props.item))
             elif isinstance(arg, CMDArrayArgBase):
                 if arg.item:
-                    args.append(arg.item)
+                    args.append(([*arg_keys, '[]'], arg.item))
             idx += 1
 
     def iter_scopes(self):
@@ -50,11 +60,14 @@ class AzArgGroupGenerator:
             if a.hide:
                 # escape hide argument
                 continue
-            if isinstance(a, CMDSubscriptionIdArg):
-                # ignore subscription id
+
+            if isinstance(a, CMDSubscriptionIdArg) and a.options == ['subscription']:
+                # ignore subscription id, because cli core registered global _subscription argument
                 continue
+
             a_name = parse_arg_name(a)
             a_type, a_kwargs, cls_builder_name = render_arg(a, self._cls_map, arg_group=self.name)
+
             rendered_args.append((a_name, a_type, a_kwargs, cls_builder_name))
             if not cls_builder_name and isinstance(a, (CMDObjectArgBase, CMDArrayArgBase)):
                 search_args[a_name] = a
@@ -142,7 +155,8 @@ def _iter_scopes_by_arg_base(arg, name, scope_define, cls_map):
         yield name, scope_define, rendered_args
 
     for a_name, a in search_args.items():
-        for scopes in _iter_scopes_by_arg_base(a, a_name, f"{scope_define}.{a_name}", cls_map):
+        a_scope_define = f"{scope_define}.{a_name}"
+        for scopes in _iter_scopes_by_arg_base(a, a_name, a_scope_define, cls_map):
             yield scopes
 
 
@@ -245,13 +259,13 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
         arg_kwargs = {}
 
     if isinstance(arg, CMDStringArgBase):
-        arg_type = "AAZStrType"
+        arg_type = "AAZStrArg"
         enum = parse_arg_enum(arg.enum)
         if enum:
             arg_kwargs['enum'] = enum
 
         if isinstance(arg, CMDSubscriptionIdArgBase):
-            raise NotImplementedError()
+            arg_type = "AAZSubscriptionIdArg"
         elif isinstance(arg, CMDResourceGroupNameArgBase):
             arg_type = "AAZResourceGroupNameArg"
             if 'options' in arg_kwargs and set(arg_kwargs['options']) == {'--resource-group', '-g'}:

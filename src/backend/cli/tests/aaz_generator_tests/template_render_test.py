@@ -95,5 +95,3 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
     # delete
     # list
     # update
-
-

@@ -135,7 +135,7 @@ class {{ leaf.cls_name }}(AAZCommand):
         {{ name }} = {{ leaf.render_condition(condition) }}
         {%- endfor %}
 
-        {%- for operation in leaf.operations %}
+        {%- for op in leaf.operations %}
 
         {%- if op.when is not none and op.when|length %}
         if {{ leaf.render_operation_when(op.when) }}:
@@ -198,16 +198,26 @@ class {{ leaf.cls_name }}(AAZCommand):
         def method(self):
             return "{{ op.method }}"
 
-        {%- if op.url_parameters is not none and op.url_parameters | length %}
+        {%- if op.url_parameters is not none and op.url_parameters|length %}
 
         @property
         def url_parameters(self):
             parameters = {
-                {%- for name, data, is_constant in self.url_parameters %}
+                {%- for name, data, is_constant, kwargs in op.url_parameters %}
                 {%- if is_constant %}
-                **self.serialize_url_param("{{ name }}", {{ data|constant_convert }}),
+                **self.serialize_url_param(
+                    "{{ name }}", {{ data|constant_convert }},
+                    {%- for key, value in kwargs.items() %}
+                    {{ key }}={{ value|constant_convert }},
+                    {%- endfor %}
+                ),
                 {%- else %}
-                **self.serialize_url_param("{{ name }}", {{ data }}),
+                **self.serialize_url_param(
+                    "{{ name }}", {{ data }},
+                    {%- for key, value in kwargs.items() %}
+                    {{ key }}={{ value|constant_convert }},
+                    {%- endfor %}
+                ),
                 {%- endif %}
                 {%- endfor %}
             }
@@ -219,11 +229,21 @@ class {{ leaf.cls_name }}(AAZCommand):
         @property
         def query_parameters(self):
             parameters = {
-                {%- for name, data, is_constant in self.query_parameters %}
+                {%- for name, data, is_constant, kwargs in op.query_parameters %}
                 {%- if is_constant %}
-                **self.serialize_query_param("{{ name }}", {{ data|constant_convert }}),
+                **self.serialize_query_param(
+                    "{{ name }}", {{ data|constant_convert }},
+                    {%- for key, value in kwargs.items() %}
+                    {{ key }}={{ value|constant_convert }},
+                    {%- endfor %}
+                ),
                 {%- else %}
-                **self.serialize_query_param("{{ name }}", {{ data }}),
+                **self.serialize_query_param(
+                    "{{ name }}", {{ data }},
+                    {%- for key, value in kwargs.items() %}
+                    {{ key }}={{ value|constant_convert }},
+                    {%- endfor %}
+                ),
                 {%- endif %}
                 {%- endfor %}
             }
@@ -235,11 +255,21 @@ class {{ leaf.cls_name }}(AAZCommand):
         @property
         def header_parameters(self):
             parameters = {
-                {%- for name, data, is_constant in self.header_parameters %}
+                {%- for name, data, is_constant, kwargs in op.header_parameters %}
                 {%- if is_constant %}
-                **self.serialize_header_param("{{ name }}", {{ data|constant_convert }}),
+                **self.serialize_header_param(
+                    "{{ name }}", {{ data|constant_convert }},
+                    {%- for key, value in kwargs.items() %}
+                    {{ key }}={{ value|constant_convert }},
+                    {%- endfor %}
+                ),
                 {%- else %}
-                **self.serialize_header_param("{{ name }}", {{ data }}),
+                **self.serialize_header_param(
+                    "{{ name }}", {{ data }},
+                    {%- for key, value in kwargs.items() %}
+                    {{ key }}={{ value|constant_convert }},
+                    {%- endfor %}
+                ),
                 {%- endif %}
                 {%- endfor %}
             }
@@ -256,9 +286,13 @@ class {{ leaf.cls_name }}(AAZCommand):
                 value={{ op.content.ref }},
                 {%- else %}
                 typ={{ op.content.typ }},
+                {%- if op.content.typ_kwargs is not none and op.content.typ_kwargs|length %}
+                typ_kwargs={{ op.content.typ_kwargs|constant_convert }}
+                {%- endif %}
                 {%- endif %}
             )
 
+            {%- if op.content.ref is none %}
             {%- if op.content.cls_builder_name is not none %}
             {{ op.content.cls_builder_name }}({{ op.content.BUILDER_NAME }})
             {%- endif %}
@@ -266,22 +300,28 @@ class {{ leaf.cls_name }}(AAZCommand):
             {%- for scope, scope_define, props in op.content.iter_scopes() %}
 
             {%- if scope_define is not none %}
+
             {{ scope }} = {{ op.content.BUILDER_NAME }}.get({{ scope_define|constant_convert }})
             if {{ scope }} is not None:
             {%- endif %}
 
-            {%- for prop_name, prop_type, arg_key, cls_builder_name in props %}
+            {%- for prop_name, prop_type, arg_key, prop_type_kwargs, cls_builder_name in props %}
             {% if scope_define is not none %}{{ "    " }}{% endif %}
             {%- if cls_builder_name is not none %}{{ cls_builder_name }}({% endif %}
-            {%- if prop_name is not None -%}
-            {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}{% if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %})
+            {%- if prop_name != '[]' and prop_name != '{}' -%}
+            {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}
+                {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+                {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
             {%- else -%}
-            {{ scope }}.set_elements({{ prop_type }}{% if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %})
+            {{ scope }}.set_elements({{ prop_type }}
+                {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+                {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
             {%- endif %}
             {%- if cls_builder_name is not none %}){% endif %}
             {%- endfor %}
 
             {%- endfor %}
+            {%- endif %}
 
             return self.serialize_content({{ op.content.VALUE_NAME }})
         {%- endif %}
@@ -363,7 +403,7 @@ class {{ leaf.cls_name }}(AAZCommand):
 
     {%- endfor %}
 
-{%- for update_cls in op.get_update_clses() %}
+{%- for update_cls in leaf.get_update_clses() %}
 {{ "" }}
 {{ "" }}
 def {{ update_cls.builder_name }}({{ update_cls.BUILDER_NAME }}):
@@ -373,17 +413,22 @@ def {{ update_cls.builder_name }}({{ update_cls.BUILDER_NAME }}):
     {%- for scope, scope_define, props in update_cls.iter_scopes() %}
 
     {%- if scope_define is not none %}
+
     {{ scope }} = {{ update_cls.BUILDER_NAME }}.get({{ scope_define|constant_convert }})
     if {{ scope }} is not None:
     {%- endif %}
 
-    {%- for prop_name, prop_type, arg_key, cls_builder_name in props %}
+    {%- for prop_name, prop_type, arg_key, prop_type_kwargs, cls_builder_name in props %}
     {% if scope_define is not none %}{{ "    " }}{% endif %}
     {%- if cls_builder_name is not none %}{{ cls_builder_name }}({% endif %}
-    {%- if prop_name is not None -%}
-    {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}{% if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %})
+    {%- if prop_name != '[]' and prop_name != '{}' -%}
+    {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}
+        {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+        {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
     {%- else -%}
-    {{ scope }}.set_elements({{ prop_type }}{% if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %})
+    {{ scope }}.set_elements({{ prop_type }}
+        {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+        {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
     {%- endif %}
     {%- if cls_builder_name is not none %}){% endif %}
     {%- endfor %}
@@ -393,7 +438,7 @@ def {{ update_cls.builder_name }}({{ update_cls.BUILDER_NAME }}):
 
 {%- endfor %}
 
-{%- for resp_cls in op.get_response_clses() %}
+{%- for resp_cls in leaf.get_response_clses() %}
 {{ "" }}
 {{ resp_cls.schema_name }} = None
 {{ "" }}

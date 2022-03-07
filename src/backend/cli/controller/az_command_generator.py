@@ -8,15 +8,53 @@ from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperat
     AzGenericUpdateOperationGenerator
 from .az_arg_group_generator import AzArgGroupGenerator, AzArgClsGenerator
 from .az_output_generator import AzOutputGenerator
+from utils import exceptions
 
 
 class AzCommandCtx:
 
-    def get_argument(self, arg_var, ref_var=None):
-        pass
+    def __init__(self):
+        self._cls_arg_maps = {}
+        self._ctx_arg_map = {}
 
-    def set_argument(self, arg_var, name, cls_name=None):
-        pass
+    def set_argument_cls(self, cls_name):
+        self._cls_arg_maps[f"@{cls_name}"] = {}
+
+    def set_argument(self, keys, var_name, hide, ctx_namespace='self.ctx.args'):
+        if var_name.startswith('@'):
+            map_name = var_name.replace('[', '.[').replace('{', '.{').split('.', maxsplit=1)[0]
+            if map_name != keys[0]:
+                raise exceptions.VerificationError(
+                    "Invalid argument var",
+                    details=f"argument var '{var_name}' does not start with '{keys[0]}'"
+                )
+            if map_name not in self._cls_arg_maps:
+                self._cls_arg_maps[map_name] = {}
+            self._cls_arg_maps[map_name][var_name] = ('.'.join(keys), hide)
+        else:
+            self._ctx_arg_map[var_name] = ('.'.join([ctx_namespace, *keys]), hide)
+
+    def get_argument(self, var_name):
+        if var_name.startswith('@'):
+            map_name = var_name.replace('[', '.[').replace('{', '.{').split('.', maxsplit=1)[0]
+            if map_name not in self._cls_arg_maps:
+                raise exceptions.VerificationError(
+                    "Invalid argument var",
+                    details=f"argument var '{var_name}' has unregistered class '{map_name}'."
+                )
+            if var_name not in self._cls_arg_maps[map_name]:
+                raise exceptions.VerificationError(
+                    "Invalid argument var",
+                    details=f"argument var '{var_name}' does not find."
+                )
+            return self._cls_arg_maps[map_name][var_name]
+        else:
+            if var_name not in self._ctx_arg_map:
+                raise exceptions.VerificationError(
+                    "Invalid argument var",
+                    details=f"argument var '{var_name}' does not find."
+                )
+            return self._ctx_arg_map[var_name]
 
     def get_variant(self, variant):
         if variant.startswith('$'):
@@ -122,6 +160,13 @@ class AzCommandGenerator:
 
     def get_arg_clses(self):
         return sorted(self._arg_cls_map.values(), key=lambda a: a.name)
+
+    def get_update_clses(self):
+        return sorted(self._op_update_cls_map.values(), key=lambda s: s.name)
+
+    def get_response_clses(self):
+        # TODO:
+        return []
 
     def has_outputs(self):
         return len(self.outputs) > 0

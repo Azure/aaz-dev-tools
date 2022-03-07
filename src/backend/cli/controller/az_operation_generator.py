@@ -1,14 +1,9 @@
-from cli.model.atomic import CLIAtomicCommand
-from command.model.configuration import CMDCommand, CMDHttpOperation, CMDCondition, CMDConditionAndOperator, \
-    CMDConditionOrOperator, CMDHttpRequestJsonBody, CMDConditionHasValueOperator, CMDInstanceUpdateOperation, \
-    CMDRequestJson, CMDGenericInstanceUpdateAction, CMDHttpResponseJsonBody, CMDClsSchemaBase
-
-from command.model.configuration import CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase, \
-    CMDBooleanSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction, CMDGenericInstanceUpdateAction
-
-from utils.case import to_camel_case, to_snack_case
+from command.model.configuration import CMDHttpOperation, CMDHttpRequestJsonBody, CMDArraySchema, \
+    CMDInstanceUpdateOperation, CMDRequestJson, CMDHttpResponseJsonBody, CMDObjectSchema, CMDSchema, \
+    CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase, CMDBooleanSchemaBase, CMDObjectSchemaBase, \
+    CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction, CMDGenericInstanceUpdateAction
 from utils import exceptions
-from utils.plane import PlaneEnum
+from utils.case import to_snack_case
 from utils.error_format import AAZErrorFormatEnum
 
 
@@ -42,21 +37,122 @@ class AzHttpResponseGenerator:
             self.schema = response.body.json.schema
 
 
-class AzHttpRequestContentGenerator:
+class AzRequestClsGenerator:
+    BUILDER_NAME = "_builder"
 
+    def __init__(self, name, request_cls_map, schema):
+        self.schema = schema
+        self.name = name
+        self.builder_name = f"_build_schema_{to_snack_case(name)}"
+        self._request_cls_map = request_cls_map
+
+    def iter_scopes(self):
+        for scopes in _iter_request_scopes_by_schema_base(self.schema, self.BUILDER_NAME, None, self._request_cls_map):
+            yield scopes
+
+
+class AzHttpRequestContentGenerator:
     VALUE_NAME = "_content_value"
     BUILDER_NAME = "_builder"
 
-    def __init__(self, cmd_ctx, body):
+    def __init__(self, cmd_ctx, body, request_cls_map):
         self._cmd_ctx = cmd_ctx
+        self._request_cls_map = request_cls_map
         assert isinstance(body.json, CMDRequestJson)
         self._json = body.json
         self.ref = self._cmd_ctx.get_variant(self.ref) if self._json.ref else None
-        self.typ = None  # TODO:
+        self.arg_key = "self.ctx.args"
+        if self.ref is None:
+            assert isinstance(self._json.schema, CMDSchema)
+            if self._json.schema.arg:
+                self.arg_key, hide = self._cmd_ctx.get_argument(self._json.schema.arg)
+                assert not hide
+            self.typ, _, self.cls_builder_name = render_schema(
+                self._json.schema, self._request_cls_map, name=self._json.schema.name)
+
+            # update cls
+            idx = 0
+            schemas = [self._json.schema]
+            while idx < len(schemas):
+                s = schemas[idx]
+                if getattr(s, 'cls', None):
+                    assert s.cls not in self._request_cls_map
+                    self._request_cls_map[s.cls] = AzRequestClsGenerator(s.cls, self._request_cls_map, s)
+
+                if isinstance(s, CMDObjectSchemaBase):
+                    if s.props:
+                        for prop in s.props:
+                            schemas.append(prop)
+                    if s.additional_props and s.additional_props.item:
+                        schemas.append(s.additional_props.item)
+                elif isinstance(s, CMDArraySchemaBase):
+                    if s.item:
+                        schemas.append(s.item)
+                idx += 1
 
     def iter_scopes(self):
-        scope = self.BUILDER_NAME
-        scope_define = None
+        if not self._json.schema or not isinstance(self._json.schema, (CMDObjectSchema, CMDArraySchema)):
+            return
+
+        for scopes in _iter_request_scopes_by_schema_base(self._json.schema, self.BUILDER_NAME, None, self._request_cls_map):
+            yield scopes
+
+
+def _iter_request_scopes_by_schema_base(schema, name, scope_define, request_cls_map):
+    rendered_schemas = []
+    search_schemas = {}
+
+    if isinstance(schema, CMDObjectSchemaBase):
+        if schema.props and schema.additional_props:
+            # not support for both props and additional props
+            raise NotImplementedError()
+        # TODO: support discriminator
+        if schema.props:
+            for s in schema.props:
+                s_name = s.name
+                s_typ, s_typ_kwargs, cls_builder_name = render_schema(s, request_cls_map, s_name)
+                s_arg_key = '.'  # TODO: add arg_key
+                rendered_schemas.append((s_name, s_typ, s_arg_key, s_typ_kwargs, cls_builder_name))
+                if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                    search_schemas[s_name] = s
+        elif schema.additional_props:
+            assert schema.additional_props.item is not None
+            s = schema.additional_props.item
+            s_name = '{}'
+            s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, request_cls_map)
+            s_arg_key = '.'  # TODO: add arg_key
+
+            rendered_schemas.append((s_name, s_typ, s_arg_key, s_typ_kwargs, cls_builder_name))
+            if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                search_schemas[s_name] = s
+    elif isinstance(schema, CMDArraySchemaBase):
+        assert schema.item is not None
+        s = schema.item
+        s_name = "[]"
+        s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, request_cls_map)
+        s_arg_key = '.'  # TODO: add arg_key
+
+        rendered_schemas.append((s_name, s_typ, s_arg_key, s_typ_kwargs, cls_builder_name))
+        if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+            search_schemas[s_name] = s
+    else:
+        raise NotImplementedError()
+
+    if rendered_schemas:
+        yield name, scope_define, rendered_schemas
+
+    scope_define = scope_define or ""
+    for s_name, s in search_schemas.items():
+        if s_name == '[]':
+            s_scope_define = scope_define + "[]"
+            s_name = '_elements'
+        elif s_name == '{}':
+            s_scope_define = scope_define + "{}"
+            s_name = '_elements'
+        else:
+            s_scope_define = f"{scope_define}.{s_name}"
+        for scopes in _iter_request_scopes_by_schema_base(s, s_name, s_scope_define, request_cls_map):
+            yield scopes
 
 
 class AzHttpOperationGenerator(AzOperationGenerator):
@@ -101,7 +197,7 @@ class AzHttpOperationGenerator(AzOperationGenerator):
         if self._operation.http.request.body:
             body = self._operation.http.request.body
             if isinstance(body, CMDHttpRequestJsonBody):
-                self.content = AzHttpRequestContentGenerator(self._cmd_ctx, body)
+                self.content = AzHttpRequestContentGenerator(self._cmd_ctx, body, self._request_cls_map)
             else:
                 raise NotImplementedError()
 
@@ -121,18 +217,32 @@ class AzHttpOperationGenerator(AzOperationGenerator):
         parameters = []
         if path.params:
             for param in path.params:
-                parameters.append([
-                    param.name,
-                    self._cmd_ctx.get_argument(param.arg),
-                    False,
-                ])
+                kwargs = {}
+                if param.skip_url_encoding:
+                    kwargs['skip_quote'] = True
+                if param.required:
+                    kwargs['required'] = param.required
+                arg_key, hide = self._cmd_ctx.get_argument(param.arg)
+                if not hide:
+                    parameters.append([
+                        param.name,
+                        arg_key,
+                        False,
+                        kwargs
+                    ])
         if path.consts:
             for param in path.consts:
                 assert param.const
+                kwargs = {}
+                if param.skip_url_encoding:
+                    kwargs['skip_quote'] = True
+                if param.required:
+                    kwargs['required'] = param.required
                 parameters.append([
                     param.name,
                     param.default.value,
-                    True
+                    True,
+                    kwargs
                 ])
         return parameters
 
@@ -144,18 +254,32 @@ class AzHttpOperationGenerator(AzOperationGenerator):
         parameters = []
         if query.params:
             for param in query.params:
-                parameters.append([
-                    param.name,
-                    self._cmd_ctx.get_argument(param.arg),
-                    False,
-                ])
+                kwargs = {}
+                if param.skip_url_encoding:
+                    kwargs['skip_quote'] = True
+                if param.required:
+                    kwargs['required'] = param.required
+                arg_key, hide = self._cmd_ctx.get_argument(param.arg)
+                if not hide:
+                    parameters.append([
+                        param.name,
+                        arg_key,
+                        False,
+                        kwargs
+                    ])
         if query.consts:
             for param in query.consts:
                 assert param.const
+                kwargs = {}
+                if param.skip_url_encoding:
+                    kwargs['skip_quote'] = True
+                if param.required:
+                    kwargs['required'] = param.required
                 parameters.append([
                     param.name,
                     param.default.value,
-                    True
+                    True,
+                    kwargs
                 ])
         return parameters
 
@@ -167,18 +291,28 @@ class AzHttpOperationGenerator(AzOperationGenerator):
         parameters = []
         if header.params:
             for param in header.params:
-                parameters.append([
-                    param.name,
-                    self._cmd_ctx.get_argument(param.arg),
-                    False,
-                ])
+                kwargs = {}
+                if param.required:
+                    kwargs['required'] = param.required
+                arg_key, hide = self._cmd_ctx.get_argument(param.arg)
+                if not hide:
+                    parameters.append([
+                        param.name,
+                        arg_key,
+                        False,
+                        kwargs
+                    ])
         if header.consts:
             for param in header.consts:
                 assert param.const
+                kwargs = {}
+                if param.required:
+                    kwargs['required'] = param.required
                 parameters.append([
                     param.name,
                     param.default.value,
-                    True
+                    True,
+                    kwargs
                 ])
         return parameters
 
@@ -200,9 +334,72 @@ class AzGenericUpdateOperationGenerator(AzOperationGenerator):
         assert isinstance(self._operation.instance_update, CMDGenericInstanceUpdateAction)
 
 
-def render_schema(prop, cls_map):
-    pass
+def render_schema(schema, cls_map, name):
+    schema_kwargs = {}
+    if name != schema.name:
+        schema_kwargs['serialized_name'] = schema.name
+
+    flags = {}
+
+    if schema.required:
+        flags['required'] = True
+    if schema.skip_url_encoding:
+        flags['skip_quote'] = True
+    if getattr(schema, 'client_flatten', False):
+        flags['client_flatten'] = True
+
+    if flags:
+        schema_kwargs['flags'] = flags
+
+    schema_type, schema_kwargs, cls_builder_name = render_schema_base(schema, cls_map, schema_kwargs)
+
+    return schema_type, schema_kwargs, cls_builder_name
 
 
-def render_schema_base(prop, cls_map):
-    pass
+def render_schema_base(schema, cls_map, schema_kwargs=None):
+    if isinstance(schema, CMDClsSchemaBase):
+        cls_name = schema.type[1:]
+        schema = cls_map[cls_name].schema
+    else:
+        cls_name = getattr(schema, 'cls', None)
+    cls_builder_name = parse_cls_builder_name(cls_name) if cls_name else None
+
+    if schema_kwargs is None:
+        schema_kwargs = {}
+
+    flags = schema_kwargs.get('flags', {})
+
+    if schema.read_only:
+        flags['read_only'] = True
+
+    if isinstance(schema, CMDStringSchemaBase):
+        schema_type = "AAZStrType"
+    elif isinstance(schema, CMDIntegerSchemaBase):
+        schema_type = "AAZIntType"
+    elif isinstance(schema, CMDBooleanSchemaBase):
+        schema_type = "AAZBoolType"
+    elif isinstance(schema, CMDFloatSchemaBase):
+        schema_type = "AAZFloatType"
+    elif isinstance(schema, CMDObjectSchemaBase):
+        # TODO: handle schema.discriminators
+        if schema.props:
+            schema_type = "AAZObjectType"
+            if schema.additional_props:
+                raise NotImplementedError()
+        elif schema.additional_props:
+            schema_type = "AAZDictType"
+        else:
+            raise NotImplementedError()
+    elif isinstance(schema, CMDArraySchemaBase):
+        schema_type = "AAZListType"
+    else:
+        raise NotImplementedError()
+
+    if flags:
+        schema_kwargs['flags'] = flags
+
+    return schema_type, schema_kwargs, cls_builder_name
+
+
+def parse_cls_builder_name(cls_name):
+    return f"_build_schema_{to_snack_case(cls_name)}"
