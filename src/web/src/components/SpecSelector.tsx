@@ -334,12 +334,9 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
   render() {
     return <div className="m-1 p-1">
       <Navbar bg="dark" variant="dark">
-        <Container>
           <Navbar.Brand href="editor">Editor</Navbar.Brand>
           <Navbar.Brand href="resourceSelection">Resource Selection</Navbar.Brand>
-          <Nav className="me-auto">
-          </Nav>
-        </Container>
+          <Nav className="me-auto"/>
       </Navbar>
       <Row>
         <Col lg='11'>

@@ -36,7 +36,7 @@ class App extends Component {
 
   render() {
     return (
-      <main className="container">
+      <main>
         <Routes>
           <Route path="/" element={<this.ModeSelection />}/>
           <Route path="workspace" element={<Workspace />}>
@@ -45,7 +45,6 @@ class App extends Component {
             <Route path=":workspaceName/editor" element={<ConfigEditor />} />
           </Route>
           <Route path="generator" element={<Generator />} />
-          <Route path="specs" element={<Specifications />} />
         </Routes>
       </main>
     );

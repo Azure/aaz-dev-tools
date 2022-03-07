@@ -65,7 +65,7 @@ export const CustomNode: React.FC<Props> = (props) => {
   return (
     <div
       className={`tree-node ${styles.root}`}
-      style={{ paddingInlineStart: indent }}
+      style={{ paddingInlineStart: indent, whiteSpace: `nowrap`}}
       {...dragOverProps}
       onClick={handleClick}
     >
