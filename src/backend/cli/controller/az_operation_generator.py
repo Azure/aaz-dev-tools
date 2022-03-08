@@ -218,25 +218,22 @@ class AzHttpRequestContentGenerator:
             self.typ, _, self.cls_builder_name = render_schema(
                 self._json.schema, self._request_cls_map, name=self._json.schema.name)
 
-            # update cls
-            idx = 0
-            schemas = [self._json.schema]
-            while idx < len(schemas):
-                s = schemas[idx]
-                if getattr(s, 'cls', None):
-                    assert s.cls not in self._request_cls_map
-                    self._request_cls_map[s.cls] = AzRequestClsGenerator(self._cmd_ctx, s.cls, self._request_cls_map, s)
+            self._update_over_schema(self._json.schema)
 
-                if isinstance(s, CMDObjectSchemaBase):
-                    if s.props:
-                        for prop in s.props:
-                            schemas.append(prop)
-                    if s.additional_props and s.additional_props.item:
-                        schemas.append(s.additional_props.item)
-                elif isinstance(s, CMDArraySchemaBase):
-                    if s.item:
-                        schemas.append(s.item)
-                idx += 1
+    def _update_over_schema(self, s):
+        if getattr(s, 'cls', None):
+            assert s.cls not in self._request_cls_map
+            self._request_cls_map[s.cls] = AzRequestClsGenerator(self._cmd_ctx, s.cls, self._request_cls_map, s)
+
+        if isinstance(s, CMDObjectSchemaBase):
+            if s.props:
+                for prop in s.props:
+                    self._update_over_schema(prop)
+            if s.additional_props and s.additional_props.item:
+                self._update_over_schema(s.additional_props.item)
+        elif isinstance(s, CMDArraySchemaBase):
+            if s.item:
+                self._update_over_schema(s.item)
 
     def iter_scopes(self):
         if not self._json.schema or not isinstance(self._json.schema, (CMDObjectSchema, CMDArraySchema)):
@@ -305,25 +302,22 @@ class AzHttpResponseSchemaGenerator:
 
         self.typ, self.typ_kwargs, self.cls_builder_name = render_schema_base(self._schema, self._response_cls_map)
 
-        # update cls
-        idx = 0
-        schemas = [self._schema]
-        while idx < len(schemas):
-            s = schemas[idx]
-            if getattr(s, 'cls', None):
-                assert s.cls not in self._response_cls_map
-                self._response_cls_map[s.cls] = AzResponseClsGenerator(self._cmd_ctx, s.cls, self._response_cls_map, s)
+        self._update_over_schema(self._schema)
 
-            if isinstance(s, CMDObjectSchemaBase):
-                if s.props:
-                    for prop in s.props:
-                        schemas.append(prop)
-                if s.additional_props and s.additional_props.item:
-                    schemas.append(s.additional_props.item)
-            elif isinstance(s, CMDArraySchemaBase):
-                if s.item:
-                    schemas.append(s.item)
-            idx += 1
+    def _update_over_schema(self, s):
+        if getattr(s, 'cls', None):
+            assert s.cls not in self._response_cls_map
+            self._response_cls_map[s.cls] = AzResponseClsGenerator(self._cmd_ctx, s.cls, self._response_cls_map, s)
+
+        if isinstance(s, CMDObjectSchemaBase):
+            if s.props:
+                for prop in s.props:
+                    self._update_over_schema(prop)
+            if s.additional_props and s.additional_props.item:
+                self._update_over_schema(s.additional_props.item)
+        elif isinstance(s, CMDArraySchemaBase):
+            if s.item:
+                self._update_over_schema(s.item)
 
     def iter_scopes(self):
         if not isinstance(self._schema, (CMDObjectSchemaBase, CMDArraySchemaBase)):
