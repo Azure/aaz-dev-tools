@@ -11,11 +11,7 @@ import 'react-bootstrap-typeahead/css/Typeahead.css';
 
 const TargetSelector = () => {
   const SelectTarget = () => {
-    const optionsTyped: Option[] = options;
-    const [singleSelections, setSingleSelections] = useState(optionsTyped);
-    const handleTypeChange = (selectedOption: Option[]) => {
-      setSingleSelections(selectedOption)
-    }
+    const [singleSelections, setSingleSelections] = useState([] as Option[]);
 
     const [radioValue, setRadioValue] = useState('1');
     const radios = [
@@ -58,8 +54,8 @@ const TargetSelector = () => {
                     <Typeahead
                       id="basic-typeahead-single"
                       labelKey="label"
-                      onChange={handleTypeChange}
-                      options={optionsTyped}
+                      onChange={setSingleSelections}
+                      options={options}
                       placeholder="Search modules"
                       selected={singleSelections}
                     />
@@ -75,14 +71,13 @@ const TargetSelector = () => {
           </Row>
         </Modal.Body>
         <Modal.Footer className='justify-content-right'>
-          <Button variant="secondary">
+          <Button variant="primary">
             OK
           </Button>
         </Modal.Footer>
       </Modal>
     </div>
   }
-
 
   return (
     <div>
