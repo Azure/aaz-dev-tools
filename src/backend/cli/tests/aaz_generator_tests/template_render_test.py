@@ -59,19 +59,21 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
-        create_cmd = tree.root.command_groups['databricks'].command_groups['workspace'].commands['create']
+        cmd_name = "create"
+
+        cmd = tree.root.command_groups['databricks'].command_groups['workspace'].commands[cmd_name]
         leaf = CLIAtomicCommand({
-            "names": create_cmd.names,
+            "names": cmd.names,
             "help": {
-                "short": create_cmd.help.short,
-                "long": '\n'.join(create_cmd.help.lines) if create_cmd.help.lines else None,
-                "examples": [e.to_primitive() for e in create_cmd.versions[0].examples]
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples]
             },
             "register_info": {
-                "stage": create_cmd.versions[0].stage,
+                "stage": cmd.versions[0].stage,
             },
-            "version": create_cmd.versions[0].name,
-            "resources": [r.to_primitive() for r in create_cmd.versions[0].resources],
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
         })
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-crud.xml")
@@ -79,19 +81,145 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         with open(cfg_file_path, 'r') as f:
             cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
         cfg_reader = CfgReader(cfg)
-        leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'create')
+        leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
         data = tmpl.render(
             leaf=AzCommandGenerator(leaf)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "output", "databricks", "workspace", "_create.py")
+                                   "output", "databricks", "workspace", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)
 
     # show
+    def test_render_show_cmd(self):
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
+
+        tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
+        with open(tree_path, 'r') as f:
+            data = json.load(f)
+            tree = CMDSpecsCommandTree(data)
+
+        cmd_name = "show"
+
+        cmd = tree.root.command_groups['databricks'].command_groups['workspace'].commands[cmd_name]
+        leaf = CLIAtomicCommand({
+            "names": cmd.names,
+            "help": {
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples]
+            },
+            "register_info": {
+                "stage": cmd.versions[0].stage,
+            },
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
+        })
+
+        cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-crud.xml")
+
+        with open(cfg_file_path, 'r') as f:
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        cfg_reader = CfgReader(cfg)
+        leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
+
+        data = tmpl.render(
+            leaf=AzCommandGenerator(leaf)
+        )
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "output", "databricks", "workspace", f"_{cmd_name}.py")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write(data)
+
     # delete
+    def test_render_delete_cmd(self):
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
+
+        tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
+        with open(tree_path, 'r') as f:
+            data = json.load(f)
+            tree = CMDSpecsCommandTree(data)
+
+        cmd_name = "delete"
+
+        cmd = tree.root.command_groups['databricks'].command_groups['workspace'].commands[cmd_name]
+        leaf = CLIAtomicCommand({
+            "names": cmd.names,
+            "help": {
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples]
+            },
+            "register_info": {
+                "stage": cmd.versions[0].stage,
+            },
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
+        })
+
+        cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-crud.xml")
+
+        with open(cfg_file_path, 'r') as f:
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        cfg_reader = CfgReader(cfg)
+        leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
+
+        data = tmpl.render(
+            leaf=AzCommandGenerator(leaf)
+        )
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "output", "databricks", "workspace", f"_{cmd_name}.py")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write(data)
+
     # list
+    def test_render_list_cmd(self):
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
+
+        tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
+        with open(tree_path, 'r') as f:
+            data = json.load(f)
+            tree = CMDSpecsCommandTree(data)
+
+        cmd_name = "list"
+
+        cmd = tree.root.command_groups['databricks'].command_groups['workspace'].commands[cmd_name]
+        leaf = CLIAtomicCommand({
+            "names": cmd.names,
+            "help": {
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples]
+            },
+            "register_info": {
+                "stage": cmd.versions[0].stage,
+            },
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
+        })
+
+        cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-list.xml")
+
+        with open(cfg_file_path, 'r') as f:
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        cfg_reader = CfgReader(cfg)
+        leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
+
+        data = tmpl.render(
+            leaf=AzCommandGenerator(leaf)
+        )
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "output", "databricks", "workspace", f"_{cmd_name}.py")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write(data)
+
     # update

@@ -80,7 +80,7 @@ class AzCommandGenerator:
         assert isinstance(self.cmd.cfg, CMDCommand)
         self.conditions = []
         if self.cmd.cfg.conditions:
-            for idx, condition in self.cmd.cfg.conditions:
+            for idx, condition in enumerate(self.cmd.cfg.conditions):
                 self.conditions.append((condition.var, f"condition_{idx}", condition))
 
         # prepare arguments
@@ -147,8 +147,9 @@ class AzCommandGenerator:
 
         # prepare outputs
         self.outputs = []
-        for output in self.cmd.cfg.outputs:
-            self.outputs.append(AzOutputGenerator(output, self.cmd_ctx))
+        if self.cmd.cfg.outputs:
+            for output in self.cmd.cfg.outputs:
+                self.outputs.append(AzOutputGenerator(output, self.cmd_ctx))
         if len(self.outputs) > 1:
             # TODO: add support for output larger than 1
             raise NotImplementedError()

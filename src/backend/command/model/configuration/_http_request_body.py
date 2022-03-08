@@ -25,6 +25,9 @@ class CMDHttpRequestBody(Model):
     def diff(self, old, level):
         raise NotImplementedError()
 
+    def reformat(self, **kwargs):
+        return NotImplementedError()
+
 
 class CMDHttpRequestJsonBody(CMDHttpRequestBody):
     POLYMORPHIC_KEY = "json"
@@ -38,3 +41,6 @@ class CMDHttpRequestJsonBody(CMDHttpRequestBody):
         if not isinstance(old, self.__class__):
             return f"Response type changed: '{type(old)}' != '{self.__class__}'"
         return self.json.diff(old.json, level)
+
+    def reformat(self, **kwargs):
+        self.json.reformat(**kwargs)

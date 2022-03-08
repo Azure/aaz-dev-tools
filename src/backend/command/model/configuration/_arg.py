@@ -43,7 +43,7 @@ class CMDArgEnum(Model):
             enum.items.append(item)
         return enum
 
-    def reformat(self):
+    def reformat(self, **kwargs):
         self.items = sorted(self.items, key=lambda it: it.name)
 
 
@@ -119,11 +119,11 @@ class CMDArgBase(Model):
     def build_arg_base(cls, builder):
         return cls()
 
-    def _reformat_base(self):
+    def _reformat_base(self, **kwargs):
         pass
 
-    def reformat(self):
-        self._reformat_base()
+    def reformat(self, **kwargs):
+        self._reformat_base(**kwargs)
 
 
 class CMDArgBaseField(PolyModelType):
@@ -214,12 +214,12 @@ class CMDArg(CMDArgBase):
         arg.hide = builder.get_hide()
         return arg
 
-    def _reformat(self):
+    def _reformat(self, **kwargs):
         self.options = sorted(self.options, key=lambda op: (len(op), op))
 
-    def reformat(self):
-        self._reformat_base()
-        self._reformat()
+    def reformat(self, **kwargs):
+        self._reformat_base(**kwargs)
+        self._reformat(**kwargs)
 
 
 #cls
@@ -285,10 +285,10 @@ class CMDStringArgBase(CMDArgBase):
         arg.enum = builder.get_enum()
         return arg
 
-    def _reformat_base(self):
-        super()._reformat_base()
+    def _reformat_base(self, **kwargs):
+        super()._reformat_base(**kwargs)
         if self.enum:
-            self.enum.reformat()
+            self.enum.reformat(**kwargs)
 
 
 class CMDStringArg(CMDStringArgBase, CMDArg):
@@ -426,10 +426,10 @@ class CMDIntegerArgBase(CMDArgBase):
         arg.enum = builder.get_enum()
         return arg
 
-    def _reformat_base(self):
-        super()._reformat_base()
+    def _reformat_base(self, **kwargs):
+        super()._reformat_base(**kwargs)
         if self.enum:
-            self.enum.reformat()
+            self.enum.reformat(**kwargs)
 
 
 class CMDIntegerArg(CMDIntegerArgBase, CMDArg):
@@ -482,10 +482,10 @@ class CMDFloatArgBase(CMDArgBase):
         arg.enum = builder.get_enum()
         return arg
 
-    def _reformat_base(self):
-        super()._reformat_base()
+    def _reformat_base(self, **kwargs):
+        super()._reformat_base(**kwargs)
         if self.enum:
-            self.enum.reformat()
+            self.enum.reformat(**kwargs)
 
 
 class CMDFloatArg(CMDFloatArgBase, CMDArg):
@@ -524,9 +524,9 @@ class CMDObjectArgAdditionalProperties(Model):
         arg.item = builder.get_sub_item()
         return arg
 
-    def reformat(self):
+    def reformat(self, **kwargs):
         if self.item:
-            self.item.reformat()
+            self.item.reformat(**kwargs)
 
 
 class CMDObjectArgBase(CMDArgBase):
@@ -544,6 +544,9 @@ class CMDObjectArgBase(CMDArgBase):
         deserialize_from="additionalProps",
     )
 
+    # cls definition will not include properties in CMDArg only
+    cls = CMDClassField()
+
     @classmethod
     def build_arg_base(cls, builder):
         arg = super().build_arg_base(builder)
@@ -554,27 +557,25 @@ class CMDObjectArgBase(CMDArgBase):
             raise
         arg.args = builder.get_sub_args()
         arg.additional_props = builder.get_additional_props()
+        arg.cls = builder.get_cls()
         return arg
 
-    def _reformat_base(self):
-        super()._reformat_base()
+    def _reformat_base(self, **kwargs):
+        super()._reformat_base(**kwargs)
         if self.args:
             for arg in self.args:
-                arg.reformat()
+                arg.reformat(**kwargs)
             self.args = sorted(self.args, key=lambda a: a.var)
         if self.additional_props:
-            self.additional_props.reformat()
+            self.additional_props.reformat(**kwargs)
 
 
 class CMDObjectArg(CMDObjectArgBase, CMDArg):
-
-    cls = CMDClassField()  # define a class which can be used by loop
 
     @classmethod
     def build_arg(cls, builder):
         arg = super().build_arg(builder)
         assert isinstance(arg, CMDObjectArg)
-        arg.cls = builder.get_cls()
         return arg
 
 
@@ -590,6 +591,9 @@ class CMDArrayArgBase(CMDArgBase):
 
     item = CMDArgBaseField(required=True)
 
+    # cls definition will not include properties in CMDArg only
+    cls = CMDClassField()
+
     def _get_type(self):
         return f"{self.TYPE_VALUE}<{self.item.type}>"
 
@@ -599,11 +603,12 @@ class CMDArrayArgBase(CMDArgBase):
         assert isinstance(arg, CMDArrayArgBase)
         arg.fmt = builder.get_fmt()
         arg.item = builder.get_sub_item()
+        arg.cls = builder.get_cls()
         return arg
 
-    def _reformat_base(self):
-        super()._reformat_base()
-        self.item.reformat()
+    def _reformat_base(self, **kwargs):
+        super()._reformat_base(**kwargs)
+        self.item.reformat(**kwargs)
 
 
 class CMDArrayArg(CMDArrayArgBase, CMDArg):
@@ -614,17 +619,14 @@ class CMDArrayArg(CMDArrayArgBase, CMDArg):
         deserialize_from='singularOptions',
     )  # options to pass element instead of full list
 
-    cls = CMDClassField()  # define a class which can be used by loop
-
     @classmethod
     def build_arg(cls, builder):
         arg = super().build_arg(builder)
         assert isinstance(arg, CMDArrayArg)
         arg.singular_options = builder.get_singular_options()
-        arg.cls = builder.get_cls()
         return arg
 
-    def _reformat(self):
-        super()._reformat()
+    def _reformat(self, **kwargs):
+        super()._reformat(**kwargs)
         if self.singular_options:
             self.singular_options = sorted(self.singular_options, key=lambda op: (len(op), op))

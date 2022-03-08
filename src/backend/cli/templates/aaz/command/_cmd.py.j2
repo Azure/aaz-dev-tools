@@ -342,7 +342,7 @@ class {{ leaf.cls_name }}(AAZCommand):
             return None
         {%- endif %}
 
-        {%- for response in self.success_responses %}
+        {%- for response in op.success_responses %}
 
         def {{ response.callback_name }}(self, session):
             {%- if response.variant_name is not none %}

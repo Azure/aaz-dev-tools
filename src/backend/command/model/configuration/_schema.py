@@ -92,6 +92,13 @@ class CMDSchemaEnum(Model):
                     diff.append(f"NewEnumItem: {item.value}")
         return diff
 
+    def reformat(self, **kwargs):
+        try:
+            self.items = sorted(self.items, key=lambda it: it.value)
+        except:
+            # some of the value main not support sort
+            pass
+
 
 class CMDSchemaDefault(Model):
     """ The argument value if an argument is not used """
@@ -186,6 +193,12 @@ class CMDSchemaBase(Model):
         diff = {}
         diff = self._diff_base(old, level, diff)
         return diff
+
+    def _reformat_base(self, **kwargs):
+        pass
+
+    def reformat(self, **kwargs):
+        self._reformat_base(**kwargs)
 
 
 class CMDSchemaBaseField(PolyModelType):
@@ -289,6 +302,13 @@ class CMDSchema(CMDSchemaBase):
         diff = self._diff(old, level, diff)
         return diff
 
+    def _reformat(self, **kwargs):
+        pass
+
+    def reformat(self, **kwargs):
+        self._reformat_base(**kwargs)
+        self._reformat(**kwargs)
+
 
 class CMDSchemaField(PolyModelType):
 
@@ -374,6 +394,11 @@ class CMDStringSchemaBase(CMDSchemaBase):
             diff["enum"] = enum_diff
 
         return diff
+
+    def _reformat_base(self, **kwargs):
+        super()._reformat_base(**kwargs)
+        if self.enum:
+            self.enum.reformat(**kwargs)
 
 
 class CMDStringSchema(CMDStringSchemaBase, CMDSchema):
@@ -501,6 +526,11 @@ class CMDIntegerSchemaBase(CMDSchemaBase):
 
         return diff
 
+    def _reformat_base(self, **kwargs):
+        super()._reformat_base(**kwargs)
+        if self.enum:
+            self.enum.reformat(**kwargs)
+
 
 class CMDIntegerSchema(CMDIntegerSchemaBase, CMDSchema):
     ARG_TYPE = CMDIntegerArg
@@ -560,6 +590,11 @@ class CMDFloatSchemaBase(CMDSchemaBase):
             diff["enum"] = enum_diff
 
         return diff
+
+    def _reformat_base(self, **kwargs):
+        super()._reformat_base(**kwargs)
+        if self.enum:
+            self.enum.reformat(**kwargs)
 
 
 class CMDFloatSchema(CMDFloatSchemaBase, CMDSchema):
@@ -650,6 +685,16 @@ class CMDObjectSchemaDiscriminator(Model):
 
         return diff
 
+    def reformat(self, **kwargs):
+        if self.props:
+            for prop in self.props:
+                prop.reformat(**kwargs)
+            self.props = sorted(self.props, key=lambda p: p.name)
+        if self.discriminators:
+            for disc in self.discriminators:
+                disc.reformat(**kwargs)
+            self.discriminators = sorted(self.discriminators, key=lambda disc: disc.value)
+
 
 # additionalProperties
 class CMDObjectSchemaAdditionalProperties(Model):
@@ -679,6 +724,10 @@ class CMDObjectSchemaAdditionalProperties(Model):
             diff["item"] = item_diff
 
         return diff
+
+    def reformat(self, **kwargs):
+        if self.item:
+            self.item.reformat(**kwargs)
 
 
 class CMDObjectSchemaAdditionalPropertiesField(ModelType):
@@ -764,6 +813,19 @@ class CMDObjectSchemaBase(CMDSchemaBase):
 
         return diff
 
+    def _reformat_base(self, **kwargs):
+        super()._reformat_base(**kwargs)
+        if self.props:
+            for prop in self.props:
+                prop.reformat(**kwargs)
+            self.props = sorted(self.props, key=lambda prop: prop.name)
+        if self.discriminators:
+            for disc in self.discriminators:
+                disc.reformat(**kwargs)
+            self.discriminators = sorted(self.discriminators, key=lambda disc: disc.value)
+        if self.additional_props:
+            self.additional_props.reformat(**kwargs)
+
 
 class CMDObjectSchema(CMDObjectSchemaBase, CMDSchema):
     ARG_TYPE = CMDObjectArg
@@ -825,6 +887,10 @@ class CMDArraySchemaBase(CMDSchemaBase):
             diff["item"] = item_diff
 
         return diff
+
+    def _reformat_base(self, **kwargs):
+        super()._reformat_base(**kwargs)
+        self.item.reformat(**kwargs)
 
 
 class CMDArraySchema(CMDArraySchemaBase, CMDSchema):

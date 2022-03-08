@@ -30,6 +30,9 @@ class CMDInstanceUpdateAction(Model):
     def generate_args(self):
         raise NotImplementedError()
 
+    def reformat(self, **kwargs):
+        raise NotImplementedError()
+
 
 # json instance update
 class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
@@ -40,6 +43,9 @@ class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
 
     def generate_args(self):
         return self.json.generate_args()
+
+    def reformat(self, **kwargs):
+        self.json.reformat(**kwargs)
 
 
 # generic instance update
@@ -100,3 +106,6 @@ class CMDGenericInstanceUpdateAction(CMDInstanceUpdateAction):
 
     def generate_args(self):
         return self.generic.generate_args()
+
+    def reformat(self, **kwargs):
+        pass

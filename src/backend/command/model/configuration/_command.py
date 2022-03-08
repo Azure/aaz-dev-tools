@@ -30,10 +30,13 @@ class CMDCommand(Model):
     class Options:
         serialize_when_none = False
 
-    def reformat(self):
+    def reformat(self, **kwargs):
         self.resources = sorted(self.resources, key=lambda r: r.id)
         if self.arg_groups:
             for arg_group in self.arg_groups:
-                arg_group.reformat()
+                arg_group.reformat(**kwargs)
             self.arg_groups = sorted(self.arg_groups, key=lambda a: a.name)
-
+        schema_cls_map = {}
+        if self.operations:
+            for operation in self.operations:
+                operation.reformat(schema_cls_map=schema_cls_map, **kwargs)

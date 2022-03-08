@@ -341,13 +341,13 @@ class AzResponseClsGenerator:
 
     def __init__(self, cmd_ctx, name, response_cls_map, schema):
         self._cmd_ctx = cmd_ctx
-        self._schema = schema
+        self.schema = schema
         self.name = name
         self._response_cls_map = response_cls_map
         self.schema_name = self._generate_schema_name(name)
         self.builder_name = parse_cls_builder_name(name)
 
-        self.typ, self.typ_kwargs, _ = render_schema_base(self._schema, self._response_cls_map)
+        self.typ, self.typ_kwargs, _ = render_schema_base(self.schema, self._response_cls_map)
 
         self.props = []
         if isinstance(schema, CMDObjectSchemaBase):
@@ -365,7 +365,7 @@ class AzResponseClsGenerator:
         self.props = sorted(self.props)
 
     def iter_scopes(self):
-        for scopes in _iter_response_scopes_by_schema_base(self._schema, to_snack_case(self.name), self.schema_name, self._response_cls_map):
+        for scopes in _iter_response_scopes_by_schema_base(self.schema, to_snack_case(self.name), self.schema_name, self._response_cls_map):
             yield scopes
 
 
@@ -462,13 +462,16 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, response_cl
                     search_schemas[s_name] = s
         elif schema.additional_props:
             # AAZDictType
-            assert schema.additional_props.item is not None
-            s = schema.additional_props.item
-            s_name = "Element"
-            s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, response_cls_map)
-            rendered_schemas.append((s_name, s_typ, s_typ_kwargs, cls_builder_name))
-            if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-                search_schemas[s_name] = s
+            if schema.additional_props.item is not None:
+                s = schema.additional_props.item
+                s_name = "Element"
+                s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, response_cls_map)
+                rendered_schemas.append((s_name, s_typ, s_typ_kwargs, cls_builder_name))
+                if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                    search_schemas[s_name] = s
+            else:
+                # TODO: handler additional props with no item schema
+                pass
     elif isinstance(schema, CMDArraySchemaBase):
         # AAZListType
         assert schema.item is not None

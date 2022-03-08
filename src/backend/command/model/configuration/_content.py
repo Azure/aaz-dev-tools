@@ -41,6 +41,10 @@ class CMDRequestJson(Model):
                 diff["ref"] = f"{old.ref} != {self.ref}"
         return diff
 
+    def reformat(self, schema_cls_map, **kwargs):
+        # TODO:
+        pass
+
 
 class CMDResponseJson(Model):
     # properties as tags
@@ -63,3 +67,7 @@ class CMDResponseJson(Model):
             if self.var != old.var:
                 diff["var"] = f"{old.var} != {self.var}"
         return diff
+
+    def reformat(self, schema_cls_map, **kwargs):
+        # TODO:
+        pass
