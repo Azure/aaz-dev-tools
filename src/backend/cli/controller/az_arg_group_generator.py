@@ -156,6 +156,8 @@ def _iter_scopes_by_arg_base(arg, name, scope_define, cls_map):
 
     for a_name, a in search_args.items():
         a_scope_define = f"{scope_define}.{a_name}"
+        if a_name == "Element":
+            a_name = '_element'
         for scopes in _iter_scopes_by_arg_base(a, a_name, a_scope_define, cls_map):
             yield scopes
 

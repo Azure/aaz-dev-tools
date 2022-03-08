@@ -39,7 +39,7 @@ class AzHttpOperationGenerator(AzOperationGenerator):
         error_format = None
         for response in self._operation.http.responses:
             if not response.is_error:
-                self.success_responses.append(AzHttpResponseGenerator(self._cmd_ctx, response))
+                self.success_responses.append(AzHttpResponseGenerator(self._cmd_ctx, response, self._response_cls_map))
             else:
                 if not isinstance(response.body, CMDHttpResponseJsonBody):
                     raise NotImplementedError()
@@ -264,19 +264,109 @@ class AzRequestClsGenerator:
 
 class AzHttpResponseGenerator:
 
-    def __init__(self, cmd_ctx, response):
+    @staticmethod
+    def _generate_callback_name(status_codes):
+        return "on_" + "_".join(str(code) for code in status_codes)
+
+    def __init__(self, cmd_ctx, response, response_cls_map):
         self._cmd_ctx = cmd_ctx
         self._response = response
+        self._response_cls_map = response_cls_map
+
         self.status_codes = response.status_codes
-        self.callback_name = "on_" + "_".join(str(code) for code in response.status_codes)
+        self.callback_name = self._generate_callback_name(response.status_codes)
+
         self.variant_name = None
-        self.callback_schema_name = None
         if response.body is not None and isinstance(response.body, CMDHttpResponseJsonBody) and \
                 response.body.json is not None and response.body.json.var is not None:
             variant = response.body.json.var
             self.variant_name = self._cmd_ctx.get_variant(variant)
-            self.schema_builder = f"_build_schema_{self.callback_name}"
-            self.schema = response.body.json.schema
+            self.schema = AzHttpResponseSchemaGenerator(
+                self._cmd_ctx, response.body.json.schema, self._response_cls_map, response.status_codes
+            )
+
+
+class AzHttpResponseSchemaGenerator:
+
+    @staticmethod
+    def _generate_schema_name(status_codes):
+        return "_schema_on_" + "_".join(str(code) for code in status_codes)
+
+    @staticmethod
+    def _generate_schema_builder_name(status_codes):
+        return "_build_schema_on_" + "_".join(str(code) for code in status_codes)
+
+    def __init__(self, cmd_ctx, schema, response_cls_map, status_codes):
+        self._cmd_ctx = cmd_ctx
+        self._response_cls_map = response_cls_map
+        self._schema = schema
+        self.name = self._generate_schema_name(status_codes)
+        self.builder_name = self._generate_schema_builder_name(status_codes)
+
+        self.typ, self.typ_kwargs, self.cls_builder_name = render_schema_base(self._schema, self._response_cls_map)
+
+        # update cls
+        idx = 0
+        schemas = [self._schema]
+        while idx < len(schemas):
+            s = schemas[idx]
+            if getattr(s, 'cls', None):
+                assert s.cls not in self._response_cls_map
+                self._response_cls_map[s.cls] = AzResponseClsGenerator(self._cmd_ctx, s.cls, self._response_cls_map, s)
+
+            if isinstance(s, CMDObjectSchemaBase):
+                if s.props:
+                    for prop in s.props:
+                        schemas.append(prop)
+                if s.additional_props and s.additional_props.item:
+                    schemas.append(s.additional_props.item)
+            elif isinstance(s, CMDArraySchemaBase):
+                if s.item:
+                    schemas.append(s.item)
+            idx += 1
+
+    def iter_scopes(self):
+        if not isinstance(self._schema, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+            return
+
+        for scopes in _iter_response_scopes_by_schema_base(self._schema, self.name, f"cls.{self.name}", self._response_cls_map):
+            yield scopes
+
+
+class AzResponseClsGenerator:
+
+    @staticmethod
+    def _generate_schema_name(name):
+        return "_schema_" + to_snack_case(name)
+
+    def __init__(self, cmd_ctx, name, response_cls_map, schema):
+        self._cmd_ctx = cmd_ctx
+        self._schema = schema
+        self.name = name
+        self._response_cls_map = response_cls_map
+        self.schema_name = self._generate_schema_name(name)
+        self.builder_name = parse_cls_builder_name(name)
+
+        self.typ, self.typ_kwargs, _ = render_schema_base(self._schema, self._response_cls_map)
+
+        self.props = []
+        if isinstance(schema, CMDObjectSchemaBase):
+            if schema.props and schema.additional_props:
+                raise NotImplementedError()
+            if schema.props:
+                for s in schema.props:
+                    s_name = to_snack_case(s.name)
+                    self.props.append(s_name)
+            elif schema.additional_props:
+                self.props.append("Element")
+        elif isinstance(schema, CMDArraySchemaBase):
+            self.props.append("Element")
+
+        self.props = sorted(self.props)
+
+    def iter_scopes(self):
+        for scopes in _iter_response_scopes_by_schema_base(self._schema, to_snack_case(self.name), self.schema_name, self._response_cls_map):
+            yield scopes
 
 
 def _iter_request_scopes_by_schema_base(schema, name, scope_define, request_cls_map, arg_key, cmd_ctx):
@@ -352,6 +442,53 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, request_cls_
         else:
             s_scope_define = f"{scope_define}.{s_name}"
         for scopes in _iter_request_scopes_by_schema_base(s, s_name, s_scope_define, request_cls_map, s_arg_key, cmd_ctx):
+            yield scopes
+
+
+def _iter_response_scopes_by_schema_base(schema, name, scope_define, response_cls_map):
+    rendered_schemas = []
+    search_schemas = {}
+    if isinstance(schema, CMDObjectSchemaBase):
+        if schema.props and schema.additional_props:
+            # not support to parse schema with both props and additional_props
+            raise NotImplementedError()
+        # TODO: support discriminator
+        if schema.props:
+            for s in schema.props:
+                s_name = to_snack_case(s.name)
+                s_typ, s_typ_kwargs, cls_builder_name = render_schema(s, response_cls_map, s_name)
+                rendered_schemas.append((s_name, s_typ, s_typ_kwargs, cls_builder_name))
+                if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                    search_schemas[s_name] = s
+        elif schema.additional_props:
+            # AAZDictType
+            assert schema.additional_props.item is not None
+            s = schema.additional_props.item
+            s_name = "Element"
+            s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, response_cls_map)
+            rendered_schemas.append((s_name, s_typ, s_typ_kwargs, cls_builder_name))
+            if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                search_schemas[s_name] = s
+    elif isinstance(schema, CMDArraySchemaBase):
+        # AAZListType
+        assert schema.item is not None
+        s = schema.item
+        s_name = "Element"
+        s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, response_cls_map)
+        rendered_schemas.append((s_name, s_typ, s_typ_kwargs, cls_builder_name))
+        if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+            search_schemas[s_name] = s
+    else:
+        raise NotImplementedError()
+
+    if rendered_schemas:
+        yield name, scope_define, rendered_schemas
+
+    for s_name, s in search_schemas.items():
+        s_scope_define = f"{scope_define}.{s_name}"
+        if s_name == "Element":
+            s_name = '_element'
+        for scopes in _iter_response_scopes_by_schema_base(s, s_name, s_scope_define, response_cls_map):
             yield scopes
 
 

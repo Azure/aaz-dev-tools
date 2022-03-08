@@ -168,8 +168,7 @@ class AzCommandGenerator:
         return sorted(self._op_update_cls_map.values(), key=lambda s: s.name)
 
     def get_response_clses(self):
-        # TODO:
-        return []
+        return sorted(self._op_response_cls_map.values(), key=lambda s: s.name)
 
     def has_outputs(self):
         return len(self.outputs) > 0

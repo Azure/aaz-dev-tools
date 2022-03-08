@@ -93,10 +93,10 @@ class {{ leaf.cls_name }}(AAZCommand):
     {{ arg_cls.args_schema_name }} = None
 
     @classmethod
-    def {{ arg_cls.builder_name }}(cls, schema):
+    def {{ arg_cls.builder_name }}(cls, _schema):
         if cls.{{ arg_cls.args_schema_name }} is not None:
             {%- for prop_name in arg_cls.props %}
-            schema.{{ prop_name }} = cls.{{ arg_cls.args_schema_name }}.{{ prop_name }}
+            _schema.{{ prop_name }} = cls.{{ arg_cls.args_schema_name }}.{{ prop_name }}
             {%- endfor %}
             return
 
@@ -124,7 +124,7 @@ class {{ leaf.cls_name }}(AAZCommand):
         {%- endfor %}
         {{- "\n" }}
         {%- for prop_name in arg_cls.props %}
-        schema.{{ prop_name }} = cls.{{ arg_cls.args_schema_name }}.{{ prop_name }}
+        _schema.{{ prop_name }} = cls.{{ arg_cls.args_schema_name }}.{{ prop_name }}
         {%- endfor %}
 
     {%- endfor %}
@@ -365,8 +365,8 @@ class {{ leaf.cls_name }}(AAZCommand):
             if cls.{{ response.schema.name }} is not None:
                 return cls.{{ response.schema.name }}
 
-            cls.{{ response.schema.name }} = {{ response.schema.type }} (
-                {%- for key, value in response.schema.kwargs.items() %}
+            cls.{{ response.schema.name }} = {{ response.schema.typ }} (
+                {%- for key, value in response.schema.typ_kwargs.items() %}
                 {{ key }}={{ value|constant_convert }},
                 {%- endfor %}
             )
@@ -440,18 +440,20 @@ def {{ update_cls.builder_name }}({{ update_cls.BUILDER_NAME }}):
 
 {%- for resp_cls in leaf.get_response_clses() %}
 {{ "" }}
+{{ "" }}
 {{ resp_cls.schema_name }} = None
 {{ "" }}
 {{ "" }}
-def {{ resp_cls.builder_name }}(schema):
+def {{ resp_cls.builder_name }}(_schema):
+    global {{ resp_cls.schema_name }}
     if {{ resp_cls.schema_name }} is not None:
         {%- for prop_name in resp_cls.props %}
-        schema.{{ prop_name }} = {{ resp_cls.schema_name }}.{{ prop_name }}
+        _schema.{{ prop_name }} = {{ resp_cls.schema_name }}.{{ prop_name }}
         {%- endfor %}
         return
 
-    {{ resp_cls.schema_name }} = {{ resp_cls.prop_type }}(
-        {%- for key, value in resp_cls.kwargs.items() %}
+    {{ resp_cls.schema_name }} = {{ resp_cls.typ }}(
+        {%- for key, value in resp_cls.typ_kwargs.items() %}
         {{ key }}={{ value|constant_convert }}
         {%- endfor %}
     )
@@ -474,7 +476,7 @@ def {{ resp_cls.builder_name }}(schema):
     {%- endfor %}
     {{- "\n" }}
     {%- for prop_name in resp_cls.props %}
-    schema.{{ prop_name }} = {{ resp_cls.schema_name }}.{{ prop_name }}
+    _schema.{{ prop_name }} = {{ resp_cls.schema_name }}.{{ prop_name }}
     {%- endfor %}
 
 {%- endfor %}

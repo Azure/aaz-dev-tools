@@ -86,13 +86,13 @@ class Create(AAZCommand):
         authorizations.Element = AAZObjectArg(
         )
 
-        Element = cls._args_schema.authorizations.Element
-        Element.principal_id = AAZStrType(
+        _element = cls._args_schema.authorizations.Element
+        _element.principal_id = AAZStrType(
             options=['principal-id'],
             help='The provider\'s principal identifier. This is the identity that the provider will use to call ARM to manage the workspace resources.',
             required=True,
         )
-        Element.role_definition_id = AAZStrType(
+        _element.role_definition_id = AAZStrType(
             options=['role-definition-id'],
             help='The provider\'s role definition identifier. This role will define all the permissions that the provider must have on the workspace\'s container resource group. This role definition cannot have permission to delete the resource group.',
             required=True,
@@ -219,9 +219,9 @@ class Create(AAZCommand):
     _args_workspace_custom_boolean_parameter_create = None
 
     @classmethod
-    def _build_args_workspace_custom_boolean_parameter_create(cls, schema):
+    def _build_args_workspace_custom_boolean_parameter_create(cls, _schema):
         if cls._args_workspace_custom_boolean_parameter_create is not None:
-            schema.value = cls._args_workspace_custom_boolean_parameter_create.value
+            _schema.value = cls._args_workspace_custom_boolean_parameter_create.value
             return
 
         cls._args_workspace_custom_boolean_parameter_create = AAZObjectArg(
@@ -234,14 +234,14 @@ class Create(AAZCommand):
             required=True,
         )
 
-        schema.value = cls._args_workspace_custom_boolean_parameter_create.value
+        _schema.value = cls._args_workspace_custom_boolean_parameter_create.value
 
     _args_workspace_custom_string_parameter_create = None
 
     @classmethod
-    def _build_args_workspace_custom_string_parameter_create(cls, schema):
+    def _build_args_workspace_custom_string_parameter_create(cls, _schema):
         if cls._args_workspace_custom_string_parameter_create is not None:
-            schema.value = cls._args_workspace_custom_string_parameter_create.value
+            _schema.value = cls._args_workspace_custom_string_parameter_create.value
             return
 
         cls._args_workspace_custom_string_parameter_create = AAZObjectArg(
@@ -254,7 +254,7 @@ class Create(AAZCommand):
             required=True,
         )
 
-        schema.value = cls._args_workspace_custom_string_parameter_create.value
+        _schema.value = cls._args_workspace_custom_string_parameter_create.value
 
     def _execute_operations(self):
         yield self.WorkspacesCreateOrUpdate(ctx=self.ctx)()
@@ -397,6 +397,87 @@ def _build_schema_workspace_custom_string_parameter_create(_builder):
     if _builder is None:
         return
     _builder.set_prop('value', AAZStrType, '.value', typ_kwargs={'flags': {'required': True}})
+
+
+_schema_created_by_read = None
+
+
+def _build_schema_created_by_read(_schema):
+    global _schema_created_by_read
+    if _schema_created_by_read is not None:
+        _schema.application_id = _schema_created_by_read.application_id
+        _schema.oid = _schema_created_by_read.oid
+        _schema.puid = _schema_created_by_read.puid
+        return
+
+    _schema_created_by_read = AAZObjectType(
+    )
+
+    created_by_read = _schema_created_by_read
+    created_by_read.oid = AAZStrType(
+        flags={'read_only': True},
+    )
+    created_by_read.puid = AAZStrType(
+        flags={'read_only': True},
+    )
+    created_by_read.application_id = AAZStrType(
+        serialized_name='applicationId',
+        flags={'read_only': True},
+    )
+
+    _schema.application_id = _schema_created_by_read.application_id
+    _schema.oid = _schema_created_by_read.oid
+    _schema.puid = _schema_created_by_read.puid
+
+
+_schema_workspace_custom_boolean_parameter_read = None
+
+
+def _build_schema_workspace_custom_boolean_parameter_read(_schema):
+    global _schema_workspace_custom_boolean_parameter_read
+    if _schema_workspace_custom_boolean_parameter_read is not None:
+        _schema.type = _schema_workspace_custom_boolean_parameter_read.type
+        _schema.value = _schema_workspace_custom_boolean_parameter_read.value
+        return
+
+    _schema_workspace_custom_boolean_parameter_read = AAZObjectType(
+    )
+
+    workspace_custom_boolean_parameter_read = _schema_workspace_custom_boolean_parameter_read
+    workspace_custom_boolean_parameter_read.type = AAZStrType(
+        flags={'read_only': True},
+    )
+    workspace_custom_boolean_parameter_read.value = AAZBoolType(
+        flags={'required': True},
+    )
+
+    _schema.type = _schema_workspace_custom_boolean_parameter_read.type
+    _schema.value = _schema_workspace_custom_boolean_parameter_read.value
+
+
+_schema_workspace_custom_string_parameter_read = None
+
+
+def _build_schema_workspace_custom_string_parameter_read(_schema):
+    global _schema_workspace_custom_string_parameter_read
+    if _schema_workspace_custom_string_parameter_read is not None:
+        _schema.type = _schema_workspace_custom_string_parameter_read.type
+        _schema.value = _schema_workspace_custom_string_parameter_read.value
+        return
+
+    _schema_workspace_custom_string_parameter_read = AAZObjectType(
+    )
+
+    workspace_custom_string_parameter_read = _schema_workspace_custom_string_parameter_read
+    workspace_custom_string_parameter_read.type = AAZStrType(
+        flags={'read_only': True},
+    )
+    workspace_custom_string_parameter_read.value = AAZStrType(
+        flags={'required': True},
+    )
+
+    _schema.type = _schema_workspace_custom_string_parameter_read.type
+    _schema.value = _schema_workspace_custom_string_parameter_read.value
 
 
 __all__ = ['Create']
