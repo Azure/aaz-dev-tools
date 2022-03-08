@@ -1,12 +1,11 @@
-import React, { useRef, useState } from "react";
+import React, {useState } from "react";
 import IconButton from "@mui/material/IconButton";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import TextareaAutosize from '@mui/base/TextareaAutosize';
-import styles from "./TreeView/CustomNode.module.css";
-import { NodeModel, useDragOver } from "@minoru/react-dnd-treeview";
+import { NodeModel} from "@minoru/react-dnd-treeview";
 import { Row, Col, ListGroup, Form, Button } from "react-bootstrap"
 import type { CommandGroup, HelpType, ExampleType } from "./ConfigEditor"
 
@@ -19,6 +18,93 @@ type Props = {
     onHelpChange: (id: NodeModel["id"], help: HelpType) => void,
     onExampleChange: (id: NodeModel["id"], examples: ExampleType[]) => void
 };
+
+type InputAreaProps = {
+    prefix: string,
+    value: string,
+    width: string,
+    placeholder: string,
+    initEditing: boolean,
+    minRow: number,
+    onSubmit: (value: string) => void
+}
+
+const InputArea: React.FC<InputAreaProps> = (props) => {
+    const { value, prefix, width, placeholder } = props;
+    const [displayValue, setDisplayValue] = useState(value)
+    const [changingValue, setChangingValue] = useState(displayValue)
+    const [editing, setEditing] = useState(props.initEditing)
+
+
+    const handleDoubleClick = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        if (!editing) {
+            setEditing(true)
+            setChangingValue(displayValue)
+        }
+    }
+
+    const handleChangeValue = (event: any) => {
+        setChangingValue(event.target.value)
+    }
+
+    const handleSubmit = (event: any) => {
+        setEditing(false)
+        setDisplayValue(changingValue.trim())
+        props.onSubmit(changingValue.trim())
+    }
+
+    const handleCancel = (event: any) => {
+        setEditing(false)
+        setChangingValue(displayValue)
+    }
+
+
+
+    return (
+        <div >
+            <Row className="align-items-top ">
+                <Col xxl="2">
+                    <h6>{prefix}</h6>
+                </Col>
+                {!editing
+                    ?
+                    (<Col onDoubleClick={handleDoubleClick} xxl="10">
+                        {displayValue.split('\n').map((line, index) => {
+                            return <div key={index}>
+                                {line}
+                            </div>
+                        })}
+                    </Col>)
+                    :
+                    (
+                        <Col xxl="10">
+                            <TextareaAutosize
+                                minRows={props.minRow}
+                                style={{ width: width }}
+                                placeholder={placeholder}
+                                value={changingValue}
+                                onChange={handleChangeValue}
+                            />
+                            <IconButton
+                                onClick={handleSubmit}
+                                disabled={displayValue === changingValue}
+                            >
+                                <CheckIcon />
+                            </IconButton>
+                            <IconButton
+                                onClick={handleCancel}
+                                disabled={displayValue === ""}
+                            >
+                                <CloseIcon />
+                            </IconButton>
+                        </Col>
+                    )
+                }
+            </Row>
+        </div>
+    )
+}
 
 export const CommandGroupDetails: React.FC<Props> = (props) => {
     const { names, help } = props.commandGroup;
@@ -96,92 +182,7 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
     }
 
 
-    type InputAreaProps = {
-        prefix: string,
-        value: string,
-        width: string,
-        placeholder: string,
-        initEditing: boolean,
-        minRow: number,
-        onSubmit: (value: string) => void
-    }
-
-    const InputArea: React.FC<InputAreaProps> = (props) => {
-        const { value, prefix, width, placeholder } = props;
-        const [displayValue, setDisplayValue] = useState(value)
-        const [changingValue, setChangingValue] = useState(displayValue)
-        const [editing, setEditing] = useState(props.initEditing)
-
-
-        const handleDoubleClick = (event: React.MouseEvent) => {
-            event.stopPropagation();
-            if (!editing) {
-                setEditing(true)
-                setChangingValue(displayValue)
-            }
-        }
-
-        const handleChangeValue = (event: any) => {
-            setChangingValue(event.target.value)
-        }
-
-        const handleSubmit = (event: any) => {
-            setEditing(false)
-            setDisplayValue(changingValue.trim())
-            props.onSubmit(changingValue.trim())
-        }
-
-        const handleCancel = (event: any) => {
-            setEditing(false)
-            setChangingValue(displayValue)
-        }
-
-
-
-        return (
-            <div >
-                <Row className="align-items-top ">
-                    <Col xxl="1">
-                        <h6>{prefix}</h6>
-                    </Col>
-                    {!editing
-                        ?
-                        (<Col onDoubleClick={handleDoubleClick} xxl="10">
-                            {displayValue.split('\n').map((line, index) => {
-                                return <div key={index}>
-                                    {line}
-                                </div>
-                            })}
-                        </Col>)
-                        :
-                        (
-                            <Col xxl="10">
-                                <TextareaAutosize
-                                    minRows={props.minRow}
-                                    style={{ width: width }}
-                                    placeholder={placeholder}
-                                    value={changingValue}
-                                    onChange={handleChangeValue}
-                                />
-                                <IconButton
-                                    onClick={handleSubmit}
-                                    disabled={displayValue === changingValue}
-                                >
-                                    <CheckIcon />
-                                </IconButton>
-                                <IconButton
-                                    onClick={handleCancel}
-                                    disabled={displayValue === ""}
-                                >
-                                    <CloseIcon />
-                                </IconButton>
-                            </Col>
-                        )
-                    }
-                </Row>
-            </div>
-        )
-    }
+ 
 
     const ExampleList = () => {
         return examples ? (<div>
@@ -225,18 +226,18 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
 
         return <div>
             <Row>
-                <Col xxl='1'>
+                <Col xxl='2'>
                     <h6>Name:</h6>
                 </Col>
-                <Col xxl="11">
+                <Col xxl="10">
                     <TextareaAutosize minRows={1} style={{ width: `35em` }} value={name} onChange={e => setName(e.target.value)} placeholder={exampleNamePlaceholder} />
                 </Col>
             </Row>
             <Row>
-                <Col xxl='1'>
+                <Col xxl='2'>
                     <h6>Commands:</h6>
                 </Col>
-                <Col xxl="11">
+                <Col xxl="10">
                     <TextareaAutosize minRows={3} style={{ width: `35em` }} value={commands} onChange={e => setCommands(e.target.value)} placeholder={exampleContentPlaceholder} />
                     <IconButton onClick={handleSubmitExample} disabled={name === "" || commands === ""}>
                         <CheckIcon />
@@ -276,3 +277,5 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
 
 
 };
+
+export {InputArea};

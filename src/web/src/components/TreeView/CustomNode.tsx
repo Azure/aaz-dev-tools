@@ -13,6 +13,7 @@ type Props = {
   node: NodeModel<CustomData>;
   depth: number;
   isOpen: boolean;
+  isSelected: boolean;
   onToggle: (id: NodeModel["id"]) => void;
   onClick: (id: NodeModel["id"]) => void
   onSubmit: (id: NodeModel["id"], newName: string) => void
@@ -64,7 +65,7 @@ export const CustomNode: React.FC<Props> = (props) => {
 
   return (
     <div
-      className={`tree-node ${styles.root}`}
+      className={`tree-node ${styles.root} ${props.isSelected ? styles.isSelected : ""}`}
       style={{ paddingInlineStart: indent, whiteSpace: `nowrap`}}
       {...dragOverProps}
       onClick={handleClick}
