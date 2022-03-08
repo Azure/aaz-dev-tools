@@ -21,35 +21,33 @@ class AzArgGroupGenerator:
         self._cmd_ctx = cmd_ctx
 
         # update args
-        idx = 0
-        args = [([parse_arg_name(arg)], arg) for arg in self._arg_group.args]
-        while idx < len(args):
-            arg_keys, arg = args[idx]
-            if isinstance(arg, CMDArg):
-                if isinstance(arg, CMDSubscriptionIdArg) \
-                        and arg_keys == ['subscription'] and arg.options == ['subscription']:
-                    # use self.ctx.subscription_id
-                    self._cmd_ctx.set_argument(['subscription_id'], arg.var, arg.hide, ctx_namespace='self.ctx')
-                else:
-                    self._cmd_ctx.set_argument(arg_keys, arg.var, arg.hide)
+        for arg in self._arg_group.args:
+            self._update_over_arg(arg, parse_arg_name(arg))
 
-            if getattr(arg, 'cls', None):
-                assert arg.cls not in self._cls_map
-                self._cls_map[arg.cls] = AzArgClsGenerator(arg.cls, cls_map, arg)
-                self._cmd_ctx.set_argument_cls(arg.cls)
+    def _update_over_arg(self, arg, *arg_keys):
+        if isinstance(arg, CMDArg):
+            if isinstance(arg, CMDSubscriptionIdArg) \
+                    and arg_keys == ('subscription', ) and arg.options == ['subscription']:
+                # use self.ctx.subscription_id
+                self._cmd_ctx.set_argument(('subscription_id', ), arg.var, arg.hide, ctx_namespace='self.ctx')
+            else:
+                self._cmd_ctx.set_argument(arg_keys, arg.var, arg.hide)
 
-                arg_keys = [f"@{arg.cls}"]  # prepare for cls sub property use
+        if getattr(arg, 'cls', None):
+            assert arg.cls not in self._cls_map
+            self._cls_map[arg.cls] = AzArgClsGenerator(arg.cls, self._cls_map, arg)
+            self._cmd_ctx.set_argument_cls(arg.cls)
+            arg_keys = (f"@{arg.cls}", )  # prepare for cls sub property use
 
-            if isinstance(arg, CMDObjectArgBase):
-                if arg.args:
-                    for sub_arg in arg.args:
-                        args.append(([*arg_keys, parse_arg_name(sub_arg)], sub_arg))
-                if arg.additional_props and arg.additional_props.item:
-                    args.append(([*arg_keys, '{}'], arg.additional_props.item))
-            elif isinstance(arg, CMDArrayArgBase):
-                if arg.item:
-                    args.append(([*arg_keys, '[]'], arg.item))
-            idx += 1
+        if isinstance(arg, CMDObjectArgBase):
+            if arg.args:
+                for sub_arg in arg.args:
+                    self._update_over_arg(sub_arg, *arg_keys, parse_arg_name(sub_arg))
+            if arg.additional_props and arg.additional_props.item:
+                self._update_over_arg(arg.additional_props.item, *arg_keys, '{}')
+        elif isinstance(arg, CMDArrayArgBase):
+            if arg.item:
+                self._update_over_arg(arg.item, *arg_keys, '[]')
 
     def iter_scopes(self):
         scope = self._args_schema_name

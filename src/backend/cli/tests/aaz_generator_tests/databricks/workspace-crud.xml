@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<CodeGen timestamp="2022-03-06T08:20:27.764872Z" plane="mgmt-plane">
+<CodeGen timestamp="2022-03-08T08:15:01.757365Z" plane="mgmt-plane">
   <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfQ==/V/MjAxOC0wNC0wMQ=="/>
   <commandGroup name="databricks workspace">
     <command name="show" version="2018-04-01">
@@ -37,15 +37,21 @@
                   <prop readOnly="True" type="ResourceId" name="id">
                     <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"/>
                   </prop>
-                  <prop readOnly="True" type="string" name="name"/>
-                  <prop readOnly="True" type="string" name="type"/>
-                  <prop type="object" name="tags">
-                    <additionalProp>
-                      <item type="string"/>
-                    </additionalProp>
-                  </prop>
                   <prop type="ResourceLocation" name="location" required="True"/>
+                  <prop readOnly="True" type="string" name="name"/>
                   <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="array<object>" name="authorizations">
+                      <item type="object">
+                        <prop type="uuid" name="principalId" required="True"/>
+                        <prop type="uuid" name="roleDefinitionId" required="True"/>
+                      </item>
+                    </prop>
+                    <prop type="object" name="createdBy" cls="CreatedBy_read">
+                      <prop readOnly="True" type="uuid" name="applicationId"/>
+                      <prop readOnly="True" type="uuid" name="oid"/>
+                      <prop readOnly="True" type="string" name="puid"/>
+                    </prop>
+                    <prop readOnly="True" type="dateTime" name="createdDateTime"/>
                     <prop type="string" name="managedResourceGroupId" required="True"/>
                     <prop type="object" name="parameters">
                       <prop type="object" name="amlWorkspaceId" cls="WorkspaceCustomStringParameter_read">
@@ -58,9 +64,9 @@
                         </prop>
                         <prop type="string" name="value" required="True"/>
                       </prop>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="customVirtualNetworkId"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="customPublicSubnetName"/>
                       <prop type="@WorkspaceCustomStringParameter_read" name="customPrivateSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customPublicSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customVirtualNetworkId"/>
                       <prop type="object" name="enableNoPublicIp" cls="WorkspaceCustomBooleanParameter_read">
                         <prop readOnly="True" type="string" name="type">
                           <enum>
@@ -71,11 +77,6 @@
                         </prop>
                         <prop type="boolean" name="value" required="True"/>
                       </prop>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerBackendPoolName"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerId"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="natGatewayName"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="publicIpName"/>
-                      <prop type="@WorkspaceCustomBooleanParameter_read" name="prepareEncryption"/>
                       <prop type="object" name="encryption">
                         <prop readOnly="True" type="string" name="type">
                           <enum>
@@ -85,6 +86,7 @@
                           </enum>
                         </prop>
                         <prop type="object" name="value">
+                          <prop type="string" name="KeyName"/>
                           <prop type="string" name="keySource">
                             <default value="Default"/>
                             <enum>
@@ -92,15 +94,16 @@
                               <item value="Microsoft.Keyvault"/>
                             </enum>
                           </prop>
-                          <prop type="string" name="KeyName"/>
-                          <prop type="string" name="keyversion"/>
                           <prop type="string" name="keyvaulturi"/>
+                          <prop type="string" name="keyversion"/>
                         </prop>
                       </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerBackendPoolName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerId"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="natGatewayName"/>
+                      <prop type="@WorkspaceCustomBooleanParameter_read" name="prepareEncryption"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="publicIpName"/>
                       <prop type="@WorkspaceCustomBooleanParameter_read" name="requireInfrastructureEncryption"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountSkuName"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="vnetAddressPrefix"/>
                       <prop readOnly="True" type="object" name="resourceTags">
                         <prop readOnly="True" type="string" name="type">
                           <enum>
@@ -113,48 +116,45 @@
                           <additionalProp readOnly="True"/>
                         </prop>
                       </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountSkuName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="vnetAddressPrefix"/>
                     </prop>
                     <prop readOnly="True" type="string" name="provisioningState">
                       <enum>
                         <item value="Accepted"/>
-                        <item value="Running"/>
-                        <item value="Ready"/>
-                        <item value="Creating"/>
-                        <item value="Created"/>
-                        <item value="Deleting"/>
-                        <item value="Deleted"/>
                         <item value="Canceled"/>
+                        <item value="Created"/>
+                        <item value="Creating"/>
+                        <item value="Deleted"/>
+                        <item value="Deleting"/>
                         <item value="Failed"/>
+                        <item value="Ready"/>
+                        <item value="Running"/>
                         <item value="Succeeded"/>
                         <item value="Updating"/>
                       </enum>
                     </prop>
-                    <prop type="string" name="uiDefinitionUri"/>
-                    <prop type="array<object>" name="authorizations">
-                      <item type="object">
-                        <prop type="uuid" name="principalId" required="True"/>
-                        <prop type="uuid" name="roleDefinitionId" required="True"/>
-                      </item>
-                    </prop>
-                    <prop type="object" name="createdBy" cls="CreatedBy_read">
-                      <prop readOnly="True" type="uuid" name="oid"/>
-                      <prop readOnly="True" type="string" name="puid"/>
-                      <prop readOnly="True" type="uuid" name="applicationId"/>
-                    </prop>
-                    <prop type="@CreatedBy_read" name="updatedBy"/>
-                    <prop readOnly="True" type="dateTime" name="createdDateTime"/>
-                    <prop readOnly="True" type="string" name="workspaceId"/>
-                    <prop readOnly="True" type="string" name="workspaceUrl"/>
                     <prop type="object" name="storageAccountIdentity">
                       <prop readOnly="True" type="uuid" name="principalId"/>
                       <prop readOnly="True" type="uuid" name="tenantId"/>
                       <prop readOnly="True" type="string" name="type"/>
                     </prop>
+                    <prop type="string" name="uiDefinitionUri"/>
+                    <prop type="@CreatedBy_read" name="updatedBy"/>
+                    <prop readOnly="True" type="string" name="workspaceId"/>
+                    <prop readOnly="True" type="string" name="workspaceUrl"/>
                   </prop>
                   <prop type="object" name="sku">
                     <prop type="string" name="name" required="True"/>
                     <prop type="string" name="tier"/>
                   </prop>
+                  <prop type="object" name="tags">
+                    <additionalProp>
+                      <item type="string"/>
+                    </additionalProp>
+                  </prop>
+                  <prop readOnly="True" type="string" name="type"/>
                 </schema>
               </json>
             </body>
@@ -350,31 +350,28 @@
             <body>
               <json>
                 <schema type="object" name="parameters" clientFlatten="True">
-                  <prop type="object" name="tags" arg="$parameters.tags">
-                    <additionalProp>
-                      <item type="string"/>
-                    </additionalProp>
-                  </prop>
                   <prop type="ResourceLocation" name="location" arg="$parameters.location" required="True"/>
                   <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="array<object>" name="authorizations" arg="$parameters.properties.authorizations">
+                      <item type="object">
+                        <prop type="uuid" name="principalId" arg="$parameters.properties.authorizations[].principalId" required="True"/>
+                        <prop type="uuid" name="roleDefinitionId" arg="$parameters.properties.authorizations[].roleDefinitionId" required="True"/>
+                      </item>
+                    </prop>
                     <prop type="string" name="managedResourceGroupId" arg="$parameters.properties.managedResourceGroupId" required="True"/>
                     <prop type="object" name="parameters" arg="$parameters.properties.parameters">
                       <prop type="object" name="amlWorkspaceId" arg="$parameters.properties.parameters.amlWorkspaceId" cls="WorkspaceCustomStringParameter_create">
                         <prop type="string" name="value" arg="@WorkspaceCustomStringParameter_create.value" required="True"/>
                       </prop>
-                      <prop type="@WorkspaceCustomStringParameter_create" name="customVirtualNetworkId" arg="$parameters.properties.parameters.customVirtualNetworkId"/>
-                      <prop type="@WorkspaceCustomStringParameter_create" name="customPublicSubnetName" arg="$parameters.properties.parameters.customPublicSubnetName"/>
                       <prop type="@WorkspaceCustomStringParameter_create" name="customPrivateSubnetName" arg="$parameters.properties.parameters.customPrivateSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="customPublicSubnetName" arg="$parameters.properties.parameters.customPublicSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="customVirtualNetworkId" arg="$parameters.properties.parameters.customVirtualNetworkId"/>
                       <prop type="object" name="enableNoPublicIp" arg="$parameters.properties.parameters.enableNoPublicIp" cls="WorkspaceCustomBooleanParameter_create">
                         <prop type="boolean" name="value" arg="@WorkspaceCustomBooleanParameter_create.value" required="True"/>
                       </prop>
-                      <prop type="@WorkspaceCustomStringParameter_create" name="loadBalancerBackendPoolName" arg="$parameters.properties.parameters.loadBalancerBackendPoolName"/>
-                      <prop type="@WorkspaceCustomStringParameter_create" name="loadBalancerId" arg="$parameters.properties.parameters.loadBalancerId"/>
-                      <prop type="@WorkspaceCustomStringParameter_create" name="natGatewayName" arg="$parameters.properties.parameters.natGatewayName"/>
-                      <prop type="@WorkspaceCustomStringParameter_create" name="publicIpName" arg="$parameters.properties.parameters.publicIpName"/>
-                      <prop type="@WorkspaceCustomBooleanParameter_create" name="prepareEncryption" arg="$parameters.properties.parameters.prepareEncryption"/>
                       <prop type="object" name="encryption" arg="$parameters.properties.parameters.encryption">
                         <prop type="object" name="value" arg="$parameters.properties.parameters.encryption.value">
+                          <prop type="string" name="KeyName" arg="$parameters.properties.parameters.encryption.value.KeyName"/>
                           <prop type="string" name="keySource" arg="$parameters.properties.parameters.encryption.value.keySource">
                             <default value="Default"/>
                             <enum>
@@ -382,27 +379,30 @@
                               <item value="Microsoft.Keyvault"/>
                             </enum>
                           </prop>
-                          <prop type="string" name="KeyName" arg="$parameters.properties.parameters.encryption.value.KeyName"/>
-                          <prop type="string" name="keyversion" arg="$parameters.properties.parameters.encryption.value.keyversion"/>
                           <prop type="string" name="keyvaulturi" arg="$parameters.properties.parameters.encryption.value.keyvaulturi"/>
+                          <prop type="string" name="keyversion" arg="$parameters.properties.parameters.encryption.value.keyversion"/>
                         </prop>
                       </prop>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="loadBalancerBackendPoolName" arg="$parameters.properties.parameters.loadBalancerBackendPoolName"/>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="loadBalancerId" arg="$parameters.properties.parameters.loadBalancerId"/>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="natGatewayName" arg="$parameters.properties.parameters.natGatewayName"/>
+                      <prop type="@WorkspaceCustomBooleanParameter_create" name="prepareEncryption" arg="$parameters.properties.parameters.prepareEncryption"/>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="publicIpName" arg="$parameters.properties.parameters.publicIpName"/>
                       <prop type="@WorkspaceCustomBooleanParameter_create" name="requireInfrastructureEncryption" arg="$parameters.properties.parameters.requireInfrastructureEncryption"/>
                       <prop type="@WorkspaceCustomStringParameter_create" name="storageAccountName" arg="$parameters.properties.parameters.storageAccountName"/>
                       <prop type="@WorkspaceCustomStringParameter_create" name="storageAccountSkuName" arg="$parameters.properties.parameters.storageAccountSkuName"/>
                       <prop type="@WorkspaceCustomStringParameter_create" name="vnetAddressPrefix" arg="$parameters.properties.parameters.vnetAddressPrefix"/>
                     </prop>
                     <prop type="string" name="uiDefinitionUri" arg="$parameters.properties.uiDefinitionUri"/>
-                    <prop type="array<object>" name="authorizations" arg="$parameters.properties.authorizations">
-                      <item type="object">
-                        <prop type="uuid" name="principalId" arg="$parameters.properties.authorizations[].principalId" required="True"/>
-                        <prop type="uuid" name="roleDefinitionId" arg="$parameters.properties.authorizations[].roleDefinitionId" required="True"/>
-                      </item>
-                    </prop>
                   </prop>
                   <prop type="object" name="sku" arg="$parameters.sku">
                     <prop type="string" name="name" arg="$parameters.sku.name" required="True"/>
                     <prop type="string" name="tier" arg="$parameters.sku.tier"/>
+                  </prop>
+                  <prop type="object" name="tags" arg="$parameters.tags">
+                    <additionalProp>
+                      <item type="string"/>
+                    </additionalProp>
                   </prop>
                 </schema>
               </json>
@@ -415,15 +415,21 @@
                   <prop readOnly="True" type="ResourceId" name="id">
                     <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"/>
                   </prop>
-                  <prop readOnly="True" type="string" name="name"/>
-                  <prop readOnly="True" type="string" name="type"/>
-                  <prop type="object" name="tags">
-                    <additionalProp>
-                      <item type="string"/>
-                    </additionalProp>
-                  </prop>
                   <prop type="ResourceLocation" name="location" required="True"/>
+                  <prop readOnly="True" type="string" name="name"/>
                   <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="array<object>" name="authorizations">
+                      <item type="object">
+                        <prop type="uuid" name="principalId" required="True"/>
+                        <prop type="uuid" name="roleDefinitionId" required="True"/>
+                      </item>
+                    </prop>
+                    <prop type="object" name="createdBy" cls="CreatedBy_read">
+                      <prop readOnly="True" type="uuid" name="applicationId"/>
+                      <prop readOnly="True" type="uuid" name="oid"/>
+                      <prop readOnly="True" type="string" name="puid"/>
+                    </prop>
+                    <prop readOnly="True" type="dateTime" name="createdDateTime"/>
                     <prop type="string" name="managedResourceGroupId" required="True"/>
                     <prop type="object" name="parameters">
                       <prop type="object" name="amlWorkspaceId" cls="WorkspaceCustomStringParameter_read">
@@ -436,9 +442,9 @@
                         </prop>
                         <prop type="string" name="value" required="True"/>
                       </prop>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="customVirtualNetworkId"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="customPublicSubnetName"/>
                       <prop type="@WorkspaceCustomStringParameter_read" name="customPrivateSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customPublicSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customVirtualNetworkId"/>
                       <prop type="object" name="enableNoPublicIp" cls="WorkspaceCustomBooleanParameter_read">
                         <prop readOnly="True" type="string" name="type">
                           <enum>
@@ -449,11 +455,6 @@
                         </prop>
                         <prop type="boolean" name="value" required="True"/>
                       </prop>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerBackendPoolName"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerId"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="natGatewayName"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="publicIpName"/>
-                      <prop type="@WorkspaceCustomBooleanParameter_read" name="prepareEncryption"/>
                       <prop type="object" name="encryption">
                         <prop readOnly="True" type="string" name="type">
                           <enum>
@@ -463,6 +464,7 @@
                           </enum>
                         </prop>
                         <prop type="object" name="value">
+                          <prop type="string" name="KeyName"/>
                           <prop type="string" name="keySource">
                             <default value="Default"/>
                             <enum>
@@ -470,15 +472,16 @@
                               <item value="Microsoft.Keyvault"/>
                             </enum>
                           </prop>
-                          <prop type="string" name="KeyName"/>
-                          <prop type="string" name="keyversion"/>
                           <prop type="string" name="keyvaulturi"/>
+                          <prop type="string" name="keyversion"/>
                         </prop>
                       </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerBackendPoolName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerId"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="natGatewayName"/>
+                      <prop type="@WorkspaceCustomBooleanParameter_read" name="prepareEncryption"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="publicIpName"/>
                       <prop type="@WorkspaceCustomBooleanParameter_read" name="requireInfrastructureEncryption"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountSkuName"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="vnetAddressPrefix"/>
                       <prop readOnly="True" type="object" name="resourceTags">
                         <prop readOnly="True" type="string" name="type">
                           <enum>
@@ -491,48 +494,45 @@
                           <additionalProp readOnly="True"/>
                         </prop>
                       </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountSkuName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="vnetAddressPrefix"/>
                     </prop>
                     <prop readOnly="True" type="string" name="provisioningState">
                       <enum>
                         <item value="Accepted"/>
-                        <item value="Running"/>
-                        <item value="Ready"/>
-                        <item value="Creating"/>
-                        <item value="Created"/>
-                        <item value="Deleting"/>
-                        <item value="Deleted"/>
                         <item value="Canceled"/>
+                        <item value="Created"/>
+                        <item value="Creating"/>
+                        <item value="Deleted"/>
+                        <item value="Deleting"/>
                         <item value="Failed"/>
+                        <item value="Ready"/>
+                        <item value="Running"/>
                         <item value="Succeeded"/>
                         <item value="Updating"/>
                       </enum>
                     </prop>
-                    <prop type="string" name="uiDefinitionUri"/>
-                    <prop type="array<object>" name="authorizations">
-                      <item type="object">
-                        <prop type="uuid" name="principalId" required="True"/>
-                        <prop type="uuid" name="roleDefinitionId" required="True"/>
-                      </item>
-                    </prop>
-                    <prop type="object" name="createdBy" cls="CreatedBy_read">
-                      <prop readOnly="True" type="uuid" name="oid"/>
-                      <prop readOnly="True" type="string" name="puid"/>
-                      <prop readOnly="True" type="uuid" name="applicationId"/>
-                    </prop>
-                    <prop type="@CreatedBy_read" name="updatedBy"/>
-                    <prop readOnly="True" type="dateTime" name="createdDateTime"/>
-                    <prop readOnly="True" type="string" name="workspaceId"/>
-                    <prop readOnly="True" type="string" name="workspaceUrl"/>
                     <prop type="object" name="storageAccountIdentity">
                       <prop readOnly="True" type="uuid" name="principalId"/>
                       <prop readOnly="True" type="uuid" name="tenantId"/>
                       <prop readOnly="True" type="string" name="type"/>
                     </prop>
+                    <prop type="string" name="uiDefinitionUri"/>
+                    <prop type="@CreatedBy_read" name="updatedBy"/>
+                    <prop readOnly="True" type="string" name="workspaceId"/>
+                    <prop readOnly="True" type="string" name="workspaceUrl"/>
                   </prop>
                   <prop type="object" name="sku">
                     <prop type="string" name="name" required="True"/>
                     <prop type="string" name="tier"/>
                   </prop>
+                  <prop type="object" name="tags">
+                    <additionalProp>
+                      <item type="string"/>
+                    </additionalProp>
+                  </prop>
+                  <prop readOnly="True" type="string" name="type"/>
                 </schema>
               </json>
             </body>
@@ -695,15 +695,21 @@
                   <prop readOnly="True" type="ResourceId" name="id">
                     <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"/>
                   </prop>
-                  <prop readOnly="True" type="string" name="name"/>
-                  <prop readOnly="True" type="string" name="type"/>
-                  <prop type="object" name="tags">
-                    <additionalProp>
-                      <item type="string"/>
-                    </additionalProp>
-                  </prop>
                   <prop type="ResourceLocation" name="location" required="True"/>
+                  <prop readOnly="True" type="string" name="name"/>
                   <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="array<object>" name="authorizations">
+                      <item type="object">
+                        <prop type="uuid" name="principalId" required="True"/>
+                        <prop type="uuid" name="roleDefinitionId" required="True"/>
+                      </item>
+                    </prop>
+                    <prop type="object" name="createdBy" cls="CreatedBy_read">
+                      <prop readOnly="True" type="uuid" name="applicationId"/>
+                      <prop readOnly="True" type="uuid" name="oid"/>
+                      <prop readOnly="True" type="string" name="puid"/>
+                    </prop>
+                    <prop readOnly="True" type="dateTime" name="createdDateTime"/>
                     <prop type="string" name="managedResourceGroupId" required="True"/>
                     <prop type="object" name="parameters">
                       <prop type="object" name="amlWorkspaceId" cls="WorkspaceCustomStringParameter_read">
@@ -716,9 +722,9 @@
                         </prop>
                         <prop type="string" name="value" required="True"/>
                       </prop>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="customVirtualNetworkId"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="customPublicSubnetName"/>
                       <prop type="@WorkspaceCustomStringParameter_read" name="customPrivateSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customPublicSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customVirtualNetworkId"/>
                       <prop type="object" name="enableNoPublicIp" cls="WorkspaceCustomBooleanParameter_read">
                         <prop readOnly="True" type="string" name="type">
                           <enum>
@@ -729,11 +735,6 @@
                         </prop>
                         <prop type="boolean" name="value" required="True"/>
                       </prop>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerBackendPoolName"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerId"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="natGatewayName"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="publicIpName"/>
-                      <prop type="@WorkspaceCustomBooleanParameter_read" name="prepareEncryption"/>
                       <prop type="object" name="encryption">
                         <prop readOnly="True" type="string" name="type">
                           <enum>
@@ -743,6 +744,7 @@
                           </enum>
                         </prop>
                         <prop type="object" name="value">
+                          <prop type="string" name="KeyName"/>
                           <prop type="string" name="keySource">
                             <default value="Default"/>
                             <enum>
@@ -750,15 +752,16 @@
                               <item value="Microsoft.Keyvault"/>
                             </enum>
                           </prop>
-                          <prop type="string" name="KeyName"/>
-                          <prop type="string" name="keyversion"/>
                           <prop type="string" name="keyvaulturi"/>
+                          <prop type="string" name="keyversion"/>
                         </prop>
                       </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerBackendPoolName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerId"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="natGatewayName"/>
+                      <prop type="@WorkspaceCustomBooleanParameter_read" name="prepareEncryption"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="publicIpName"/>
                       <prop type="@WorkspaceCustomBooleanParameter_read" name="requireInfrastructureEncryption"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountSkuName"/>
-                      <prop type="@WorkspaceCustomStringParameter_read" name="vnetAddressPrefix"/>
                       <prop readOnly="True" type="object" name="resourceTags">
                         <prop readOnly="True" type="string" name="type">
                           <enum>
@@ -771,48 +774,45 @@
                           <additionalProp readOnly="True"/>
                         </prop>
                       </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountSkuName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="vnetAddressPrefix"/>
                     </prop>
                     <prop readOnly="True" type="string" name="provisioningState">
                       <enum>
                         <item value="Accepted"/>
-                        <item value="Running"/>
-                        <item value="Ready"/>
-                        <item value="Creating"/>
-                        <item value="Created"/>
-                        <item value="Deleting"/>
-                        <item value="Deleted"/>
                         <item value="Canceled"/>
+                        <item value="Created"/>
+                        <item value="Creating"/>
+                        <item value="Deleted"/>
+                        <item value="Deleting"/>
                         <item value="Failed"/>
+                        <item value="Ready"/>
+                        <item value="Running"/>
                         <item value="Succeeded"/>
                         <item value="Updating"/>
                       </enum>
                     </prop>
-                    <prop type="string" name="uiDefinitionUri"/>
-                    <prop type="array<object>" name="authorizations">
-                      <item type="object">
-                        <prop type="uuid" name="principalId" required="True"/>
-                        <prop type="uuid" name="roleDefinitionId" required="True"/>
-                      </item>
-                    </prop>
-                    <prop type="object" name="createdBy" cls="CreatedBy_read">
-                      <prop readOnly="True" type="uuid" name="oid"/>
-                      <prop readOnly="True" type="string" name="puid"/>
-                      <prop readOnly="True" type="uuid" name="applicationId"/>
-                    </prop>
-                    <prop type="@CreatedBy_read" name="updatedBy"/>
-                    <prop readOnly="True" type="dateTime" name="createdDateTime"/>
-                    <prop readOnly="True" type="string" name="workspaceId"/>
-                    <prop readOnly="True" type="string" name="workspaceUrl"/>
                     <prop type="object" name="storageAccountIdentity">
                       <prop readOnly="True" type="uuid" name="principalId"/>
                       <prop readOnly="True" type="uuid" name="tenantId"/>
                       <prop readOnly="True" type="string" name="type"/>
                     </prop>
+                    <prop type="string" name="uiDefinitionUri"/>
+                    <prop type="@CreatedBy_read" name="updatedBy"/>
+                    <prop readOnly="True" type="string" name="workspaceId"/>
+                    <prop readOnly="True" type="string" name="workspaceUrl"/>
                   </prop>
                   <prop type="object" name="sku">
                     <prop type="string" name="name" required="True"/>
                     <prop type="string" name="tier"/>
                   </prop>
+                  <prop type="object" name="tags">
+                    <additionalProp>
+                      <item type="string"/>
+                    </additionalProp>
+                  </prop>
+                  <prop readOnly="True" type="string" name="type"/>
                 </schema>
               </json>
             </body>
@@ -830,30 +830,27 @@
         <instanceUpdate instance="$Instance">
           <json>
             <schema type="object" name="parameters" clientFlatten="True">
-              <prop type="object" name="tags" arg="$parameters.tags">
-                <additionalProp>
-                  <item type="string"/>
-                </additionalProp>
-              </prop>
               <prop type="object" name="properties" required="True" clientFlatten="True">
+                <prop type="array<object>" name="authorizations" arg="$parameters.properties.authorizations">
+                  <item type="object">
+                    <prop type="uuid" name="principalId" arg="$parameters.properties.authorizations[].principalId" required="True"/>
+                    <prop type="uuid" name="roleDefinitionId" arg="$parameters.properties.authorizations[].roleDefinitionId" required="True"/>
+                  </item>
+                </prop>
                 <prop type="string" name="managedResourceGroupId" arg="$parameters.properties.managedResourceGroupId" required="True"/>
                 <prop type="object" name="parameters" arg="$parameters.properties.parameters">
                   <prop type="object" name="amlWorkspaceId" arg="$parameters.properties.parameters.amlWorkspaceId" cls="WorkspaceCustomStringParameter_update">
                     <prop type="string" name="value" arg="@WorkspaceCustomStringParameter_update.value" required="True"/>
                   </prop>
-                  <prop type="@WorkspaceCustomStringParameter_update" name="customVirtualNetworkId" arg="$parameters.properties.parameters.customVirtualNetworkId"/>
-                  <prop type="@WorkspaceCustomStringParameter_update" name="customPublicSubnetName" arg="$parameters.properties.parameters.customPublicSubnetName"/>
                   <prop type="@WorkspaceCustomStringParameter_update" name="customPrivateSubnetName" arg="$parameters.properties.parameters.customPrivateSubnetName"/>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="customPublicSubnetName" arg="$parameters.properties.parameters.customPublicSubnetName"/>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="customVirtualNetworkId" arg="$parameters.properties.parameters.customVirtualNetworkId"/>
                   <prop type="object" name="enableNoPublicIp" arg="$parameters.properties.parameters.enableNoPublicIp" cls="WorkspaceCustomBooleanParameter_update">
                     <prop type="boolean" name="value" arg="@WorkspaceCustomBooleanParameter_update.value" required="True"/>
                   </prop>
-                  <prop type="@WorkspaceCustomStringParameter_update" name="loadBalancerBackendPoolName" arg="$parameters.properties.parameters.loadBalancerBackendPoolName"/>
-                  <prop type="@WorkspaceCustomStringParameter_update" name="loadBalancerId" arg="$parameters.properties.parameters.loadBalancerId"/>
-                  <prop type="@WorkspaceCustomStringParameter_update" name="natGatewayName" arg="$parameters.properties.parameters.natGatewayName"/>
-                  <prop type="@WorkspaceCustomStringParameter_update" name="publicIpName" arg="$parameters.properties.parameters.publicIpName"/>
-                  <prop type="@WorkspaceCustomBooleanParameter_update" name="prepareEncryption" arg="$parameters.properties.parameters.prepareEncryption"/>
                   <prop type="object" name="encryption" arg="$parameters.properties.parameters.encryption">
                     <prop type="object" name="value" arg="$parameters.properties.parameters.encryption.value">
+                      <prop type="string" name="KeyName" arg="$parameters.properties.parameters.encryption.value.KeyName"/>
                       <prop type="string" name="keySource" arg="$parameters.properties.parameters.encryption.value.keySource">
                         <default value="Default"/>
                         <enum>
@@ -861,27 +858,30 @@
                           <item value="Microsoft.Keyvault"/>
                         </enum>
                       </prop>
-                      <prop type="string" name="KeyName" arg="$parameters.properties.parameters.encryption.value.KeyName"/>
-                      <prop type="string" name="keyversion" arg="$parameters.properties.parameters.encryption.value.keyversion"/>
                       <prop type="string" name="keyvaulturi" arg="$parameters.properties.parameters.encryption.value.keyvaulturi"/>
+                      <prop type="string" name="keyversion" arg="$parameters.properties.parameters.encryption.value.keyversion"/>
                     </prop>
                   </prop>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="loadBalancerBackendPoolName" arg="$parameters.properties.parameters.loadBalancerBackendPoolName"/>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="loadBalancerId" arg="$parameters.properties.parameters.loadBalancerId"/>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="natGatewayName" arg="$parameters.properties.parameters.natGatewayName"/>
+                  <prop type="@WorkspaceCustomBooleanParameter_update" name="prepareEncryption" arg="$parameters.properties.parameters.prepareEncryption"/>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="publicIpName" arg="$parameters.properties.parameters.publicIpName"/>
                   <prop type="@WorkspaceCustomBooleanParameter_update" name="requireInfrastructureEncryption" arg="$parameters.properties.parameters.requireInfrastructureEncryption"/>
                   <prop type="@WorkspaceCustomStringParameter_update" name="storageAccountName" arg="$parameters.properties.parameters.storageAccountName"/>
                   <prop type="@WorkspaceCustomStringParameter_update" name="storageAccountSkuName" arg="$parameters.properties.parameters.storageAccountSkuName"/>
                   <prop type="@WorkspaceCustomStringParameter_update" name="vnetAddressPrefix" arg="$parameters.properties.parameters.vnetAddressPrefix"/>
                 </prop>
                 <prop type="string" name="uiDefinitionUri" arg="$parameters.properties.uiDefinitionUri"/>
-                <prop type="array<object>" name="authorizations" arg="$parameters.properties.authorizations">
-                  <item type="object">
-                    <prop type="uuid" name="principalId" arg="$parameters.properties.authorizations[].principalId" required="True"/>
-                    <prop type="uuid" name="roleDefinitionId" arg="$parameters.properties.authorizations[].roleDefinitionId" required="True"/>
-                  </item>
-                </prop>
               </prop>
               <prop type="object" name="sku" arg="$parameters.sku">
                 <prop type="string" name="name" arg="$parameters.sku.name" required="True"/>
                 <prop type="string" name="tier" arg="$parameters.sku.tier"/>
+              </prop>
+              <prop type="object" name="tags" arg="$parameters.tags">
+                <additionalProp>
+                  <item type="string"/>
+                </additionalProp>
               </prop>
             </schema>
           </json>

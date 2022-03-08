@@ -212,7 +212,9 @@ class AzCommandGenerator:
             if parent_priority > 6:
                 result = f"({result})"
         elif isinstance(operator, CMDConditionHasValueOperator):
-            result = f'has_value({self._variants[operator.arg]})'
+            arg_keys, hide = self.cmd_ctx.get_argument(operator.arg)
+            assert not hide
+            result = f'has_value({arg_keys})'
         else:
             raise NotImplementedError()
         return result

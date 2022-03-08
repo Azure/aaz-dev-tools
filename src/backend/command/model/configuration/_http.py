@@ -294,4 +294,6 @@ class CMDHttpAction(Model):
             self.request.reformat(**kwargs)
         if self.responses:
             for response in self.responses:
+                if response.is_error:
+                    continue
                 response.reformat(**kwargs)

@@ -350,6 +350,18 @@ class CMDClsSchemaBase(CMDSchemaBase):
             return True
         return False
 
+    @classmethod
+    def build_from_schema_base(cls, schema_base):
+        assert isinstance(schema_base, (CMDObjectSchemaBase, CMDArraySchemaBase))
+        assert getattr(schema_base, 'cls', None)
+        cls_schema = cls()
+        cls_schema._type = f"@{schema_base.cls}"
+        cls_schema.read_only = schema_base.read_only
+        cls_schema.frozen = schema_base.frozen
+        cls_schema.const = schema_base.const
+        cls_schema.default = schema_base.default
+        return cls_schema
+
 
 class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
     ARG_TYPE = CMDClsArg
@@ -368,6 +380,19 @@ class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
                 diff["client_flatten"] = f"from {old.client_flatten} to {self.client_flatten}"
 
         return diff
+
+    @classmethod
+    def build_from_schema(cls, schema):
+        assert isinstance(schema, (CMDObjectSchema, CMDArraySchema))
+        cls_schema = cls.build_from_schema_base(schema)
+        cls_schema.name = schema.name
+        cls_schema.arg = schema.arg
+        cls_schema.required = schema.required
+        cls_schema.description = schema.description
+        cls_schema.skip_url_encoding = schema.skip_url_encoding
+        if isinstance(schema, CMDObjectSchema):
+            cls_schema.client_flatten = schema.client_flatten
+        return cls_schema
 
 
 # string

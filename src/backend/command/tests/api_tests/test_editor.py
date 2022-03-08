@@ -207,11 +207,7 @@ class APIEditorTest(CommandTestCase):
                     swagger_resource_path_to_resource_id(
                         '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
                     swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies'),
-                    swagger_resource_path_to_resource_id(
                         '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata'),
                     swagger_resource_path_to_resource_id(
                         '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders'),
                     swagger_resource_path_to_resource_id(
@@ -232,6 +228,11 @@ class APIEditorTest(CommandTestCase):
                         '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel'),
                     swagger_resource_path_to_resource_id(
                         '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return'),
+                    # FIXME: fix issues in following resources
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies'),
                 ]
             })
             self.assertTrue(rv.status_code == 200)
