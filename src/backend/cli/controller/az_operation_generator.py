@@ -20,162 +20,6 @@ class AzOperationGenerator:
         return self._operation.when
 
 
-class AzHttpResponseGenerator:
-
-    def __init__(self, cmd_ctx, response):
-        self._cmd_ctx = cmd_ctx
-        self._response = response
-        self.status_codes = response.status_codes
-        self.callback_name = "on_" + "_".join(str(code) for code in response.status_codes)
-        self.variant_name = None
-        self.callback_schema_name = None
-        if response.body is not None and isinstance(response.body, CMDHttpResponseJsonBody) and \
-                response.body.json is not None and response.body.json.var is not None:
-            variant = response.body.json.var
-            self.variant_name = self._cmd_ctx.get_variant(variant)
-            self.schema_builder = f"_build_schema_{self.callback_name}"
-            self.schema = response.body.json.schema
-
-
-class AzRequestClsGenerator:
-    BUILDER_NAME = "_builder"
-
-    def __init__(self, cmd_ctx, name, request_cls_map, schema):
-        self._cmd_ctx = cmd_ctx
-        self.schema = schema
-        self.name = name
-        self.builder_name = parse_cls_builder_name(name)
-        self._request_cls_map = request_cls_map
-
-    def iter_scopes(self):
-        arg_key = f"@{self.name}"
-        for scopes in _iter_request_scopes_by_schema_base(self.schema, self.BUILDER_NAME, None, self._request_cls_map, arg_key ,self._cmd_ctx):
-            yield scopes
-
-
-class AzHttpRequestContentGenerator:
-    VALUE_NAME = "_content_value"
-    BUILDER_NAME = "_builder"
-
-    def __init__(self, cmd_ctx, body, request_cls_map):
-        self._cmd_ctx = cmd_ctx
-        self._request_cls_map = request_cls_map
-        assert isinstance(body.json, CMDRequestJson)
-        self._json = body.json
-        self.ref = self._cmd_ctx.get_variant(self.ref) if self._json.ref else None
-        self.arg_key = "self.ctx.args"
-        if self.ref is None:
-            assert isinstance(self._json.schema, CMDSchema)
-            if self._json.schema.arg:
-                self.arg_key, hide = self._cmd_ctx.get_argument(self._json.schema.arg)
-                assert not hide
-            self.typ, _, self.cls_builder_name = render_schema(
-                self._json.schema, self._request_cls_map, name=self._json.schema.name)
-
-            # update cls
-            idx = 0
-            schemas = [self._json.schema]
-            while idx < len(schemas):
-                s = schemas[idx]
-                if getattr(s, 'cls', None):
-                    assert s.cls not in self._request_cls_map
-                    self._request_cls_map[s.cls] = AzRequestClsGenerator(self._cmd_ctx, s.cls, self._request_cls_map, s)
-
-                if isinstance(s, CMDObjectSchemaBase):
-                    if s.props:
-                        for prop in s.props:
-                            schemas.append(prop)
-                    if s.additional_props and s.additional_props.item:
-                        schemas.append(s.additional_props.item)
-                elif isinstance(s, CMDArraySchemaBase):
-                    if s.item:
-                        schemas.append(s.item)
-                idx += 1
-
-    def iter_scopes(self):
-        if not self._json.schema or not isinstance(self._json.schema, (CMDObjectSchema, CMDArraySchema)):
-            return
-
-        for scopes in _iter_request_scopes_by_schema_base(self._json.schema, self.BUILDER_NAME, None, self._request_cls_map, self.arg_key, self._cmd_ctx):
-            yield scopes
-
-
-def _iter_request_scopes_by_schema_base(schema, name, scope_define, request_cls_map, arg_key, cmd_ctx):
-    rendered_schemas = []
-    search_schemas = {}
-
-    if isinstance(schema, CMDObjectSchemaBase):
-        if schema.props and schema.additional_props:
-            # not support for both props and additional props
-            raise NotImplementedError()
-        # TODO: support discriminator
-        if schema.props:
-            for s in schema.props:
-                s_name = s.name
-                s_typ, s_typ_kwargs, cls_builder_name = render_schema(s, request_cls_map, s_name)
-                if s.arg:
-                    s_arg_key, hide = cmd_ctx.get_argument(s.arg)
-                    if hide:
-                        continue
-                else:
-                    s_arg_key = arg_key
-
-                r_key = s_arg_key.replace(arg_key, '')
-                if not r_key:
-                    r_key = '.' if s.required else None
-
-                rendered_schemas.append((s_name, s_typ, r_key, s_typ_kwargs, cls_builder_name))
-                if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-                    search_schemas[s_name] = (s, s_arg_key)
-        elif schema.additional_props:
-            assert schema.additional_props.item is not None
-            s = schema.additional_props.item
-            s_name = '{}'
-            s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, request_cls_map)
-            s_arg_key = arg_key + '{}'
-            if not isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-                r_key = '.'
-            else:
-                r_key = None
-
-            rendered_schemas.append((s_name, s_typ, r_key, s_typ_kwargs, cls_builder_name))
-            if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-                search_schemas[s_name] = (s, s_arg_key)
-    elif isinstance(schema, CMDArraySchemaBase):
-        assert schema.item is not None
-        s = schema.item
-        s_name = "[]"
-        s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, request_cls_map)
-        s_arg_key = arg_key + '[]'
-
-        if not isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-            r_key = '.'
-        else:
-            r_key = None
-
-        rendered_schemas.append((s_name, s_typ, r_key, s_typ_kwargs, cls_builder_name))
-        if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-            search_schemas[s_name] = (s, s_arg_key)
-    else:
-        raise NotImplementedError()
-
-    if rendered_schemas:
-        yield name, scope_define, rendered_schemas
-
-    scope_define = scope_define or ""
-    for s_name, (s, s_arg_key) in search_schemas.items():
-        if s_name == '[]':
-            s_scope_define = scope_define + "[]"
-            s_name = '_elements'
-        elif s_name == '{}':
-            s_scope_define = scope_define + "{}"
-            s_name = '_elements'
-        else:
-            s_scope_define = f"{scope_define}.{s_name}"
-        for scopes in _iter_request_scopes_by_schema_base(s, s_name, s_scope_define, request_cls_map, s_arg_key, cmd_ctx):
-            yield scopes
-
-
 class AzHttpOperationGenerator(AzOperationGenerator):
 
     def __init__(self, name, cmd_ctx, operation, request_cls_map, response_cls_map):
@@ -353,6 +197,162 @@ class AzGenericUpdateOperationGenerator(AzOperationGenerator):
         super().__init__(name, cmd_ctx, operation)
         assert isinstance(self._operation, CMDInstanceUpdateOperation)
         assert isinstance(self._operation.instance_update, CMDGenericInstanceUpdateAction)
+
+
+class AzHttpRequestContentGenerator:
+    VALUE_NAME = "_content_value"
+    BUILDER_NAME = "_builder"
+
+    def __init__(self, cmd_ctx, body, request_cls_map):
+        self._cmd_ctx = cmd_ctx
+        self._request_cls_map = request_cls_map
+        assert isinstance(body.json, CMDRequestJson)
+        self._json = body.json
+        self.ref = self._cmd_ctx.get_variant(self.ref) if self._json.ref else None
+        self.arg_key = "self.ctx.args"
+        if self.ref is None:
+            assert isinstance(self._json.schema, CMDSchema)
+            if self._json.schema.arg:
+                self.arg_key, hide = self._cmd_ctx.get_argument(self._json.schema.arg)
+                assert not hide
+            self.typ, _, self.cls_builder_name = render_schema(
+                self._json.schema, self._request_cls_map, name=self._json.schema.name)
+
+            # update cls
+            idx = 0
+            schemas = [self._json.schema]
+            while idx < len(schemas):
+                s = schemas[idx]
+                if getattr(s, 'cls', None):
+                    assert s.cls not in self._request_cls_map
+                    self._request_cls_map[s.cls] = AzRequestClsGenerator(self._cmd_ctx, s.cls, self._request_cls_map, s)
+
+                if isinstance(s, CMDObjectSchemaBase):
+                    if s.props:
+                        for prop in s.props:
+                            schemas.append(prop)
+                    if s.additional_props and s.additional_props.item:
+                        schemas.append(s.additional_props.item)
+                elif isinstance(s, CMDArraySchemaBase):
+                    if s.item:
+                        schemas.append(s.item)
+                idx += 1
+
+    def iter_scopes(self):
+        if not self._json.schema or not isinstance(self._json.schema, (CMDObjectSchema, CMDArraySchema)):
+            return
+
+        for scopes in _iter_request_scopes_by_schema_base(self._json.schema, self.BUILDER_NAME, None, self._request_cls_map, self.arg_key, self._cmd_ctx):
+            yield scopes
+
+
+class AzRequestClsGenerator:
+    BUILDER_NAME = "_builder"
+
+    def __init__(self, cmd_ctx, name, request_cls_map, schema):
+        self._cmd_ctx = cmd_ctx
+        self.schema = schema
+        self.name = name
+        self.builder_name = parse_cls_builder_name(name)
+        self._request_cls_map = request_cls_map
+
+    def iter_scopes(self):
+        arg_key = f"@{self.name}"
+        for scopes in _iter_request_scopes_by_schema_base(self.schema, self.BUILDER_NAME, None, self._request_cls_map, arg_key ,self._cmd_ctx):
+            yield scopes
+
+
+class AzHttpResponseGenerator:
+
+    def __init__(self, cmd_ctx, response):
+        self._cmd_ctx = cmd_ctx
+        self._response = response
+        self.status_codes = response.status_codes
+        self.callback_name = "on_" + "_".join(str(code) for code in response.status_codes)
+        self.variant_name = None
+        self.callback_schema_name = None
+        if response.body is not None and isinstance(response.body, CMDHttpResponseJsonBody) and \
+                response.body.json is not None and response.body.json.var is not None:
+            variant = response.body.json.var
+            self.variant_name = self._cmd_ctx.get_variant(variant)
+            self.schema_builder = f"_build_schema_{self.callback_name}"
+            self.schema = response.body.json.schema
+
+
+def _iter_request_scopes_by_schema_base(schema, name, scope_define, request_cls_map, arg_key, cmd_ctx):
+    rendered_schemas = []
+    search_schemas = {}
+
+    if isinstance(schema, CMDObjectSchemaBase):
+        if schema.props and schema.additional_props:
+            # not support for both props and additional props
+            raise NotImplementedError()
+        # TODO: support discriminator
+        if schema.props:
+            for s in schema.props:
+                s_name = s.name
+                s_typ, s_typ_kwargs, cls_builder_name = render_schema(s, request_cls_map, s_name)
+                if s.arg:
+                    s_arg_key, hide = cmd_ctx.get_argument(s.arg)
+                    if hide:
+                        continue
+                else:
+                    s_arg_key = arg_key
+
+                r_key = s_arg_key.replace(arg_key, '')
+                if not r_key:
+                    r_key = '.' if s.required else None
+
+                rendered_schemas.append((s_name, s_typ, r_key, s_typ_kwargs, cls_builder_name))
+                if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                    search_schemas[s_name] = (s, s_arg_key)
+        elif schema.additional_props:
+            assert schema.additional_props.item is not None
+            s = schema.additional_props.item
+            s_name = '{}'
+            s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, request_cls_map)
+            s_arg_key = arg_key + '{}'
+            if not isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                r_key = '.'
+            else:
+                r_key = None
+
+            rendered_schemas.append((s_name, s_typ, r_key, s_typ_kwargs, cls_builder_name))
+            if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                search_schemas[s_name] = (s, s_arg_key)
+    elif isinstance(schema, CMDArraySchemaBase):
+        assert schema.item is not None
+        s = schema.item
+        s_name = "[]"
+        s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, request_cls_map)
+        s_arg_key = arg_key + '[]'
+
+        if not isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+            r_key = '.'
+        else:
+            r_key = None
+
+        rendered_schemas.append((s_name, s_typ, r_key, s_typ_kwargs, cls_builder_name))
+        if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+            search_schemas[s_name] = (s, s_arg_key)
+    else:
+        raise NotImplementedError()
+
+    if rendered_schemas:
+        yield name, scope_define, rendered_schemas
+
+    scope_define = scope_define or ""
+    for s_name, (s, s_arg_key) in search_schemas.items():
+        if s_name == '[]':
+            s_scope_define = scope_define + "[]"
+            s_name = '_elements'
+        elif s_name == '{}':
+            s_scope_define = scope_define + "{}"
+            s_name = '_elements'
+        else:
+            s_scope_define = f"{scope_define}.{s_name}"
+        for scopes in _iter_request_scopes_by_schema_base(s, s_name, s_scope_define, request_cls_map, s_arg_key, cmd_ctx):
+            yield scopes
 
 
 def render_schema(schema, cls_map, name):
