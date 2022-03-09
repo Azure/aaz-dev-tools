@@ -863,6 +863,325 @@ class APIEditorTest(CommandTestCase):
             rv = c.post(f"{ws_url}/Generate")
             self.assertTrue(rv.status_code == 200)
 
+    @workspace_name("test_workspace_aaz_generate_elastic")
+    def test_workspace_aaz_generate_elastic(self, ws_name):
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum.Mgmt,
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws = rv.get_json()
+            ws_url = ws['url']
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': 'elastic',
+                'version': '2020-07-01',
+                'resources': [
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.Elastic/monitors'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/listMonitoredResources'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/listDeploymentInfo'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/tagRules'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/tagRules/{ruleSetName}'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/listVMHost'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/vmIngestionDetails'),
+                    swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/vmCollectionUpdate'),
+                    ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/list-monitored-resource/Rename", json={
+                'name': "elastic monitor list-resource"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/vm-collection-update/Rename", json={
+                'name': "elastic monitor update-vm-collection"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/vm-ingestion-detail/Rename", json={
+                'name': "elastic monitor list-vm-ingestion-detail"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic", json={
+                "help": {
+                    "short": "Manage Microsoft Elastic.",
+                },
+                "stage": AAZStageEnum.Experimental
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor", json={
+                "help": {
+                    "short": "Manage monitor with Elastic.",
+                },
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/tag-rule", json={
+                "help": {
+                    "short": "Manage tag rule with Elastic.",
+                },
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/list", json={
+                "help": {
+                    "short": "List all monitors under the specified resource group. "
+                             "And List all monitors under the specified subscription.",
+                },
+                "examples": [
+                    {
+                        "name": "Monitors List By ResourceGroup",
+                        "commands": [
+                            "elastic monitor list --resource-group myResourceGroup"
+                        ]
+                    },
+                    {
+                        "name": "Monitors List",
+                        "commands": [
+                            "elastic monitor list"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/show", json={
+                "help": {
+                    "short": "Get the properties of a specific monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "Monitors Get",
+                        "commands": [
+                            "elastic monitor show --name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/create", json={
+                "help": {
+                    "short": "Create a monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "Monitors Create",
+                        "commands": [
+                            "elastic monitor create --name myMonitor --location westus2"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/update", json={
+                "help": {
+                    "short": "Update a monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "Monitors Update",
+                        "commands": [
+                            "elastic monitor update --name myMonitor --tags Environment=dev --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/delete", json={
+                "help": {
+                    "short": "Delete a monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "Monitors Delete",
+                        "commands": [
+                            "elastic monitor delete --name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/list-deployment-info", json={
+                "help": {
+                    "short": "Fetch information regarding Elastic cloud deployment corresponding to the Elastic monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "DeploymentInfo List",
+                        "commands": [
+                            "elastic monitor list-deployment-info --name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/list-resource", json={
+                "help": {
+                    "short": "List the resources currently being monitored by the Elastic monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "MonitoredResources List",
+                        "commands": [
+                            "elastic monitor list-resource --name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/list-vm-host", json={
+                "help": {
+                    "short": "List the vm resources currently being monitored by the Elastic monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "VMHost List",
+                        "commands": [
+                            "elastic monitor list-vm-host --name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/list-vm-ingestion-detail", json={
+                "help": {
+                    "short": "List the vm ingestion details that will be monitored by the Elastic monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "VMIngestion Details",
+                        "commands": [
+                            "elastic monitor list-vm-ingestion-detail --name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/update-vm-collection", json={
+                "help": {
+                    "short": "Update the vm details that will be monitored by the Elastic monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "VMCollection Update",
+                        "commands": [
+                            "elastic monitor update-vm-collection --name myMonitor --resource-group myResourceGroup "
+                            "--operation-name Add --vm-resource-id /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualmachines/myVM"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/tag-rule/Leaves/list", json={
+                "help": {
+                    "short": "List the tag rules for a given monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "TagRules List",
+                        "commands": [
+                            "elastic monitor tag-rule list --monitor-name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/tag-rule/Leaves/show", json={
+                "help": {
+                    "short": "Get a tag rule set for a given monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "TagRules Get",
+                        "commands": [
+                            "elastic monitor tag-rule show --monitor-name myMonitor --resource-group myResourceGroup --rule-set-name default"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/tag-rule/Leaves/create", json={
+                "help": {
+                    "short": "Create a tag rule set for a given monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "TagRules Create",
+                        "commands": [
+                            "elastic monitor tag-rule create --monitor-name myMonitor --resource-group myResourceGroup "
+                            "--rule-set-name default --filtering-tags name=Environment action=Include value=Prod "
+                            "--send-aad-logs False --send-activity-logs --send-subscription-logs "
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/tag-rule/Leaves/update", json={
+                "help": {
+                    "short": "Update a tag rule set for a given monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "TagRules Update",
+                        "commands": [
+                            "elastic monitor tag-rule update --monitor-name myMonitor --resource-group myResourceGroup "
+                            "--rule-set-name default --send-aad-logs True"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/tag-rule/Leaves/delete", json={
+                "help": {
+                    "short": "Delete a tag rule set for a given monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "TagRules Delete",
+                        "commands": [
+                            "elastic monitor tag-rule delete --monitor-name myMonitor --resource-group myResourceGroup "
+                            "--rule-set-name default"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/Generate")
+            self.assertTrue(rv.status_code == 200)
+
     @workspace_name("test_workspace_command_node_rename")
     def test_workspace_command_node_rename(self, ws_name):
         with self.app.test_client() as c:
