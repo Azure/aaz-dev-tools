@@ -1,18 +1,34 @@
-import { useState } from "react";
-import { Modal, Row, Col, ButtonGroup, ToggleButton, Button, Form } from "react-bootstrap";
-import { Typeahead } from 'react-bootstrap-typeahead';
+import {Component, useState} from "react";
+import axios from "axios";
+import {Link} from "react-router-dom";
+import {Modal, Row, Col, ButtonGroup, ToggleButton, Button, Form} from "react-bootstrap";
+import {Typeahead} from 'react-bootstrap-typeahead';
+import type {Option} from "react-bootstrap-typeahead/types/types"
 import "./TargetSelector.css";
-import type { Option } from "react-bootstrap-typeahead/types/types"
 
-import options from './data';
-
-import 'react-bootstrap-typeahead/css/Typeahead.css';
+import options from './data.js';
 
 
-const TargetSelector = () => {
-  const SelectTarget = () => {
+type TargetSelectorState = {
+  isNew: boolean,
+  moduleName: string,
+}
+
+
+export default class TargetSelector extends Component<any, TargetSelectorState>{
+  constructor(props: any) {
+    super(props);
+    this.state = {
+      isNew: false,
+      moduleName: "",
+    }
+  }
+
+  SelectTarget = () => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const [singleSelections, setSingleSelections] = useState([] as Option[]);
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const [radioValue, setRadioValue] = useState('1');
     const radios = [
       { name: 'Azure CLI', value: '1' },
@@ -20,7 +36,7 @@ const TargetSelector = () => {
     ];
 
     return <div>
-      <Modal show="true" dialogClassName="target-dialog" contentClassName="target-content" centered>
+      <Modal show={!this.state.isNew} dialogClassName="target-dialog" contentClassName="target-content" centered>
         <Modal.Header className="target-header" closeButton>
           <Modal.Title className="target-title">
             Welcome to CodeGen 2.0
@@ -62,7 +78,7 @@ const TargetSelector = () => {
                   </Form.Group>
                 </Col>
                 <Col sm={4}>
-                  <Button variant="secondary">
+                  <Button variant="secondary" onClick={() => this.setState({isNew: true})}>
                     New Module
                   </Button>
                 </Col>
@@ -71,19 +87,69 @@ const TargetSelector = () => {
           </Row>
         </Modal.Body>
         <Modal.Footer className='justify-content-right'>
-          <Button variant="primary">
-            OK
+          <Link to={"generator"}>
+            <Button variant="primary">
+              OK
+            </Button>
+          </Link>
+        </Modal.Footer>
+      </Modal>
+    </div>
+  }
+
+  NewTarget = () => {
+    const handleSubmit = (event: any) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const form = event.currentTarget;
+
+      if (form.checkValidity() === true) {
+        const workspaceName = event.target[0].value
+        axios.post('/AAZ/Editor/Workspaces', {
+          name: workspaceName,
+          plane: 'mgmt-plane'
+        })
+            .then(() => {
+              window.location.href = `/workspace/${workspaceName}`
+            });
+      }
+    }
+
+    return <div>
+      <Modal show={this.state.isNew} dialogClassName="target-dialog" contentClassName="target-content" centered>
+        <Modal.Header className="target-header" closeButton>
+          <Modal.Title className="target-title">
+            Welcome to CodeGen 2.0
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form id="newTargetForm" onSubmit={handleSubmit}>
+            <Form.Group>
+              <Form.Label>Module Name:</Form.Label>
+              <Form.Control type="text" required/>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer className='justify-content-right'>
+          <Link to={"/module/generator"}>
+            <Button type="submit" form="newTargetForm" variant="primary">
+              Create
+            </Button>
+          </Link>
+          <Button variant="secondary" onClick={() => this.setState({isNew: false})}>
+            Cancel
           </Button>
         </Modal.Footer>
       </Modal>
     </div>
   }
 
-  return (
-    <div>
-      <SelectTarget/>
-    </div>
-  )
+  render() {
+    return (
+        <div>
+          <this.SelectTarget/>
+          <this.NewTarget/>
+        </div>
+    )
+  }
 }
-
-export default TargetSelector;

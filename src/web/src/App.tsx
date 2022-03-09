@@ -22,7 +22,7 @@ class App extends Component {
           <br />
           <div className="row">
             <div className="col text-center">
-              <Button href="generator" variant="dark">Generator</Button>
+              <Button href="module" variant="dark">Generator</Button>
             </div>
           </div>
 
@@ -44,9 +44,8 @@ class App extends Component {
             {/* <Route path=":workspaceName/resourceSelection" element={<SpecSelector />}/> */}
             <Route path=":workspaceName" element={<ConfigEditor />} />
           </Route>
-          <Route path="generator" element={<Generator/>}>
-            <Route index element={<TargetSelector/>}/>
-          </Route>
+          <Route path="module" element={<TargetSelector/>}/>
+          <Route path="module/generator" element={<Generator/>}/>
         </Routes>
       </main>
     );
