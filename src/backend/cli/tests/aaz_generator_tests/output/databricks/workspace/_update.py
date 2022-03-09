@@ -36,6 +36,8 @@ class Update(AAZCommand):
 
     AZ_SUPPORT_NO_WAIT = True
 
+    AZ_SUPPORT_GENERIC_UPDATE = True
+
     def _handler(self, command_args):
         super()._handler(command_args)
         return self.build_lro_poller(self._execute_operations(), result_callback=self._output)
@@ -260,6 +262,7 @@ class Update(AAZCommand):
     def _execute_operations(self):
         self.WorkspacesGet(ctx=self.ctx)()
         self.InstanceUpdateByJson(ctx=self.ctx)()
+        self.InstanceUpdateByGeneric(ctx=self.ctx)()
         yield self.WorkspacesCreateOrUpdate(ctx=self.ctx)()
 
     def _output(self, *args, **kwargs):
@@ -421,7 +424,7 @@ class Update(AAZCommand):
 
             return cls._schema_on_200_201
 
-    class InstanceUpdateByJson(AAZInstanceUpdateOperation):
+    class InstanceUpdateByJson(AAZJsonInstanceUpdateOperation):
 
         def __call__(self, *args, **kwargs):
             self.ctx.vars.instance = self._update_instance(self.ctx.vars.instance)
@@ -491,6 +494,14 @@ class Update(AAZCommand):
                 tags.set_elements(AAZStrType, '.')
 
             return _instance_value
+
+    class InstanceUpdateByGeneric(AAZGenericInstanceUpdateOperation):
+
+        def __call__(self, *args, **kwargs):
+            self.ctx.vars.instance = self._update_instance_by_generic(
+                self.ctx.vars.instance,
+                self.ctx.args
+            )
 
 
 def _build_schema_workspace_custom_boolean_parameter_update(_builder):

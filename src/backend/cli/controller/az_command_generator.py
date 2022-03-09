@@ -4,7 +4,8 @@ from command.model.configuration import CMDCommand, CMDHttpOperation, CMDConditi
     CMDJsonInstanceUpdateAction
 from utils.case import to_camel_case, to_snack_case
 from utils.plane import PlaneEnum
-from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator
+from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator, \
+    AzGenericUpdateOperationGenerator
 from .az_arg_group_generator import AzArgGroupGenerator
 from .az_output_generator import AzOutputGenerator
 from utils import exceptions
@@ -100,6 +101,8 @@ class AzCommandGenerator:
         self.operations = []
         self.http_operations = []
         self.json_update_operations = []
+        self.generic_update_op = None
+        self.support_generic_update = False
 
         json_update_counts = 0
         for operation in self.cmd.cfg.operations:
@@ -127,6 +130,32 @@ class AzCommandGenerator:
             self.operations.append(op)
 
         self.support_no_wait = self.lro_counts == 1  # not support no wait if there are multiple long running operations
+
+        # generic_update_op
+        if self.json_update_operations:
+            self.support_generic_update = self.cmd.names[-1] == "update"
+            if self.support_generic_update:
+                # make sure all json update operations has the same variant key
+                variant_key = self.json_update_operations[0].variant_key
+                for op in self.json_update_operations[1:]:
+                    if op.variant_key != variant_key:
+                        self.support_generic_update = False
+                        break
+            if self.support_generic_update:
+                min_idx = None
+                max_idx = None
+                for idx, op in enumerate(self.operations):
+                    if isinstance(op, AzJsonUpdateOperationGenerator):
+                        if min_idx is None:
+                            min_idx = idx
+                        if max_idx is None or max_idx < idx:
+                            max_idx = idx
+                if max_idx + 1 - min_idx != len(self.json_update_operations):
+                    # has other operations between
+                    self.support_generic_update = False
+                else:
+                    self.generic_update_op = AzGenericUpdateOperationGenerator(self.cmd_ctx, variant_key)
+                    self.operations = [*self.operations[:max_idx+1], self.generic_update_op, *self.operations[max_idx+1:]]
 
         self.plane = None
         for resource in self.cmd.resources:

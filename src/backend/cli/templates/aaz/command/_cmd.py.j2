@@ -43,6 +43,10 @@ class {{ leaf.cls_name }}(AAZCommand):
 
     AZ_SUPPORT_NO_WAIT = True
     {%- endif %}
+    {%- if leaf.support_generic_update %}
+
+    AZ_SUPPORT_GENERIC_UPDATE = True
+    {%- endif %}
 
     def _handler(self, command_args):
         super()._handler(command_args)
@@ -415,7 +419,7 @@ class {{ leaf.cls_name }}(AAZCommand):
 
     {%- for op in leaf.json_update_operations %}
 
-    class {{ op.name }}(AAZInstanceUpdateOperation):
+    class {{ op.name }}(AAZJsonInstanceUpdateOperation):
 
         def __call__(self, *args, **kwargs):
             {{ op.variant_key }} = self.{{ op.UPDATER_NAME }}({{ op.variant_key }})
@@ -459,6 +463,18 @@ class {{ leaf.cls_name }}(AAZCommand):
             return {{ op.VALUE_NAME }}
 
     {%- endfor %}
+
+    {%- if leaf.generic_update_op is not none %}
+
+    class {{ leaf.generic_update_op.name }}(AAZGenericInstanceUpdateOperation):
+
+        def __call__(self, *args, **kwargs):
+            {{ leaf.generic_update_op.variant_key }} = self._update_instance_by_generic(
+                {{ leaf.generic_update_op.variant_key }},
+                {{ leaf.generic_update_op.arg_key }}
+            )
+
+    {%- endif %}
 
 
 {%- for update_cls in leaf.get_update_clses() %}

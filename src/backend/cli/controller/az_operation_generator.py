@@ -233,6 +233,18 @@ class AzJsonUpdateOperationGenerator(AzOperationGenerator):
             yield scopes
 
 
+class AzGenericUpdateOperationGenerator(AzOperationGenerator):
+
+    def __init__(self, cmd_ctx, variant_key):
+        super().__init__("InstanceUpdateByGeneric", cmd_ctx, None)
+        self.variant_key = variant_key
+        self.arg_key = "self.ctx.args"
+
+    @property
+    def when(self):
+        return None
+
+
 class AzHttpRequestContentGenerator:
     VALUE_NAME = "_content_value"
     BUILDER_NAME = "_builder"
