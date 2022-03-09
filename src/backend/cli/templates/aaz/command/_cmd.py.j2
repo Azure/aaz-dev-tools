@@ -72,10 +72,13 @@ class {{ leaf.cls_name }}(AAZCommand):
 
         {%- for arg_name, arg_type, arg_kwargs, cls_builder_name in arguments %}
         {{ scope }}.{{ arg_name }} = {{ arg_type }}(
+        {%- if not arg_kwargs|length %})
+        {%- else %}
             {%- for key, value in arg_kwargs.items() %}
             {{ key }}={{ value|constant_convert }},
             {%- endfor %}
         )
+        {%- endif %}
         {%- if cls_builder_name is not none %}
         cls.{{ cls_builder_name }}({{ scope }}.{{ arg_name }})
         {%- endif %}
@@ -101,10 +104,13 @@ class {{ leaf.cls_name }}(AAZCommand):
             return
 
         cls.{{ arg_cls.args_schema_name }} = {{ arg_cls.arg_type }}(
+        {%- if not arg_cls.arg_kwargs|length %})
+        {%- else %}
             {%- for key, value in arg_cls.arg_kwargs.items() %}
             {{ key }}={{ value|constant_convert }},
             {%- endfor %}
         )
+        {%- endif %}
 
         {%- for scope, scope_define, arguments in arg_cls.iter_scopes() %}
 
@@ -112,10 +118,13 @@ class {{ leaf.cls_name }}(AAZCommand):
 
         {%- for arg_name, arg_type, arg_kwargs, cls_builder_name in arguments %}
         {{ scope }}.{{ arg_name }} = {{ arg_type }}(
+        {%- if not arg_kwargs|length %})
+        {%- else %}
             {%- for key, value in arg_kwargs.items() %}
             {{ key }}={{ value|constant_convert }},
             {%- endfor %}
         )
+        {%- endif %}
         {%- if cls_builder_name is not none %}
         {{ cls_builder_name }}({{ scope }}.{{ arg_name }})
         {%- endif %}
@@ -366,10 +375,13 @@ class {{ leaf.cls_name }}(AAZCommand):
                 return cls.{{ response.schema.name }}
 
             cls.{{ response.schema.name }} = {{ response.schema.typ }}(
+            {%- if not response.schema.typ_kwargs|length %})
+            {%- else %}
                 {%- for key, value in response.schema.typ_kwargs.items() %}
                 {{ key }}={{ value|constant_convert }},
                 {%- endfor %}
             )
+            {%- endif %}
             {%- if response.schema.cls_builder_name is not none %}
             {{ response.schema.cls_builder_name }}(cls.{{ response.schema.name }})
             {%- endif %}
@@ -380,10 +392,13 @@ class {{ leaf.cls_name }}(AAZCommand):
 
             {%- for prop_name, prop_type, prop_kwargs, cls_builder_name in props %}
             {{ scope }}.{{ prop_name }} = {{ prop_type }}(
+            {%- if not prop_kwargs|length %})
+            {%- else %}
                 {%- for key, value in prop_kwargs.items() %}
                 {{ key }}={{ value|constant_convert }},
                 {%- endfor %}
             )
+            {%- endif %}
             {%- if cls_builder_name is not none %}
             {{ cls_builder_name }}({{ scope }}.{{ prop_name }})
             {%- endif %}
@@ -496,10 +511,13 @@ def {{ resp_cls.builder_name }}(_schema):
         return
 
     {{ resp_cls.schema_name }} = {{ resp_cls.typ }}(
+    {%- if not resp_cls.typ_kwargs|length %})
+    {%- else %}
         {%- for key, value in resp_cls.typ_kwargs.items() %}
         {{ key }}={{ value|constant_convert }}
         {%- endfor %}
     )
+    {%- endif %}
 
     {%- for scope, scope_define, props in resp_cls.iter_scopes() %}
 
@@ -507,10 +525,13 @@ def {{ resp_cls.builder_name }}(_schema):
 
     {%- for prop_name, prop_type, prop_kwargs, cls_builder_name in props %}
     {{ scope }}.{{ prop_name }} = {{ prop_type }}(
+    {%- if not prop_kwargs|length %})
+    {%- else %}
         {%- for key, value in prop_kwargs.items() %}
         {{ key }}={{ value|constant_convert }},
         {%- endfor %}
     )
+    {%- endif %}
     {%- if cls_builder_name is not none %}
     {{ cls_builder_name }}({{ scope }}.{{ prop_name }})
     {%- endif %}

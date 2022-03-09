@@ -88,8 +88,7 @@ class Update(AAZCommand):
         )
 
         authorizations = cls._args_schema.authorizations
-        authorizations.Element = AAZObjectArg(
-        )
+        authorizations.Element = AAZObjectArg()
 
         _element = cls._args_schema.authorizations.Element
         _element.principal_id = AAZStrType(
@@ -217,8 +216,7 @@ class Update(AAZCommand):
         )
 
         tags = cls._args_schema.tags
-        tags.Element = AAZStrArg(
-        )
+        tags.Element = AAZStrArg()
         return _args_schema
 
     _args_workspace_custom_boolean_parameter_update = None
@@ -229,8 +227,7 @@ class Update(AAZCommand):
             _schema.value = cls._args_workspace_custom_boolean_parameter_update.value
             return
 
-        cls._args_workspace_custom_boolean_parameter_update = AAZObjectArg(
-        )
+        cls._args_workspace_custom_boolean_parameter_update = AAZObjectArg()
 
         workspace_custom_boolean_parameter_update = cls._args_workspace_custom_boolean_parameter_update
         workspace_custom_boolean_parameter_update.value = AAZBoolArg(
@@ -249,8 +246,7 @@ class Update(AAZCommand):
             _schema.value = cls._args_workspace_custom_string_parameter_update.value
             return
 
-        cls._args_workspace_custom_string_parameter_update = AAZObjectArg(
-        )
+        cls._args_workspace_custom_string_parameter_update = AAZObjectArg()
 
         workspace_custom_string_parameter_update = cls._args_workspace_custom_string_parameter_update
         workspace_custom_string_parameter_update.value = AAZStrArg(
@@ -335,8 +331,7 @@ class Update(AAZCommand):
             if cls._schema_on_200 is not None:
                 return cls._schema_on_200
 
-            cls._schema_on_200 = AAZObjectType(
-            )
+            cls._schema_on_200 = AAZObjectType()
             _build_schema_workspace_read(cls._schema_on_200)
 
             return cls._schema_on_200
@@ -421,8 +416,7 @@ class Update(AAZCommand):
             if cls._schema_on_200_201 is not None:
                 return cls._schema_on_200_201
 
-            cls._schema_on_200_201 = AAZObjectType(
-            )
+            cls._schema_on_200_201 = AAZObjectType()
             _build_schema_workspace_read(cls._schema_on_200_201)
 
             return cls._schema_on_200_201
@@ -522,8 +516,7 @@ def _build_schema_created_by_read(_schema):
         _schema.puid = _schema_created_by_read.puid
         return
 
-    _schema_created_by_read = AAZObjectType(
-    )
+    _schema_created_by_read = AAZObjectType()
 
     created_by_read = _schema_created_by_read
     created_by_read.application_id = AAZStrType(
@@ -552,8 +545,7 @@ def _build_schema_workspace_custom_boolean_parameter_read(_schema):
         _schema.value = _schema_workspace_custom_boolean_parameter_read.value
         return
 
-    _schema_workspace_custom_boolean_parameter_read = AAZObjectType(
-    )
+    _schema_workspace_custom_boolean_parameter_read = AAZObjectType()
 
     workspace_custom_boolean_parameter_read = _schema_workspace_custom_boolean_parameter_read
     workspace_custom_boolean_parameter_read.type = AAZStrType(
@@ -577,8 +569,7 @@ def _build_schema_workspace_custom_string_parameter_read(_schema):
         _schema.value = _schema_workspace_custom_string_parameter_read.value
         return
 
-    _schema_workspace_custom_string_parameter_read = AAZObjectType(
-    )
+    _schema_workspace_custom_string_parameter_read = AAZObjectType()
 
     workspace_custom_string_parameter_read = _schema_workspace_custom_string_parameter_read
     workspace_custom_string_parameter_read.type = AAZStrType(
@@ -607,8 +598,7 @@ def _build_schema_workspace_read(_schema):
         _schema.type = _schema_workspace_read.type
         return
 
-    _schema_workspace_read = AAZObjectType(
-    )
+    _schema_workspace_read = AAZObjectType()
 
     workspace_read = _schema_workspace_read
     workspace_read.id = AAZStrType(
@@ -623,17 +613,14 @@ def _build_schema_workspace_read(_schema):
     workspace_read.properties = AAZObjectType(
         flags={'required': True, 'client_flatten': True},
     )
-    workspace_read.sku = AAZObjectType(
-    )
-    workspace_read.tags = AAZDictType(
-    )
+    workspace_read.sku = AAZObjectType()
+    workspace_read.tags = AAZDictType()
     workspace_read.type = AAZStrType(
         flags={'read_only': True},
     )
 
     properties = _schema_workspace_read.properties
-    properties.authorizations = AAZListType(
-    )
+    properties.authorizations = AAZListType()
     properties.created_by = AAZObjectType(
         serialized_name='createdBy',
     )
@@ -646,8 +633,7 @@ def _build_schema_workspace_read(_schema):
         serialized_name='managedResourceGroupId',
         flags={'required': True},
     )
-    properties.parameters = AAZObjectType(
-    )
+    properties.parameters = AAZObjectType()
     properties.provisioning_state = AAZStrType(
         serialized_name='provisioningState',
         flags={'read_only': True},
@@ -672,8 +658,7 @@ def _build_schema_workspace_read(_schema):
     )
 
     authorizations = _schema_workspace_read.properties.authorizations
-    authorizations.Element = AAZObjectType(
-    )
+    authorizations.Element = AAZObjectType()
 
     _element = _schema_workspace_read.properties.authorizations.Element
     _element.principal_id = AAZStrType(
@@ -706,8 +691,7 @@ def _build_schema_workspace_read(_schema):
         serialized_name='enableNoPublicIp',
     )
     _build_schema_workspace_custom_boolean_parameter_read(parameters.enable_no_public_ip)
-    parameters.encryption = AAZObjectType(
-    )
+    parameters.encryption = AAZObjectType()
     parameters.load_balancer_backend_pool_name = AAZObjectType(
         serialized_name='loadBalancerBackendPoolName',
     )
@@ -753,8 +737,7 @@ def _build_schema_workspace_read(_schema):
     encryption.type = AAZStrType(
         flags={'read_only': True},
     )
-    encryption.value = AAZObjectType(
-    )
+    encryption.value = AAZObjectType()
 
     value = _schema_workspace_read.properties.parameters.encryption.value
     value.key_name = AAZStrType(
@@ -763,10 +746,8 @@ def _build_schema_workspace_read(_schema):
     value.key_source = AAZStrType(
         serialized_name='keySource',
     )
-    value.keyvaulturi = AAZStrType(
-    )
-    value.keyversion = AAZStrType(
-    )
+    value.keyvaulturi = AAZStrType()
+    value.keyversion = AAZStrType()
 
     resource_tags = _schema_workspace_read.properties.parameters.resource_tags
     resource_tags.type = AAZStrType(
@@ -793,12 +774,10 @@ def _build_schema_workspace_read(_schema):
     sku.name = AAZStrType(
         flags={'required': True},
     )
-    sku.tier = AAZStrType(
-    )
+    sku.tier = AAZStrType()
 
     tags = _schema_workspace_read.tags
-    tags.Element = AAZStrType(
-    )
+    tags.Element = AAZStrType()
 
     _schema.id = _schema_workspace_read.id
     _schema.location = _schema_workspace_read.location

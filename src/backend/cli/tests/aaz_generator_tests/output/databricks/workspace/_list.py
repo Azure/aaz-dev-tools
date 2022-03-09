@@ -115,19 +115,16 @@ class List(AAZCommand):
             if cls._schema_on_200 is not None:
                 return cls._schema_on_200
 
-            cls._schema_on_200 = AAZObjectType(
-            )
+            cls._schema_on_200 = AAZObjectType()
 
             _schema_on_200 = cls._schema_on_200
             _schema_on_200.next_link = AAZStrType(
                 serialized_name='nextLink',
             )
-            _schema_on_200.value = AAZListType(
-            )
+            _schema_on_200.value = AAZListType()
 
             value = cls._schema_on_200.value
-            value.Element = AAZObjectType(
-            )
+            value.Element = AAZObjectType()
 
             _element = cls._schema_on_200.value.Element
             _element.id = AAZStrType(
@@ -142,17 +139,14 @@ class List(AAZCommand):
             _element.properties = AAZObjectType(
                 flags={'required': True, 'client_flatten': True},
             )
-            _element.sku = AAZObjectType(
-            )
-            _element.tags = AAZDictType(
-            )
+            _element.sku = AAZObjectType()
+            _element.tags = AAZDictType()
             _element.type = AAZStrType(
                 flags={'read_only': True},
             )
 
             properties = cls._schema_on_200.value.Element.properties
-            properties.authorizations = AAZListType(
-            )
+            properties.authorizations = AAZListType()
             properties.created_by = AAZObjectType(
                 serialized_name='createdBy',
             )
@@ -165,8 +159,7 @@ class List(AAZCommand):
                 serialized_name='managedResourceGroupId',
                 flags={'required': True},
             )
-            properties.parameters = AAZObjectType(
-            )
+            properties.parameters = AAZObjectType()
             properties.provisioning_state = AAZStrType(
                 serialized_name='provisioningState',
                 flags={'read_only': True},
@@ -191,8 +184,7 @@ class List(AAZCommand):
             )
 
             authorizations = cls._schema_on_200.value.Element.properties.authorizations
-            authorizations.Element = AAZObjectType(
-            )
+            authorizations.Element = AAZObjectType()
 
             _element = cls._schema_on_200.value.Element.properties.authorizations.Element
             _element.principal_id = AAZStrType(
@@ -225,8 +217,7 @@ class List(AAZCommand):
                 serialized_name='enableNoPublicIp',
             )
             _build_schema_workspace_custom_boolean_parameter_read(parameters.enable_no_public_ip)
-            parameters.encryption = AAZObjectType(
-            )
+            parameters.encryption = AAZObjectType()
             parameters.load_balancer_backend_pool_name = AAZObjectType(
                 serialized_name='loadBalancerBackendPoolName',
             )
@@ -272,8 +263,7 @@ class List(AAZCommand):
             encryption.type = AAZStrType(
                 flags={'read_only': True},
             )
-            encryption.value = AAZObjectType(
-            )
+            encryption.value = AAZObjectType()
 
             value = cls._schema_on_200.value.Element.properties.parameters.encryption.value
             value.key_name = AAZStrType(
@@ -282,10 +272,8 @@ class List(AAZCommand):
             value.key_source = AAZStrType(
                 serialized_name='keySource',
             )
-            value.keyvaulturi = AAZStrType(
-            )
-            value.keyversion = AAZStrType(
-            )
+            value.keyvaulturi = AAZStrType()
+            value.keyversion = AAZStrType()
 
             resource_tags = cls._schema_on_200.value.Element.properties.parameters.resource_tags
             resource_tags.type = AAZStrType(
@@ -312,12 +300,10 @@ class List(AAZCommand):
             sku.name = AAZStrType(
                 flags={'required': True},
             )
-            sku.tier = AAZStrType(
-            )
+            sku.tier = AAZStrType()
 
             tags = cls._schema_on_200.value.Element.tags
-            tags.Element = AAZStrType(
-            )
+            tags.Element = AAZStrType()
 
             return cls._schema_on_200
 
@@ -382,19 +368,16 @@ class List(AAZCommand):
             if cls._schema_on_200 is not None:
                 return cls._schema_on_200
 
-            cls._schema_on_200 = AAZObjectType(
-            )
+            cls._schema_on_200 = AAZObjectType()
 
             _schema_on_200 = cls._schema_on_200
             _schema_on_200.next_link = AAZStrType(
                 serialized_name='nextLink',
             )
-            _schema_on_200.value = AAZListType(
-            )
+            _schema_on_200.value = AAZListType()
 
             value = cls._schema_on_200.value
-            value.Element = AAZObjectType(
-            )
+            value.Element = AAZObjectType()
 
             _element = cls._schema_on_200.value.Element
             _element.id = AAZStrType(
@@ -409,17 +392,14 @@ class List(AAZCommand):
             _element.properties = AAZObjectType(
                 flags={'required': True, 'client_flatten': True},
             )
-            _element.sku = AAZObjectType(
-            )
-            _element.tags = AAZDictType(
-            )
+            _element.sku = AAZObjectType()
+            _element.tags = AAZDictType()
             _element.type = AAZStrType(
                 flags={'read_only': True},
             )
 
             properties = cls._schema_on_200.value.Element.properties
-            properties.authorizations = AAZListType(
-            )
+            properties.authorizations = AAZListType()
             properties.created_by = AAZObjectType(
                 serialized_name='createdBy',
             )
@@ -432,8 +412,7 @@ class List(AAZCommand):
                 serialized_name='managedResourceGroupId',
                 flags={'required': True},
             )
-            properties.parameters = AAZObjectType(
-            )
+            properties.parameters = AAZObjectType()
             properties.provisioning_state = AAZStrType(
                 serialized_name='provisioningState',
                 flags={'read_only': True},
@@ -458,8 +437,7 @@ class List(AAZCommand):
             )
 
             authorizations = cls._schema_on_200.value.Element.properties.authorizations
-            authorizations.Element = AAZObjectType(
-            )
+            authorizations.Element = AAZObjectType()
 
             _element = cls._schema_on_200.value.Element.properties.authorizations.Element
             _element.principal_id = AAZStrType(
@@ -492,8 +470,7 @@ class List(AAZCommand):
                 serialized_name='enableNoPublicIp',
             )
             _build_schema_workspace_custom_boolean_parameter_read(parameters.enable_no_public_ip)
-            parameters.encryption = AAZObjectType(
-            )
+            parameters.encryption = AAZObjectType()
             parameters.load_balancer_backend_pool_name = AAZObjectType(
                 serialized_name='loadBalancerBackendPoolName',
             )
@@ -539,8 +516,7 @@ class List(AAZCommand):
             encryption.type = AAZStrType(
                 flags={'read_only': True},
             )
-            encryption.value = AAZObjectType(
-            )
+            encryption.value = AAZObjectType()
 
             value = cls._schema_on_200.value.Element.properties.parameters.encryption.value
             value.key_name = AAZStrType(
@@ -549,10 +525,8 @@ class List(AAZCommand):
             value.key_source = AAZStrType(
                 serialized_name='keySource',
             )
-            value.keyvaulturi = AAZStrType(
-            )
-            value.keyversion = AAZStrType(
-            )
+            value.keyvaulturi = AAZStrType()
+            value.keyversion = AAZStrType()
 
             resource_tags = cls._schema_on_200.value.Element.properties.parameters.resource_tags
             resource_tags.type = AAZStrType(
@@ -579,12 +553,10 @@ class List(AAZCommand):
             sku.name = AAZStrType(
                 flags={'required': True},
             )
-            sku.tier = AAZStrType(
-            )
+            sku.tier = AAZStrType()
 
             tags = cls._schema_on_200.value.Element.tags
-            tags.Element = AAZStrType(
-            )
+            tags.Element = AAZStrType()
 
             return cls._schema_on_200
 
@@ -600,8 +572,7 @@ def _build_schema_created_by_read(_schema):
         _schema.puid = _schema_created_by_read.puid
         return
 
-    _schema_created_by_read = AAZObjectType(
-    )
+    _schema_created_by_read = AAZObjectType()
 
     created_by_read = _schema_created_by_read
     created_by_read.application_id = AAZStrType(
@@ -630,8 +601,7 @@ def _build_schema_workspace_custom_boolean_parameter_read(_schema):
         _schema.value = _schema_workspace_custom_boolean_parameter_read.value
         return
 
-    _schema_workspace_custom_boolean_parameter_read = AAZObjectType(
-    )
+    _schema_workspace_custom_boolean_parameter_read = AAZObjectType()
 
     workspace_custom_boolean_parameter_read = _schema_workspace_custom_boolean_parameter_read
     workspace_custom_boolean_parameter_read.type = AAZStrType(
@@ -655,8 +625,7 @@ def _build_schema_workspace_custom_string_parameter_read(_schema):
         _schema.value = _schema_workspace_custom_string_parameter_read.value
         return
 
-    _schema_workspace_custom_string_parameter_read = AAZObjectType(
-    )
+    _schema_workspace_custom_string_parameter_read = AAZObjectType()
 
     workspace_custom_string_parameter_read = _schema_workspace_custom_string_parameter_read
     workspace_custom_string_parameter_read.type = AAZStrType(
