@@ -1,10 +1,11 @@
 import React, {Component} from "react";
 import {Navbar, Nav, Container, Button} from "react-bootstrap"
 import {useParams} from "react-router-dom";
+import axios from "axios";
 
 
 type GeneratorState = {
-  currRepo: string,
+  moduleName: string,
   profiles: string[]
 }
 
@@ -13,9 +14,14 @@ class Generator extends Component<any, GeneratorState> {
   constructor(props: any) {
     super(props);
     this.state = {
-      currRepo: "",
+      moduleName: this.props.params.moduleName,
       profiles: []
     }
+  }
+
+  componentDidMount() {
+    axios.get("/CLI/Az/Profiles")
+        .then(res => {this.setState({profiles: res.data})})
   }
 
   render() {
@@ -23,12 +29,14 @@ class Generator extends Component<any, GeneratorState> {
       <div>
         <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark">
           <Container>
-            <Navbar.Brand>{this.props.params.moduleName}</Navbar.Brand>
+            <Navbar.Brand>{this.state.moduleName}</Navbar.Brand>
             <Navbar.Toggle aria-controls="responsive-navbar-nav" />
             <Navbar.Collapse id="responsive-navbar-nav">
-              <Nav className="me-auto">
-                <Nav.Link href="#features">Profile1</Nav.Link>
-                <Nav.Link href="#pricing">Profile2</Nav.Link>
+              <Nav className="me-auto">{
+                this.state.profiles.map((profile: string) => {
+                  return <Nav.Link href={`#${profile}`}>{profile}</Nav.Link>
+                })
+              }
               </Nav>
               <Button>
                 Generate
@@ -43,7 +51,7 @@ class Generator extends Component<any, GeneratorState> {
 
 const GeneratorWrapper = (props: any) => {
   const params = useParams()
-  return <Generator params={params} {...props} />
+  return <Generator params={params} {...props}/>
 }
 
-export { GeneratorWrapper as Generator };
+export {GeneratorWrapper as Generator};

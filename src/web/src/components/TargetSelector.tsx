@@ -1,6 +1,5 @@
 import {Component, useState} from "react";
 import axios from "axios";
-import {Link} from "react-router-dom";
 import {Modal, Row, Col, ButtonGroup, ToggleButton, Button, Form} from "react-bootstrap";
 import {Typeahead} from 'react-bootstrap-typeahead';
 import type {Option} from "react-bootstrap-typeahead/types/types"
@@ -11,7 +10,7 @@ type TargetSelectorState = {
   isNew: boolean,
   currRepo: string,
   modules: Module[],
-  moduleName: string
+  moduleName: string,
 }
 
 type Module = {
@@ -28,14 +27,15 @@ export default class TargetSelector extends Component<any, TargetSelectorState> 
       isNew: false,
       currRepo: "",
       modules: [],
-      moduleName: ""
+      moduleName: "",
     }
   }
 
   handleSubmit = (event: any) => {
-    event.preventDefault()
-    event.stopPropagation()
-    window.location.href = window.location.href + "/" + this.state.moduleName
+    event.preventDefault();
+    event.stopPropagation();
+
+    window.location.href = `/module/${this.state.moduleName}`
   }
 
   SelectTarget = () => {
@@ -45,8 +45,8 @@ export default class TargetSelector extends Component<any, TargetSelectorState> 
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [targetValue, setTargetValue] = useState('1');
     const targets = [
-      { name: 'Azure CLI', value: '1' },
-      { name: 'Azure CLI Extension', value: '2' },
+      {name: "Azure CLI", value: "1"},
+      {name: "Azure CLI Extension", value: "2"}
     ];
 
     const handleClick = (event: any) => {
@@ -84,7 +84,7 @@ export default class TargetSelector extends Component<any, TargetSelectorState> 
 
     const handleOptionSelection = (options: Option[]) => {
       setSingleSelections(options)
-      this.setState({moduleName:String(options[0])})
+      this.setState({moduleName: String(options[0])})
     }
 
     return <div>
@@ -124,7 +124,7 @@ export default class TargetSelector extends Component<any, TargetSelectorState> 
                       id="basic-typeahead-single"
                       labelKey="name"
                       onChange={handleOptionSelection}
-                      options={this.state.modules.map(module=>{return module.name})}
+                      options={this.state.modules.map(module => {return module.name})}
                       placeholder="Search modules"
                       selected={singleSelections}
                     />
@@ -152,18 +152,38 @@ export default class TargetSelector extends Component<any, TargetSelectorState> 
     const handleSubmit = (event: any) => {
       event.preventDefault();
       event.stopPropagation();
-      const form = event.currentTarget;
 
-      if (form.checkValidity() === true) {
-        const workspaceName = event.target[0].value
-        axios.post('/AAZ/Editor/Workspaces', {
-          name: workspaceName,
-          plane: 'mgmt-plane'
-        })
-            .then(() => {
-              window.location.href = `/workspace/${workspaceName}`
-            });
+      const moduleName = event.target[0].value
+      if (this.state.currRepo === "Azure CLI") {
+        axios.post('/CLI/Az/Main/Modules', {name: moduleName})
+          .then(res => {
+            this.setState({
+              modules: res.data.map((module: any) => {
+                return {
+                  folder: module.folder,
+                  name: module.name,
+                  url: module.url
+                }
+              })
+            })
+          })
       }
+      if (this.state.currRepo === "Azure CLI Extension") {
+        axios.post('/CLI/Az/Extension/Modules', {name: moduleName})
+          .then(res => {
+            this.setState({
+              modules: res.data.map((module: any) => {
+                return {
+                  folder: module.folder,
+                  name: module.name,
+                  url: module.url
+                }
+              })
+            })
+          })
+      }
+
+      window.location.href = `/module/${moduleName}`
     }
 
     return <div>
@@ -182,11 +202,9 @@ export default class TargetSelector extends Component<any, TargetSelectorState> 
           </Form>
         </Modal.Body>
         <Modal.Footer className='justify-content-right'>
-          <Link to={"generator"}>
-            <Button type="submit" form="newTargetForm" variant="primary">
-              Create
-            </Button>
-          </Link>
+          <Button type="submit" form="newTargetForm" variant="primary">
+            Create
+          </Button>
           <Button variant="secondary" onClick={() => this.setState({isNew: false})}>
             Cancel
           </Button>
