@@ -14,7 +14,6 @@ import styles from "./TreeView/App.module.css";
 import { CustomData } from "./TreeView/types";
 import { CustomNode } from "./TreeView/CustomNode";
 import { CustomDragPreview } from "./TreeView/CustomDragPreview";
-import { InputArea } from "./CommandGroupDetails"
 
 
 type Props = {
@@ -84,7 +83,7 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
 
     const handleClick = (id: NodeModel["id"]) => {
         setSelectedIndex(Number(id))
-        console.log(selectedIndex)
+        // console.log(selectedIndex)
     }
     const handleNameChange = () => { }
     const handleDrop = () => { }
@@ -110,6 +109,92 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
                 }}
             />
         </div>
+    }
+
+
+    type InputAreaProps = {
+        prefix: string,
+        value: string,
+        width: string,
+        placeholder: string,
+        initEditing: boolean,
+        minRow: number,
+        onSubmit: (value: string) => void
+    }
+
+    const InputArea: React.FC<InputAreaProps> = (props) => {
+        const { value, prefix, width, placeholder } = props;
+        const [displayValue, setDisplayValue] = useState(value)
+        const [changingValue, setChangingValue] = useState(displayValue)
+        const [editing, setEditing] = useState(props.initEditing)
+
+
+        const handleDoubleClick = (event: React.MouseEvent) => {
+            event.stopPropagation();
+            if (!editing) {
+                setEditing(true)
+                setChangingValue(displayValue)
+            }
+        }
+
+        const handleChangeValue = (event: any) => {
+            setChangingValue(event.target.value)
+        }
+
+        const handleSubmit = (event: any) => {
+            setEditing(false)
+            setDisplayValue(changingValue.trim())
+            props.onSubmit(changingValue.trim())
+        }
+
+        const handleCancel = (event: any) => {
+            setEditing(false)
+            setChangingValue(displayValue)
+        }
+
+        return (
+            <div >
+                <Row className="align-items-top ">
+                    <Col xxl="2">
+                        <h6>{prefix}</h6>
+                    </Col>
+                    {!editing
+                        ?
+                        (<Col onDoubleClick={handleDoubleClick} xxl="10">
+                            {displayValue.split('\n').map((line, index) => {
+                                return <div key={index}>
+                                    {line}
+                                </div>
+                            })}
+                        </Col>)
+                        :
+                        (
+                            <Col xxl="10">
+                                <TextareaAutosize
+                                    minRows={props.minRow}
+                                    style={{ width: width }}
+                                    placeholder={placeholder}
+                                    value={changingValue}
+                                    onChange={handleChangeValue}
+                                />
+                                <IconButton
+                                    onClick={handleSubmit}
+                                    disabled={displayValue === changingValue}
+                                >
+                                    <CheckIcon />
+                                </IconButton>
+                                <IconButton
+                                    onClick={handleCancel}
+                                    disabled={displayValue === ""}
+                                >
+                                    <CloseIcon />
+                                </IconButton>
+                            </Col>
+                        )
+                    }
+                </Row>
+            </div>
+        )
     }
 
     const ArgumentsEdit = () => {
