@@ -39,10 +39,23 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
             return
         }
         args.map(arg => {
+            let text = ""
+            arg.options.map((option, index)=>{
+                if (index>0){
+                    text+=' '
+                }
+                if (option.length>1){
+                    text+='--'
+                } else {
+                    text+='-'
+                }
+                text+=option
+            })
+
             let treeNode: TreeNode = {
                 id: currentIndex,
                 parent: parentIndex,
-                text: `--${arg.options.join(' --')}`,
+                text: text,
                 droppable: false,
                 data: { hasChildren: false, type: 'Command' }
             }
@@ -95,7 +108,7 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
                 tree={initTreeData}
                 rootId={0}
                 render={(node: NodeModel<CustomData>, { depth, isOpen, onToggle }) => (
-                    <CustomNode node={node} depth={depth} isOpen={isOpen} isSelected={node.id === selectedIndex} onToggle={onToggle} onClick={handleClick} onSubmit={handleNameChange} />
+                    <CustomNode node={node} depth={depth} isOpen={isOpen} isSelected={node.id === selectedIndex} onToggle={onToggle} onClick={handleClick} onSubmit={handleNameChange} editable={false} />
                 )}
                 dragPreviewRender={(
                     monitorProps: DragLayerMonitorProps<CustomData>
@@ -119,6 +132,7 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
         placeholder: string,
         initEditing: boolean,
         minRow: number,
+        editable: boolean,
         onSubmit: (value: string) => void
     }
 
@@ -130,6 +144,9 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
 
 
         const handleDoubleClick = (event: React.MouseEvent) => {
+            if (!props.editable){
+                return
+            }
             event.stopPropagation();
             if (!editing) {
                 setEditing(true)
@@ -205,9 +222,9 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
         // const checked = indexToArgument[selectedIndex].required? indexToArgument[selectedIndex].required! : false
 
         return (<div>
-            <InputArea value={initTreeData[selectedIndex - 1].text} prefix="Option List: " initEditing={initTreeData[selectedIndex - 1].text === ""} onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
-            <InputArea value={indexToArgument[selectedIndex].type} prefix="Type: " initEditing={indexToArgument[selectedIndex].type === ""} onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
-            <InputArea value={helpText} prefix="Help: " initEditing={false} onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
+            <InputArea value={initTreeData[selectedIndex - 1].text} prefix="Option List: " initEditing={initTreeData[selectedIndex - 1].text === ""} editable={false} onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
+            <InputArea value={indexToArgument[selectedIndex].type} prefix="Type: " initEditing={indexToArgument[selectedIndex].type === ""} editable={false} onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
+            <InputArea value={helpText} prefix="Help: " initEditing={false} editable={false}  onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
             <Row>
                 <Col xxl='2'>
                     <h6>Required?:</h6>

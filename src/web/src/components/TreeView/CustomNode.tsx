@@ -14,6 +14,7 @@ type Props = {
   depth: number;
   isOpen: boolean;
   isSelected: boolean;
+  editable: boolean;
   onToggle: (id: NodeModel["id"]) => void;
   onClick: (id: NodeModel["id"]) => void
   onSubmit: (id: NodeModel["id"], newName: string) => void
@@ -38,6 +39,9 @@ export const CustomNode: React.FC<Props> = (props) => {
   }
 
   const handleDoubleClick = (e: React.MouseEvent) => {
+    if (!props.editable){
+      return
+    }
     e.stopPropagation();
     if (!editing) {
       setEditing(true)

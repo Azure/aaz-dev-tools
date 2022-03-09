@@ -50,8 +50,15 @@ export default class WorkspaceSelector extends Component<{}, workspaceSelectorSt
       .catch((err) => console.log(err));
   }
 
+  calculatePageHeight = (subtractAmount: number) => {
+    const body = document.body;
+    const html = document.documentElement;
+
+    return (Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight) - subtractAmount).toString() + 'px'
+  }
+
   WorkspaceList = () => {
-    return <>{
+    return <div style={{ maxHeight: this.calculatePageHeight(300), overflow: `auto` }}>{
       this.state.workspaces.map((workspace: Workspace, index) => {
         return <ListGroup.Item key={index} action href={`/workspace/${workspace.name}`}>
           <Row>
@@ -61,7 +68,7 @@ export default class WorkspaceSelector extends Component<{}, workspaceSelectorSt
         </ListGroup.Item>
       })
     }
-    </>
+    </div>
   }
 
   SelectWorkspace = () => {
