@@ -1,0 +1,30 @@
+{% extends "python.j2" %}
+
+{% block imports %}
+from azure.cli.core import AzCommandsLoader
+from azext_{{ mod_name|snake_case }}._help import helps  # pylint: disable=unused-import
+{% endblock %}
+
+{% block code %}
+
+class {{ mod_name|camel_case }}CommandsLoader(AzCommandsLoader):
+
+    def __init__(self, cli_ctx=None):
+        from azure.cli.core.commands import CliCommandType
+        custom_command_type = CliCommandType(
+            operations_tmpl='azext_{{ mod_name|snake_case }}.custom#{}')
+        super().__init__(cli_ctx=cli_ctx,
+                         custom_command_type=custom_command_type)
+
+    def load_command_table(self, args):
+        from azext_{{ mod_name|snake_case }}.commands import load_command_table
+        load_command_table(self, args)
+        return self.command_table
+
+    def load_arguments(self, command):
+        from azext_{{ mod_name|snake_case }}._params import load_arguments
+        load_arguments(self, command)
+
+
+COMMAND_LOADER_CLS = {{ mod_name|camel_case }}CommandsLoader
+{% endblock %}

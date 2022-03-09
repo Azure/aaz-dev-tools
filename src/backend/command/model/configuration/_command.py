@@ -7,6 +7,7 @@ from ._fields import CMDDescriptionField, CMDVersionField, CMDCommandNameField
 from ._operation import CMDOperation
 from ._output import CMDOutput
 from ._resource import CMDResource
+from utils import exceptions
 
 
 class CMDCommand(Model):
@@ -30,10 +31,22 @@ class CMDCommand(Model):
     class Options:
         serialize_when_none = False
 
-    def reformat(self):
+    def reformat(self, **kwargs):
         self.resources = sorted(self.resources, key=lambda r: r.id)
         if self.arg_groups:
             for arg_group in self.arg_groups:
-                arg_group.reformat()
+                arg_group.reformat(**kwargs)
             self.arg_groups = sorted(self.arg_groups, key=lambda a: a.name)
-
+        if self.operations:
+            schema_cls_map = {}
+            for operation in self.operations:
+                operation.reformat(schema_cls_map=schema_cls_map, **kwargs)
+            for key, value in schema_cls_map.items():
+                if value is None:
+                    raise exceptions.VerificationError(
+                        message=f"Schema Class '{key}' not defined.",
+                        details={
+                            "name": self.name,
+                            "resources": [resource.to_primitive() for resource in self.resources]
+                        }
+                    )

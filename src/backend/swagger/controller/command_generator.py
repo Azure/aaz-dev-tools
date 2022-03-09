@@ -2,9 +2,8 @@ import logging
 
 import inflect
 from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, CMDSchemaDefault, \
-    CMDHttpResponseJsonBody, CMDObjectOutput, CMDArrayOutput, CMDGenericInstanceUpdateAction, \
-    CMDGenericInstanceUpdateMethod, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, CMDRequestJson, \
-    CMDArgGroup, CMDDiffLevelEnum, CMDClsSchemaBase, CMDArraySchema, CMDStringSchema, CMDObjectSchemaBase, \
+    CMDHttpResponseJsonBody, CMDObjectOutput, CMDArrayOutput, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, \
+    CMDRequestJson, CMDArgGroup, CMDDiffLevelEnum, CMDClsSchemaBase, CMDArraySchema, CMDStringSchema, CMDObjectSchemaBase, \
     CMDArraySchemaBase, CMDStringSchemaBase, CMDStringOutput
 from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.schema.fields import MutabilityEnum
@@ -171,11 +170,10 @@ class CommandGenerator:
         command.outputs.append(output)
         command.description = put_op.description
 
-        json_update_op, generic_update_op = self._generate_instance_update_operations(put_op)
+        json_update_op = self._generate_instance_update_operation(put_op)
         command.operations = [
             get_op,
             json_update_op,
-            generic_update_op,
             put_op
         ]
 
@@ -200,6 +198,7 @@ class CommandGenerator:
                     param.default = CMDSchemaDefault()
                     param.default.value = api_version
                     param.read_only = True
+                    param.const = True
                     if query.consts is None:
                         query.consts = []
                     query.consts.append(param)
@@ -466,23 +465,16 @@ class CommandGenerator:
 
     # For update
     @staticmethod
-    def _generate_instance_update_operations(put_op):
-
+    def _generate_instance_update_operation(put_op):
         json_update_op = CMDInstanceUpdateOperation()
         json_update_op.instance_update = CMDJsonInstanceUpdateAction()
         json_update_op.instance_update.instance = BuildInVariants.Instance
         json_update_op.instance_update.json = CMDRequestJson()
         json_update_op.instance_update.json.schema = put_op.http.request.body.json.schema
 
-        generic_update_op = CMDInstanceUpdateOperation()
-        generic_update_op.instance_update = CMDGenericInstanceUpdateAction()
-        generic_update_op.instance_update.instance = BuildInVariants.Instance
-        generic_update_op.instance_update.client_flatten = True
-        generic_update_op.instance_update.generic = CMDGenericInstanceUpdateMethod()
-
         put_op.http.request.body.json.ref = BuildInVariants.Instance
         put_op.http.request.body.json.schema = None
-        return json_update_op, generic_update_op
+        return json_update_op
 
     @staticmethod
     def _filter_generic_update_parameters(get_op, put_op):

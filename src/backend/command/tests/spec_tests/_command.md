@@ -22,8 +22,7 @@ Long help end of line
 
 - List order of a resource group
     ```bash
-        edge-order order list \
-        -g {resource_group_name}
+        edge-order order list -g {resource_group_name}
     ```
 
 ### [2020-12-01-preview](/Resources/mgmt-plane/L3N1YnNjcmlwdGlvbnMve30vcHJvdmlkZXJzL21pY3Jvc29mdC5lZGdlb3JkZXIvb3JkZXJz/2020-12-01-preview.xml) **Preview**
@@ -40,6 +39,5 @@ Long help end of line
 
 - List order of a resource group
     ```bash
-        edge-order order list \
-        -g {resource_group_name}
+        edge-order order list -g {resource_group_name}
     ```

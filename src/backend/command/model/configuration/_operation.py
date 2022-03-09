@@ -29,6 +29,9 @@ class CMDOperation(Model):
     def generate_args(self):
         raise NotImplementedError()
 
+    def reformat(self, **kwargs):
+        raise NotImplementedError()
+
 
 class CMDHttpOperationLongRunning(Model):
     # properties as tags
@@ -71,6 +74,9 @@ class CMDHttpOperation(CMDOperation):
     def generate_args(self):
         return self.http.generate_args()
 
+    def reformat(self, **kwargs):
+        self.http.reformat(**kwargs)
+
 
 class CMDInstanceUpdateOperation(CMDOperation):
     POLYMORPHIC_KEY = "instanceUpdate"
@@ -86,3 +92,6 @@ class CMDInstanceUpdateOperation(CMDOperation):
 
     def generate_args(self):
         return self.instance_update.generate_args()
+
+    def reformat(self, **kwargs):
+        self.instance_update.reformat(**kwargs)

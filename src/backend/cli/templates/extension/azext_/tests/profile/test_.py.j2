@@ -1,0 +1,10 @@
+{% extends "python.j2" %}
+{% block imports %}
+from azure.cli.testsdk import *
+{% endblock %}
+{% block code %}
+
+class {{ name|camel_case }}Scenario(ScenarioTest):
+    # TODO: add tests here
+    pass
+{% endblock %}

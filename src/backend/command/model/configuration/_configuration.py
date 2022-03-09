@@ -21,10 +21,10 @@ class CMDConfiguration(Model):
     class Options:
         serialize_when_none = False
 
-    def reformat(self):
+    def reformat(self, **kwargs):
         self.resources = sorted(self.resources, key=lambda r: r.id)
         for group in self.command_groups:
-            group.reformat()
+            group.reformat(**kwargs)
         self.command_groups = sorted(
             [group for group in self.command_groups if group.commands or group.command_groups],
             key=lambda g: g.name

@@ -1,7 +1,11 @@
 import os
+from packaging import version
 
 
 class Config:
+
+    MIN_CLI_CORE_VERSION = version.parse("2.33.0")
+
     AAZ_PATH = os.environ.get("AAZ_PATH", None)
     SWAGGER_PATH = os.environ.get("AAZ_SWAGGER_PATH", None)
     CLI_PATH = os.environ.get("AAZ_CLI_PATH", None)
@@ -19,6 +23,16 @@ class Config:
     PORT = int(os.environ.get("AAZ_PORT", 5000))
     STATIC_FOLDER = '../../web/build'
     STATIC_URL_PATH = '/'
+
+    CLI_DEFAULT_PROFILE = 'latest'
+
+    CLI_PROFILES = [
+        CLI_DEFAULT_PROFILE,
+        "2020-09-01-hybrid",
+        "2019-03-01-hybrid",
+        "2018-03-01-hybrid",
+        "2017-03-09-profile",
+    ]
 
     @classmethod
     def validate_and_setup_host(cls, ctx, param, value):
