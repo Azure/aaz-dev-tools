@@ -1,6 +1,7 @@
 
 _templates = None
 
+
 def get_templates():
     global _templates
     if _templates is None:

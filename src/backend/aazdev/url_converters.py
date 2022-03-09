@@ -16,6 +16,10 @@ class NameConverter(BaseConverter):
     regex = r"[a-z0-9]+(-[a-z0-9]+)*"
 
 
+class NameWithCapitalConverter(BaseConverter):
+    regex = r"[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*"
+
+
 class NamesPathConverter(BaseConverter):
     regex = r"[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+(-[a-z0-9]+)*)*"
     weight = 200

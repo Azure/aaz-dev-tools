@@ -1,6 +1,7 @@
 import os
 
-from command.model.configuration import CMDHelp, CMDCommandExample, CMDStageEnum
+from command.model.configuration import CMDHelp, CMDCommandExample
+from utils.stage import AAZStageEnum
 from command.model.specs import CMDSpecsCommandGroup, CMDSpecsCommand, CMDSpecsCommandVersion, CMDSpecsResource, \
     CMDSpecsCommandTree
 from command.templates import get_templates
@@ -8,7 +9,7 @@ from command.tests.common import CommandTestCase
 from utils.plane import PlaneEnum
 
 
-class TemplateRenderTest(CommandTestCase):
+class AAZSpecTemplateRenderTest(CommandTestCase):
 
     def test_render_tree_template(self):
         tmpl = get_templates()['tree']
@@ -114,7 +115,7 @@ class TemplateRenderTest(CommandTestCase):
             CMDCommandExample(
                 {
                     "name": "List order of current subscription",
-                    "lines": [
+                    "commands": [
                         "edge-order order list"
                     ]
                 }
@@ -122,9 +123,8 @@ class TemplateRenderTest(CommandTestCase):
             CMDCommandExample(
                 {
                     "name": "List order of a resource group",
-                    "lines": [
-                        "edge-order order list \\",
-                        "-g {resource_group_name}"
+                    "commands": [
+                        "edge-order order list -g {resource_group_name}"
                     ]
                 }
             )
@@ -133,7 +133,7 @@ class TemplateRenderTest(CommandTestCase):
 
         v_2 = CMDSpecsCommandVersion()
         v_2.name = "2020-12-01-preview"
-        v_2.stage = CMDStageEnum.Preview
+        v_2.stage = AAZStageEnum.Preview
         v_2.resources = [
             CMDSpecsResource(
                 {
@@ -154,7 +154,7 @@ class TemplateRenderTest(CommandTestCase):
             CMDCommandExample(
                 {
                     "name": "List order of current subscription",
-                    "lines": [
+                    "commands": [
                         "edge-order order list"
                     ]
                 }
@@ -162,9 +162,8 @@ class TemplateRenderTest(CommandTestCase):
             CMDCommandExample(
                 {
                     "name": "List order of a resource group",
-                    "lines": [
-                        "edge-order order list \\",
-                        "-g {resource_group_name}"
+                    "commands": [
+                        "edge-order order list -g {resource_group_name}"
                     ]
                 }
             )

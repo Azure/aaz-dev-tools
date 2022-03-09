@@ -1,0 +1,9 @@
+{% extends "python.j2" %}
+{% block pylint %}
+# pylint: disable=line-too-long
+# pylint: disable=too-many-lines
+{% endblock %}
+
+{% block imports %}
+from knack.help_files import helps  # pylint: disable=unused-import
+{% endblock %}

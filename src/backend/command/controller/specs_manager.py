@@ -3,7 +3,7 @@ import os
 import re
 import shutil
 
-from command.model.configuration import CMDConfiguration, CMDHelp, CMDCommandExample
+from command.model.configuration import CMDConfiguration, CMDHelp, CMDCommandExample, XMLSerializer
 from utils.base64 import b64encode_str
 from utils.config import Config
 from command.model.specs import CMDSpecsCommandTree, CMDSpecsCommandGroup, CMDSpecsCommand, CMDSpecsCommandVersion, CMDSpecsResource
@@ -70,9 +70,7 @@ class AAZSpecsManager:
         return os.path.join(self.get_resource_plane_folder(plane), b64encode_str(resource_id))
 
     def get_resource_cfg_file_path(self, plane, resource_id, version):
-        # return os.path.join(self.get_resource_cfg_folder(plane, resource_id), f"{version}.xml")
-        # TODO: use xml
-        return os.path.join(self.get_resource_cfg_folder(plane, resource_id), f"{version}.json")
+        return os.path.join(self.get_resource_cfg_folder(plane, resource_id), f"{version}.xml")
 
     def get_resource_cfg_ref_file_path(self, plane, resource_id, version):
         return os.path.join(self.get_resource_cfg_folder(plane, resource_id), f"{version}.md")
@@ -143,9 +141,7 @@ class AAZSpecsManager:
             raise ValueError(f"Invalid file path: {path}")
 
         with open(path, 'r') as f:
-            # TODO: use xml
-            data = json.load(f)
-            cfg = CMDConfiguration(data)
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
         return CfgReader(cfg)
 
     def load_resource_cfg_reader_by_command_with_version(self, cmd, version):
@@ -492,6 +488,4 @@ class AAZSpecsManager:
 
     @staticmethod
     def render_resource_cfg(cfg):
-        # TODO: use xml
-        data = cfg.to_primitive()
-        return json.dumps(data, ensure_ascii=False)
+        return XMLSerializer(cfg).to_xml()
