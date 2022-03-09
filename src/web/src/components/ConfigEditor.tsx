@@ -99,7 +99,9 @@ type ConfigEditorState = {
   indexToCommandGroup: NumberToCommandGroup,
   indexToTreeNode: NumberToTreeNode,
   showSpecSelectorModal: boolean,
-  showAlert: boolean
+  showAlert: boolean,
+  alertVariant: string,
+  alertText: string
 }
 
 type WrapperProp = {
@@ -120,7 +122,9 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       indexToCommandGroup: {},
       indexToTreeNode: {},
       showSpecSelectorModal: false,
-      showAlert: false
+      showAlert: false,
+      alertVariant: "",
+      alertText: ""
     }
   }
 
@@ -430,13 +434,17 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     const url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/Generate`
     axios.post(url)
       .then(res=>{
-        this.setState({showAlert:true})
+        this.setState({showAlert:true, alertText:"Successfully generated configuration.", alertVariant:"success"})
         window.setTimeout(()=>{
           this.setState({showAlert:false})
         },2000)
       })
       .catch(err => {
         console.error(err.response)
+        this.setState({showAlert:true, alertText:"Need to complete all the short help fields", alertVariant:"danger"})
+        window.setTimeout(()=>{
+          this.setState({showAlert:false})
+        },2000)
       })
   }
 
@@ -452,8 +460,8 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         </Button>
         <Nav className="me-auto" />
       </Navbar>
-      {this.state.showAlert&&<Alert variant='success' onClose={() => this.setState({showAlert: false})}>
-        Successfully generated configuration
+      {this.state.showAlert&&<Alert variant={this.state.alertVariant} onClose={() => this.setState({showAlert: false})}>
+        {this.state.alertText}
       </Alert>}
       <Row>
         <Col xxl="3" style={{ overflow: `auto` }}>
