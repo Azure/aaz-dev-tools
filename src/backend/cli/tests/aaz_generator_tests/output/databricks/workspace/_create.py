@@ -25,6 +25,13 @@ class Create(AAZCommand):
         az databricks workspace create --resource-group MyResourceGroup --name MyWorkspace --location eastus2euap --sku premium --prepare-encryption
     """
 
+    _aaz_info = {
+        "version": '2018-04-01',
+        "resources": [
+            ('mgmt-plane', '/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}', '2018-04-01'),
+        ]
+    }
+
     AZ_SUPPORT_NO_WAIT = True
 
     def _handler(self, command_args):

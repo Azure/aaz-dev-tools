@@ -39,6 +39,16 @@ class {{ leaf.cls_name }}(AAZCommand):
     {%- endfor %}
     {%- endif %}
     """
+
+    _aaz_info = {
+        "version": {{ leaf.version|constant_convert }},
+        "resources": [
+            {%- for resource in leaf.resources %}
+            ({{ resource.plane|constant_convert }}, {{ resource.id|constant_convert }}, {{ resource.version|constant_convert }}),
+            {%- endfor %}
+        ]
+    }
+
     {%- if leaf.support_no_wait %}
 
     AZ_SUPPORT_NO_WAIT = True

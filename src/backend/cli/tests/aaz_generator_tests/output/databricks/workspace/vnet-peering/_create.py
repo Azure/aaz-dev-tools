@@ -22,6 +22,13 @@ class Create(AAZCommand):
         az databricks workspace vnet-peering create --resource-group MyResourceGroup --workspace-name MyWorkspace -n MyPeering --remote-vnet /subscriptions/000000-0000-0000/resourceGroups/MyRG/providers/Microsoft.Network/virtualNetworks/MyVNet
     """
 
+    _aaz_info = {
+        "version": '2018-04-01',
+        "resources": [
+            ('mgmt-plane', '/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}', '2018-04-01'),
+        ]
+    }
+
     AZ_SUPPORT_NO_WAIT = True
 
     def _handler(self, command_args):

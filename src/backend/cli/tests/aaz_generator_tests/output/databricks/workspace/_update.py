@@ -34,6 +34,13 @@ class Update(AAZCommand):
         az databricks workspace update --resource-group MyResourceGroup --name MyWorkspace --key-source Default
     """
 
+    _aaz_info = {
+        "version": '2018-04-01',
+        "resources": [
+            ('mgmt-plane', '/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}', '2018-04-01'),
+        ]
+    }
+
     AZ_SUPPORT_NO_WAIT = True
 
     AZ_SUPPORT_GENERIC_UPDATE = True

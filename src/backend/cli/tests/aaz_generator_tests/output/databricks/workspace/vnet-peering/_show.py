@@ -22,6 +22,13 @@ class Show(AAZCommand):
         az databricks workspace vnet-peering show --resource-group MyResourceGroup --workspace-name MyWorkspace -n MyPeering
     """
 
+    _aaz_info = {
+        "version": '2018-04-01',
+        "resources": [
+            ('mgmt-plane', '/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}', '2018-04-01'),
+        ]
+    }
+
     def _handler(self, command_args):
         super()._handler(command_args)
         self._execute_operations()

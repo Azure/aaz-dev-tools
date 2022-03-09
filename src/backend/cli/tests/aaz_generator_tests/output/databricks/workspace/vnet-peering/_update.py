@@ -22,6 +22,13 @@ class Update(AAZCommand):
         az databricks workspace vnet-peering update --resource-group MyResourceGroup --workspace-name MyWorkspace -n MyPeering --allow-gateway-transit --allow-virtual-network-access false
     """
 
+    _aaz_info = {
+        "version": '2018-04-01',
+        "resources": [
+            ('mgmt-plane', '/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}', '2018-04-01'),
+        ]
+    }
+
     AZ_SUPPORT_NO_WAIT = True
 
     AZ_SUPPORT_GENERIC_UPDATE = True

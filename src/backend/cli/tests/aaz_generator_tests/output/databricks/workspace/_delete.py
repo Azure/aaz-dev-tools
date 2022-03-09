@@ -22,6 +22,13 @@ class Delete(AAZCommand):
         az databricks workspace delete --resource-group MyResourceGroup --name MyWorkspace
     """
 
+    _aaz_info = {
+        "version": '2018-04-01',
+        "resources": [
+            ('mgmt-plane', '/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}', '2018-04-01'),
+        ]
+    }
+
     AZ_SUPPORT_NO_WAIT = True
 
     def _handler(self, command_args):

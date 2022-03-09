@@ -127,8 +127,8 @@ class AzMainManager:
             ],
         }
 
-    # def setup_aaz_folder(self, mod_name):
-    #     pass
-    #
-    # def load_module(self, mod_name):
-    #     pass
+    def setup_aaz_folder(self, mod_name):
+        pass
+
+    def load_module(self, mod_name):
+        pass
