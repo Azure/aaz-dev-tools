@@ -1,4 +1,4 @@
-from command.model.configuration import CMDStageEnum
+from utils.stage import AAZStageEnum
 from command.tests.common import CommandTestCase, workspace_name
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.plane import PlaneEnum
@@ -77,7 +77,7 @@ class APIAAZSpecsTest(CommandTestCase):
                 "help": {
                     "short": "Manage edge order.",
                 },
-                "stage": CMDStageEnum.Preview
+                "stage": AAZStageEnum.Preview
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -106,7 +106,7 @@ class APIAAZSpecsTest(CommandTestCase):
                 "help": {
                     "short": "Manage the order item of edge order.",
                 },
-                "stage": CMDStageEnum.Preview
+                "stage": AAZStageEnum.Preview
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -117,7 +117,7 @@ class APIAAZSpecsTest(CommandTestCase):
                         "Provides the list of configurations for the given product family, product line and product.",
                     ]
                 },
-                "stage": CMDStageEnum.Experimental
+                "stage": AAZStageEnum.Experimental
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -125,7 +125,7 @@ class APIAAZSpecsTest(CommandTestCase):
                 "help": {
                     "short": "List the addresses of the edge order.",
                 },
-                "stage": CMDStageEnum.Experimental
+                "stage": AAZStageEnum.Experimental
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -133,7 +133,7 @@ class APIAAZSpecsTest(CommandTestCase):
                 "help": {
                     "short": "List the orders of the edge order.",
                 },
-                "stage": CMDStageEnum.Experimental
+                "stage": AAZStageEnum.Experimental
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -141,7 +141,7 @@ class APIAAZSpecsTest(CommandTestCase):
                 "help": {
                     "short": "List the product families of the edge order.",
                 },
-                "stage": CMDStageEnum.Experimental
+                "stage": AAZStageEnum.Experimental
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -149,7 +149,7 @@ class APIAAZSpecsTest(CommandTestCase):
                 "help": {
                     "short": "List the product families metadata of the edge order.",
                 },
-                "stage": CMDStageEnum.Experimental
+                "stage": AAZStageEnum.Experimental
             })
             self.assertTrue(rv.status_code == 200)
 

@@ -23,6 +23,16 @@ class CMDHttpRequestArgs(Model):
     class Options:
         serialize_when_none = False
 
+    def reformat(self, **kwargs):
+        if self.params:
+            for param in self.params:
+                param.reformat(**kwargs)
+            self.params = sorted(self.params, key=lambda s: s.name)
+        if self.consts:
+            for const in self.consts:
+                const.reformat(**kwargs)
+            self.consts = sorted(self.consts, key=lambda c: c.name)
+
 
 class CMDHttpRequestPath(CMDHttpRequestArgs):
 
@@ -132,6 +142,16 @@ class CMDHttpRequest(Model):
             args.extend(self.body.generate_args())
         return args
 
+    def reformat(self, **kwargs):
+        if self.path:
+            self.path.reformat(**kwargs)
+        if self.query:
+            self.query.reformat(**kwargs)
+        if self.header:
+            self.header.reformat(**kwargs)
+        if self.body:
+            self.body.reformat(**kwargs)
+
 
 class CMDHttpResponseHeaderItem(Model):
     # properties as tags
@@ -186,6 +206,10 @@ class CMDHttpResponseHeader(Model):
             for old_item in old_items_dict.values():
                 diff[old_item.name] = "Miss header item"
         return diff
+
+    def reformat(self, **kwargs):
+        if self.items:
+            self.items = sorted(self.items, key=lambda h: h.name)
 
 
 class CMDHttpResponse(Model):
@@ -247,6 +271,12 @@ class CMDHttpResponse(Model):
 
         return diff
 
+    def reformat(self, **kwargs):
+        if self.header:
+            self.header.reformat(**kwargs)
+        if self.body:
+            self.body.reformat(**kwargs)
+
 
 class CMDHttpAction(Model):
     # properties as tags
@@ -258,3 +288,12 @@ class CMDHttpAction(Model):
 
     def generate_args(self):
         return self.request.generate_args(path=self.path)
+
+    def reformat(self, **kwargs):
+        if self.request:
+            self.request.reformat(**kwargs)
+        if self.responses:
+            for response in self.responses:
+                if response.is_error:
+                    continue
+                response.reformat(**kwargs)

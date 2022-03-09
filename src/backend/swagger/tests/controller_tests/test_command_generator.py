@@ -5,7 +5,7 @@ from swagger.utils import exceptions
 
 MUTE_ERROR_MESSAGES = (
     "type is not supported",
-    "format is not supported"
+    "format is not supported",
 )
 
 
@@ -176,7 +176,7 @@ class CommandGeneratorTestCase(SwaggerSpecsTestCase):
                         "securityinsights",  # invalid swagger
                 ),
                 resource_provider_filter=lambda m: str(m) not in (
-                        "(MgmtPlane)/azsadmin/infrastructureinsights/Microsoft.InfrastructureInsights.Admin",  # have invalid reference
+                        "mgmt-plane/azsadmin/infrastructureinsights/ResourceProviders/Microsoft.InfrastructureInsights.Admin",  # have invalid reference
                 )
         ):
             print(str(rp))
@@ -199,9 +199,9 @@ class CommandGeneratorTestCase(SwaggerSpecsTestCase):
     def test_data_plane_modules(self):
         for rp in self.get_data_plane_resource_providers(
                 resource_provider_filter=lambda m: str(m) not in (
-                    "(DataPlane)/cognitiveservices/AutoSuggest",  # have complicated loop reference
-                    "(DataPlane)/cognitiveservices/ImageSearch",
-                    "(DataPlane)/cognitiveservices/WebSearch"
+                    "data-plane/cognitiveservices/AutoSuggest",  # have complicated loop reference
+                    "data-plane/cognitiveservices/ImageSearch",
+                    "data-plane/cognitiveservices/WebSearch"
                 )
         ):
             print(str(rp))

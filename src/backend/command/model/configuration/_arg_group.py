@@ -11,7 +11,7 @@ class CMDArgGroup(Model):
     # properties as nodes
     args = ListType(PolyModelType(CMDArg, allow_subclasses=True), min_size=1)
 
-    def reformat(self):
+    def reformat(self, **kwargs):
         for arg in self.args:
-            arg.reformat()
+            arg.reformat(**kwargs)
         self.args = sorted(self.args, key=lambda a: a.var)

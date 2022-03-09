@@ -26,5 +26,9 @@ class PlaneEnum:
             return True
         return False
 
+    @classmethod
+    def http_client(cls, plane):
+        return cls._config[plane]['client']
+
 
 __all__ = ["PlaneEnum"]

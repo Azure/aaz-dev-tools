@@ -1,4 +1,5 @@
 from schematics.types import StringType, BaseType, BooleanType
+from utils.stage import AAZStageEnum, AAZStageField
 
 
 class CMDBooleanField(BooleanType):
@@ -19,33 +20,18 @@ class CMDBooleanField(BooleanType):
         return value
 
 
-class CMDStageEnum:
-    Experimental = "Experimental"
-    Preview = "Preview"
-    Stable = "Stable"
-
-
-class CMDStageField(StringType):
+class CMDStageField(AAZStageField):
     """The stage for command group, command or argument."""
-
-    def __init__(self, *args, **kwargs):
-        super(CMDStageField, self).__init__(
-            choices=(CMDStageEnum.Experimental, CMDStageEnum.Preview, CMDStageEnum.Stable),
-            default=CMDStageEnum.Stable,
-            serialize_when_none=False,
-            *args,
-            **kwargs
-        )
 
     def to_native(self, value, context=None):
         value = super(CMDStageField, self).to_native(value, context)
-        if value == CMDStageEnum.Stable:
+        if value == AAZStageEnum.Stable:
             return None  # return None when value is false to hide field with `serialize_when_none=False`
         return value
 
     def to_primitive(self, value, context=None):
         value = super(CMDStageField, self).to_primitive(value, context)
-        if value == CMDStageEnum.Stable:
+        if value == AAZStageEnum.Stable:
             return None  # return None when value is false to hide field with `serialize_when_none=False`
         return value
 
