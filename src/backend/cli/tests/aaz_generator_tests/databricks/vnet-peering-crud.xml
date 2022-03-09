@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<CodeGen timestamp="2022-03-08T08:15:01.757365Z" plane="mgmt-plane">
+<CodeGen timestamp="2022-03-09T02:16:16.773350Z" plane="mgmt-plane">
   <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfS92aXJ0dWFsTmV0d29ya1BlZXJpbmdzL3twZWVyaW5nTmFtZX0=/V/MjAxOC0wNC0wMQ=="/>
   <commandGroup name="databricks workspace vnet-peering">
     <command name="show" version="2018-04-01">
@@ -331,12 +331,6 @@
           <help short="If remote gateways can be used on this virtual network. If the flag is set to true, and allowGatewayTransit on remote peering is also true, virtual network will use gateways of remote virtual network for transit. Only one peering can have this flag set to true. This flag cannot be set if virtual network already has a gateway."/>
         </arg>
       </argGroup>
-      <argGroup name="Generic Update">
-        <arg type="@GenericUpdateAdd" var="$GenericUpdate.add" options="add" group="Generic Update"/>
-        <arg type="@GenericUpdateForceString" var="$GenericUpdate.forceString" options="force-string" group="Generic Update"/>
-        <arg type="@GenericUpdateRemove" var="$GenericUpdate.remove" options="remove" group="Generic Update"/>
-        <arg type="@GenericUpdateSet" var="$GenericUpdate.set" options="set" group="Generic Update"/>
-      </argGroup>
       <operation operationId="vNetPeering_Get">
         <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings/{peeringName}">
           <request method="get">
@@ -436,11 +430,6 @@
               </prop>
             </schema>
           </json>
-        </instanceUpdate>
-      </operation>
-      <operation>
-        <instanceUpdate instance="$Instance" clientFlatten="True">
-          <generic add="$GenericUpdate.add" set="$GenericUpdate.set" remove="$GenericUpdate.remove" forceString="$GenericUpdate.forceString"/>
         </instanceUpdate>
       </operation>
       <operation operationId="vNetPeering_CreateOrUpdate">

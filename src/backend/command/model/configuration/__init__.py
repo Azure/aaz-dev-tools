@@ -43,8 +43,7 @@ from ._http import CMDHttpRequestArgs, CMDHttpRequestPath, CMDHttpRequestQuery, 
     CMDHttpAction
 from ._http_request_body import CMDHttpRequestBody, CMDHttpRequestJsonBody
 from ._http_response_body import CMDHttpResponseBody, CMDHttpResponseJsonBody
-from ._instance_update import CMDInstanceUpdateAction, CMDJsonInstanceUpdateAction, \
-    CMDGenericInstanceUpdateMethod, CMDGenericInstanceUpdateAction
+from ._instance_update import CMDInstanceUpdateAction, CMDJsonInstanceUpdateAction
 from ._operation import CMDOperation, CMDHttpOperation, CMDInstanceUpdateOperation, CMDHttpOperationLongRunning
 from ._output import CMDOutput, CMDObjectOutput, CMDArrayOutput, CMDStringOutput
 from ._resource import CMDResource

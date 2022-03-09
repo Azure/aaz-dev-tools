@@ -5,9 +5,8 @@
 from schematics.models import Model
 from schematics.types import ModelType
 
-from ._fields import CMDVariantField, CMDBooleanField
 from ._content import CMDRequestJson
-from ._arg import CMDClsArg
+from ._fields import CMDVariantField
 
 
 class CMDInstanceUpdateAction(Model):
@@ -46,66 +45,3 @@ class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
 
     def reformat(self, **kwargs):
         self.json.reformat(**kwargs)
-
-
-# generic instance update
-class CMDGenericInstanceUpdateMethod(Model):
-    # properties as tags
-    add = CMDVariantField()
-    set = CMDVariantField()
-    remove = CMDVariantField()
-    force_string = CMDVariantField(
-        serialized_name='forceString',
-        deserialize_from='forceString'
-    )
-
-    def generate_args(self):
-        self.add = "$GenericUpdate.add"
-        self.set = "$GenericUpdate.set"
-        self.remove = "$GenericUpdate.remove"
-        self.force_string = "$GenericUpdate.forceString"
-
-        args = [
-            CMDClsArg({
-                'var': self.add,
-                'type': "@GenericUpdateAdd",
-                'options': ['add']
-            }),
-            CMDClsArg({
-                'var': self.set,
-                'type': "@GenericUpdateSet",
-                'options': ['set']
-            }),
-            CMDClsArg({
-                'var': self.remove,
-                'type': "@GenericUpdateRemove",
-                'options': ['remove']
-            }),
-            CMDClsArg({
-                'var': self.force_string,
-                'type': "@GenericUpdateForceString",
-                'options': ['force-string'],
-            })
-        ]
-        for arg in args:
-            arg.group = "Generic Update"
-        return args
-
-
-class CMDGenericInstanceUpdateAction(CMDInstanceUpdateAction):
-    POLYMORPHIC_KEY = "generic"
-
-    # properties as tags
-    client_flatten = CMDBooleanField(
-        serialized_name='clientFlatten',
-        deserialize_from='clientFlatten'
-    )  # to control instance in client_flatten mode or not
-
-    # properties as nodes
-    generic = ModelType(CMDGenericInstanceUpdateMethod)
-
-    def generate_args(self):
-        return self.generic.generate_args()
-
-    def reformat(self, **kwargs):
-        pass

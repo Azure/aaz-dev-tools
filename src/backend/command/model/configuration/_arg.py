@@ -88,7 +88,7 @@ class CMDArgBase(Model):
     TYPE_VALUE = None
 
     # base types: "array", "boolean", "integer", "float", "object", "string",
-    # special types: "@File", "@ResourceID", "@ResourceGroup", "@Subscription", "@Json"
+    # special types: "ResourceId", "ResourceGroupName", "SubscriptionId", "ResourceLocation", "File"
 
     class Options:
         serialize_when_none = False

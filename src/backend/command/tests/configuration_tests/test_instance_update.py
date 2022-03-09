@@ -220,19 +220,3 @@ class InstanceUpdateTest(TestCase):
         instance_update.validate()
         print(instance_update.to_native())
         print(instance_update.to_primitive())
-
-    def test_generic_instance_update(self):
-
-        instance_update = CMDGenericInstanceUpdateAction({
-            "instance": "$instance.property",
-            "clientFlatten": True,
-            "generic": {
-                "add": "$add",
-                "set": "$set",
-                "remove": "$remove",
-                "force_string": "$forceString"
-            }
-        })
-        instance_update.validate()
-        print(instance_update.to_native())
-        print(instance_update.to_primitive())

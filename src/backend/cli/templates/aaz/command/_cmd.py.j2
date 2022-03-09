@@ -281,7 +281,7 @@ class {{ leaf.cls_name }}(AAZCommand):
         @property
         def content(self):
             {{ op.content.VALUE_NAME}}, {{ op.content.BUILDER_NAME }} = self.new_content(
-                self.ctx.args,
+                {{ op.content.arg_key }},
                 {%- if op.content.ref is not none %}
                 value={{ op.content.ref }},
                 {%- else %}
@@ -365,11 +365,14 @@ class {{ leaf.cls_name }}(AAZCommand):
             if cls.{{ response.schema.name }} is not None:
                 return cls.{{ response.schema.name }}
 
-            cls.{{ response.schema.name }} = {{ response.schema.typ }} (
+            cls.{{ response.schema.name }} = {{ response.schema.typ }}(
                 {%- for key, value in response.schema.typ_kwargs.items() %}
                 {{ key }}={{ value|constant_convert }},
                 {%- endfor %}
             )
+            {%- if response.schema.cls_builder_name is not none %}
+            {{ response.schema.cls_builder_name }}(cls.{{ response.schema.name }})
+            {%- endif %}
 
             {%- for scope, scope_define, props in response.schema.iter_scopes() %}
 
@@ -395,13 +398,53 @@ class {{ leaf.cls_name }}(AAZCommand):
 
     {%- endfor %}
 
-    {%- for operation in leaf.json_update_operations %}
+    {%- for op in leaf.json_update_operations %}
+
+    class {{ op.name }}(AAZInstanceUpdateOperation):
+
+        def __call__(self, *args, **kwargs):
+            {{ op.variant_key }} = self.{{ op.UPDATER_NAME }}({{ op.variant_key }})
+
+        def {{ op.UPDATER_NAME }}(self, instance):
+            {{ op.VALUE_NAME }}, {{ op.BUILDER_NAME }} = self.new_content_builder(
+                {{ op.arg_key }},
+                value=instance,
+                typ={{ op.typ }}
+            )
+
+            {%- if op.cls_builder_name is not none %}
+            {{ op.cls_builder_name }}({{ op.BUILDER_NAME }})
+            {%- endif %}
+
+            {%- for scope, scope_define, props in op.iter_scopes() %}
+
+            {%- if scope_define is not none %}
+
+            {{ scope }} = {{ op.BUILDER_NAME }}.get({{ scope_define|constant_convert }})
+            if {{ scope }} is not None:
+            {%- endif %}
+
+            {%- for prop_name, prop_type, arg_key, prop_type_kwargs, cls_builder_name in props %}
+            {% if scope_define is not none %}{{ "    " }}{% endif %}
+            {%- if cls_builder_name is not none %}{{ cls_builder_name }}({% endif %}
+            {%- if prop_name != '[]' and prop_name != '{}' -%}
+            {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}
+                {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+                {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+            {%- else -%}
+            {{ scope }}.set_elements({{ prop_type }}
+                {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+                {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+            {%- endif %}
+            {%- if cls_builder_name is not none %}){% endif %}
+            {%- endfor %}
+
+            {%- endfor %}
+
+            return {{ op.VALUE_NAME }}
 
     {%- endfor %}
 
-    {%- for operation in leaf.generic_update_operations %}
-
-    {%- endfor %}
 
 {%- for update_cls in leaf.get_update_clses() %}
 {{ "" }}

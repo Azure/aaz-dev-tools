@@ -1,12 +1,11 @@
 from cli.model.atomic import CLIAtomicCommand
 from command.model.configuration import CMDCommand, CMDHttpOperation, CMDCondition, CMDConditionAndOperator, \
     CMDConditionOrOperator, CMDConditionNotOperator, CMDConditionHasValueOperator, CMDInstanceUpdateOperation, \
-    CMDJsonInstanceUpdateAction, CMDGenericInstanceUpdateAction, CMDOperation
+    CMDJsonInstanceUpdateAction
 from utils.case import to_camel_case, to_snack_case
 from utils.plane import PlaneEnum
-from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator, \
-    AzGenericUpdateOperationGenerator
-from .az_arg_group_generator import AzArgGroupGenerator, AzArgClsGenerator
+from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator
+from .az_arg_group_generator import AzArgGroupGenerator
 from .az_output_generator import AzOutputGenerator
 from utils import exceptions
 
@@ -59,10 +58,12 @@ class AzCommandCtx:
                 )
             return self._ctx_arg_map[var_name]
 
-    def get_variant(self, variant):
+    def get_variant(self, variant, name_only=False):
         if variant.startswith('$'):
             variant = variant[1:]
         variant = to_snack_case(variant)
+        if name_only:
+            return variant
         return f'self.ctx.vars.{variant}'
 
 
@@ -99,10 +100,8 @@ class AzCommandGenerator:
         self.operations = []
         self.http_operations = []
         self.json_update_operations = []
-        self.generic_update_operations = []
 
         json_update_counts = 0
-        generic_update_counts = 0
         for operation in self.cmd.cfg.operations:
             lr = False
             if isinstance(operation, CMDHttpOperation):
@@ -119,13 +118,6 @@ class AzCommandGenerator:
                     op = AzJsonUpdateOperationGenerator(op_cls_name, self.cmd_ctx, operation, self._op_update_cls_map)
                     self.json_update_operations.append(op)
                     json_update_counts += 1
-                elif isinstance(operation.instance_update, CMDGenericInstanceUpdateAction):
-                    op_cls_name = f'InstanceUpdateByGeneric'
-                    if generic_update_counts > 0:
-                        op_cls_name += f'_{generic_update_counts}'
-                    op = AzGenericUpdateOperationGenerator(op_cls_name, self.cmd_ctx, operation)
-                    self.generic_update_operations.append(op)
-                    generic_update_counts += 1
                 else:
                     raise NotImplementedError()
             else:

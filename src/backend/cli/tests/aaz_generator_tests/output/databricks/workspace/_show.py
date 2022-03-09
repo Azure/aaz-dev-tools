@@ -109,7 +109,7 @@ class Show(AAZCommand):
         def on_200(self, session):
             data = self.deserialize_http_content(session)
             self.ctx.set_var(
-                'self.ctx.vars.instance',
+                'instance',
                 data,
                 schema_builder=self._build_schema_on_200
             )
@@ -121,7 +121,7 @@ class Show(AAZCommand):
             if cls._schema_on_200 is not None:
                 return cls._schema_on_200
 
-            cls._schema_on_200 = AAZObjectType (
+            cls._schema_on_200 = AAZObjectType(
             )
 
             _schema_on_200 = cls._schema_on_200
