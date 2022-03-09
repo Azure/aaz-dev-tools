@@ -6,22 +6,36 @@ import {Typeahead} from 'react-bootstrap-typeahead';
 import type {Option} from "react-bootstrap-typeahead/types/types"
 import "./TargetSelector.css";
 
-import options from './data.js';
-
 
 type TargetSelectorState = {
   isNew: boolean,
-  moduleName: string,
+  currRepo: string,
+  modules: Module[],
+  moduleName: string
+}
+
+type Module = {
+  folder: string,
+  name: string,
+  url: string
 }
 
 
-export default class TargetSelector extends Component<any, TargetSelectorState>{
+export default class TargetSelector extends Component<any, TargetSelectorState> {
   constructor(props: any) {
     super(props);
     this.state = {
       isNew: false,
-      moduleName: "",
+      currRepo: "",
+      modules: [],
+      moduleName: ""
     }
+  }
+
+  handleSubmit = (event: any) => {
+    event.preventDefault()
+    event.stopPropagation()
+    window.location.href = window.location.href + "/" + this.state.moduleName
   }
 
   SelectTarget = () => {
@@ -29,11 +43,49 @@ export default class TargetSelector extends Component<any, TargetSelectorState>{
     const [singleSelections, setSingleSelections] = useState([] as Option[]);
 
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [radioValue, setRadioValue] = useState('1');
-    const radios = [
+    const [targetValue, setTargetValue] = useState('1');
+    const targets = [
       { name: 'Azure CLI', value: '1' },
       { name: 'Azure CLI Extension', value: '2' },
     ];
+
+    const handleClick = (event: any) => {
+      const targetName = event.target.innerText
+      this.setState({currRepo: targetName})
+      if (targetName === "Azure CLI") {
+        axios.get("/CLI/Az/Main/Modules")
+          .then(res => {
+            this.setState({
+              modules: res.data.map((module: any) => {
+                return {
+                  folder: module.folder,
+                  name: module.name,
+                  url: module.url
+                }
+              })
+            })
+          })
+      }
+      if (targetName === "Azure CLI Extension") {
+        axios.get("/CLI/Az/Extension/Modules")
+          .then(res => {
+            this.setState({
+              modules: res.data.map((module: any) => {
+                return {
+                  folder: module.folder,
+                  name: module.name,
+                  url: module.url
+                }
+              })
+            })
+          })
+      }
+    }
+
+    const handleOptionSelection = (options: Option[]) => {
+      setSingleSelections(options)
+      this.setState({moduleName:String(options[0])})
+    }
 
     return <div>
       <Modal show={!this.state.isNew} dialogClassName="target-dialog" contentClassName="target-content" centered>
@@ -46,19 +98,20 @@ export default class TargetSelector extends Component<any, TargetSelectorState>{
           <Row>
             <Col sm={4}>
               <ButtonGroup className="d-grid gap-2">
-                {radios.map((radio, idx) => (
+                {targets.map((target, idx) => (
                   <ToggleButton
                     key={idx}
-                    id={`radio-${idx}`}
+                    id={`target-${idx}`}
                     type="radio"
                     variant={idx % 2 ? 'outline-secondary' : 'outline-secondary'}
                     size = "lg"
-                    name="radio"
-                    value={radio.value}
-                    checked={radioValue === radio.value}
-                    onChange={(e) => setRadioValue(e.currentTarget.value)}
+                    name="target"
+                    value={target.value}
+                    checked={targetValue === target.value}
+                    onChange={(e) => setTargetValue(e.currentTarget.value)}
+                    onClick={handleClick}
                   >
-                    {radio.name}
+                    {target.name}
                   </ToggleButton>
                 ))}
               </ButtonGroup>
@@ -66,16 +119,16 @@ export default class TargetSelector extends Component<any, TargetSelectorState>{
             <Col sm={8}>
               <Row>
                 <Col sm={8}>
-                  <Form.Group>
+                  <Form id="moduleName" onSubmit={this.handleSubmit}>
                     <Typeahead
                       id="basic-typeahead-single"
-                      labelKey="label"
-                      onChange={setSingleSelections}
-                      options={options}
+                      labelKey="name"
+                      onChange={handleOptionSelection}
+                      options={this.state.modules.map(module=>{return module.name})}
                       placeholder="Search modules"
                       selected={singleSelections}
                     />
-                  </Form.Group>
+                  </Form>
                 </Col>
                 <Col sm={4}>
                   <Button variant="secondary" onClick={() => this.setState({isNew: true})}>
@@ -87,11 +140,9 @@ export default class TargetSelector extends Component<any, TargetSelectorState>{
           </Row>
         </Modal.Body>
         <Modal.Footer className='justify-content-right'>
-          <Link to={"generator"}>
-            <Button variant="primary">
-              OK
-            </Button>
-          </Link>
+          <Button type="submit" form="moduleName" variant="primary">
+            OK
+          </Button>
         </Modal.Footer>
       </Modal>
     </div>
@@ -131,7 +182,7 @@ export default class TargetSelector extends Component<any, TargetSelectorState>{
           </Form>
         </Modal.Body>
         <Modal.Footer className='justify-content-right'>
-          <Link to={"/module/generator"}>
+          <Link to={"generator"}>
             <Button type="submit" form="newTargetForm" variant="primary">
               Create
             </Button>
