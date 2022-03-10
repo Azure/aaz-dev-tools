@@ -1,10 +1,8 @@
-import React, { Component, useState } from "react";
+import React, { Component } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom"
-import { Row, Col, Navbar, Nav, Button, Alert} from "react-bootstrap"
+import { Row, Col, Navbar, Nav, Button, Alert } from "react-bootstrap"
 import { SpecSelector } from "./SpecSelector";
-
-import { Set } from "typescript";
 
 
 import { Tree, NodeModel, DragLayerMonitorProps, DropOptions } from "@minoru/react-dnd-treeview";
@@ -213,10 +211,10 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
 
   markHasChildren = () => {
     let hasChildren = new Set()
-    this.state.treeData.map(node => {
+    this.state.treeData.forEach(node => {
       hasChildren.add(node.parent)
     })
-    this.state.treeData.map(node => {
+    this.state.treeData.forEach(node => {
       node.data.hasChildren = hasChildren.has(node.id)
     })
   }
@@ -433,18 +431,18 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   handleGenerate = () => {
     const url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/Generate`
     axios.post(url)
-      .then(res=>{
-        this.setState({showAlert:true, alertText:"Successfully generated configuration.", alertVariant:"success"})
-        window.setTimeout(()=>{
-          this.setState({showAlert:false})
-        },2000)
+      .then(res => {
+        this.setState({ showAlert: true, alertText: "Successfully generated configuration.", alertVariant: "success" })
+        window.setTimeout(() => {
+          this.setState({ showAlert: false })
+        }, 2000)
       })
       .catch(err => {
         console.error(err.response)
-        this.setState({showAlert:true, alertText:"Need to complete all the short help fields", alertVariant:"danger"})
-        window.setTimeout(()=>{
-          this.setState({showAlert:false})
-        },2000)
+        this.setState({ showAlert: true, alertText: "Need to complete all the short help fields", alertVariant: "danger" })
+        window.setTimeout(() => {
+          this.setState({ showAlert: false })
+        }, 2000)
       })
   }
 
@@ -460,7 +458,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         </Button>
         <Nav className="me-auto" />
       </Navbar>
-      {this.state.showAlert&&<Alert variant={this.state.alertVariant} onClose={() => this.setState({showAlert: false})}>
+      {this.state.showAlert && <Alert variant={this.state.alertVariant} onClose={() => this.setState({ showAlert: false })}>
         {this.state.alertText}
       </Alert>}
       <Row>
@@ -475,7 +473,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
 
 
       {this.state.showSpecSelectorModal ? <SpecSelector onCloseModal={this.handleCloseModal} /> : <></>}
-      
+
     </div>
   }
 }

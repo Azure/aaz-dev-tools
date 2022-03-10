@@ -2,12 +2,10 @@ import React, { useState } from "react";
 import IconButton from "@mui/material/IconButton";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
 import TextareaAutosize from '@mui/base/TextareaAutosize';
-import { Tree, NodeModel, DragLayerMonitorProps, DropOptions } from "@minoru/react-dnd-treeview";
-import { Row, Col, ListGroup, Form, Button } from "react-bootstrap"
-import type { CommandGroup, HelpType, ExampleType, ArgGroups, TreeDataType, TreeNode, Argument } from "./ConfigEditor"
+import { Tree, NodeModel, DragLayerMonitorProps } from "@minoru/react-dnd-treeview";
+import { Row, Col } from "react-bootstrap"
+import type { ArgGroups, TreeDataType, TreeNode, Argument } from "./ConfigEditor"
 import styles from "./TreeView/App.module.css";
 
 
@@ -38,18 +36,18 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
         if (!args) {
             return
         }
-        args.map(arg => {
+        args.forEach(arg => {
             let text = ""
-            arg.options.map((option, index)=>{
-                if (index>0){
-                    text+=' '
+            arg.options.forEach((option, index) => {
+                if (index > 0) {
+                    text += ' '
                 }
-                if (option.length>1){
-                    text+='--'
+                if (option.length > 1) {
+                    text += '--'
                 } else {
-                    text+='-'
+                    text += '-'
                 }
-                text+=option
+                text += option
             })
 
             let treeNode: TreeNode = {
@@ -69,7 +67,7 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
         if (!argGroups) {
             return
         }
-        argGroups.map(argGroup => {
+        argGroups.forEach(argGroup => {
             let treeNode: TreeNode = {
                 id: currentIndex,
                 parent: parentIndex,
@@ -100,7 +98,6 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
     }
     const handleNameChange = () => { }
     const handleDrop = () => { }
-    const testing = []
 
     const ArgumentsTree = () => {
         return <div className={styles.app}>
@@ -144,7 +141,7 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
 
 
         const handleDoubleClick = (event: React.MouseEvent) => {
-            if (!props.editable){
+            if (!props.editable) {
                 return
             }
             event.stopPropagation();
@@ -224,7 +221,7 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
         return (<div>
             <InputArea value={initTreeData[selectedIndex - 1].text} prefix="Option List: " initEditing={initTreeData[selectedIndex - 1].text === ""} editable={false} onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
             <InputArea value={indexToArgument[selectedIndex].type} prefix="Type: " initEditing={indexToArgument[selectedIndex].type === ""} editable={false} onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
-            <InputArea value={helpText} prefix="Help: " initEditing={false} editable={false}  onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
+            <InputArea value={helpText} prefix="Help: " initEditing={false} editable={false} onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
             <Row>
                 <Col xxl='2'>
                     <h6>Required?:</h6>

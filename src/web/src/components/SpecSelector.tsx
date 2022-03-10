@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom"
-import { ListGroup, Row, Col, Button, Dropdown, DropdownButton, Spinner, Modal, Navbar, Nav } from "react-bootstrap"
+import { ListGroup, Row, Col, Button, Dropdown, DropdownButton, Spinner, Modal, } from "react-bootstrap"
 import { Set } from "typescript";
 
 type WrapperProp = {
@@ -25,8 +25,7 @@ type SpecSelectState = {
   prevResources: Set<string>,
   versions: Versions,
   selectedVersion: string,
-  prevVersion: string,
-  altered: boolean
+  prevVersion: string
 }
 
 type Instance = {
@@ -80,8 +79,7 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
       prevResources: new Set<string>(),
       versions: {},
       selectedVersion: "",
-      prevVersion: "",
-      altered: false
+      prevVersion: ""
     }
   }
 
@@ -90,7 +88,7 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
     return axios.get(`/Swagger/Specs/${plane}`)
       .then((res) => {
         const modules: DictType = {}
-        res.data.map((module: Instance) => {
+        res.data.forEach((module: Instance) => {
           modules[module.name] = module.url
         })
         this.setState({ modules: modules })
@@ -130,7 +128,6 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
               }
               this.setState({ prevResources: resources })
               this.state.selectedResources.clear()
-              this.setState({ altered: this.checkAltered() })
             })
         }
       })
@@ -155,16 +152,6 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
 
   }
 
-  checkAltered = () => {
-    return true
-    let altered = this.state.selectedModule !== this.state.prevModule
-    altered = altered || this.state.selectedResourceProvider !== this.state.prevResourceProvider
-    altered = altered || this.state.selectedVersion !== this.state.prevVersion
-    let areSetsEqual = (a: any, b: any) => a.size === b.size && [...a].every(value => b.has(value));
-    altered = altered || !areSetsEqual(this.state.selectedResources, this.state.prevResources)
-    return altered
-  }
-
   handleTogglePlane = (eventKey: any) => {
     if (eventKey === this.state.mgmtPlane) {
       return
@@ -181,14 +168,13 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
     return axios.get(`${moduleUrl}/ResourceProviders`)
       .then((res) => {
         const resourceProviders: DictType = {}
-        res.data.map((resourceProvider: Instance) => {
+        res.data.forEach((resourceProvider: Instance) => {
           resourceProviders[resourceProvider.name] = resourceProvider.url
         })
         this.setState({
           resourceProviders: resourceProviders,
           selectedModule: moduleName,
-          selectedResourceProvider: "",
-          altered: this.checkAltered()
+          selectedResourceProvider: ""
         })
         this.clearResourcesAndVersions()
       })
@@ -209,12 +195,12 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
         const resources: Resources = {}
         const versions: Versions = {}
         let selectedVersion: string = ""
-        res.data.map((resource: Resource) => {
+        res.data.forEach((resource: Resource) => {
           resource.versions.sort((a, b) => a.version.localeCompare(b.version))
           resource.versions.reverse()
           selectedVersion = resource.versions[0].version
           resources[resource.id] = resource.versions
-          resource.versions.map((versionObj: Version) => {
+          resource.versions.forEach((versionObj: Version) => {
             const version = versionObj.version
             if (!(version in versions)) {
               versions[version] = []
@@ -227,8 +213,7 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
           versions: versions,
           selectedVersion: selectedVersion,
           selectedResourceProvider: resourceProviderName,
-          loadingResources: false,
-          altered: this.checkAltered()
+          loadingResources: false
         })
       })
       .catch((err) => console.log(err.response.message));
@@ -257,7 +242,7 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
 
   handleSelectVersion = (eventKey: any) => {
     const version: string = eventKey
-    this.setState({ selectedVersion: version, altered: this.checkAltered() })
+    this.setState({ selectedVersion: version})
   }
 
   handleSelectResource = (event: any) => {
@@ -267,10 +252,6 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
     } else {
       this.state.selectedResources.delete(resourceId)
     }
-
-    this.setState({
-      altered: this.checkAltered()
-    })
   }
 
   ListVersions = () => {
