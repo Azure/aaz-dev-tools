@@ -2,7 +2,7 @@ import os
 import shutil
 
 from cli.tests.common import CommandTestCase
-from cli.controller.az_extension_manager import AzExtensionManager
+from cli.controller.az_module_manager import AzExtensionManager
 
 
 class CliExtensionManagerTest(CommandTestCase):

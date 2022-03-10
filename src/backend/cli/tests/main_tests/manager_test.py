@@ -2,7 +2,7 @@ import os
 import shutil
 
 from cli.tests.common import CommandTestCase
-from cli.controller.az_main_manager import AzMainManager
+from cli.controller.az_module_manager import AzMainManager
 
 
 class CliMainManagerTest(CommandTestCase):
