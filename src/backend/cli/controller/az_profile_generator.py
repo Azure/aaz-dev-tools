@@ -1,11 +1,12 @@
 import os
+import shutil
 from cli.templates import get_templates
 from command.model.configuration import CMDCommand
 from utils.case import to_snack_case
 from .az_command_generator import AzCommandGenerator
 
 
-class AzAAZGenerator:
+class AzProfileGenerator:
     """Used to generate atomic layer command group"""
 
     def __init__(self, aaz_folder, profile):
@@ -47,6 +48,18 @@ class AzAAZGenerator:
                 self._delete_folder(self.profile.name, name)
 
         return sorted(self._removed_folders), sorted(self._removed_files), self._modified_files
+
+    def save(self):
+        for folder in self._removed_folders:
+            shutil.rmtree(folder, ignore_errors=True)
+        for file in self._removed_files:
+            os.remove(file)
+        for path, data in self._modified_files.items():
+            with open(path, 'w') as f:
+                f.write(data)
+        self._removed_folders = set()
+        self._removed_files = set()
+        self._modified_files = {}
 
     def _generate_by_command_group(self, profile_name, command_group):
         assert command_group.command_groups or command_group.commands

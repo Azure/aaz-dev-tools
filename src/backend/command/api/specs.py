@@ -48,9 +48,17 @@ def aaz_command_in_version(node_names, leaf_name, version_name):
     if not leaf:
         raise exceptions.ResourceNotFind("Command not exist")
 
-    cmd_cfg, version = manager.load_command_cfg_in_version(leaf, version_name)
+    version = None
+    for v in (leaf.versions or []):
+        if v.name == version_name:
+            version = v
+            break
+
     if not version:
         raise exceptions.ResourceNotFind("Command of version not exist")
+
+    cfg_reader = manager.load_resource_cfg_reader_by_command_with_version(leaf, version=version)
+    cmd_cfg = cfg_reader.find_command(*leaf.names)
 
     result = cmd_cfg.to_primitive()
     del result['name']

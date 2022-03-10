@@ -2,8 +2,8 @@ from flask import Blueprint, jsonify, request, url_for
 
 from utils.config import Config
 from utils import exceptions
-from cli.controller.az_main_manager import AzMainManager
-from cli.controller.az_extension_manager import AzExtensionManager
+from cli.controller.az_module_manager import AzModuleManager, AzMainManager, AzExtensionManager
+from cli.model.atomic import CLIModule
 
 
 bp = Blueprint('az', __name__, url_prefix='/CLI/Az')
@@ -12,6 +12,26 @@ bp = Blueprint('az', __name__, url_prefix='/CLI/Az')
 @bp.route("/Profiles", methods=("GET", ))
 def az_profiles():
     return jsonify(Config.CLI_PROFILES)
+
+
+@bp.route("/AAZ/Specs/CommandTree/Nodes/<names_path:node_names>/Transfer", methods=("POST", ))
+def az_utils_nodes(node_names):
+    manager = AzModuleManager()
+    command_group = manager.build_command_group_from_aaz(*node_names)
+    if command_group is None:
+        raise exceptions.ResourceNotFind(f"CommandGroup '{' '.join(node_names)}' not find.")
+    result = command_group.to_primitive()
+    return jsonify(result)
+
+
+@bp.route("/AAZ/Specs/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Versions/<base64:version_name>/Transfer", methods=("POST", ))
+def az_utils_leaves(node_names, leaf_name, version_name):
+    manager = AzModuleManager()
+    command = manager.build_command_from_aaz(*node_names, leaf_name, version_name=version_name)
+    if command is None:
+        raise exceptions.ResourceNotFind(f"Command '{' '.join([*node_names, leaf_name])}' not find.")
+    result = command.to_primitive()
+    return jsonify(result)
 
 
 @bp.route("/Main/Modules", methods=("GET", "POST"))
@@ -23,10 +43,8 @@ def az_main_modules():
             raise exceptions.InvalidAPIUsage("Invalid request body")
         mod_name = data['name']
         module = manager.create_new_mod(mod_name)
-        result = {
-            **module,
-            'url': url_for('az.az_main_module', module_name=module['name']),
-        }
+        result = module.to_primitive()
+        result['url'] = url_for('az.az_main_module', module_name=module.name)
     elif request.method == "GET":
         # list available modules
         modules = manager.list_modules()
@@ -38,16 +56,30 @@ def az_main_modules():
             })
     else:
         raise NotImplementedError()
-
     return jsonify(result)
 
 
-@bp.route("/Main/Modules/<Name:module_name>", methods=("GET", ))
+@bp.route("/Main/Modules/<Name:module_name>", methods=("GET", "PUT"))
 def az_main_module(module_name):
     manager = AzMainManager()
-    manager.load_module(module_name)
-    # TODO:
-    return "", 200
+    if request.method == "PUT":
+        data = request.get_json()
+        if 'profiles' not in data:
+            raise exceptions.InvalidAPIUsage("miss profiles for module")
+        module = CLIModule({
+            "name": module_name,
+            "profiles": data['profiles']
+        })
+        module = manager.update_module(module_name, module.profiles)
+        result = module.to_primitive()
+        result['url'] = url_for('az.az_main_module', module_name=module.name)
+    elif request.method == "GET":
+        module = manager.load_module(module_name)
+        result = module.to_primitive()
+        result['url'] = url_for('az.az_main_module', module_name=module.name)
+    else:
+        raise NotImplementedError()
+    return jsonify(result)
 
 
 @bp.route("/Extension/Modules", methods=("GET", "POST"))
@@ -59,10 +91,8 @@ def az_extension_modules():
             raise exceptions.InvalidAPIUsage("Invalid request body")
         mod_name = data['name']
         module = manager.create_new_mod(mod_name)
-        result = {
-            **module,
-            'url': url_for('az.az_extension_module', module_name=module['name']),
-        }
+        result = module.to_primitive()
+        result['url'] = url_for('az.az_extension_module', module_name=module.name)
     elif request.method == "GET":
         # list available modules
         modules = manager.list_modules()
@@ -74,13 +104,27 @@ def az_extension_modules():
             })
     else:
         raise NotImplementedError()
-
     return jsonify(result)
 
 
-@bp.route("/Extension/Modules/<Name:module_name>", methods=("GET", "POST"))
+@bp.route("/Extension/Modules/<Name:module_name>", methods=("GET", "PUT"))
 def az_extension_module(module_name):
     manager = AzExtensionManager()
-    manager.load_module(module_name)
-    # TODO:
-    return "", 200
+    if request.method == "PUT":
+        data = request.get_json()
+        if 'profiles' not in data:
+            raise exceptions.InvalidAPIUsage("miss profiles for module")
+        module = CLIModule({
+            "name": module_name,
+            "profiles": data['profiles']
+        })
+        module = manager.update_module(module_name, module.profiles)
+        result = module.to_primitive()
+        result['url'] = url_for('az.az_extension_module', module_name=module.name)
+    elif request.method == "GET":
+        module = manager.load_module(module_name)
+        result = module.to_primitive()
+        result['url'] = url_for('az.az_extension_module', module_name=module.name)
+    else:
+        raise NotImplementedError()
+    return jsonify(result)
