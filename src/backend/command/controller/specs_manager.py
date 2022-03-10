@@ -100,6 +100,18 @@ class AAZSpecsManager:
         leaf = node.commands[name]
         return leaf
 
+    def load_command_cfg_in_version(self, cmd, version_name):
+        version = None
+        for v in (cmd.versions or []):
+            if v.name == version_name:
+                version = v
+                break
+        if not version:
+            return None, None
+        cfg_reader = self.load_resource_cfg_reader_by_command_with_version(cmd, version=version)
+        cmd_cfg = cfg_reader.find_command(*cmd.names)
+        return cmd_cfg, version
+
     def iter_command_groups(self, *root_cg_names):
         root = self.find_command_group(*root_cg_names)
         if root:
@@ -145,16 +157,14 @@ class AAZSpecsManager:
         return CfgReader(cfg)
 
     def load_resource_cfg_reader_by_command_with_version(self, cmd, version):
-        if isinstance(version, CMDSpecsCommandVersion):
-            version_name = version.name
-        else:
+        if not isinstance(version, CMDSpecsCommandVersion):
             assert isinstance(version, str)
             version_name = version
-        version = None
-        for v in cmd.versions or []:
-            if v.name == version_name:
-                version = v
-                break
+            version = None
+            for v in cmd.versions or []:
+                if v.name == version_name:
+                    version = v
+                    break
         if not version:
             return None
         resource = version.resources[0]
