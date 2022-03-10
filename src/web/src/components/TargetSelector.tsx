@@ -215,10 +215,10 @@ export default class TargetSelector extends Component<any, TargetSelectorState> 
 
   render() {
     return (
-        <div>
-          <this.SelectTarget/>
-          <this.NewTarget/>
-        </div>
+      <div>
+        <this.SelectTarget/>
+        <this.NewTarget/>
+      </div>
     )
   }
 }
