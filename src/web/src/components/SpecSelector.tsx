@@ -252,6 +252,7 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
     } else {
       this.state.selectedResources.delete(resourceId)
     }
+    this.setState({selectedResources: this.state.selectedResources})
   }
 
   ListVersions = () => {
