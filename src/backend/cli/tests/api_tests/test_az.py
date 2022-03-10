@@ -37,3 +37,5 @@ class APIAzTest(CommandTestCase):
                 rv = c.get(mod['url'])
                 self.assertTrue(rv.status_code == 200, mod['url'])
 
+    def _prepare_databricks(self):
+        pass

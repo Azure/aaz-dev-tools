@@ -182,9 +182,9 @@ class APIEditorTest(CommandTestCase):
             assert rv.status_code == 200
             command = rv.get_json()
             assert command['names'] == ['edge-order', 'address', 'update']
-            assert len(command['argGroups']) == 2
+            assert len(command['argGroups']) == 1
             assert 'conditions' not in command
-            assert len(command['operations']) == 4  # Get, InstanceUpdate, GenericUpdate, Put
+            assert len(command['operations']) == 3  # Get, InstanceUpdate, Put
             assert len(command['outputs']) == 1
             assert len(command['resources']) == 1
             assert command['version'] == '2021-12-01'
@@ -228,7 +228,6 @@ class APIEditorTest(CommandTestCase):
                         '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel'),
                     swagger_resource_path_to_resource_id(
                         '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return'),
-                    # FIXME: fix issues in following resources
                     swagger_resource_path_to_resource_id(
                         '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata'),
                     swagger_resource_path_to_resource_id(
