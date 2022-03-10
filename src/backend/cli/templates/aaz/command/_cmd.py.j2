@@ -44,7 +44,7 @@ class {{ leaf.cls_name }}(AAZCommand):
         "version": {{ leaf.version|constant_convert }},
         "resources": [
             {%- for resource in leaf.resources %}
-            ({{ resource.plane|constant_convert }}, {{ resource.id|constant_convert }}, {{ resource.version|constant_convert }}),
+            [{{ resource.plane|constant_convert }}, {{ resource.id|constant_convert }}, {{ resource.version|constant_convert }}],
             {%- endfor %}
         ]
     }
@@ -371,7 +371,7 @@ class {{ leaf.cls_name }}(AAZCommand):
             {%- if response.variant_name is not none %}
             data = self.deserialize_http_content(session)
             self.ctx.set_var(
-                '{{ response.variant_name }}',
+                "{{ response.variant_name }}",
                 data,
                 schema_builder=self.{{ response.schema.builder_name }}
             )

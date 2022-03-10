@@ -23,9 +23,9 @@ class Show(AAZCommand):
     """
 
     _aaz_info = {
-        "version": '2018-04-01',
+        "version": "2018-04-01",
         "resources": [
-            ('mgmt-plane', '/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}', '2018-04-01'),
+            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}", "2018-04-01"],
         ]
     }
 
@@ -46,19 +46,19 @@ class Show(AAZCommand):
 
         _args_schema = cls._args_schema
         _args_schema.peering_name = AAZStrArg(
-            options=['--peering-name', '--name', '-n'],
-            help='The name of the workspace vNet peering.',
+            options=["--peering-name", "--name", "-n"],
+            help="The name of the workspace vNet peering.",
             required=True,
-            id_part='child_name_1',
+            id_part="child_name_1",
         )
         _args_schema.resource_group = AAZResourceGroupNameArg(
             required=True,
         )
         _args_schema.workspace_name = AAZStrArg(
-            options=['--workspace-name'],
-            help='The name of the workspace.',
+            options=["--workspace-name"],
+            help="The name of the workspace.",
             required=True,
-            id_part='name',
+            id_part="name",
         )
         return _args_schema
 
@@ -119,7 +119,7 @@ class Show(AAZCommand):
         def query_parameters(self):
             parameters = {
                 **self.serialize_query_param(
-                    "api-version", '2018-04-01',
+                    "api-version", "2018-04-01",
                     required=True,
                 ),
             }
@@ -128,7 +128,7 @@ class Show(AAZCommand):
         def on_200(self, session):
             data = self.deserialize_http_content(session)
             self.ctx.set_var(
-                'instance',
+                "instance",
                 data,
                 schema_builder=self._build_schema_on_200
             )
@@ -144,53 +144,53 @@ class Show(AAZCommand):
 
             _schema_on_200 = cls._schema_on_200
             _schema_on_200.id = AAZStrType(
-                flags={'read_only': True},
+                flags={"read_only": True},
             )
             _schema_on_200.name = AAZStrType(
-                flags={'read_only': True},
+                flags={"read_only": True},
             )
             _schema_on_200.properties = AAZObjectType(
-                flags={'required': True, 'client_flatten': True},
+                flags={"required": True, "client_flatten": True},
             )
             _schema_on_200.type = AAZStrType(
-                flags={'read_only': True},
+                flags={"read_only": True},
             )
 
             properties = cls._schema_on_200.properties
             properties.allow_forwarded_traffic = AAZBoolType(
-                serialized_name='allowForwardedTraffic',
+                serialized_name="allowForwardedTraffic",
             )
             properties.allow_gateway_transit = AAZBoolType(
-                serialized_name='allowGatewayTransit',
+                serialized_name="allowGatewayTransit",
             )
             properties.allow_virtual_network_access = AAZBoolType(
-                serialized_name='allowVirtualNetworkAccess',
+                serialized_name="allowVirtualNetworkAccess",
             )
             properties.databricks_address_space = AAZObjectType(
-                serialized_name='databricksAddressSpace',
+                serialized_name="databricksAddressSpace",
             )
             _build_schema_address_space_read(properties.databricks_address_space)
             properties.databricks_virtual_network = AAZObjectType(
-                serialized_name='databricksVirtualNetwork',
+                serialized_name="databricksVirtualNetwork",
             )
             properties.peering_state = AAZStrType(
-                serialized_name='peeringState',
-                flags={'read_only': True},
+                serialized_name="peeringState",
+                flags={"read_only": True},
             )
             properties.provisioning_state = AAZStrType(
-                serialized_name='provisioningState',
-                flags={'read_only': True},
+                serialized_name="provisioningState",
+                flags={"read_only": True},
             )
             properties.remote_address_space = AAZObjectType(
-                serialized_name='remoteAddressSpace',
+                serialized_name="remoteAddressSpace",
             )
             _build_schema_address_space_read(properties.remote_address_space)
             properties.remote_virtual_network = AAZObjectType(
-                serialized_name='remoteVirtualNetwork',
-                flags={'required': True},
+                serialized_name="remoteVirtualNetwork",
+                flags={"required": True},
             )
             properties.use_remote_gateways = AAZBoolType(
-                serialized_name='useRemoteGateways',
+                serialized_name="useRemoteGateways",
             )
 
             databricks_virtual_network = cls._schema_on_200.properties.databricks_virtual_network
@@ -218,7 +218,7 @@ def _build_schema_address_space_read(_schema):
 
     address_space_read = _schema_address_space_read
     address_space_read.address_prefixes = AAZListType(
-        serialized_name='addressPrefixes',
+        serialized_name="addressPrefixes",
     )
 
     address_prefixes = _schema_address_space_read.address_prefixes
@@ -227,4 +227,4 @@ def _build_schema_address_space_read(_schema):
     _schema.address_prefixes = _schema_address_space_read.address_prefixes
 
 
-__all__ = ['Show']
+__all__ = ["Show"]

@@ -23,9 +23,9 @@ class Delete(AAZCommand):
     """
 
     _aaz_info = {
-        "version": '2018-04-01',
+        "version": "2018-04-01",
         "resources": [
-            ('mgmt-plane', '/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}', '2018-04-01'),
+            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}", "2018-04-01"],
         ]
     }
 
@@ -50,10 +50,10 @@ class Delete(AAZCommand):
             required=True,
         )
         _args_schema.workspace_name = AAZStrArg(
-            options=['--workspace-name', '--name', '-n'],
-            help='The name of the workspace.',
+            options=["--workspace-name", "--name", "-n"],
+            help="The name of the workspace.",
             required=True,
-            id_part='name',
+            id_part="name",
         )
         return _args_schema
 
@@ -72,7 +72,7 @@ class Delete(AAZCommand):
                     self.ctx.args.no_wait,
                     session,
                     deserialization_callback=self.on_200_202_204,
-                    lro_options={'final-state-via': 'azure-async-operation'},
+                    lro_options={"final-state-via": "azure-async-operation"},
                     path_format_arguments=self.url_parameters,
                 )
             return self.on_error(session)
@@ -110,7 +110,7 @@ class Delete(AAZCommand):
         def query_parameters(self):
             parameters = {
                 **self.serialize_query_param(
-                    "api-version", '2018-04-01',
+                    "api-version", "2018-04-01",
                     required=True,
                 ),
             }
@@ -120,4 +120,4 @@ class Delete(AAZCommand):
             pass
 
 
-__all__ = ['Delete']
+__all__ = ["Delete"]
