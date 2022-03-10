@@ -6,19 +6,19 @@ import type {Option} from "react-bootstrap-typeahead/types/types"
 import "./TargetSelector.css";
 
 
-type TargetSelectorState = {
-  isNew: boolean,
-  currRepo: string,
-  modules: Module[],
-  moduleName: string,
-}
-
 type Module = {
   folder: string,
   name: string,
   url: string
 }
 
+
+type TargetSelectorState = {
+  isNew: boolean,
+  currRepo: string,
+  modules: Module[],
+  moduleName: string
+}
 
 export default class TargetSelector extends Component<any, TargetSelectorState> {
   constructor(props: any) {
@@ -35,7 +35,7 @@ export default class TargetSelector extends Component<any, TargetSelectorState> 
     event.preventDefault();
     event.stopPropagation();
 
-    window.location.href = `/module/${this.state.moduleName}`
+    window.location.href = `/module/${this.state.currRepo}/${this.state.moduleName}`
   }
 
   SelectTarget = () => {
@@ -183,7 +183,7 @@ export default class TargetSelector extends Component<any, TargetSelectorState> 
           })
       }
 
-      window.location.href = `/module/${moduleName}`
+      window.location.href = `/module/${this.state.currRepo}/${moduleName}`
     }
 
     return <div>

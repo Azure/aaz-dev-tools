@@ -1,22 +1,34 @@
-import React, {Component} from "react";
+import React, {Component, useState} from "react";
 import {Navbar, Nav, Container, Button} from "react-bootstrap"
 import {useParams} from "react-router-dom";
 import axios from "axios";
 import styles from "./TreeView/App.module.css";
 import {DragLayerMonitorProps, DropOptions, NodeModel, Tree} from "@minoru/react-dnd-treeview";
-import {CustomData} from "./TreeView/types";
-import {CustomNode} from "./TreeView/CustomNode";
+import {CheckData} from "./TreeView/types";
+import {CheckNode} from "./TreeView/CheckNode";
 import {CustomDragPreview} from "./TreeView/CustomDragPreview";
-import {TreeDataType} from "./ConfigEditor";
 
 import SampleData from "./tree.json";
 
 
+type TreeNode = {
+  id: number,
+  parent: number,
+  droppable: boolean,
+  text: string,
+  data: {
+    hasChildren: boolean,
+    type: string
+  }
+}
+
+
 type GeneratorState = {
+  currRepo: string,
   moduleName: string,
   profiles: string[],
   currProfile: string,
-  treeData: TreeDataType,
+  treeData: TreeNode[],
   selectedIdx: number
 }
 
@@ -25,6 +37,7 @@ class Generator extends Component<any, GeneratorState> {
   constructor(props: any) {
     super(props);
     this.state = {
+      currRepo: this.props.params.currRepo,
       moduleName: this.props.params.moduleName,
       profiles: [],
       currProfile: "",
@@ -66,30 +79,58 @@ class Generator extends Component<any, GeneratorState> {
   }
 
   displayCommandTree = () => {
-    const handleClick = (id: NodeModel["id"]) => {
-      id = Number(id)
-      this.setState({ selectedIdx: id })
+    if (this.state.currRepo === "Azure CLI") {
+      axios.get(`/CLI/Az/Main/Modules/${this.state.moduleName}`)
+        .then(res => {
+          console.log(`/CLI/Az/Main/Modules/${this.state.moduleName}`)
+        })
     }
 
-    const handleNameChange = (id: NodeModel["id"], newName: string) => {}
+    const handleDrop = (newTree: NodeModel[]) => {};
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const [selectedNodes, setSelectedNodes] = useState<NodeModel[]>([]);
 
-    const handleDrop = (newTreeData: any, dropOptions: DropOptions) => {}
+    const handleSelect = (node: NodeModel) => {
+      const item = selectedNodes.find((n) => n.id === node.id);
+
+      if (!item) {
+        setSelectedNodes([...selectedNodes, node]);
+      } else {
+        setSelectedNodes(selectedNodes.filter((n) => n.id !== node.id));
+      }
+    };
+
+    const handleClear = (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) {
+        setSelectedNodes([]);
+      }
+    };
 
     return <div className={styles.app}>
       <Tree
         tree={this.state.treeData}
         rootId={0}
-        render={(node: NodeModel<CustomData>, { depth, isOpen, onToggle }) => (
-            <CustomNode node={node} depth={depth} isOpen={isOpen} isSelected={node.id === this.state.selectedIdx} onToggle={onToggle} onClick={handleClick} onSubmit={handleNameChange} editable={true}/>
+        render={(node: NodeModel<CheckData>, {depth, isOpen, onToggle}) => (
+          <CheckNode
+            node={node}
+            depth={depth}
+            isOpen={isOpen}
+            isSelected={!!selectedNodes.find((n) => n.id === node.id)}
+            onToggle={onToggle}
+            onSelect={handleSelect}
+          />
         )}
-        dragPreviewRender={(
-            monitorProps: DragLayerMonitorProps<CustomData>
-        ) => <CustomDragPreview monitorProps={monitorProps} />}
+        dragPreviewRender={(monitorProps: DragLayerMonitorProps<CheckData>) => (
+          <CustomDragPreview monitorProps={monitorProps}/>
+        )}
         onDrop={handleDrop}
         classes={{
           root: styles.treeRoot,
           draggingSource: styles.draggingSource,
           dropTarget: styles.dropTarget,
+        }}
+        rootProps={{
+          onClick: handleClear
         }}
       />
     </div>

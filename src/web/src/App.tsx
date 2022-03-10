@@ -47,7 +47,7 @@ class App extends Component {
           </Route>
           <Route path="module" element={<Target/>}>
             <Route index element={<TargetSelector/>}/>
-            <Route path=":moduleName" element={<Generator/>}/>
+            <Route path=":currRepo/:moduleName" element={<Generator/>}/>
           </Route>
         </Routes>
       </main>
