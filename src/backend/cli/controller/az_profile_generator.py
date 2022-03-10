@@ -55,6 +55,7 @@ class AzProfileGenerator:
         for file in self._removed_files:
             os.remove(file)
         for path, data in self._modified_files.items():
+            os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, 'w') as f:
                 f.write(data)
         self._removed_folders = set()
