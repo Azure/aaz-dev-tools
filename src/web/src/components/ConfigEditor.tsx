@@ -56,6 +56,10 @@ type NumberToString = {
   [index: number]: string
 }
 
+type StringToNumber = {
+  [name: string]: number
+}
+
 type NumberToTreeNode = {
   [index: number]: TreeNode
 }
@@ -94,6 +98,7 @@ type ConfigEditorState = {
   treeData: TreeDataType,
   currentIndex: number,
   indexToCommandGroupName: NumberToString,
+  nameToIndex: StringToNumber,
   indexToCommandGroup: NumberToCommandGroup,
   indexToTreeNode: NumberToTreeNode,
   showSpecSelectorModal: boolean,
@@ -117,6 +122,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       treeData: [],
       currentIndex: 0,
       indexToCommandGroupName: {},
+      nameToIndex: {},
       indexToCommandGroup: {},
       indexToTreeNode: {},
       showSpecSelectorModal: false,
@@ -134,6 +140,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       let namesJoined = commandGroups[commandGroupName].names.join('/')
       this.setState({ currentIndex: this.state.currentIndex + 1 })
       this.state.indexToCommandGroupName[this.state.currentIndex] = namesJoined
+      this.state.nameToIndex[namesJoined] = this.state.currentIndex
       this.state.indexToCommandGroup[this.state.currentIndex] = commandGroups[commandGroupName]
 
       let treeNode: TreeNode = {
@@ -166,6 +173,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         }
         const currentIndex = this.state.currentIndex
         this.state.indexToCommandGroupName[currentIndex] = namesJoined
+        this.state.nameToIndex[namesJoined] = this.state.currentIndex
         this.state.treeData.push(treeNode)
         this.state.indexToTreeNode[currentIndex] = treeNode
         return this.getCommand(currentIndex, names.slice(0, names.length - 1).join('/'), names[names.length - 1])
@@ -229,6 +237,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       treeData: [],
       currentIndex: 0,
       indexToCommandGroupName: {},
+      nameToIndex: {},
       indexToCommandGroup: {},
       indexToTreeNode: {}
     })
@@ -352,7 +361,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     const newNameJoined = targetNames.join(' ')
 
     // console.log(url)
-    // console.log(newNameJoined)
+    // console.log(targetNames)
 
     return axios.post(url, { name: newNameJoined })
       .then(res => {
@@ -361,7 +370,11 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       })
       .then(() => {
         // console.log(this.state)
-        this.setState({ selectedIndex: Number(dragSourceId) })
+        let newIndex = -1
+        if (this.state.nameToIndex[targetNames.join('/')]) {
+          newIndex = this.state.nameToIndex[targetNames.join('/')]
+        }
+        this.setState({ selectedIndex: newIndex })
         //         console.log(this.state)
       })
       .catch(err => {
