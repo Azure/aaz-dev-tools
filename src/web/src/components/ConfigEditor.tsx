@@ -1,9 +1,8 @@
 import React, { Component, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom"
-import { Row, Col, Navbar, Nav, Container, ListGroup, Button } from "react-bootstrap"
-import type { WrapperProp } from "./SpecSelector"
-import {SpecSelector} from "./SpecSelector";
+import { Row, Col, Navbar, Nav, Button, Alert} from "react-bootstrap"
+import { SpecSelector } from "./SpecSelector";
 
 import { Set } from "typescript";
 
@@ -15,19 +14,23 @@ import { CustomDragPreview } from "./TreeView/CustomDragPreview";
 import styles from "./TreeView/App.module.css";
 
 import { CommandGroupDetails } from "./CommandGroupDetails"
+import { ArgumentDetails } from "./ArgumentDetails"
 
 type Argument = {
-  idPart: string,
-  help?: { short: string },
   options: string[],
-  required: boolean,
-  type: string
+  type: string,
+  help?: { short: string },
+  required?: boolean,
+  idPart?: string,
+  args?: Argument[]
 }
 
-type Args = Argument[]
+type ArgGroups = {
+  args: Argument[],
+  name: string
+}[]
 
 type Command = {
-  argGroups?: Args[],
   help: { short: string },
   names: string[],
   resources: {},
@@ -43,7 +46,8 @@ type CommandGroup = {
   commands?: Commands,
   names: string[],
   help?: HelpType,
-  examples?: ExampleType[]
+  examples?: ExampleType[],
+  argGroups?: ArgGroups
 }
 
 type CommandGroups = {
@@ -83,7 +87,7 @@ type HelpType = {
 
 type ExampleType = {
   name: string,
-  lines: string[]
+  commands: string[]
 }
 
 type ConfigEditorState = {
@@ -94,7 +98,16 @@ type ConfigEditorState = {
   indexToCommandGroupName: NumberToString,
   indexToCommandGroup: NumberToCommandGroup,
   indexToTreeNode: NumberToTreeNode,
-  showSpecSelectorModal: boolean
+  showSpecSelectorModal: boolean,
+  showAlert: boolean,
+  alertVariant: string,
+  alertText: string
+}
+
+type WrapperProp = {
+  params: {
+    workspaceName: string
+  }
 }
 
 class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
@@ -109,10 +122,13 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       indexToCommandGroup: {},
       indexToTreeNode: {},
       showSpecSelectorModal: false,
+      showAlert: false,
+      alertVariant: "",
+      alertText: ""
     }
   }
 
-  parseCommandGroup = (depth: number, parentName: string, parentIndex: number, commandGroups?: CommandGroups) => {
+  parseCommandGroup = (depth: number, parentIndex: number, commandGroups?: CommandGroups) => {
     if (!commandGroups) {
       return Promise.resolve()
     }
@@ -133,7 +149,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       this.state.indexToTreeNode[this.state.currentIndex] = treeNode
 
       let commandGroupIndex = this.state.currentIndex
-      let commandGroupPromise: Promise<any> = this.parseCommandGroup(depth + 1, namesJoined, this.state.currentIndex, commandGroups[commandGroupName].commandGroups)
+      let commandGroupPromise: Promise<any> = this.parseCommandGroup(depth + 1, this.state.currentIndex, commandGroups[commandGroupName].commandGroups)
       let commands = commandGroups[commandGroupName].commands
       if (!commands) {
         return commandGroupPromise
@@ -177,17 +193,18 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   getSwagger = () => {
     return axios.get(`/AAZ/Editor/Workspaces/${this.props.params.workspaceName}`)
       .then(res => {
-        console.log(res.data)
+        // console.log(res.data)
         let commandGroups: CommandGroups = res.data.commandTree.commandGroups
-        if (!commandGroups){
-          this.setState({showSpecSelectorModal: true})
-          return 
+        if (!commandGroups) {
+          this.setState({ showSpecSelectorModal: true })
+          return
         }
         this.setState({ commandGroups: commandGroups })
         let depth = 0
-        return this.parseCommandGroup(depth, 'aaz', 0, commandGroups)
+        return this.parseCommandGroup(depth, 0, commandGroups)
           .then(() => {
             this.markHasChildren()
+            console.log(this.state.indexToCommandGroup)
             return Promise.resolve()
           })
       })
@@ -310,16 +327,6 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     return type === 'Command'
   }
 
-  displayCommandDetail = () => {
-    // console.log(this.state.selectedIndex)
-    // console.log(this.state.indexToCommandGroup)
-    // console.log(this.state.indexToCommandGroup[this.state.selectedIndex])
-    if (this.state.selectedIndex !== -1 && this.state.indexToCommandGroup[this.state.selectedIndex]) {
-      return <CommandGroupDetails commandGroup={this.state.indexToCommandGroup[this.state.selectedIndex]} id={this.state.selectedIndex} onHelpChange={this.handleHelpChange} onExampleChange={this.handleExampleChange} isCommand={this.isCommand(this.state.selectedIndex)} />
-    }
-    return <div></div>
-  }
-
   handleDrop = (newTreeData: any, dropOptions: DropOptions) => {
     let { dragSourceId, dropTargetId } = dropOptions
 
@@ -368,6 +375,8 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     id = Number(id)
     // console.log(this.state.indexToCommandGroupName[id])
     this.setState({ selectedIndex: id })
+    // console.log(this.state.selectedIndex)
+    // console.log(this.state.indexToCommandGroup[this.state.selectedIndex])
   }
 
   displayCommandGroupsTree = () => {
@@ -376,7 +385,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         tree={this.state.treeData}
         rootId={0}
         render={(node: NodeModel<CustomData>, { depth, isOpen, onToggle }) => (
-          <CustomNode node={node} depth={depth} isOpen={isOpen} onToggle={onToggle} onClick={this.handleClick} onSubmit={this.handleNameChange} />
+          <CustomNode node={node} depth={depth} isOpen={isOpen} isSelected={node.id === this.state.selectedIndex} onToggle={onToggle} onClick={this.handleClick} onSubmit={this.handleNameChange} editable={true} />
         )}
         dragPreviewRender={(
           monitorProps: DragLayerMonitorProps<CustomData>
@@ -391,34 +400,82 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     </div>
   }
 
+  displayCommandDetail = () => {
+    // console.log(this.state.selectedIndex)
+    // console.log(this.state.indexToCommandGroup)
+    // console.log(this.state.indexToCommandGroup[this.state.selectedIndex])
+    if (this.state.selectedIndex !== -1 && this.state.indexToCommandGroup[this.state.selectedIndex]) {
+      return <CommandGroupDetails commandGroup={this.state.indexToCommandGroup[this.state.selectedIndex]} id={this.state.selectedIndex} onHelpChange={this.handleHelpChange} onExampleChange={this.handleExampleChange} isCommand={this.isCommand(this.state.selectedIndex)} />
+    }
+    return <div></div>
+  }
+
+  handleArgumentNameChange = () => {
+
+  }
+
+  displayArgumentDetail = () => {
+    if (!this.state.indexToCommandGroup[this.state.selectedIndex]) {
+      return <div />
+    }
+    let argGroups = this.state.indexToCommandGroup[this.state.selectedIndex].argGroups
+    return argGroups
+      ?
+      <ArgumentDetails argGroups={this.state.indexToCommandGroup[this.state.selectedIndex].argGroups!} id={this.state.selectedIndex} onNameChange={this.handleArgumentNameChange} />
+      :
+      <></>
+  }
+
+  handleCloseModal = () => {
+    this.setState({ showSpecSelectorModal: false })
+  }
+
+  handleGenerate = () => {
+    const url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/Generate`
+    axios.post(url)
+      .then(res=>{
+        this.setState({showAlert:true, alertText:"Successfully generated configuration.", alertVariant:"success"})
+        window.setTimeout(()=>{
+          this.setState({showAlert:false})
+        },2000)
+      })
+      .catch(err => {
+        console.error(err.response)
+        this.setState({showAlert:true, alertText:"Need to complete all the short help fields", alertVariant:"danger"})
+        window.setTimeout(()=>{
+          this.setState({showAlert:false})
+        },2000)
+      })
+  }
+
   render() {
     return <div className="m-1 p-1">
       <Navbar bg="dark" variant="dark">
-          <Navbar.Brand href={window.location.href} >Editor</Navbar.Brand>
-          <Navbar.Brand>
-            <Button variant='dark' onClick={()=>{this.setState({showSpecSelectorModal:true})}}>
-              Resource Selection
-            </Button>
-          </Navbar.Brand>
-          <Nav className="me-auto"/>
+        <Navbar.Brand href={window.location.href} >Workspace: {this.props.params.workspaceName}</Navbar.Brand>
+        <Button variant='dark' onClick={() => { this.setState({ showSpecSelectorModal: true }) }}>
+          Add Swagger
+        </Button>
+        <Button variant='dark' onClick={this.handleGenerate}>
+          Generate Configuration
+        </Button>
+        <Nav className="me-auto" />
       </Navbar>
+      {this.state.showAlert&&<Alert variant={this.state.alertVariant} onClose={() => this.setState({showAlert: false})}>
+        {this.state.alertText}
+      </Alert>}
       <Row>
-        <Col>
-          <h1>
-            Workspace Name: {this.props.params.workspaceName}
-          </h1>
-        </Col>
-      </Row>
-      <Row>
-        <Col xxl="3" style={{overflow: `auto`}}>
+        <Col xxl="3" style={{ overflow: `auto` }}>
           <this.displayCommandGroupsTree />
         </Col>
         <Col xxl="9">
           <this.displayCommandDetail />
+          <this.displayArgumentDetail />
         </Col>
       </Row>
-      {this.state.showSpecSelectorModal?<SpecSelector/>:<></>}
 
+
+      {this.state.showSpecSelectorModal ? <SpecSelector onCloseModal={this.handleCloseModal} /> : <></>}
+      
     </div>
   }
 }
@@ -431,4 +488,4 @@ const ConfigEditorWrapper = (props: any) => {
 
 export { ConfigEditorWrapper as ConfigEditor };
 
-export type { CommandGroup, HelpType, ExampleType };
+export type { CommandGroup, HelpType, ExampleType, ArgGroups, TreeDataType, TreeNode, Argument };

@@ -1,12 +1,11 @@
-import React, { useRef, useState } from "react";
+import React, { useState, useEffect } from "react";
 import IconButton from "@mui/material/IconButton";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import TextareaAutosize from '@mui/base/TextareaAutosize';
-import styles from "./TreeView/CustomNode.module.css";
-import { NodeModel, useDragOver } from "@minoru/react-dnd-treeview";
+import { NodeModel } from "@minoru/react-dnd-treeview";
 import { Row, Col, ListGroup, Form, Button } from "react-bootstrap"
 import type { CommandGroup, HelpType, ExampleType } from "./ConfigEditor"
 
@@ -20,6 +19,7 @@ type Props = {
     onExampleChange: (id: NodeModel["id"], examples: ExampleType[]) => void
 };
 
+
 export const CommandGroupDetails: React.FC<Props> = (props) => {
     const { names, help } = props.commandGroup;
     let { examples } = props.commandGroup
@@ -31,9 +31,9 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
 
 
     const shortHelpPlaceholder = "Create a new resource group"
-    const longHelpPlaceholder = "Create a new resource group for something\nDo something else"
+    const longHelpPlaceholder = "Create a new resource group\nShow details of the new resource group"
 
-    const exampleNamePlaceholder = "Create a new resource group"
+    const exampleNamePlaceholder = "Create a new example"
     const exampleContentPlaceholder = "az group create\naz group list"
 
     if (help) {
@@ -67,7 +67,7 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
     const onExampleNameChange = (exampleName: string, index: number) => {
         let exampleObj: ExampleType = {
             name: exampleName,
-            lines: examples![index].lines
+            commands: examples![index].commands
         }
         examples![index] = exampleObj
         props.onExampleChange(id, examples!)
@@ -76,7 +76,7 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
     const onExampleContentChange = (exampleContent: string, index: number) => {
         let exampleObj: ExampleType = {
             name: examples![index].name,
-            lines: exampleContent.split('\n')
+            commands: exampleContent.split('\n')
         }
         examples![index] = exampleObj
         props.onExampleChange(id, examples!)
@@ -103,6 +103,7 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
         placeholder: string,
         initEditing: boolean,
         minRow: number,
+        editable: boolean,
         onSubmit: (value: string) => void
     }
 
@@ -114,6 +115,9 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
 
 
         const handleDoubleClick = (event: React.MouseEvent) => {
+            if (!props.editable){
+                return
+            }
             event.stopPropagation();
             if (!editing) {
                 setEditing(true)
@@ -136,12 +140,10 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
             setChangingValue(displayValue)
         }
 
-
-
         return (
             <div >
                 <Row className="align-items-top ">
-                    <Col xxl="1">
+                    <Col xxl="2">
                         <h6>{prefix}</h6>
                     </Col>
                     {!editing
@@ -183,16 +185,17 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
         )
     }
 
+
     const ExampleList = () => {
         return examples ? (<div>
             {examples.map((example, index) => {
                 const name = example.name
-                const content = example.lines.join('\n')
+                const content = example.commands.join('\n')
                 return <div key={index}>
                     <Row>
                         <Col xxl='11'>
-                            <InputArea value={name} prefix="Name: " initEditing={name === ""} onSubmit={(exampleName: string) => { onExampleNameChange(exampleName, index) }} minRow={1} width="35em" placeholder={exampleNamePlaceholder} />
-                            <InputArea value={content} prefix="Commands:" initEditing={content === ""} onSubmit={(exampleContent: string) => { onExampleContentChange(exampleContent, index) }} minRow={3} width="35em" placeholder={exampleContentPlaceholder} />
+                            <InputArea value={name} prefix="Name: " initEditing={name === ""} editable={true} onSubmit={(exampleName: string) => { onExampleNameChange(exampleName, index) }} minRow={1} width="35em" placeholder={exampleNamePlaceholder} />
+                            <InputArea value={content} prefix="Commands:" initEditing={content === ""} editable={true} onSubmit={(exampleContent: string) => { onExampleContentChange(exampleContent, index) }} minRow={3} width="35em" placeholder={exampleContentPlaceholder} />
                         </Col>
                         <Col xxl='1'>
                             <IconButton onClick={() => { onExampleDelete(index) }}>
@@ -215,7 +218,7 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
             setCreatingExample(false)
             onExampleCreate({
                 name: name,
-                lines: commands.split('\n')
+                commands: commands.split('\n')
             })
         }
 
@@ -225,18 +228,18 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
 
         return <div>
             <Row>
-                <Col xxl='1'>
+                <Col xxl='2'>
                     <h6>Name:</h6>
                 </Col>
-                <Col xxl="11">
+                <Col xxl="10">
                     <TextareaAutosize minRows={1} style={{ width: `35em` }} value={name} onChange={e => setName(e.target.value)} placeholder={exampleNamePlaceholder} />
                 </Col>
             </Row>
             <Row>
-                <Col xxl='1'>
+                <Col xxl='2'>
                     <h6>Commands:</h6>
                 </Col>
-                <Col xxl="11">
+                <Col xxl="10">
                     <TextareaAutosize minRows={3} style={{ width: `35em` }} value={commands} onChange={e => setCommands(e.target.value)} placeholder={exampleContentPlaceholder} />
                     <IconButton onClick={handleSubmitExample} disabled={name === "" || commands === ""}>
                         <CheckIcon />
@@ -255,9 +258,9 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
     return (<div>
         <div>
             {/* <InputArea name={names.join(' ')} prefix="Name: aaz" initEditing={false} onSubmit={onNameChange} editable={false}/> */}
-            <h5>Name: aaz {names.join(' ')}</h5>
-            <InputArea value={shortHelp} prefix="Short Help: " initEditing={shortHelp === ""} onSubmit={onShortHelpChange} minRow={1} width="35em" placeholder={shortHelpPlaceholder} />
-            <InputArea value={longHelp} prefix="Long Help: " initEditing={longHelp === ""} onSubmit={onLongHelpChange} minRow={3} width="35em" placeholder={longHelpPlaceholder} />
+            <h5>Name: az {names.join(' ')}</h5>
+            <InputArea value={shortHelp} prefix="Short Help: " initEditing={shortHelp === ""} editable={true} onSubmit={onShortHelpChange} minRow={1} width="35em" placeholder={shortHelpPlaceholder} />
+            <InputArea value={longHelp} prefix="Long Help: " initEditing={longHelp === ""} editable={true} onSubmit={onLongHelpChange} minRow={3} width="35em" placeholder={longHelpPlaceholder} />
             {isCommand &&
                 <div>
                     <h5>Examples:</h5>

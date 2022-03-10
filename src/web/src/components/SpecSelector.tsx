@@ -4,12 +4,11 @@ import { useParams } from "react-router-dom"
 import { ListGroup, Row, Col, Button, Dropdown, DropdownButton, Spinner, Modal, Navbar, Nav } from "react-bootstrap"
 import { Set } from "typescript";
 
-type ParamsType = {
-  workspaceName: String
-}
-
 type WrapperProp = {
-  params: ParamsType
+  params: {
+    workspaceName: string
+  },
+  onCloseModal: () => void
 }
 
 type SpecSelectState = {
@@ -241,17 +240,11 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
     if (sortDesc) {
       instanceNames.reverse()
     }
-    return <div>
+    return <div style={{ maxHeight: this.calculatePageHeight(140), overflow: `auto` }}>
       {instanceNames.map((instanceName) => {
         return <Dropdown.Item eventKey={instanceName} key={instanceName}>{instanceName}</Dropdown.Item>
       })}
     </div>
-  }
-
-  instanceHeight = (instanceDict: {}, instance: string) => {
-    let instanceList = Object.keys(instanceDict)
-    instanceList.sort((a, b) => a.localeCompare(b))
-    return 41 * instanceList.indexOf(instance)
   }
 
   ListModules = () => {
@@ -284,14 +277,22 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
     return this.listInstances(this.state.versions, true)
   }
 
+  calculatePageHeight = (subtractAmount: number) => {
+    const body = document.body;
+    const html = document.documentElement;
+
+    return (Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight) - subtractAmount).toString() + 'px'
+  }
+
   ListResources = () => {
     if (!this.state.selectedVersion) {
       return <></>
     }
     let resourceIds = this.state.versions[this.state.selectedVersion]
     resourceIds.sort((a, b) => a.localeCompare(b))
+
     return <div>
-      <ListGroup>
+      <ListGroup style={{ maxHeight: this.calculatePageHeight(130), overflow: `auto` }}>
         {resourceIds.map((resourceId) => {
           return <ListGroup.Item key={resourceId}><input type="checkbox" checked={this.state.prevResources.has(resourceId) || this.state.selectedResources.has(resourceId)} disabled={this.state.prevResources.has(resourceId)} onChange={this.handleSelectResource} id={resourceId} /> {resourceId}</ListGroup.Item>
         })}
@@ -300,6 +301,10 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
   }
 
   saveResourcesAndVersion = () => {
+    if (this.state.selectedResources.size === 0) {
+      this.props.onCloseModal()
+      return
+    }
     const finalResources: Swagger = {
       module: this.state.selectedModule,
       version: this.state.selectedVersion,
@@ -326,7 +331,7 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
   }
 
   resetResourcesAndVersion = () => {
-    window.location.href = `/workspace/${this.props.params.workspaceName}`
+    this.props.onCloseModal()
   }
 
   DropdownButtonRow = () => {
@@ -369,8 +374,8 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
 
   render() {
     return <div className="m-1 p-1">
-      <Modal show={true} backdrop="static" size='xl'>
-        <Modal.Body>
+      <Modal show={true} backdrop="static" size='xl' >
+        <Modal.Body >
           <this.DropdownButtonRow />
           <this.ListResources />
         </Modal.Body>
@@ -386,4 +391,3 @@ const SpecSelectorWrapper = (props: any) => {
 }
 
 export { SpecSelectorWrapper as SpecSelector };
-export type { WrapperProp }
