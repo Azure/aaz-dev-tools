@@ -7,6 +7,7 @@ from command.controller.workspace_manager import WorkspaceManager
 from command.tests.common import CommandTestCase, workspace_name
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.plane import PlaneEnum
+from utils.base64 import b64encode_str
 
 
 class APIEditorTest(CommandTestCase):
@@ -362,6 +363,33 @@ class APIEditorTest(CommandTestCase):
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
             self.assertTrue(data['commands']['create']['stage'] == AAZStageEnum.Experimental)
+
+            # try delete resource with CRUD
+            resource = data['commands']['create']['resources'][0]
+            resource_id = resource['id']
+            resource_version = resource['version']
+
+            rv = c.delete(f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(resource_version)}")
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue('create' not in data['commands'] and 'show' not in data['commands'] and 'update' not in data['commands'] and 'delete' not in data['commands'])
+
+            # try delete one resource in list
+            self.assertTrue(len(data['commands']['list']['resources']) > 1)
+            resource = data['commands']['list']['resources'][0]
+            resource_id = resource['id']
+            resource_version = resource['version']
+
+            rv = c.delete(f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(resource_version)}")
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue('list' not in data['commands'])
 
     @workspace_name("test_workspace_command_merge")
     def test_workspace_command_merge(self, ws_name):

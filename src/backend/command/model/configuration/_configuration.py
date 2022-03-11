@@ -8,7 +8,6 @@ from ._resource import CMDResource
 
 class CMDConfiguration(Model):
     # properties as nodes
-    timestamp = UTCDateTimeType(required=True)
     plane = PlaneField(required=True)
 
     resources = ListType(ModelType(CMDResource), min_size=1, required=True)  # resources contained in configuration file

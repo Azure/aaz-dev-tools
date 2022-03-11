@@ -393,7 +393,7 @@ class AAZSpecsManager:
         command_groups = set()
 
         tree_path = self.get_tree_file_path()
-        update_files[tree_path] = json.dumps(self.tree.to_primitive(), indent=2)
+        update_files[tree_path] = json.dumps(self.tree.to_primitive(), indent=2, sort_keys=True)
 
         # command
         for cmd_names in sorted(self._modified_commands):

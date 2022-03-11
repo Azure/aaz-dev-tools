@@ -187,13 +187,11 @@ class WorkspaceManager:
                 if aaz_node is not None:
                     new_node = CMDCommandTreeNode({
                         "names": node_names[:idx + 1],
-                        "stage": aaz_node.stage,
                         "help": aaz_node.help.to_primitive()
                     })
                 else:
                     new_node = CMDCommandTreeNode({
                         "names": node_names[:idx + 1],
-                        "stage": node.stage,
                     })
                 node.command_groups[name] = new_node
             node = node.command_groups[name]
@@ -525,9 +523,6 @@ class WorkspaceManager:
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if not cfg_editor:
             return False
-        if len(cfg_editor.resources) > 1:
-            # TODO: handler to remove one resource from multiple resource cfg_editor
-            pass
         self.remove_cfg(cfg_editor)
         return True
 
@@ -620,13 +615,15 @@ class WorkspaceManager:
         return leaf
 
     def generate_to_aaz(self):
-        generate_timestamp = datetime.utcnow()
+        # update configurations
         for ws_leaf in self.iter_command_tree_leaves():
             editor = self.load_cfg_editor_by_command(ws_leaf)
             cfg = editor.cfg
-            cfg.timestamp = generate_timestamp
             self.aaz_specs.update_resource_cfg(cfg)
+        # update commands
+        for ws_leaf in self.iter_command_tree_leaves():
             self.aaz_specs.update_command_by_ws(ws_leaf)
+        # update command groups
         for ws_node in self.iter_command_tree_nodes():
             if ws_node == self.ws.command_tree:
                 # ignore root node

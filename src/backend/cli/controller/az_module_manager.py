@@ -62,11 +62,74 @@ class AzModuleManager:
             generator.generate()
         for generator in generators.values():
             generator.save()
+        for patch_file, file_data in self._patch_module(mod_name):
+            os.makedirs(os.path.dirname(patch_file), exist_ok=True)
+            with open(patch_file, 'w') as f:
+                f.write(file_data)
         module = CLIModule()
         module.name = mod_name
         module.folder = self.get_mod_path(mod_name)
         module.profiles = profiles
         return module
+
+    _def_load_command_table = re.compile("^(\s+)def\s+load_command_table\(\s*self,\s+(\w+)\s*\):(.*)?$")
+    _def_import_load_aaz = re.compile("\s+(import\s+(\w+.)*load_aaz_command_table)\s*$")
+
+    def _patch_module(self, mod_name):
+        file = os.path.join(os.path.dirname(self.get_aaz_path(mod_name)), '__init__.py')
+        if not os.path.exists(file) or not os.path.isfile(file):
+            logger.error(f"Patch Module failed: Cannot find file: {file}")
+            return
+
+        with open(file, 'r') as f:
+            lines = f.read().split('\n')
+
+        start_line = None
+        insert_after = None
+        args_name = None
+        space = None
+        for idx in range(len(lines)):
+            line = lines[idx]
+            if self._def_import_load_aaz.findall(line):
+                # already patched
+                logger.debug(f"Module is already patched")
+                return
+            if start_line is None:
+                def_match = self._def_load_command_table.match(line)
+                if def_match:
+                    start_line = idx
+                    insert_after = idx
+                    space = def_match[1]
+                    args_name = def_match[2]
+                    if args_name == '_':
+                        args_name = 'args'
+                        lines[idx] = "    def load_command_table(self, args):" + def_match[3]
+            else:
+                if line.startswith(f"{space}{space}return") or line.startswith(f"{space}def ") or not line.startswith(space):
+                    # finish the load_command_table function
+                    break
+                if line.startswith(f"{space}{space}from ") or line.startswith(f"{space}{space}import "):
+                    insert_after = idx
+        if start_line is None:
+            logger.error(f"Patch Module failed: Cannot find load_command_table function in file: {file}")
+            return
+
+        insert_lines = [
+            f"{space}{space}from azure.cli.core.aaz import load_aaz_command_table",
+            f"{space}{space}try:",
+            f"{space}{space}{space}from . import aaz",
+            f"{space}{space}except ImportError:",
+            f"{space}{space}{space}aaz = None",
+            f"{space}{space}if aaz:",
+            f"{space}{space}{space}load_aaz_command_table(",
+            f"{space}{space}{space}{space}loader=self,",
+            f"{space}{space}{space}{space}aaz_pkg_name=aaz.__name__,",
+            f"{space}{space}{space}{space}args={args_name}",
+            f"{space}{space}{space})"
+        ]
+        lines = lines[:insert_after+1] + insert_lines + lines[insert_after+1:]
+
+        yield file, '\n'.join(lines)
 
     def _load_profile(self, profile_name, aaz_path):
         profile = CLIAtomicProfile()
@@ -395,9 +458,6 @@ class AzMainManager(AzModuleManager):
 
         return module
 
-    def setup_aaz_folder(self, mod_name):
-        pass
-
 
 class AzExtensionManager(AzModuleManager):
 
@@ -485,7 +545,7 @@ class AzExtensionManager(AzModuleManager):
                 })
         return modules
 
-    def create_mod_azext_metadata(self, mod_name):
+    def create_or_update_mod_azext_metadata(self, mod_name):
         from packaging import version
         ext_path = self.get_mod_ext_path(mod_name)
         metadata_path = os.path.join(ext_path, 'azext_metadata.json')
@@ -501,6 +561,10 @@ class AzExtensionManager(AzModuleManager):
                 "azext.minCliCoreVersion": str(Config.MIN_CLI_CORE_VERSION),
             }
         return metadata
+
+    def update_module(self, mod_name, profiles):
+        super().update_module(mod_name, profiles)
+        self.create_or_update_mod_azext_metadata(mod_name)
 
     def create_new_mod(self, mod_name):
         if self.folder_is_module:
@@ -589,7 +653,7 @@ class AzExtensionManager(AzModuleManager):
         file_path = os.path.join(ext_path, 'azext_metadata.json')
         if os.path.exists(file_path):
             raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
-        ext_metadata = self.create_mod_azext_metadata(mod_name)
+        ext_metadata = self.create_or_update_mod_azext_metadata(mod_name)
         new_files[file_path] = json.dumps(ext_metadata, indent=4, sort_keys=True)
 
         # test_folder
@@ -637,6 +701,3 @@ class AzExtensionManager(AzModuleManager):
                 profile.to_primitive()
             ],
         }
-
-    def setup_aaz_folder(self, mod_name):
-        pass
