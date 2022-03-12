@@ -2,6 +2,9 @@ from cli.tests.common import CommandTestCase
 from utils.config import Config
 from utils.base64 import b64encode_str
 from utils.stage import AAZStageEnum
+from cli.controller.az_module_manager import AzMainManager, AzExtensionManager
+import os
+import shutil
 
 
 class APIAzTest(CommandTestCase):
@@ -123,3 +126,45 @@ class APIAzTest(CommandTestCase):
                     'version': '2021-04-01-preview'
                 }
             ])
+
+    def test_create_new_module_in_main(self):
+        mod_name = "aaz-new-module"
+        manager = AzMainManager()
+        path = manager.get_mod_path(mod_name)
+        if os.path.exists(path):
+            shutil.rmtree(path, ignore_errors=True)
+        try:
+            with self.app.test_client() as c:
+                rv = c.post(f"/CLI/Az/Main/Modules", json={
+                    "name": mod_name
+                })
+                self.assertTrue(rv.status_code == 200)
+                data = rv.get_json()
+                self.assertTrue(data['name'] == mod_name)
+                self.assertTrue(data['folder'] == path)
+                for profile_name in Config.CLI_PROFILES:
+                    self.assertTrue(profile_name in data['profiles'])
+                    self.assertTrue(data['profiles'][profile_name] == {'name': profile_name})
+        finally:
+            shutil.rmtree(path, ignore_errors=True)
+
+    def test_create_new_module_in_extension(self):
+        mod_name = "aaz-new-extension"
+        manager = AzExtensionManager()
+        path = manager.get_mod_path(mod_name)
+        if os.path.exists(path):
+            shutil.rmtree(path, ignore_errors=True)
+        try:
+            with self.app.test_client() as c:
+                rv = c.post(f"/CLI/Az/Extension/Modules", json={
+                    "name": mod_name
+                })
+                self.assertTrue(rv.status_code == 200)
+                data = rv.get_json()
+                self.assertTrue(data['name'] == mod_name)
+                self.assertTrue(data['folder'] == path)
+                for profile_name in Config.CLI_PROFILES:
+                    self.assertTrue(profile_name in data['profiles'])
+                    self.assertTrue(data['profiles'][profile_name] == {'name': profile_name})
+        finally:
+            shutil.rmtree(path, ignore_errors=True)

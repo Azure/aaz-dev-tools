@@ -9,8 +9,11 @@ class CliExtensionManagerTest(CommandTestCase):
 
     def test_create_new_extension(self):
         mod_name = "new-extension"
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name)
+        if os.path.exists:
+            shutil.rmtree(path, ignore_errors=True)
         manager = AzExtensionManager()
-        manager.get_mod_path = lambda _: os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name)
+        manager.get_mod_path = lambda _: path
         manager.create_new_mod(mod_name)
 
     def test_patch_aaz_extension(self):

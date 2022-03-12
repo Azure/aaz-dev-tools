@@ -7,9 +7,8 @@ from utils.stage import AAZStageEnum
 
 class CommandTestCase(ApiTestCase):
 
-    def test_prepare_aaz(self):
-        self.prepare_aaz()
-        print("Ok")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def prepare_aaz(self):
         self.prepare_edge_order_aaz_2020_12_01_preview()

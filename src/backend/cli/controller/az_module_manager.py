@@ -50,7 +50,7 @@ class AzModuleManager:
 
         return module
 
-    def update_module(self, mod_name, profiles):
+    def update_module(self, mod_name, profiles, **kwargs):
         aaz_folder = self.get_aaz_path(mod_name)
         generators = {}
         for profile_name, profile in profiles.items():
@@ -562,8 +562,8 @@ class AzExtensionManager(AzModuleManager):
             }
         return metadata
 
-    def update_module(self, mod_name, profiles):
-        super().update_module(mod_name, profiles)
+    def update_module(self, mod_name, profiles, **kwargs):
+        super().update_module(mod_name, profiles, **kwargs)
         self.create_or_update_mod_azext_metadata(mod_name)
 
     def create_new_mod(self, mod_name):
@@ -691,13 +691,12 @@ class AzExtensionManager(AzModuleManager):
             with open(path, 'w') as f:
                 f.write(data)
 
-        profile = CLIAtomicProfile()
-        profile.name = Config.CLI_DEFAULT_PROFILE
+        module = CLIModule()
+        module.name = mod_name
+        module.folder = self.get_mod_path(mod_name)
 
-        return {
-            "name": mod_name,
-            "folder": mod_path,
-            "profiles": [
-                profile.to_primitive()
-            ],
-        }
+        module.profiles = {}
+        for profile_name in Config.CLI_PROFILES:
+            module.profiles[profile_name] = self._load_profile(profile_name, self.get_aaz_path(mod_name))
+
+        return module
