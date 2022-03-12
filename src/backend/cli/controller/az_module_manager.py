@@ -218,7 +218,7 @@ class AzModuleManager:
         command_group = CLIAtomicCommandGroup()
         command_group.names = [*names]
         command_group.help = CLICommandGroupHelp()
-        command_group.help.short = aaz_cg.help.shrot
+        command_group.help.short = aaz_cg.help.short
         if aaz_cg.help.lines:
             command_group.help.long = '\n'.join(aaz_cg.help.lines)
         return command_group

@@ -4,6 +4,7 @@ from utils.config import Config
 from utils import exceptions
 from cli.controller.az_module_manager import AzModuleManager, AzMainManager, AzExtensionManager
 from cli.model.atomic import CLIModule
+from command.controller.specs_manager import AAZSpecsManager
 
 
 bp = Blueprint('az', __name__, url_prefix='/CLI/Az')
@@ -16,6 +17,11 @@ def az_profiles():
 
 @bp.route("/AAZ/Specs/CommandTree/Nodes/<names_path:node_names>/Transfer", methods=("POST", ))
 def az_utils_nodes(node_names):
+    if node_names[0] != AAZSpecsManager.COMMAND_TREE_ROOT_NAME:
+        raise exceptions.ResourceNotFind("Command group not exist")
+    if len(node_names) < 2:
+        raise exceptions.ResourceNotFind(f"CommandGroup '{' '.join(node_names)}' not find.")
+    node_names = node_names[1:]
     manager = AzModuleManager()
     command_group = manager.build_command_group_from_aaz(*node_names)
     if command_group is None:
@@ -26,6 +32,9 @@ def az_utils_nodes(node_names):
 
 @bp.route("/AAZ/Specs/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Versions/<base64:version_name>/Transfer", methods=("POST", ))
 def az_utils_leaves(node_names, leaf_name, version_name):
+    if node_names[0] != AAZSpecsManager.COMMAND_TREE_ROOT_NAME:
+        raise exceptions.ResourceNotFind("Command group not exist")
+    node_names = node_names[1:]
     manager = AzModuleManager()
     command = manager.build_command_from_aaz(*node_names, leaf_name, version_name=version_name)
     if command is None:
