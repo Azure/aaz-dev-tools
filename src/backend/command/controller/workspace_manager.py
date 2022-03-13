@@ -419,27 +419,30 @@ class WorkspaceManager:
             new_name = f"{name}-untitled{idx}"
         return new_name
 
-    def add_new_resources_by_swagger(self, mod_names, version, resource_ids, *root_node_names):
+    def add_new_resources_by_swagger(self, mod_names, version, resources, *root_node_names):
         root_node = self.find_command_tree_node(*root_node_names)
         if not root_node:
             raise exceptions.InvalidAPIUsage(f"Command Group not exist: '{' '.join(root_node_names)}'")
 
         swagger_resources = []
+        resource_options = []
         used_resource_ids = set()
-        for resource_id in resource_ids:
-            if resource_id in used_resource_ids:
+        for r in resources:
+            if r['id'] in used_resource_ids:
                 continue
-            if self.check_resource_exist(resource_id):
-                raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {resource_id}")
-            swagger_resources.append(self.swagger_specs.get_resource_in_version(
-                self.ws.plane, mod_names, resource_id, version))
-            used_resource_ids.update(resource_id)
+            if self.check_resource_exist(r['id']):
+                raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {r['id']}")
+            swagger_resource = self.swagger_specs.get_resource_in_version(
+                self.ws.plane, mod_names, r['id'], version)
+            swagger_resources.append(swagger_resource)
+            resource_options.append(r.get("options", {}))
+            used_resource_ids.update(r['id'])
 
         self.swagger_command_generator.load_resources(swagger_resources)
 
         cfg_editors = []
-        for resource in swagger_resources:
-            command_group = self.swagger_command_generator.create_draft_command_group(resource)
+        for resource, options in zip(swagger_resources, resource_options):
+            command_group = self.swagger_command_generator.create_draft_command_group(resource, **options)
             assert not command_group.command_groups, "The logic to support sub command groups is not supported"
             cfg_editors.append(WorkspaceCfgEditor.new_cfg(
                 plane=self.ws.plane,
