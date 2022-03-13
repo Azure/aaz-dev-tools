@@ -1,12 +1,13 @@
+import re
 
+import inflect
+from utils.case import to_camel_case
 
-from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
-    CMDArraySchema, CMDArraySchemaBase, CMDSchemaEnumItem, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema
 from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgEnumItem, CMDArgDefault, CMDBooleanArgBase, \
     CMDArgBlank, CMDObjectArgAdditionalProperties
 from ._format import CMDFormat
-import re
-import inflect
+from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
+    CMDArraySchema, CMDArraySchemaBase, CMDSchemaEnumItem, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema
 
 
 class CMDArgBuilder:
@@ -106,8 +107,9 @@ class CMDArgBuilder:
         if self._need_flatten():
             if isinstance(self.schema, CMDSchema):
                 self.schema.arg = None
-                # for sub_arg in arg.args:
-                #     sub_arg.group = self.schema.name
+                if arg.args:
+                    for sub_arg in arg.args:
+                        sub_arg.group = to_camel_case(self.schema.name)
             return arg.args or []
         elif isinstance(self.schema, CMDSchema):
             self.schema.arg = arg.var
