@@ -1,12 +1,13 @@
 import json
 import os
 
-from utils.stage import AAZStageEnum
 from command.controller.workspace_cfg_editor import WorkspaceCfgEditor
 from command.controller.workspace_manager import WorkspaceManager
 from command.tests.common import CommandTestCase, workspace_name
 from swagger.utils.tools import swagger_resource_path_to_resource_id
+from utils.base64 import b64encode_str
 from utils.plane import PlaneEnum
+from utils.stage import AAZStageEnum
 
 
 class APIEditorTest(CommandTestCase):
@@ -99,12 +100,12 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}')},
                 ]
             })
             assert rv.status_code == 200
@@ -171,7 +172,7 @@ class APIEditorTest(CommandTestCase):
             assert rv.status_code == 200
             command = rv.get_json()
             assert command['names'] == ['edge-order', 'address', 'create']
-            assert len(command['argGroups']) == 1
+            assert len(command['argGroups']) == 2
             assert 'conditions' not in command
             assert len(command['operations']) == 1
             assert len(command['outputs']) == 1
@@ -184,7 +185,7 @@ class APIEditorTest(CommandTestCase):
             assert command['names'] == ['edge-order', 'address', 'update']
             assert len(command['argGroups']) == 2
             assert 'conditions' not in command
-            assert len(command['operations']) == 4  # Get, InstanceUpdate, GenericUpdate, Put
+            assert len(command['operations']) == 3  # Get, InstanceUpdate, Put
             assert len(command['outputs']) == 1
             assert len(command['resources']) == 1
             assert command['version'] == '2021-12-01'
@@ -204,35 +205,34 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orderItems'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orders'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/locations/{location}/orders/{orderName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return'),
-                    # FIXME: fix issues in following resources
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orderItems')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orders')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/locations/{location}/orders/{orderName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies')},
                 ]
             })
             self.assertTrue(rv.status_code == 200)
@@ -364,6 +364,35 @@ class APIEditorTest(CommandTestCase):
             data = rv.get_json()
             self.assertTrue(data['commands']['create']['stage'] == AAZStageEnum.Experimental)
 
+            # try delete resource with CRUD
+            resource = data['commands']['create']['resources'][0]
+            resource_id = resource['id']
+            resource_version = resource['version']
+
+            rv = c.delete(f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(resource_version)}")
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(
+                'create' not in data['commands'] and 'show' not in data['commands'] and 'update' not in data[
+                    'commands'] and 'delete' not in data['commands'])
+
+            # try delete one resource in list
+            self.assertTrue(len(data['commands']['list']['resources']) > 1)
+            resource = data['commands']['list']['resources'][0]
+            resource_id = resource['id']
+            resource_version = resource['version']
+
+            rv = c.delete(f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(resource_version)}")
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue('list' not in data['commands'])
+
     @workspace_name("test_workspace_command_merge")
     def test_workspace_command_merge(self, ws_name):
         with self.app.test_client() as c:
@@ -379,8 +408,8 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses')},
                 ]
             })
             self.assertTrue(rv.status_code == 200)
@@ -401,8 +430,8 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses')},
                 ]
             })
             self.assertTrue(rv.status_code == 200)
@@ -428,7 +457,8 @@ class APIEditorTest(CommandTestCase):
             rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address")
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
-            self.assertTrue(len(data['commands']) == 1 and 'list' in data['commands'] and len(data['commands']['list']['resources']) == 2)
+            self.assertTrue(len(data['commands']) == 1 and 'list' in data['commands'] and len(
+                data['commands']['list']['resources']) == 2)
 
             manager = WorkspaceManager(name=ws_name)
             path_main = WorkspaceCfgEditor.get_cfg_path(
@@ -462,34 +492,34 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orderItems'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orders'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/locations/{location}/orders/{orderName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orderItems')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orders')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/locations/{location}/orders/{orderName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return')},
                 ]
             })
             self.assertTrue(rv.status_code == 200)
@@ -617,17 +647,17 @@ class APIEditorTest(CommandTestCase):
                 'module': 'databricks',
                 'version': '2018-04-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.Databricks/workspaces'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings/{peeringName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings'),
-                    ]
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.Databricks/workspaces')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings/{peeringName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings')},
+                ]
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -877,27 +907,27 @@ class APIEditorTest(CommandTestCase):
                 'module': 'elastic',
                 'version': '2020-07-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.Elastic/monitors'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/listMonitoredResources'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/listDeploymentInfo'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/tagRules'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/tagRules/{ruleSetName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/listVMHost'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/vmIngestionDetails'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/vmCollectionUpdate'),
-                    ]
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.Elastic/monitors')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/listMonitoredResources')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/listDeploymentInfo')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/tagRules')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/tagRules/{ruleSetName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/listVMHost')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/vmIngestionDetails')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/vmCollectionUpdate')},
+                ]
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -1197,34 +1227,34 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orderItems'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orders'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/locations/{location}/orders/{orderName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orderItems')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orders')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/locations/{location}/orders/{orderName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return')},
                 ]
             })
             self.assertTrue(rv.status_code == 200)
@@ -1257,8 +1287,8 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/providers/Microsoft.EdgeOrder/operations'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/providers/Microsoft.EdgeOrder/operations')},
                 ]
             })
             self.assertTrue(rv.status_code == 200)

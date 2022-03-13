@@ -157,6 +157,8 @@ class AzCommandGenerator:
                     self.generic_update_op = AzGenericUpdateOperationGenerator(self.cmd_ctx, variant_key)
                     self.operations = [*self.operations[:max_idx+1], self.generic_update_op, *self.operations[max_idx+1:]]
 
+        self.version = cmd.version
+        self.resources = cmd.resources
         self.plane = None
         for resource in self.cmd.resources:
             if not self.plane:

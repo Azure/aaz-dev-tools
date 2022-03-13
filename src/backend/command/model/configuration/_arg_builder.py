@@ -1,19 +1,20 @@
+import re
 
+import inflect
+from utils.case import to_camel_case
 
-from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
-    CMDArraySchema, CMDArraySchemaBase, CMDSchemaEnumItem, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema
 from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgEnumItem, CMDArgDefault, CMDBooleanArgBase, \
     CMDArgBlank, CMDObjectArgAdditionalProperties
 from ._format import CMDFormat
-import re
-import inflect
+from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
+    CMDArraySchema, CMDArraySchemaBase, CMDSchemaEnumItem, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema
 
 
 class CMDArgBuilder:
     _inflect_engine = inflect.engine()
 
     @classmethod
-    def new_builder(cls, schema, parent=None, var_prefix=None):
+    def new_builder(cls, schema, parent=None, var_prefix=None, is_update_action=False):
         if var_prefix is None:
             if parent is None or parent._arg_var is None:
                 arg_var = "$"
@@ -51,16 +52,17 @@ class CMDArgBuilder:
             if cls_name is not None:
                 arg_var = arg_var.replace(parent._arg_var, f"@{cls_name}")
 
-        return cls(schema=schema, arg_var=arg_var, parent=parent)
+        return cls(schema=schema, arg_var=arg_var, parent=parent, is_update_action=is_update_action)
 
-    def __init__(self, schema, arg_var, parent=None):
+    def __init__(self, schema, arg_var, parent=None, is_update_action=False):
         self.schema = schema
         self._parent = parent
         self._arg_var = arg_var
         self._flatten_discriminators = False
+        self._is_update_action = is_update_action
 
     def get_sub_builder(self, schema):
-        return self.new_builder(schema=schema, parent=self)
+        return self.new_builder(schema=schema, parent=self, is_update_action=self._is_update_action)
 
     def _ignore(self):
         if self.schema.frozen:
@@ -105,8 +107,9 @@ class CMDArgBuilder:
         if self._need_flatten():
             if isinstance(self.schema, CMDSchema):
                 self.schema.arg = None
-                # for sub_arg in arg.args:
-                #     sub_arg.group = self.schema.name
+                if arg.args:
+                    for sub_arg in arg.args:
+                        sub_arg.group = to_camel_case(self.schema.name)
             return arg.args or []
         elif isinstance(self.schema, CMDSchema):
             self.schema.arg = arg.var
@@ -161,7 +164,7 @@ class CMDArgBuilder:
             return None
 
     def get_required(self):
-        if isinstance(self.schema, CMDSchema):
+        if not self._is_update_action and isinstance(self.schema, CMDSchema):
             return self.schema.required
         return False
 

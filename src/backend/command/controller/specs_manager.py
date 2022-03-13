@@ -145,16 +145,14 @@ class AAZSpecsManager:
         return CfgReader(cfg)
 
     def load_resource_cfg_reader_by_command_with_version(self, cmd, version):
-        if isinstance(version, CMDSpecsCommandVersion):
-            version_name = version.name
-        else:
+        if not isinstance(version, CMDSpecsCommandVersion):
             assert isinstance(version, str)
             version_name = version
-        version = None
-        for v in cmd.versions or []:
-            if v.name == version_name:
-                version = v
-                break
+            version = None
+            for v in cmd.versions or []:
+                if v.name == version_name:
+                    version = v
+                    break
         if not version:
             return None
         resource = version.resources[0]
@@ -395,7 +393,7 @@ class AAZSpecsManager:
         command_groups = set()
 
         tree_path = self.get_tree_file_path()
-        update_files[tree_path] = json.dumps(self.tree.to_primitive(), indent=2)
+        update_files[tree_path] = json.dumps(self.tree.to_primitive(), indent=2, sort_keys=True)
 
         # command
         for cmd_names in sorted(self._modified_commands):

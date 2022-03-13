@@ -7,7 +7,7 @@
 {%- endif %}
 
 ## Versions
-{%- for version in command.versions %}
+{%- for version in command.versions|sort(attribute='name') %}
 
 ### [{{ version.name }}]({{ version.resources|first|resource_cfg_path }}) {{ version.stage|stage_label }}
 {% for resource in version.resources %}

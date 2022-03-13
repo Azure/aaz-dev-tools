@@ -22,6 +22,13 @@ class Update(AAZCommand):
         az databricks workspace vnet-peering update --resource-group MyResourceGroup --workspace-name MyWorkspace -n MyPeering --allow-gateway-transit --allow-virtual-network-access false
     """
 
+    _aaz_info = {
+        "version": "2018-04-01",
+        "resources": [
+            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}", "2018-04-01"],
+        ]
+    }
+
     AZ_SUPPORT_NO_WAIT = True
 
     AZ_SUPPORT_GENERIC_UPDATE = True
@@ -42,66 +49,66 @@ class Update(AAZCommand):
 
         _args_schema = cls._args_schema
         _args_schema.peering_name = AAZStrArg(
-            options=['--peering-name', '--name', '-n'],
-            help='The name of the workspace vNet peering.',
+            options=["--peering-name", "--name", "-n"],
+            help="The name of the workspace vNet peering.",
             required=True,
-            id_part='child_name_1',
+            id_part="child_name_1",
         )
         _args_schema.resource_group = AAZResourceGroupNameArg(
             required=True,
         )
         _args_schema.workspace_name = AAZStrArg(
-            options=['--workspace-name'],
-            help='The name of the workspace.',
+            options=["--workspace-name"],
+            help="The name of the workspace.",
             required=True,
-            id_part='name',
+            id_part="name",
         )
         _args_schema.allow_forwarded_traffic = AAZBoolArg(
-            options=['--allow-forwarded-traffic'],
-            help='Whether the forwarded traffic from the VMs in the local virtual network will be allowed/disallowed in remote virtual network.',
+            options=["--allow-forwarded-traffic"],
+            help="Whether the forwarded traffic from the VMs in the local virtual network will be allowed/disallowed in remote virtual network.",
         )
         _args_schema.allow_gateway_transit = AAZBoolArg(
-            options=['--allow-gateway-transit'],
-            help='If gateway links can be used in remote virtual networking to link to this virtual network.',
+            options=["--allow-gateway-transit"],
+            help="If gateway links can be used in remote virtual networking to link to this virtual network.",
         )
         _args_schema.allow_virtual_network_access = AAZBoolArg(
-            options=['--allow-virtual-network-access'],
-            help='Whether the VMs in the local virtual network space would be able to access the VMs in remote virtual network space.',
+            options=["--allow-virtual-network-access"],
+            help="Whether the VMs in the local virtual network space would be able to access the VMs in remote virtual network space.",
         )
         _args_schema.databricks_address_space = AAZObjectArg(
-            options=['--databricks-address-space'],
-            help='The reference to the databricks virtual network address space.',
+            options=["--databricks-address-space"],
+            help="The reference to the databricks virtual network address space.",
         )
         cls._build_args_address_space_update(_args_schema.databricks_address_space)
         _args_schema.databricks_virtual_network = AAZObjectArg(
-            options=['--databricks-virtual-network'],
-            help=' The remote virtual network should be in the same region. See here to learn more (https://docs.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-peering).',
+            options=["--databricks-virtual-network"],
+            help=" The remote virtual network should be in the same region. See here to learn more (https://docs.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-peering).",
         )
         _args_schema.remote_address_space = AAZObjectArg(
-            options=['--remote-address-space'],
-            help='The reference to the remote virtual network address space.',
+            options=["--remote-address-space"],
+            help="The reference to the remote virtual network address space.",
         )
         cls._build_args_address_space_update(_args_schema.remote_address_space)
         _args_schema.remote_virtual_network = AAZObjectArg(
-            options=['--remote-virtual-network'],
-            help=' The remote virtual network should be in the same region. See here to learn more (https://docs.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-peering).',
+            options=["--remote-virtual-network"],
+            help=" The remote virtual network should be in the same region. See here to learn more (https://docs.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-peering).",
             required=True,
         )
         _args_schema.use_remote_gateways = AAZBoolArg(
-            options=['--use-remote-gateways'],
-            help='If remote gateways can be used on this virtual network. If the flag is set to true, and allowGatewayTransit on remote peering is also true, virtual network will use gateways of remote virtual network for transit. Only one peering can have this flag set to true. This flag cannot be set if virtual network already has a gateway.',
+            options=["--use-remote-gateways"],
+            help="If remote gateways can be used on this virtual network. If the flag is set to true, and allowGatewayTransit on remote peering is also true, virtual network will use gateways of remote virtual network for transit. Only one peering can have this flag set to true. This flag cannot be set if virtual network already has a gateway.",
         )
 
         databricks_virtual_network = cls._args_schema.databricks_virtual_network
         databricks_virtual_network.id = AAZStrArg(
-            options=['id'],
-            help='The Id of the databricks virtual network.',
+            options=["id"],
+            help="The Id of the databricks virtual network.",
         )
 
         remote_virtual_network = cls._args_schema.remote_virtual_network
         remote_virtual_network.id = AAZStrArg(
-            options=['id'],
-            help='The Id of the remote virtual network.',
+            options=["id"],
+            help="The Id of the remote virtual network.",
         )
         return _args_schema
 
@@ -117,9 +124,9 @@ class Update(AAZCommand):
 
         address_space_update = cls._args_address_space_update
         address_space_update.address_prefixes = AAZListArg(
-            options=['address-prefixes'],
-            singular_options=['address-prefix'],
-            help='A list of address blocks reserved for this virtual network in CIDR notation.',
+            options=["address-prefixes"],
+            singular_options=["address-prefix"],
+            help="A list of address blocks reserved for this virtual network in CIDR notation.",
         )
 
         address_prefixes = cls._args_address_space_update.address_prefixes
@@ -148,6 +155,7 @@ class Update(AAZCommand):
                 return self.on_200(session)
             if session.http_response.status_code in [204]:
                 return self.on_204(session)
+
             return self.on_error(session)
 
         @property
@@ -187,8 +195,17 @@ class Update(AAZCommand):
         def query_parameters(self):
             parameters = {
                 **self.serialize_query_param(
-                    "api-version", '2018-04-01',
+                    "api-version", "2018-04-01",
                     required=True,
+                ),
+            }
+            return parameters
+
+        @property
+        def header_parameters(self):
+            parameters = {
+                **self.serialize_header_param(
+                    "Accept", "application/json",
                 ),
             }
             return parameters
@@ -196,7 +213,7 @@ class Update(AAZCommand):
         def on_200(self, session):
             data = self.deserialize_http_content(session)
             self.ctx.set_var(
-                'instance',
+                "instance",
                 data,
                 schema_builder=self._build_schema_on_200
             )
@@ -223,14 +240,23 @@ class Update(AAZCommand):
         def __call__(self, *args, **kwargs):
             request = self.make_request()
             session = self.client.send_request(request=request, stream=False, **kwargs)
+            if session.http_response.status_code in [202]:
+                return self.client.build_lro_polling(
+                    self.ctx.args.no_wait,
+                    session,
+                    deserialization_callback=self.on_200_201,
+                    lro_options={"final-state-via": "azure-async-operation"},
+                    path_format_arguments=self.url_parameters,
+                )
             if session.http_response.status_code in [200, 201]:
                 return self.client.build_lro_polling(
                     self.ctx.args.no_wait,
                     session,
                     deserialization_callback=self.on_200_201,
-                    lro_options={'final-state-via': 'azure-async-operation'},
+                    lro_options={"final-state-via": "azure-async-operation"},
                     path_format_arguments=self.url_parameters,
                 )
+
             return self.on_error(session)
 
         @property
@@ -270,15 +296,27 @@ class Update(AAZCommand):
         def query_parameters(self):
             parameters = {
                 **self.serialize_query_param(
-                    "api-version", '2018-04-01',
+                    "api-version", "2018-04-01",
                     required=True,
                 ),
             }
             return parameters
 
         @property
+        def header_parameters(self):
+            parameters = {
+                **self.serialize_header_param(
+                    "Content-Type", "application/json",
+                ),
+                **self.serialize_header_param(
+                    "Accept", "application/json",
+                ),
+            }
+            return parameters
+
+        @property
         def content(self):
-            _content_value, _builder = self.new_content(
+            _content_value, _builder = self.new_content_builder(
                 self.ctx.args,
                 value=self.ctx.vars.instance,
             )
@@ -288,7 +326,7 @@ class Update(AAZCommand):
         def on_200_201(self, session):
             data = self.deserialize_http_content(session)
             self.ctx.set_var(
-                'instance',
+                "instance",
                 data,
                 schema_builder=self._build_schema_on_200_201
             )
@@ -316,26 +354,26 @@ class Update(AAZCommand):
                 value=instance,
                 typ=AAZObjectType
             )
-            _builder.set_prop('properties', AAZObjectType, '.', typ_kwargs={'flags': {'required': True, 'client_flatten': True}})
+            _builder.set_prop("properties", AAZObjectType, ".", typ_kwargs={"flags": {"required": True, "client_flatten": True}})
 
-            properties = _builder.get('.properties')
+            properties = _builder.get(".properties")
             if properties is not None:
-                properties.set_prop('allowForwardedTraffic', AAZBoolType, '.allow_forwarded_traffic')
-                properties.set_prop('allowGatewayTransit', AAZBoolType, '.allow_gateway_transit')
-                properties.set_prop('allowVirtualNetworkAccess', AAZBoolType, '.allow_virtual_network_access')
-                _build_schema_address_space_update(properties.set_prop('databricksAddressSpace', AAZObjectType, '.databricks_address_space'))
-                properties.set_prop('databricksVirtualNetwork', AAZObjectType, '.databricks_virtual_network')
-                _build_schema_address_space_update(properties.set_prop('remoteAddressSpace', AAZObjectType, '.remote_address_space'))
-                properties.set_prop('remoteVirtualNetwork', AAZObjectType, '.remote_virtual_network', typ_kwargs={'flags': {'required': True}})
-                properties.set_prop('useRemoteGateways', AAZBoolType, '.use_remote_gateways')
+                properties.set_prop("allowForwardedTraffic", AAZBoolType, ".allow_forwarded_traffic")
+                properties.set_prop("allowGatewayTransit", AAZBoolType, ".allow_gateway_transit")
+                properties.set_prop("allowVirtualNetworkAccess", AAZBoolType, ".allow_virtual_network_access")
+                _build_schema_address_space_update(properties.set_prop("databricksAddressSpace", AAZObjectType, ".databricks_address_space"))
+                properties.set_prop("databricksVirtualNetwork", AAZObjectType, ".databricks_virtual_network")
+                _build_schema_address_space_update(properties.set_prop("remoteAddressSpace", AAZObjectType, ".remote_address_space"))
+                properties.set_prop("remoteVirtualNetwork", AAZObjectType, ".remote_virtual_network", typ_kwargs={"flags": {"required": True}})
+                properties.set_prop("useRemoteGateways", AAZBoolType, ".use_remote_gateways")
 
-            databricksVirtualNetwork = _builder.get('.properties.databricksVirtualNetwork')
-            if databricksVirtualNetwork is not None:
-                databricksVirtualNetwork.set_prop('id', AAZStrType, '.id')
+            databricks_virtual_network = _builder.get(".properties.databricksVirtualNetwork")
+            if databricks_virtual_network is not None:
+                databricks_virtual_network.set_prop("id", AAZStrType, ".id")
 
-            remoteVirtualNetwork = _builder.get('.properties.remoteVirtualNetwork')
-            if remoteVirtualNetwork is not None:
-                remoteVirtualNetwork.set_prop('id', AAZStrType, '.id')
+            remote_virtual_network = _builder.get(".properties.remoteVirtualNetwork")
+            if remote_virtual_network is not None:
+                remote_virtual_network.set_prop("id", AAZStrType, ".id")
 
             return _instance_value
 
@@ -351,11 +389,11 @@ class Update(AAZCommand):
 def _build_schema_address_space_update(_builder):
     if _builder is None:
         return
-    _builder.set_prop('addressPrefixes', AAZListType, '.address_prefixes')
+    _builder.set_prop("addressPrefixes", AAZListType, ".address_prefixes")
 
-    addressPrefixes = _builder.get('.addressPrefixes')
-    if addressPrefixes is not None:
-        addressPrefixes.set_elements(AAZStrType, '.')
+    address_prefixes = _builder.get(".addressPrefixes")
+    if address_prefixes is not None:
+        address_prefixes.set_elements(AAZStrType, ".")
 
 
 _schema_address_space_read = None
@@ -371,7 +409,7 @@ def _build_schema_address_space_read(_schema):
 
     address_space_read = _schema_address_space_read
     address_space_read.address_prefixes = AAZListType(
-        serialized_name='addressPrefixes',
+        serialized_name="addressPrefixes",
     )
 
     address_prefixes = _schema_address_space_read.address_prefixes
@@ -396,53 +434,53 @@ def _build_schema_virtual_network_peering_read(_schema):
 
     virtual_network_peering_read = _schema_virtual_network_peering_read
     virtual_network_peering_read.id = AAZStrType(
-        flags={'read_only': True},
+        flags={"read_only": True},
     )
     virtual_network_peering_read.name = AAZStrType(
-        flags={'read_only': True},
+        flags={"read_only": True},
     )
     virtual_network_peering_read.properties = AAZObjectType(
-        flags={'required': True, 'client_flatten': True},
+        flags={"required": True, "client_flatten": True},
     )
     virtual_network_peering_read.type = AAZStrType(
-        flags={'read_only': True},
+        flags={"read_only": True},
     )
 
     properties = _schema_virtual_network_peering_read.properties
     properties.allow_forwarded_traffic = AAZBoolType(
-        serialized_name='allowForwardedTraffic',
+        serialized_name="allowForwardedTraffic",
     )
     properties.allow_gateway_transit = AAZBoolType(
-        serialized_name='allowGatewayTransit',
+        serialized_name="allowGatewayTransit",
     )
     properties.allow_virtual_network_access = AAZBoolType(
-        serialized_name='allowVirtualNetworkAccess',
+        serialized_name="allowVirtualNetworkAccess",
     )
     properties.databricks_address_space = AAZObjectType(
-        serialized_name='databricksAddressSpace',
+        serialized_name="databricksAddressSpace",
     )
     _build_schema_address_space_read(properties.databricks_address_space)
     properties.databricks_virtual_network = AAZObjectType(
-        serialized_name='databricksVirtualNetwork',
+        serialized_name="databricksVirtualNetwork",
     )
     properties.peering_state = AAZStrType(
-        serialized_name='peeringState',
-        flags={'read_only': True},
+        serialized_name="peeringState",
+        flags={"read_only": True},
     )
     properties.provisioning_state = AAZStrType(
-        serialized_name='provisioningState',
-        flags={'read_only': True},
+        serialized_name="provisioningState",
+        flags={"read_only": True},
     )
     properties.remote_address_space = AAZObjectType(
-        serialized_name='remoteAddressSpace',
+        serialized_name="remoteAddressSpace",
     )
     _build_schema_address_space_read(properties.remote_address_space)
     properties.remote_virtual_network = AAZObjectType(
-        serialized_name='remoteVirtualNetwork',
-        flags={'required': True},
+        serialized_name="remoteVirtualNetwork",
+        flags={"required": True},
     )
     properties.use_remote_gateways = AAZBoolType(
-        serialized_name='useRemoteGateways',
+        serialized_name="useRemoteGateways",
     )
 
     databricks_virtual_network = _schema_virtual_network_peering_read.properties.databricks_virtual_network
@@ -457,4 +495,4 @@ def _build_schema_virtual_network_peering_read(_schema):
     _schema.type = _schema_virtual_network_peering_read.type
 
 
-__all__ = ['Update']
+__all__ = ["Update"]
