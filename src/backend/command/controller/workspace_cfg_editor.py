@@ -202,14 +202,21 @@ class WorkspaceCfgEditor(CfgReader):
             for operation in plus_command.operations:
                 plus_operations.append(operation.__class__(operation.to_primitive()))
             op_required_args = {**plus_op_required_args, **main_op_required_args}
-            main_command.conditions, main_command.operations = main_editor._merge_command_operations(
+            common_required_args, main_command.conditions, main_command.operations = main_editor._merge_command_operations(
                 op_required_args,
                 *plus_operations, *main_command.operations
             )
+
+            # update arg required of command
+            for arg_group in main_command.arg_groups:
+                for arg in arg_group.args:
+                    arg.required = arg.var in common_required_args
+
             for resource in plus_command.resources:
                 main_command.resources.append(
                     resource.__class__(resource.to_primitive())
                 )
+
         for resource in plus_cfg_editor.resources:
             main_editor.cfg.resources.append(
                 resource.__class__(resource.to_primitive())
@@ -416,6 +423,13 @@ class WorkspaceCfgEditor(CfgReader):
         return arg
 
     def _merge_command_operations(self, op_required_args, *operations):
+        common_required_args = None
+        for required_args in op_required_args.values():
+            if common_required_args is None:
+                common_required_args = {*required_args}
+            else:
+                common_required_args.intersection_update(required_args)
+
         arg_ops_map = {}
         for op_id, required_args in op_required_args.items():
             for arg in required_args:
@@ -462,7 +476,7 @@ class WorkspaceCfgEditor(CfgReader):
             operation.when = [condition.var]
             new_operations.append(operation)
 
-        return conditions, new_operations
+        return common_required_args, conditions, new_operations
 
     def reformat(self):
         self.cfg.reformat()
