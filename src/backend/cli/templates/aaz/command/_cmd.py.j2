@@ -448,7 +448,7 @@ class {{ leaf.cls_name }}(AAZCommand):
     class {{ op.name }}(AAZJsonInstanceUpdateOperation):
 
         def __call__(self, *args, **kwargs):
-            {{ op.variant_key }} = self.{{ op.UPDATER_NAME }}({{ op.variant_key }})
+            self.{{ op.UPDATER_NAME }}({{ op.variant_key }})
 
         def {{ op.UPDATER_NAME }}(self, instance):
             {{ op.VALUE_NAME }}, {{ op.BUILDER_NAME }} = self.new_content_builder(
@@ -495,7 +495,7 @@ class {{ leaf.cls_name }}(AAZCommand):
     class {{ leaf.generic_update_op.name }}(AAZGenericInstanceUpdateOperation):
 
         def __call__(self, *args, **kwargs):
-            {{ leaf.generic_update_op.variant_key }} = self._update_instance_by_generic(
+            self._update_instance_by_generic(
                 {{ leaf.generic_update_op.variant_key }},
                 {{ leaf.generic_update_op.arg_key }}
             )

@@ -20,11 +20,11 @@ class CMDRequestJson(Model):
     class Options:
         serialize_when_none = False
 
-    def generate_args(self):
+    def generate_args(self, is_update_action=False):
         if not self.schema:
             return []
         assert isinstance(self.schema, CMDSchema)
-        builder = CMDArgBuilder.new_builder(schema=self.schema)
+        builder = CMDArgBuilder.new_builder(schema=self.schema, is_update_action=is_update_action)
         args = builder.get_args()
         return args
 

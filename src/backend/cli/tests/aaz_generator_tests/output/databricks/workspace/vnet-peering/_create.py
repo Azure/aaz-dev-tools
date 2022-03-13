@@ -239,13 +239,13 @@ class Create(AAZCommand):
                 properties.set_prop("remoteVirtualNetwork", AAZObjectType, ".remote_virtual_network", typ_kwargs={"flags": {"required": True}})
                 properties.set_prop("useRemoteGateways", AAZBoolType, ".use_remote_gateways")
 
-            databricksVirtualNetwork = _builder.get(".properties.databricksVirtualNetwork")
-            if databricksVirtualNetwork is not None:
-                databricksVirtualNetwork.set_prop("id", AAZStrType, ".id")
+            databricks_virtual_network = _builder.get(".properties.databricksVirtualNetwork")
+            if databricks_virtual_network is not None:
+                databricks_virtual_network.set_prop("id", AAZStrType, ".id")
 
-            remoteVirtualNetwork = _builder.get(".properties.remoteVirtualNetwork")
-            if remoteVirtualNetwork is not None:
-                remoteVirtualNetwork.set_prop("id", AAZStrType, ".id")
+            remote_virtual_network = _builder.get(".properties.remoteVirtualNetwork")
+            if remote_virtual_network is not None:
+                remote_virtual_network.set_prop("id", AAZStrType, ".id")
 
             return self.serialize_content(_content_value)
 
@@ -331,9 +331,9 @@ def _build_schema_address_space_create(_builder):
         return
     _builder.set_prop("addressPrefixes", AAZListType, ".address_prefixes")
 
-    addressPrefixes = _builder.get(".addressPrefixes")
-    if addressPrefixes is not None:
-        addressPrefixes.set_elements(AAZStrType, ".")
+    address_prefixes = _builder.get(".addressPrefixes")
+    if address_prefixes is not None:
+        address_prefixes.set_elements(AAZStrType, ".")
 
 
 _schema_address_space_read = None
