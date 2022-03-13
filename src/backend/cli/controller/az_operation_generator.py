@@ -35,10 +35,13 @@ class AzHttpOperationGenerator(AzOperationGenerator):
             }
 
         self.success_responses = []
+        self.success_202_response = None
 
         error_format = None
         for response in self._operation.http.responses:
             if not response.is_error:
+                if self.is_long_running and response.status_codes == [202]:
+                    continue
                 self.success_responses.append(AzHttpResponseGenerator(self._cmd_ctx, response, self._response_cls_map))
             else:
                 if not isinstance(response.body, CMDHttpResponseJsonBody):
@@ -53,6 +56,14 @@ class AzHttpOperationGenerator(AzOperationGenerator):
                     raise exceptions.InvalidAPIUsage(f"Multiple error formats in one operation: {name}, {error_format}")
         if not AAZErrorFormatEnum.validate(error_format):
             raise exceptions.InvalidAPIUsage(f"Invalid error format: {error_format}")
+
+        if self.is_long_running:
+            callback_name = None
+            for response in self.success_responses:
+                if 200 in response.status_codes or 201 in response.status_codes:
+                    callback_name = response.callback_name
+                    break
+            self.success_202_response = AzHttp202ResponseGenerator(self._cmd_ctx, callback_name)
         self.error_format = error_format
 
         # specify content
@@ -151,34 +162,52 @@ class AzHttpOperationGenerator(AzOperationGenerator):
     @property
     def header_parameters(self):
         header = self._operation.http.request.header
-        if not header:
-            return None
         parameters = []
-        if header.params:
-            for param in header.params:
-                kwargs = {}
-                if param.required:
-                    kwargs['required'] = param.required
-                arg_key, hide = self._cmd_ctx.get_argument(param.arg)
-                if not hide:
+        if header:
+            if header.params:
+                for param in header.params:
+                    kwargs = {}
+                    if param.required:
+                        kwargs['required'] = param.required
+                    arg_key, hide = self._cmd_ctx.get_argument(param.arg)
+                    if not hide:
+                        parameters.append([
+                            param.name,
+                            arg_key,
+                            False,
+                            kwargs
+                        ])
+            if header.consts:
+                for param in header.consts:
+                    assert param.const
+                    kwargs = {}
+                    if param.required:
+                        kwargs['required'] = param.required
                     parameters.append([
                         param.name,
-                        arg_key,
-                        False,
+                        param.default.value,
+                        True,
                         kwargs
                     ])
-        if header.consts:
-            for param in header.consts:
-                assert param.const
-                kwargs = {}
-                if param.required:
-                    kwargs['required'] = param.required
+        if self.content:
+            body = self._operation.http.request.body
+            if isinstance(body, CMDHttpRequestJsonBody):
                 parameters.append([
-                    param.name,
-                    param.default.value,
+                    "Content-Type",
+                    "application/json",
                     True,
-                    kwargs
+                    {}
                 ])
+        if self.success_responses:
+            for response in self.success_responses:
+                if response._response.body is not None and isinstance(response._response.body, CMDHttpResponseJsonBody):
+                    parameters.append([
+                        "Accept",
+                        "application/json",
+                        True,
+                        {}
+                    ])
+                    break
         return parameters
 
 
@@ -327,6 +356,14 @@ class AzHttpResponseGenerator:
             self.schema = AzHttpResponseSchemaGenerator(
                 self._cmd_ctx, response.body.json.schema, self._response_cls_map, response.status_codes
             )
+
+
+class AzHttp202ResponseGenerator:
+
+    def __init__(self, cmd_ctx, callback_name):
+        self._cmd_ctx = cmd_ctx
+        self.status_codes = [202]
+        self.callback_name = callback_name
 
 
 class AzHttpResponseSchemaGenerator:
@@ -479,7 +516,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, cls_map, arg
             s_name = '_elements'
         else:
             s_scope_define = f"{scope_define}.{s_name}"
-        for scopes in _iter_request_scopes_by_schema_base(s, s_name, s_scope_define, cls_map, s_arg_key, cmd_ctx):
+        for scopes in _iter_request_scopes_by_schema_base(s, to_snack_case(s_name), s_scope_define, cls_map, s_arg_key, cmd_ctx):
             yield scopes
 
 

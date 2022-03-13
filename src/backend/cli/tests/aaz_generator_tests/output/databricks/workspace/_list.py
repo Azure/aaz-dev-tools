@@ -75,6 +75,7 @@ class List(AAZCommand):
             session = self.client.send_request(request=request, stream=False, **kwargs)
             if session.http_response.status_code in [200]:
                 return self.on_200(session)
+
             return self.on_error(session)
 
         @property
@@ -104,6 +105,15 @@ class List(AAZCommand):
                 **self.serialize_query_param(
                     "api-version", "2018-04-01",
                     required=True,
+                ),
+            }
+            return parameters
+
+        @property
+        def header_parameters(self):
+            parameters = {
+                **self.serialize_header_param(
+                    "Accept", "application/json",
                 ),
             }
             return parameters
@@ -324,6 +334,7 @@ class List(AAZCommand):
             session = self.client.send_request(request=request, stream=False, **kwargs)
             if session.http_response.status_code in [200]:
                 return self.on_200(session)
+
             return self.on_error(session)
 
         @property
@@ -357,6 +368,15 @@ class List(AAZCommand):
                 **self.serialize_query_param(
                     "api-version", "2018-04-01",
                     required=True,
+                ),
+            }
+            return parameters
+
+        @property
+        def header_parameters(self):
+            parameters = {
+                **self.serialize_header_param(
+                    "Accept", "application/json",
                 ),
             }
             return parameters

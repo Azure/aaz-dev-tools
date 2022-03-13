@@ -168,3 +168,254 @@ class APIAzTest(CommandTestCase):
                     self.assertTrue(data['profiles'][profile_name] == {'name': profile_name})
         finally:
             shutil.rmtree(path, ignore_errors=True)
+
+    def test_generate_edge_order_in_main_repo(self):
+        self.prepare_aaz()
+        mod_name = "aaz-edge-order"
+        manager = AzMainManager()
+        path = manager.get_mod_path(mod_name)
+        if os.path.exists(path):
+            shutil.rmtree(path, ignore_errors=True)
+        with self.app.test_client() as c:
+            rv = c.post(f"/CLI/Az/Main/Modules", json={
+                "name": mod_name
+            })
+            self.assertTrue(rv.status_code == 200)
+            profiles = rv.get_json()['profiles']
+
+            # latest profile
+            version = '2021-12-01'
+            profile = profiles[Config.CLI_DEFAULT_PROFILE]
+            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            profile['commandGroups'] = {
+                'edge-order': data
+            }
+
+            edge_order = profile['commandGroups']['edge-order']
+            edge_order['commandGroups'] = {}
+
+            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            edge_order['commandGroups']['address'] = data
+
+            address = profile['commandGroups']['edge-order']['commandGroups']['address']
+            address['commands'] = {}
+
+            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/create/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            address['commands']['create'] = data
+
+            rv = c.post(
+                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/delete/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            address['commands']['delete'] = data
+
+            rv = c.post(
+                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/list/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            address['commands']['list'] = data
+
+            rv = c.post(
+                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/show/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            address['commands']['show'] = data
+
+            rv = c.post(
+                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/update/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            address['commands']['update'] = data
+
+            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            edge_order['commandGroups']['order'] = data
+
+            order = profile['commandGroups']['edge-order']['commandGroups']['order']
+            order['commands'] = {}
+
+            rv = c.post(
+                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order/Leaves/list/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            order['commands']['list'] = data
+
+            rv = c.post(
+                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order/Leaves/show/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            order['commands']['show'] = data
+
+            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            edge_order['commandGroups']['order-item'] = data
+
+            order_item = profile['commandGroups']['edge-order']['commandGroups']['order-item']
+            order_item['commands'] = {}
+
+            rv = c.post(
+                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/cancel/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            order_item['commands']['cancel'] = data
+
+            rv = c.post(
+                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/create/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            order_item['commands']['create'] = data
+
+            rv = c.post(
+                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/delete/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            order_item['commands']['delete'] = data
+
+            rv = c.post(
+                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/list/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            order_item['commands']['list'] = data
+
+            rv = c.post(
+                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/return/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            order_item['commands']['return'] = data
+
+            rv = c.post(
+                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/show/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            order_item['commands']['show'] = data
+
+            rv = c.post(
+                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/update/Versions/{b64encode_str(version)}/Transfer")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            order_item['commands']['update'] = data
+
+            rv = c.put(f"/CLI/Az/Main/Modules/{mod_name}", json={
+                "profiles": profiles
+            })
+            self.assertTrue(rv.status_code == 200)
+
+    # databricks has object whose value type can be anything https://github.com/Azure/azure-rest-api-specs/blob/2c66a689c610dbef623d6c4e4c4e913446d5ac68/specification/databricks/resource-manager/Microsoft.Databricks/stable/2018-04-01/databricks.json#L594-L609
+    # def test_generate_databricks_in_main_repo(self):
+    #     self.prepare_aaz()
+    #     mod_name = "aaz-data-bricks"
+    #     manager = AzMainManager()
+    #     path = manager.get_mod_path(mod_name)
+    #     if os.path.exists(path):
+    #         shutil.rmtree(path, ignore_errors=True)
+    #     with self.app.test_client() as c:
+    #         rv = c.post(f"/CLI/Az/Main/Modules", json={
+    #             "name": mod_name
+    #         })
+    #         self.assertTrue(rv.status_code == 200)
+    #         profiles = rv.get_json()['profiles']
+    #
+    #         # latest profile
+    #         version = '2018-04-01'
+    #         profile = profiles[Config.CLI_DEFAULT_PROFILE]
+    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/Transfer")
+    #         self.assertTrue(rv.status_code == 200)
+    #         data = rv.get_json()
+    #         profile['commandGroups'] = {
+    #             'data-bricks': data
+    #         }
+    #
+    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Transfer")
+    #         self.assertTrue(rv.status_code == 200)
+    #         data = rv.get_json()
+    #         profile['commandGroups']['data-bricks']['commandGroups'] = {
+    #             'workspace': data,
+    #         }
+    #
+    #         workspace = profile['commandGroups']['data-bricks']['commandGroups']['workspace']
+    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Transfer")
+    #         self.assertTrue(rv.status_code == 200)
+    #         data = rv.get_json()
+    #         workspace['commandGroups'] = {
+    #             'vnet-peering': data
+    #         }
+    #
+    #         workspace['commands'] = {}
+    #
+    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Versions/{b64encode_str(version)}/Transfer")
+    #         self.assertTrue(rv.status_code == 200)
+    #         data = rv.get_json()
+    #         workspace['commands']['create'] = data
+    #
+    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/delete/Versions/{b64encode_str(version)}/Transfer")
+    #         self.assertTrue(rv.status_code == 200)
+    #         data = rv.get_json()
+    #         workspace['commands']['delete'] = data
+    #
+    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/list/Versions/{b64encode_str(version)}/Transfer")
+    #         self.assertTrue(rv.status_code == 200)
+    #         data = rv.get_json()
+    #         workspace['commands']['list'] = data
+    #
+    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/show/Versions/{b64encode_str(version)}/Transfer")
+    #         self.assertTrue(rv.status_code == 200)
+    #         data = rv.get_json()
+    #         workspace['commands']['show'] = data
+    #
+    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/update/Versions/{b64encode_str(version)}/Transfer")
+    #         self.assertTrue(rv.status_code == 200)
+    #         data = rv.get_json()
+    #         workspace['commands']['update'] = data
+    #
+    #         vnet_peering = profile['commandGroups']['data-bricks']['commandGroups']['workspace']['commandGroups']['vnet-peering']
+    #         vnet_peering['commands'] = {}
+    #
+    #         rv = c.post(
+    #             f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/create/Versions/{b64encode_str(version)}/Transfer")
+    #         self.assertTrue(rv.status_code == 200)
+    #         data = rv.get_json()
+    #         vnet_peering['commands']['create'] = data
+    #
+    #         rv = c.post(
+    #             f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/delete/Versions/{b64encode_str(version)}/Transfer")
+    #         self.assertTrue(rv.status_code == 200)
+    #         data = rv.get_json()
+    #         vnet_peering['commands']['delete'] = data
+    #
+    #         rv = c.post(
+    #             f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/list/Versions/{b64encode_str(version)}/Transfer")
+    #         self.assertTrue(rv.status_code == 200)
+    #         data = rv.get_json()
+    #         vnet_peering['commands']['list'] = data
+    #
+    #         rv = c.post(
+    #             f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/show/Versions/{b64encode_str(version)}/Transfer")
+    #         self.assertTrue(rv.status_code == 200)
+    #         data = rv.get_json()
+    #         vnet_peering['commands']['show'] = data
+    #
+    #         rv = c.post(
+    #             f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/update/Versions/{b64encode_str(version)}/Transfer")
+    #         self.assertTrue(rv.status_code == 200)
+    #         data = rv.get_json()
+    #         vnet_peering['commands']['update'] = data
+    #
+    #         rv = c.put(f"/CLI/Az/Main/Modules/{mod_name}", json={
+    #             "profiles": profiles
+    #         })
+    #         self.assertTrue(rv.status_code == 200)
+    #
+    #         # hybrid_profile = profiles["2020-09-01-hybrid"]
+    #         # hybrid_profile['commandGroups'] = {
+    #         #     "data-bricks": data
+    #         # }
+
+

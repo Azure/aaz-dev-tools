@@ -194,6 +194,21 @@ class {{ leaf.cls_name }}(AAZCommand):
             request = self.make_request()
             session = self.client.send_request(request=request, stream=False, **kwargs)
 
+            {%- if op.success_202_response %}
+            if session.http_response.status_code in {{ op.success_202_response.status_codes|constant_convert }}:
+                return self.client.build_lro_polling(
+                    {% if leaf.support_no_wait %}self.ctx.args.no_wait{% else %}False{% endif %},
+                    session,
+                    {%- if op.success_202_response.callback_name is not none %}
+                    deserialization_callback=self.{{ op.success_202_response.callback_name }},
+                    {%- else %}
+                    deserialization_callback=None,
+                    {%- endif %}
+                    lro_options={{ op.lro_options|constant_convert }},
+                    path_format_arguments=self.url_parameters,
+                )
+            {%- endif %}
+
             {%- for response in op.success_responses %}
             if session.http_response.status_code in {{ response.status_codes|constant_convert }}:
                 {%- if op.is_long_running %}
@@ -208,6 +223,7 @@ class {{ leaf.cls_name }}(AAZCommand):
                 return self.{{ response.callback_name }}(session)
                 {%- endif %}
             {%- endfor %}
+
             return self.on_error(session)
 
         @property
@@ -303,7 +319,7 @@ class {{ leaf.cls_name }}(AAZCommand):
 
         @property
         def content(self):
-            {{ op.content.VALUE_NAME}}, {{ op.content.BUILDER_NAME }} = self.new_content(
+            {{ op.content.VALUE_NAME}}, {{ op.content.BUILDER_NAME }} = self.new_content_builder(
                 {{ op.content.arg_key }},
                 {%- if op.content.ref is not none %}
                 value={{ op.content.ref }},

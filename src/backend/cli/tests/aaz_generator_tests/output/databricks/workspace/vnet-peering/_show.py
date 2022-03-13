@@ -80,6 +80,7 @@ class Show(AAZCommand):
                 return self.on_200(session)
             if session.http_response.status_code in [204]:
                 return self.on_204(session)
+
             return self.on_error(session)
 
         @property
@@ -121,6 +122,15 @@ class Show(AAZCommand):
                 **self.serialize_query_param(
                     "api-version", "2018-04-01",
                     required=True,
+                ),
+            }
+            return parameters
+
+        @property
+        def header_parameters(self):
+            parameters = {
+                **self.serialize_header_param(
+                    "Accept", "application/json",
                 ),
             }
             return parameters

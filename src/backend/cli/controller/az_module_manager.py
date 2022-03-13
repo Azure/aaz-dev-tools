@@ -221,6 +221,9 @@ class AzModuleManager:
         command_group.help.short = aaz_cg.help.short
         if aaz_cg.help.lines:
             command_group.help.long = '\n'.join(aaz_cg.help.lines)
+        command_group.register_info = CLIAtomicCommandGroupRegisterInfo({
+            "stage": AAZStageEnum.Stable
+        })
         return command_group
 
     def _load_command(self, *names, path):
@@ -308,9 +311,11 @@ class AzModuleManager:
             command.help.examples = [CLICommandExample(e.to_primitive()) for e in version.examples]
 
         command.version = version.name
-        command.stage = version.stage
+        command.stage = version.stage or AAZStageEnum.Stable
         command.resources = [CLISpecsResource(r.to_primitive()) for r in version.resources]
-
+        command.register_info = CLIAtomicCommandRegisterInfo({
+            "stage": command.stage,
+        })
         return command
 
     def _load_commands_cfg(self, command_group):

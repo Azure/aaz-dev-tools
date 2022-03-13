@@ -93,12 +93,12 @@ class Create(AAZCommand):
         authorizations.Element = AAZObjectArg()
 
         _element = cls._args_schema.authorizations.Element
-        _element.principal_id = AAZStrType(
+        _element.principal_id = AAZStrArg(
             options=["principal-id"],
             help="The provider's principal identifier. This is the identity that the provider will use to call ARM to manage the workspace resources.",
             required=True,
         )
-        _element.role_definition_id = AAZStrType(
+        _element.role_definition_id = AAZStrArg(
             options=["role-definition-id"],
             help="The provider's role definition identifier. This role will define all the permissions that the provider must have on the workspace's container resource group. This role definition cannot have permission to delete the resource group.",
             required=True,
@@ -273,6 +273,14 @@ class Create(AAZCommand):
         def __call__(self, *args, **kwargs):
             request = self.make_request()
             session = self.client.send_request(request=request, stream=False, **kwargs)
+            if session.http_response.status_code in [202]:
+                return self.client.build_lro_polling(
+                    self.ctx.args.no_wait,
+                    session,
+                    deserialization_callback=self.on_200_201,
+                    lro_options={"final-state-via": "azure-async-operation"},
+                    path_format_arguments=self.url_parameters,
+                )
             if session.http_response.status_code in [200, 201]:
                 return self.client.build_lro_polling(
                     self.ctx.args.no_wait,
@@ -281,6 +289,7 @@ class Create(AAZCommand):
                     lro_options={"final-state-via": "azure-async-operation"},
                     path_format_arguments=self.url_parameters,
                 )
+
             return self.on_error(session)
 
         @property
@@ -323,8 +332,20 @@ class Create(AAZCommand):
             return parameters
 
         @property
+        def header_parameters(self):
+            parameters = {
+                **self.serialize_header_param(
+                    "Content-Type", "application/json",
+                ),
+                **self.serialize_header_param(
+                    "Accept", "application/json",
+                ),
+            }
+            return parameters
+
+        @property
         def content(self):
-            _content_value, _builder = self.new_content(
+            _content_value, _builder = self.new_content_builder(
                 self.ctx.args,
                 typ=AAZObjectType,
             )

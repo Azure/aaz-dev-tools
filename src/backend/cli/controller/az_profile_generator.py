@@ -36,7 +36,7 @@ class AzProfileGenerator:
                 self._update_file(self.profile.name, file_name, data=data)
 
             remain_folders, _ = self._list_package(self.profile.name)
-            for command_group in self.profile.command_groups:
+            for command_group in self.profile.command_groups.values():
                 assert len(command_group.names) == 1, f"Invalid command group name: {command_group.names}"
                 self._generate_by_command_group(
                     profile_name=self.profile.name,
@@ -69,7 +69,7 @@ class AzProfileGenerator:
 
         folders = set()
         if command_group.command_groups:
-            for sub_group in command_group.command_groups:
+            for sub_group in command_group.command_groups.values():
                 assert sub_group.names[:-1] == command_group.names, f"Invalid command group name: {sub_group.names}"
                 self._generate_by_command_group(profile_name=profile_name, command_group=sub_group)
                 folders.add(sub_group.names[-1])
@@ -81,7 +81,7 @@ class AzProfileGenerator:
 
         files = set()
         if command_group.commands:
-            for command in command_group.commands:
+            for command in command_group.commands.values():
                 assert command.names[:-1] == command_group.names, f"Invalid command name: {command.names}"
                 cmd_file_name = self._command_file_name(command.names[-1])
                 if cmd_file_name in cur_files:
@@ -119,7 +119,7 @@ class AzProfileGenerator:
     def _generate_by_command(self, profile_name, command):
         assert isinstance(command.cfg, CMDCommand)
         file_name = self._command_file_name(command.names[-1])
-        tmpl = get_templates()['aaz']['command']['_cmd.py.j2']
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
         data = tmpl.render(
             leaf=AzCommandGenerator(command)
         )
