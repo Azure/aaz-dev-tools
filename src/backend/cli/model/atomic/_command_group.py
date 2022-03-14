@@ -7,7 +7,7 @@ from utils.stage import AAZStageField
 
 
 class CLIAtomicCommandGroupRegisterInfo(Model):
-    stage = AAZStageField(required=True)
+    stage = AAZStageField(required=True)    # the stage of command group used in code
     # TODO: add support for deprecate_info
 
 

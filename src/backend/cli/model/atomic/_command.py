@@ -7,12 +7,13 @@ from schematics.types import ModelType, ListType
 
 
 class CLIAtomicCommandRegisterInfo(Model):
-    stage = AAZStageField(required=True)
+    stage = AAZStageField(required=True)    # the stage used in code, usually it should be consist with command.stage
     # TODO: add support for deprecate_info
 
 
 class CLIAtomicCommand(Model):
     names = ListType(field=CLICommandNameField(), min_size=1, required=True)  # full name of a command
+    stage = AAZStageField()     # the stage of command
     help = ModelType(CLICommandHelp, required=True)
     register_info = ModelType(
         CLIAtomicCommandRegisterInfo,

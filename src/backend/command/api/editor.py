@@ -243,14 +243,14 @@ def editor_workspace_tree_node_resources(name, node_names):
     try:
         mod_names = data['module']
         version = data['version']
-        resource_ids = data['resources']
+        resources = data['resources']
     except KeyError:
         raise exceptions.InvalidAPIUsage("Invalid request")
 
     manager.add_new_resources_by_swagger(
         mod_names=mod_names,
         version=version,
-        resource_ids=resource_ids,
+        resources=resources,
         *node_names
     )
     manager.save()
