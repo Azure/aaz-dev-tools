@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import IconButton from "@mui/material/IconButton";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
@@ -6,7 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import TextareaAutosize from '@mui/base/TextareaAutosize';
 import { NodeModel } from "@minoru/react-dnd-treeview";
-import { Row, Col, ListGroup, Form, Button } from "react-bootstrap"
+import { Row, Col } from "react-bootstrap"
 import type { CommandGroup, HelpType, ExampleType } from "./ConfigEditor"
 
 
@@ -115,7 +115,7 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
 
 
         const handleDoubleClick = (event: React.MouseEvent) => {
-            if (!props.editable){
+            if (!props.editable) {
                 return
             }
             event.stopPropagation();

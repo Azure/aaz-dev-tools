@@ -50,6 +50,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         with open(output_path, 'w') as f:
             f.write(data)
 
+    # workspace
     # create
     def test_render_create_cmd(self):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
@@ -261,6 +262,222 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "databricks", "workspace", f"_{cmd_name}.py")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write(data)
+
+    # vnet-peering
+    # create
+    def test_render_vnet_peering_create_cmd(self):
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
+
+        tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
+        with open(tree_path, 'r') as f:
+            data = json.load(f)
+            tree = CMDSpecsCommandTree(data)
+
+        cmd_name = "create"
+
+        cmd = tree.root.command_groups['databricks'].command_groups['workspace'].command_groups['vnet-peering'].commands[cmd_name]
+        leaf = CLIAtomicCommand({
+            "names": cmd.names,
+            "help": {
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples]
+            },
+            "register_info": {
+                "stage": cmd.versions[0].stage,
+            },
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
+        })
+
+        cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-crud.xml")
+
+        with open(cfg_file_path, 'r') as f:
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        cfg_reader = CfgReader(cfg)
+        leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
+
+        data = tmpl.render(
+            leaf=AzCommandGenerator(leaf)
+        )
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "output", "databricks", "workspace", "vnet-peering", f"_{cmd_name}.py")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write(data)
+
+    # show
+    def test_render_vnet_peering_show_cmd(self):
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
+
+        tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
+        with open(tree_path, 'r') as f:
+            data = json.load(f)
+            tree = CMDSpecsCommandTree(data)
+
+        cmd_name = "show"
+
+        cmd = tree.root.command_groups['databricks'].command_groups['workspace'].command_groups['vnet-peering'].commands[cmd_name]
+        leaf = CLIAtomicCommand({
+            "names": cmd.names,
+            "help": {
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples]
+            },
+            "register_info": {
+                "stage": cmd.versions[0].stage,
+            },
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
+        })
+
+        cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-crud.xml")
+
+        with open(cfg_file_path, 'r') as f:
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        cfg_reader = CfgReader(cfg)
+        leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
+
+        data = tmpl.render(
+            leaf=AzCommandGenerator(leaf)
+        )
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "output", "databricks", "workspace", "vnet-peering", f"_{cmd_name}.py")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write(data)
+
+    # delete
+    def test_render_vnet_peering_delete_cmd(self):
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
+
+        tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
+        with open(tree_path, 'r') as f:
+            data = json.load(f)
+            tree = CMDSpecsCommandTree(data)
+
+        cmd_name = "delete"
+
+        cmd = tree.root.command_groups['databricks'].command_groups['workspace'].command_groups['vnet-peering'].commands[cmd_name]
+        leaf = CLIAtomicCommand({
+            "names": cmd.names,
+            "help": {
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples]
+            },
+            "register_info": {
+                "stage": cmd.versions[0].stage,
+            },
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
+        })
+
+        cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-crud.xml")
+
+        with open(cfg_file_path, 'r') as f:
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        cfg_reader = CfgReader(cfg)
+        leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
+
+        data = tmpl.render(
+            leaf=AzCommandGenerator(leaf)
+        )
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "output", "databricks", "workspace", "vnet-peering", f"_{cmd_name}.py")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write(data)
+
+    # update
+    def test_render_vnet_peering_update_cmd(self):
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
+
+        tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
+        with open(tree_path, 'r') as f:
+            data = json.load(f)
+            tree = CMDSpecsCommandTree(data)
+
+        cmd_name = "update"
+
+        cmd = tree.root.command_groups['databricks'].command_groups['workspace'].command_groups['vnet-peering'].commands[cmd_name]
+        leaf = CLIAtomicCommand({
+            "names": cmd.names,
+            "help": {
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples]
+            },
+            "register_info": {
+                "stage": cmd.versions[0].stage,
+            },
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
+        })
+
+        cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-crud.xml")
+
+        with open(cfg_file_path, 'r') as f:
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        cfg_reader = CfgReader(cfg)
+        leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
+
+        data = tmpl.render(
+            leaf=AzCommandGenerator(leaf)
+        )
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "output", "databricks", "workspace", "vnet-peering", f"_{cmd_name}.py")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write(data)
+
+    # list
+    def test_render_vnet_peering_list_cmd(self):
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
+
+        tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
+        with open(tree_path, 'r') as f:
+            data = json.load(f)
+            tree = CMDSpecsCommandTree(data)
+
+        cmd_name = "list"
+
+        cmd = tree.root.command_groups['databricks'].command_groups['workspace'].command_groups['vnet-peering'].commands[cmd_name]
+        leaf = CLIAtomicCommand({
+            "names": cmd.names,
+            "help": {
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples]
+            },
+            "register_info": {
+                "stage": cmd.versions[0].stage,
+            },
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
+        })
+
+        cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-list.xml")
+
+        with open(cfg_file_path, 'r') as f:
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        cfg_reader = CfgReader(cfg)
+        leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
+
+        data = tmpl.render(
+            leaf=AzCommandGenerator(leaf)
+        )
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "output", "databricks", "workspace", "vnet-peering", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)

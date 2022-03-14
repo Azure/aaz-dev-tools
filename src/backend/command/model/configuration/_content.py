@@ -20,11 +20,11 @@ class CMDRequestJson(Model):
     class Options:
         serialize_when_none = False
 
-    def generate_args(self):
+    def generate_args(self, is_update_action=False):
         if not self.schema:
             return []
         assert isinstance(self.schema, CMDSchema)
-        builder = CMDArgBuilder.new_builder(schema=self.schema)
+        builder = CMDArgBuilder.new_builder(schema=self.schema, is_update_action=is_update_action)
         args = builder.get_args()
         return args
 
@@ -111,7 +111,7 @@ def _iter_over_schema(schema, schema_cls_map):
         if isinstance(schema, CMDObjectSchemaBase) and schema.additional_props and schema.additional_props.item:
             s = schema.additional_props.item
             if getattr(s, 'cls', None):
-                if schema_cls_map.get(s.cls, None):
+                if not schema_cls_map.get(s.cls, None):
                     schema_cls_map[s.cls] = s
                 else:
                     # replace by CMDClsBaseSchema
@@ -121,7 +121,7 @@ def _iter_over_schema(schema, schema_cls_map):
     elif isinstance(schema, CMDArraySchemaBase):
         s = schema.item
         if getattr(s, 'cls', None):
-            if schema_cls_map.get(s.cls, None):
+            if not schema_cls_map.get(s.cls, None):
                 schema_cls_map[s.cls] = s
             else:
                 # replace by CMDClsBaseSchema

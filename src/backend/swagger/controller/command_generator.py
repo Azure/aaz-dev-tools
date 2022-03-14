@@ -11,7 +11,8 @@ from swagger.model.schema.path_item import PathItem
 from swagger.model.schema.x_ms_pageable import XmsPageable
 from swagger.model.specs import SwaggerLoader
 from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case, get_url_path_valid_parts
-from swagger.utils import exceptions
+from swagger.utils.exceptions import InvalidSwaggerValueError
+from utils import exceptions
 
 logger = logging.getLogger('backend')
 
@@ -35,7 +36,7 @@ class CommandGenerator:
             self.loader.load_file(resource.file_path)
         self.loader.link_swaggers()
 
-    def create_draft_command_group(self, resource):
+    def create_draft_command_group(self, resource, **kwargs):
         swagger = self.loader.get_loaded(resource.file_path)
         assert swagger is not None
         path_item = swagger.paths.get(resource.path, None)
@@ -72,23 +73,54 @@ class CommandGenerator:
             command_group.commands.append(head_command)
 
         # update command
-        update_by_patch_command = None
-        update_by_generic_command = None
-        if path_item.patch is not None:
-            cmd_builder = CMDBuilder(path=resource.path, method='patch', mutability=MutabilityEnum.Update)
-            update_by_patch_command = self.generate_command(path_item, resource, cmd_builder)
-        if path_item.get is not None and path_item.put is not None:
-            cmd_builder = CMDBuilder(path=resource.path)
-            update_by_generic_command = self.generate_generic_update_command(path_item, resource, cmd_builder)
-        if update_by_patch_command and update_by_generic_command:
-            update_command = self._merge_update_commands(
-                patch_command=update_by_patch_command, generic_command=update_by_generic_command
-            )
-            command_group.commands.append(update_command)
-        elif update_by_generic_command:
-            command_group.commands.append(update_by_generic_command)
-        elif update_by_patch_command:
-            command_group.commands.append(update_by_patch_command)
+        update_by = kwargs.get('update_by', None)
+        if update_by is None:
+            update_by_patch_command = None
+            update_by_generic_command = None
+            if path_item.patch is not None:
+                cmd_builder = CMDBuilder(path=resource.path, method='patch', mutability=MutabilityEnum.Update)
+                update_by_patch_command = self.generate_command(path_item, resource, cmd_builder)
+            if path_item.get is not None and path_item.put is not None:
+                cmd_builder = CMDBuilder(path=resource.path)
+                update_by_generic_command = self.generate_generic_update_command(path_item, resource, cmd_builder)
+            # generic update command first, patch update command after that
+            if update_by_generic_command:
+                command_group.commands.append(update_by_generic_command)
+            elif update_by_patch_command:
+                command_group.commands.append(update_by_patch_command)
+        else:
+            if update_by == 'GenericOnly':
+                if path_item.get is None or path_item.put is None:
+                    raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: resource needs to have 'get' and 'put' operations: '{resource}'")
+                cmd_builder = CMDBuilder(path=resource.path)
+                generic_update_command = self.generate_generic_update_command(path_item, resource, cmd_builder)
+                if generic_update_command is None:
+                    raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: failed to generate generic update: '{resource}'")
+                command_group.commands.append(generic_update_command)
+                # elif 'update_by' in kwargs:
+                #     logger.error(f'Failed to generate generic update for resource: {resource}')
+            elif update_by == 'PatchOnly':
+                if path_item.patch is None:
+                    raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: resource needs to have 'patch' operation: '{resource}'")
+                cmd_builder = CMDBuilder(path=resource.path, method='patch', mutability=MutabilityEnum.Update)
+                patch_update_command = self.generate_command(path_item, resource, cmd_builder)
+                command_group.commands.append(patch_update_command)
+            # elif update_by == 'GenericAndPatch':
+            #     # TODO: add support for generic and patch merge
+            #     if path_item.get is None or path_item.put is None or path_item.patch is None:
+            #         raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: resource needs to have 'get' and 'put' and 'patch' operation: '{resource}'")
+            #     cmd_builder = CMDBuilder(path=resource.path)
+            #     generic_update_command = self.generate_generic_update_command(path_item, resource, cmd_builder)
+            #     if generic_update_command is None:
+            #         raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: failed to generate generic update: '{resource}'")
+            #     cmd_builder = CMDBuilder(path=resource.path, method='patch', mutability=MutabilityEnum.Update)
+            #     patch_update_command = self.generate_command(path_item, resource, cmd_builder)
+            #     generic_and_patch_update_command = self._merge_update_commands(
+            #         patch_command=patch_update_command, generic_command=generic_update_command
+            #     )
+            #     command_group.commands.append(generic_and_patch_update_command)
+            elif update_by != 'None':
+                raise exceptions.InvalidAPIUsage(f"Invalid update_by value: {update_by} : only support ['GenericOnly', 'PatchOnly', 'None'] values")
 
         for command in command_group.commands:
             parts = command.name.split(' ')
@@ -265,13 +297,13 @@ class CommandGenerator:
                         output = CMDObjectOutput()
                         output.ref = body_json.var
                     else:
-                        raise exceptions.InvalidSwaggerValueError(
+                        raise InvalidSwaggerValueError(
                             "Invalid output schema:",
                             key=[cmd_builder.path, cmd_builder.method],
                             value=type(model)
                         )
                 else:
-                    raise exceptions.InvalidSwaggerValueError(
+                    raise InvalidSwaggerValueError(
                         "Invalid output schema:",
                         key=[cmd_builder.path, cmd_builder.method],
                         value=type(resp.body.json.schema)

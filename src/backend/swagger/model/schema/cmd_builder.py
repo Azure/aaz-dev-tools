@@ -438,6 +438,8 @@ class CMDBuilder:
     @staticmethod
     def classify_responses(schema):
         success_responses = []
+        success_202_response = None
+        success_204_response = None
         redirect_responses = []
         error_responses = []
 
@@ -450,15 +452,20 @@ class CMDBuilder:
                 continue
             status_code = int(code)
             if status_code < 300:
-                # success
-                find_match = False
-                for status_codes, p_resp in success_responses:
-                    if p_resp.schema == resp.schema:
-                        status_codes.add(status_code)
-                        find_match = True
-                        break
-                if not find_match:
-                    success_responses.append(({status_code}, resp))
+                if status_code == 202:
+                    success_202_response = ({status_code}, resp)
+                elif status_code == 204:
+                    success_204_response = ({status_code}, resp)
+                else:
+                    # success
+                    find_match = False
+                    for status_codes, p_resp in success_responses:
+                        if p_resp.schema == resp.schema:
+                            status_codes.add(status_code)
+                            find_match = True
+                            break
+                    if not find_match:
+                        success_responses.append(({status_code}, resp))
             elif status_code < 400:
                 # redirect
                 find_match = False
@@ -480,8 +487,7 @@ class CMDBuilder:
                 if not find_match:
                     error_responses.append(({status_code}, resp))
 
-        if len(success_responses) >= 3:
-            # 202 may contained
+        if len(success_responses) >= 2:
             raise exceptions.InvalidSwaggerValueError(
                 msg="Multi Schema for success responses",
                 key=[schema.traces],
@@ -499,6 +505,13 @@ class CMDBuilder:
                 key=[schema.traces],
                 value=[status_codes for status_codes, _ in error_responses]
             )
+
+        if success_202_response is not None:
+            # append 202 Long Running response at the end of success response
+            success_responses.append(success_202_response)
+        if success_204_response is not None:
+            # append 204 No Content response at the end of success response
+            success_responses.append(success_204_response)
 
         # # default response
         # if 'default' not in error_responses and len(error_responses) == 1:

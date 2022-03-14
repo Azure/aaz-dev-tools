@@ -22,6 +22,13 @@ class Delete(AAZCommand):
         az databricks workspace delete --resource-group MyResourceGroup --name MyWorkspace
     """
 
+    _aaz_info = {
+        "version": "2018-04-01",
+        "resources": [
+            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}", "2018-04-01"],
+        ]
+    }
+
     AZ_SUPPORT_NO_WAIT = True
 
     def _handler(self, command_args):
@@ -43,10 +50,10 @@ class Delete(AAZCommand):
             required=True,
         )
         _args_schema.workspace_name = AAZStrArg(
-            options=['--workspace-name', '--name', '-n'],
-            help='The name of the workspace.',
+            options=["--workspace-name", "--name", "-n"],
+            help="The name of the workspace.",
             required=True,
-            id_part='name',
+            id_part="name",
         )
         return _args_schema
 
@@ -60,14 +67,23 @@ class Delete(AAZCommand):
         def __call__(self, *args, **kwargs):
             request = self.make_request()
             session = self.client.send_request(request=request, stream=False, **kwargs)
+            if session.http_response.status_code in [202]:
+                return self.client.build_lro_polling(
+                    self.ctx.args.no_wait,
+                    session,
+                    deserialization_callback=self.on_200_202_204,
+                    lro_options={"final-state-via": "azure-async-operation"},
+                    path_format_arguments=self.url_parameters,
+                )
             if session.http_response.status_code in [200, 202, 204]:
                 return self.client.build_lro_polling(
                     self.ctx.args.no_wait,
                     session,
                     deserialization_callback=self.on_200_202_204,
-                    lro_options={'final-state-via': 'azure-async-operation'},
+                    lro_options={"final-state-via": "azure-async-operation"},
                     path_format_arguments=self.url_parameters,
                 )
+
             return self.on_error(session)
 
         @property
@@ -103,7 +119,7 @@ class Delete(AAZCommand):
         def query_parameters(self):
             parameters = {
                 **self.serialize_query_param(
-                    "api-version", '2018-04-01',
+                    "api-version", "2018-04-01",
                     required=True,
                 ),
             }
@@ -113,4 +129,4 @@ class Delete(AAZCommand):
             pass
 
 
-__all__ = ['Delete']
+__all__ = ["Delete"]

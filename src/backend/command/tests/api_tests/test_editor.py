@@ -1,12 +1,13 @@
 import json
 import os
 
-from utils.stage import AAZStageEnum
 from command.controller.workspace_cfg_editor import WorkspaceCfgEditor
 from command.controller.workspace_manager import WorkspaceManager
 from command.tests.common import CommandTestCase, workspace_name
 from swagger.utils.tools import swagger_resource_path_to_resource_id
+from utils.base64 import b64encode_str
 from utils.plane import PlaneEnum
+from utils.stage import AAZStageEnum
 
 
 class APIEditorTest(CommandTestCase):
@@ -99,12 +100,12 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}')},
                 ]
             })
             assert rv.status_code == 200
@@ -171,7 +172,7 @@ class APIEditorTest(CommandTestCase):
             assert rv.status_code == 200
             command = rv.get_json()
             assert command['names'] == ['edge-order', 'address', 'create']
-            assert len(command['argGroups']) == 1
+            assert len(command['argGroups']) == 2
             assert 'conditions' not in command
             assert len(command['operations']) == 1
             assert len(command['outputs']) == 1
@@ -184,7 +185,7 @@ class APIEditorTest(CommandTestCase):
             assert command['names'] == ['edge-order', 'address', 'update']
             assert len(command['argGroups']) == 2
             assert 'conditions' not in command
-            assert len(command['operations']) == 4  # Get, InstanceUpdate, GenericUpdate, Put
+            assert len(command['operations']) == 3  # Get, InstanceUpdate, Put
             assert len(command['outputs']) == 1
             assert len(command['resources']) == 1
             assert command['version'] == '2021-12-01'
@@ -204,35 +205,34 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orderItems'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orders'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/locations/{location}/orders/{orderName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return'),
-                    # FIXME: fix issues in following resources
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orderItems')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orders')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/locations/{location}/orders/{orderName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies')},
                 ]
             })
             self.assertTrue(rv.status_code == 200)
@@ -364,6 +364,35 @@ class APIEditorTest(CommandTestCase):
             data = rv.get_json()
             self.assertTrue(data['commands']['create']['stage'] == AAZStageEnum.Experimental)
 
+            # try delete resource with CRUD
+            resource = data['commands']['create']['resources'][0]
+            resource_id = resource['id']
+            resource_version = resource['version']
+
+            rv = c.delete(f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(resource_version)}")
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(
+                'create' not in data['commands'] and 'show' not in data['commands'] and 'update' not in data[
+                    'commands'] and 'delete' not in data['commands'])
+
+            # try delete one resource in list
+            self.assertTrue(len(data['commands']['list']['resources']) > 1)
+            resource = data['commands']['list']['resources'][0]
+            resource_id = resource['id']
+            resource_version = resource['version']
+
+            rv = c.delete(f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(resource_version)}")
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/order/item")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue('list' not in data['commands'])
+
     @workspace_name("test_workspace_command_merge")
     def test_workspace_command_merge(self, ws_name):
         with self.app.test_client() as c:
@@ -379,8 +408,8 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses')},
                 ]
             })
             self.assertTrue(rv.status_code == 200)
@@ -401,8 +430,8 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses')},
                 ]
             })
             self.assertTrue(rv.status_code == 200)
@@ -428,7 +457,8 @@ class APIEditorTest(CommandTestCase):
             rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address")
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
-            self.assertTrue(len(data['commands']) == 1 and 'list' in data['commands'] and len(data['commands']['list']['resources']) == 2)
+            self.assertTrue(len(data['commands']) == 1 and 'list' in data['commands'] and len(
+                data['commands']['list']['resources']) == 2)
 
             manager = WorkspaceManager(name=ws_name)
             path_main = WorkspaceCfgEditor.get_cfg_path(
@@ -462,34 +492,34 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orderItems'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orders'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/locations/{location}/orders/{orderName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orderItems')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orders')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/locations/{location}/orders/{orderName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return')},
                 ]
             })
             self.assertTrue(rv.status_code == 200)
@@ -617,17 +647,17 @@ class APIEditorTest(CommandTestCase):
                 'module': 'databricks',
                 'version': '2018-04-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.Databricks/workspaces'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings/{peeringName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings'),
-                    ]
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.Databricks/workspaces')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings/{peeringName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings')},
+                ]
             })
             self.assertTrue(rv.status_code == 200)
 
@@ -863,6 +893,325 @@ class APIEditorTest(CommandTestCase):
             rv = c.post(f"{ws_url}/Generate")
             self.assertTrue(rv.status_code == 200)
 
+    @workspace_name("test_workspace_aaz_generate_elastic")
+    def test_workspace_aaz_generate_elastic(self, ws_name):
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum.Mgmt,
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws = rv.get_json()
+            ws_url = ws['url']
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': 'elastic',
+                'version': '2020-07-01',
+                'resources': [
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.Elastic/monitors')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/listMonitoredResources')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/listDeploymentInfo')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/tagRules')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/tagRules/{ruleSetName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/listVMHost')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/vmIngestionDetails')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Elastic/monitors/{monitorName}/vmCollectionUpdate')},
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/list-monitored-resource/Rename", json={
+                'name': "elastic monitor list-resource"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/vm-collection-update/Rename", json={
+                'name': "elastic monitor update-vm-collection"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/vm-ingestion-detail/Rename", json={
+                'name': "elastic monitor list-vm-ingestion-detail"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic", json={
+                "help": {
+                    "short": "Manage Microsoft Elastic.",
+                },
+                "stage": AAZStageEnum.Experimental
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor", json={
+                "help": {
+                    "short": "Manage monitor with Elastic.",
+                },
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/tag-rule", json={
+                "help": {
+                    "short": "Manage tag rule with Elastic.",
+                },
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/list", json={
+                "help": {
+                    "short": "List all monitors under the specified resource group. "
+                             "And List all monitors under the specified subscription.",
+                },
+                "examples": [
+                    {
+                        "name": "Monitors List By ResourceGroup",
+                        "commands": [
+                            "elastic monitor list --resource-group myResourceGroup"
+                        ]
+                    },
+                    {
+                        "name": "Monitors List",
+                        "commands": [
+                            "elastic monitor list"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/show", json={
+                "help": {
+                    "short": "Get the properties of a specific monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "Monitors Get",
+                        "commands": [
+                            "elastic monitor show --name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/create", json={
+                "help": {
+                    "short": "Create a monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "Monitors Create",
+                        "commands": [
+                            "elastic monitor create --name myMonitor --location westus2"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/update", json={
+                "help": {
+                    "short": "Update a monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "Monitors Update",
+                        "commands": [
+                            "elastic monitor update --name myMonitor --tags Environment=dev --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/delete", json={
+                "help": {
+                    "short": "Delete a monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "Monitors Delete",
+                        "commands": [
+                            "elastic monitor delete --name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/list-deployment-info", json={
+                "help": {
+                    "short": "Fetch information regarding Elastic cloud deployment corresponding to the Elastic monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "DeploymentInfo List",
+                        "commands": [
+                            "elastic monitor list-deployment-info --name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/list-resource", json={
+                "help": {
+                    "short": "List the resources currently being monitored by the Elastic monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "MonitoredResources List",
+                        "commands": [
+                            "elastic monitor list-resource --name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/list-vm-host", json={
+                "help": {
+                    "short": "List the vm resources currently being monitored by the Elastic monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "VMHost List",
+                        "commands": [
+                            "elastic monitor list-vm-host --name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/list-vm-ingestion-detail", json={
+                "help": {
+                    "short": "List the vm ingestion details that will be monitored by the Elastic monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "VMIngestion Details",
+                        "commands": [
+                            "elastic monitor list-vm-ingestion-detail --name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/Leaves/update-vm-collection", json={
+                "help": {
+                    "short": "Update the vm details that will be monitored by the Elastic monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "VMCollection Update",
+                        "commands": [
+                            "elastic monitor update-vm-collection --name myMonitor --resource-group myResourceGroup "
+                            "--operation-name Add --vm-resource-id /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualmachines/myVM"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/tag-rule/Leaves/list", json={
+                "help": {
+                    "short": "List the tag rules for a given monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "TagRules List",
+                        "commands": [
+                            "elastic monitor tag-rule list --monitor-name myMonitor --resource-group myResourceGroup"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/tag-rule/Leaves/show", json={
+                "help": {
+                    "short": "Get a tag rule set for a given monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "TagRules Get",
+                        "commands": [
+                            "elastic monitor tag-rule show --monitor-name myMonitor --resource-group myResourceGroup --rule-set-name default"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/tag-rule/Leaves/create", json={
+                "help": {
+                    "short": "Create a tag rule set for a given monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "TagRules Create",
+                        "commands": [
+                            "elastic monitor tag-rule create --monitor-name myMonitor --resource-group myResourceGroup "
+                            "--rule-set-name default --filtering-tags name=Environment action=Include value=Prod "
+                            "--send-aad-logs False --send-activity-logs --send-subscription-logs "
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/tag-rule/Leaves/update", json={
+                "help": {
+                    "short": "Update a tag rule set for a given monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "TagRules Update",
+                        "commands": [
+                            "elastic monitor tag-rule update --monitor-name myMonitor --resource-group myResourceGroup "
+                            "--rule-set-name default --send-aad-logs True"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/elastic/monitor/tag-rule/Leaves/delete", json={
+                "help": {
+                    "short": "Delete a tag rule set for a given monitor resource.",
+                },
+                "examples": [
+                    {
+                        "name": "TagRules Delete",
+                        "commands": [
+                            "elastic monitor tag-rule delete --monitor-name myMonitor --resource-group myResourceGroup "
+                            "--rule-set-name default"
+                        ]
+                    }
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/Generate")
+            self.assertTrue(rv.status_code == 200)
+
     @workspace_name("test_workspace_command_node_rename")
     def test_workspace_command_node_rename(self, ws_name):
         with self.app.test_client() as c:
@@ -878,34 +1227,34 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orderItems'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orders'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/locations/{location}/orders/{orderName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel'),
-                    swagger_resource_path_to_resource_id(
-                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listProductFamilies')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/listConfigurations')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/productFamiliesMetadata')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orders')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/orderItems')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orders')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/locations/{location}/orders/{orderName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/cancel')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/return')},
                 ]
             })
             self.assertTrue(rv.status_code == 200)
@@ -938,8 +1287,8 @@ class APIEditorTest(CommandTestCase):
                 'module': 'edgeorder',
                 'version': '2021-12-01',
                 'resources': [
-                    swagger_resource_path_to_resource_id(
-                        '/providers/Microsoft.EdgeOrder/operations'),
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/providers/Microsoft.EdgeOrder/operations')},
                 ]
             })
             self.assertTrue(rv.status_code == 200)

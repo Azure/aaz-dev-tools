@@ -1,10 +1,8 @@
-import React, { Component, useState } from "react";
+import React, { Component } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom"
-import { Row, Col, Navbar, Nav, Button, Alert} from "react-bootstrap"
+import { Row, Col, Navbar, Nav, Button, Alert } from "react-bootstrap"
 import { SpecSelector } from "./SpecSelector";
-
-import { Set } from "typescript";
 
 
 import { Tree, NodeModel, DragLayerMonitorProps, DropOptions } from "@minoru/react-dnd-treeview";
@@ -58,6 +56,10 @@ type NumberToString = {
   [index: number]: string
 }
 
+type StringToNumber = {
+  [name: string]: number
+}
+
 type NumberToTreeNode = {
   [index: number]: TreeNode
 }
@@ -96,6 +98,7 @@ type ConfigEditorState = {
   treeData: TreeDataType,
   currentIndex: number,
   indexToCommandGroupName: NumberToString,
+  nameToIndex: StringToNumber,
   indexToCommandGroup: NumberToCommandGroup,
   indexToTreeNode: NumberToTreeNode,
   showSpecSelectorModal: boolean,
@@ -119,6 +122,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       treeData: [],
       currentIndex: 0,
       indexToCommandGroupName: {},
+      nameToIndex: {},
       indexToCommandGroup: {},
       indexToTreeNode: {},
       showSpecSelectorModal: false,
@@ -136,6 +140,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       let namesJoined = commandGroups[commandGroupName].names.join('/')
       this.setState({ currentIndex: this.state.currentIndex + 1 })
       this.state.indexToCommandGroupName[this.state.currentIndex] = namesJoined
+      this.state.nameToIndex[namesJoined] = this.state.currentIndex
       this.state.indexToCommandGroup[this.state.currentIndex] = commandGroups[commandGroupName]
 
       let treeNode: TreeNode = {
@@ -168,6 +173,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         }
         const currentIndex = this.state.currentIndex
         this.state.indexToCommandGroupName[currentIndex] = namesJoined
+        this.state.nameToIndex[namesJoined] = this.state.currentIndex
         this.state.treeData.push(treeNode)
         this.state.indexToTreeNode[currentIndex] = treeNode
         return this.getCommand(currentIndex, names.slice(0, names.length - 1).join('/'), names[names.length - 1])
@@ -213,10 +219,10 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
 
   markHasChildren = () => {
     let hasChildren = new Set()
-    this.state.treeData.map(node => {
+    this.state.treeData.forEach(node => {
       hasChildren.add(node.parent)
     })
-    this.state.treeData.map(node => {
+    this.state.treeData.forEach(node => {
       node.data.hasChildren = hasChildren.has(node.id)
     })
   }
@@ -231,6 +237,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       treeData: [],
       currentIndex: 0,
       indexToCommandGroupName: {},
+      nameToIndex: {},
       indexToCommandGroup: {},
       indexToTreeNode: {}
     })
@@ -354,7 +361,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     const newNameJoined = targetNames.join(' ')
 
     // console.log(url)
-    // console.log(newNameJoined)
+    // console.log(targetNames)
 
     return axios.post(url, { name: newNameJoined })
       .then(res => {
@@ -363,7 +370,11 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       })
       .then(() => {
         // console.log(this.state)
-        this.setState({ selectedIndex: Number(dragSourceId) })
+        let newIndex = -1
+        if (this.state.nameToIndex[targetNames.join('/')]) {
+          newIndex = this.state.nameToIndex[targetNames.join('/')]
+        }
+        this.setState({ selectedIndex: newIndex })
         //         console.log(this.state)
       })
       .catch(err => {
@@ -433,18 +444,18 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   handleGenerate = () => {
     const url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/Generate`
     axios.post(url)
-      .then(res=>{
-        this.setState({showAlert:true, alertText:"Successfully generated configuration.", alertVariant:"success"})
-        window.setTimeout(()=>{
-          this.setState({showAlert:false})
-        },2000)
+      .then(res => {
+        this.setState({ showAlert: true, alertText: "Successfully generated configuration.", alertVariant: "success" })
+        window.setTimeout(() => {
+          this.setState({ showAlert: false })
+        }, 2000)
       })
       .catch(err => {
         console.error(err.response)
-        this.setState({showAlert:true, alertText:"Need to complete all the short help fields", alertVariant:"danger"})
-        window.setTimeout(()=>{
-          this.setState({showAlert:false})
-        },2000)
+        this.setState({ showAlert: true, alertText: "Need to complete all the short help fields", alertVariant: "danger" })
+        window.setTimeout(() => {
+          this.setState({ showAlert: false })
+        }, 2000)
       })
   }
 
@@ -460,7 +471,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         </Button>
         <Nav className="me-auto" />
       </Navbar>
-      {this.state.showAlert&&<Alert variant={this.state.alertVariant} onClose={() => this.setState({showAlert: false})}>
+      {this.state.showAlert && <Alert variant={this.state.alertVariant} onClose={() => this.setState({ showAlert: false })}>
         {this.state.alertText}
       </Alert>}
       <Row>
@@ -475,7 +486,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
 
 
       {this.state.showSpecSelectorModal ? <SpecSelector onCloseModal={this.handleCloseModal} /> : <></>}
-      
+
     </div>
   }
 }

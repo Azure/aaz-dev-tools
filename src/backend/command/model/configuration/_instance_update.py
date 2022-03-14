@@ -41,7 +41,7 @@ class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
     json = ModelType(CMDRequestJson, required=True)
 
     def generate_args(self):
-        return self.json.generate_args()
+        return self.json.generate_args(is_update_action=True)
 
     def reformat(self, **kwargs):
         self.json.reformat(**kwargs)
