@@ -6,12 +6,12 @@ import styles from "./TreeView/App.module.css";
 import { NodeModel, Tree } from "@minoru/react-dnd-treeview";
 import { CheckData } from "./TreeView/types";
 import { CheckNode } from "./TreeView/CheckNode";
-
+import {verify} from "crypto";
 
 type Version = {
   name: string;
-  resources: {}
-}
+  resources: {};
+};
 
 type Command = {
   help: { short: string };
@@ -97,7 +97,7 @@ class Generator extends Component<any, GeneratorState> {
         return Promise.resolve();
       });
     });
-    console.log(this.state.treeData)
+    console.log(this.state.treeData);
   }
 
   parseCommandGroup = (
@@ -135,15 +135,17 @@ class Generator extends Component<any, GeneratorState> {
         // eslint-disable-next-line array-callback-return
         let commandPromises = Object.keys(commands).map((commandName) => {
           this.setState({ currIdx: this.state.currIdx + 1 });
+          let versions: string[] = [];
           if (commands) {
-            console.log(commands[commandName]['versions'])
+            const versionList = commands[commandName]["versions"];
+            versionList.map((version) => versions.push(version["name"]));
           }
           let treeNode: TreeNode = {
             id: this.state.currIdx,
             parent: commandGroupIdx,
             text: commandName,
             droppable: false,
-            data: { type: "Command" },
+            data: { type: "Command", versions: versions},
           };
           this.state.treeData.push(treeNode);
         });
