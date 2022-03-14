@@ -1,18 +1,30 @@
 .target-dialog {
-    width: 60%;
-    height: 500px;
-    max-width: none!important;
+  width: 40%;
+  height: 500px;
+  max-width: none !important;
 }
 
 .target-content {
-    height: 45%;
+  height: 40%;
 }
 
 .target-header {
-    height:0em;
+  height: 0;
 }
 
 .target-title {
-    font: 1em sans-serif;
-    margin-left: 37%;
+  font: 1em sans-serif;
+  margin-left: 30%;
+}
+
+.cli {
+  margin-top: 3%;
+}
+
+.module {
+  margin-left: 18%;
+}
+
+.search {
+  width: 330px;
 }
