@@ -1,0 +1,18 @@
+.target-dialog {
+    width: 60%;
+    height: 500px;
+    max-width: none!important;
+}
+
+.target-content {
+    height: 45%;
+}
+
+.target-header {
+    height:0em;
+}
+
+.target-title {
+    font: 1em sans-serif;
+    margin-left: 38%;
+}
