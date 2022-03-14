@@ -6,7 +6,11 @@ import styles from "./TreeView/App.module.css";
 import { NodeModel, Tree } from "@minoru/react-dnd-treeview";
 import { CheckData } from "./TreeView/types";
 import { CheckNode } from "./TreeView/CheckNode";
-import {verify} from "crypto";
+
+const repoMap = {
+  "Azure CLI": "Main",
+  "Azure CLI Extension": "Extension",
+};
 
 type Version = {
   name: string;
@@ -48,9 +52,9 @@ type TreeNode = {
 };
 
 type GeneratorState = {
-  currRepo: string;
+  currRepo: "Azure CLI" | "Azure CLI Extension";
   moduleName: string;
-  toBeGenerated: {};
+  toBeGenerated: CommandGroups;
   profiles: string[];
   currProfile: string;
   treeData: TreeNode[];
@@ -76,10 +80,11 @@ class Generator extends Component<any, GeneratorState> {
   componentDidMount() {
     axios.get("/CLI/Az/Profiles").then((res) => {
       this.setState({ profiles: res.data });
+      this.setState({ currProfile: "latest" });
     });
 
     axios.get(`/CLI/Az/Main/Modules/${this.state.moduleName}`).then((res) => {
-      this.setState({ toBeGenerated: res.data });
+      this.setState({ toBeGenerated: res.data["profiles"] });
     });
 
     const url = `/AAZ/Specs/CommandTree/Nodes/aaz/${this.state.moduleName}`;
@@ -145,7 +150,7 @@ class Generator extends Component<any, GeneratorState> {
             parent: commandGroupIdx,
             text: commandName,
             droppable: false,
-            data: { type: "Command", versions: versions},
+            data: { type: "Command", versions: versions },
           };
           this.state.treeData.push(treeNode);
         });
@@ -178,6 +183,20 @@ class Generator extends Component<any, GeneratorState> {
       this.setState({ currProfile: profileName });
     };
 
+    const handleGen = () => {
+      axios
+        .put(
+          `/CLI/Az/${repoMap[this.state.currRepo]}/Modules/${
+            this.state.moduleName
+          }`,
+          { profiles: this.state.toBeGenerated }
+        )
+        .then(() => {})
+        .catch((err) => {
+          console.error(err.response);
+        });
+    };
+
     return (
       <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark">
         <Container>
@@ -197,7 +216,7 @@ class Generator extends Component<any, GeneratorState> {
                 );
               })}
             </Nav>
-            <Button>Generate</Button>
+            <Button onClick={handleGen}>Generate</Button>
           </Navbar.Collapse>
         </Container>
       </Navbar>
@@ -214,6 +233,38 @@ class Generator extends Component<any, GeneratorState> {
 
       if (!item) {
         setSelectedNodes([...selectedNodes, node]);
+        const version = "2021-12-01";
+        let namePath = [node.text];
+        let currId = Number(node.parent);
+        while (currId !== 0) {
+          const currNode = this.state.treeData[currId - 1];
+          namePath.unshift(currNode.text);
+          currId = currNode.parent;
+        }
+        let profile = this.state.toBeGenerated[this.state.currProfile];
+        namePath.slice(0, -1).forEach((item, idx) => {
+          const currPath = namePath.slice(0, idx + 1).join("/");
+          axios
+            .post(
+              `/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/${currPath}/Transfer`
+            )
+            .then((res) => {
+              let currItem: CommandGroups = {};
+              currItem[item] = res.data;
+              profile["commandGroups"] = currItem;
+              profile = profile["commandGroups"][item];
+            });
+        });
+        const currPath = namePath.slice(0, -1).join("/");
+        const currCmdName = namePath.slice(-1)[0];
+        const url = `/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/${currPath}/Leaves/${currCmdName}/Versions/${btoa(
+          version
+        )}/Transfer`;
+        axios.post(url).then((res) => {
+          let currItem: Commands = {};
+          currItem[currCmdName] = res.data;
+          profile["commands"] = currItem;
+        });
       } else {
         setSelectedNodes(selectedNodes.filter((n) => n.id !== node.id));
       }
