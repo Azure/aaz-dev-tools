@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Typography, Box, Link } from '@mui/material';
+import { Typography, Box, Link } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import CLIModuleSelector from './CLIModuleSelector';
 
@@ -18,7 +18,7 @@ const SpacePadding = styled(Box)(({ theme }) => ({
 }));
 
 class GenerationInstruction extends React.Component {
-    
+
     render() {
         return (
             <Box sx={{
@@ -37,13 +37,13 @@ class GenerationInstruction extends React.Component {
                     flexDirection: 'row',
                     alignItems: "center"
                 }}>
-                <CLIModuleSelector repo='Main' name='Azure Cli Module' />
-                <SpacePadding/>
-                <Typography variant='h6' gutterBottom>
-                    Or
-                </Typography>
-                <SpacePadding/>
-                <CLIModuleSelector repo='Extension' name='Azure Cli Extension Module' />
+                    <CLIModuleSelector repo='Main' name='Azure Cli Module' />
+                    <SpacePadding />
+                    <Typography variant='h6' gutterBottom>
+                        Or
+                    </Typography>
+                    <SpacePadding />
+                    <CLIModuleSelector repo='Extension' name='Azure Cli Extension Module' />
                 </Box>
             </Box>
         )

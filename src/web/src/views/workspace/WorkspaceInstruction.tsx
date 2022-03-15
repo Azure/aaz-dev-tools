@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Typography, Box, Link } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import WorkspaceSelector from './WorkspaceSelector';
 
@@ -19,7 +19,6 @@ const SpacePadding = styled(Box)(({ theme }) => ({
 
 
 class WorkspaceInstruction extends React.Component {
-    
     render() {
         return (
             <Box sx={{
@@ -32,7 +31,7 @@ class WorkspaceInstruction extends React.Component {
                     Please select a Workspace
                 </Typography>
                 <MiddlePadding />
-                <WorkspaceSelector name='Open or create a workspace'/>
+                <WorkspaceSelector name='Open or create a workspace' />
             </Box>
         )
     }

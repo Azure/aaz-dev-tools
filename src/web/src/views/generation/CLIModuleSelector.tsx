@@ -3,7 +3,6 @@ import { Box } from '@mui/system';
 import axios from 'axios';
 import * as React from 'react';
 import { Button } from 'reactstrap';
-import { Url } from 'url';
 
 
 interface CLIModule {
@@ -55,20 +54,20 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
 
     loadModules = () => {
         axios.get("/CLI/Az/" + this.props.repo + "/Modules")
-        .then((res) => {
-            let options = res.data.map((option: any) => {
-                console.log(option)
-                return {
-                    name: option.name,
-                    folder: option.folder,
-                    url: option.url,
-                }
+            .then((res) => {
+                let options = res.data.map((option: any) => {
+                    console.log(option)
+                    return {
+                        name: option.name,
+                        folder: option.folder,
+                        url: option.url,
+                    }
+                })
+                this.setState({
+                    options: options
+                })
             })
-            this.setState({
-                options: options
-            })
-        })
-        .catch((err) => console.log(err));
+            .catch((err) => console.log(err));
     }
 
     handleDialogSubmit = (event: any) => {
@@ -79,21 +78,21 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
             axios.post("/CLI/Az/" + this.props.repo + "/Modules", {
                 name: moduleName,
             })
-            .then((res) => {
-                let module = res.data;
-                let value = {
-                    name: module.name,
-                    folder: module.folder,
-                    url: module.url,
-                }
-                setTimeout(() => {
-                    this.onValueUpdated(value);
+                .then((res) => {
+                    let module = res.data;
+                    let value = {
+                        name: module.name,
+                        folder: module.folder,
+                        url: module.url,
+                    }
+                    setTimeout(() => {
+                        this.onValueUpdated(value);
+                    })
+                    this.handleDialogClose();
                 })
-                this.handleDialogClose();
-            })
-            .catch(error => {
-                console.log(error);
-            })
+                .catch(error => {
+                    console.log(error);
+                })
         }
     }
 
@@ -118,8 +117,8 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
     }
 
     render() {
-        const { options, value, openDialog,  createDialogValue} = this.state
-        
+        const { options, value, openDialog, createDialogValue } = this.state
+
         const { repo, name } = this.props
 
         return (
@@ -200,10 +199,10 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
                 <Dialog open={openDialog} onClose={this.handleDialogClose}>
                     <form onSubmit={this.handleDialogSubmit}>
                         <DialogTitle>
-                            {'Create module in Azure Cli' + repo === 'Extension' ? ' Extension': ''}
+                            {'Create module in Azure Cli' + repo === 'Extension' ? ' Extension' : ''}
                         </DialogTitle>
                         <DialogContent>
-                            <TextField 
+                            <TextField
                                 autoFocus
                                 margin="dense"
                                 id="name"
@@ -223,7 +222,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
                             />
                         </DialogContent>
                         <DialogActions>
-                        <Button onClick={this.handleDialogClose}>Cancel</Button>
+                            <Button onClick={this.handleDialogClose}>Cancel</Button>
                             <Button type="submit" color="success">Create</Button>
                         </DialogActions>
                     </form>

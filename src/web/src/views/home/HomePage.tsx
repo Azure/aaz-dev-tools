@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Typography, Box, Link } from '@mui/material';
+import { Typography, Box, Link } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 import withRoot from '../../withRoot';
@@ -38,7 +38,7 @@ class HomePage extends React.Component {
                         </Typography>
                         <MiddlePadding />
                         <Typography variant="h6" align="center" gutterBottom>
-                            
+
                             {'Convert Swagger to Command Model? '}
                             <Link
                                 href="/?#/Workspace"

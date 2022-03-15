@@ -7,7 +7,7 @@ class CommandsPage extends React.Component {
     render() {
         return (
             <React.Fragment>
-                <AppAppBar pageName={'Commands'}/>
+                <AppAppBar pageName={'Commands'} />
                 {/* <Typography variant='h1' gutterBottom>
                     Commands Page
                 </Typography> */}

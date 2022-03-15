@@ -9,7 +9,7 @@ class GenerationPage extends React.Component {
     render() {
         return (
             <React.Fragment>
-                <AppAppBar pageName={'Generation'}/>
+                <AppAppBar pageName={'Generation'} />
                 <PageLayout>
                     <Outlet />
                 </PageLayout>
