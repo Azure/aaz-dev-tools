@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom"
-import { Row, Col, Navbar, Nav, Button, Alert } from "react-bootstrap"
+import { Row, Col, Navbar, Nav, Button, Alert, Modal } from "react-bootstrap"
 import { SpecSelector } from "./SpecSelector";
 
 
@@ -15,12 +15,16 @@ import { CommandGroupDetails } from "./CommandGroupDetails"
 import { ArgumentDetails } from "./ArgumentDetails"
 
 type Argument = {
-  options: string[],
-  type: string,
+  options?: string[],
+  type?: string,
   help?: { short: string },
   required?: boolean,
   idPart?: string,
-  args?: Argument[]
+  args?: Argument[],
+  item?: {
+    args: Argument[],
+    type: string
+  }
 }
 
 type ArgGroups = {
@@ -31,7 +35,9 @@ type ArgGroups = {
 type Command = {
   help: { short: string },
   names: string[],
-  resources: {},
+  resources: {
+    swagger: string
+  }[],
   version: string
 }
 
@@ -45,7 +51,10 @@ type CommandGroup = {
   names: string[],
   help?: HelpType,
   examples?: ExampleType[],
-  argGroups?: ArgGroups
+  argGroups?: ArgGroups,
+  resources?: {
+    swagger: string
+  }[]
 }
 
 type CommandGroups = {
@@ -74,10 +83,7 @@ type TreeNode = {
   parent: number,
   droppable: boolean,
   text: string,
-  data: {
-    hasChildren: boolean,
-    type: string
-  }
+  data: CustomData
 }
 
 type TreeDataType = TreeNode[]
@@ -92,6 +98,13 @@ type ExampleType = {
   commands: string[]
 }
 
+type DeleteCommand = {
+  active: boolean,
+  originalCommand: string,
+  affectedCommands: string[],
+  urls: string[]
+}
+
 type ConfigEditorState = {
   commandGroups: CommandGroups,
   selectedIndex: number,
@@ -102,9 +115,12 @@ type ConfigEditorState = {
   indexToCommandGroup: NumberToCommandGroup,
   indexToTreeNode: NumberToTreeNode,
   showSpecSelectorModal: boolean,
-  showAlert: boolean,
+  showGenerateAlert: boolean,
+  showDeleteCommandGroupAlert: boolean,
   alertVariant: string,
   alertText: string
+  resourceIdToCommands: { [id: string]: string[] }
+  deletingCommand: DeleteCommand
 }
 
 type WrapperProp = {
@@ -126,9 +142,17 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       indexToCommandGroup: {},
       indexToTreeNode: {},
       showSpecSelectorModal: false,
-      showAlert: false,
+      showGenerateAlert: false,
+      showDeleteCommandGroupAlert: false,
       alertVariant: "",
-      alertText: ""
+      alertText: "",
+      resourceIdToCommands: {},
+      deletingCommand: {
+        active: false,
+        originalCommand: "",
+        affectedCommands: [],
+        urls: []
+      }
     }
   }
 
@@ -139,6 +163,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     let totalPromise: Promise<any>[] = Object.keys(commandGroups).map(commandGroupName => {
       let namesJoined = commandGroups[commandGroupName].names.join('/')
       this.setState({ currentIndex: this.state.currentIndex + 1 })
+      // console.log(this.state.currentIndex)
       this.state.indexToCommandGroupName[this.state.currentIndex] = namesJoined
       this.state.nameToIndex[namesJoined] = this.state.currentIndex
       this.state.indexToCommandGroup[this.state.currentIndex] = commandGroups[commandGroupName]
@@ -148,8 +173,9 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         parent: parentIndex,
         text: commandGroupName,
         droppable: true,
-        data: { hasChildren: true, type: 'CommandGroup' }
+        data: { hasChildren: true, type: 'CommandGroup', allowDelete: true }
       }
+      // console.log(commandGroupName)
       this.state.treeData.push(treeNode)
       this.state.indexToTreeNode[this.state.currentIndex] = treeNode
 
@@ -164,13 +190,25 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         const names = commands![commandName].names
         let namesJoined = commands![commandName].names.join('/')
         this.setState({ currentIndex: this.state.currentIndex + 1 })
+        // console.log(this.state.currentIndex)
         let treeNode: TreeNode = {
           id: this.state.currentIndex,
           parent: commandGroupIndex,
           text: commandName,
           droppable: false,
-          data: { hasChildren: false, type: 'Command' }
+          data: { hasChildren: false, type: 'Command', allowDelete: true }
         }
+        const resources = commands![commandName].resources
+        resources.forEach(resource => {
+          const splitSwagger = resource.swagger.split('/')
+          const resourceId = splitSwagger[splitSwagger.length - 3]
+          const version = splitSwagger[splitSwagger.length - 1]
+          const combined = `${resourceId}/V/${version}`
+          if (!(combined in this.state.resourceIdToCommands)) {
+            this.state.resourceIdToCommands[combined] = []
+          }
+          this.state.resourceIdToCommands[combined].push(namesJoined)
+        })
         const currentIndex = this.state.currentIndex
         this.state.indexToCommandGroupName[currentIndex] = namesJoined
         this.state.nameToIndex[namesJoined] = this.state.currentIndex
@@ -210,7 +248,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         return this.parseCommandGroup(depth, 0, commandGroups)
           .then(() => {
             this.markHasChildren()
-            console.log(this.state.indexToCommandGroup)
+            console.log(this.state.resourceIdToCommands)
             return Promise.resolve()
           })
       })
@@ -239,7 +277,14 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       indexToCommandGroupName: {},
       nameToIndex: {},
       indexToCommandGroup: {},
-      indexToTreeNode: {}
+      indexToTreeNode: {},
+      resourceIdToCommands: {},
+      deletingCommand: {
+        active: false,
+        originalCommand: "",
+        affectedCommands: [],
+        urls: []
+      }
     })
   }
 
@@ -359,7 +404,6 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     }
     targetNames.push(sourceNames[sourceNames.length - 1])
     const newNameJoined = targetNames.join(' ')
-
     // console.log(url)
     // console.log(targetNames)
 
@@ -374,7 +418,8 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         if (this.state.nameToIndex[targetNames.join('/')]) {
           newIndex = this.state.nameToIndex[targetNames.join('/')]
         }
-        this.setState({ selectedIndex: newIndex })
+        this.setState({ selectedIndex: newIndex})
+        this.markHasChildren()
         //         console.log(this.state)
       })
       .catch(err => {
@@ -390,13 +435,109 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     // console.log(this.state.indexToCommandGroup[this.state.selectedIndex])
   }
 
+  handleDelete = (id: NodeModel["id"]) => {
+    id = Number(id)
+    // console.log(this.state.indexToTreeNode[id])
+    // console.log(this.state.indexToCommandGroupName[id])
+    const namesJoined = this.state.indexToCommandGroupName[id]
+
+
+    let url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/CommandTree/Nodes/aaz/${namesJoined}`
+    let urls: string[] = []
+    if (this.isCommand(id)) {
+      const command = this.state.indexToCommandGroup[id]
+      // console.log(command.resources)
+      const affectedCommands: string[] = []
+      command.resources?.forEach(resource => {
+        const splitSwagger = resource.swagger.split('/')
+        const resourceId = splitSwagger[splitSwagger.length - 3]
+        const version = splitSwagger[splitSwagger.length - 1]
+        url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/Resources/${resourceId}/V/${version}`
+        const curr_commands = this.state.resourceIdToCommands[`${resourceId}/V/${version}`]
+        if (curr_commands) {
+          affectedCommands.push(...curr_commands)
+        }
+        urls.push(url)
+      })
+      this.setState({
+        deletingCommand: {
+          active: true,
+          originalCommand: this.state.indexToCommandGroupName[id],
+          affectedCommands: affectedCommands,
+          urls: urls
+        }
+      })
+    } else {
+      console.log(this.state.indexToTreeNode[id])
+      if (this.state.indexToTreeNode[id].data.hasChildren){
+        this.setState({showDeleteCommandGroupAlert: true})
+        window.setTimeout(() => {
+          this.setState({ showDeleteCommandGroupAlert: false })
+        }, 2000)
+      } else {
+        urls.push(url)
+        this.confirmDelete(urls)
+      }
+    }
+  }
+
+  confirmDelete = (urls: string[]) => {
+    const promisesAll = urls.map(url=>{
+      console.log(url)
+      return axios.delete(url)
+    })
+    Promise.all(promisesAll)
+    .then(res => {
+      console.log(res)
+      if(res[0].status!==200){
+        this.state.deletingCommand.active=false
+      } else {
+        this.refreshAll()
+        return this.getSwagger()
+      }
+      
+    })
+    .catch(err => {
+      console.error(err.response)
+    })
+  }
+
+  cancelDelete = ()=> {
+    this.setState({
+      deletingCommand: {
+        active: false,
+        originalCommand: "",
+        affectedCommands: [],
+        urls: []
+      }
+    })
+  }
+
+  ConfirmDeletionModal = () => {
+    const {active, originalCommand, affectedCommands, urls} = this.state.deletingCommand
+    return <Modal show={active} centered>
+      <Modal.Header>
+        Deleting {originalCommand}
+      </Modal.Header>
+      <Modal.Body>
+        This will delete {affectedCommands.join(', ')}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button onClick={()=>{this.confirmDelete(urls)}}>Confirm</Button>
+        <Button onClick={this.cancelDelete}>Cancel</Button>
+      </Modal.Footer>
+    </Modal>
+  }
+
+
   displayCommandGroupsTree = () => {
+    // console.log(this.state.treeData)
     return <div className={styles.app}>
       <Tree
         tree={this.state.treeData}
         rootId={0}
         render={(node: NodeModel<CustomData>, { depth, isOpen, onToggle }) => (
-          <CustomNode node={node} depth={depth} isOpen={isOpen} isSelected={node.id === this.state.selectedIndex} onToggle={onToggle} onClick={this.handleClick} onSubmit={this.handleNameChange} editable={true} />
+          <CustomNode node={node} depth={depth} isOpen={isOpen} isSelected={node.id === this.state.selectedIndex} onToggle={onToggle} onClick={this.handleClick} onSubmit={this.handleNameChange} editable={true} onDelete={this.handleDelete} />
         )}
         dragPreviewRender={(
           monitorProps: DragLayerMonitorProps<CustomData>
@@ -407,6 +548,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
           draggingSource: styles.draggingSource,
           dropTarget: styles.dropTarget,
         }}
+        initialOpen={true}
       />
     </div>
   }
@@ -445,16 +587,16 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     const url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/Generate`
     axios.post(url)
       .then(res => {
-        this.setState({ showAlert: true, alertText: "Successfully generated configuration.", alertVariant: "success" })
+        this.setState({ showGenerateAlert: true, alertText: "Successfully generated configuration.", alertVariant: "success" })
         window.setTimeout(() => {
-          this.setState({ showAlert: false })
+          this.setState({ showGenerateAlert: false })
         }, 2000)
       })
       .catch(err => {
         console.error(err.response)
-        this.setState({ showAlert: true, alertText: "Need to complete all the short help fields", alertVariant: "danger" })
+        this.setState({ showGenerateAlert: true, alertText: "Need to complete all the short help fields", alertVariant: "danger" })
         window.setTimeout(() => {
-          this.setState({ showAlert: false })
+          this.setState({ showGenerateAlert: false })
         }, 2000)
       })
   }
@@ -471,8 +613,11 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         </Button>
         <Nav className="me-auto" />
       </Navbar>
-      {this.state.showAlert && <Alert variant={this.state.alertVariant} onClose={() => this.setState({ showAlert: false })}>
+      {this.state.showGenerateAlert && <Alert variant={this.state.alertVariant} onClose={() => this.setState({ showGenerateAlert: false })}>
         {this.state.alertText}
+      </Alert>}
+      {this.state.showDeleteCommandGroupAlert && <Alert variant="danger" onClose={() => this.setState({ showDeleteCommandGroupAlert: false })}>
+        "You can only delete an empty command group!"
       </Alert>}
       <Row>
         <Col xxl="3" style={{ overflow: `auto` }}>
@@ -486,7 +631,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
 
 
       {this.state.showSpecSelectorModal ? <SpecSelector onCloseModal={this.handleCloseModal} /> : <></>}
-
+      <this.ConfirmDeletionModal/>
     </div>
   }
 }

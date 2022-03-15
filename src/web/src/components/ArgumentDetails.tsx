@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, Component } from "react";
 import IconButton from "@mui/material/IconButton";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
@@ -38,7 +38,7 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
         }
         args.forEach(arg => {
             let text = ""
-            arg.options.forEach((option, index) => {
+            arg.options?.forEach((option, index) => {
                 if (index > 0) {
                     text += ' '
                 }
@@ -49,17 +49,26 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
                 }
                 text += option
             })
+            text += arg.required ? "(*)" : ""
 
+            const hasChildren = (arg.args || arg.type === 'array<object>') ? true : false
             let treeNode: TreeNode = {
                 id: currentIndex,
                 parent: parentIndex,
                 text: text,
-                droppable: false,
-                data: { hasChildren: false, type: 'Command' }
+                droppable: hasChildren,
+                data: { hasChildren: hasChildren, type: hasChildren ? 'CommandGroup' : 'Command', allowDelete: false }
             }
             indexToArgument[currentIndex] = arg
+            const nextParentIndex = currentIndex
             currentIndex += 1
             initTreeData.push(treeNode)
+            if (arg.args) {
+                parseArguments(nextParentIndex, arg.args)
+            }
+            if (arg.item) {
+                parseArguments(nextParentIndex, arg.item.args)
+            }
         })
     }
 
@@ -68,44 +77,57 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
             return
         }
         argGroups.forEach(argGroup => {
-            let treeNode: TreeNode = {
-                id: currentIndex,
-                parent: parentIndex,
-                text: argGroup.name,
-                droppable: false,
-                data: { hasChildren: false, type: 'Command' }
-            }
-            currentIndex += 1
-            initTreeData.push(treeNode)
-            if (argGroup.args) {
-                parseArguments(currentIndex, argGroup.args)
+            if (!argGroup.name) {
+                if (argGroup.args) {
+                    parseArguments(parentIndex, argGroup.args)
+                }
+            } else {
+                const hasChildren = argGroup.args ? true : false
+                let treeNode: TreeNode = {
+                    id: currentIndex,
+                    parent: parentIndex,
+                    text: argGroup.name,
+                    droppable: hasChildren,
+                    data: { hasChildren: hasChildren, type: 'CommandGroup', allowDelete: false }
+                }
+                indexToArgument[currentIndex] = argGroup
+                const nextParentIndex = currentIndex
+                currentIndex += 1
+                initTreeData.push(treeNode)
+                if (argGroup.args) {
+                    parseArguments(nextParentIndex, argGroup.args)
+                }
             }
         })
     }
 
-    if (props.argGroups.length > 1) {
-        parseArgGroups(0, props.argGroups)
-    } else {
-        parseArguments(0, props.argGroups[0].args)
+    const load = () => {
+        if (props.argGroups.length > 1) {
+            parseArgGroups(0, props.argGroups)
+        } else {
+            parseArguments(0, props.argGroups[0].args)
+        }
+        // console.log(indexToArgument)
+        // console.log(initTreeData)
     }
 
-    // console.log(initTreeData)
-
+    load()
 
     const handleClick = (id: NodeModel["id"]) => {
         setSelectedIndex(Number(id))
-        // console.log(selectedIndex)
+        console.log(indexToArgument[Number(id)])
     }
     const handleNameChange = () => { }
     const handleDrop = () => { }
 
     const ArgumentsTree = () => {
+        // console.log(initTreeData)
         return <div className={styles.app}>
             <Tree
                 tree={initTreeData}
                 rootId={0}
                 render={(node: NodeModel<CustomData>, { depth, isOpen, onToggle }) => (
-                    <CustomNode node={node} depth={depth} isOpen={isOpen} isSelected={node.id === selectedIndex} onToggle={onToggle} onClick={handleClick} onSubmit={handleNameChange} editable={false} />
+                    <CustomNode node={node} depth={depth} isOpen={isOpen} isSelected={node.id === selectedIndex} onToggle={onToggle} onClick={handleClick} onSubmit={handleNameChange} editable={false}/>
                 )}
                 dragPreviewRender={(
                     monitorProps: DragLayerMonitorProps<CustomData>
@@ -117,6 +139,7 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
                     draggingSource: styles.draggingSource,
                     dropTarget: styles.dropTarget,
                 }}
+                initialOpen={true}
             />
         </div>
     }
@@ -212,35 +235,39 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
     }
 
     const ArgumentsEdit = () => {
-        if (!initTreeData[selectedIndex - 1]) {
+        if (!indexToArgument[selectedIndex]) {
+            return <div />
+        }
+        if (!indexToArgument[selectedIndex].options) {
             return <div />
         }
         const helpText = indexToArgument[selectedIndex].help?.short ? indexToArgument[selectedIndex].help?.short! : ""
         // const checked = indexToArgument[selectedIndex].required? indexToArgument[selectedIndex].required! : false
 
         return (<div>
-            <InputArea value={initTreeData[selectedIndex - 1].text} prefix="Option List: " initEditing={initTreeData[selectedIndex - 1].text === ""} editable={false} onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
-            <InputArea value={indexToArgument[selectedIndex].type} prefix="Type: " initEditing={indexToArgument[selectedIndex].type === ""} editable={false} onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
+            {/* <InputArea value={initTreeData[selectedIndex - 1].text} prefix="Option List: " initEditing={initTreeData[selectedIndex - 1].text === ""} editable={false} onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" /> */}
+            <InputArea value={indexToArgument[selectedIndex].type!} prefix="Type: " initEditing={indexToArgument[selectedIndex].type === ""} editable={false} onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
             <InputArea value={helpText} prefix="Help: " initEditing={false} editable={false} onSubmit={handleNameChange} minRow={1} width="35em" placeholder="" />
-            <Row>
+            {/* <Row>
                 <Col xxl='2'>
                     <h6>Required?:</h6>
                 </Col>
                 <Col xxl='10'>
                     <input type="checkbox" checked={indexToArgument[selectedIndex].required ? indexToArgument[selectedIndex].required! : false} onChange={handleNameChange} />
                 </Col>
-            </Row>
+            </Row> */}
         </div>
         )
     }
 
     return (<div>
         <h5>Arguments: </h5>
+        <h6> Required (*)</h6>
         <Row>
-            <Col xxl='3'>
+            <Col xxl='4'>
                 <ArgumentsTree />
             </Col>
-            <Col xxl='9'>
+            <Col xxl='8'>
                 <ArgumentsEdit />
             </Col>
         </Row>

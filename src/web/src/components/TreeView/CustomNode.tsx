@@ -6,7 +6,9 @@ import { TypeIcon } from "./TypeIcon";
 import IconButton from "@mui/material/IconButton";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import RemoveIcon from '@mui/icons-material/Remove';
 import styles from "./CustomNode.module.css";
+import { Row, Col } from "react-bootstrap"
 
 
 type Props = {
@@ -18,7 +20,8 @@ type Props = {
   onToggle: (id: NodeModel["id"]) => void;
   onClick: (id: NodeModel["id"]) => void
   onSubmit: (id: NodeModel["id"], newName: string) => void
-};
+  onDelete?: (id: NodeModel["id"]) => void
+}
 
 export const CustomNode: React.FC<Props> = (props) => {
   const { id, droppable, data, text } = props.node;
@@ -29,6 +32,7 @@ export const CustomNode: React.FC<Props> = (props) => {
   const [changingName, setChangingName] = useState(nodeName)
 
   const handleToggle = (e: React.MouseEvent) => {
+    // console.log(e)
     e.stopPropagation();
     props.onToggle(id);
   };
@@ -39,7 +43,7 @@ export const CustomNode: React.FC<Props> = (props) => {
   }
 
   const handleDoubleClick = (e: React.MouseEvent) => {
-    if (!props.editable){
+    if (!props.editable) {
       return
     }
     e.stopPropagation();
@@ -65,12 +69,17 @@ export const CustomNode: React.FC<Props> = (props) => {
     setChangingName(nodeName)
   }
 
+  const handleDelete = (event: any) => {
+    // console.log(id)
+    props.onDelete!(id)
+  }
+
   const dragOverProps = useDragOver(id, props.isOpen, props.onToggle);
 
   return (
     <div
       className={`tree-node ${styles.root} ${props.isSelected ? styles.isSelected : ""}`}
-      style={{ paddingInlineStart: indent, whiteSpace: `nowrap`}}
+      style={{ paddingInlineStart: indent, whiteSpace: `nowrap` }}
       {...dragOverProps}
       onClick={handleClick}
     >
@@ -85,7 +94,18 @@ export const CustomNode: React.FC<Props> = (props) => {
         <TypeIcon type={data?.type} />
       </div>
       <div className={styles.labelGridItem} onDoubleClick={handleDoubleClick}>
-        {!editing ? nodeName :
+        {!editing ?
+          <Row className="align-items-center">
+            <Col xxl='auto'>
+            {nodeName}
+            </Col>
+            {data?.allowDelete?<Col>
+              < IconButton className={styles.editButton} onClick={handleDelete}>
+                <RemoveIcon className={styles.editIcon} />
+              </IconButton>
+            </Col>:<div></div>}
+          </Row>
+          :
           (
             <div className={styles.inputWrapper}>
               <input style={{ width: `${Math.max(20, changingName.length)}ch` }}
@@ -105,6 +125,6 @@ export const CustomNode: React.FC<Props> = (props) => {
           )
         }
       </div>
-    </div>
+    </div >
   );
 };
