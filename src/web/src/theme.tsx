@@ -93,12 +93,12 @@ const theme = {
             fontSize: 18,
         },
         body1: {
-            ...rawTheme.typography.body2,
+            ...rawTheme.typography.body1,
             fontWeight: rawTheme.typography.fontWeightRegular,
             fontSize: 16,
         },
         body2: {
-            ...rawTheme.typography.body1,
+            ...rawTheme.typography.body2,
             fontSize: 14,
         },
     }
