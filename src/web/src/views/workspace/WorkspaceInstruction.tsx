@@ -32,28 +32,7 @@ class WorkspaceInstruction extends React.Component {
                     Please select a Workspace
                 </Typography>
                 <MiddlePadding />
-                <WorkspaceSelector/>
-                {/* <Box sx={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center'
-                }}>
-                    <WorkspaceSelector/>
-                    <SpacePadding />
-                    <Typography variant='h6' gutterBottom>
-                        Or
-                    </Typography>
-                    <SpacePadding />
-                    <Typography variant='h6' gutterBottom>
-                    <Link
-                        href="/#/Generation"
-                        align="center"
-                        underline="always"
-                    >
-                        Create New
-                    </Link>
-                </Typography>
-                </Box> */}
+                <WorkspaceSelector name='Open or create a workspace'/>
             </Box>
         )
     }

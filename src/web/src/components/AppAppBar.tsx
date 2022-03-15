@@ -35,7 +35,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                             variant="h6"
                             underline="none"
                             color="inherit"
-                            href="/#/HomePage"
+                            href="/?#/HomePage"
                             fontWeight={
                                 this.props.pageName == "HomePage" ? 
                                 theme.typography.fontWeightMedium : 
@@ -49,7 +49,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                             variant="h6"
                             underline="none"
                             color="inherit"
-                            href="/#/Workspace"
+                            href="/?#/Workspace"
                             fontWeight={
                                 this.props.pageName == "Workspace" ? 
                                 theme.typography.fontWeightMedium : 
@@ -63,7 +63,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                             variant="h6"
                             underline="none"
                             color="inherit"
-                            href="/#/Commands"
+                            href="/?#/Commands"
                             fontWeight={
                                 this.props.pageName == "Commands" ? 
                                 theme.typography.fontWeightMedium : 
@@ -77,7 +77,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                             variant="h6"
                             underline="none"
                             color="inherit"
-                            href="/#/Generation"
+                            href="/?#/Generation"
                             fontWeight={
                                 this.props.pageName == "Generation" ? 
                                 theme.typography.fontWeightMedium : 
@@ -93,7 +93,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                                 color="inherit"
                                 variant="h6"
                                 underline="none"
-                                href="/#/Documents"
+                                href="/?#/Documents"
                                 sx={rightLink}
                             >
                                 {'Docs'}

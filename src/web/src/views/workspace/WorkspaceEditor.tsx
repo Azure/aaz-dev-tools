@@ -34,7 +34,7 @@ class WorkspaceEditor extends React.Component {
                     
                     {'Convert Swagger to Command Model? '}
                     <Link
-                        href="/#/Workspace"
+                        href="/?#/Workspace"
                         align="center"
                         underline="always"
                     >
@@ -44,7 +44,7 @@ class WorkspaceEditor extends React.Component {
                 <Typography variant="h6" align="center" gutterBottom>
                     {'Convert Command Model to Code? '}
                     <Link
-                        href="/#/Generation"
+                        href="/?#/Generation"
                         align="center"
                         underline="always"
                     >

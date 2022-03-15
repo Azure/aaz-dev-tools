@@ -23,6 +23,7 @@ ReactDOM.render(
           <Route path="HomePage" element={<HomePage />} />
           <Route path="Workspace" element={<WorkspacePage />}>
             <Route index element={<WorkspaceInstruction />} />
+            <Route path="Instruction" element={<WorkspaceInstruction />}/>
             <Route path=":workspaceName" element={<WorkspaceEditor />} />
           </Route>
           <Route path="Commands" element={<CommandsPage />}>
@@ -31,7 +32,7 @@ ReactDOM.render(
             <Route index element={<GenerationInstruction />} />
             <Route path="Instruction" element={<GenerationInstruction />} > 
             </Route>
-            <Route path=":moduleName" element={<GenerationModuleEditor />} />
+            <Route path=":repoName/:moduleName" element={<GenerationModuleEditor />} />
           </Route>
         </Route>
         {/* <Route path="workspace" element={<Workspace />}>

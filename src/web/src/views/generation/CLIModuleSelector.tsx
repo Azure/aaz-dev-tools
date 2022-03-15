@@ -6,24 +6,22 @@ import { Button } from 'reactstrap';
 import { Url } from 'url';
 
 
-interface Workspace {
-    name: string,
-    plane: string | null,
-    lastModified: Date | null,
-    url: Url | null,
-    folder: string | null,
+interface CLIModule {
+    name: string
+    folder: string | null
+    url: string | null
 }
 
-interface WorkspaceSelectorProps {
-    name: string,
+interface CLIModuleSelectorProps {
+    repo: string
+    name: string
 }
 
-interface WorkspaceSelectorState {
+interface CLIModuleSelectorState {
     options: any[],
-    value: Workspace | null,
+    value: CLIModule | null,
     openDialog: boolean,
-    createDialogValue: Workspace
-    // dialogValidated: boolean
+    createDialogValue: CLIModule
 }
 
 interface InputType {
@@ -31,13 +29,12 @@ interface InputType {
     title: string,
 }
 
-const filter = createFilterOptions<Workspace | InputType>();
+const filter = createFilterOptions<CLIModule | InputType>();
 
-const defaultPlane = "mgmt-plane"
 
-class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, WorkspaceSelectorState> {
+class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModuleSelectorState> {
 
-    constructor(props: WorkspaceSelectorProps) {
+    constructor(props: CLIModuleSelectorProps) {
         super(props);
         this.state = {
             options: [],
@@ -45,64 +42,58 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
             openDialog: false,
             createDialogValue: {
                 name: "",
-                plane: null,
-                lastModified: null,
-                url: null,
                 folder: null,
-            },
-            // dialogValidated: false
+                url: null
+            }
         }
+
     }
 
     componentDidMount() {
-        this.loadWorkspaces();
+        this.loadModules();
     }
 
-    loadWorkspaces = () => {
-        axios.get("/AAZ/Editor/Workspaces")
-            .then((res) => {
-                let options = res.data.map((option: any) => {
-                    return {
-                        name: option.name,
-                        lastModified: new Date(option.updated * 1000),
-                        url: option.url,
-                        plane: option.plane,
-                        folder: option.folder
-                    }
-                });
-                this.setState({
-                    options: options
-                })
+    loadModules = () => {
+        axios.get("/CLI/Az/" + this.props.repo + "/Modules")
+        .then((res) => {
+            let options = res.data.map((option: any) => {
+                console.log(option)
+                return {
+                    name: option.name,
+                    folder: option.folder,
+                    url: option.url,
+                }
             })
-            .catch((err) => console.log(err));
+            this.setState({
+                options: options
+            })
+        })
+        .catch((err) => console.log(err));
     }
 
     handleDialogSubmit = (event: any) => {
         const form = event.currentTarget;
         if (form.checkValidity() === true) {
-            const workspaceName = this.state.createDialogValue.name
-            const plane = this.state.createDialogValue.plane
-            axios.post('/AAZ/Editor/Workspaces', {
-                name: workspaceName,
-                plane: plane,
+            const moduleName = this.state.createDialogValue.name;
+
+            axios.post("/CLI/Az/" + this.props.repo + "/Modules", {
+                name: moduleName,
             })
-                .then((res) => {
-                    let workspace = res.data;
-                    let value = {
-                        name: workspace.name,
-                        lastModified: new Date(workspace.updated * 1000),
-                        url: workspace.url,
-                        plane: workspace.plane,
-                        folder: workspace.folder
-                    }
-                    setTimeout(() => {
-                        this.onValueUpdated(value);
-                    })
-                    this.handleDialogClose();
+            .then((res) => {
+                let module = res.data;
+                let value = {
+                    name: module.name,
+                    folder: module.folder,
+                    url: module.url,
+                }
+                setTimeout(() => {
+                    this.onValueUpdated(value);
                 })
-                .catch(error => {
-                    console.log(error);
-                })
+                this.handleDialogClose();
+            })
+            .catch(error => {
+                console.log(error);
+            })
         }
     }
 
@@ -110,13 +101,10 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
         this.setState({
             createDialogValue: {
                 name: "",
-                plane: null,
-                lastModified: null,
-                url: null,
                 folder: null,
+                url: null,
             },
             openDialog: false,
-            // dialogValidated: false,
         })
     }
 
@@ -125,31 +113,30 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
             value: value
         });
         if (value.url) {
-            window.location.href = `/?#/workspace/${value.name}`
+            window.location.href = `/?#/Generation/${this.props.repo}/${value.name}`
         }
     }
 
     render() {
-        const { options, value, openDialog, createDialogValue } = this.state
-        const { name } = this.props
+        const { options, value, openDialog,  createDialogValue} = this.state
+        
+        const { repo, name } = this.props
+
         return (
             <React.Fragment>
                 <Autocomplete
-                    id="workspace-select"
+                    id={repo + "-module-select"}
                     value={value}
                     sx={{ width: 280 }}
                     options={options}
                     autoHighlight
                     onChange={(event, newValue: any) => {
                         if (typeof newValue === 'string') {
-                            // timeout to avoid instant validation of the dialog's form.
                             setTimeout(() => {
                                 this.setState({
                                     openDialog: true,
                                     createDialogValue: {
                                         name: newValue,
-                                        plane: defaultPlane,
-                                        lastModified: null,
                                         url: null,
                                         folder: null,
                                     }
@@ -160,8 +147,6 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
                                 openDialog: true,
                                 createDialogValue: {
                                     name: newValue.inputValue,
-                                    plane: defaultPlane,
-                                    lastModified: null,
                                     url: null,
                                     folder: null,
                                 }
@@ -215,10 +200,10 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
                 <Dialog open={openDialog} onClose={this.handleDialogClose}>
                     <form onSubmit={this.handleDialogSubmit}>
                         <DialogTitle>
-                            Create a new workspace
+                            {'Create module in Azure Cli' + repo === 'Extension' ? ' Extension': ''}
                         </DialogTitle>
                         <DialogContent>
-                            <TextField
+                            <TextField 
                                 autoFocus
                                 margin="dense"
                                 id="name"
@@ -232,13 +217,13 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
                                         }
                                     })
                                 }}
-                                label="Name"
+                                label="Module Name"
                                 type="text"
                                 variant='standard'
                             />
                         </DialogContent>
                         <DialogActions>
-                            <Button onClick={this.handleDialogClose}>Cancel</Button>
+                        <Button onClick={this.handleDialogClose}>Cancel</Button>
                             <Button type="submit" color="success">Create</Button>
                         </DialogActions>
                     </form>
@@ -248,4 +233,4 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
     }
 }
 
-export default WorkspaceSelector
+export default CLIModuleSelector
