@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { AppBar, Typography, Box, Link } from '@mui/material';
+import {Typography, Box, Link } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
-import withRoot from '../withRoot';
-import { AppAppBar } from '../components/AppAppBar';
-import PageLayout from '../components/PageLayout';
+import withRoot from '../../withRoot';
+import { AppAppBar } from '../../components/AppAppBar';
+import PageLayout from '../../components/PageLayout';
 
 
 const TopPadding = styled(Box)(({ theme }) => ({

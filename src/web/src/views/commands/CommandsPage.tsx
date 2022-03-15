@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Typography } from '@mui/material';
-import withRoot from '../withRoot';
-import { AppAppBar } from '../components/AppAppBar';
+import withRoot from '../../withRoot';
+import { AppAppBar } from '../../components/AppAppBar';
 
 class CommandsPage extends React.Component {
     render() {

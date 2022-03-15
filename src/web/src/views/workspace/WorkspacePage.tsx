@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { Typography } from '@mui/material';
-import withRoot from '../withRoot';
-import { AppAppBar } from '../components/AppAppBar';
+import withRoot from '../../withRoot';
+import { AppAppBar } from '../../components/AppAppBar';
+import PageLayout from '../../components/PageLayout';
+import { Outlet } from 'react-router';
 
 class WorkspacePage extends React.Component {
 
@@ -9,9 +11,9 @@ class WorkspacePage extends React.Component {
         return (
             <React.Fragment>
                 <AppAppBar pageName={'Workspace'}/>
-                {/* <Typography variant='h1' gutterBottom>
-                    Welcome to WorkspacePage
-                </Typography> */}
+                <PageLayout>
+                    <Outlet />
+                </PageLayout>
             </React.Fragment>
         )
     }

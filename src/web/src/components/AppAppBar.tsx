@@ -35,7 +35,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                             variant="h6"
                             underline="none"
                             color="inherit"
-                            href="/"
+                            href="/#/HomePage"
                             fontWeight={
                                 this.props.pageName == "HomePage" ? 
                                 theme.typography.fontWeightMedium : 
