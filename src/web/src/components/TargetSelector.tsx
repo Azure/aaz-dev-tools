@@ -4,14 +4,14 @@ import { Typeahead } from 'react-bootstrap-typeahead';
 import "./TargetSelector.css";
 import type { Option } from "react-bootstrap-typeahead/types/types"
 
-import options from './data';
+// import options from './data';
 
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 
 
 const TargetSelector = () => {
   const SelectTarget = () => {
-    const optionsTyped: Option[] = options;
+    const optionsTyped: Option[] = [];
     const [singleSelections, setSingleSelections] = useState(optionsTyped);
     const handleTypeChange = (selectedOption: Option[]) => {
       setSingleSelections(selectedOption)

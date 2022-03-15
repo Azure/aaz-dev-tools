@@ -1,52 +1,36 @@
-import React, { Component } from "react";
+// import React, { Component } from "react";
 import { Routes, Route, useParams} from "react-router-dom";
-import { Modal, Button } from "react-bootstrap"
+import * as React from 'react';
 
-import Generator from "./components/Generator"
-import WorkspaceSelector from "./components/WorkspaceSelector"
-import TargetSelector from "./components/TargetSelector"
-import {SpecSelector} from "./components/SpecSelector";
-import Workspace from "./components/Workspace";
-import {ConfigEditor} from "./components/ConfigEditor";
-
-class App extends Component {
-  ModeSelection = () => {
-    return <div className="container-fluid row">
-      <Modal show="true" size='sm' centered >
-        <Modal.Body>
-          <div className="row">
-            <div className="col text-center">
-              <Button href="workspace" variant="dark">Editor</Button>
-            </div>
-          </div>
-          <br />
-          <div className="row">
-            <div className="col text-center">
-              <Button href="generator" variant="dark">Generator</Button>
-            </div>
-          </div>
-
-        </Modal.Body>
-      </Modal>
-    </div>
-  }
-
-  
+import HomePage from "./views/HomePage";
+import WorkspacePage from "./views/WorkspacePage";
+import GenerationPage from "./views/GenerationPage";
+import CommandsPage from "./views/CommandsPage";
 
 
+class App extends React.Component {
   render() {
     return (
       <main>
         <Routes>
-          <Route path="/" element={<this.ModeSelection />}/>
-          <Route path="workspace" element={<Workspace />}>
+          <Route path="/" element={<HomePage />}/>
+          <Route path="/Workspace" element={<WorkspacePage />}>
+            {/* <Route index element={}></Route> */}
+          </Route>
+          <Route path="/Commands" element={<CommandsPage />}>
+            
+          </Route>
+          <Route path="/Generation" element={<GenerationPage />}>
+
+          </Route>
+          {/* <Route path="workspace" element={<Workspace />}>
             <Route index element={<WorkspaceSelector/>}/>
-            {/* <Route path=":workspaceName/resourceSelection" element={<SpecSelector />}/> */}
+            <Route path=":workspaceName/resourceSelection" element={<SpecSelector />}/>
             <Route path=":workspaceName" element={<ConfigEditor />} />
           </Route>
           <Route path="generator" element={<Generator/>}>
             <Route index element={<TargetSelector/>}/>
-          </Route>
+          </Route> */}
         </Routes>
       </main>
     );
