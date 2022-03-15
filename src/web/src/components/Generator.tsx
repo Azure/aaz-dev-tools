@@ -29,7 +29,7 @@ type Commands = {
 };
 
 type CommandGroup = {
-  commandGroups?: CommandGroups;
+  commandGroups: CommandGroups;
   commands?: Commands;
   names: string[];
   help?: {};
@@ -53,20 +53,20 @@ type TreeNode = {
   };
 };
 
-type Profile = {
-  name: string;
-  commandGroups: CommandGroups;
-  commands: Commands;
-};
-
-type Generation = {
-  [name: string]: Profile;
-};
+// type Reference = {
+//   name?: string;
+//   commandGroups: CommandGroups;
+//   commands: Commands;
+// };
+//
+// type Generation = {
+//   [name: string]: Reference;
+// };
 
 type GeneratorState = {
   currRepo: "Azure CLI" | "Azure CLI Extension";
   moduleName: string;
-  toBeGenerated: Generation;
+  toBeGenerated: CommandGroups;
   profiles: string[];
   currProfile: string;
   treeData: TreeNode[];
@@ -223,9 +223,28 @@ class Generator extends Component<any, GeneratorState> {
   };
 
   displayCommandTree = () => {
-    const handleDrop = () => {};
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [selectedNodes, setSelectedNodes] = useState<NodeModel[]>([]);
+
+    const getNodeData = (path: string) => {
+      return axios
+        .post(`/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/${path}/Transfer`)
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => console.log(err));
+    };
+
+    const getLeafData = (path: string, command: string, version: string) => {
+      return axios
+        .post(
+          `/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/${path}/Leaves/${command}/Versions/${version}/Transfer`
+        )
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => console.log(err));
+    };
 
     const getNamePath = (node: NodeModel) => {
       let namePath = [node.text];
@@ -238,85 +257,74 @@ class Generator extends Component<any, GeneratorState> {
       return namePath;
     };
 
+    const getReference = (namePath: string[]) => {
+      let reference = this.state.toBeGenerated[this.state.currProfile];
+      namePath.slice(0, -1).forEach((item, idx) => {
+        const currPath = namePath.slice(0, idx + 1).join("/");
+        const data = getNodeData(currPath);
+        if (!reference.hasOwnProperty("commandGroups")) {
+          let element: any = {};
+          element[item] = data;
+          reference["commandGroups"] = element;
+          reference = reference["commandGroups"][item];
+        } else if (!reference["commandGroups"].hasOwnProperty(item)) {
+          let element: any = reference["commandGroups"];
+          element[item] = data;
+          reference["commandGroups"] = element;
+          reference = reference["commandGroups"][item];
+        } else {
+          reference = reference["commandGroups"][item];
+        }
+      });
+      return reference;
+    };
+
     const handleSelect = (node: NodeModel) => {
       const item = selectedNodes.find((n) => n.id === node.id);
 
       if (!item) {
         setSelectedNodes([...selectedNodes, node]);
-
         const namePath = getNamePath(node);
-        let currLocation: any = this.state.toBeGenerated[this.state.currProfile];
-
-        namePath.slice(0, -1).forEach((item, idx) => {
-          const currPath = namePath.slice(0, idx + 1).join("/");
-
-          axios
-            .post(
-              `/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/${currPath}/Transfer`
-            )
-            .then((res) => {
-              if (currLocation.commandGroups === undefined) {
-                let element: CommandGroups = {};
-                element[item] = res.data;
-                currLocation["commandGroups"] = element;
-                currLocation = currLocation["commandGroups"][item];
-              } else if (currLocation.commandGroups.name === undefined) {
-                let element = currLocation["commandGroups"];
-                element[item] = res.data;
-                currLocation["commandGroups"] = element;
-                currLocation = currLocation["commandGroups"][item];
-              } else {
-                currLocation = currLocation["commandGroups"][item];
-              }
-            })
-            .catch((err) => console.log(err));
-        });
-
         const path = namePath.slice(0, -1).join("/");
-        const commandName = namePath[namePath.length - 1];
+        const command = namePath[namePath.length - 1];
         const currNode = this.state.treeData[Number(node.id) - 1];
-        const version = String(currNode.data.currVersion);
-        const versionEncode = btoa(version);
-
-        axios
-          .post(
-            `/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/${path}/Leaves/${commandName}/Versions/${versionEncode}/Transfer`
-          )
-          .then((res) => {
-            if (currLocation.commands === undefined) {
-              let element: Commands = {};
-              element[commandName] = res.data;
-              currLocation["commands"] = element;
-            } else {
-              let element = currLocation["commands"];
-              element[commandName] = res.data;
-              currLocation["commands"] = element;
-            }
-          })
-          .catch((err) => console.log(err));
-        // console.log(this.state.toBeGenerated);
+        const version = btoa(String(currNode.data.currVersion))
+        const data = getLeafData(path, command, version)
+        let commandRef = getReference(namePath);
+        if (!commandRef.hasOwnProperty("commands")) {
+          let element: any = {}
+          element[command] = data
+          commandRef["commands"] = element
+        } else {
+          let element: any = commandRef["commands"]
+          element[command] = data;
+          commandRef["commands"] = element
+        }
+        console.log(this.state.toBeGenerated)
       } else {
         setSelectedNodes(selectedNodes.filter((n) => n.id !== node.id));
       }
     };
 
     const handleChange = (version: string, node: NodeModel) => {
-      let currNode = this.state.treeData[Number(node.id) - 1];
-      currNode.data.currVersion = version;
-
-      const namePath = getNamePath(node);
-      let currLocation: Profile | CommandGroup =
-        this.state.toBeGenerated[this.state.currProfile];
-      namePath.slice(0, -1).forEach((name) => {
-        if (currLocation.commandGroups) {
-          currLocation = currLocation["commandGroups"][name];
-        }
-      });
-
-      if (currLocation.commands) {
-        currLocation["commands"][namePath.slice(-1)[0]]["version"] = version;
-      }
+      // let currNode = this.state.treeData[Number(node.id) - 1];
+      // currNode.data.currVersion = version;
+      //
+      // const namePath = getNamePath(node);
+      // let currLocation: Profile | CommandGroup =
+      //   this.state.toBeGenerated[this.state.currProfile];
+      // namePath.slice(0, -1).forEach((name) => {
+      //   if (currLocation.commandGroups) {
+      //     currLocation = currLocation["commandGroups"][name];
+      //   }
+      // });
+      //
+      // if (currLocation.commands) {
+      //   currLocation["commands"][namePath.slice(-1)[0]]["version"] = version;
+      // }
     };
+
+    const handleDrop = () => {};
 
     return (
       <div className={styles.app}>
