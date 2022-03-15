@@ -62,11 +62,55 @@ type TreeNode = {
 // type Generation = {
 //   [name: string]: Reference;
 // };
+type ExampleTye = {
+  commands: string[];
+  name: string;
+};
+
+type HelpType = {
+  short: string;
+  examples?: ExampleTye[];
+};
+
+type RegisterType = {
+  stage: string;
+};
+
+type NodeType = {
+  help: HelpType;
+  names: string[];
+  registerInfo: RegisterType;
+  commandGroups?: Nodes;
+  commands?: Leaves;
+};
+
+type Nodes = {
+  [name: string]: NodeType;
+};
+
+type ResourceType = {
+  id: string;
+  plane: string;
+  version: string;
+};
+
+type LeafType = {
+  help: HelpType;
+  names: string[];
+  registerInfo: RegisterType;
+  resources: ResourceType[];
+  stage: string;
+  version: string;
+};
+
+type Leaves = {
+  [name: string]: LeafType;
+};
 
 type GeneratorState = {
   currRepo: "Azure CLI" | "Azure CLI Extension";
   moduleName: string;
-  toBeGenerated: CommandGroups;
+  toBeGenerated: Nodes;
   profiles: string[];
   currProfile: string;
   treeData: TreeNode[];
@@ -225,25 +269,31 @@ class Generator extends Component<any, GeneratorState> {
   displayCommandTree = () => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [selectedNodes, setSelectedNodes] = useState<NodeModel[]>([]);
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const [nodeData, setNodeData] = useState({} as NodeType);
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const [leafData, setLeafData] = useState({} as LeafType);
 
     const getNodeData = (path: string) => {
-      return axios
+      axios
         .post(`/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/${path}/Transfer`)
-        .then((res) => {
-          return res.data;
+        .then(res => {
+          setNodeData(res.data)
         })
         .catch((err) => console.log(err));
+      return nodeData
     };
 
     const getLeafData = (path: string, command: string, version: string) => {
-      return axios
+      axios
         .post(
           `/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/${path}/Leaves/${command}/Versions/${version}/Transfer`
         )
-        .then((res) => {
-          return res.data;
+        .then(res => {
+          setLeafData(res.data)
         })
         .catch((err) => console.log(err));
+      return leafData
     };
 
     const getNamePath = (node: NodeModel) => {
@@ -263,17 +313,19 @@ class Generator extends Component<any, GeneratorState> {
         const currPath = namePath.slice(0, idx + 1).join("/");
         const data = getNodeData(currPath);
         if (!reference.hasOwnProperty("commandGroups")) {
-          let element: any = {};
-          element[item] = data;
-          reference["commandGroups"] = element;
-          reference = reference["commandGroups"][item];
-        } else if (!reference["commandGroups"].hasOwnProperty(item)) {
-          let element: any = reference["commandGroups"];
+          let element: Nodes = {};
           element[item] = data;
           reference["commandGroups"] = element;
           reference = reference["commandGroups"][item];
         } else {
-          reference = reference["commandGroups"][item];
+          if (!reference["commandGroups"]!.hasOwnProperty(item)) {
+            let element: Nodes = reference["commandGroups"]!;
+            element[item] = data;
+            reference["commandGroups"] = element;
+            reference = reference["commandGroups"][item];
+          } else {
+            reference = reference["commandGroups"]![item];
+          }
         }
       });
       return reference;
@@ -288,19 +340,19 @@ class Generator extends Component<any, GeneratorState> {
         const path = namePath.slice(0, -1).join("/");
         const command = namePath[namePath.length - 1];
         const currNode = this.state.treeData[Number(node.id) - 1];
-        const version = btoa(String(currNode.data.currVersion))
-        const data = getLeafData(path, command, version)
+        const version = btoa(String(currNode.data.currVersion));
+        const data = getLeafData(path, command, version);
         let commandRef = getReference(namePath);
         if (!commandRef.hasOwnProperty("commands")) {
-          let element: any = {}
-          element[command] = data
-          commandRef["commands"] = element
-        } else {
-          let element: any = commandRef["commands"]
+          let element: Leaves = {};
           element[command] = data;
-          commandRef["commands"] = element
+          commandRef["commands"] = element;
+        } else {
+          let element: Leaves = commandRef["commands"]!;
+          element[command] = data;
+          commandRef["commands"] = element;
         }
-        console.log(this.state.toBeGenerated)
+        console.log(this.state.toBeGenerated);
       } else {
         setSelectedNodes(selectedNodes.filter((n) => n.id !== node.id));
       }
