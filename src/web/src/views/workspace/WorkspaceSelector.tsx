@@ -54,18 +54,28 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
         }
     }
 
-    handleDialogClose = () => {
-        this.setState({
-            createDialogValue: {
-                name: "",
-                plane: null,
-                lastModified: null,
-                url: null,
-                folder: null,
-            },
-            openDialog: false,
-            dialogValidated: false,
-        })
+    componentDidMount() {
+        this.loadWorkspaces();
+    }
+
+    loadWorkspaces = () => {
+        axios.get("/AAZ/Editor/Workspaces")
+            .then((res) => {
+                let workspaces = res.data.map((workspace: any) => {
+                    console.log(workspace)
+                    return {
+                        name: workspace.name,
+                        lastModified: new Date(workspace.updated * 1000),
+                        url: workspace.url,
+                        plane: workspace.plane,
+                        folder: workspace.folder
+                    }
+                });
+                this.setState({
+                    workspaces: workspaces
+                })
+            })
+            .catch((err) => console.log(err));
     }
 
     handleDialogSubmit = (event: any) => {
@@ -96,6 +106,20 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
         }
     }
 
+    handleDialogClose = () => {
+        this.setState({
+            createDialogValue: {
+                name: "",
+                plane: null,
+                lastModified: null,
+                url: null,
+                folder: null,
+            },
+            openDialog: false,
+            dialogValidated: false,
+        })
+    }
+
     onValueUpdated = (value: any) => {
         console.log(value);
         this.setState({
@@ -104,34 +128,6 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
         if (value.url) {
             window.location.href = `/#/workspace/${value.name}`
         }
-    }
-
-    componentDidMount() {
-        this.loadWorkspaces();
-    }
-
-    loadWorkspaces = () => {
-        axios.get("/AAZ/Editor/Workspaces")
-            .then((res) => {
-                let workspaces = res.data.map((workspace: any) => {
-                    console.log(workspace)
-                    return {
-                        name: workspace.name,
-                        lastModified: new Date(workspace.updated * 1000),
-                        url: workspace.url,
-                        plane: workspace.plane,
-                        folder: workspace.folder
-                    }
-                });
-                this.setState({
-                    workspaces: workspaces
-                })
-            })
-            .catch((err) => console.log(err));
-    }
-
-    createNewWorkspace = () => {
-        // axios.
     }
 
     render() {
