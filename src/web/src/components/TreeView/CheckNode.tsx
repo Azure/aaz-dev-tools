@@ -1,11 +1,12 @@
 import React from "react";
-import { Typography } from "@mui/material";
+import { NativeSelect, Typography } from "@mui/material";
 import { Checkbox } from "@mui/material";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import { NodeModel } from "@minoru/react-dnd-treeview";
 import { CheckData } from "./types";
 import { TypeIcon } from "./TypeIcon";
 import styles from "./CheckNode.module.css";
+import FormControl from "@mui/material/FormControl";
 
 type Props = {
   node: NodeModel<CheckData>;
@@ -14,10 +15,12 @@ type Props = {
   isSelected: boolean;
   onToggle: (id: NodeModel["id"]) => void;
   onSelect: (node: NodeModel) => void;
+  onChange: (version: string, node: NodeModel) => void;
 };
 
 export const CheckNode: React.FC<Props> = (props) => {
   const { data } = props.node;
+  let versions = data?.versions;
   const indent = props.depth * 24;
 
   const handleToggle = (e: React.MouseEvent) => {
@@ -26,7 +29,12 @@ export const CheckNode: React.FC<Props> = (props) => {
   };
 
   const handleSelect = () => props.onSelect(props.node);
-
+  const handleChange = (event: any) => {
+    if (versions) {
+      const currVersion = versions[event.target.value];
+      props.onChange(currVersion, props.node);
+    }
+  };
   return (
     <div
       className={`tree-node ${styles.root} ${
@@ -60,6 +68,26 @@ export const CheckNode: React.FC<Props> = (props) => {
       </div>
       <div className={styles.labelGridItem}>
         <Typography variant="inherit">{props.node.text}</Typography>
+      </div>
+      <div>
+        {data?.type === "Command" && (
+          <FormControl sx={{ m: 1, minWidth: 80 }} disabled={!props.isSelected}>
+            <NativeSelect
+              defaultValue={0}
+              inputProps={{
+                name: "version",
+                id: "uncontrolled-native",
+              }}
+              onChange={handleChange}
+            >
+              {versions?.map((version, idx) => (
+                <option key={idx} value={idx}>
+                  {version}
+                </option>
+              ))}
+            </NativeSelect>
+          </FormControl>
+        )}
       </div>
     </div>
   );

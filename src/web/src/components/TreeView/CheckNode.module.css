@@ -1,7 +1,7 @@
 .root {
   align-items: center;
   display: grid;
-  grid-template-columns: auto auto auto 1fr;
+  grid-template-columns: auto auto auto auto 1fr;
   height: 32px;
   padding-inline-end: 8px;
 }

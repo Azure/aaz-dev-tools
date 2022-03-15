@@ -5,5 +5,6 @@ export type CustomData = {
 
 export type CheckData = {
   type: string;
+  currVersion?: string;
   versions?: string[];
 };
