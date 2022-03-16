@@ -1,4 +1,4 @@
-import React, { Component, useState } from "react";
+import React, { Component, useRef, useState } from "react";
 import { Button, Container, Nav, Navbar } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -130,9 +130,11 @@ class Generator extends Component<any, GeneratorState> {
       this.setState({ currProfile: "latest" });
     });
 
-    const promiseGen = axios.get(`/CLI/Az/Main/Modules/${this.state.moduleName}`).then((res) => {
-      this.setState({ toBeGenerated: res.data["profiles"] });
-    });
+    const promiseGen = axios
+      .get(`/CLI/Az/Main/Modules/${this.state.moduleName}`)
+      .then((res) => {
+        this.setState({ toBeGenerated: res.data["profiles"] });
+      });
 
     const url = `/AAZ/Specs/CommandTree/Nodes/aaz/${this.state.moduleName}`;
     const promiseTree = axios.get(url).then((res) => {
@@ -149,7 +151,7 @@ class Generator extends Component<any, GeneratorState> {
         return Promise.resolve();
       });
     });
-    return Promise.all([promiseProfile, promiseGen, promiseTree])
+    return Promise.all([promiseProfile, promiseGen, promiseTree]);
   }
 
   parseCommandGroup = (
@@ -257,10 +259,40 @@ class Generator extends Component<any, GeneratorState> {
     );
   };
 
+  // loadLocalCommands = () => {
+  //   // eslint-disable-next-line react-hooks/rules-of-hooks
+  //   const [selectedNodes, setSelectedNodes] = useState<NodeModel[]>([]);
+  //
+  //   const isGenerated = (node: TreeNode) => {
+  //     let namePath = [];
+  //     let currId = Number(node.parent);
+  //     while (currId !== 0) {
+  //       const currNode = this.state.treeData[currId - 1];
+  //       namePath.unshift(currNode.text);
+  //       currId = currNode.parent;
+  //     }
+  //
+  //     let currLocation = this.state.toBeGenerated[this.state.currProfile];
+  //     try {
+  //       namePath.forEach((item) => {
+  //         currLocation = currLocation["commandGroups"]![item];
+  //       });
+  //       currLocation = currLocation["commands"]![node.text];
+  //     } catch (e: unknown) {
+  //       return false;
+  //     }
+  //     return true;
+  //   };
+  //
+  //   const selectedNodes = this.state.treeData
+  //     .filter((node) => node.data.type === "Command")
+  //     .filter((node) => isGenerated(node));
+  //   setSelectedNodes(selectedNodes);
+  // };
+
   displayCommandTree = () => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [selectedNodes, setSelectedNodes] = useState<NodeModel[]>([]);
-    // const commandList = this.state.treeData.filter(node => node.data.type === "Command")
 
     const getNamePath = (node: NodeModel) => {
       let namePath = [node.text];
@@ -324,7 +356,7 @@ class Generator extends Component<any, GeneratorState> {
           }
         })
         .catch((err) => console.log(err));
-      return Promise.all([promise])
+      return Promise.all([promise]);
     };
 
     const removeNodes = (namePath: string[]) => {
@@ -374,7 +406,7 @@ class Generator extends Component<any, GeneratorState> {
           }
         }
       }
-      console.log(this.state.toBeGenerated)
+      console.log(this.state.toBeGenerated);
     };
 
     const handleChange = (node: NodeModel, version: string) => {
@@ -390,6 +422,38 @@ class Generator extends Component<any, GeneratorState> {
     };
 
     const handleDrop = () => {};
+
+    const isGenerated = (node: TreeNode) => {
+      let namePath = [];
+      let currId = Number(node.parent);
+      while (currId !== 0) {
+        const currNode = this.state.treeData[currId - 1];
+        namePath.unshift(currNode.text);
+        currId = currNode.parent;
+      }
+
+      let currLocation = this.state.toBeGenerated[this.state.currProfile];
+      try {
+        namePath.forEach((item) => {
+          currLocation = currLocation["commandGroups"]![item];
+        });
+        currLocation = currLocation["commands"]![node.text];
+      } catch (e: unknown) {
+        return false;
+      }
+      return true;
+    };
+
+    const loadCommands = (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) {
+        // const ref = useRef(null);
+        // ref.current!.openAll();
+        const selectedNodes = this.state.treeData
+          .filter((node) => node.data.type === "Command")
+          .filter((node) => isGenerated(node));
+        setSelectedNodes(selectedNodes);
+      }
+    };
 
     return (
       <div className={styles.app}>
@@ -412,6 +476,9 @@ class Generator extends Component<any, GeneratorState> {
             root: styles.treeRoot,
             draggingSource: styles.draggingSource,
             dropTarget: styles.dropTarget,
+          }}
+          rootProps={{
+            onClick: loadCommands,
           }}
         />
       </div>
