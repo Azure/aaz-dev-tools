@@ -95,7 +95,7 @@ export const CustomNode: React.FC<Props> = (props) => {
       </div>
       <div className={styles.labelGridItem} onDoubleClick={handleDoubleClick}>
         {!editing ?
-          <Row className="align-items-center">
+          <Row className="align-items-center flex-nowrap">
             <Col xxl='auto'>
             {nodeName}
             </Col>

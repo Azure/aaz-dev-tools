@@ -36,7 +36,8 @@ type Command = {
   help: { short: string },
   names: string[],
   resources: {
-    swagger: string
+    id: string,
+    version: string
   }[],
   version: string
 }
@@ -53,7 +54,8 @@ type CommandGroup = {
   examples?: ExampleType[],
   argGroups?: ArgGroups,
   resources?: {
-    swagger: string
+    id: string,
+    version: string
   }[]
 }
 
@@ -200,9 +202,10 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         }
         const resources = commands![commandName].resources
         resources.forEach(resource => {
-          const splitSwagger = resource.swagger.split('/')
-          const resourceId = splitSwagger[splitSwagger.length - 3]
-          const version = splitSwagger[splitSwagger.length - 1]
+//           console.log(resource)
+          const resourceId = btoa(resource.id)
+          const version = btoa(resource.version)
+          // console.log(resourceId, version)
           const combined = `${resourceId}/V/${version}`
           if (!(combined in this.state.resourceIdToCommands)) {
             this.state.resourceIdToCommands[combined] = []
@@ -248,7 +251,8 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         return this.parseCommandGroup(depth, 0, commandGroups)
           .then(() => {
             this.markHasChildren()
-            console.log(this.state.resourceIdToCommands)
+            // console.log(this.state)
+            // console.log(this.state.resourceIdToCommands)
             return Promise.resolve()
           })
       })
@@ -418,7 +422,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         if (this.state.nameToIndex[targetNames.join('/')]) {
           newIndex = this.state.nameToIndex[targetNames.join('/')]
         }
-        this.setState({ selectedIndex: newIndex})
+        this.setState({ selectedIndex: newIndex })
         this.markHasChildren()
         //         console.log(this.state)
       })
@@ -449,9 +453,8 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       // console.log(command.resources)
       const affectedCommands: string[] = []
       command.resources?.forEach(resource => {
-        const splitSwagger = resource.swagger.split('/')
-        const resourceId = splitSwagger[splitSwagger.length - 3]
-        const version = splitSwagger[splitSwagger.length - 1]
+        const resourceId = btoa(resource.id)
+        const version = btoa(resource.version)
         url = `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}/Resources/${resourceId}/V/${version}`
         const curr_commands = this.state.resourceIdToCommands[`${resourceId}/V/${version}`]
         if (curr_commands) {
@@ -468,9 +471,9 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         }
       })
     } else {
-      console.log(this.state.indexToTreeNode[id])
-      if (this.state.indexToTreeNode[id].data.hasChildren){
-        this.setState({showDeleteCommandGroupAlert: true})
+      // console.log(this.state.indexToTreeNode[id])
+      if (this.state.indexToTreeNode[id].data.hasChildren) {
+        this.setState({ showDeleteCommandGroupAlert: true })
         window.setTimeout(() => {
           this.setState({ showDeleteCommandGroupAlert: false })
         }, 2000)
@@ -482,27 +485,31 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   }
 
   confirmDelete = (urls: string[]) => {
-    const promisesAll = urls.map(url=>{
+    const promisesAll = urls.map(url => {
       console.log(url)
       return axios.delete(url)
     })
     Promise.all(promisesAll)
-    .then(res => {
-      console.log(res)
-      if(res[0].status!==200){
-        this.state.deletingCommand.active=false
-      } else {
-        this.refreshAll()
-        return this.getSwagger()
-      }
-      
-    })
-    .catch(err => {
-      console.error(err.response)
-    })
+      .then(res => {
+        // console.log(res)
+        if (res[0].status !== 200) {
+          this.state.deletingCommand.active = false
+        } else {
+          this.refreshAll()
+          return this.getSwagger()
+          .then(() => {
+            this.setState({ selectedIndex: -1 })
+            this.markHasChildren()
+          })
+        }
+
+      })
+      .catch(err => {
+        console.error(err.response)
+      })
   }
 
-  cancelDelete = ()=> {
+  cancelDelete = () => {
     this.setState({
       deletingCommand: {
         active: false,
@@ -514,7 +521,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   }
 
   ConfirmDeletionModal = () => {
-    const {active, originalCommand, affectedCommands, urls} = this.state.deletingCommand
+    const { active, originalCommand, affectedCommands, urls } = this.state.deletingCommand
     return <Modal show={active} centered>
       <Modal.Header>
         Deleting {originalCommand}
@@ -523,7 +530,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         This will delete {affectedCommands.join(', ')}
       </Modal.Body>
       <Modal.Footer>
-        <Button onClick={()=>{this.confirmDelete(urls)}}>Confirm</Button>
+        <Button onClick={() => { this.confirmDelete(urls) }}>Confirm</Button>
         <Button onClick={this.cancelDelete}>Cancel</Button>
       </Modal.Footer>
     </Modal>
@@ -631,7 +638,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
 
 
       {this.state.showSpecSelectorModal ? <SpecSelector onCloseModal={this.handleCloseModal} /> : <></>}
-      <this.ConfirmDeletionModal/>
+      <this.ConfirmDeletionModal />
     </div>
   }
 }
