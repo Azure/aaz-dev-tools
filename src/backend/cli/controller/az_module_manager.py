@@ -10,6 +10,8 @@ from cli.controller.az_profile_generator import AzProfileGenerator
 from utils import exceptions
 from utils.config import Config
 from utils.stage import AAZStageEnum
+
+import ast
 import re
 import json
 import logging
@@ -134,7 +136,8 @@ class AzModuleManager:
     def _load_profile(self, profile_name, aaz_path):
         profile = CLIAtomicProfile()
         profile.name = profile_name
-        profile_path = os.path.join(aaz_path, profile_name)
+        profile_folder_name = profile_name.lower().replace('-', '_')
+        profile_path = os.path.join(aaz_path, profile_folder_name)
         if not os.path.exists(profile_path):
             return profile
 
@@ -185,11 +188,11 @@ class AzModuleManager:
                 line = f.readline()
                 if line.startswith('@register_command_group('):
                     register_info_lines = []
-                if register_info_lines is not None:
-                    register_info_lines.append(line)
                 if self._command_group_pattern.match(line):
                     find_command_group = True
                     break
+                if register_info_lines is not None:
+                    register_info_lines.append(line)
         if not find_command_group:
             return None
 
@@ -237,11 +240,11 @@ class AzModuleManager:
                 line = f.readline()
                 if line.startswith('@register_command('):
                     register_info_lines = []
-                if register_info_lines is not None:
-                    register_info_lines.append(line)
                 if self._command_pattern.match(line):
                     find_command = True
                     break
+                if register_info_lines is not None:
+                    register_info_lines.append(line)
             if not find_command:
                 return None
 
@@ -268,10 +271,10 @@ class AzModuleManager:
             return None
 
         try:
-            data = json.loads(aaz_info_lines)
+            data = ast.literal_eval(aaz_info_lines)
             version_name = data['version']
         except Exception as err:
-            logger.error(f"Command info invalid in code: '{' '.join(names)}': {err}")
+            logger.error(f"Command info invalid in code: '{' '.join(names)}': {err}: {aaz_info_lines}")
             return None
 
         command = self.build_command_from_aaz(*names, version_name=version_name)
