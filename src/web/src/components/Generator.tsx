@@ -125,17 +125,17 @@ class Generator extends Component<any, GeneratorState> {
   }
 
   componentDidMount() {
-    axios.get("/CLI/Az/Profiles").then((res) => {
+    const promiseProfile = axios.get("/CLI/Az/Profiles").then((res) => {
       this.setState({ profiles: res.data });
       this.setState({ currProfile: "latest" });
     });
 
-    axios.get(`/CLI/Az/Main/Modules/${this.state.moduleName}`).then((res) => {
+    const promiseGen = axios.get(`/CLI/Az/Main/Modules/${this.state.moduleName}`).then((res) => {
       this.setState({ toBeGenerated: res.data["profiles"] });
     });
 
     const url = `/AAZ/Specs/CommandTree/Nodes/aaz/${this.state.moduleName}`;
-    axios.get(url).then((res) => {
+    const promiseTree = axios.get(url).then((res) => {
       let combinedData: CommandGroups = {};
       const moduleName = this.state.moduleName;
       combinedData[moduleName] = res.data;
@@ -149,6 +149,7 @@ class Generator extends Component<any, GeneratorState> {
         return Promise.resolve();
       });
     });
+    return Promise.all([promiseProfile, promiseGen, promiseTree])
   }
 
   parseCommandGroup = (
@@ -259,6 +260,7 @@ class Generator extends Component<any, GeneratorState> {
   displayCommandTree = () => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [selectedNodes, setSelectedNodes] = useState<NodeModel[]>([]);
+    // const commandList = this.state.treeData.filter(node => node.data.type === "Command")
 
     const getNamePath = (node: NodeModel) => {
       let namePath = [node.text];
@@ -305,7 +307,7 @@ class Generator extends Component<any, GeneratorState> {
       path.split("/").forEach((item) => {
         currLocation = currLocation["commandGroups"]![item];
       });
-      axios
+      const promise = axios
         .post(
           `/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/${path}/Leaves/${command}/Versions/${version}/Transfer`
         )
@@ -322,6 +324,7 @@ class Generator extends Component<any, GeneratorState> {
           }
         })
         .catch((err) => console.log(err));
+      return Promise.all([promise])
     };
 
     const removeNodes = (namePath: string[]) => {
@@ -350,7 +353,7 @@ class Generator extends Component<any, GeneratorState> {
           const path = namePath.slice(0, -1).join("/");
           const currNode = this.state.treeData[Number(node.id) - 1];
           const version = btoa(String(currNode.data.currVersion));
-          insertLeaf(path, node.text, version);
+          insertLeaf(path, node.text, version).then(() => {});
         });
       } else {
         setSelectedNodes(selectedNodes.filter((n) => n.id !== node.id));
@@ -371,6 +374,7 @@ class Generator extends Component<any, GeneratorState> {
           }
         }
       }
+      console.log(this.state.toBeGenerated)
     };
 
     const handleChange = (node: NodeModel, version: string) => {
@@ -430,4 +434,3 @@ const GeneratorWrapper = (props: any) => {
 };
 
 export { GeneratorWrapper as Generator };
-export type { TreeNode };
