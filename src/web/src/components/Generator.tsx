@@ -3,7 +3,7 @@ import { Button, Container, Nav, Navbar } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import styles from "./TreeView/App.module.css";
-import { NodeModel, Tree } from "@minoru/react-dnd-treeview";
+import { NodeModel, Tree, useOpenIdsHelper } from "@minoru/react-dnd-treeview";
 import { CheckData } from "./TreeView/types";
 import { CheckNode } from "./TreeView/CheckNode";
 
@@ -106,7 +106,6 @@ type GeneratorState = {
   currProfile: string;
   treeData: TreeNode[];
   currIdx: number;
-  selectedIdx: number[];
 };
 
 class Generator extends Component<any, GeneratorState> {
@@ -120,24 +119,21 @@ class Generator extends Component<any, GeneratorState> {
       currProfile: "",
       treeData: [],
       currIdx: 0,
-      selectedIdx: [],
     };
   }
 
   componentDidMount() {
-    const promiseProfile = axios.get("/CLI/Az/Profiles").then((res) => {
+    axios.get("/CLI/Az/Profiles").then((res) => {
       this.setState({ profiles: res.data });
       this.setState({ currProfile: "latest" });
     });
 
-    const promiseGen = axios
-      .get(`/CLI/Az/Main/Modules/${this.state.moduleName}`)
-      .then((res) => {
-        this.setState({ toBeGenerated: res.data["profiles"] });
-      });
+    axios.get(`/CLI/Az/Main/Modules/${this.state.moduleName}`).then((res) => {
+      this.setState({ toBeGenerated: res.data["profiles"] });
+    });
 
     const url = `/AAZ/Specs/CommandTree/Nodes/aaz/${this.state.moduleName}`;
-    const promiseTree = axios.get(url).then((res) => {
+    axios.get(url).then((res) => {
       let combinedData: CommandGroups = {};
       const moduleName = this.state.moduleName;
       combinedData[moduleName] = res.data;
@@ -151,7 +147,6 @@ class Generator extends Component<any, GeneratorState> {
         return Promise.resolve();
       });
     });
-    return Promise.all([promiseProfile, promiseGen, promiseTree]);
   }
 
   parseCommandGroup = (
@@ -259,37 +254,6 @@ class Generator extends Component<any, GeneratorState> {
     );
   };
 
-  // loadLocalCommands = () => {
-  //   // eslint-disable-next-line react-hooks/rules-of-hooks
-  //   const [selectedNodes, setSelectedNodes] = useState<NodeModel[]>([]);
-  //
-  //   const isGenerated = (node: TreeNode) => {
-  //     let namePath = [];
-  //     let currId = Number(node.parent);
-  //     while (currId !== 0) {
-  //       const currNode = this.state.treeData[currId - 1];
-  //       namePath.unshift(currNode.text);
-  //       currId = currNode.parent;
-  //     }
-  //
-  //     let currLocation = this.state.toBeGenerated[this.state.currProfile];
-  //     try {
-  //       namePath.forEach((item) => {
-  //         currLocation = currLocation["commandGroups"]![item];
-  //       });
-  //       currLocation = currLocation["commands"]![node.text];
-  //     } catch (e: unknown) {
-  //       return false;
-  //     }
-  //     return true;
-  //   };
-  //
-  //   const selectedNodes = this.state.treeData
-  //     .filter((node) => node.data.type === "Command")
-  //     .filter((node) => isGenerated(node));
-  //   setSelectedNodes(selectedNodes);
-  // };
-
   displayCommandTree = () => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [selectedNodes, setSelectedNodes] = useState<NodeModel[]>([]);
@@ -306,26 +270,26 @@ class Generator extends Component<any, GeneratorState> {
     };
 
     const prepareNodes = (namePath: string[]) => {
-      let reference = this.state.toBeGenerated[this.state.currProfile];
+      let currLocation = this.state.toBeGenerated[this.state.currProfile];
       const promises = namePath.slice(0, -1).map((item, idx) => {
         const currPath = namePath.slice(0, idx + 1).join("/");
         return axios
           .post(`/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/${currPath}/Transfer`)
           .then((res) => {
             const data = res.data;
-            if (!reference.hasOwnProperty("commandGroups")) {
+            if (!currLocation.hasOwnProperty("commandGroups")) {
               let element: Nodes = {};
               element[item] = data;
-              reference["commandGroups"] = element;
-              reference = reference["commandGroups"][item];
+              currLocation["commandGroups"] = element;
+              currLocation = currLocation["commandGroups"][item];
             } else {
-              if (!reference["commandGroups"]!.hasOwnProperty(item)) {
-                let element: Nodes = reference["commandGroups"]!;
+              if (!currLocation["commandGroups"]!.hasOwnProperty(item)) {
+                let element: Nodes = currLocation["commandGroups"]!;
                 element[item] = data;
-                reference["commandGroups"] = element;
-                reference = reference["commandGroups"][item];
+                currLocation["commandGroups"] = element;
+                currLocation = currLocation["commandGroups"][item];
               } else {
-                reference = reference["commandGroups"]![item];
+                currLocation = currLocation["commandGroups"]![item];
               }
             }
           })
@@ -339,7 +303,7 @@ class Generator extends Component<any, GeneratorState> {
       path.split("/").forEach((item) => {
         currLocation = currLocation["commandGroups"]![item];
       });
-      const promise = axios
+      axios
         .post(
           `/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/${path}/Leaves/${command}/Versions/${version}/Transfer`
         )
@@ -356,7 +320,6 @@ class Generator extends Component<any, GeneratorState> {
           }
         })
         .catch((err) => console.log(err));
-      return Promise.all([promise]);
     };
 
     const removeNodes = (namePath: string[]) => {
@@ -385,7 +348,7 @@ class Generator extends Component<any, GeneratorState> {
           const path = namePath.slice(0, -1).join("/");
           const currNode = this.state.treeData[Number(node.id) - 1];
           const version = btoa(String(currNode.data.currVersion));
-          insertLeaf(path, node.text, version).then(() => {});
+          insertLeaf(path, node.text, version)
         });
       } else {
         setSelectedNodes(selectedNodes.filter((n) => n.id !== node.id));
@@ -444,10 +407,8 @@ class Generator extends Component<any, GeneratorState> {
       return true;
     };
 
-    const loadCommands = (e: React.MouseEvent) => {
+    const loadLocalCommands = (e: React.MouseEvent) => {
       if (e.target === e.currentTarget) {
-        // const ref = useRef(null);
-        // ref.current!.openAll();
         const selectedNodes = this.state.treeData
           .filter((node) => node.data.type === "Command")
           .filter((node) => isGenerated(node));
@@ -478,7 +439,7 @@ class Generator extends Component<any, GeneratorState> {
             dropTarget: styles.dropTarget,
           }}
           rootProps={{
-            onClick: loadCommands,
+            onClick: loadLocalCommands,
           }}
         />
       </div>
