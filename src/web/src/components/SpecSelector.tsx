@@ -58,7 +58,9 @@ type Resources = {
 type Swagger = {
   module: string,
   version: string,
-  resources: string[]
+  resources: {
+    id: string
+  }[]
 }
 
 
@@ -293,9 +295,9 @@ class SpecSelector extends Component<WrapperProp, SpecSelectState> {
       resources: []
     }
     this.state.selectedResources.forEach(resourceId => {
-      finalResources.resources.push(resourceId)
+      finalResources.resources.push({id:resourceId})
     })
-    // console.log(finalResources)
+    console.log(finalResources)
     this.addSwagger(finalResources)
   }
 
