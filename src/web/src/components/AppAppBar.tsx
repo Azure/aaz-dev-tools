@@ -2,7 +2,6 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import { AppBar, Toolbar } from '@mui/material';
-import { fontWeight } from '@mui/system';
 import theme from '../theme';
 
 
@@ -15,7 +14,6 @@ const rightLink = {
 type AppAppBarProps = {
     pageName: string | null,
 };
-
 
 
 class AppAppBar extends React.Component<AppAppBarProps> {

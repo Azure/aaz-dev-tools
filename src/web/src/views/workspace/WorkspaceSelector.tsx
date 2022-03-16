@@ -213,14 +213,14 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
                     )}
                 />
                 <Dialog open={openDialog} onClose={this.handleDialogClose}>
-                    <form onSubmit={this.handleDialogSubmit}>
+                    <Box component='form' onSubmit={this.handleDialogSubmit}>
                         <DialogTitle>
                             Create a new workspace
                         </DialogTitle>
                         <DialogContent>
                             <TextField
                                 autoFocus
-                                margin="dense"
+                                margin="normal"
                                 id="name"
                                 required
                                 value={createDialogValue.name}
@@ -241,7 +241,7 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
                             <Button onClick={this.handleDialogClose}>Cancel</Button>
                             <Button type="submit" color="success">Create</Button>
                         </DialogActions>
-                    </form>
+                    </Box>
                 </Dialog>
             </React.Fragment>
         )

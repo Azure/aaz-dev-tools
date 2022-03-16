@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {Typography, Box, Link } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { useParams } from 'react-router';
 
 const TopPadding = styled(Box)(({ theme }) => ({
     [theme.breakpoints.up('sm')]: {
@@ -12,9 +13,25 @@ const MiddlePadding = styled(Box)(({ theme }) => ({
     height: '6vh'
 }));
 
+interface GenerationModuleEditorProps {
+    params: {
+        repoName: string,
+        moduleName: string,
+    }
+}
 
-class GenerationModuleEditor extends React.Component {
+interface GenerationModuleEditorState {
+
+}
+
+
+class GenerationModuleEditor extends React.Component<GenerationModuleEditorProps, GenerationModuleEditorState> {
     
+    constructor(props: GenerationModuleEditorProps) {
+        super(props);
+        console.log(props.params);
+    }
+
     render() {
         return (
             <Box sx={{
@@ -56,4 +73,10 @@ class GenerationModuleEditor extends React.Component {
     }
 }
 
-export default GenerationModuleEditor;
+
+const GenerationModuleEditorWrapper = (props: any) => {
+    const params = useParams()
+    return <GenerationModuleEditor params={params} {...props} />
+}
+
+export { GenerationModuleEditorWrapper as GenerationModuleEditor };

@@ -9,10 +9,7 @@ class WorkspacePage extends React.Component {
     render() {
         return (
             <React.Fragment>
-                <AppAppBar pageName={'Workspace'} />
-                <PageLayout>
-                    <Outlet />
-                </PageLayout>
+                <Outlet />
             </React.Fragment>
         )
     }

@@ -7,11 +7,11 @@ import App from './App';
 import HomePage from './views/home/HomePage';
 import WorkspacePage from './views/workspace/WorkspacePage';
 import WorkspaceInstruction from './views/workspace/WorkspaceInstruction';
-import WorkspaceEditor from './views/workspace/WorkspaceEditor';
+import { WorkspaceEditor } from './views/workspace/WorkspaceEditor';
 import CommandsPage from './views/commands/CommandsPage';
 import GenerationPage from './views/generation/GenerationPage';
 import GenerationInstruction from './views/generation/GenerationInstruction';
-import GenerationModuleEditor from './views/generation/GenerationModuleEditor';
+import { GenerationModuleEditor } from './views/generation/GenerationModuleEditor';
 // import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
