@@ -13,6 +13,7 @@ import styles from "./TreeView/App.module.css";
 
 import { CommandGroupDetails } from "./CommandGroupDetails"
 import { ArgumentDetails } from "./ArgumentDetails"
+import { couldStartTrivia } from "typescript";
 
 type Argument = {
   options?: string[],
@@ -110,6 +111,7 @@ type DeleteCommand = {
 type ConfigEditorState = {
   commandGroups: CommandGroups,
   selectedIndex: number,
+  initialTreeData: TreeDataType,
   treeData: TreeDataType,
   currentIndex: number,
   indexToCommandGroupName: NumberToString,
@@ -137,6 +139,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
     this.state = {
       commandGroups: {},
       selectedIndex: -1,
+      initialTreeData: [],
       treeData: [],
       currentIndex: 0,
       indexToCommandGroupName: {},
@@ -178,7 +181,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         data: { hasChildren: true, type: 'CommandGroup', allowDelete: true }
       }
       // console.log(commandGroupName)
-      this.state.treeData.push(treeNode)
+      this.state.initialTreeData.push(treeNode)
       this.state.indexToTreeNode[this.state.currentIndex] = treeNode
 
       let commandGroupIndex = this.state.currentIndex
@@ -202,7 +205,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         }
         const resources = commands![commandName].resources
         resources.forEach(resource => {
-//           console.log(resource)
+          //           console.log(resource)
           const resourceId = btoa(resource.id)
           const version = btoa(resource.version)
           // console.log(resourceId, version)
@@ -215,7 +218,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         const currentIndex = this.state.currentIndex
         this.state.indexToCommandGroupName[currentIndex] = namesJoined
         this.state.nameToIndex[namesJoined] = this.state.currentIndex
-        this.state.treeData.push(treeNode)
+        this.state.initialTreeData.push(treeNode)
         this.state.indexToTreeNode[currentIndex] = treeNode
         return this.getCommand(currentIndex, names.slice(0, names.length - 1).join('/'), names[names.length - 1])
       })
@@ -250,9 +253,11 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         let depth = 0
         return this.parseCommandGroup(depth, 0, commandGroups)
           .then(() => {
+            this.setState({ treeData: this.state.initialTreeData })
             this.markHasChildren()
             // console.log(this.state)
             // console.log(this.state.resourceIdToCommands)
+            
             return Promise.resolve()
           })
       })
@@ -276,6 +281,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
   refreshAll = () => {
     this.setState({
       commandGroups: {},
+      initialTreeData: [],
       treeData: [],
       currentIndex: 0,
       indexToCommandGroupName: {},
@@ -422,9 +428,10 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         if (this.state.nameToIndex[targetNames.join('/')]) {
           newIndex = this.state.nameToIndex[targetNames.join('/')]
         }
+        console.log(newIndex)
         this.setState({ selectedIndex: newIndex })
         this.markHasChildren()
-        //         console.log(this.state)
+        console.log(this.state)
       })
       .catch(err => {
         console.error(err.response)
@@ -497,10 +504,10 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
         } else {
           this.refreshAll()
           return this.getSwagger()
-          .then(() => {
-            this.setState({ selectedIndex: -1 })
-            this.markHasChildren()
-          })
+            .then(() => {
+              this.setState({ selectedIndex: -1 })
+              this.markHasChildren()
+            })
         }
 
       })
@@ -628,7 +635,7 @@ class ConfigEditor extends Component<WrapperProp, ConfigEditorState> {
       </Alert>}
       <Row>
         <Col xxl="3" style={{ overflow: `auto` }}>
-          <this.displayCommandGroupsTree />
+          {this.state.treeData && this.state.treeData.length > 0 && <this.displayCommandGroupsTree />}
         </Col>
         <Col xxl="9">
           <this.displayCommandDetail />

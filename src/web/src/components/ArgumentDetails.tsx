@@ -20,8 +20,43 @@ type Props = {
     onNameChange: (id: NodeModel["id"], name: string) => void
 };
 
+const ArgumentsTree = (
+    props: {
+        treeData: any,
+        selectedIndex: any,
+        onClick: any,
+        onSubmit: any,
+        onDrop: any
+    }
+) => {
+    console.log(props.treeData)
+    return <div className={styles.app}>
+        <Tree
+            tree={props.treeData}
+            rootId={0}
+            render={(node: NodeModel<CustomData>, { depth, isOpen, onToggle }) => (
+                <CustomNode node={node} depth={depth} isOpen={isOpen} isSelected={node.id === props.selectedIndex}
+                    onToggle={onToggle} onClick={props.onClick} onSubmit={props.onSubmit} editable={false} />
+            )}
+            dragPreviewRender={(
+                monitorProps: DragLayerMonitorProps<CustomData>
+            ) => <CustomDragPreview monitorProps={monitorProps} />}
+            onDrop={props.onDrop}
+            canDrag={() => { return false }}
+            classes={{
+                root: styles.treeRoot,
+                draggingSource: styles.draggingSource,
+                dropTarget: styles.dropTarget,
+            }}
+            initialOpen={true}
+        />
+    </div>
+}
+
+
 export const ArgumentDetails: React.FC<Props> = (props) => {
     let initTreeData: TreeDataType = [];
+    let treeData: TreeDataType = [];
     // const [treeData, setTreeData] = useState(initTreeData)
     // console.log(props.argGroups)
     let currentIndex = 1
@@ -107,8 +142,10 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
         } else {
             parseArguments(0, props.argGroups[0].args)
         }
+        treeData = initTreeData
         // console.log(indexToArgument)
         // console.log(initTreeData)
+
     }
 
     load()
@@ -120,29 +157,7 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
     const handleNameChange = () => { }
     const handleDrop = () => { }
 
-    const ArgumentsTree = () => {
-        // console.log(initTreeData)
-        return <div className={styles.app}>
-            <Tree
-                tree={initTreeData}
-                rootId={0}
-                render={(node: NodeModel<CustomData>, { depth, isOpen, onToggle }) => (
-                    <CustomNode node={node} depth={depth} isOpen={isOpen} isSelected={node.id === selectedIndex} onToggle={onToggle} onClick={handleClick} onSubmit={handleNameChange} editable={false}/>
-                )}
-                dragPreviewRender={(
-                    monitorProps: DragLayerMonitorProps<CustomData>
-                ) => <CustomDragPreview monitorProps={monitorProps} />}
-                onDrop={handleDrop}
-                canDrag={() => { return false }}
-                classes={{
-                    root: styles.treeRoot,
-                    draggingSource: styles.draggingSource,
-                    dropTarget: styles.dropTarget,
-                }}
-                initialOpen={true}
-            />
-        </div>
-    }
+
 
 
     type InputAreaProps = {
@@ -265,7 +280,7 @@ export const ArgumentDetails: React.FC<Props> = (props) => {
         <h6> Required (*)</h6>
         <Row>
             <Col xxl='4'>
-                <ArgumentsTree />
+                {treeData && treeData.length > 0 && <ArgumentsTree treeData={treeData} selectedIndex={selectedIndex} onDrop={handleDrop} onClick={handleClick} onSubmit={handleNameChange} />}
             </Col>
             <Col xxl='8'>
                 <ArgumentsEdit />
