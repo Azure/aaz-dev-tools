@@ -15,12 +15,12 @@ type Props = {
   isSelected: boolean;
   onToggle: (id: NodeModel["id"]) => void;
   onSelect: (node: NodeModel) => void;
-  onChange: (version: string, node: NodeModel) => void;
+  onChange: (node: NodeModel, version: string) => void;
 };
 
 export const CheckNode: React.FC<Props> = (props) => {
   const { data } = props.node;
-  let versions = data?.versions;
+  const versions = data?.versions;
   const indent = props.depth * 24;
 
   const handleToggle = (e: React.MouseEvent) => {
@@ -32,7 +32,7 @@ export const CheckNode: React.FC<Props> = (props) => {
   const handleChange = (event: any) => {
     if (versions) {
       const currVersion = versions[event.target.value];
-      props.onChange(currVersion, props.node);
+      props.onChange(props.node, currVersion);
     }
   };
   return (
