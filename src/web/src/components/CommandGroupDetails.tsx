@@ -142,13 +142,13 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
 
         return (
             <div >
-                <Row className="align-items-top ">
+                <Row className="align-items-top">
                     <Col xxl="2">
                         <h6>{prefix}</h6>
                     </Col>
                     {!editing
                         ?
-                        (<Col onDoubleClick={handleDoubleClick} xxl="10">
+                        (<Col onDoubleClick={handleDoubleClick}>
                             {displayValue.split('\n').map((line, index) => {
                                 return <div key={index}>
                                     {line}
@@ -157,7 +157,7 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
                         </Col>)
                         :
                         (
-                            <Col xxl="10">
+                            <Col>
                                 <TextareaAutosize
                                     minRows={props.minRow}
                                     style={{ width: width }}
@@ -193,11 +193,11 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
                 const content = example.commands.join('\n')
                 return <div key={index}>
                     <Row>
-                        <Col xxl='11'>
+                        <Col>
                             <InputArea value={name} prefix="Name: " initEditing={name === ""} editable={true} onSubmit={(exampleName: string) => { onExampleNameChange(exampleName, index) }} minRow={1} width="35em" placeholder={exampleNamePlaceholder} />
                             <InputArea value={content} prefix="Commands:" initEditing={content === ""} editable={true} onSubmit={(exampleContent: string) => { onExampleContentChange(exampleContent, index) }} minRow={3} width="35em" placeholder={exampleContentPlaceholder} />
                         </Col>
-                        <Col xxl='1'>
+                        <Col xxl='3'>
                             <IconButton onClick={() => { onExampleDelete(index) }}>
                                 <RemoveIcon />
                             </IconButton>
@@ -231,7 +231,7 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
                 <Col xxl='2'>
                     <h6>Name:</h6>
                 </Col>
-                <Col xxl="10">
+                <Col>
                     <TextareaAutosize minRows={1} style={{ width: `35em` }} value={name} onChange={e => setName(e.target.value)} placeholder={exampleNamePlaceholder} />
                 </Col>
             </Row>
@@ -239,7 +239,7 @@ export const CommandGroupDetails: React.FC<Props> = (props) => {
                 <Col xxl='2'>
                     <h6>Commands:</h6>
                 </Col>
-                <Col xxl="10">
+                <Col>
                     <TextareaAutosize minRows={3} style={{ width: `35em` }} value={commands} onChange={e => setCommands(e.target.value)} placeholder={exampleContentPlaceholder} />
                     <IconButton onClick={handleSubmitExample} disabled={name === "" || commands === ""}>
                         <CheckIcon />
