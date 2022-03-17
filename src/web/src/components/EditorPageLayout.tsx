@@ -3,17 +3,17 @@ import { Box } from '@mui/system';
 // import { SxProps } from '@mui/system';
 import * as React from 'react';
 
-const PageContainer = styled(Container)(({theme}) => ({
+const PageContainer = styled(Box)(({theme}) => ({
     color: theme.palette.common.white,
     position: 'absolute',
-    left: 0,
-    right: 0,
+    left: '6vh',
+    right: '6vh',
     top: 64,
     bottom: 0,
     display: 'flex',
     alignItems: 'stretch',
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
 }));
 
 
@@ -29,7 +29,7 @@ const Background = styled(Box)({
 });
 
 
-export default function PageLayout(
+export default function EditorPageLayout(
     props: React.HTMLAttributes<HTMLDivElement>
 ) {
     const { children } = props;

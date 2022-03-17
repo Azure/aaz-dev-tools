@@ -5,20 +5,10 @@ import WorkspaceSelector from './WorkspaceSelector';
 import { AppAppBar } from '../../components/AppAppBar';
 import PageLayout from '../../components/PageLayout';
 
-const TopPadding = styled(Box)(({ theme }) => ({
-    [theme.breakpoints.up('sm')]: {
-        height: '20vh',
-    },
-}));
 
 const MiddlePadding = styled(Box)(({ theme }) => ({
     height: '6vh'
 }));
-
-const SpacePadding = styled(Box)(({ theme }) => ({
-    width: '3vh'
-}));
-
 
 class WorkspaceInstruction extends React.Component {
     render() {
@@ -30,13 +20,24 @@ class WorkspaceInstruction extends React.Component {
                         display: 'flex',
                         alignItems: 'center',
                         flexDirection: 'column',
+                        justifyContent: 'center',
                     }}>
-                        <TopPadding />
-                        <Typography variant='h4' gutterBottom>
-                            Please select a Workspace
-                        </Typography>
-                        <MiddlePadding />
-                        <WorkspaceSelector name='Open or create a workspace' />
+                        <Box sx={{ flexGrow: 3 }} />
+                        <Box sx={{
+                            flexGrow: 3,
+                            flexShrink: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexDirection: 'column'
+                        }}>
+                            <Typography variant='h3' gutterBottom>
+                                Please select a Workspace
+                            </Typography>
+                            <MiddlePadding />
+                            <WorkspaceSelector name='Open or create a workspace' />
+                        </Box>
+                        <Box sx={{ flexGrow: 5 }} />
                     </Box>
                 </PageLayout>
             </React.Fragment>

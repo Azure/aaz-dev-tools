@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { Typography, Box, Link, Dialog, Slide, Button, Toolbar } from '@mui/material';
+import { Typography, Box, Dialog, Slide } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { Params, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import axios from 'axios';
 import { TransitionProps } from '@mui/material/transitions';
 import SwaggerResourcePicker from './SwaggerResourcePicker';

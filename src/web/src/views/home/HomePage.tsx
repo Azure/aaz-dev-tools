@@ -7,12 +7,6 @@ import { AppAppBar } from '../../components/AppAppBar';
 import PageLayout from '../../components/PageLayout';
 
 
-const TopPadding = styled(Box)(({ theme }) => ({
-    [theme.breakpoints.up('sm')]: {
-        height: '12vh',
-    },
-}));
-
 const MiddlePadding = styled(Box)(({ theme }) => ({
     height: '6vh'
 }));
@@ -28,36 +22,47 @@ class HomePage extends React.Component {
                         display: 'flex',
                         alignItems: 'center',
                         flexDirection: 'column',
+                        justifyContent: 'center',
                     }}>
-                        <TopPadding />
-                        <Typography variant='h2' gutterBottom>
-                            Welcome to
-                        </Typography>
-                        <Typography variant='h2' gutterBottom>
-                            AAZ Development Tool
-                        </Typography>
-                        <MiddlePadding />
-                        <Typography variant="h6" align="center" gutterBottom>
+                        <Box sx={{ flexGrow: 3 }} />
+                        <Box sx={{
+                            flexGrow: 3,
+                            flexShrink: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexDirection: 'column'
+                        }}>
+                            <Typography variant='h2' gutterBottom>
+                                Welcome to
+                            </Typography>
+                            <Typography variant='h2' gutterBottom>
+                                AAZ Development Tool
+                            </Typography>
+                            <MiddlePadding />
+                            <Typography variant="h6" align="center" gutterBottom>
 
-                            {'Convert Swagger to Command Model? '}
-                            <Link
-                                href="/?#/Workspace"
-                                align="center"
-                                underline="always"
-                            >
-                                Workspace
-                            </Link>
-                        </Typography>
-                        <Typography variant="h6" align="center" gutterBottom>
-                            {'Convert Command Model to Code? '}
-                            <Link
-                                href="/?#/Generation"
-                                align="center"
-                                underline="always"
-                            >
-                                Generation
-                            </Link>
-                        </Typography>
+                                {'Convert Swagger to Command Model? '}
+                                <Link
+                                    href="/?#/Workspace"
+                                    align="center"
+                                    underline="always"
+                                >
+                                    Workspace
+                                </Link>
+                            </Typography>
+                            <Typography variant="h6" align="center" gutterBottom>
+                                {'Convert Command Model to Code? '}
+                                <Link
+                                    href="/?#/Generation"
+                                    align="center"
+                                    underline="always"
+                                >
+                                    Generation
+                                </Link>
+                            </Typography>
+                        </Box>
+                        <Box sx={{ flexGrow: 5 }} />
                     </Box>
                 </PageLayout>
             </React.Fragment>

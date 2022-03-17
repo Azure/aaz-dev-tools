@@ -2,7 +2,8 @@ import * as React from 'react';
 import { Typography, Box, AppBar, Toolbar, IconButton, Button, Container, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText, Paper } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
-import PageLayout from '../../components/PageLayout';
+import EditorPageLayout from '../../components/EditorPageLayout';
+import { styled } from '@mui/material/styles';
 
 
 interface SwaggerResourcePickerProps {
@@ -60,6 +61,14 @@ type VersionResourceIdMap = {
 // type Resources = {
 //     [id: string]: Version[]
 // }
+
+const MiddlePadding = styled(Box)(({ theme }) => ({
+    height: '2vh'
+}));
+
+const MiddlePadding2 = styled(Box)(({ theme }) => ({
+    height: '8vh'
+}));
 
 class SwaggerResourcePicker extends React.Component<SwaggerResourcePickerProps, SwaggerResourcePickerState> {
 
@@ -324,30 +333,29 @@ class SwaggerResourcePicker extends React.Component<SwaggerResourcePickerProps, 
                         <Typography sx={{ ml: 2, flex: 1, flexDirection: "row", display: "flex", justifyContent: "center", alignContent: "center" }} variant='h5' component='div'>
                             Add Swagger Resources
                         </Typography>
-                        <Button
-                            color='success' onClick={this.handleSubmit}
-                            disabled={selectedModule == null || selectedVersion == null || selectedResources.size < 1}
-                        >
-                            Submit
-                        </Button>
+                        
                     </Toolbar>
                 </AppBar>
-                <PageLayout>
-                    <Container sx={{
-                        flex: 1,
-                        width: "95%",
+                <EditorPageLayout
+                >
+                    <Box sx={{
+                        flexShrink: 0,
+                        width: 250,
+                        flexDirection: 'column',
                         display: 'flex',
-                        flexDirection: 'row',
-                        alignContent: 'center',
+                        alignItems: 'stretch',
                         justifyContent: 'flex-start',
-                        mt: 2
+                        marginRight: '3vh'
                     }}>
+                        <ListSubheader> Swagger Filters</ListSubheader>
+                        <MiddlePadding />
                         <SwaggerItemSelector
                             name='Swagger Module'
                             commonPrefix={this.state.moduleOptionsCommonPrefix}
                             options={this.state.moduleOptions}
                             value={this.state.selectedModule}
                             onValueUpdate={this.onModuleSelectorUpdate} />
+                        <MiddlePadding />
                         <SwaggerItemSelector
                             name='Resource Provider'
                             commonPrefix={this.state.resourceProviderOptionsCommonPrefix}
@@ -355,6 +363,7 @@ class SwaggerResourcePicker extends React.Component<SwaggerResourcePickerProps, 
                             value={this.state.selectedResourceProvider}
                             onValueUpdate={this.onResourceProviderUpdate}
                         />
+                        <MiddlePadding />
                         <SwaggerItemSelector
                             name='API Version'
                             commonPrefix=''
@@ -362,41 +371,50 @@ class SwaggerResourcePicker extends React.Component<SwaggerResourcePickerProps, 
                             value={this.state.selectedVersion}
                             onValueUpdate={this.onVersionUpdate}
                         />
-                    </Container>
-                    {resourceOptions.length > 0 &&
-                        <List
-                            dense
-                            sx={{ width: "95%" }}
-                            subheader={<ListSubheader>Resource Url</ListSubheader>}
+                        <MiddlePadding2 />
+                        <Button
+                            variant="contained"
+                            // sx={{
+                            //     width: 250,
+                            // }}
+                            onClick={this.handleSubmit}
+                            disabled={selectedModule == null || selectedVersion == null || selectedResources.size < 1}
                         >
-                            {resourceOptions.map((option) => {
-                                const labelId = `resource-${option}`;
-                                return <ListItem
-                                    key={option}
-                                    disablePadding
-                                >
-                                    <ListItemButton dense onClick={this.onResourceItemClick(option)}>
-                                        <ListItemIcon>
-                                            <Checkbox
-                                                edge="start"
-                                                checked={selectedResources.has(option) || existingResources.has(option)}
-                                                tabIndex={-1}
-                                                disableRipple
-                                                inputProps={{ 'aria-labelledby': labelId }}
-                                            />
-                                        </ListItemIcon>
-                                        <ListItemText id={labelId}
-                                            primary={option}
-                                            primaryTypographyProps={{
-                                                variant: "h6",
-                                            }}
+                            Submit
+                        </Button>
+                    </Box>
+                    <List
+                        dense
+                        sx={{ flexGrow: 1 }}
+                        subheader={<ListSubheader>Resource Url</ListSubheader>}
+                    >
+                        {resourceOptions.map((option) => {
+                            const labelId = `resource-${option}`;
+                            return <ListItem
+                                key={option}
+                                disablePadding
+                            >
+                                <ListItemButton dense onClick={this.onResourceItemClick(option)}>
+                                    <ListItemIcon>
+                                        <Checkbox
+                                            edge="start"
+                                            checked={selectedResources.has(option) || existingResources.has(option)}
+                                            tabIndex={-1}
+                                            disableRipple
+                                            inputProps={{ 'aria-labelledby': labelId }}
                                         />
-                                    </ListItemButton>
-                                </ListItem>
-                            })}
-                        </List>
-                    }
-                </PageLayout>
+                                    </ListItemIcon>
+                                    <ListItemText id={labelId}
+                                        primary={option}
+                                        primaryTypographyProps={{
+                                            variant: "h6",
+                                        }}
+                                    />
+                                </ListItemButton>
+                            </ListItem>
+                        })}
+                    </List>
+                </EditorPageLayout>
                 <Backdrop
                     sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
                     open={this.state.loading}
@@ -435,9 +453,9 @@ class SwaggerItemSelector extends React.Component<SwaggerItemsSelectorProps> {
             <Autocomplete
                 id={name}
                 value={value}
-                sx={{
-                    width: 250,
-                }}
+                // sx={{
+                //     width: 250,
+                // }}
                 options={options}
                 onChange={(event, newValue: any) => {
                     this.props.onValueUpdate(newValue);
