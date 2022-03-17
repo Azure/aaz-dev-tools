@@ -153,11 +153,10 @@ class WorkspaceEditor extends React.Component<WorkspaceEditorProps, WorkspaceEdi
                     plane: res.data.plane,
                     commandTree: commandTree
                 })
-                this.showSwaggerResourcePicker();
-                // if (!commandTree.commandGroups) {
-                //     this.showSwaggerResourcePicker();
-                //     return
-                // }
+                if (!commandTree.commandGroups) {
+                    this.showSwaggerResourcePicker();
+                    return
+                }
             })
             .catch((err) => console.log(err));
     }
@@ -174,10 +173,10 @@ class WorkspaceEditor extends React.Component<WorkspaceEditorProps, WorkspaceEdi
 
 
     handleBackToHomepage = () => {
-
+        window.location.href = `/?#/workspace`
     }
     
-    handleLayout = () => {
+    handleGenerate = () => {
 
     }
 
@@ -186,8 +185,9 @@ class WorkspaceEditor extends React.Component<WorkspaceEditorProps, WorkspaceEdi
 
         return (
             <React.Fragment>
-                <WorkspaceEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onLayout={this.handleLayout}>
+                <WorkspaceEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onAdd={this.showSwaggerResourcePicker} onGenerate={this.handleGenerate}>
                 {/* <Button onClick={this.showSwaggerResourcePicker}>Add Swagger Resource</Button> */}
+                
                 </WorkspaceEditorToolBar>
 
                 {/* <PageLayout>
