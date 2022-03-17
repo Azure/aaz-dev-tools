@@ -8,7 +8,7 @@ import AddIcon from '@mui/icons-material/Add';
 import * as React from 'react';
 
 
-interface WorkspaceEditorToolBarProps {
+interface WSEditorToolBarProps {
     workspaceName: string
     onHomePage: () => void
     onAdd: () => void
@@ -20,18 +20,21 @@ const MiddlePadding = styled(Box)(({ theme }) => ({
     height: '6vh'
 }));
 
-class WorkspaceEditorToolBar extends React.Component<WorkspaceEditorToolBarProps> {
+class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
 
     render() {
         const { workspaceName, onHomePage, onAdd, onGenerate } = this.props;
         return (
             <React.Fragment>
-                <AppBar sx={{ position: "fixed" }}>
+                <AppBar sx={{
+                    position: "fixed",
+                    zIndex: (theme) => theme.zIndex.drawer + 1,
+                }}>
                     <Toolbar sx={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: "flex-start",
-                        height: 64
+                        height: 64,
                     }}>
                         <IconButton
                             color='inherit'
@@ -91,4 +94,4 @@ class WorkspaceEditorToolBar extends React.Component<WorkspaceEditorToolBarProps
 }
 
 
-export default WorkspaceEditorToolBar;
+export default WSEditorToolBar;

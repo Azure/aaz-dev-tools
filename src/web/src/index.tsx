@@ -7,7 +7,7 @@ import App from './App';
 import HomePage from './views/home/HomePage';
 import WorkspacePage from './views/workspace/WorkspacePage';
 import WorkspaceInstruction from './views/workspace/WorkspaceInstruction';
-import { WorkspaceEditor } from './views/workspace/WorkspaceEditor';
+import { WSEditor } from './views/workspace/WSEditor';
 import CommandsPage from './views/commands/CommandsPage';
 import GenerationPage from './views/generation/GenerationPage';
 import GenerationInstruction from './views/generation/GenerationInstruction';
@@ -24,7 +24,7 @@ ReactDOM.render(
           <Route path="Workspace" element={<WorkspacePage />}>
             <Route index element={<WorkspaceInstruction />} />
             <Route path="Instruction" element={<WorkspaceInstruction />}/>
-            <Route path=":workspaceName" element={<WorkspaceEditor />} />
+            <Route path=":workspaceName" element={<WSEditor />} />
           </Route>
           <Route path="Commands" element={<CommandsPage />}>
           </Route>
