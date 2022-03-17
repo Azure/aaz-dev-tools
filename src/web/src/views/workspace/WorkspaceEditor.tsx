@@ -5,7 +5,7 @@ import { useParams } from 'react-router';
 import axios from 'axios';
 import { TransitionProps } from '@mui/material/transitions';
 import SwaggerResourcePicker from './SwaggerResourcePicker';
-import EditorToolBar from '../../components/EditorToolBar';
+import WorkspaceEditorToolBar from './WorkspaceEditorToolBar';
 import PageLayout from '../../components/PageLayout';
 
 const TopPadding = styled(Box)(({ theme }) => ({
@@ -153,10 +153,11 @@ class WorkspaceEditor extends React.Component<WorkspaceEditorProps, WorkspaceEdi
                     plane: res.data.plane,
                     commandTree: commandTree
                 })
-                if (!commandTree.commandGroups) {
-                    this.showSwaggerResourcePicker();
-                    return
-                }
+                this.showSwaggerResourcePicker();
+                // if (!commandTree.commandGroups) {
+                //     this.showSwaggerResourcePicker();
+                //     return
+                // }
             })
             .catch((err) => console.log(err));
     }
@@ -171,15 +172,25 @@ class WorkspaceEditor extends React.Component<WorkspaceEditorProps, WorkspaceEdi
         })
     }
 
+
+    handleBackToHomepage = () => {
+
+    }
+    
+    handleLayout = () => {
+
+    }
+
     render() {
         const { showSwaggerResourcePicker, plane, commandTree, name } = this.state;
 
         return (
             <React.Fragment>
-                <EditorToolBar>
+                <WorkspaceEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onLayout={this.handleLayout}>
                 {/* <Button onClick={this.showSwaggerResourcePicker}>Add Swagger Resource</Button> */}
-                </EditorToolBar>
-                <PageLayout>
+                </WorkspaceEditorToolBar>
+
+                {/* <PageLayout>
                     <Box sx={{
                         display: 'flex',
                         alignItems: 'center',
@@ -194,7 +205,7 @@ class WorkspaceEditor extends React.Component<WorkspaceEditorProps, WorkspaceEdi
                         </Typography>
                         <MiddlePadding />
                     </Box>
-                </PageLayout>
+                </PageLayout> */}
 
                 <Dialog
                     fullScreen
