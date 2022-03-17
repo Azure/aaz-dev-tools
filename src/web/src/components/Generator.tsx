@@ -1,11 +1,11 @@
-import React, { Component, useRef, useState } from "react";
-import { Button, Container, Nav, Navbar } from "react-bootstrap";
-import { useParams } from "react-router-dom";
+import React, {Component, useState} from "react";
+import {Button, Container, Nav, Navbar} from "react-bootstrap";
+import {useParams} from "react-router-dom";
 import axios from "axios";
 import styles from "./TreeView/App.module.css";
-import { NodeModel, Tree, useOpenIdsHelper } from "@minoru/react-dnd-treeview";
-import { CheckData } from "./TreeView/types";
-import { CheckNode } from "./TreeView/CheckNode";
+import {NodeModel, Tree} from "@minoru/react-dnd-treeview";
+import {CheckData} from "./TreeView/types";
+import {CheckNode} from "./TreeView/CheckNode";
 
 const repoMap = {
   "Azure CLI": "Main",
@@ -147,6 +147,7 @@ class Generator extends Component<any, GeneratorState> {
         return Promise.resolve();
       });
     });
+    console.log(this.state.treeData)
   }
 
   parseCommandGroup = (
@@ -185,10 +186,8 @@ class Generator extends Component<any, GeneratorState> {
         let commandPromises = Object.keys(commands).map((commandName) => {
           this.setState({ currIdx: this.state.currIdx + 1 });
           let versions: string[] = [];
-          if (commands) {
-            const versionList = commands[commandName]["versions"];
-            versionList.map((version) => versions.push(version["name"]));
-          }
+          const versionList = commands![commandName]["versions"];
+          versionList.map((version) => versions.push(version["name"]));
           let treeNode: TreeNode = {
             id: this.state.currIdx,
             parent: commandGroupIdx,
@@ -394,30 +393,67 @@ class Generator extends Component<any, GeneratorState> {
         namePath.unshift(currNode.text);
         currId = currNode.parent;
       }
-
       let currLocation = this.state.toBeGenerated[this.state.currProfile];
       try {
         namePath.forEach((item) => {
           currLocation = currLocation["commandGroups"]![item];
         });
-        currLocation = currLocation["commands"]![node.text];
+        node.data.currVersion = currLocation["commands"]![node.text]["version"]
       } catch (e: unknown) {
         return false;
       }
       return true;
     };
 
-    const loadLocalCommands = (e: React.MouseEvent) => {
-      if (e.target === e.currentTarget) {
-        const selectedNodes = this.state.treeData
+    const handleClick = (event: any) => {
+      const profileName = event.target.text;
+      this.setState({ currProfile: profileName });
+      const selectedNodes = this.state.treeData
           .filter((node) => node.data.type === "Command")
           .filter((node) => isGenerated(node));
-        setSelectedNodes(selectedNodes);
-      }
+      setSelectedNodes(selectedNodes);
+      console.log(this.state.treeData)
+      console.log(this.state.toBeGenerated)
+    };
+
+    const handleGen = () => {
+      axios
+          .put(
+              `/CLI/Az/${repoMap[this.state.currRepo]}/Modules/${
+                  this.state.moduleName
+              }`,
+              { profiles: this.state.toBeGenerated }
+          )
+          .then(() => {})
+          .catch((err) => {
+            console.error(err.response);
+          });
     };
 
     return (
       <div className={styles.app}>
+        <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark">
+          <Container>
+            <Navbar.Brand>{this.state.moduleName}</Navbar.Brand>
+            <Navbar.Toggle aria-controls="responsive-navbar-nav" />
+            <Navbar.Collapse id="responsive-navbar-nav">
+              <Nav className="me-auto">
+                {this.state.profiles.map((profile: string, idx) => {
+                  return (
+                      <Nav.Link
+                          key={idx}
+                          // href={`#${profile}`}
+                          onClick={handleClick}
+                      >
+                        {profile}
+                      </Nav.Link>
+                  );
+                })}
+              </Nav>
+              <Button onClick={handleGen}>Generate</Button>
+            </Navbar.Collapse>
+          </Container>
+        </Navbar>
         <Tree
           tree={this.state.treeData}
           rootId={0}
@@ -438,9 +474,6 @@ class Generator extends Component<any, GeneratorState> {
             draggingSource: styles.draggingSource,
             dropTarget: styles.dropTarget,
           }}
-          rootProps={{
-            onClick: loadLocalCommands,
-          }}
         />
       </div>
     );
@@ -449,7 +482,6 @@ class Generator extends Component<any, GeneratorState> {
   render() {
     return (
       <div>
-        <this.displayNavbar />
         <this.displayCommandTree />
       </div>
     );

@@ -20,6 +20,7 @@ type Props = {
 
 export const CheckNode: React.FC<Props> = (props) => {
   const { data } = props.node;
+  const currVersion = data?.currVersion;
   const versions = data?.versions;
   const indent = props.depth * 24;
 
@@ -70,10 +71,10 @@ export const CheckNode: React.FC<Props> = (props) => {
         <Typography variant="inherit">{props.node.text}</Typography>
       </div>
       <div>
-        {data?.type === "Command" && (
+        {currVersion && (
           <FormControl sx={{ m: 1, minWidth: 80 }} disabled={!props.isSelected}>
             <NativeSelect
-              defaultValue={0}
+              defaultValue={versions?.indexOf(currVersion)}
               inputProps={{
                 name: "version",
                 id: "uncontrolled-native",
