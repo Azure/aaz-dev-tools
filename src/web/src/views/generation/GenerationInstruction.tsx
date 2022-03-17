@@ -45,13 +45,13 @@ class GenerationInstruction extends React.Component {
                                 flexDirection: 'row',
                                 alignItems: "center"
                             }}>
-                                <CLIModuleSelector repo='Main' name='Azure Cli Module' />
+                                <CLIModuleSelector repo='Main' name='Azure CLI Module' />
                                 <SpacePadding />
                                 <Typography variant='h6' gutterBottom>
                                     Or
                                 </Typography>
                                 <SpacePadding />
-                                <CLIModuleSelector repo='Extension' name='Azure Cli Extension Module' />
+                                <CLIModuleSelector repo='Extension' name='Azure CLI Extension Module' />
                             </Box>
                         </Box>
                         <Box sx={{ flexGrow: 5 }} />

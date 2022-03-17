@@ -2,6 +2,7 @@ import * as React from 'react';
 import {Typography, Box, Link } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useParams } from 'react-router';
+import GenerationModuleEditorToolBar from "./GenerationModuleEditorToolBar";
 
 const TopPadding = styled(Box)(({ theme }) => ({
     [theme.breakpoints.up('sm')]: {
@@ -21,7 +22,7 @@ interface GenerationModuleEditorProps {
 }
 
 interface GenerationModuleEditorState {
-
+    moduleName: string,
 }
 
 
@@ -29,46 +30,27 @@ class GenerationModuleEditor extends React.Component<GenerationModuleEditorProps
     
     constructor(props: GenerationModuleEditorProps) {
         super(props);
-        console.log(props.params);
+        this.state = {
+            moduleName: this.props.params.moduleName,
+        }
+    }
+
+    handleBackToHomepage = () => {
+        window.location.href = `/?#/workspace`
+    }
+
+    handleGenerate = () => {
+
     }
 
     render() {
+        const { moduleName} = this.state
         return (
-            <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                flexDirection: 'column',
-            }}>
-                <TopPadding />
-                <Typography variant='h2' gutterBottom>
-                    Welcome to
-                </Typography>
-                <Typography variant='h2' gutterBottom>
-                    Generation Module Editor
-                </Typography>
-                <MiddlePadding />
-                <Typography variant="h6" align="center" gutterBottom>
-                    
-                    {'Convert Swagger to Command Model? '}
-                    <Link
-                        href="/?#/Workspace"
-                        align="center"
-                        underline="always"
-                    >
-                        Workspace
-                    </Link>
-                </Typography>
-                <Typography variant="h6" align="center" gutterBottom>
-                    {'Convert Command Model to Code? '}
-                    <Link
-                        href="/?#/Generation"
-                        align="center"
-                        underline="always"
-                    >
-                        Generation
-                    </Link>
-                </Typography>
-            </Box>
+            <React.Fragment>
+                <GenerationModuleEditorToolBar moduleName={moduleName} onHomePage={this.handleBackToHomepage} onGenerate={this.handleGenerate}>
+
+                </GenerationModuleEditorToolBar>
+            </React.Fragment>
         )
     }
 }
