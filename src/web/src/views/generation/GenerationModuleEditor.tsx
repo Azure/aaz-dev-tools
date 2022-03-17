@@ -269,13 +269,13 @@ class GenerationModuleEditor extends React.Component<
   async prepareNodes(namePath: string[]) {
     const profileName = this.state.profiles[this.state.profileIndex];
     let currentNode = this.state.toBeGenerated[profileName];
-    for (let idx=0; idx < namePath.length - 1; idx ++) {
-      const name = namePath[idx]
+    for (let idx = 0; idx < namePath.length - 1; idx++) {
+      const name = namePath[idx];
       const currentPath = namePath.slice(0, idx + 1).join("/");
       await axios
         .post(`/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/${currentPath}/Transfer`)
-          // eslint-disable-next-line no-loop-func
-        .then(res => {
+        // eslint-disable-next-line no-loop-func
+        .then((res) => {
           const data = res.data;
           if (!currentNode.hasOwnProperty("commandGroups")) {
             let element: Nodes = {};
@@ -295,7 +295,7 @@ class GenerationModuleEditor extends React.Component<
         })
         .catch((err) => console.log(err));
     }
-  };
+  }
 
   insertLeaf = (path: string, command: string, version: string) => {
     const profileName = this.state.profiles[this.state.profileIndex];
@@ -406,42 +406,40 @@ class GenerationModuleEditor extends React.Component<
   };
 
   render() {
-    // const { moduleName } = this.state;
+    const { moduleName } = this.state;
     return (
-      <div>
-        <GenerationCommandTree
-          treeData={this.state.treeData}
-          selectedNodes={this.state.selectedNodes}
-          onSelect={this.handleSelect}
-          onChange={this.handleVersionChange}
+      <React.Fragment>
+        <GenerationModuleEditorToolBar
+          moduleName={moduleName}
+          onHomePage={this.handleBackToHomepage}
+          onGenerate={this.handleGenerate}
         />
-      </div>
-      // <React.Fragment>
-      //   <GenerationModuleEditorToolBar
-      //     moduleName={moduleName}
-      //     onHomePage={this.handleBackToHomepage}
-      //     onGenerate={this.handleGenerate}
-      //   />
-      //   <EditorPageLayout>
-      //     <Box
-      //       sx={{
-      //         flexShrink: 0,
-      //         width: 250,
-      //         flexDirection: "column",
-      //         display: "flex",
-      //         alignItems: "stretch",
-      //         justifyContent: "flex-start",
-      //         marginRight: "3vh",
-      //       }}
-      //     >
-      //       <ModuleProfileSelector
-      //         value={this.state.profileIndex}
-      //         profiles={this.state.profiles}
-      //         onChange={this.handleProfileChange}
-      //       />
-      //     </Box>
-      //   </EditorPageLayout>
-      // </React.Fragment>
+        <EditorPageLayout>
+          <Box
+            sx={{
+              flexShrink: 0,
+              width: 250,
+              flexDirection: "column",
+              display: "flex",
+              alignItems: "stretch",
+              justifyContent: "flex-start",
+              marginRight: "3vh",
+            }}
+          >
+            <ModuleProfileSelector
+              value={this.state.profileIndex}
+              profiles={this.state.profiles}
+              onChange={this.handleProfileChange}
+            />
+            <GenerationCommandTree
+                treeData={this.state.treeData}
+                selectedNodes={this.state.selectedNodes}
+                onSelect={this.handleSelect}
+                onChange={this.handleVersionChange}
+            />
+          </Box>
+        </EditorPageLayout>
+      </React.Fragment>
     );
   }
 }

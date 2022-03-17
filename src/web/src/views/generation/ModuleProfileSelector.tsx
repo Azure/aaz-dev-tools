@@ -20,14 +20,6 @@ class ModuleProfileSelector extends React.Component<ModuleProfileSelectorProps> 
   render() {
     const { value, profiles, onChange } = this.props;
     return (
-      <Box
-        sx={{
-          flexGrow: 1,
-          bgcolor: "background.paper",
-          display: "flex",
-          height: 224,
-        }}
-      >
         <Tabs
           orientation="vertical"
           variant="scrollable"
@@ -40,7 +32,6 @@ class ModuleProfileSelector extends React.Component<ModuleProfileSelectorProps> 
             return <Tab key={idx} label={profile} {...a11yProps(idx)} />;
           })}
         </Tabs>
-      </Box>
     );
   }
 }
