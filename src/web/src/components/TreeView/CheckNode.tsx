@@ -14,13 +14,12 @@ type Props = {
   isOpen: boolean;
   isSelected: boolean;
   onToggle: (id: NodeModel["id"]) => void;
-  onSelect: (node: NodeModel) => void;
-  onChange: (node: NodeModel, version: string) => void;
+  onSelect: (node: NodeModel<CheckData>) => void;
+  onChange: (node: NodeModel<CheckData>, version: string) => void;
 };
 
 export const CheckNode: React.FC<Props> = (props) => {
   const { data } = props.node;
-  const currVersion = data?.currVersion;
   const versions = data?.versions;
   const indent = props.depth * 24;
 
@@ -54,7 +53,7 @@ export const CheckNode: React.FC<Props> = (props) => {
           </div>
         )}
       </div>
-      {props.node.data?.type === "Command" && (
+      {props.node.data!.type === "Command" && (
         <div>
           <Checkbox
             color="primary"
@@ -65,16 +64,16 @@ export const CheckNode: React.FC<Props> = (props) => {
         </div>
       )}
       <div>
-        <TypeIcon type={data?.type} />
+        <TypeIcon type={data!.type} />
       </div>
       <div className={styles.labelGridItem}>
         <Typography variant="inherit">{props.node.text}</Typography>
       </div>
       <div>
-        {currVersion && (
+        {data!.type === "Command" && (
           <FormControl sx={{ m: 1, minWidth: 80 }} disabled={!props.isSelected}>
             <NativeSelect
-              defaultValue={versions?.indexOf(currVersion)}
+              defaultValue={data!.versionIndex}
               inputProps={{
                 name: "version",
                 id: "uncontrolled-native",

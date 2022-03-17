@@ -454,27 +454,27 @@ class Generator extends Component<any, GeneratorState> {
             </Navbar.Collapse>
           </Container>
         </Navbar>
-        <Tree
-          tree={this.state.treeData}
-          rootId={0}
-          render={(node: NodeModel<CheckData>, { depth, isOpen, onToggle }) => (
-            <CheckNode
-              node={node}
-              depth={depth}
-              isOpen={isOpen}
-              isSelected={!!selectedNodes.find((n) => n.id === node.id)}
-              onToggle={onToggle}
-              onSelect={handleSelect}
-              onChange={handleChange}
-            />
-          )}
-          onDrop={handleDrop}
-          classes={{
-            root: styles.treeRoot,
-            draggingSource: styles.draggingSource,
-            dropTarget: styles.dropTarget,
-          }}
-        />
+        {/*<Tree*/}
+        {/*  tree={this.state.treeData}*/}
+        {/*  rootId={0}*/}
+        {/*  render={(node: NodeModel<CheckData>, { depth, isOpen, onToggle }) => (*/}
+        {/*    <CheckNode*/}
+        {/*      node={node}*/}
+        {/*      depth={depth}*/}
+        {/*      isOpen={isOpen}*/}
+        {/*      isSelected={!!selectedNodes.find((n) => n.id === node.id)}*/}
+        {/*      onToggle={onToggle}*/}
+        {/*      onSelect={handleSelect}*/}
+        {/*      onChange={handleChange}*/}
+        {/*    />*/}
+        {/*  )}*/}
+        {/*  onDrop={handleDrop}*/}
+        {/*  classes={{*/}
+        {/*    root: styles.treeRoot,*/}
+        {/*    draggingSource: styles.draggingSource,*/}
+        {/*    dropTarget: styles.dropTarget,*/}
+        {/*  }}*/}
+        {/*/>*/}
       </div>
     );
   };
