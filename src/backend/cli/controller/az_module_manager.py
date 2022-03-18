@@ -571,8 +571,9 @@ class AzExtensionManager(AzModuleManager):
         return metadata
 
     def update_module(self, mod_name, profiles, **kwargs):
+        module = super().update_module(mod_name, profiles, **kwargs)
         self.create_or_update_mod_azext_metadata(mod_name)
-        return super().update_module(mod_name, profiles, **kwargs)
+        return module
 
     def create_new_mod(self, mod_name):
         if self.folder_is_module:
