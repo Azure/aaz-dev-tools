@@ -12,6 +12,8 @@ import CommandsPage from './views/commands/CommandsPage';
 import GenerationPage from './views/generation/GenerationPage';
 import GenerationInstruction from './views/generation/GenerationInstruction';
 import { GenerationModuleEditor } from './views/generation/GenerationModuleEditor';
+import DocumentsPage from './views/documentation/DocumentsPage';
+import DocumentsContent from './views/documentation/DocumentsContent';
 // import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
@@ -23,16 +25,19 @@ ReactDOM.render(
           <Route path="HomePage" element={<HomePage />} />
           <Route path="Workspace" element={<WorkspacePage />}>
             <Route index element={<WorkspaceInstruction />} />
-            <Route path="Instruction" element={<WorkspaceInstruction />}/>
+            <Route path="Instruction" element={<WorkspaceInstruction />} />
             <Route path=":workspaceName" element={<WSEditor />} />
           </Route>
           <Route path="Commands" element={<CommandsPage />}>
           </Route>
           <Route path="Generation" element={<GenerationPage />}>
             <Route index element={<GenerationInstruction />} />
-            <Route path="Instruction" element={<GenerationInstruction />} > 
+            <Route path="Instruction" element={<GenerationInstruction />} >
             </Route>
             <Route path=":repoName/:moduleName" element={<GenerationModuleEditor />} />
+          </Route>
+          <Route path="Documents" element={<DocumentsPage />}>
+            <Route index element={<DocumentsContent/>} />
           </Route>
         </Route>
         {/* <Route path="workspace" element={<Workspace />}>
