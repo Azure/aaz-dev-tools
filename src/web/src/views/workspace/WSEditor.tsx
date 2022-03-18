@@ -7,8 +7,8 @@ import { TransitionProps } from '@mui/material/transitions';
 import WSEditorSwaggerPicker from './WSEditorSwaggerPicker';
 import WSEditorToolBar from './WSEditorToolBar';
 import WSEditorCommandTree, { CommandTreeLeaf, CommandTreeNode } from './WSEditorCommandTree';
-import WSEditorCommandGroupContent, { CommandGroup } from './WSEditorCommandGroupContent';
-import WSEditorCommandContent, { Command } from './WSEditorCommandContent';
+import WSEditorCommandGroupContent, { CommandGroup, DecodeResponseCommandGroup, ResponseCommandGroup, ResponseCommandGroups } from './WSEditorCommandGroupContent';
+import WSEditorCommandContent, { Command, DecodeResponseCommand, ResponseCommand } from './WSEditorCommandContent';
 
 
 const TopPadding = styled(Box)(({ theme }) => ({
@@ -31,110 +31,6 @@ interface CommandMap {
 }
 
 
-interface ResponseCommand {
-
-    names: string[],
-    help?: {
-        short: string
-        lines?: string[]
-    }
-}
-
-interface ResponseCommands {
-    [name: string]: ResponseCommand
-}
-
-interface ResponseCommandGroup {
-    names: string[],
-    help?: {
-        short: string
-        lines?: string[]
-    }
-    commands?: ResponseCommands
-    commandGroups?: ResponseCommandGroups
-}
-
-interface ResponseCommandGroups {
-    [name: string]: ResponseCommandGroup
-}
-
-// type Argument = {
-//     options: string[],
-//     type: string,
-//     help?: { short: string },
-//     required?: boolean,
-//     idPart?: string,
-//     args?: Argument[]
-// }
-
-// type ArgGroups = {
-//     args: Argument[],
-//     name: string
-// }[]
-
-// type ExampleType = {
-//     name: string,
-//     commands: string[]
-// }
-
-// type CommandResource = {
-//     id: string,
-//     version: string,
-//     swagger: string,
-// }
-
-// type Command = {
-//     help: HelpType,
-//     names: string[],
-//     resources: CommandResource[],
-//     version: string
-// }
-
-// type Commands = {
-//     [name: string]: Command
-// }
-
-
-// type CommandTree = {
-//     names: string[],
-//     commandGroups: CommandGroups
-// }
-
-// type NumberToString = {
-//     [index: number]: string
-// }
-
-// type StringToNumber = {
-//     [name: string]: number
-// }
-
-// type NumberToTreeNode = {
-//     [index: number]: TreeNode
-// }
-
-// type NumberToCommandGroup = {
-//     [index: number]: CommandGroup
-// }
-
-// type TreeNode = {
-//     id: number,
-//     parent: number,
-//     droppable: boolean,
-//     text: string,
-//     data: {
-//         hasChildren: boolean,
-//         type: string
-//     }
-// }
-
-// type TreeDataType = TreeNode[]
-
-// type CommandGroups = {
-//     [names: string]: 
-// }
-
-
-
 interface WSEditorProps {
     params: {
         workspaceName: string
@@ -143,6 +39,7 @@ interface WSEditorProps {
 
 interface WSEditorState {
     name: string
+    workspaceUrl: string,
     plane: string,
 
     selected: Command | CommandGroup | null,
@@ -184,6 +81,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         super(props);
         this.state = {
             name: this.props.params.workspaceName,
+            workspaceUrl: `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}`,
             plane: "",
             selected: null,
             commandMap: {},
@@ -197,121 +95,116 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         this.loadWorkspace();
     }
 
-    loadWorkspace = () => {
+    loadWorkspace = async (preSelected?: CommandGroup | Command | null) => {
+        const {workspaceUrl} = this.state
+        if (preSelected === undefined) {
+            preSelected = this.state.selected;
+        }
 
-        axios.get(`/AAZ/Editor/Workspaces/${this.props.params.workspaceName}`)
-            .then(res => {
-                const commandMap: CommandMap = {};
-                const commandGroupMap: CommandGroupMap = {};
+        try {
+            const res = await axios.get(workspaceUrl);
+            const commandMap: CommandMap = {};
+            const commandGroupMap: CommandGroupMap = {};
 
-                const buildCommand = (command: ResponseCommand): CommandTreeLeaf => {
-                    const cmd: Command = {
-                        id: 'command:' + command.names.join('/'),
-                        names: command.names,
-                        help: command.help,
-                    }
-                    commandMap[cmd.id] = cmd;
-                    return {
-                        id: cmd.id,
-                        names: [...cmd.names],
-                    }
+            const buildCommand = (command_1: ResponseCommand): CommandTreeLeaf => {
+                const cmd: Command = DecodeResponseCommand(command_1);
+                commandMap[cmd.id] = cmd;
+                return {
+                    id: cmd.id,
+                    names: [...cmd.names],
+                };
+            };
+
+            const buildCommandGroup = (commandGroup_1: ResponseCommandGroup): CommandTreeNode => {
+                const group: CommandGroup = DecodeResponseCommandGroup(commandGroup_1);
+
+                commandGroupMap[group.id] = group;
+
+                const node: CommandTreeNode = {
+                    id: group.id,
+                    names: [...group.names],
                 };
 
-                const buildCommandGroup = (commandGroup: ResponseCommandGroup): CommandTreeNode => {
-                    const group: CommandGroup = {
-                        id: 'group:' + commandGroup.names.join('/'),
-                        names: commandGroup.names,
-                        help: commandGroup.help,
+                if (typeof commandGroup_1.commands === 'object' && commandGroup_1.commands !== null) {
+                    node['leaves'] = [];
+
+                    for (const name in commandGroup_1.commands) {
+                        const subLeave = buildCommand(commandGroup_1.commands[name]);
+                        node['leaves'].push(subLeave);
                     }
-
-                    commandGroupMap[group.id] = group
-
-                    const node: CommandTreeNode = {
-                        id: group.id,
-                        names: [...group.names],
-                    }
-
-                    if (typeof commandGroup.commands === 'object' && commandGroup.commands !== null) {
-                        node['leaves'] = [];
-
-                        for (const name in commandGroup.commands) {
-                            const subLeave = buildCommand(commandGroup.commands[name]);
-                            node['leaves'].push(subLeave);
-                        }
-                        node['leaves'].sort((a, b) => a.id.localeCompare(b.id));
-                    }
-
-                    if (typeof commandGroup.commandGroups === 'object' && commandGroup.commandGroups !== null) {
-                        node['nodes'] = []
-                        for (const name in commandGroup.commandGroups) {
-                            const subNode = buildCommandGroup(commandGroup.commandGroups[name]);
-                            node['nodes'].push(subNode);
-                        }
-                        node['nodes'].sort((a, b) => a.id.localeCompare(b.id));
-                    }
-                    return node;
-                };
-
-                let commandTree: CommandTreeNode[] = [];
-
-                if (res.data.commandTree.commandGroups) {
-                    const cmdGroups: ResponseCommandGroups = res.data.commandTree.commandGroups
-                    for (const key in cmdGroups) {
-                        commandTree.push(buildCommandGroup(cmdGroups[key]));
-                    }
-                    commandTree.sort((a, b) => a.id.localeCompare(b.id));
+                    node['leaves'].sort((a, b) => a.id.localeCompare(b.id));
                 }
 
-                let selected: Command | CommandGroup | null = null;
+                if (typeof commandGroup_1.commandGroups === 'object' && commandGroup_1.commandGroups !== null) {
+                    node['nodes'] = [];
+                    for (const name_1 in commandGroup_1.commandGroups) {
+                        const subNode = buildCommandGroup(commandGroup_1.commandGroups[name_1]);
+                        node['nodes'].push(subNode);
+                    }
+                    node['nodes'].sort((a_1, b_1) => a_1.id.localeCompare(b_1.id));
+                }
+                return node;
+            };
 
-                if (this.state.selected != null) {
-                    if (this.state.selected.id.startsWith('command:')) {
-                        let id: string = this.state.selected.id;
-                        if (id in commandMap) {
-                            selected = commandMap[id];
-                        } else {
-                            id = 'group:' + id.slice(8);
-                            let parts = id.split('/')
-                            while (parts.length > 1 && !(id in commandGroupMap)) {
-                                parts = parts.slice(0, -1)
-                                id = parts.join('/')
-                            }
-                            if (id in commandGroupMap) {
-                                selected = commandGroupMap[id];
-                            }
-                        }
-                    } else if (this.state.selected.id.startsWith('group:')) {
-                        let id: string = this.state.selected.id;
+            let commandTree: CommandTreeNode[] = [];
+
+            if (res.data.commandTree.commandGroups) {
+                const cmdGroups: ResponseCommandGroups = res.data.commandTree.commandGroups;
+                for (const key in cmdGroups) {
+                    commandTree.push(buildCommandGroup(cmdGroups[key]));
+                }
+                commandTree.sort((a_2, b_2) => a_2.id.localeCompare(b_2.id));
+            }
+
+            let selected: Command | CommandGroup | null = null;
+
+            if (preSelected != null) {
+                if (preSelected.id.startsWith('command:')) {
+                    let id: string = preSelected.id;
+                    if (id in commandMap) {
+                        selected = commandMap[id];
+                    } else {
+                        id = 'group:' + id.slice(8);
                         let parts = id.split('/');
                         while (parts.length > 1 && !(id in commandGroupMap)) {
-                            parts = parts.slice(0, -1)
-                            id = parts.join('/')
+                            parts = parts.slice(0, -1);
+                            id = parts.join('/');
                         }
                         if (id in commandGroupMap) {
                             selected = commandGroupMap[id];
                         }
                     }
+                } else if (preSelected.id.startsWith('group:')) {
+                    let id_1: string = preSelected.id;
+                    let parts_1 = id_1.split('/');
+                    while (parts_1.length > 1 && !(id_1 in commandGroupMap)) {
+                        parts_1 = parts_1.slice(0, -1);
+                        id_1 = parts_1.join('/');
+                    }
+                    if (id_1 in commandGroupMap) {
+                        selected = commandGroupMap[id_1];
+                    }
                 }
+            }
 
-                if (selected == null && commandTree.length > 0) {
-                    selected = commandGroupMap[commandTree[0].id];
-                }
+            if (selected === null && commandTree.length > 0) {
+                selected = commandGroupMap[commandTree[0].id];
+            }
 
-                this.setState({
-                    plane: res.data.plane,
+            this.setState({
+                plane: res.data.plane,
+                commandTree: commandTree,
+                selected: selected,
+                commandMap: commandMap,
+                commandGroupMap: commandGroupMap,
+            });
 
-                    commandTree: commandTree,
-                    selected: selected,
-
-                    commandMap: commandMap,
-                    commandGroupMap: commandGroupMap,
-                })
-
-                if (commandTree.length == 0) {
-                    this.showSwaggerResourcePicker();
-                }
-            })
-            .catch((err) => console.log(err));
+            if (commandTree.length === 0) {
+                this.showSwaggerResourcePicker();
+            }
+        } catch (err) {
+            return console.log(err);
+        }
     }
 
     showSwaggerResourcePicker = () => {
@@ -353,9 +246,35 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         }
     }
 
-    render() {
-        const { showSwaggerResourcePicker, plane, name, commandTree, selected } = this.state;
+    handleCommandGroupUpdate = (commandGroup: CommandGroup | null) => {
+        this.loadWorkspace(commandGroup);
+        // if (commandGroup === null) {
+        //     // commandGroup is removed
+        // } else {
+        //     const {commandGroupMap, selected} = this.state;
+        //     if (!selected || commandGroup.id != selected.id) {
+        //         this.loadWorkspace(commandGroup);
+        //     } else {
+        //         commandGroupMap[commandGroup.id] = commandGroup 
+        //         this.setState(preState => {
+        //             const commandGroupMap = {
+        //                 ...preState.commandGroupMap,
+        //             };
+        //             commandGroupMap[commandGroup.id] = commandGroup
+        //             return {
+        //                 ...preState,
+        //                 commandGroupMap: commandGroupMap
+        //             }
+        //         })
+        //         this.setState({
+        //             selected: commandGroup
+        //         })
+        //     }
+        // }
+    }
 
+    render() {
+        const { showSwaggerResourcePicker, plane, name, commandTree, selected, workspaceUrl } = this.state;
         return (
             <React.Fragment>
                 <WSEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onAdd={this.showSwaggerResourcePicker} onGenerate={this.handleGenerate}>
@@ -388,10 +307,13 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                     }}>
                         <Toolbar sx={{ flexShrink: 0 }}/>
                         {selected != null && selected.id.startsWith('group:') &&
-                            <WSEditorCommandGroupContent commandGroup={selected} />
+                            <WSEditorCommandGroupContent 
+                                workspaceUrl={workspaceUrl} commandGroup={selected} 
+                                onUpdateCommandGroup={this.handleCommandGroupUpdate}
+                                />
                         }
                         {selected != null && selected.id.startsWith('command:') &&
-                            <WSEditorCommandContent command={selected} />
+                            <WSEditorCommandContent workspaceUrl={workspaceUrl} command={selected} />
                         }
                     </Box>
                 </Box>

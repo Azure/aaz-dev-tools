@@ -368,7 +368,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                             //     width: 250,
                             // }}
                             onClick={this.handleSubmit}
-                            disabled={selectedModule == null || selectedVersion == null || selectedResources.size < 1}
+                            disabled={selectedModule === null || selectedVersion === null || selectedResources.size < 1}
                         >
                             Submit
                         </Button>
@@ -432,7 +432,7 @@ class SwaggerItemSelector extends React.Component<SwaggerItemsSelectorProps> {
     constructor(props: SwaggerItemsSelectorProps) {
         super(props);
         this.state = {
-            value: this.props.options.length == 1 ? this.props.options[0] : null,
+            value: this.props.options.length === 1 ? this.props.options[0] : null,
         }
     }
 
