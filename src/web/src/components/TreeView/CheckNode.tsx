@@ -70,11 +70,11 @@ export const CheckNode: React.FC<Props> = (props) => {
         <Typography variant="inherit">{props.node.text}</Typography>
       </div>
       <div>
-        {data!.type === "Command" && (
-          <FormControl sx={{ m: 1, minWidth: 80 }} disabled={!props.isSelected}>
+        {props.isSelected && (
+          <FormControl sx={{ m: 1, minWidth: 80 }}>
             <NativeSelect
-              defaultValue={data!.versionIndex}
               key={data!.versionIndex}
+              defaultValue={data!.versionIndex}
               inputProps={{
                 name: "version",
                 id: "uncontrolled-native",

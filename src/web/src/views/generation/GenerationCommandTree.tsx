@@ -29,11 +29,12 @@ class GenerationCommandTree extends React.Component<GenerationCommandTreeProps> 
             onChange={onChange}
           />
         )}
-        onDrop={()=>{}}
+        onDrop={() => {}}
         classes={{
           root: styles.treeRoot,
           dropTarget: styles.dropTarget,
         }}
+        initialOpen={true}
       />
     );
   }

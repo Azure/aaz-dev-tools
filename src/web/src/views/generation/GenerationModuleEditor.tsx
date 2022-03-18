@@ -1,23 +1,12 @@
 import * as React from "react";
-import {Box} from "@mui/material";
-import {styled} from "@mui/material/styles";
-import {useParams} from "react-router";
-import ModuleProfileSelector from "./ModuleProfileSelector";
+import { Box, Drawer, Toolbar } from "@mui/material";
+import { useParams } from "react-router";
+import GenerationProfileTab from "./GenerationProfileTab";
 import GenerationCommandTree from "./GenerationCommandTree";
 import axios from "axios";
-import {NodeModel} from "@minoru/react-dnd-treeview";
-import {CheckData} from "../../components/TreeView/types";
-import {Button, Col, Row} from "react-bootstrap";
-
-const TopPadding = styled(Box)(({ theme }) => ({
-  [theme.breakpoints.up("sm")]: {
-    height: "12vh",
-  },
-}));
-
-const MiddlePadding = styled(Box)(({ theme }) => ({
-  height: "6vh",
-}));
+import { NodeModel } from "@minoru/react-dnd-treeview";
+import { CheckData } from "../../components/TreeView/types";
+import GenerationModuleEditorToolBar from "./GenerationModuleEditorToolBar";
 
 type Version = {
   examples: ExampleType;
@@ -105,6 +94,7 @@ interface GenerationModuleEditorState {
   profiles: string[];
   profileIndex: number;
   currentIndex: number;
+  initialTreeData: NodeModel<CheckData>[];
   treeData: NodeModel<CheckData>[];
   toBeGenerated: Nodes;
   selectedNodes: NodeModel<CheckData>[];
@@ -122,6 +112,7 @@ class GenerationModuleEditor extends React.Component<
       profiles: [],
       profileIndex: 0,
       currentIndex: 0,
+      initialTreeData: [],
       treeData: [],
       toBeGenerated: {},
       selectedNodes: [],
@@ -159,7 +150,9 @@ class GenerationModuleEditor extends React.Component<
 
         let depth = 0;
         this.parseCommandTree(depth, 0, combinedData).then(() => {
-          this.loadLocalCommands();
+          this.setState({ treeData: this.state.initialTreeData }, () => {
+            this.loadLocalCommands();
+          });
         });
       })
       .catch((err) => {
@@ -201,7 +194,7 @@ class GenerationModuleEditor extends React.Component<
           droppable: true,
           data: { type: "CommandGroup", versions: [], versionIndex: -1 },
         };
-        this.state.treeData.push(treeNode);
+        this.state.initialTreeData.push(treeNode);
         let commandGroupIndex = this.state.currentIndex;
         let commandGroupPromise: Promise<any> = this.parseCommandTree(
           depth + 1,
@@ -230,7 +223,7 @@ class GenerationModuleEditor extends React.Component<
               versionIndex: 0,
             },
           };
-          this.state.treeData.push(treeNode);
+          this.state.initialTreeData.push(treeNode);
         });
         return Promise.all([commandGroupPromise, ...commandPromises]);
       }
@@ -251,12 +244,12 @@ class GenerationModuleEditor extends React.Component<
 
   getProfileEntry = () => {
     const profileName = this.state.profiles[this.state.profileIndex];
-    return this.state.toBeGenerated[profileName]
-  }
+    return this.state.toBeGenerated[profileName];
+  };
 
   isGenerated = (node: NodeModel<CheckData>) => {
     const namePath = this.getNamePath(node);
-    let currentPointer = this.getProfileEntry()
+    let currentPointer = this.getProfileEntry();
     try {
       namePath.slice(0, -1).forEach((item) => {
         currentPointer = currentPointer["commandGroups"]![item];
@@ -270,13 +263,13 @@ class GenerationModuleEditor extends React.Component<
   };
 
   refreshVersionInfo = () => {
-    this.state.treeData.forEach(node => {
-      node.data!.versionIndex = 0
-    })
-  }
+    this.state.treeData.forEach((node) => {
+      node.data!.versionIndex = 0;
+    });
+  };
 
   async prepareNodes(namePath: string[]) {
-    let currentPointer = this.getProfileEntry()
+    let currentPointer = this.getProfileEntry();
     for (let idx = 0; idx < namePath.length - 1; idx++) {
       const name = namePath[idx];
       const currentPath = namePath.slice(0, idx + 1).join("/");
@@ -306,7 +299,7 @@ class GenerationModuleEditor extends React.Component<
   }
 
   insertLeaf = (path: string, command: string, version: string) => {
-    let currentPointer = this.getProfileEntry()
+    let currentPointer = this.getProfileEntry();
     path.split("/").forEach((name) => {
       currentPointer = currentPointer["commandGroups"]![name];
     });
@@ -331,7 +324,7 @@ class GenerationModuleEditor extends React.Component<
 
   removeNodes = (namePath: string[]) => {
     const nodeName = namePath[namePath.length - 1];
-    let currentPointer = this.getProfileEntry()
+    let currentPointer = this.getProfileEntry();
     namePath.slice(0, -1).forEach((name) => {
       currentPointer = currentPointer["commandGroups"]![name];
     });
@@ -361,12 +354,11 @@ class GenerationModuleEditor extends React.Component<
 
   handleProfileChange = (event: React.SyntheticEvent, newValue: number) => {
     this.setState({ profileIndex: newValue }, () => {
-      this.refreshVersionInfo()
+      this.refreshVersionInfo();
       const selectedNodes = this.state.treeData
         .filter((node) => node.data!.type === "Command")
         .filter((node) => this.isGenerated(node));
       this.setState({ selectedNodes: selectedNodes });
-      console.log(this.state.treeData)
     });
   };
 
@@ -387,7 +379,7 @@ class GenerationModuleEditor extends React.Component<
         selectedNodes: this.state.selectedNodes.filter((n) => n.id !== node.id),
       });
       const namePath = this.getNamePath(node);
-      let currentPointer = this.getProfileEntry()
+      let currentPointer = this.getProfileEntry();
       namePath.slice(0, -1).forEach((name) => {
         currentPointer = currentPointer["commandGroups"]![name];
       });
@@ -402,14 +394,13 @@ class GenerationModuleEditor extends React.Component<
         }
       }
     }
-    console.log(this.state.toBeGenerated);
   };
 
   handleVersionChange = (node: NodeModel<CheckData>, version: string) => {
     let changeNode = this.state.treeData[Number(node.id) - 1];
     changeNode.data!.versionIndex = changeNode.data!.versions.indexOf(version);
     const namePath = this.getNamePath(node);
-    let currentPointer = this.getProfileEntry()
+    let currentPointer = this.getProfileEntry();
     namePath.slice(0, -1).forEach((name) => {
       currentPointer = currentPointer["commandGroups"]![name];
     });
@@ -417,28 +408,49 @@ class GenerationModuleEditor extends React.Component<
   };
 
   render() {
-    // const { moduleName } = this.state;
+    const { moduleName } = this.state;
     return (
-      <div>
-        <Row>
-          <Col>
-            <ModuleProfileSelector
+      <React.Fragment>
+        <GenerationModuleEditorToolBar
+          moduleName={moduleName}
+          onHomePage={this.handleBackToHomepage}
+          onGenerate={this.handleGenerate}
+        />
+        <Box sx={{ display: "flex" }}>
+          <Drawer
+            variant="permanent"
+            sx={{
+              width: 300,
+              flexShrink: 0,
+              [`& .MuiDrawer-paper`]: { width: 300, boxSizing: "border-box" },
+            }}
+          >
+            <Toolbar />
+            <GenerationProfileTab
               value={this.state.profileIndex}
               profiles={this.state.profiles}
               onChange={this.handleProfileChange}
             />
-            <Button onClick={this.handleGenerate}>test</Button>
-          </Col>
-          <Col>
-            <GenerationCommandTree
-              treeData={this.state.treeData}
-              selectedNodes={this.state.selectedNodes}
-              onSelect={this.handleSelect}
-              onChange={this.handleVersionChange}
-            />
-          </Col>
-        </Row>
-      </div>
+          </Drawer>
+          <Box
+            component="main"
+            sx={{
+              flexGrow: 1,
+              p: 1,
+            }}
+          >
+            <Toolbar sx={{ flexShrink: 0 }} />
+            {this.state.treeData.length !== 0 && (
+              <GenerationCommandTree
+                treeData={this.state.treeData}
+                selectedNodes={this.state.selectedNodes}
+                onSelect={this.handleSelect}
+                onChange={this.handleVersionChange}
+              />
+            )}
+          </Box>
+        </Box>
+      </React.Fragment>
     );
   }
 }
