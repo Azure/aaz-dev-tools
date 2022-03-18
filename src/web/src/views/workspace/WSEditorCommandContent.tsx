@@ -1,10 +1,17 @@
-import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputBase, InputBaseProps, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps } from '@mui/material';
+import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Accordion, InputBaseProps, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps, AccordionSummary, AccordionDetails, IconButton, Input, InputAdornment } from '@mui/material';
 import { createTheme, styled } from '@mui/system';
 import axios from 'axios';
 import * as React from 'react';
-import { Input } from 'reactstrap';
 import { NameTypography, ShortHelpTypography, ShortHelpPlaceHolderTypography, LongHelpTypography, StableTypography, PreviewTypography, ExperimentalTypography } from './WSEditorTheme';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import DoDisturbOnRoundedIcon from '@mui/icons-material/DoDisturbOnRounded';
+import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 
+
+interface Example {
+    name: string,
+    commands: string[],
+}
 
 interface Command {
     id: string
@@ -14,7 +21,7 @@ interface Command {
         lines?: string[]
     }
     stage: "Stable" | "Preview" | "Experimental"
-    // examples?: ExampleType[],
+    examples?: Example[],
     // argGroups?: ArgGroups
 }
 
@@ -25,6 +32,7 @@ interface ResponseCommand {
         lines?: string[]
     }
     stage?: "Stable" | "Preview" | "Experimental"
+    examples?: Example[],
 }
 
 interface ResponseCommands {
@@ -39,18 +47,27 @@ interface WSEditorCommandContentProps {
 
 interface WSEditorCommandContentState {
     displayCommandDisplay: boolean
-
+    displayExampleDisplay: boolean
+    exampleIdx?: number
 }
 
 const commandPrefix = 'Az '
+
+
+const SubtitleTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: theme.palette.primary.main,
+    fontFamily: "'Roboto Condensed', sans-serif",
+    fontSize: 16,
+    fontWeight: 700,
+}))
 
 class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps, WSEditorCommandContentState> {
 
     constructor(props: WSEditorCommandContentProps) {
         super(props);
         this.state = {
-
             displayCommandDisplay: false,
+            displayExampleDisplay: false,
         }
     }
 
@@ -69,6 +86,22 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         }
     }
 
+    onExampleDialogDisplay = (idx?: number) => {
+        this.setState({
+            displayExampleDisplay: true,
+            exampleIdx: idx,
+        })
+    }
+
+    handleExampleDialogClose = (newCommand?: Command) => {
+        this.setState({
+            displayExampleDisplay: false,
+        })
+        if (newCommand) {
+            this.props.onUpdateCommand(newCommand!);
+        }
+    }
+
     render() {
         const { workspaceUrl, command } = this.props;
         const name = commandPrefix + this.props.command.names.join(' ');
@@ -76,16 +109,21 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         const longHelp = this.props.command.help?.lines?.join('\n');
         const lines: string[] = this.props.command.help?.lines ?? [];
         const stage = this.props.command.stage;
-        const { displayCommandDisplay } = this.state;
+        const examples = this.props.command.examples;
+        const { displayCommandDisplay, displayExampleDisplay, exampleIdx } = this.state;
 
         return (
             <React.Fragment>
                 <Box sx={{
                     display: 'flex',
-                    justifyContent: 'stretch',
+                    flexDirection: 'column',
+                    alignItems: 'stretch',
                 }}>
                     <Card variant='outlined'
-                        sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                        sx={{
+                            flexGrow: 1, display: 'flex', flexDirection: 'column',
+                            p: 2
+                        }}>
                         <CardContent sx={{
                             flex: '1 0 auto',
                             display: 'flex',
@@ -93,7 +131,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             justifyContent: 'stretch',
                         }}>
                             <Box sx={{
-                                ml: 2, mr: 2, mt: 1, mb: 2,
+                                mb: 2,
                                 display: 'flex',
                                 flexDirection: 'row',
                                 alignItems: "center"
@@ -122,19 +160,20 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                                 </ExperimentalTypography>}
                             </Box>
 
-                            <NameTypography sx={{ ml: 2, mr: 2, mt: 1 }}>
+                            <NameTypography sx={{ mt: 1 }}>
                                 {name}
                             </NameTypography>
-                            {shortHelp && <ShortHelpTypography sx={{ ml: 8, mr: 2, mt: 2 }}> {shortHelp} </ShortHelpTypography>}
-                            {!shortHelp && <ShortHelpPlaceHolderTypography sx={{ ml: 8, mr: 2, mt: 2 }}>Please add command short summery!</ShortHelpPlaceHolderTypography>}
-                            {longHelp && <Box sx={{ ml: 8, mr: 2, mt: 1, mb: 1 }}>
-                                {lines.map((line) => (<LongHelpTypography>{line}</LongHelpTypography>))}
+                            {shortHelp && <ShortHelpTypography sx={{ ml: 6, mt: 2 }}> {shortHelp} </ShortHelpTypography>}
+                            {!shortHelp && <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>Please add command short summery!</ShortHelpPlaceHolderTypography>}
+                            {longHelp && <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
+                                {lines.map((line, idx) => (<LongHelpTypography key={idx}>{line}</LongHelpTypography>))}
                             </Box>}
                         </CardContent>
                         <CardActions sx={{
                             display: "flex",
-                            flexDirection: "row-reverse"
+                            flexDirection: "row-reverse",
                         }}>
+
                             <Button
                                 variant='outlined' size="small" color='info'
                                 onClick={this.onCommandDialogDisplay}
@@ -145,9 +184,99 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             </Button>
                         </CardActions>
                     </Card>
+
+                    <Card variant='outlined'
+                        sx={{
+                            flexGrow: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            mt: 1,
+                            p: 2
+                        }}>
+                        <CardActions sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "flex-start"
+                        }}>
+                            <SubtitleTypography sx={{ flexShrink: 0 }}>EXAMPLES</SubtitleTypography>
+                            <Box sx={{ flexGrow: 1 }} />
+                            <Button
+                                variant='outlined' size="small" color='info'
+                                onClick={() => this.onExampleDialogDisplay(undefined)}
+                                sx={{ flexShrink: 0 }}
+                            >
+                                <Typography variant='body2'>
+                                    Add
+                                </Typography>
+                            </Button>
+                        </CardActions>
+                        {/* <CardContent sx={{
+                            flex: '1 0 auto',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'stretch',
+                        }}>
+
+                        </CardContent> */}
+                    </Card>
+                    <Card variant="outlined"
+                        sx={{
+                            flexGrow: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            mt: 1,
+                            p: 2
+                        }}>
+
+                        <CardActions sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "flex-start"
+                        }}>
+                            <SubtitleTypography sx={{ flexShrink: 0 }}>ARGUMENTS</SubtitleTypography>
+                            <Box sx={{ flexGrow: 1 }} />
+                        </CardActions>
+                        {/* <CardContent sx={{
+                            flex: '1 0 auto',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'stretch',
+                        }}>
+
+                        </CardContent> */}
+                    </Card>
+
+                    {/* <Accordion variant="outlined">
+                        <AccordionSummary 
+                            expandIcon={<ExpandMoreIcon />}
+                            id="examples"
+                        >
+                            <Typography>
+                                Examples:
+                            </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+
+                        </AccordionDetails>
+                    </Accordion>
+                    <Accordion variant="outlined">
+                    <AccordionSummary 
+                            expandIcon={<ExpandMoreIcon />}
+                            id="arguments"
+                        >
+                            <Typography>
+                                Arguments:
+                            </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+
+                        </AccordionDetails>
+
+                    </Accordion> */}
+
                 </Box>
                 {displayCommandDisplay && <CommandDialog open={displayCommandDisplay} workspaceUrl={workspaceUrl} command={command} onClose={this.handleCommandDialogClose} />}
-
+                {displayExampleDisplay && <ExampleDialog open={displayExampleDisplay} workspaceUrl={workspaceUrl} command={command} idx={exampleIdx} onClose={this.handleExampleDialogClose} />}
             </React.Fragment>
         )
     }
@@ -279,7 +408,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
     }
 
     render() {
-        const { name, shortHelp, longHelp, invalidText, updating, stage } = this.state
+        const { name, shortHelp, longHelp, invalidText, updating, stage } = this.state;
         return (
             <Dialog
                 disableEscapeKeyDown
@@ -362,7 +491,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                     }
                     {!updating && <React.Fragment>
                         <Button onClick={this.handleClose}>Cancel</Button>
-                        <Button onClick={this.handleModify}>Submit</Button>
+                        <Button onClick={this.handleModify}>Save</Button>
                     </React.Fragment>}
                 </DialogActions>
             </Dialog>
@@ -371,12 +500,315 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
 
 }
 
+interface ExampleDialogProps {
+    workspaceUrl: string
+    open: boolean
+    command: Command
+    idx?: number
+    onClose: (newCommand?: Command) => void
+}
+
+interface ExampleDialogState {
+    name: string
+    exampleCommands: string[]
+    isAdd: boolean
+    invalidText?: string
+    updating: boolean
+}
+
+const ExampleCommandTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: theme.palette.primary.main,
+    fontFamily: "'Roboto Condensed', sans-serif",
+    fontSize: 16,
+    fontWeight: 400,
+}))
+
+class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogState> {
+
+    constructor(props: ExampleDialogProps) {
+        super(props);
+        const examples: Example[] = this.props.command.examples ?? [];
+        console.log(examples);
+        if (this.props.idx === undefined) {
+            this.state = {
+                name: "",
+                exampleCommands: ["",],
+                isAdd: true,
+                invalidText: undefined,
+                updating: false,
+            }
+        } else {
+            const example = examples[this.props.idx];
+            this.state = {
+                name: example.name,
+                exampleCommands: example.commands,
+                isAdd: false,
+                invalidText: undefined,
+                updating: false,
+            }
+        }
+    }
+
+    onUpdateExamples = (examples: Example[]) => {
+        let { workspaceUrl, command } = this.props;
+
+        const leafUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + command.names.slice(0, -1).join('/') + '/Leaves/' + command.names[command.names.length - 1];
+
+        this.setState({
+            updating: true,
+        })
+        axios.patch(leafUrl, {
+            examples: examples
+        }).then(res => {
+            const cmd = DecodeResponseCommand(res.data);
+            this.setState({
+                updating: false,
+            })
+            this.props.onClose(cmd);
+        }).catch(err => {
+            console.log(err.response);
+            if (err.resource?.message) {
+                this.setState({
+                    invalidText: `ResponseError: ${err.resource!.message!}`,
+                })
+            }
+            this.setState({
+                updating: false,
+            })
+        });
+    }
+
+    handleDelete = () => {
+        let { command } = this.props;
+        let examples: Example[] = command.examples ?? [];
+        let idx = this.props.idx!;
+        examples = [...examples.slice(0, idx), ...examples.slice(idx + 1)];
+
+        this.onUpdateExamples(examples);
+    }
+
+    handleModify = () => {
+        let { command } = this.props;
+        let { name, exampleCommands } = this.state;
+        let examples: Example[] = command.examples ?? [];
+        let idx = this.props.idx!;
+
+        name = name.trim();
+        if (name.length < 1) {
+            this.setState({
+                invalidText: `Field 'Name' is required.`
+            })
+            return
+        }
+        exampleCommands = exampleCommands.map(cmd => {
+            return cmd.split('\n')
+                .map(cmdLine => cmdLine.trim())
+                .filter(cmdLine => cmdLine.length > 0)
+                .join(' ')
+                .trim();
+        }).filter(cmd => cmd.length > 0);
+
+        if (exampleCommands.length < 1) {
+            this.setState({
+                invalidText: `Field 'Commands' is required.`
+            })
+            return
+        }
+
+        const newExample: Example = {
+            name: name,
+            commands: exampleCommands
+        }
+
+        examples = [...examples.slice(0, idx), newExample, ...examples.slice(idx + 1)];
+
+        this.onUpdateExamples(examples);
+    }
+
+    handleAdd = () => {
+        let { command } = this.props;
+        let { name, exampleCommands } = this.state;
+        let examples: Example[] = command.examples ?? [];
+
+        name = name.trim();
+        if (name.length < 1) {
+            this.setState({
+                invalidText: `Field 'Name' is required.`
+            })
+            return
+        }
+        exampleCommands = exampleCommands.map(cmd => {
+            return cmd.split('\n')
+                .map(cmdLine => cmdLine.trim())
+                .filter(cmdLine => cmdLine.length > 0)
+                .join(' ')
+                .trim();
+        }).filter(cmd => cmd.length > 0);
+
+        if (exampleCommands.length < 1) {
+            this.setState({
+                invalidText: `Field 'Commands' is required.`
+            })
+            return
+        }
+
+        const newExample: Example = {
+            name: name,
+            commands: exampleCommands
+        }
+        examples.push(newExample);
+
+        this.onUpdateExamples(examples);
+    }
+
+    handleClose = () => {
+        this.setState({
+            invalidText: undefined
+        });
+        this.props.onClose()
+    }
+
+    onModifyExampleCommand = (cmd: string, idx: number) => {
+        this.setState(preState => {
+            return {
+                ...preState,
+                exampleCommands: [...preState.exampleCommands.slice(0, idx), cmd, ...preState.exampleCommands.slice(idx + 1)]
+            }
+        })
+    }
+
+    onRemoveExampleCommand = (idx: number) => {
+        this.setState(preState => {
+            let exampleCommands: string[] = [...preState.exampleCommands.slice(0, idx), ...preState.exampleCommands.slice(idx + 1)];
+            if (exampleCommands.length == 0) {
+                exampleCommands.push("");
+            }
+            return {
+                ...preState,
+                exampleCommands: exampleCommands,
+            }
+        })
+    }
+
+    onAddExampleCommand = () => {
+        this.setState(preState => {
+            return {
+                ...preState,
+                exampleCommands: [...preState.exampleCommands, ""]
+            }
+        })
+    }
+
+    render() {
+        const { name, exampleCommands, isAdd, invalidText, updating } = this.state;
+
+        const buildExampleInput = (cmd: string, idx: number) => {
+            return (
+                <Box key={idx} sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    ml: 1,
+                }}>
+                    <IconButton
+                        edge="start"
+                        color="inherit"
+                        onClick={() => this.onRemoveExampleCommand(idx)}
+                        aria-label="remove"
+                    >
+                        <DoDisturbOnRoundedIcon fontSize="small" />
+                    </IconButton>
+                    <Input
+                        id={`command-${idx}`}
+                        multiline
+                        value={cmd}
+                        onChange={(event: any) => {
+                            this.onModifyExampleCommand(event.target.value, idx)
+                        }}
+                        sx={{ flexGrow: 1 }}
+                        placeholder="Input a command here."
+                        startAdornment={
+                            <InputAdornment position="start">
+                                <ExampleCommandTypography>{commandPrefix}</ExampleCommandTypography>
+                            </InputAdornment>
+                        }
+                    />
+                </Box>
+            );
+        }
+
+        return (
+            <Dialog
+                disableEscapeKeyDown
+                open={this.props.open}
+                sx={{ '& .MuiDialog-paper': { width: '80%' } }}
+            >
+                <DialogTitle>{isAdd ? "Add Example" : "Modify Example"}</DialogTitle>
+                <DialogContent dividers={true}>
+                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                    <TextField
+                        id="name"
+                        label="Name"
+                        type="text"
+                        fullWidth
+                        variant='standard'
+                        value={name}
+                        onChange={(event: any) => {
+                            this.setState({
+                                name: event.target.value,
+                            })
+                        }}
+                        margin="normal"
+                        required
+                    />
+                    <InputLabel required sx={{ font: "inherit", mt: 1}}>Commands</InputLabel>
+                    {exampleCommands.map(buildExampleInput)}
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        ml: 1,
+                    }}>
+                        <IconButton
+                            edge="start"
+                            color="inherit"
+                            onClick={this.onAddExampleCommand}
+                            aria-label="remove"
+                        >
+                            <AddCircleRoundedIcon fontSize="small" />
+                        </IconButton>
+                        <ExampleCommandTypography sx={{ flexShrink: 0 }}> One more command</ExampleCommandTypography>
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    {updating &&
+                        <Box sx={{ width: '100%' }}>
+                            <LinearProgress color='info' />
+                        </Box>
+                    }
+                    {!updating && <React.Fragment>
+                        <Button onClick={this.handleClose}>Cancel</Button>
+                        {!isAdd && <React.Fragment>
+                            <Button onClick={this.handleDelete}>Delete</Button>
+                            <Button onClick={this.handleModify}>Save</Button>
+                        </React.Fragment>}
+                        {isAdd && <Button onClick={this.handleAdd}>Add</Button>}
+                    </React.Fragment>}
+                </DialogActions>
+            </Dialog>
+        )
+    }
+}
+
 const DecodeResponseCommand = (command: ResponseCommand): Command => {
     return {
         id: 'command:' + command.names.join('/'),
         names: command.names,
         help: command.help,
         stage: command.stage ?? "Stable",
+        examples: command.examples
     }
 }
 export default WSEditorCommandContent;

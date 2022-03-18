@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Typography, Box, Dialog, Slide, Drawer, Toolbar } from '@mui/material';
+import { Box, Dialog, Slide, Drawer, Toolbar } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useParams } from 'react-router';
 import axios from 'axios';

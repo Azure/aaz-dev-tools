@@ -79,18 +79,22 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
             <React.Fragment>
                 <Box sx={{
                     display: 'flex',
-                    justifyContent: 'stretch',
+                    flexDirection: 'column',
+                    alignItems: 'stretch',
                 }}>
                     <Card variant='outlined'
-                        sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                        sx={{
+                            flexGrow: 1, display: 'flex', flexDirection: 'column',
+                            p: 2
+                        }}>
                         <CardContent sx={{
                             flex: '1 0 auto',
                             display: 'flex',
                             flexDirection: 'column',
-                            justifyContent: 'stretch',
+                            alignItems: 'stretch',
                         }}>
                             <Box sx={{
-                                ml: 2, mr: 2, mt: 1, mb: 2,
+                                mb: 2,
                                 display: 'flex',
                                 flexDirection: 'row',
                                 alignItems: "center"
@@ -119,13 +123,13 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
                                 </ExperimentalTypography>}
                             </Box>
 
-                            <NameTypography sx={{ ml: 2, mr: 2, mt: 1 }}>
+                            <NameTypography sx={{ mt: 1 }}>
                                 {name}
                             </NameTypography>
-                            {shortHelp && <ShortHelpTypography sx={{ ml: 8, mr: 2, mt: 2 }}> {shortHelp} </ShortHelpTypography>}
-                            {!shortHelp && <ShortHelpPlaceHolderTypography sx={{ ml: 8, mr: 2, mt: 2 }}>Please add command group short summery!</ShortHelpPlaceHolderTypography>}
-                            {longHelp && <Box sx={{ ml: 8, mr: 2, mt: 1, mb: 1 }}>
-                                {lines.map((line) => (<LongHelpTypography>{line}</LongHelpTypography>))}
+                            {shortHelp && <ShortHelpTypography sx={{ ml: 6, mt: 2 }}> {shortHelp} </ShortHelpTypography>}
+                            {!shortHelp && <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>Please add command group short summery!</ShortHelpPlaceHolderTypography>}
+                            {longHelp && <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
+                                {lines.map((line, idx) => (<LongHelpTypography key={idx}>{line}</LongHelpTypography>))}
                             </Box>}
                         </CardContent>
                         <CardActions sx={{
@@ -147,7 +151,6 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
             </React.Fragment>
         )
     }
-
 }
 
 interface CommandGroupDialogProps {
@@ -357,7 +360,7 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
                     }
                     {!updating && <React.Fragment>
                         <Button onClick={this.handleClose}>Cancel</Button>
-                        <Button onClick={this.handleModify}>Submit</Button>
+                        <Button onClick={this.handleModify}>Save</Button>
                     </React.Fragment>}
                 </DialogActions>
             </Dialog>
