@@ -262,13 +262,18 @@ class GenerationModuleEditor extends React.Component<
         currentPointer = currentPointer["commandGroups"]![item];
       });
       const versionName = currentPointer["commands"]![node.text]["version"];
-      console.log(versionName)
       node.data!.versionIndex = node.data!.versions.indexOf(versionName);
     } catch (e: unknown) {
       return false;
     }
     return true;
   };
+
+  refreshVersionInfo = () => {
+    this.state.treeData.forEach(node => {
+      node.data!.versionIndex = 0
+    })
+  }
 
   async prepareNodes(namePath: string[]) {
     let currentPointer = this.getProfileEntry()
@@ -356,11 +361,12 @@ class GenerationModuleEditor extends React.Component<
 
   handleProfileChange = (event: React.SyntheticEvent, newValue: number) => {
     this.setState({ profileIndex: newValue }, () => {
+      this.refreshVersionInfo()
       const selectedNodes = this.state.treeData
         .filter((node) => node.data!.type === "Command")
         .filter((node) => this.isGenerated(node));
-      console.log(this.state.treeData)
       this.setState({ selectedNodes: selectedNodes });
+      console.log(this.state.treeData)
     });
   };
 

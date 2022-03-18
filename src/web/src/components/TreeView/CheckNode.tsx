@@ -20,7 +20,7 @@ type Props = {
 
 export const CheckNode: React.FC<Props> = (props) => {
   const { data } = props.node;
-  const versions = data?.versions;
+  const versions = data!.versions;
   const indent = props.depth * 24;
 
   const handleToggle = (e: React.MouseEvent) => {
@@ -53,7 +53,7 @@ export const CheckNode: React.FC<Props> = (props) => {
           </div>
         )}
       </div>
-      {props.node.data!.type === "Command" && (
+      {data!.type === "Command" && (
         <div>
           <Checkbox
             color="primary"
@@ -74,6 +74,7 @@ export const CheckNode: React.FC<Props> = (props) => {
           <FormControl sx={{ m: 1, minWidth: 80 }} disabled={!props.isSelected}>
             <NativeSelect
               defaultValue={data!.versionIndex}
+              key={data!.versionIndex}
               inputProps={{
                 name: "version",
                 id: "uncontrolled-native",
