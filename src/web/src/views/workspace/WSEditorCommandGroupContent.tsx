@@ -1,9 +1,8 @@
-import { Alert, Box, Button, Card, CardActions, CardContent, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputBase, InputBaseProps, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps } from '@mui/material';
-import { display, styled } from '@mui/system';
+import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps } from '@mui/material';
 import axios from 'axios';
 import * as React from 'react';
-import { FormLabel } from 'react-bootstrap';
 import { ResponseCommands } from './WSEditorCommandContent';
+import { NameTypography, ShortHelpTypography, ShortHelpPlaceHolderTypography, LongHelpTypography, StableTypography, PreviewTypography, ExperimentalTypography } from './WSEditorTheme';
 
 interface CommandGroup {
     id: string
@@ -32,67 +31,16 @@ interface ResponseCommandGroups {
 }
 
 
-const DecodeResponseCommandGroup = (commandGroup: ResponseCommandGroup): CommandGroup => {
-    return {
-        id: 'group:' + commandGroup.names.join('/'),
-        names: commandGroup.names,
-        help: commandGroup.help,
-        stage: commandGroup.stage ?? "Stable"
-    }
-}
-
 const commandPrefix = 'Az '
 
-const NameTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Roboto Condensed', sans-serif",
-    fontSize: 32,
-    fontWeight: 700,
-}))
-
-const ShortHelpTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Work Sans', sans-serif",
-    fontSize: 24,
-    fontWeight: 200,
-}))
-
-const ShortHelpPlaceHolderTypography = styled(ShortHelpTypography)<TypographyProps>(({ theme }) => ({
-    color: '#5d64cf',
-}))
-
-const LongHelpTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Work Sans', sans-serif",
-    fontSize: 18,
-    fontWeight: 400,
-}))
-
-const StableTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
-    color: '#67b349',
-    fontFamily: "'Work Sans', sans-serif",
-    fontSize: 20,
-    fontWeight: 200,
-}))
-
-const PreviewTypography = styled(StableTypography)<TypographyProps>(({ theme }) => ({
-    color: '#dba339',
-}))
-
-const ExperimentalTypography = styled(StableTypography)<TypographyProps>(({ theme }) => ({
-    color: '#e05376',
-}))
-
-
-
 interface WSEditorCommandGroupContentProps {
-    workspaceUrl: string,
+    workspaceUrl: string
     commandGroup: CommandGroup
     onUpdateCommandGroup: (commandGroup: CommandGroup | null) => void
 }
 
 interface WSEditorCommandGroupContentState {
-    displayDialog: boolean
+    displayCommandGroupDialog: boolean
 }
 
 class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupContentProps, WSEditorCommandGroupContentState> {
@@ -100,19 +48,19 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
     constructor(props: WSEditorCommandGroupContentProps) {
         super(props);
         this.state = {
-            displayDialog: false,
+            displayCommandGroupDialog: false,
         }
     }
 
-    onDialogDisplay = () => {
+    onCommandGroupDialogDisplay = () => {
         this.setState({
-            displayDialog: true,
+            displayCommandGroupDialog: true,
         })
     }
 
-    handleDialogClose = (newCommandGroup?: CommandGroup) => {
+    handleCommandGroupDialogClose = (newCommandGroup?: CommandGroup) => {
         this.setState({
-            displayDialog: false,
+            displayCommandGroupDialog: false,
         })
         if (newCommandGroup) {
             this.props.onUpdateCommandGroup(newCommandGroup!);
@@ -124,8 +72,9 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
         const name = commandPrefix + this.props.commandGroup.names.join(' ');
         const shortHelp = this.props.commandGroup.help?.short;
         const longHelp = this.props.commandGroup.help?.lines?.join('\n');
+        const lines: string[] = this.props.commandGroup.help?.lines ?? [];
         const stage = this.props.commandGroup.stage;
-        const { displayDialog } = this.state;
+        const { displayCommandGroupDialog: displayDialog } = this.state;
         return (
             <React.Fragment>
                 <Box sx={{
@@ -174,14 +123,19 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
                                 {name}
                             </NameTypography>
                             {shortHelp && <ShortHelpTypography sx={{ ml: 8, mr: 2, mt: 2 }}> {shortHelp} </ShortHelpTypography>}
-                            {!shortHelp && <ShortHelpPlaceHolderTypography  sx={{ ml: 8, mr: 2, mt: 2 }}>Please add command group short summery!</ShortHelpPlaceHolderTypography>}
-                            {longHelp && <LongHelpTypography sx={{ ml: 8, mr: 2, mt: 1, mb: 1 }}> {longHelp} </LongHelpTypography>}
+                            {!shortHelp && <ShortHelpPlaceHolderTypography sx={{ ml: 8, mr: 2, mt: 2 }}>Please add command group short summery!</ShortHelpPlaceHolderTypography>}
+                            {longHelp && <Box sx={{ ml: 8, mr: 2, mt: 1, mb: 1 }}>
+                                {lines.map((line) => (<LongHelpTypography>{line}</LongHelpTypography>))}
+                            </Box>}
                         </CardContent>
                         <CardActions sx={{
                             display: "flex",
                             flexDirection: "row-reverse"
                         }}>
-                            <Button variant='outlined' size="small" color='info' onClick={this.onDialogDisplay}>
+                            <Button
+                                variant='outlined' size="small" color='info'
+                                onClick={this.onCommandGroupDialogDisplay}
+                            >
                                 <Typography variant='body2'>
                                     Edit
                                 </Typography>
@@ -189,7 +143,7 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
                         </CardActions>
                     </Card>
                 </Box>
-                {displayDialog && <CommandGroupDialog open={displayDialog} workspaceUrl={workspaceUrl} commandGroup={commandGroup} onClose={this.handleDialogClose} />}
+                {displayDialog && <CommandGroupDialog open={displayDialog} workspaceUrl={workspaceUrl} commandGroup={commandGroup} onClose={this.handleCommandGroupDialogClose} />}
             </React.Fragment>
         )
     }
@@ -224,8 +178,6 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
             updating: false
         }
     }
-
-    // component
 
     handleModify = (event: any) => {
         let { name, stage, shortHelp, longHelp } = this.state
@@ -273,7 +225,7 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
             updating: true,
         })
 
-        const nodeUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + commandGroup.names.join('/')
+        const nodeUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + commandGroup.names.join('/');
 
         axios.patch(nodeUrl, {
             help: {
@@ -301,18 +253,17 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
                     this.props.onClose(cmdGroup);
                 })
             }
-        })
-            .catch(err => {
-                console.log(err.response);
-                if (err.resource?.message) {
-                    this.setState({
-                        invalidText: `ResponseError: ${err.resource!.message!}`,
-                    })
-                }
+        }).catch(err => {
+            console.log(err.response);
+            if (err.resource?.message) {
                 this.setState({
-                    updating: false,
+                    invalidText: `ResponseError: ${err.resource!.message!}`,
                 })
-            });
+            }
+            this.setState({
+                updating: false,
+            })
+        });
     }
 
     handleClose = () => {
@@ -413,6 +364,15 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
         )
     }
 
+}
+
+const DecodeResponseCommandGroup = (commandGroup: ResponseCommandGroup): CommandGroup => {
+    return {
+        id: 'group:' + commandGroup.names.join('/'),
+        names: commandGroup.names,
+        help: commandGroup.help,
+        stage: commandGroup.stage ?? "Stable"
+    }
 }
 
 export default WSEditorCommandGroupContent;

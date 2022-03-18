@@ -96,7 +96,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 
     loadWorkspace = async (preSelected?: CommandGroup | Command | null) => {
-        const {workspaceUrl} = this.state
+        const { workspaceUrl } = this.state
         if (preSelected === undefined) {
             preSelected = this.state.selected;
         }
@@ -248,29 +248,10 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
 
     handleCommandGroupUpdate = (commandGroup: CommandGroup | null) => {
         this.loadWorkspace(commandGroup);
-        // if (commandGroup === null) {
-        //     // commandGroup is removed
-        // } else {
-        //     const {commandGroupMap, selected} = this.state;
-        //     if (!selected || commandGroup.id != selected.id) {
-        //         this.loadWorkspace(commandGroup);
-        //     } else {
-        //         commandGroupMap[commandGroup.id] = commandGroup 
-        //         this.setState(preState => {
-        //             const commandGroupMap = {
-        //                 ...preState.commandGroupMap,
-        //             };
-        //             commandGroupMap[commandGroup.id] = commandGroup
-        //             return {
-        //                 ...preState,
-        //                 commandGroupMap: commandGroupMap
-        //             }
-        //         })
-        //         this.setState({
-        //             selected: commandGroup
-        //         })
-        //     }
-        // }
+    }
+
+    handleCommandUpdate = (command: Command | null) => {
+        this.loadWorkspace(command);
     }
 
     render() {
@@ -282,7 +263,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
 
                 </WSEditorToolBar>
 
-                <Box sx={{display: 'flex'}}>
+                <Box sx={{ display: 'flex' }}>
                     <Drawer
                         variant="permanent"
                         sx={{
@@ -305,15 +286,18 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                         flexGrow: 1,
                         p: 1,
                     }}>
-                        <Toolbar sx={{ flexShrink: 0 }}/>
+                        <Toolbar sx={{ flexShrink: 0 }} />
                         {selected != null && selected.id.startsWith('group:') &&
-                            <WSEditorCommandGroupContent 
-                                workspaceUrl={workspaceUrl} commandGroup={selected} 
+                            <WSEditorCommandGroupContent
+                                workspaceUrl={workspaceUrl} commandGroup={selected}
                                 onUpdateCommandGroup={this.handleCommandGroupUpdate}
-                                />
+                            />
                         }
                         {selected != null && selected.id.startsWith('command:') &&
-                            <WSEditorCommandContent workspaceUrl={workspaceUrl} command={selected} />
+                            <WSEditorCommandContent
+                                workspaceUrl={workspaceUrl} command={selected}
+                                onUpdateCommand={this.handleCommandUpdate}
+                            />
                         }
                     </Box>
                 </Box>
