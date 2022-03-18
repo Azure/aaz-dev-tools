@@ -1,14 +1,13 @@
 import * as React from "react";
-import { Box } from "@mui/material";
-import { styled } from "@mui/material/styles";
-import { useParams } from "react-router";
-import GenerationModuleEditorToolBar from "./GenerationModuleEditorToolBar";
+import {Box} from "@mui/material";
+import {styled} from "@mui/material/styles";
+import {useParams} from "react-router";
 import ModuleProfileSelector from "./ModuleProfileSelector";
 import GenerationCommandTree from "./GenerationCommandTree";
 import axios from "axios";
-import EditorPageLayout from "../../components/EditorPageLayout";
-import { NodeModel } from "@minoru/react-dnd-treeview";
-import { CheckData } from "../../components/TreeView/types";
+import {NodeModel} from "@minoru/react-dnd-treeview";
+import {CheckData} from "../../components/TreeView/types";
+import {Button, Col, Row} from "react-bootstrap";
 
 const TopPadding = styled(Box)(({ theme }) => ({
   [theme.breakpoints.up("sm")]: {
@@ -130,16 +129,16 @@ class GenerationModuleEditor extends React.Component<
   }
 
   componentDidMount() {
-    this.loadProfiles();
-    this.loadCommandTree();
-    this.loadLocalCommands();
+    this.initialModuleEditor();
   }
 
-  loadProfiles = () => {
+  initialModuleEditor = () => {
     axios
       .get("/CLI/Az/Profiles")
       .then((res) => {
-        this.setState({ profiles: res.data });
+        this.setState({ profiles: res.data }, () => {
+          this.loadCommandTree();
+        });
       })
       .catch((err) => {
         console.error(err.response);
@@ -159,8 +158,8 @@ class GenerationModuleEditor extends React.Component<
         combinedData[moduleName]["names"] = [moduleName];
 
         let depth = 0;
-        return this.parseCommandTree(depth, 0, combinedData).then(() => {
-          return Promise.resolve();
+        this.parseCommandTree(depth, 0, combinedData).then(() => {
+          this.loadLocalCommands();
         });
       })
       .catch((err) => {
@@ -172,16 +171,16 @@ class GenerationModuleEditor extends React.Component<
     axios
       .get(`/CLI/Az/Main/Modules/${this.state.moduleName}`)
       .then((res) => {
-        this.setState({ toBeGenerated: res.data["profiles"] });
+        this.setState({ toBeGenerated: res.data["profiles"] }, () => {
+          const selectedNodes = this.state.treeData
+            .filter((node) => node.data!.type === "Command")
+            .filter((node) => this.isGenerated(node));
+          this.setState({ selectedNodes: selectedNodes });
+        });
       })
       .catch((err) => {
         console.error(err.response);
       });
-
-    const selectedNodes = this.state.treeData
-      .filter((node) => node.data!.type === "Command")
-      .filter((node) => this.isGenerated(node));
-    this.setState({ selectedNodes: selectedNodes });
   };
 
   parseCommandTree = (
@@ -250,15 +249,20 @@ class GenerationModuleEditor extends React.Component<
     return namePath;
   };
 
+  getProfileEntry = () => {
+    const profileName = this.state.profiles[this.state.profileIndex];
+    return this.state.toBeGenerated[profileName]
+  }
+
   isGenerated = (node: NodeModel<CheckData>) => {
     const namePath = this.getNamePath(node);
-    const profileName = this.state.profiles[this.state.profileIndex];
-    let currentNode = this.state.toBeGenerated[profileName];
+    let currentPointer = this.getProfileEntry()
     try {
       namePath.slice(0, -1).forEach((item) => {
-        currentNode = currentNode["commandGroups"]![item];
+        currentPointer = currentPointer["commandGroups"]![item];
       });
-      const versionName = currentNode["commands"]![node.text]["version"];
+      const versionName = currentPointer["commands"]![node.text]["version"];
+      console.log(versionName)
       node.data!.versionIndex = node.data!.versions.indexOf(versionName);
     } catch (e: unknown) {
       return false;
@@ -267,8 +271,7 @@ class GenerationModuleEditor extends React.Component<
   };
 
   async prepareNodes(namePath: string[]) {
-    const profileName = this.state.profiles[this.state.profileIndex];
-    let currentNode = this.state.toBeGenerated[profileName];
+    let currentPointer = this.getProfileEntry()
     for (let idx = 0; idx < namePath.length - 1; idx++) {
       const name = namePath[idx];
       const currentPath = namePath.slice(0, idx + 1).join("/");
@@ -277,19 +280,19 @@ class GenerationModuleEditor extends React.Component<
         // eslint-disable-next-line no-loop-func
         .then((res) => {
           const data = res.data;
-          if (!currentNode.hasOwnProperty("commandGroups")) {
+          if (!currentPointer.hasOwnProperty("commandGroups")) {
             let element: Nodes = {};
             element[name] = data;
-            currentNode["commandGroups"] = element;
-            currentNode = currentNode["commandGroups"][name];
+            currentPointer["commandGroups"] = element;
+            currentPointer = currentPointer["commandGroups"][name];
           } else {
-            if (!currentNode["commandGroups"]!.hasOwnProperty(name)) {
-              let element: Nodes = currentNode["commandGroups"]!;
+            if (!currentPointer["commandGroups"]!.hasOwnProperty(name)) {
+              let element: Nodes = currentPointer["commandGroups"]!;
               element[name] = data;
-              currentNode["commandGroups"] = element;
-              currentNode = currentNode["commandGroups"][name];
+              currentPointer["commandGroups"] = element;
+              currentPointer = currentPointer["commandGroups"][name];
             } else {
-              currentNode = currentNode["commandGroups"]![name];
+              currentPointer = currentPointer["commandGroups"]![name];
             }
           }
         })
@@ -298,10 +301,9 @@ class GenerationModuleEditor extends React.Component<
   }
 
   insertLeaf = (path: string, command: string, version: string) => {
-    const profileName = this.state.profiles[this.state.profileIndex];
-    let currentNode = this.state.toBeGenerated[profileName];
+    let currentPointer = this.getProfileEntry()
     path.split("/").forEach((name) => {
-      currentNode = currentNode["commandGroups"]![name];
+      currentPointer = currentPointer["commandGroups"]![name];
     });
     axios
       .post(
@@ -309,14 +311,14 @@ class GenerationModuleEditor extends React.Component<
       )
       .then((res) => {
         const data = res.data;
-        if (!currentNode.hasOwnProperty("commands")) {
+        if (!currentPointer.hasOwnProperty("commands")) {
           let element: Leaves = {};
           element[command] = data;
-          currentNode["commands"] = element;
+          currentPointer["commands"] = element;
         } else {
-          let element: Leaves = currentNode["commands"]!;
+          let element: Leaves = currentPointer["commands"]!;
           element[command] = data;
-          currentNode["commands"] = element;
+          currentPointer["commands"] = element;
         }
       })
       .catch((err) => console.log(err));
@@ -324,14 +326,13 @@ class GenerationModuleEditor extends React.Component<
 
   removeNodes = (namePath: string[]) => {
     const nodeName = namePath[namePath.length - 1];
-    const profileName = this.state.profiles[this.state.profileIndex];
-    let currentNode = this.state.toBeGenerated[profileName];
+    let currentPointer = this.getProfileEntry()
     namePath.slice(0, -1).forEach((name) => {
-      currentNode = currentNode["commandGroups"]![name];
+      currentPointer = currentPointer["commandGroups"]![name];
     });
-    delete currentNode["commandGroups"]![nodeName];
-    if (Object.keys(currentNode["commandGroups"]!).length === 0) {
-      delete currentNode["commandGroups"];
+    delete currentPointer["commandGroups"]![nodeName];
+    if (Object.keys(currentPointer["commandGroups"]!).length === 0) {
+      delete currentPointer["commandGroups"];
       return true;
     } else {
       return false;
@@ -354,7 +355,13 @@ class GenerationModuleEditor extends React.Component<
   };
 
   handleProfileChange = (event: React.SyntheticEvent, newValue: number) => {
-    this.setState({ profileIndex: newValue });
+    this.setState({ profileIndex: newValue }, () => {
+      const selectedNodes = this.state.treeData
+        .filter((node) => node.data!.type === "Command")
+        .filter((node) => this.isGenerated(node));
+      console.log(this.state.treeData)
+      this.setState({ selectedNodes: selectedNodes });
+    });
   };
 
   handleSelect = (node: NodeModel<CheckData>) => {
@@ -374,15 +381,14 @@ class GenerationModuleEditor extends React.Component<
         selectedNodes: this.state.selectedNodes.filter((n) => n.id !== node.id),
       });
       const namePath = this.getNamePath(node);
-      const profileName = this.state.profiles[this.state.profileIndex];
-      let currentNode = this.state.toBeGenerated[profileName];
+      let currentPointer = this.getProfileEntry()
       namePath.slice(0, -1).forEach((name) => {
-        currentNode = currentNode["commandGroups"]![name];
+        currentPointer = currentPointer["commandGroups"]![name];
       });
-      delete currentNode["commands"]![node.text];
+      delete currentPointer["commands"]![node.text];
 
-      if (Object.keys(currentNode["commands"]!).length === 0) {
-        delete currentNode["commands"];
+      if (Object.keys(currentPointer["commands"]!).length === 0) {
+        delete currentPointer["commands"];
         for (let idx = namePath.length - 1; idx > 0; idx--) {
           if (!this.removeNodes(namePath.slice(0, idx))) {
             break;
@@ -397,49 +403,36 @@ class GenerationModuleEditor extends React.Component<
     let changeNode = this.state.treeData[Number(node.id) - 1];
     changeNode.data!.versionIndex = changeNode.data!.versions.indexOf(version);
     const namePath = this.getNamePath(node);
-    const profileName = this.state.profiles[this.state.profileIndex];
-    let currentNode = this.state.toBeGenerated[profileName];
+    let currentPointer = this.getProfileEntry()
     namePath.slice(0, -1).forEach((name) => {
-      currentNode = currentNode["commandGroups"]![name];
+      currentPointer = currentPointer["commandGroups"]![name];
     });
-    currentNode["commands"]![node.text]["version"] = version;
+    currentPointer["commands"]![node.text]["version"] = version;
   };
 
   render() {
-    const { moduleName } = this.state;
+    // const { moduleName } = this.state;
     return (
-      <React.Fragment>
-        <GenerationModuleEditorToolBar
-          moduleName={moduleName}
-          onHomePage={this.handleBackToHomepage}
-          onGenerate={this.handleGenerate}
-        />
-        <EditorPageLayout>
-          <Box
-            sx={{
-              flexShrink: 0,
-              width: 250,
-              flexDirection: "column",
-              display: "flex",
-              alignItems: "stretch",
-              justifyContent: "flex-start",
-              marginRight: "3vh",
-            }}
-          >
+      <div>
+        <Row>
+          <Col>
             <ModuleProfileSelector
               value={this.state.profileIndex}
               profiles={this.state.profiles}
               onChange={this.handleProfileChange}
             />
+            <Button onClick={this.handleGenerate}>test</Button>
+          </Col>
+          <Col>
             <GenerationCommandTree
-                treeData={this.state.treeData}
-                selectedNodes={this.state.selectedNodes}
-                onSelect={this.handleSelect}
-                onChange={this.handleVersionChange}
+              treeData={this.state.treeData}
+              selectedNodes={this.state.selectedNodes}
+              onSelect={this.handleSelect}
+              onChange={this.handleVersionChange}
             />
-          </Box>
-        </EditorPageLayout>
-      </React.Fragment>
+          </Col>
+        </Row>
+      </div>
     );
   }
 }
