@@ -8,6 +8,7 @@ import DoDisturbOnRoundedIcon from '@mui/icons-material/DoDisturbOnRounded';
 import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
+import WSEditorCommandArgumentsContent from './WSEditorCommandArgumentsContent';
 
 
 interface Example {
@@ -24,7 +25,6 @@ interface Command {
     }
     stage: "Stable" | "Preview" | "Experimental"
     examples?: Example[],
-    // argGroups?: ArgGroups
 }
 
 interface ResponseCommand {
@@ -153,6 +153,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         const lines: string[] = this.props.command.help?.lines ?? [];
         const stage = this.props.command.stage;
         const examples: Example[] = this.props.command.examples ?? [];
+        const commandUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + command.names.slice(0, -1).join('/') + '/Leaves/' + command.names[command.names.length - 1];
         const { displayCommandDisplay, displayExampleDisplay, exampleIdx } = this.state;
 
         const buildExampleAccordion = (example: Example, idx: number) => {
@@ -184,7 +185,6 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                     expanded
                     key={`example-${idx}`}
                     onDoubleClick={() => { this.onExampleDialogDisplay(idx) }}
-                // sx={{border:0}}
                 >
                     <ExampleAccordionSummary
                         id={`example-${idx}-header`}
@@ -298,7 +298,6 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                     </Card>
 
                     <Card
-                        // variant='outlined'
                         elevation={3}
                         sx={{
                             flexGrow: 1,
@@ -336,7 +335,6 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                         </CardContent>}
                     </Card>
                     <Card
-                        // variant='outlined'
                         elevation={3}
                         sx={{
                             flexGrow: 1,
@@ -345,7 +343,6 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             mt: 1,
                             p: 2
                         }}>
-
                         <CardActions sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -354,39 +351,8 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             <SubtitleTypography sx={{ flexShrink: 0 }}>ARGUMENTS</SubtitleTypography>
                             <Box sx={{ flexGrow: 1 }} />
                         </CardActions>
-                        {/* <CardContent sx={{
-                            flex: '1 0 auto',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'stretch',
-                        }}>
-                        </CardContent> */}
+                        <WSEditorCommandArgumentsContent commandUrl={commandUrl}/>
                     </Card>
-
-                    {/* <Accordion variant="outlined">
-                        <AccordionSummary 
-                            expandIcon={<ExpandMoreIcon />}
-                            id="examples"
-                        >
-                            <Typography>
-                                Examples:
-                            </Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                        </AccordionDetails>
-                    </Accordion>
-                    <Accordion variant="outlined">
-                    <AccordionSummary 
-                            expandIcon={<ExpandMoreIcon />}
-                            id="arguments"
-                        >
-                            <Typography>
-                                Arguments:
-                            </Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                        </AccordionDetails>
-                    </Accordion> */}
                 </Box>
                 {displayCommandDisplay && <CommandDialog open={displayCommandDisplay} workspaceUrl={workspaceUrl} command={command} onClose={this.handleCommandDialogClose} />}
                 {displayExampleDisplay && <ExampleDialog open={displayExampleDisplay} workspaceUrl={workspaceUrl} command={command} idx={exampleIdx} onClose={this.handleExampleDialogClose} />}
@@ -531,7 +497,6 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                 <DialogTitle>Command</DialogTitle>
                 <DialogContent dividers={true}>
                     {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
-
                     <InputLabel required shrink sx={{ font: "inherit" }}>Stage</InputLabel>
                     <RadioGroup
                         row
@@ -594,7 +559,6 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                         }}
                         margin="normal"
                     />
-
                 </DialogContent>
                 <DialogActions>
                     {updating &&
@@ -610,7 +574,6 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
             </Dialog>
         )
     }
-
 }
 
 interface ExampleDialogProps {
@@ -695,7 +658,6 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
         let examples: Example[] = command.examples ?? [];
         let idx = this.props.idx!;
         examples = [...examples.slice(0, idx), ...examples.slice(idx + 1)];
-
         this.onUpdateExamples(examples);
     }
 
