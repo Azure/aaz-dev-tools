@@ -1,11 +1,13 @@
-import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Accordion, InputBaseProps, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps, AccordionSummary, AccordionDetails, IconButton, Input, InputAdornment } from '@mui/material';
-import { createTheme, styled } from '@mui/system';
+import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Accordion, InputBaseProps, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps, AccordionSummary, AccordionDetails, IconButton, Input, InputAdornment, InputBase, AccordionActions, Paper, PaperProps, AccordionSummaryProps } from '@mui/material';
+import { styled } from '@mui/system';
 import axios from 'axios';
 import * as React from 'react';
+import MuiAccordionSummary from '@mui/material/AccordionSummary';
 import { NameTypography, ShortHelpTypography, ShortHelpPlaceHolderTypography, LongHelpTypography, StableTypography, PreviewTypography, ExperimentalTypography } from './WSEditorTheme';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DoDisturbOnRoundedIcon from '@mui/icons-material/DoDisturbOnRounded';
 import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
+import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
+import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
 
 
 interface Example {
@@ -51,7 +53,7 @@ interface WSEditorCommandContentState {
     exampleIdx?: number
 }
 
-const commandPrefix = 'Az '
+const commandPrefix = 'az '
 
 
 const SubtitleTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
@@ -60,6 +62,47 @@ const SubtitleTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     fontSize: 16,
     fontWeight: 700,
 }))
+
+const ExampleHeaderTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: theme.palette.primary.main,
+    fontFamily: "'Roboto Condensed', sans-serif",
+    fontSize: 16,
+    fontWeight: 400,
+}))
+
+const ExampleCommandHeaderTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: theme.palette.primary.main,
+    fontFamily: "'Work Sans', sans-serif",
+    fontSize: 14,
+    fontWeight: 400,
+}))
+
+const ExampleCommandBodyTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: theme.palette.primary.main,
+    fontFamily: "'Work Sans', sans-serif",
+    fontSize: 14,
+    fontWeight: 400,
+}))
+
+const ExampleEditTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: "#0288d1",
+    fontFamily: "'Work Sans', sans-serif",
+    fontSize: 13,
+    fontWeight: 400,
+}));
+
+const ExampleAccordionSummary = styled((props: AccordionSummaryProps) => (
+    <MuiAccordionSummary
+        expandIcon={<ExpandCircleDownIcon fontSize="small" />}
+        {...props}
+    />
+))(({ theme }) => ({
+    flexDirection: 'row-reverse',
+    '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
+        transform: 'rotate(0deg)',
+    },
+}));
+
 
 class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps, WSEditorCommandContentState> {
 
@@ -109,8 +152,73 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         const longHelp = this.props.command.help?.lines?.join('\n');
         const lines: string[] = this.props.command.help?.lines ?? [];
         const stage = this.props.command.stage;
-        const examples = this.props.command.examples;
+        const examples: Example[] = this.props.command.examples ?? [];
         const { displayCommandDisplay, displayExampleDisplay, exampleIdx } = this.state;
+
+        const buildExampleAccordion = (example: Example, idx: number) => {
+            const buildCommand = (exampleCommand: string, cmdIdx: number) => {
+                return (<Box key={`example-${idx}-command-${cmdIdx}`} sx={{
+                    display: "flex",
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    justifyContent: 'flex-start',
+                }}>
+                    <Box component="span" sx={{
+                        flexShrink: 0,
+                        display: "flex",
+                        flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start',
+                    }}>
+                        <KeyboardDoubleArrowRightIcon fontSize="small" />
+                        <ExampleCommandHeaderTypography sx={{ flexShrink: 0 }}>{commandPrefix}</ExampleCommandHeaderTypography>
+                    </Box>
+                    <Box component="span" sx={{
+                        ml: 0.8,
+                    }}>
+                        <ExampleCommandBodyTypography>{exampleCommand}</ExampleCommandBodyTypography>
+                    </Box>
+                </Box>)
+            }
+            return (
+                <Accordion
+                    variant='outlined'
+                    expanded
+                    key={`example-${idx}`}
+                    onDoubleClick={() => { this.onExampleDialogDisplay(idx) }}
+                // sx={{border:0}}
+                >
+                    <ExampleAccordionSummary
+                        id={`example-${idx}-header`}
+                    >
+                        <Box sx={{
+                            ml: 1,
+                            flexGrow: 1,
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                        }}>
+                            <ExampleHeaderTypography sx={{ flexShrink: 0 }} >{example.name}</ExampleHeaderTypography>
+                            <Box sx={{ flexGrow: 1 }} />
+                            <Button sx={{ flexShrink: 0 }}
+                                onClick={() => { this.onExampleDialogDisplay(idx) }}
+                            >
+                                <ExampleEditTypography>Edit</ExampleEditTypography>
+                            </Button>
+                        </Box>
+                    </ExampleAccordionSummary>
+                    <AccordionDetails sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'stretch',
+                        justifyContent: 'flex-start',
+                        ml: 3,
+                        mr: 3,
+                        paddingTop: 0,
+                    }}>
+                        {example.commands.map(buildCommand)}
+                    </AccordionDetails>
+                </Accordion>
+            )
+        }
 
         return (
             <React.Fragment>
@@ -119,17 +227,21 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                     flexDirection: 'column',
                     alignItems: 'stretch',
                 }}>
-                    <Card variant='outlined'
+                    <Card
+                        onDoubleClick={this.onCommandDialogDisplay}
+                        elevation={3}
                         sx={{
                             flexGrow: 1, display: 'flex', flexDirection: 'column',
                             p: 2
                         }}>
-                        <CardContent sx={{
-                            flex: '1 0 auto',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'stretch',
-                        }}>
+                        <CardContent
+
+                            sx={{
+                                flex: '1 0 auto',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'stretch',
+                            }}>
                             <Box sx={{
                                 mb: 2,
                                 display: 'flex',
@@ -185,7 +297,9 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                         </CardActions>
                     </Card>
 
-                    <Card variant='outlined'
+                    <Card
+                        // variant='outlined'
+                        elevation={3}
                         sx={{
                             flexGrow: 1,
                             display: 'flex',
@@ -210,16 +324,20 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                                 </Typography>
                             </Button>
                         </CardActions>
-                        {/* <CardContent sx={{
+                        {examples.length > 0 && <CardContent sx={{
                             flex: '1 0 auto',
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'stretch',
                         }}>
-
-                        </CardContent> */}
+                            <Box>
+                                {examples.map(buildExampleAccordion)}
+                            </Box>
+                        </CardContent>}
                     </Card>
-                    <Card variant="outlined"
+                    <Card
+                        // variant='outlined'
+                        elevation={3}
                         sx={{
                             flexGrow: 1,
                             display: 'flex',
@@ -242,7 +360,6 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             flexDirection: 'column',
                             alignItems: 'stretch',
                         }}>
-
                         </CardContent> */}
                     </Card>
 
@@ -256,7 +373,6 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             </Typography>
                         </AccordionSummary>
                         <AccordionDetails>
-
                         </AccordionDetails>
                     </Accordion>
                     <Accordion variant="outlined">
@@ -269,11 +385,8 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             </Typography>
                         </AccordionSummary>
                         <AccordionDetails>
-
                         </AccordionDetails>
-
                     </Accordion> */}
-
                 </Box>
                 {displayCommandDisplay && <CommandDialog open={displayCommandDisplay} workspaceUrl={workspaceUrl} command={command} onClose={this.handleCommandDialogClose} />}
                 {displayExampleDisplay && <ExampleDialog open={displayExampleDisplay} workspaceUrl={workspaceUrl} command={command} idx={exampleIdx} onClose={this.handleExampleDialogClose} />}
@@ -528,7 +641,6 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
     constructor(props: ExampleDialogProps) {
         super(props);
         const examples: Example[] = this.props.command.examples ?? [];
-        console.log(examples);
         if (this.props.idx === undefined) {
             this.state = {
                 name: "",
@@ -762,7 +874,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
                         margin="normal"
                         required
                     />
-                    <InputLabel required sx={{ font: "inherit", mt: 1}}>Commands</InputLabel>
+                    <InputLabel required sx={{ font: "inherit", mt: 1 }}>Commands</InputLabel>
                     {exampleCommands.map(buildExampleInput)}
                     <Box sx={{
                         display: 'flex',

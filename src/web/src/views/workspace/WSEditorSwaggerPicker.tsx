@@ -9,7 +9,7 @@ import { styled } from '@mui/material/styles';
 interface WSEditorSwaggerPickerProps {
     workspaceName: string,
     plane: string,
-    onClose: any
+    onClose: (updated: boolean) => void
 }
 
 interface WSEditorSwaggerPickerState {
@@ -96,7 +96,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     }
 
     handleClose = () => {
-        this.props.onClose()
+        this.props.onClose(false);
     }
 
     handleSubmit = () => {
@@ -241,7 +241,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 this.setState({
                     loading: false
                 });
-                this.props.onClose();
+                this.props.onClose(true);
             })
             .catch((err) => console.log(err.response));
     }

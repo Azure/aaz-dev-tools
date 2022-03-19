@@ -211,12 +211,14 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         this.setState({ showSwaggerResourcePicker: true })
     }
 
-    handleSwaggerResourcePickerClose = () => {
+    handleSwaggerResourcePickerClose = (updated: boolean) => {
+        if (updated) {
+            this.loadWorkspace();
+        }
         this.setState({
             showSwaggerResourcePicker: false
         })
     }
-
 
     handleBackToHomepage = () => {
         window.location.href = `/?#/workspace`
@@ -310,9 +312,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 >
                     <WSEditorSwaggerPicker plane={plane} workspaceName={name} onClose={this.handleSwaggerResourcePickerClose} />
                 </Dialog>
-
             </React.Fragment>
-
         )
     }
 }

@@ -31,7 +31,7 @@ interface ResponseCommandGroups {
 }
 
 
-const commandPrefix = 'Az '
+const commandPrefix = 'az '
 
 interface WSEditorCommandGroupContentProps {
     workspaceUrl: string
@@ -82,7 +82,9 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
                     flexDirection: 'column',
                     alignItems: 'stretch',
                 }}>
-                    <Card variant='outlined'
+                    <Card
+                        // variant='outlined'
+                        elevation={3}
                         sx={{
                             flexGrow: 1, display: 'flex', flexDirection: 'column',
                             p: 2
