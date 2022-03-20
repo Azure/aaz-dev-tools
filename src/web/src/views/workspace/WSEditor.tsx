@@ -297,7 +297,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                         }
                         {selected != null && selected.id.startsWith('command:') &&
                             <WSEditorCommandContent
-                                workspaceUrl={workspaceUrl} command={selected}
+                                workspaceUrl={workspaceUrl} command={(selected as Command)}
                                 onUpdateCommand={this.handleCommandUpdate}
                             />
                         }

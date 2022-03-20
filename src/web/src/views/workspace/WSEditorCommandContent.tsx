@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Accordion, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps, AccordionSummary, AccordionDetails, IconButton, Input, InputAdornment, InputBase, AccordionActions, Paper, PaperProps, AccordionSummaryProps } from '@mui/material';
+import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Accordion, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps, AccordionSummary, AccordionDetails, IconButton, Input, InputAdornment, InputBase, AccordionActions, Paper, PaperProps, AccordionSummaryProps, Tooltip } from '@mui/material';
 import { styled } from '@mui/system';
 import axios from 'axios';
 import * as React from 'react';
@@ -16,6 +16,12 @@ interface Example {
     commands: string[],
 }
 
+interface Resource {
+    id: string,
+    version: string,
+    swagger: string,
+}
+
 interface Command {
     id: string
     names: string[]
@@ -24,7 +30,8 @@ interface Command {
         lines?: string[]
     }
     stage: "Stable" | "Preview" | "Experimental"
-    examples?: Example[],
+    examples?: Example[]
+    resources: Resource[]
 }
 
 interface ResponseCommand {
@@ -35,6 +42,7 @@ interface ResponseCommand {
     }
     stage?: "Stable" | "Preview" | "Experimental"
     examples?: Example[],
+    resources: Resource[],
 }
 
 interface ResponseCommands {
@@ -48,19 +56,13 @@ interface WSEditorCommandContentProps {
 }
 
 interface WSEditorCommandContentState {
-    displayCommandDisplay: boolean
-    displayExampleDisplay: boolean
+    displayCommandDialog: boolean
+    displayExampleDialog: boolean
+    displayCommandDeleteDialog: boolean
     exampleIdx?: number
 }
 
 const commandPrefix = 'az '
-
-const ExampleHeaderTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Roboto Condensed', sans-serif",
-    fontSize: 16,
-    fontWeight: 400,
-}))
 
 const ExampleCommandHeaderTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     color: theme.palette.primary.main,
@@ -101,36 +103,52 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
     constructor(props: WSEditorCommandContentProps) {
         super(props);
         this.state = {
-            displayCommandDisplay: false,
-            displayExampleDisplay: false,
+            displayCommandDialog: false,
+            displayExampleDialog: false,
+            displayCommandDeleteDialog: false,
         }
     }
 
     onCommandDialogDisplay = () => {
         this.setState({
-            displayCommandDisplay: true,
+            displayCommandDialog: true,
+        })
+    }
+
+    onCommandDeleteDialogDisplay = () => {
+        this.setState({
+            displayCommandDeleteDialog: true,
         })
     }
 
     handleCommandDialogClose = (newCommand?: Command) => {
         this.setState({
-            displayCommandDisplay: false,
+            displayCommandDialog: false,
         })
         if (newCommand) {
             this.props.onUpdateCommand(newCommand!);
         }
     }
 
+    handleCommandDeleteDialogClose = (deleted: boolean) => {
+        this.setState({
+            displayCommandDeleteDialog: false,
+        })
+        if (deleted) {
+            this.props.onUpdateCommand(null);
+        }
+    }
+
     onExampleDialogDisplay = (idx?: number) => {
         this.setState({
-            displayExampleDisplay: true,
+            displayExampleDialog: true,
             exampleIdx: idx,
         })
     }
 
     handleExampleDialogClose = (newCommand?: Command) => {
         this.setState({
-            displayExampleDisplay: false,
+            displayExampleDialog: false,
         })
         if (newCommand) {
             this.props.onUpdateCommand(newCommand!);
@@ -146,7 +164,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         const stage = this.props.command.stage;
         const examples: Example[] = this.props.command.examples ?? [];
         const commandUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + command.names.slice(0, -1).join('/') + '/Leaves/' + command.names[command.names.length - 1];
-        const { displayCommandDisplay, displayExampleDisplay, exampleIdx } = this.state;
+        const { displayCommandDialog, displayExampleDialog, displayCommandDeleteDialog, exampleIdx } = this.state;
 
         const buildExampleView = (example: Example, idx: number) => {
             const buildCommand = (exampleCommand: string, cmdIdx: number) => {
@@ -273,16 +291,45 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                         <CardActions sx={{
                             display: "flex",
                             flexDirection: "row-reverse",
+                            alignContent: "center",
+                            justifyContent: "flex-start"
                         }}>
+                            <Box sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                alignContent: "center",
+                                justifyContent: "flex-start"
+                            }}>
 
-                            <Button
-                                variant='outlined' size="small" color='info'
-                                onClick={this.onCommandDialogDisplay}
-                            >
-                                <Typography variant='body2'>
-                                    Edit
-                                </Typography>
-                            </Button>
+                                <Button
+                                    variant='outlined' size="small" color='info'
+                                    onClick={this.onCommandDialogDisplay}
+                                    sx={{ mr: 2 }}
+                                >
+                                    <Typography variant='body2'>
+                                        Edit
+                                    </Typography>
+                                </Button>
+                                <Button
+                                    variant='outlined' size="small" color='error'
+                                    onClick={this.onCommandDeleteDialogDisplay}
+                                    sx={{ mr: 2 }}
+                                >
+                                    <Typography variant='body2'>
+                                        Delete
+                                    </Typography>
+                                </Button>
+                                {/* <Tooltip title='Try in CLI. Developing...'>
+                                    <Button
+                                        variant='outlined' size="small" color='success'
+                                        disabled
+                                    >
+                                        <Typography variant='body2'>
+                                            Try
+                                        </Typography>
+                                    </Button>
+                                </Tooltip> */}
+                            </Box>
                         </CardActions>
                     </Card>
 
@@ -346,13 +393,107 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                     </Card>
 
                 </Box>
-                {displayCommandDisplay && <CommandDialog open={displayCommandDisplay} workspaceUrl={workspaceUrl} command={command} onClose={this.handleCommandDialogClose} />}
-                {displayExampleDisplay && <ExampleDialog open={displayExampleDisplay} workspaceUrl={workspaceUrl} command={command} idx={exampleIdx} onClose={this.handleExampleDialogClose} />}
+                {displayCommandDialog && <CommandDialog open={displayCommandDialog} workspaceUrl={workspaceUrl} command={command} onClose={this.handleCommandDialogClose} />}
+                {displayExampleDialog && <ExampleDialog open={displayExampleDialog} workspaceUrl={workspaceUrl} command={command} idx={exampleIdx} onClose={this.handleExampleDialogClose} />}
+
+                {displayCommandDeleteDialog && <CommandDeleteDialog open={displayCommandDeleteDialog} workspaceUrl={workspaceUrl} command={command} onClose={this.handleCommandDeleteDialogClose} />}
             </React.Fragment>
         )
     }
 }
 
+
+function CommandDeleteDialog(props: {
+    workspaceUrl: string,
+    open: boolean,
+    command: Command,
+    onClose: (deleted: boolean) => void
+}) {
+    const [updating, setUpdating] = React.useState<boolean>(false);
+    const [relatedCommands, setRelatedCommands] = React.useState<string[]>([]);
+
+    React.useEffect(() => {
+        setRelatedCommands([]);
+        const urls = props.command.resources.map(resource => {
+            const resourceId = btoa(resource.id)
+            const version = btoa(resource.version)
+            return `${props.workspaceUrl}/Resources/${resourceId}/V/${version}`
+        })
+        const promisesAll = urls.map(url => {
+            return axios.get(`${url}/Commands`)
+        })
+
+        Promise.all(promisesAll)
+            .then(responses => {
+                const commands = new Set<string>();
+                responses.forEach(response => {
+                    const responseCommands: ResponseCommand[] = response.data
+                    responseCommands
+                        .map(responseCommand => DecodeResponseCommand(responseCommand))
+                        .map(cmd => {commands.add(cmd.names.join(" "))});
+                });
+                
+                const cmdNames: string[] = [];
+                commands.forEach(cmdName => cmdNames.push(cmdName));
+                cmdNames.sort((a, b) => a.localeCompare(b));
+                setRelatedCommands(cmdNames);
+            })
+            .catch(err => {
+                console.error(err.response)
+            })
+
+    }, [props.command]);
+
+    const handleClose = () => {
+        props.onClose(false);
+    }
+    const handleDelete = () => {
+        setUpdating(true);
+        const urls = props.command.resources.map(resource => {
+            const resourceId = btoa(resource.id)
+            const version = btoa(resource.version)
+            return `${props.workspaceUrl}/Resources/${resourceId}/V/${version}`
+        })
+        const promisesAll = urls.map(url => {
+            return axios.delete(url)
+        })
+
+        Promise.all(promisesAll)
+            .then(res => {
+                props.onClose(true);
+            })
+            .catch(err => {
+                console.error(err.response)
+            })
+    }
+    return (
+        <Dialog
+            disableEscapeKeyDown
+            open={props.open}
+        >
+            <DialogTitle>Delete Commands</DialogTitle>
+            <DialogContent dividers={true}>
+                {relatedCommands.map((command, idx) => (
+                <Typography key={`command-${idx}`} variant="body2">{`${commandPrefix}${command}`}</Typography>
+                ))}
+            </DialogContent>
+            <DialogActions>
+                {updating &&
+                    <Box sx={{ width: '100%' }}>
+                        <LinearProgress color='info' />
+                    </Box>
+                }
+                {!updating && <React.Fragment>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleDelete}>Delete</Button>
+                </React.Fragment>}
+            </DialogActions>
+
+        </Dialog>
+    )
+
+
+}
 
 interface CommandDialogProps {
     workspaceUrl: string,
@@ -567,6 +708,8 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
         )
     }
 }
+
+// function CommandDeleteDialog
 
 interface ExampleDialogProps {
     workspaceUrl: string
@@ -874,7 +1017,8 @@ const DecodeResponseCommand = (command: ResponseCommand): Command => {
         names: command.names,
         help: command.help,
         stage: command.stage ?? "Stable",
-        examples: command.examples
+        examples: command.examples,
+        resources: command.resources,
     }
 }
 export default WSEditorCommandContent;
