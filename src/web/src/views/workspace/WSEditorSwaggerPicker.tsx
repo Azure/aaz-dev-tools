@@ -6,13 +6,13 @@ import EditorPageLayout from '../../components/EditorPageLayout';
 import { styled } from '@mui/material/styles';
 
 
-interface SwaggerResourcePickerProps {
+interface WSEditorSwaggerPickerProps {
     workspaceName: string,
     plane: string,
-    onClose: any
+    onClose: (updated: boolean) => void
 }
 
-interface SwaggerResourcePickerState {
+interface WSEditorSwaggerPickerState {
     loading: boolean
 
     plane: string
@@ -39,8 +39,6 @@ interface SwaggerResourcePickerState {
     selectedVersion: string | null,
 }
 
-
-
 type ResourceVersion = {
     version: string
 }
@@ -50,17 +48,9 @@ type Resource = {
     versions: ResourceVersion[]
 }
 
-type ResourceIdVersionSelectedMap = {
-    [id: string]: string
-}
-
 type VersionResourceIdMap = {
     [version: string]: string[]
 }
-
-// type Resources = {
-//     [id: string]: Version[]
-// }
 
 const MiddlePadding = styled(Box)(({ theme }) => ({
     height: '2vh'
@@ -70,9 +60,9 @@ const MiddlePadding2 = styled(Box)(({ theme }) => ({
     height: '8vh'
 }));
 
-class SwaggerResourcePicker extends React.Component<SwaggerResourcePickerProps, SwaggerResourcePickerState> {
+class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, WSEditorSwaggerPickerState> {
 
-    constructor(props: SwaggerResourcePickerProps) {
+    constructor(props: WSEditorSwaggerPickerProps) {
         super(props);
         this.state = {
             loading: false,
@@ -106,7 +96,7 @@ class SwaggerResourcePicker extends React.Component<SwaggerResourcePickerProps, 
     }
 
     handleClose = () => {
-        this.props.onClose()
+        this.props.onClose(false);
     }
 
     handleSubmit = () => {
@@ -251,7 +241,7 @@ class SwaggerResourcePicker extends React.Component<SwaggerResourcePickerProps, 
                 this.setState({
                     loading: false
                 });
-                this.props.onClose();
+                this.props.onClose(true);
             })
             .catch((err) => console.log(err.response));
     }
@@ -378,7 +368,7 @@ class SwaggerResourcePicker extends React.Component<SwaggerResourcePickerProps, 
                             //     width: 250,
                             // }}
                             onClick={this.handleSubmit}
-                            disabled={selectedModule == null || selectedVersion == null || selectedResources.size < 1}
+                            disabled={selectedModule === null || selectedVersion === null || selectedResources.size < 1}
                         >
                             Submit
                         </Button>
@@ -416,7 +406,7 @@ class SwaggerResourcePicker extends React.Component<SwaggerResourcePickerProps, 
                     </List>
                 </EditorPageLayout>
                 <Backdrop
-                    sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                    sx={{ color: '#fff', zIndex: (theme: any) => theme.zIndex.drawer + 1 }}
                     open={this.state.loading}
                 >
                     <CircularProgress color='inherit' />
@@ -442,7 +432,7 @@ class SwaggerItemSelector extends React.Component<SwaggerItemsSelectorProps> {
     constructor(props: SwaggerItemsSelectorProps) {
         super(props);
         this.state = {
-            value: this.props.options.length == 1 ? this.props.options[0] : null,
+            value: this.props.options.length === 1 ? this.props.options[0] : null,
         }
     }
 
@@ -488,4 +478,4 @@ class SwaggerItemSelector extends React.Component<SwaggerItemsSelectorProps> {
 }
 
 
-export default SwaggerResourcePicker;
+export default WSEditorSwaggerPicker;

@@ -33,6 +33,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                             variant="h6"
                             underline="none"
                             color="inherit"
+                            
                             href="/?#/HomePage"
                             fontWeight={
                                 this.props.pageName == "HomePage" ? 

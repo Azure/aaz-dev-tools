@@ -172,7 +172,7 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
                     }}
                     filterOptions={(options, params: any) => {
                         const filtered = filter(options, params);
-                        if (params.inputValue !== '' && -1 == options.findIndex((e) => e.name == params.inputValue)) {
+                        if (params.inputValue !== '' && -1 === options.findIndex((e) => e.name === params.inputValue)) {
                             filtered.push({
                                 inputValue: params.inputValue,
                                 title: `Create "${params.inputValue}"`,
@@ -181,7 +181,7 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
                         return filtered;
                     }}
                     getOptionLabel={(option) => {
-                        if (typeof option == "string") {
+                        if (typeof option === "string") {
                             return option;
                         }
                         if (option.title) {
@@ -224,7 +224,7 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
                                 id="name"
                                 required
                                 value={createDialogValue.name}
-                                onChange={(event) => {
+                                onChange={(event: any) => {
                                     this.setState({
                                         createDialogValue: {
                                             ...createDialogValue,
