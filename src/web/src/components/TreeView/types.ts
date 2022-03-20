@@ -3,4 +3,9 @@ export type CustomData = {
     type: string,
     allowDelete: boolean
   };
-  
+
+export type CheckData = {
+  type: string;
+  versions: string[];
+  versionIndex: number;
+};

@@ -369,6 +369,13 @@ class APIEditorTest(CommandTestCase):
             resource_id = resource['id']
             resource_version = resource['version']
 
+            rv = c.get(f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(resource_version)}/Commands")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(len(data) == 4)
+            for cmd in data:
+                self.assertTrue(cmd['names'][:-1] == ["edge-order", "order", "item"])
+
             rv = c.delete(f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(resource_version)}")
             self.assertTrue(rv.status_code == 200)
 
@@ -392,6 +399,9 @@ class APIEditorTest(CommandTestCase):
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
             self.assertTrue('list' not in data['commands'])
+
+
+
 
     @workspace_name("test_workspace_command_merge")
     def test_workspace_command_merge(self, ws_name):

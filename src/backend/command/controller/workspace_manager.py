@@ -529,6 +529,16 @@ class WorkspaceManager:
         self.remove_cfg(cfg_editor)
         return True
 
+    def list_commands_by_resource(self, resource_id, version):
+        commands = []
+        cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
+        if cfg_editor:
+            for cmd_names, _ in cfg_editor.iter_commands():
+                leaf = self.find_command_tree_leaf(*cmd_names)
+                if leaf:
+                    commands.append(leaf)
+        return commands
+
     def merge_resources(self, main_resource_id, main_resource_version, plus_resource_id, plus_resource_version):
         main_cfg_editor = self.load_cfg_editor_by_resource(main_resource_id, main_resource_version)
         plus_cfg_editor = self.load_cfg_editor_by_resource(plus_resource_id, plus_resource_version)
