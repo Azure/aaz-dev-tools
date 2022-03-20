@@ -256,6 +256,10 @@ const NavBarItemTypography = styled(Typography)<TypographyProps>(({ theme }) => 
     fontWeight: 400,
 }))
 
+const NavBarItemHightLightedTypography = styled(NavBarItemTypography)<TypographyProps>(({ theme }) => ({
+    color: '#5d64cf',
+}))
+
 function ArgNavBar(props: {
     argIdxStack: ArgIdx[],
     onChangeArgIdStack: (end: number) => void,
@@ -287,6 +291,14 @@ function ArgNavBar(props: {
                         <NavBarItemTypography sx={{ flexShrink: 0 }} >{index > 0 ? `.${argIdx.displayKey}` : argIdx.displayKey}</NavBarItemTypography>
                     </ButtonBase>
                 ))}
+                <ButtonBase
+                        key={`${props.argIdxStack.length-1}`}
+                        onClick={() => {
+                            props.onChangeArgIdStack(props.argIdxStack.length)
+                        }}
+                    >
+                        <NavBarItemHightLightedTypography sx={{ flexShrink: 0 }} >{props.argIdxStack.length > 1 ? `.${props.argIdxStack[props.argIdxStack.length-1].displayKey}` : props.argIdxStack[props.argIdxStack.length-1].displayKey}</NavBarItemHightLightedTypography>
+                </ButtonBase>
             </Box>
         </React.Fragment>
     )
