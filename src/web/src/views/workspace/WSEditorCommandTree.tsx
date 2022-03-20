@@ -15,6 +15,7 @@ interface CommandTreeNode {
     names: string[]
     nodes?: CommandTreeNode[]
     leaves?: CommandTreeLeaf[]
+    canDelete: boolean
 }
 
 

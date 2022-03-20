@@ -12,6 +12,7 @@ interface CommandGroup {
         short: string
         lines?: string[]
     }
+    canDelete: boolean
 }
 
 interface ResponseCommandGroup {
@@ -41,6 +42,7 @@ interface WSEditorCommandGroupContentProps {
 
 interface WSEditorCommandGroupContentState {
     displayCommandGroupDialog: boolean
+    displayCommandGroupDeleteDialog: boolean
 }
 
 class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupContentProps, WSEditorCommandGroupContentState> {
@@ -49,12 +51,19 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
         super(props);
         this.state = {
             displayCommandGroupDialog: false,
+            displayCommandGroupDeleteDialog: false,
         }
     }
 
     onCommandGroupDialogDisplay = () => {
         this.setState({
             displayCommandGroupDialog: true,
+        })
+    }
+
+    onCommandGroupDeleteDialogDisplay = () => {
+        this.setState({
+            displayCommandGroupDeleteDialog: true,
         })
     }
 
@@ -67,6 +76,15 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
         }
     }
 
+    handleCommandGroupDeleteDialogClose = (deleted: boolean) => {
+        this.setState({
+            displayCommandGroupDeleteDialog: false,
+        })
+        if (deleted) {
+            this.props.onUpdateCommandGroup(null);
+        }
+    }
+
     render() {
         const { workspaceUrl, commandGroup } = this.props;
         const name = commandPrefix + this.props.commandGroup.names.join(' ');
@@ -74,7 +92,7 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
         const longHelp = this.props.commandGroup.help?.lines?.join('\n');
         const lines: string[] = this.props.commandGroup.help?.lines ?? [];
         const stage = this.props.commandGroup.stage;
-        const { displayCommandGroupDialog: displayDialog } = this.state;
+        const { displayCommandGroupDialog, displayCommandGroupDeleteDialog } = this.state;
         return (
             <React.Fragment>
                 <Box sx={{
@@ -136,23 +154,96 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
                         </CardContent>
                         <CardActions sx={{
                             display: "flex",
-                            flexDirection: "row-reverse"
+                            flexDirection: "row-reverse",
+                            alignContent: "center",
+                            justifyContent: "flex-start"
                         }}>
-                            <Button
-                                variant='outlined' size="small" color='info'
-                                onClick={this.onCommandGroupDialogDisplay}
-                            >
-                                <Typography variant='body2'>
-                                    Edit
-                                </Typography>
-                            </Button>
+                            <Box sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                alignContent: "center",
+                                justifyContent: "flex-start"
+                            }}>
+                                <Button
+                                    variant='outlined' size="small" color='info'
+                                    onClick={this.onCommandGroupDialogDisplay}
+                                >
+                                    <Typography variant='body2'>
+                                        Edit
+                                    </Typography>
+                                </Button>
+                                <Button
+                                    variant='outlined' size="small" color='error'
+                                    onClick={this.onCommandGroupDeleteDialogDisplay}
+                                    disabled={!this.props.commandGroup.canDelete}
+                                    sx={{ ml: 2 }}
+                                >
+                                    <Typography variant='body2'>
+                                        Delete
+                                    </Typography>
+                                </Button>
+                            </Box>
+
                         </CardActions>
                     </Card>
                 </Box>
-                {displayDialog && <CommandGroupDialog open={displayDialog} workspaceUrl={workspaceUrl} commandGroup={commandGroup} onClose={this.handleCommandGroupDialogClose} />}
+                {displayCommandGroupDialog && <CommandGroupDialog open={displayCommandGroupDialog} workspaceUrl={workspaceUrl} commandGroup={commandGroup} onClose={this.handleCommandGroupDialogClose} />}
+                {displayCommandGroupDeleteDialog && <CommandGroupDeleteDialog open={displayCommandGroupDeleteDialog} workspaceUrl={workspaceUrl} commandGroup={commandGroup} onClose={this.handleCommandGroupDeleteDialogClose} />}
             </React.Fragment>
         )
     }
+}
+
+function CommandGroupDeleteDialog(props: {
+    workspaceUrl: string,
+    open: boolean
+    commandGroup: CommandGroup
+    onClose: (deleted: boolean) => void
+}) {
+
+    const [updating, setUpdating] = React.useState<boolean>(false);
+
+    const handleClose = () => {
+        props.onClose(false);
+    }
+    const handleDelete = () => {
+        const nodeUrl = `${props.workspaceUrl}/CommandTree/Nodes/aaz/` + props.commandGroup.names.join('/');
+        setUpdating(true);
+
+        axios.delete(nodeUrl)
+            .then(res => {
+                setUpdating(false);
+                props.onClose(true);
+            }).catch(err => {
+                setUpdating(false);
+                console.error(err.response)
+            })
+    }
+
+    return (
+        <Dialog
+            disableEscapeKeyDown
+            open={props.open}
+        >
+            <DialogTitle>Delete Command Group</DialogTitle>
+            <DialogContent dividers={true}>
+                <Typography variant="body2">{`${commandPrefix}${props.commandGroup.names.join(" ")}`}</Typography>
+            </DialogContent>
+            <DialogActions>
+                {updating &&
+                    <Box sx={{ width: '100%' }}>
+                        <LinearProgress color='info' />
+                    </Box>
+                }
+                {!updating && <React.Fragment>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleDelete}>Delete</Button>
+                </React.Fragment>}
+            </DialogActions>
+        </Dialog>
+
+    )
+
 }
 
 interface CommandGroupDialogProps {
@@ -376,7 +467,8 @@ const DecodeResponseCommandGroup = (commandGroup: ResponseCommandGroup): Command
         id: 'group:' + commandGroup.names.join('/'),
         names: commandGroup.names,
         help: commandGroup.help,
-        stage: commandGroup.stage ?? "Stable"
+        stage: commandGroup.stage ?? "Stable",
+        canDelete: true,
     }
 }
 

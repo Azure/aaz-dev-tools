@@ -123,6 +123,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 const node: CommandTreeNode = {
                     id: group.id,
                     names: [...group.names],
+                    canDelete: group.canDelete,
                 };
 
                 if (typeof commandGroup_1.commands === 'object' && commandGroup_1.commands !== null) {
@@ -133,6 +134,9 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                         node['leaves'].push(subLeave);
                     }
                     node['leaves'].sort((a, b) => a.id.localeCompare(b.id));
+                    if (node['leaves'].length > 0) {
+                        node.canDelete = false;
+                    }
                 }
 
                 if (typeof commandGroup_1.commandGroups === 'object' && commandGroup_1.commandGroups !== null) {
@@ -140,9 +144,17 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                     for (const name_1 in commandGroup_1.commandGroups) {
                         const subNode = buildCommandGroup(commandGroup_1.commandGroups[name_1]);
                         node['nodes'].push(subNode);
+                        if (!subNode.canDelete) {
+                            node.canDelete = false;
+                        }
                     }
                     node['nodes'].sort((a_1, b_1) => a_1.id.localeCompare(b_1.id));
                 }
+
+                if ((node['leaves']?.length ?? 0) > 1) {
+                    node.canDelete = false
+                }
+                group.canDelete = node.canDelete;
                 return node;
             };
 
@@ -291,7 +303,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                         <Toolbar sx={{ flexShrink: 0 }} />
                         {selected != null && selected.id.startsWith('group:') &&
                             <WSEditorCommandGroupContent
-                                workspaceUrl={workspaceUrl} commandGroup={selected}
+                                workspaceUrl={workspaceUrl} commandGroup={(selected as CommandGroup)}
                                 onUpdateCommandGroup={this.handleCommandGroupUpdate}
                             />
                         }

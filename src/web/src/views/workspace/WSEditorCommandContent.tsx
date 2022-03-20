@@ -460,9 +460,11 @@ function CommandDeleteDialog(props: {
 
         Promise.all(promisesAll)
             .then(res => {
+                setUpdating(false);
                 props.onClose(true);
             })
             .catch(err => {
+                setUpdating(false);
                 console.error(err.response)
             })
     }
