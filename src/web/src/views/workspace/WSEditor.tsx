@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Dialog, Slide, Drawer, Toolbar } from '@mui/material';
+import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useParams } from 'react-router';
 import axios from 'axios';
@@ -9,6 +9,7 @@ import WSEditorToolBar from './WSEditorToolBar';
 import WSEditorCommandTree, { CommandTreeLeaf, CommandTreeNode } from './WSEditorCommandTree';
 import WSEditorCommandGroupContent, { CommandGroup, DecodeResponseCommandGroup, ResponseCommandGroup, ResponseCommandGroups } from './WSEditorCommandGroupContent';
 import WSEditorCommandContent, { Command, DecodeResponseCommand, ResponseCommand } from './WSEditorCommandContent';
+import { Alert } from 'reactstrap';
 
 
 const TopPadding = styled(Box)(({ theme }) => ({
@@ -49,6 +50,7 @@ interface WSEditorState {
     commandTree: CommandTreeNode[],
 
     showSwaggerResourcePicker: boolean
+    showExportDialog: boolean
 }
 
 const swaggerResourcePickerTransition = React.forwardRef(function swaggerResourcePickerTransition(
@@ -88,6 +90,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             commandGroupMap: {},
             commandTree: [],
             showSwaggerResourcePicker: false,
+            showExportDialog: false,
         }
     }
 
@@ -237,7 +240,15 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 
     handleGenerate = () => {
+        this.setState({
+            showExportDialog: true
+        })
+    }
 
+    handleGenerationClose = (exported: boolean) => {
+        this.setState({
+            showExportDialog: false
+        })
     }
 
     handleCommandTreeSelect = (nodeId: string) => {
@@ -269,7 +280,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 
     render() {
-        const { showSwaggerResourcePicker, plane, name, commandTree, selected, workspaceUrl } = this.state;
+        const { showSwaggerResourcePicker, showExportDialog, plane, name, commandTree, selected, workspaceUrl } = this.state;
         return (
             <React.Fragment>
                 <WSEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onAdd={this.showSwaggerResourcePicker} onGenerate={this.handleGenerate}>
@@ -324,9 +335,63 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 >
                     <WSEditorSwaggerPicker plane={plane} workspaceName={name} onClose={this.handleSwaggerResourcePickerClose} />
                 </Dialog>
+                {showExportDialog && <WSEditorExportDialog workspaceUrl={workspaceUrl} open={showExportDialog} onClose={this.handleGenerationClose} />}
             </React.Fragment>
         )
     }
+}
+
+function WSEditorExportDialog(props: {
+    workspaceUrl: string,
+    open: boolean,
+    onClose: (exported: boolean) => void,
+}) {
+    const [updating, setUpdating] = React.useState<boolean>(false);
+    const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
+
+    const handleClose = () => {
+        props.onClose(false);
+    }
+
+    const handleExport = () => {
+        const url = `${props.workspaceUrl}/Generate`;
+        setUpdating(true);
+
+        axios.post(url)
+            .then(res => {
+                setUpdating(false);
+                props.onClose(true);
+            }).catch(err => {
+                console.error(err.response)
+                if (err.resource?.message) {
+                    setInvalidText(`ResponseError: ${err.resource!.message!}`);
+                }
+                setUpdating(false);
+            })
+    }
+
+    return (
+        <Dialog
+            disableEscapeKeyDown
+            open={props.open}
+        >
+            <DialogTitle>Export workspace command models to AAZ Repo</DialogTitle>
+            <DialogContent>
+                {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+            </DialogContent>
+            <DialogActions>
+                {updating &&
+                    <Box sx={{ width: '100%' }}>
+                        <LinearProgress color='info' />
+                    </Box>
+                }
+                {!updating && <React.Fragment>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleExport}>Confirm</Button>
+                </React.Fragment>}
+            </DialogActions>
+        </Dialog>
+    )
 }
 
 const WSEditorWrapper = (props: any) => {
