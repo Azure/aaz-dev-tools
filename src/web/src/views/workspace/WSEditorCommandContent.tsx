@@ -1,13 +1,13 @@
-import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Accordion, InputBaseProps, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps, AccordionSummary, AccordionDetails, IconButton, Input, InputAdornment, InputBase, AccordionActions, Paper, PaperProps, AccordionSummaryProps } from '@mui/material';
+import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Accordion, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps, AccordionSummary, AccordionDetails, IconButton, Input, InputAdornment, InputBase, AccordionActions, Paper, PaperProps, AccordionSummaryProps } from '@mui/material';
 import { styled } from '@mui/system';
 import axios from 'axios';
 import * as React from 'react';
 import MuiAccordionSummary from '@mui/material/AccordionSummary';
-import { NameTypography, ShortHelpTypography, ShortHelpPlaceHolderTypography, LongHelpTypography, StableTypography, PreviewTypography, ExperimentalTypography } from './WSEditorTheme';
+import { NameTypography, ShortHelpTypography, ShortHelpPlaceHolderTypography, LongHelpTypography, StableTypography, PreviewTypography, ExperimentalTypography, SubtitleTypography, CardTitleTypography } from './WSEditorTheme';
 import DoDisturbOnRoundedIcon from '@mui/icons-material/DoDisturbOnRounded';
 import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
-import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
+import LabelIcon from '@mui/icons-material/Label';
 import WSEditorCommandArgumentsContent from './WSEditorCommandArgumentsContent';
 
 
@@ -55,14 +55,6 @@ interface WSEditorCommandContentState {
 
 const commandPrefix = 'az '
 
-
-const SubtitleTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Roboto Condensed', sans-serif",
-    fontSize: 16,
-    fontWeight: 700,
-}))
-
 const ExampleHeaderTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     color: theme.palette.primary.main,
     fontFamily: "'Roboto Condensed', sans-serif",
@@ -93,7 +85,7 @@ const ExampleEditTypography = styled(Typography)<TypographyProps>(({ theme }) =>
 
 const ExampleAccordionSummary = styled((props: AccordionSummaryProps) => (
     <MuiAccordionSummary
-        expandIcon={<ExpandCircleDownIcon fontSize="small" />}
+        expandIcon={<LabelIcon fontSize="small" color="primary" />}
         {...props}
     />
 ))(({ theme }) => ({
@@ -156,7 +148,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         const commandUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + command.names.slice(0, -1).join('/') + '/Leaves/' + command.names[command.names.length - 1];
         const { displayCommandDisplay, displayExampleDisplay, exampleIdx } = this.state;
 
-        const buildExampleAccordion = (example: Example, idx: number) => {
+        const buildExampleView = (example: Example, idx: number) => {
             const buildCommand = (exampleCommand: string, cmdIdx: number) => {
                 return (<Box key={`example-${idx}-command-${cmdIdx}`} sx={{
                     display: "flex",
@@ -181,7 +173,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
             }
             return (
                 <Accordion
-                    variant='outlined'
+                    elevation={0}
                     expanded
                     key={`example-${idx}`}
                     onDoubleClick={() => { this.onExampleDialogDisplay(idx) }}
@@ -196,7 +188,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             flexDirection: "row",
                             alignItems: "center",
                         }}>
-                            <ExampleHeaderTypography sx={{ flexShrink: 0 }} >{example.name}</ExampleHeaderTypography>
+                            <SubtitleTypography sx={{ flexShrink: 0 }} >{example.name}</SubtitleTypography>
                             <Box sx={{ flexGrow: 1 }} />
                             <Button sx={{ flexShrink: 0 }}
                                 onClick={() => { this.onExampleDialogDisplay(idx) }}
@@ -231,29 +223,26 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                         onDoubleClick={this.onCommandDialogDisplay}
                         elevation={3}
                         sx={{
-                            flexGrow: 1, display: 'flex', flexDirection: 'column',
+                            flexGrow: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
                             p: 2
                         }}>
-                        <CardContent
-
-                            sx={{
-                                flex: '1 0 auto',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'stretch',
-                            }}>
+                        <CardContent sx={{
+                            flex: '1 0 auto',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'stretch',
+                        }}>
                             <Box sx={{
                                 mb: 2,
                                 display: 'flex',
                                 flexDirection: 'row',
                                 alignItems: "center"
                             }}>
-                                <Typography
-                                    variant='h6'
-                                    sx={{ flexShrink: 0 }}
-                                >
+                                <CardTitleTypography sx={{ flexShrink: 0 }}>
                                     [ COMMAND ]
-                                </Typography>
+                                </CardTitleTypography>
                                 <Box sx={{ flexGrow: 1 }} />
                                 {stage === "Stable" && <StableTypography
                                     sx={{ flexShrink: 0 }}
@@ -306,34 +295,9 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             mt: 1,
                             p: 2
                         }}>
-                        <CardActions sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "flex-start"
-                        }}>
-                            <SubtitleTypography sx={{ flexShrink: 0 }}>EXAMPLES</SubtitleTypography>
-                            <Box sx={{ flexGrow: 1 }} />
-                            <Button
-                                variant='outlined' size="small" color='info'
-                                onClick={() => this.onExampleDialogDisplay(undefined)}
-                                sx={{ flexShrink: 0 }}
-                            >
-                                <Typography variant='body2'>
-                                    Add
-                                </Typography>
-                            </Button>
-                        </CardActions>
-                        {examples.length > 0 && <CardContent sx={{
-                            flex: '1 0 auto',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'stretch',
-                        }}>
-                            <Box>
-                                {examples.map(buildExampleAccordion)}
-                            </Box>
-                        </CardContent>}
+                        <WSEditorCommandArgumentsContent commandUrl={commandUrl} />
                     </Card>
+
                     <Card
                         elevation={3}
                         sx={{
@@ -343,16 +307,44 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             mt: 1,
                             p: 2
                         }}>
+
+                        <CardContent sx={{
+                            flex: '1 0 auto',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'stretch',
+                        }}>
+                            <Box sx={{
+                                mb: 2,
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: "center"
+                            }}>
+                                <CardTitleTypography sx={{ flexShrink: 0 }}>
+                                    [ EXAMPLE ]
+                                </CardTitleTypography>
+
+                            </Box>
+                            {examples.length > 0 && <Box>
+                                {examples.map(buildExampleView)}
+                            </Box>}
+                        </CardContent>
+
                         <CardActions sx={{
                             display: "flex",
-                            flexDirection: "row",
-                            alignItems: "flex-start"
+                            flexDirection: "row-reverse",
                         }}>
-                            <SubtitleTypography sx={{ flexShrink: 0 }}>ARGUMENTS</SubtitleTypography>
-                            <Box sx={{ flexGrow: 1 }} />
+                            <Button
+                                variant='outlined' size="small" color='info'
+                                onClick={() => this.onExampleDialogDisplay(undefined)}
+                            >
+                                <Typography variant='body2'>
+                                    Add
+                                </Typography>
+                            </Button>
                         </CardActions>
-                        <WSEditorCommandArgumentsContent commandUrl={commandUrl}/>
                     </Card>
+
                 </Box>
                 {displayCommandDisplay && <CommandDialog open={displayCommandDisplay} workspaceUrl={workspaceUrl} command={command} onClose={this.handleCommandDialogClose} />}
                 {displayExampleDisplay && <ExampleDialog open={displayExampleDisplay} workspaceUrl={workspaceUrl} command={command} idx={exampleIdx} onClose={this.handleExampleDialogClose} />}
