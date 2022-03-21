@@ -1,5 +1,15 @@
 import * as React from "react";
-import { Box, Drawer, Toolbar } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Drawer,
+  LinearProgress,
+  Toolbar,
+} from "@mui/material";
 import { useParams } from "react-router";
 import GenerationProfileTab from "./GenerationProfileTab";
 import GenerationCommandTree from "./GenerationCommandTree";
@@ -7,6 +17,7 @@ import axios from "axios";
 import { NodeModel } from "@minoru/react-dnd-treeview";
 import { CheckData } from "../../components/TreeView/types";
 import GenerationModuleEditorToolBar from "./GenerationModuleEditorToolBar";
+import { Alert } from "reactstrap";
 
 type Version = {
   examples: ExampleType;
@@ -98,6 +109,7 @@ interface GenerationModuleEditorState {
   treeData: NodeModel<CheckData>[];
   toBeGenerated: Nodes;
   selectedNodes: NodeModel<CheckData>[];
+  showGenerateDialog: boolean;
 }
 
 class GenerationModuleEditor extends React.Component<
@@ -116,6 +128,7 @@ class GenerationModuleEditor extends React.Component<
       treeData: [],
       toBeGenerated: {},
       selectedNodes: [],
+      showGenerateDialog: false,
     };
   }
 
@@ -162,7 +175,7 @@ class GenerationModuleEditor extends React.Component<
 
   loadLocalCommands = () => {
     axios
-      .get(`/CLI/Az/Main/Modules/${this.state.moduleName}`)
+      .get(`/CLI/Az/${this.state.repoName}/Modules/${this.state.moduleName}`)
       .then((res) => {
         this.setState({ toBeGenerated: res.data["profiles"] }, () => {
           const selectedNodes = this.state.treeData
@@ -342,14 +355,11 @@ class GenerationModuleEditor extends React.Component<
   };
 
   handleGenerate = () => {
-    axios
-      .put(`/CLI/Az/${this.state.repoName}/Modules/${this.state.moduleName}`, {
-        profiles: this.state.toBeGenerated,
-      })
-      .then(() => {})
-      .catch((err) => {
-        console.error(err.response);
-      });
+    this.setState({ showGenerateDialog: true });
+  };
+
+  handleGenerationClose = (generated: boolean) => {
+    this.setState({ showGenerateDialog: false });
   };
 
   handleProfileChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -408,7 +418,7 @@ class GenerationModuleEditor extends React.Component<
   };
 
   render() {
-    const { moduleName } = this.state;
+    const { moduleName, showGenerateDialog } = this.state;
     return (
       <React.Fragment>
         <GenerationModuleEditorToolBar
@@ -450,9 +460,77 @@ class GenerationModuleEditor extends React.Component<
             )}
           </Box>
         </Box>
+        {showGenerateDialog && (
+          <GenerationModuleEditorDialog
+            url={`/CLI/Az/${this.state.repoName}/Modules/${this.state.moduleName}`}
+            data={{ profiles: this.state.toBeGenerated }}
+            open={true}
+            onClose={this.handleGenerationClose}
+          />
+        )}
       </React.Fragment>
     );
   }
+}
+
+function GenerationModuleEditorDialog(props: {
+  url: string;
+  data: any;
+  open: boolean;
+  onClose: (generated: boolean) => void;
+}) {
+  const [updating, setUpdating] = React.useState<boolean>(false);
+  const [invalidText, setInvalidText] = React.useState<string | undefined>(
+    undefined
+  );
+
+  const handleClose = () => {
+    props.onClose(false);
+  };
+
+  const handleGenerate = () => {
+    setUpdating(true);
+    axios
+      .put(props.url, props.data)
+      .then(() => {
+        setUpdating(false);
+        props.onClose(true);
+      })
+      .catch((err) => {
+        console.error(err.response);
+        if (err.resource?.message) {
+          setInvalidText(`ResponseError: ${err.resource!.message!}`);
+        }
+        setUpdating(false);
+      });
+  };
+
+  return (
+    <Dialog disableEscapeKeyDown open={props.open}>
+      <DialogTitle>Generate CLI commands to local disk</DialogTitle>
+      <DialogContent>
+        {invalidText && (
+          <Alert variant="filled" severity="error">
+            {" "}
+            {invalidText}{" "}
+          </Alert>
+        )}
+      </DialogContent>
+      <DialogActions>
+        {updating && (
+          <Box sx={{ width: "100%" }}>
+            <LinearProgress color="info" />
+          </Box>
+        )}
+        {!updating && (
+          <React.Fragment>
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={handleGenerate}>Confirm</Button>
+          </React.Fragment>
+        )}
+      </DialogActions>
+    </Dialog>
+  );
 }
 
 const GenerationModuleEditorWrapper = (props: any) => {
