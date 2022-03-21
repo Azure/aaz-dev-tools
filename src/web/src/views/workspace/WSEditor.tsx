@@ -44,6 +44,7 @@ interface WSEditorState {
     plane: string,
 
     selected: Command | CommandGroup | null,
+    expanded: Set<string>,
 
     commandMap: CommandMap,
     commandGroupMap: CommandGroupMap,
@@ -86,6 +87,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             workspaceUrl: `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}`,
             plane: "",
             selected: null,
+            expanded: new Set<string>(),
             commandMap: {},
             commandGroupMap: {},
             commandTree: [],
@@ -206,13 +208,51 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 selected = commandGroupMap[commandTree[0].id];
             }
 
-            this.setState({
-                plane: res.data.plane,
-                commandTree: commandTree,
-                selected: selected,
-                commandMap: commandMap,
-                commandGroupMap: commandGroupMap,
+            this.setState(preState => {
+                const newExpanded = new Set<string>();
+
+                // clean up removed group Id
+                preState.expanded.forEach((value) => {
+                    if (value in commandGroupMap) {
+                        newExpanded.add(value);
+                    }
+                })
+
+                // expand new groupId by default
+                for (const groupId in commandGroupMap) {
+                    if (!(groupId in preState.commandGroupMap)) {
+                        newExpanded.add(groupId);
+                    }
+                }
+
+                return {
+                    ...preState,
+                    plane: res.data.plane,
+                    commandTree: commandTree,
+                    selected: selected,
+                    commandMap: commandMap,
+                    commandGroupMap: commandGroupMap,
+                    expanded: newExpanded,
+                }
             });
+
+            if (selected) {
+                let expandedId = selected.id;
+                if (expandedId.startsWith('command:')) {
+                    expandedId = expandedId.replace('command:', 'group:').split('/').slice(0, -1).join('/')
+                }
+                let expandedIdParts = expandedId.split('/');
+                this.setState(preState => {
+                    const newExpanded = new Set(preState.expanded);
+                    expandedIdParts.forEach((value, idx) => {
+                        newExpanded.add(expandedIdParts.slice(0, idx+1).join('/'));
+                    })
+                    return {
+                        ...preState,
+                        expanded: newExpanded,
+                    }
+                })
+            }
 
             if (commandTree.length === 0) {
                 this.showSwaggerResourcePicker();
@@ -221,6 +261,8 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             return console.log(err);
         }
     }
+
+
 
     showSwaggerResourcePicker = () => {
         this.setState({ showSwaggerResourcePicker: true })
@@ -279,8 +321,19 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         this.loadWorkspace(command);
     }
 
+    handleCommandTreeToggle = (nodeIds: string[]) => {
+        const newExpanded = new Set(nodeIds);
+        this.setState({
+            expanded: newExpanded,
+        });
+    }
+
     render() {
-        const { showSwaggerResourcePicker, showExportDialog, plane, name, commandTree, selected, workspaceUrl } = this.state;
+        const { showSwaggerResourcePicker, showExportDialog, plane, name, commandTree, selected, workspaceUrl, expanded } = this.state;
+        const expandedIds: string[] = []
+        expanded.forEach((expandId) => {
+            expandedIds.push(expandId);
+        })
         return (
             <React.Fragment>
                 <WSEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onAdd={this.showSwaggerResourcePicker} onGenerate={this.handleGenerate}>
@@ -302,7 +355,9 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                             <WSEditorCommandTree
                                 commandTreeNodes={commandTree}
                                 onSelected={this.handleCommandTreeSelect}
+                                onToggle={this.handleCommandTreeToggle}
                                 selected={selected!.id}
+                                expanded={expandedIds}
                             />
                         }
                     </Drawer>

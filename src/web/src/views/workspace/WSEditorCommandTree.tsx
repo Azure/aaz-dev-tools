@@ -22,7 +22,9 @@ interface CommandTreeNode {
 interface WSEditorCommandTreeProps {
     commandTreeNodes: CommandTreeNode[]
     selected: string
+    expanded: string[]
     onSelected: (nodeId: string) => void
+    onToggle: (nodeIds: string[]) => void
 }
 
 
@@ -34,8 +36,12 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
         }
     }
 
+    onNodeToggle = (event: React.SyntheticEvent, nodeIds: string[]) => {
+        this.props.onToggle(nodeIds);
+    }
+
     render() {
-        const { commandTreeNodes, selected } = this.props;
+        const { commandTreeNodes, selected, expanded } = this.props;
 
         const renderLeaf = (leaf: CommandTreeLeaf) => {
             // const leafId = 'command:' +  leaf.names.join('/');
@@ -61,7 +67,9 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
                 defaultCollapseIcon={<ExpandMoreIcon />}
                 defaultExpandIcon={<ChevronRightIcon />}
                 onNodeSelect={this.onNodeSelected}
+                onNodeToggle={this.onNodeToggle}
                 selected={selected}
+                expanded={expanded}
                 sx={{
                     flexGrow: 1,
                     overflowY: 'auto',
