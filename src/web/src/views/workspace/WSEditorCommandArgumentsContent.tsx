@@ -529,7 +529,7 @@ function ArgumentPropsReviewer(props: {
             >
                 <Box sx={{ flexShrink: 0, ml: 2, p: 1 }} >
                     <ArgGroupTypography id={`argGroup-${idx}-header`}>
-                        {group.name.length > 0 ? group.name : "Default"}
+                        {group.name.length > 0 ? `${group.name} Group` : "Default Group"}
                     </ArgGroupTypography>
                 </Box>
                 <Box sx={{

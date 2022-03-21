@@ -322,16 +322,15 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                                         Delete
                                     </Typography>
                                 </Button>
-                                {/* <Tooltip title='Try in CLI. Developing...'>
-                                    <Button
-                                        variant='outlined' size="small" color='success'
-                                        disabled
-                                    >
-                                        <Typography variant='body2'>
-                                            Try
-                                        </Typography>
-                                    </Button>
-                                </Tooltip> */}
+                                <Button
+                                    variant='outlined' size="small" color='success'
+                                    sx={{ mr: 2 }}
+                                    disabled
+                                >
+                                    <Typography variant='body2'>
+                                        Try
+                                    </Typography>
+                                </Button>
                             </Box>
                         </CardActions>
                     </Card>
@@ -433,9 +432,9 @@ function CommandDeleteDialog(props: {
                     const responseCommands: ResponseCommand[] = response.data
                     responseCommands
                         .map(responseCommand => DecodeResponseCommand(responseCommand))
-                        .map(cmd => {commands.add(cmd.names.join(" "))});
+                        .map(cmd => { commands.add(cmd.names.join(" ")) });
                 });
-                
+
                 const cmdNames: string[] = [];
                 commands.forEach(cmdName => cmdNames.push(cmdName));
                 cmdNames.sort((a, b) => a.localeCompare(b));
@@ -479,7 +478,7 @@ function CommandDeleteDialog(props: {
             <DialogTitle>Delete Commands</DialogTitle>
             <DialogContent dividers={true}>
                 {relatedCommands.map((command, idx) => (
-                <Typography key={`command-${idx}`} variant="body2">{`${commandPrefix}${command}`}</Typography>
+                    <Typography key={`command-${idx}`} variant="body2">{`${commandPrefix}${command}`}</Typography>
                 ))}
             </DialogContent>
             <DialogActions>
