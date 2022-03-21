@@ -42,7 +42,7 @@ const StableTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
 }))
 
 const PreviewTypography = styled(StableTypography)<TypographyProps>(({ theme }) => ({
-    color: '#dba339',
+    color: '#d1b102',
 }))
 
 const ExperimentalTypography = styled(StableTypography)<TypographyProps>(({ theme }) => ({

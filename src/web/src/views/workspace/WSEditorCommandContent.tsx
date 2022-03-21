@@ -30,6 +30,7 @@ interface Command {
         lines?: string[]
     }
     stage: "Stable" | "Preview" | "Experimental"
+    version: string
     examples?: Example[]
     resources: Resource[]
 }
@@ -41,6 +42,7 @@ interface ResponseCommand {
         lines?: string[]
     }
     stage?: "Stable" | "Preview" | "Experimental"
+    version: string,
     examples?: Example[],
     resources: Resource[],
 }
@@ -162,6 +164,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         const longHelp = this.props.command.help?.lines?.join('\n');
         const lines: string[] = this.props.command.help?.lines ?? [];
         const stage = this.props.command.stage;
+        const version = this.props.command.version;
         const examples: Example[] = this.props.command.examples ?? [];
         const commandUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + command.names.slice(0, -1).join('/') + '/Leaves/' + command.names[command.names.length - 1];
         const { displayCommandDialog, displayExampleDialog, displayCommandDeleteDialog, exampleIdx } = this.state;
@@ -265,17 +268,17 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                                 {stage === "Stable" && <StableTypography
                                     sx={{ flexShrink: 0 }}
                                 >
-                                    {stage}
+                                    {`v${version}`}
                                 </StableTypography>}
                                 {stage === "Preview" && <PreviewTypography
                                     sx={{ flexShrink: 0 }}
                                 >
-                                    {stage}
+                                    {`v${version}`}
                                 </PreviewTypography>}
                                 {stage === "Experimental" && <ExperimentalTypography
                                     sx={{ flexShrink: 0 }}
                                 >
-                                    {stage}
+                                    {`v${version}`}
                                 </ExperimentalTypography>}
                             </Box>
 
@@ -319,16 +322,15 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                                         Delete
                                     </Typography>
                                 </Button>
-                                {/* <Tooltip title='Try in CLI. Developing...'>
-                                    <Button
-                                        variant='outlined' size="small" color='success'
-                                        disabled
-                                    >
-                                        <Typography variant='body2'>
-                                            Try
-                                        </Typography>
-                                    </Button>
-                                </Tooltip> */}
+                                <Button
+                                    variant='outlined' size="small" color='success'
+                                    sx={{ mr: 2 }}
+                                    disabled
+                                >
+                                    <Typography variant='body2'>
+                                        Try
+                                    </Typography>
+                                </Button>
                             </Box>
                         </CardActions>
                     </Card>
@@ -430,9 +432,9 @@ function CommandDeleteDialog(props: {
                     const responseCommands: ResponseCommand[] = response.data
                     responseCommands
                         .map(responseCommand => DecodeResponseCommand(responseCommand))
-                        .map(cmd => {commands.add(cmd.names.join(" "))});
+                        .map(cmd => { commands.add(cmd.names.join(" ")) });
                 });
-                
+
                 const cmdNames: string[] = [];
                 commands.forEach(cmdName => cmdNames.push(cmdName));
                 cmdNames.sort((a, b) => a.localeCompare(b));
@@ -476,7 +478,7 @@ function CommandDeleteDialog(props: {
             <DialogTitle>Delete Commands</DialogTitle>
             <DialogContent dividers={true}>
                 {relatedCommands.map((command, idx) => (
-                <Typography key={`command-${idx}`} variant="body2">{`${commandPrefix}${command}`}</Typography>
+                    <Typography key={`command-${idx}`} variant="body2">{`${commandPrefix}${command}`}</Typography>
                 ))}
             </DialogContent>
             <DialogActions>
@@ -602,7 +604,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                 })
             }
         }).catch(err => {
-            console.log(err.response);
+            console.error(err.response);
             if (err.resource?.message) {
                 this.setState({
                     invalidText: `ResponseError: ${err.resource!.message!}`,
@@ -778,7 +780,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
             })
             this.props.onClose(cmd);
         }).catch(err => {
-            console.log(err.response);
+            console.error(err.response);
             if (err.resource?.message) {
                 this.setState({
                     invalidText: `ResponseError: ${err.resource!.message!}`,
@@ -1021,6 +1023,7 @@ const DecodeResponseCommand = (command: ResponseCommand): Command => {
         stage: command.stage ?? "Stable",
         examples: command.examples,
         resources: command.resources,
+        version: command.version,
     }
 }
 export default WSEditorCommandContent;

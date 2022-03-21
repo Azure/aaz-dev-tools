@@ -17,11 +17,9 @@ function WSEditorCommandArgumentsContent(props: {
         axios.get(props.commandUrl)
             .then(res => {
                 const { args, clsDefineMap } = decodeResponse(res.data);
-                console.log(args);
-                console.log(clsDefineMap);
                 setArgs(args);
                 setClsArgDefineMap(clsDefineMap);
-            }).catch(err => console.log(err.response));
+            }).catch(err => console.error(err.response));
     }, [props.commandUrl]);
 
     return (
@@ -531,7 +529,7 @@ function ArgumentPropsReviewer(props: {
             >
                 <Box sx={{ flexShrink: 0, ml: 2, p: 1 }} >
                     <ArgGroupTypography id={`argGroup-${idx}-header`}>
-                        {group.name.length > 0 ? group.name : "Default"}
+                        {group.name.length > 0 ? `${group.name} Group` : "Default Group"}
                     </ArgGroupTypography>
                 </Box>
                 <Box sx={{
@@ -862,7 +860,7 @@ function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsA
             } else if (response.type.startsWith("@")) {
                 argBase["clsName"] = response.type.slice(1);
             } else {
-                console.log(`Unknown type '${response.type}'`)
+                console.error(`Unknown type '${response.type}'`)
                 throw Error(`Unknown type '${response.type}'`)
             }
     }
@@ -944,7 +942,7 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
                     }
                 }
             } else {
-                console.log(`Unknown type '${argBase.type}'`)
+                console.error(`Unknown type '${argBase.type}'`)
                 throw Error(`Unknown type '${argBase.type}'`)
             }
     }
