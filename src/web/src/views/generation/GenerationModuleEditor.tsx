@@ -151,7 +151,7 @@ class GenerationModuleEditor extends React.Component<
 
   loadCommandTree = () => {
     axios
-      .get(`/AAZ/Specs/CommandTree/Nodes/aaz/${this.state.moduleName}`)
+      .get(`/AAZ/Specs/CommandTree/Nodes/aaz`)
       .then((res) => {
         if (!res.data) {
           return;
@@ -252,7 +252,7 @@ class GenerationModuleEditor extends React.Component<
       namePath.unshift(currNode.text);
       currentId = currNode.parent;
     }
-    return namePath;
+    return namePath.slice(1);
   };
 
   getProfileEntry = () => {
