@@ -26,6 +26,7 @@ interface WSEditorSwaggerPickerState {
     versionOptions: string[],
 
     versionResourceIdMap: VersionResourceIdMap,
+    resourceMap: ResourceMap,
     resourceOptions: string[],
 
     existingResources: Set<string>,
@@ -37,10 +38,21 @@ interface WSEditorSwaggerPickerState {
     selectedModule: string | null,
     selectedResourceProvider: string | null,
     selectedVersion: string | null,
+    
+    updateOptions: string[],
+    updateOption: string,
+}
+
+type ResourceVersionOperations = {
+    [Named: string]: string
 }
 
 type ResourceVersion = {
     version: string
+    operations: ResourceVersionOperations
+    file: string
+    id: string
+    path: string
 }
 
 type Resource = {
@@ -52,6 +64,10 @@ type VersionResourceIdMap = {
     [version: string]: string[]
 }
 
+type ResourceMap = {
+    [id: string]: Resource
+}
+
 const MiddlePadding = styled(Box)(({ theme }) => ({
     height: '2vh'
 }));
@@ -59,6 +75,8 @@ const MiddlePadding = styled(Box)(({ theme }) => ({
 const MiddlePadding2 = styled(Box)(({ theme }) => ({
     height: '8vh'
 }));
+
+const UpdateOptions = ["Generic(Get&Put)First", "PatchFirst"];
 
 class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, WSEditorSwaggerPickerState> {
 
@@ -76,16 +94,17 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
             resourceProviderOptionsCommonPrefix: '',
             moduleOptions: [],
             versionOptions: [],
-
             resourceProviderOptions: [],
             selectedResources: new Set(),
             resourceOptions: [],
-
             versionResourceIdMap: {},
-
+            resourceMap: {},
             selectedModule: null,
             selectedResourceProvider: null,
-            selectedVersion: null
+            selectedVersion: null,
+
+            updateOptions: UpdateOptions,
+            updateOption: UpdateOptions[0],
         }
     }
 
@@ -177,8 +196,11 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     // const resourceIdVersionMap: ResourceIdVersionMap = {}
                     const versionResourceIdMap: VersionResourceIdMap = {}
                     const versionOptions: string[] = []
+                    const resourceMap: ResourceMap = {}
                     res.data.forEach((resource: Resource) => {
                         // resource.versions.sort((a, b) =>  a.version.localeCompare(b.version));
+                        resourceMap[resource.id] = resource;
+
                         const resourceVersions = resource.versions.map((v) => v.version)
                         // resourceIdVersionMap[resource.id] = versions;
                         resourceVersions.forEach((v) => {
@@ -197,6 +219,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     this.setState({
                         loading: false,
                         versionResourceIdMap: versionResourceIdMap,
+                        resourceMap: resourceMap,
                         versionOptions: versionOptions,
                     })
                     this.onVersionUpdate(selectVersion);
@@ -217,12 +240,30 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
 
     addSwagger = () => {
 
-        const { selectedResources, selectedVersion, selectedModule, moduleOptionsCommonPrefix } = this.state;
-        const resources: { id: string }[] = [];
+        const { selectedResources, selectedVersion, selectedModule, moduleOptionsCommonPrefix, updateOption, resourceMap } = this.state;
+        const resources: { id: string, options?: {update_by: string}}[] = [];
         selectedResources.forEach((resourceId) => {
-            resources.push({
-                id: resourceId
-            })
+            const res: any = {
+                id: resourceId,
+                options: undefined,
+            }
+
+            if (updateOption === UpdateOptions[1]) {
+                // patch first
+                const resource = resourceMap[resourceId];
+                const operations = resource.versions.find(v => v.version === selectedVersion)?.operations;
+                if (operations) {
+                    for (const opName in operations) {
+                        if (operations[opName].toLowerCase() === "patch") {
+                            res.options = {
+                                update_by: "PatchOnly",
+                            }
+                            break
+                        }
+                    }
+                }
+            }
+            resources.push(res)
         });
 
         const requestBody = {
@@ -284,6 +325,13 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 selectedVersion: version,
                 selectedResources: selectedResources,
             }
+        })
+    }
+
+    onUpdateOptionUpdate = (updateOption: string | null) => {
+
+        this.setState({
+            updateOption: updateOption ?? UpdateOptions[0]
         })
     }
 
@@ -360,11 +408,17 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                             onValueUpdate={this.onVersionUpdate}
                         />
                         <MiddlePadding2 />
+                        <SwaggerItemSelector
+                            name='Update Command Mode'
+                            commonPrefix=''
+                            options={this.state.updateOptions}
+                            value={this.state.updateOption}
+                            onValueUpdate={this.onUpdateOptionUpdate}
+                        />
+                        <MiddlePadding2 />
+
                         <Button
                             variant="contained"
-                            // sx={{
-                            //     width: 250,
-                            // }}
                             onClick={this.handleSubmit}
                             disabled={selectedModule === null || selectedVersion === null || selectedResources.size < 1}
                         >
