@@ -13,7 +13,7 @@ import GenerationPage from './views/generation/GenerationPage';
 import GenerationInstruction from './views/generation/GenerationInstruction';
 import { GenerationModuleEditor } from './views/generation/GenerationModuleEditor';
 import DocumentsPage from './views/documentation/DocumentsPage';
-import DocumentsContent from './views/documentation/DocumentsContent';
+import DocumentsDisplay from './views/documentation/DocumentsDisplay';
 // import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
@@ -37,7 +37,7 @@ ReactDOM.render(
             <Route path=":repoName/:moduleName" element={<GenerationModuleEditor />} />
           </Route>
           <Route path="Documents" element={<DocumentsPage />}>
-            <Route index element={<DocumentsContent/>} />
+            <Route index element={<DocumentsDisplay/>} />
           </Route>
         </Route>
         {/* <Route path="workspace" element={<Workspace />}>

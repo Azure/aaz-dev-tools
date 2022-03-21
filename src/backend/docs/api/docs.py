@@ -16,3 +16,10 @@ def get_all_documents():
             res.append(file_or_folder.replace("\\", '/').replace(docs_path.replace('\\','/'), '.'))
     return jsonify(res)
 
+@bp.route("/<path:file_path>", methods=("GET",))
+def get_document_content(file_path):
+    file_path = ''.join(file_path)
+    docs_path = os.path.abspath(os.path.join(os.path.join(os.path.join(os.path.join(flask.current_app.root_path, os.pardir), os.pardir), os.pardir), 'docs'))
+    markdown_path = os.path.abspath(os.path.join(docs_path, file_path))
+    with open(markdown_path, 'r') as d:
+        return jsonify(d.read())
