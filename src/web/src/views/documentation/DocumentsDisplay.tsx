@@ -71,7 +71,8 @@ export default class DocumentsDisplay extends React.Component<{}, DocumentsDispl
 
         let node: CommandTreeNode = {
             id: !names||(names.length===1 && names[0]==='.') ? "Docs" : names.join('/'),
-            names: !names||(names.length===1 && names[0]==='.') ? ["Docs"] : names
+            names: !names||(names.length===1 && names[0]==='.') ? ["Docs"] : names,
+            canDelete: false
         };
         if (children) {
             node.nodes = Object.keys(children).map(childName => {
