@@ -258,7 +258,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 this.showSwaggerResourcePicker();
             }
         } catch (err) {
-            return console.log(err);
+            return console.error(err);
         }
     }
 

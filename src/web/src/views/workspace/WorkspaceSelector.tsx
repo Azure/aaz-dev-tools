@@ -74,7 +74,7 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
                     options: options
                 })
             })
-            .catch((err) => console.log(err));
+            .catch((err) => console.error(err));
     }
 
     handleDialogSubmit = (event: any) => {
@@ -101,7 +101,7 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
                     this.handleDialogClose();
                 })
                 .catch(error => {
-                    console.log(error);
+                    console.error(error.response);
                 })
         }
     }

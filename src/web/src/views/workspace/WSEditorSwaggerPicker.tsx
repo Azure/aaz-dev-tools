@@ -116,7 +116,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     }
                 });
             })
-            .catch((err) => console.log(err.response));
+            .catch((err) => console.error(err.response));
     }
 
     loadResourceProviders = (moduleUrl: string | null) => {
@@ -131,7 +131,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     });
                     this.onResourceProviderUpdate(selectedResourceProvider);
                 })
-                .catch((err) => console.log(err.response.message));
+                .catch((err) => console.error(err.response.message));
         } else {
             this.setState({
                 resourceProviderOptions: [],
@@ -143,7 +143,6 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     loadWorkspaceResources = () => {
         return axios.get(`/AAZ/Editor/Workspaces/${this.props.workspaceName}/CommandTree/Nodes/aaz/Resources`)
             .then(res => {
-                console.log(res);
                 const existingResources = new Set<string>();
                 // let preModuleName: string | null = null;
                 // let preResourceProvider: string | null = null;
@@ -165,7 +164,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     existingResources: existingResources,
                 })
             })
-            .catch((err) => console.log(err.response));
+            .catch((err) => console.error(err.response));
     }
 
     loadResources = (resourceProviderUrl: string | null) => {
@@ -203,7 +202,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     this.onVersionUpdate(selectVersion);
                 })
                 .catch((err) => {
-                    console.log(err.response);
+                    console.error(err.response);
                     this.setState({
                         loading: false,
                     });
@@ -243,7 +242,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 });
                 this.props.onClose(true);
             })
-            .catch((err) => console.log(err.response));
+            .catch((err) => console.error(err.response));
     }
 
     onModuleSelectorUpdate = (moduleValueUrl: string | null) => {
@@ -297,7 +296,6 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 } else if (!preState.existingResources.has(resourceId)) {
                     selectedResources.add(resourceId);
                 }
-                console.log(selectedResources);
                 return {
                     ...preState,
                     selectedResources: selectedResources,

@@ -605,7 +605,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                 })
             }
         }).catch(err => {
-            console.log(err.response);
+            console.error(err.response);
             if (err.resource?.message) {
                 this.setState({
                     invalidText: `ResponseError: ${err.resource!.message!}`,
@@ -781,7 +781,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
             })
             this.props.onClose(cmd);
         }).catch(err => {
-            console.log(err.response);
+            console.error(err.response);
             if (err.resource?.message) {
                 this.setState({
                     invalidText: `ResponseError: ${err.resource!.message!}`,
