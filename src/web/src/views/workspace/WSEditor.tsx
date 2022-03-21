@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Typography, Box, Dialog, Slide, Drawer, Toolbar } from '@mui/material';
+import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useParams } from 'react-router';
 import axios from 'axios';
@@ -9,6 +9,7 @@ import WSEditorToolBar from './WSEditorToolBar';
 import WSEditorCommandTree, { CommandTreeLeaf, CommandTreeNode } from './WSEditorCommandTree';
 import WSEditorCommandGroupContent, { CommandGroup, DecodeResponseCommandGroup, ResponseCommandGroup, ResponseCommandGroups } from './WSEditorCommandGroupContent';
 import WSEditorCommandContent, { Command, DecodeResponseCommand, ResponseCommand } from './WSEditorCommandContent';
+import { Alert } from 'reactstrap';
 
 
 const TopPadding = styled(Box)(({ theme }) => ({
@@ -43,12 +44,14 @@ interface WSEditorState {
     plane: string,
 
     selected: Command | CommandGroup | null,
+    expanded: Set<string>,
 
     commandMap: CommandMap,
     commandGroupMap: CommandGroupMap,
     commandTree: CommandTreeNode[],
 
     showSwaggerResourcePicker: boolean
+    showExportDialog: boolean
 }
 
 const swaggerResourcePickerTransition = React.forwardRef(function swaggerResourcePickerTransition(
@@ -84,10 +87,12 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             workspaceUrl: `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}`,
             plane: "",
             selected: null,
+            expanded: new Set<string>(),
             commandMap: {},
             commandGroupMap: {},
             commandTree: [],
             showSwaggerResourcePicker: false,
+            showExportDialog: false,
         }
     }
 
@@ -96,7 +101,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 
     loadWorkspace = async (preSelected?: CommandGroup | Command | null) => {
-        const {workspaceUrl} = this.state
+        const { workspaceUrl } = this.state
         if (preSelected === undefined) {
             preSelected = this.state.selected;
         }
@@ -123,6 +128,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 const node: CommandTreeNode = {
                     id: group.id,
                     names: [...group.names],
+                    canDelete: group.canDelete,
                 };
 
                 if (typeof commandGroup_1.commands === 'object' && commandGroup_1.commands !== null) {
@@ -133,6 +139,9 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                         node['leaves'].push(subLeave);
                     }
                     node['leaves'].sort((a, b) => a.id.localeCompare(b.id));
+                    if (node['leaves'].length > 0) {
+                        node.canDelete = false;
+                    }
                 }
 
                 if (typeof commandGroup_1.commandGroups === 'object' && commandGroup_1.commandGroups !== null) {
@@ -140,9 +149,17 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                     for (const name_1 in commandGroup_1.commandGroups) {
                         const subNode = buildCommandGroup(commandGroup_1.commandGroups[name_1]);
                         node['nodes'].push(subNode);
+                        if (!subNode.canDelete) {
+                            node.canDelete = false;
+                        }
                     }
                     node['nodes'].sort((a_1, b_1) => a_1.id.localeCompare(b_1.id));
                 }
+
+                if ((node['leaves']?.length ?? 0) > 1) {
+                    node.canDelete = false
+                }
+                group.canDelete = node.canDelete;
                 return node;
             };
 
@@ -191,39 +208,89 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 selected = commandGroupMap[commandTree[0].id];
             }
 
-            this.setState({
-                plane: res.data.plane,
-                commandTree: commandTree,
-                selected: selected,
-                commandMap: commandMap,
-                commandGroupMap: commandGroupMap,
+            this.setState(preState => {
+                const newExpanded = new Set<string>();
+
+                // clean up removed group Id
+                preState.expanded.forEach((value) => {
+                    if (value in commandGroupMap) {
+                        newExpanded.add(value);
+                    }
+                })
+
+                // expand new groupId by default
+                for (const groupId in commandGroupMap) {
+                    if (!(groupId in preState.commandGroupMap)) {
+                        newExpanded.add(groupId);
+                    }
+                }
+
+                return {
+                    ...preState,
+                    plane: res.data.plane,
+                    commandTree: commandTree,
+                    selected: selected,
+                    commandMap: commandMap,
+                    commandGroupMap: commandGroupMap,
+                    expanded: newExpanded,
+                }
             });
+
+            if (selected) {
+                let expandedId = selected.id;
+                if (expandedId.startsWith('command:')) {
+                    expandedId = expandedId.replace('command:', 'group:').split('/').slice(0, -1).join('/')
+                }
+                let expandedIdParts = expandedId.split('/');
+                this.setState(preState => {
+                    const newExpanded = new Set(preState.expanded);
+                    expandedIdParts.forEach((value, idx) => {
+                        newExpanded.add(expandedIdParts.slice(0, idx+1).join('/'));
+                    })
+                    return {
+                        ...preState,
+                        expanded: newExpanded,
+                    }
+                })
+            }
 
             if (commandTree.length === 0) {
                 this.showSwaggerResourcePicker();
             }
         } catch (err) {
-            return console.log(err);
+            return console.error(err);
         }
     }
+
+
 
     showSwaggerResourcePicker = () => {
         this.setState({ showSwaggerResourcePicker: true })
     }
 
-    handleSwaggerResourcePickerClose = () => {
+    handleSwaggerResourcePickerClose = (updated: boolean) => {
+        if (updated) {
+            this.loadWorkspace();
+        }
         this.setState({
             showSwaggerResourcePicker: false
         })
     }
-
 
     handleBackToHomepage = () => {
         window.location.href = `/?#/workspace`
     }
 
     handleGenerate = () => {
+        this.setState({
+            showExportDialog: true
+        })
+    }
 
+    handleGenerationClose = (exported: boolean) => {
+        this.setState({
+            showExportDialog: false
+        })
     }
 
     handleCommandTreeSelect = (nodeId: string) => {
@@ -248,33 +315,25 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
 
     handleCommandGroupUpdate = (commandGroup: CommandGroup | null) => {
         this.loadWorkspace(commandGroup);
-        // if (commandGroup === null) {
-        //     // commandGroup is removed
-        // } else {
-        //     const {commandGroupMap, selected} = this.state;
-        //     if (!selected || commandGroup.id != selected.id) {
-        //         this.loadWorkspace(commandGroup);
-        //     } else {
-        //         commandGroupMap[commandGroup.id] = commandGroup 
-        //         this.setState(preState => {
-        //             const commandGroupMap = {
-        //                 ...preState.commandGroupMap,
-        //             };
-        //             commandGroupMap[commandGroup.id] = commandGroup
-        //             return {
-        //                 ...preState,
-        //                 commandGroupMap: commandGroupMap
-        //             }
-        //         })
-        //         this.setState({
-        //             selected: commandGroup
-        //         })
-        //     }
-        // }
+    }
+
+    handleCommandUpdate = (command: Command | null) => {
+        this.loadWorkspace(command);
+    }
+
+    handleCommandTreeToggle = (nodeIds: string[]) => {
+        const newExpanded = new Set(nodeIds);
+        this.setState({
+            expanded: newExpanded,
+        });
     }
 
     render() {
-        const { showSwaggerResourcePicker, plane, name, commandTree, selected, workspaceUrl } = this.state;
+        const { showSwaggerResourcePicker, showExportDialog, plane, name, commandTree, selected, workspaceUrl, expanded } = this.state;
+        const expandedIds: string[] = []
+        expanded.forEach((expandId) => {
+            expandedIds.push(expandId);
+        })
         return (
             <React.Fragment>
                 <WSEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onAdd={this.showSwaggerResourcePicker} onGenerate={this.handleGenerate}>
@@ -282,7 +341,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
 
                 </WSEditorToolBar>
 
-                <Box sx={{display: 'flex'}}>
+                <Box sx={{ display: 'flex' }}>
                     <Drawer
                         variant="permanent"
                         sx={{
@@ -296,7 +355,9 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                             <WSEditorCommandTree
                                 commandTreeNodes={commandTree}
                                 onSelected={this.handleCommandTreeSelect}
+                                onToggle={this.handleCommandTreeToggle}
                                 selected={selected!.id}
+                                expanded={expandedIds}
                             />
                         }
                     </Drawer>
@@ -305,15 +366,18 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                         flexGrow: 1,
                         p: 1,
                     }}>
-                        <Toolbar sx={{ flexShrink: 0 }}/>
+                        <Toolbar sx={{ flexShrink: 0 }} />
                         {selected != null && selected.id.startsWith('group:') &&
-                            <WSEditorCommandGroupContent 
-                                workspaceUrl={workspaceUrl} commandGroup={selected} 
+                            <WSEditorCommandGroupContent
+                                workspaceUrl={workspaceUrl} commandGroup={(selected as CommandGroup)}
                                 onUpdateCommandGroup={this.handleCommandGroupUpdate}
-                                />
+                            />
                         }
                         {selected != null && selected.id.startsWith('command:') &&
-                            <WSEditorCommandContent workspaceUrl={workspaceUrl} command={selected} />
+                            <WSEditorCommandContent
+                                workspaceUrl={workspaceUrl} command={(selected as Command)}
+                                onUpdateCommand={this.handleCommandUpdate}
+                            />
                         }
                     </Box>
                 </Box>
@@ -326,11 +390,63 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 >
                     <WSEditorSwaggerPicker plane={plane} workspaceName={name} onClose={this.handleSwaggerResourcePickerClose} />
                 </Dialog>
-
+                {showExportDialog && <WSEditorExportDialog workspaceUrl={workspaceUrl} open={showExportDialog} onClose={this.handleGenerationClose} />}
             </React.Fragment>
-
         )
     }
+}
+
+function WSEditorExportDialog(props: {
+    workspaceUrl: string,
+    open: boolean,
+    onClose: (exported: boolean) => void,
+}) {
+    const [updating, setUpdating] = React.useState<boolean>(false);
+    const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
+
+    const handleClose = () => {
+        props.onClose(false);
+    }
+
+    const handleExport = () => {
+        const url = `${props.workspaceUrl}/Generate`;
+        setUpdating(true);
+
+        axios.post(url)
+            .then(res => {
+                setUpdating(false);
+                props.onClose(true);
+            }).catch(err => {
+                console.error(err.response)
+                if (err.resource?.message) {
+                    setInvalidText(`ResponseError: ${err.resource!.message!}`);
+                }
+                setUpdating(false);
+            })
+    }
+
+    return (
+        <Dialog
+            disableEscapeKeyDown
+            open={props.open}
+        >
+            <DialogTitle>Export workspace command models to AAZ Repo</DialogTitle>
+            <DialogContent>
+                {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+            </DialogContent>
+            <DialogActions>
+                {updating &&
+                    <Box sx={{ width: '100%' }}>
+                        <LinearProgress color='info' />
+                    </Box>
+                }
+                {!updating && <React.Fragment>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleExport}>Confirm</Button>
+                </React.Fragment>}
+            </DialogActions>
+        </Dialog>
+    )
 }
 
 const WSEditorWrapper = (props: any) => {

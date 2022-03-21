@@ -199,7 +199,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
                 <Dialog open={openDialog} onClose={this.handleDialogClose}>
                     <Box component='form' onSubmit={this.handleDialogSubmit}>
                         <DialogTitle>
-                            {'Create module in Azure Cli' + repo === 'Extension' ? ' Extension' : ''}
+                            {'Create module in Azure CLI' + repo === 'Extension' ? ' Extension' : ''}
                         </DialogTitle>
                         <DialogContent>
                             <TextField
