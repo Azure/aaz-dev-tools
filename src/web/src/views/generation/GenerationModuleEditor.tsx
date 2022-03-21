@@ -157,9 +157,9 @@ class GenerationModuleEditor extends React.Component<
           return;
         }
         let combinedData: CommandGroups = {};
-        const moduleName = this.state.moduleName;
+        const moduleName = "az";
         combinedData[moduleName] = res.data;
-        combinedData[moduleName]["names"] = [moduleName];
+        combinedData[moduleName]["names"] = ["az"];
 
         let depth = 0;
         this.parseCommandTree(depth, 0, combinedData).then(() => {
