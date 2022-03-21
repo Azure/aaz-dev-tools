@@ -30,6 +30,7 @@ interface Command {
         lines?: string[]
     }
     stage: "Stable" | "Preview" | "Experimental"
+    version: string
     examples?: Example[]
     resources: Resource[]
 }
@@ -41,6 +42,7 @@ interface ResponseCommand {
         lines?: string[]
     }
     stage?: "Stable" | "Preview" | "Experimental"
+    version: string,
     examples?: Example[],
     resources: Resource[],
 }
@@ -162,6 +164,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         const longHelp = this.props.command.help?.lines?.join('\n');
         const lines: string[] = this.props.command.help?.lines ?? [];
         const stage = this.props.command.stage;
+        const version = this.props.command.version;
         const examples: Example[] = this.props.command.examples ?? [];
         const commandUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + command.names.slice(0, -1).join('/') + '/Leaves/' + command.names[command.names.length - 1];
         const { displayCommandDialog, displayExampleDialog, displayCommandDeleteDialog, exampleIdx } = this.state;
@@ -265,17 +268,17 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                                 {stage === "Stable" && <StableTypography
                                     sx={{ flexShrink: 0 }}
                                 >
-                                    {stage}
+                                    {`v${version}`}
                                 </StableTypography>}
                                 {stage === "Preview" && <PreviewTypography
                                     sx={{ flexShrink: 0 }}
                                 >
-                                    {stage}
+                                    {`v${version}`}
                                 </PreviewTypography>}
                                 {stage === "Experimental" && <ExperimentalTypography
                                     sx={{ flexShrink: 0 }}
                                 >
-                                    {stage}
+                                    {`v${version}`}
                                 </ExperimentalTypography>}
                             </Box>
 
@@ -1021,6 +1024,7 @@ const DecodeResponseCommand = (command: ResponseCommand): Command => {
         stage: command.stage ?? "Stable",
         examples: command.examples,
         resources: command.resources,
+        version: command.version,
     }
 }
 export default WSEditorCommandContent;

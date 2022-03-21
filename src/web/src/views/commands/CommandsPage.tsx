@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Typography } from '@mui/material';
 import withRoot from '../../withRoot';
 import { AppAppBar } from '../../components/AppAppBar';
 
