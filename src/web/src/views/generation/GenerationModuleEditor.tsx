@@ -138,7 +138,7 @@ class GenerationModuleEditor extends React.Component<
 
   loadCommandTree = () => {
     axios
-      .get(`/AAZ/Specs/CommandTree/Nodes/aaz`)
+      .get(`/AAZ/Specs/CommandTree/Nodes/aaz/${this.state.moduleName}`)
       .then((res) => {
         if (!res.data) {
           return;
