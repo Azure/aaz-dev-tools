@@ -1,0 +1,8 @@
+nav:
+  - 'Welcome': readme.md
+  - 'Main Concepts':
+      - 'Atomic Azure CLI Command': concepts/atomic_azure_cli_command.md
+      - 'Workflow': concepts/workflow.md
+      - 'Command Model': concepts/command_model.md
+  - 'FAQ':
+      - 'autorest vs aazdev': faq/autorest_vs_aazdev.md

@@ -56,7 +56,6 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
         axios.get("/CLI/Az/" + this.props.repo + "/Modules")
             .then((res) => {
                 let options = res.data.map((option: any) => {
-                    console.log(option)
                     return {
                         name: option.name,
                         folder: option.folder,
@@ -67,7 +66,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
                     options: options
                 })
             })
-            .catch((err) => console.log(err));
+            .catch((err) => console.error(err.response));
     }
 
     handleDialogSubmit = (event: any) => {
@@ -91,7 +90,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
                     this.handleDialogClose();
                 })
                 .catch(error => {
-                    console.log(error);
+                    console.error(error.response);
                 })
         }
     }
