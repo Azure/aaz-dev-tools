@@ -64,19 +64,6 @@ const swaggerResourcePickerTransition = React.forwardRef(function swaggerResourc
 
 const drawerWidth = 300;
 
-const ContentContainer = styled(Box)(({ theme }) => ({
-    color: theme.palette.common.white,
-    position: 'absolute',
-    left: '6vh',
-    right: '6vh',
-    top: 64,
-    bottom: 0,
-    display: 'flex',
-    alignItems: 'stretch',
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-}));
-
 
 class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
 
