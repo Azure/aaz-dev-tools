@@ -19,11 +19,9 @@ def get_document(doc_id):
     page = manager.get_page(doc_id)
     if not page:
         raise exceptions.ResourceNotFind(f"Page not find: '{doc_id}'")
-    content, mimetype = manager.load_page_content(page)
-    if content is not None:
-        resp = make_response(content)
-        resp.mimetype = mimetype
-        return resp
+    file = manager.load_page_content(page)
+    if file is not None:
+        return file
     else:
         return "", 204
 
@@ -32,6 +30,10 @@ def get_document(doc_id):
 def get_document_content(file_path):
     manager = DocsManager()
     page = manager.find_page_by_file(file_path)
-    if not page:
-        raise exceptions.ResourceNotFind(f"Page not find: '{file_path}'")
-    return redirect(f"/?#/Documents/{page['id']}")
+    if page:
+        return redirect(f"/?#/Documents/{page['id']}")
+    file = manager.load_material(file_path)
+    if file is not None:
+        return file
+    else:
+        raise exceptions.ResourceNotFind(f"File not find: '{file_path}'")

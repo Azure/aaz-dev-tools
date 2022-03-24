@@ -1,6 +1,8 @@
 import os
+import mimetypes
 import yaml
 from utils import exceptions
+from flask import send_file
 
 
 class DocsManager:
@@ -65,13 +67,25 @@ class DocsManager:
 
     def load_page_content(self, page):
         if 'file' not in page:
-            return None, None
+            return None
         doc_path = os.path.join(self.docs_folder, page['file'])
-        with open(doc_path, 'r') as f:
-            return f.read(), "text/markdown"
+        return send_file(
+            doc_path,
+            mimetype="text/markdown"
+        )
 
     def find_page_by_file(self, file):
         for doc_id, page in self._page_map.items():
             if 'file' in page and file == page['file']:
                 return page
         return None
+
+    def load_material(self, file):
+        m_path = os.path.join(self.docs_folder, file)
+        if not os.path.exists(m_path) or not os.path.isfile(m_path):
+            return None
+        else:
+            return send_file(
+                m_path,
+                mimetype=mimetypes.guess_type(m_path)[0]
+            )
