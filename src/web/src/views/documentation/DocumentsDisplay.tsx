@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box,  Drawer, Toolbar, Container } from '@mui/material';
+import { Box, Drawer, Toolbar, Container } from '@mui/material';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown'
 import gfm from 'remark-gfm'
@@ -18,15 +18,7 @@ function DocumentsDisplay(props: {
     const [selected, setSelected] = React.useState<string | undefined>(undefined);
     const [documentTree, setDocumentTree] = React.useState<DocumentTreeNode[]>([]);
     const [markDownContent, setMarkDownContent] = React.useState<string | undefined>(undefined);
-
-    const loadDocumentIndex = () => {
-        axios.get('/Docs/Index')
-            .then(res => {
-                const pages: ResponseDocumentTreeNode[] = res.data;
-                const documentTree: DocumentTreeNode[] = pages.map(e => DecodeResponseDocumentTreeNode(e));
-                setDocumentTree(documentTree);
-            }).catch(err => console.error(err.response));
-    }
+    const [expanded, setExpanded] = React.useState<string[]>([]);
 
     const loadDocument = (nodeId: string) => {
         axios.get(`/Docs/Index/${nodeId}`)
@@ -50,8 +42,36 @@ function DocumentsDisplay(props: {
         }
     }, [props.params.docId])
 
+    
+    const loadDocumentIndex = async () => {
+        try {
+            const res = await axios.get('/Docs/Index');
+            const pages: ResponseDocumentTreeNode[] = res.data;
+            const dt: DocumentTreeNode[] = pages.map(e => DecodeResponseDocumentTreeNode(e));
+            return dt
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
     React.useEffect(() => {
-        loadDocumentIndex();
+        loadDocumentIndex().then((dt) => {
+            if (dt) {
+                const expandedIds: string[] = [];
+                const iterNode = (node: DocumentTreeNode) => {
+                    if (node.nodes) {
+                        expandedIds.push(node.id);
+                        node.nodes.forEach(subNode => iterNode(subNode));
+                    }
+                }
+                dt.forEach(subNode => iterNode(subNode));
+                setDocumentTree(dt);
+                setExpanded(expandedIds);
+                if (!props.params.docId && dt.length > 0) {
+                    handleTreeSelect(dt[0].id);
+                }
+            }
+        })
     }, [])
 
     return (
@@ -71,6 +91,7 @@ function DocumentsDisplay(props: {
                         nodes={documentTree}
                         selected={selected}
                         onSelected={handleTreeSelect}
+                        expanded={expanded}
                     />}
                 </Drawer>
 

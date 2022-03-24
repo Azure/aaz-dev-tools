@@ -21,6 +21,7 @@ interface ResponseDocumentTreeNode {
 
 interface DocumentsTreeProps {
     nodes: DocumentTreeNode[]
+    expanded: string[]
     selected: string
     onSelected: (docId: string) => void
 }
@@ -33,6 +34,7 @@ class DocumentsTree extends React.Component<DocumentsTreeProps> {
     }
 
     render() {
+
         const renderNode = (node: DocumentTreeNode) => {
             const title = node.title;
             return (
@@ -47,6 +49,7 @@ class DocumentsTree extends React.Component<DocumentsTreeProps> {
             defaultExpandIcon={<ChevronRightIcon />}
             onNodeSelect={this.onNodeSelected}
             selected={this.props.selected}
+            expanded={this.props.expanded}
             sx={{
                 flexGrow: 1,
                 overflowY: 'auto',
