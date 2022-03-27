@@ -1,3 +1,0 @@
-# Atomic Azure Cli Command
-
-
