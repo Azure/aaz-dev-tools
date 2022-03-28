@@ -2,7 +2,6 @@ import { BorderColor } from '@mui/icons-material';
 import { AppBar, Button, Container, IconButton, styled, Theme, Toolbar, Typography, Tooltip } from '@mui/material';
 import { borderBottom, Box } from '@mui/system';
 import HomeIcon from '@mui/icons-material/Home';
-import AddIcon from '@mui/icons-material/Add';
 
 import * as React from 'react';
 
@@ -10,7 +9,6 @@ import * as React from 'react';
 interface WSEditorToolBarProps {
     workspaceName: string
     onHomePage: () => void
-    onAdd: () => void
     onGenerate: () => void
 }
 
@@ -22,7 +20,7 @@ const MiddlePadding = styled(Box)(({ theme }) => ({
 class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
 
     render() {
-        const { workspaceName, onHomePage, onAdd, onGenerate } = this.props;
+        const { workspaceName, onHomePage, onGenerate } = this.props;
         return (
             <React.Fragment>
                 <AppBar sx={{
@@ -63,16 +61,7 @@ class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
 
                         <Box sx={{ flexGrow: 1 }} />
                         <Box sx={{ flexShrink: 0 }} >
-                            <Tooltip title='Add from Swagger'>
-                                <IconButton
-                                    color='inherit'
-                                    onClick={onAdd}
-                                    aria-label='add'
-                                    sx={{ mr: 10, flexShrink: 0 }}
-                                >
-                                    <AddIcon sx={{ mr: 2 }} />
-                                </IconButton>
-                            </Tooltip>
+                       
                             <Tooltip title='Export Command Models'>
                                 <Button
                                     variant="outlined"

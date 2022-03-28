@@ -13,6 +13,11 @@ const rawTheme = createTheme({
             main: '#ff3366',
             dark: '#e62958',
         },
+        info: {
+            light: '#cccfff',
+            main: '#5d64cf',
+            dark: '#464c99',
+        },
         warning: {
             main: '#ffc071',
             dark: '#ffb25e',

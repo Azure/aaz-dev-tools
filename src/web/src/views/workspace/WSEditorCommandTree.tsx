@@ -3,6 +3,9 @@ import TreeView from '@mui/lab/TreeView';
 import TreeItem from '@mui/lab/TreeItem';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { Box, IconButton, Tooltip, Typography, TypographyProps } from '@mui/material';
+import { styled } from '@mui/system';
+import AddIcon from '@mui/icons-material/Add';
 
 
 interface CommandTreeLeaf {
@@ -25,7 +28,16 @@ interface WSEditorCommandTreeProps {
     expanded: string[]
     onSelected: (nodeId: string) => void
     onToggle: (nodeIds: string[]) => void
+    onAdd: () => void
 }
+
+
+const HeaderTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: theme.palette.primary.main,
+    fontFamily: "'Work Sans', sans-serif",
+    fontSize: 16,
+    fontWeight: 600,
+}))
 
 
 class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
@@ -41,7 +53,7 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
     }
 
     render() {
-        const { commandTreeNodes, selected, expanded } = this.props;
+        const { commandTreeNodes, selected, onAdd, expanded } = this.props;
 
         const renderLeaf = (leaf: CommandTreeLeaf) => {
             // const leafId = 'command:' +  leaf.names.join('/');
@@ -63,21 +75,44 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
         }
 
         return (
-            <TreeView
-                defaultCollapseIcon={<ExpandMoreIcon />}
-                defaultExpandIcon={<ChevronRightIcon />}
-                onNodeSelect={this.onNodeSelected}
-                onNodeToggle={this.onNodeToggle}
-                selected={selected}
-                expanded={expanded}
-                sx={{
-                    flexGrow: 1,
-                    overflowY: 'auto',
-                    p: 3
-                }}
-            >
-                {commandTreeNodes.map((node) => renderNode(node))}
-            </TreeView>
+            <React.Fragment>
+                <Box sx={{
+                    mt: 2, ml: 4, mr: 2,
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                }}>
+                    <HeaderTypography>Command Tree</HeaderTypography>
+                    <Box sx={{flexGrow: 1}}/>
+                    <Tooltip title='Add from Swagger'>
+                        <IconButton
+                            color='info'
+                            onClick={onAdd}
+                            aria-label='add'
+                        >
+                            <AddIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+                <TreeView
+                    defaultCollapseIcon={<ExpandMoreIcon />}
+                    defaultExpandIcon={<ChevronRightIcon />}
+                    onNodeSelect={this.onNodeSelected}
+                    onNodeToggle={this.onNodeToggle}
+                    selected={selected}
+                    expanded={expanded}
+                    sx={{
+                        flexGrow: 1,
+                        overflowY: 'auto',
+                        mt: 1,
+                        ml: 3,
+                        mr: 3,
+                    }}
+                >
+                    {commandTreeNodes.map((node) => renderNode(node))}
+                </TreeView>
+            </React.Fragment>
         )
     }
 

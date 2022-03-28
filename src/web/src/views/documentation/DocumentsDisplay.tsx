@@ -101,18 +101,22 @@ function DocumentsDisplay(props: {
                     flexGrow: 1,
                 }}>
                     <Toolbar sx={{ flexShrink: 0 }} />
-                    <Box sx={{ pt: 2 }}>
+                    <Box sx={{ pt: 4, pb: 20 }}>
                         {markDownContent && <ReactMarkdown
                             children={markDownContent}
                             remarkPlugins={[remarkGfm]}
                             components={{
                                 p: (props) => {
-                                    return (<Box sx={{ mt: 2}}>
+                                    return (<Box sx={{ mt: 2 }}>
                                         <PComponent>{props.children}</PComponent>
                                     </Box>)
                                 },
                                 h1: (props: React.PropsWithChildren<HeadingProps>) => {
-                                    return (<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    return (<Box sx={{
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        mt: 2,
+                                        mb: 2,
+                                    }}>
                                         <H1Component>{props.children}</H1Component>
                                     </Box>)
                                 },
@@ -154,21 +158,19 @@ function DocumentsDisplay(props: {
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
-                                            p: 2,
-                                            ml: 2
+                                            mt: 2, mb: 2, ml: 2, p: 2,
                                         }}>
-                                            <img alt={props.alt} src={props.src} title={props.title} style={{ maxWidth: "90%" }} />
+                                            <img alt={props.alt} src={props.src} title={props.title} style={{ maxWidth: "95%" }} />
                                         </Box>
                                     )
                                 },
                                 table: (props) => {
                                     return (
-                                        <Box sx={{display: "flex", alignItems: "center", justifyContent: "center", p: 2}}>
+                                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}>
                                             <TableContainer component={Card} variant='outlined'>
                                                 <Table sx={{ minWidth: 400 }}>{props.children}</Table>
                                             </TableContainer>
                                         </Box>
-
                                     )
                                 },
                                 thead: (props) => {
@@ -200,7 +202,7 @@ function DocumentsDisplay(props: {
 const H1Component = styled(Typography)<TypographyProps>(({ theme }) => ({
     color: theme.palette.primary.main,
     fontFamily: "'Work Sans', sans-serif",
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 600,
 }))
 

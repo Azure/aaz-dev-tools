@@ -36,7 +36,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                                 theme.typography.fontWeightLight
                             }
                         >
-                            {'HomePage'}
+                            {'Home'}
                         </Link>
                         <Box sx={{ p: 4}}/>
                         <Link
@@ -52,7 +52,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                         >
                             {'Workspace'}
                         </Link>
-                        <Box sx={{ p: 4}}/>
+                        {/* <Box sx={{ p: 4}}/>
                         <Link
                             variant="h6"
                             underline="none"
@@ -65,7 +65,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                             }
                         >
                             {'Commands'}
-                        </Link>
+                        </Link> */}
                         <Box sx={{ p: 4}}/>
                         <Link
                             variant="h6"
@@ -78,7 +78,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                                 theme.typography.fontWeightLight
                             }
                         >
-                            {'Generation'}
+                            {'CLI'}
                         </Link>
                         </Box>
                         

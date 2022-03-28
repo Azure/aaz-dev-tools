@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Typography, Box, AppBar, Toolbar, IconButton, Button, Container, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText, Paper } from '@mui/material';
+import { Typography, Box, AppBar, Toolbar, IconButton, Button, Container, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText, Paper, RadioGroup, InputLabel, FormControlLabel, Radio } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import EditorPageLayout from '../../components/EditorPageLayout';
@@ -38,7 +38,7 @@ interface WSEditorSwaggerPickerState {
     selectedModule: string | null,
     selectedResourceProvider: string | null,
     selectedVersion: string | null,
-    
+
     updateOptions: string[],
     updateOption: string,
 }
@@ -76,7 +76,7 @@ const MiddlePadding2 = styled(Box)(({ theme }) => ({
     height: '8vh'
 }));
 
-const UpdateOptions = ["Generic(Get&Put)First", "PatchFirst"];
+const UpdateOptions = ["Generic(Get&Put) First", "Patch First"];
 
 class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, WSEditorSwaggerPickerState> {
 
@@ -241,7 +241,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     addSwagger = () => {
 
         const { selectedResources, selectedVersion, selectedModule, moduleOptionsCommonPrefix, updateOption, resourceMap } = this.state;
-        const resources: { id: string, options?: {update_by: string}}[] = [];
+        const resources: { id: string, options?: { update_by: string } }[] = [];
         selectedResources.forEach((resourceId) => {
             const res: any = {
                 id: resourceId,
@@ -369,7 +369,6 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                         <Typography sx={{ ml: 2, flex: 1, flexDirection: "row", display: "flex", justifyContent: "center", alignContent: "center" }} variant='h5' component='div'>
                             Add Swagger Resources
                         </Typography>
-                        
                     </Toolbar>
                 </AppBar>
                 <EditorPageLayout
@@ -495,9 +494,6 @@ class SwaggerItemSelector extends React.Component<SwaggerItemsSelectorProps> {
             <Autocomplete
                 id={name}
                 value={value}
-                // sx={{
-                //     width: 250,
-                // }}
                 options={options}
                 onChange={(event, newValue: any) => {
                     this.props.onValueUpdate(newValue);
@@ -522,6 +518,7 @@ class SwaggerItemSelector extends React.Component<SwaggerItemsSelectorProps> {
                         size='small'
                         // variant='filled'
                         label={name}
+                        required
                     />
                 )}
             />
