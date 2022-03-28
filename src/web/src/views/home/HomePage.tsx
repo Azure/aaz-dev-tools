@@ -30,10 +30,6 @@ const StepContentTypography = styled(Typography)<TypographyProps>(({ theme }) =>
 function HomePage() {
     const [activeStep, setActiveStep] = React.useState(0);
 
-    const handleNext = () => {
-        setActiveStep((prevActiveStep) => prevActiveStep + 1);
-    };
-
     const handleStep = (step: number) => () => {
         setActiveStep(step);
     }

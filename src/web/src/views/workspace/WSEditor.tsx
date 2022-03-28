@@ -323,9 +323,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         })
         return (
             <React.Fragment>
-                <WSEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onAdd={this.showSwaggerResourcePicker} onGenerate={this.handleGenerate}>
-                    {/* <Button onClick={this.showSwaggerResourcePicker}>Add Swagger Resource</Button> */}
-
+                <WSEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onGenerate={this.handleGenerate}>
                 </WSEditorToolBar>
 
                 <Box sx={{ display: 'flex' }}>
@@ -343,6 +341,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                                 commandTreeNodes={commandTree}
                                 onSelected={this.handleCommandTreeSelect}
                                 onToggle={this.handleCommandTreeToggle}
+                                onAdd={this.showSwaggerResourcePicker}
                                 selected={selected!.id}
                                 expanded={expandedIds}
                             />
