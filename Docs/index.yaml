@@ -1,9 +1,5 @@
 nav:
   - 'Introduction': readme.md
-  - 'Workspace Editor':
-    - 'Group & Command': workspace/command_group_and_command_op.md
-    - 'Argument': workspace/argument_op.md
-  - 'CLI Generator':
-    - 'Profile & Command': cli/profile_and_command.md
-    - 'Argument': cli/argument.md
+  - 'Workspace Editor': usage/workspace_editor_usage.md
+  - 'CLI Generator': usage/cli_generator_usage.md
   - 'FAQ': faq.md
