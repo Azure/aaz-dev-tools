@@ -5,11 +5,6 @@ import { AppBar, Toolbar } from '@mui/material';
 import theme from '../theme';
 
 
-const rightLink = {
-    fontSize: 16,
-    color: 'common.white',
-    ml: 3,
-};
 
 type AppAppBarProps = {
     pageName: string | null,
@@ -93,7 +88,16 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                                 variant="h6"
                                 underline="none"
                                 href="/?#/Documents"
-                                sx={rightLink}
+                                fontWeight={
+                                    this.props.pageName == "Documents" ?
+                                    theme.typography.fontWeightMedium : 
+                                    theme.typography.fontWeightLight
+                                }
+                                sx={{
+                                    fontSize: 16,
+                                    color: 'common.white',
+                                    ml: 3,
+                                }}
                             >
                                 {'Docs'}
                             </Link>

@@ -13,7 +13,7 @@ import GenerationPage from './views/generation/GenerationPage';
 import GenerationInstruction from './views/generation/GenerationInstruction';
 import { GenerationModuleEditor } from './views/generation/GenerationModuleEditor';
 import DocumentsPage from './views/documentation/DocumentsPage';
-import DocumentsDisplay from './views/documentation/DocumentsDisplay';
+import { DocumentsDisplay } from './views/documentation/DocumentsDisplay';
 // import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
@@ -38,16 +38,9 @@ ReactDOM.render(
           </Route>
           <Route path="Documents" element={<DocumentsPage />}>
             <Route index element={<DocumentsDisplay/>} />
+            <Route path=":docId" element={<DocumentsDisplay/>} />
           </Route>
         </Route>
-        {/* <Route path="workspace" element={<Workspace />}>
-            <Route index element={<WorkspaceSelector/>}/>
-            <Route path=":workspaceName/resourceSelection" element={<SpecSelector />}/>
-            <Route path=":workspaceName" element={<ConfigEditor />} />
-          </Route>
-          <Route path="generator" element={<Generator/>}>
-            <Route index element={<TargetSelector/>}/>
-          </Route> */}
       </Routes>
     </HashRouter>
   </React.StrictMode>,

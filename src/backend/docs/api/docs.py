@@ -1,25 +1,39 @@
-from flask import Blueprint, jsonify
-import flask
-import glob
-import os
+from flask import Blueprint, jsonify, make_response, redirect, url_for
+from ..controller.docs_manager import DocsManager
+from utils import exceptions
 
-bp = Blueprint('docs', __name__, url_prefix='/Documentation')
-    
 
-@bp.route("/all", methods=("GET",))
+bp = Blueprint('docs', __name__, url_prefix='/Docs')
+
+
+@bp.route("/Index", methods=("GET",))
 def get_all_documents():
-    docs_path = os.path.abspath(os.path.join(os.path.join(os.path.join(os.path.join(flask.current_app.root_path, os.pardir), os.pardir), os.pardir), 'docs'))
-    files_and_folders = glob.glob(docs_path+'/**', recursive=True)
-    res = []
-    for file_or_folder in files_and_folders:
-        if file_or_folder.endswith('.md'):
-            res.append(file_or_folder.replace("\\", '/').replace(docs_path.replace('\\','/'), '.'))
-    return jsonify(res)
+    manager = DocsManager()
+    pages = manager.pages
+    return jsonify(pages)
+
+
+@bp.route("/Index/<doc_id>", methods=("GET", ))
+def get_document(doc_id):
+    manager = DocsManager()
+    page = manager.get_page(doc_id)
+    if not page:
+        raise exceptions.ResourceNotFind(f"Page not find: '{doc_id}'")
+    file = manager.load_page_content(page)
+    if file is not None:
+        return file
+    else:
+        return "", 204
+
 
 @bp.route("/<path:file_path>", methods=("GET",))
 def get_document_content(file_path):
-    file_path = ''.join(file_path)
-    docs_path = os.path.abspath(os.path.join(os.path.join(os.path.join(os.path.join(flask.current_app.root_path, os.pardir), os.pardir), os.pardir), 'docs'))
-    markdown_path = os.path.abspath(os.path.join(docs_path, file_path))
-    with open(markdown_path, 'r') as d:
-        return jsonify(d.read())
+    manager = DocsManager()
+    page = manager.find_page_by_file(file_path)
+    if page:
+        return redirect(f"/?#/Documents/{page['id']}")
+    file = manager.load_material(file_path)
+    if file is not None:
+        return file
+    else:
+        raise exceptions.ResourceNotFind(f"File not find: '{file_path}'")
