@@ -332,7 +332,7 @@ const ArgTypeTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
 }))
 
 const ArgRequiredTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
-    color: '#dba339',
+    color: '#fad105',
     fontFamily: "'Roboto Condensed', sans-serif",
     fontSize: 16,
     fontWeight: 200,

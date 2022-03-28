@@ -165,7 +165,7 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
                                 justifyContent: "flex-start"
                             }}>
                                 <Button
-                                    variant='outlined' size="small" color='info'
+                                    variant='contained' size="small" color='info' disableElevation
                                     onClick={this.onCommandGroupDialogDisplay}
                                 >
                                     <Typography variant='body2'>
@@ -173,7 +173,7 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
                                     </Typography>
                                 </Button>
                                 <Button
-                                    variant='outlined' size="small" color='error'
+                                    variant='outlined' size="small" color='info'
                                     onClick={this.onCommandGroupDeleteDialogDisplay}
                                     disabled={!this.props.commandGroup.canDelete}
                                     sx={{ ml: 2 }}

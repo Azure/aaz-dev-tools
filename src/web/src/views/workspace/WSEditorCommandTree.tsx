@@ -87,7 +87,7 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
                     <Box sx={{flexGrow: 1}}/>
                     <Tooltip title='Add from Swagger'>
                         <IconButton
-                            color='inherit'
+                            color='info'
                             onClick={onAdd}
                             aria-label='add'
                         >

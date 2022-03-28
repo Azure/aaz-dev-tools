@@ -9,7 +9,7 @@ import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import LabelIcon from '@mui/icons-material/Label';
 import WSEditorCommandArgumentsContent from './WSEditorCommandArgumentsContent';
-
+import EditIcon from '@mui/icons-material/Edit';
 
 interface Example {
     name: string,
@@ -81,9 +81,9 @@ const ExampleCommandBodyTypography = styled(Typography)<TypographyProps>(({ them
 }))
 
 const ExampleEditTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
-    color: "#0288d1",
+    color: "#5d64cf",
     fontFamily: "'Work Sans', sans-serif",
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 400,
 }));
 
@@ -210,8 +210,9 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             alignItems: "center",
                         }}>
                             <SubtitleTypography sx={{ flexShrink: 0 }} >{example.name}</SubtitleTypography>
-                            <Box sx={{ flexGrow: 1 }} />
-                            <Button sx={{ flexShrink: 0 }}
+                            {/* <Box sx={{ flexGrow: 1 }} /> */}
+                            <Button sx={{ flexShrink: 0, ml: 3 }}
+                                startIcon={<EditIcon color="info" fontSize='small' />}
                                 onClick={() => { this.onExampleDialogDisplay(idx) }}
                             >
                                 <ExampleEditTypography>Edit</ExampleEditTypography>
@@ -305,7 +306,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             }}>
 
                                 <Button
-                                    variant='outlined' size="small" color='info'
+                                    variant='contained' size="small" color='info' disableElevation
                                     onClick={this.onCommandDialogDisplay}
                                     sx={{ mr: 2 }}
                                 >
@@ -314,7 +315,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                                     </Typography>
                                 </Button>
                                 <Button
-                                    variant='outlined' size="small" color='error'
+                                    variant='outlined' size="small" color='info'
                                     onClick={this.onCommandDeleteDialogDisplay}
                                     sx={{ mr: 2 }}
                                 >
@@ -323,7 +324,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                                     </Typography>
                                 </Button>
                                 <Button
-                                    variant='outlined' size="small" color='success'
+                                    variant='outlined' size="small" color='info'
                                     sx={{ mr: 2 }}
                                     disabled
                                 >
@@ -384,7 +385,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             flexDirection: "row-reverse",
                         }}>
                             <Button
-                                variant='outlined' size="small" color='info'
+                                variant='contained' size="small" color='info' disableElevation
                                 onClick={() => this.onExampleDialogDisplay(undefined)}
                             >
                                 <Typography variant='body2'>
