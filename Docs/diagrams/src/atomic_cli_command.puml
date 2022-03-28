@@ -1,0 +1,62 @@
+@startuml file_structure
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+
+skinparam Linetype ortho
+
+HIDE_STEREOTYPE()
+
+skinparam interface {
+    BorderColor Blue
+    Shadowing false
+
+    BackgroundColor<<v1>> Red
+    BackgroundColor<<v2>> Green
+    BackgroundColor<<v3>> Blue
+}
+
+
+Boundary(python_sdk, "SDK") {
+    Boundary(version_3, "API Version 3") {
+        circle "A" as api_a_v3 <<v3>>
+        circle "B" as api_b_v3 <<v3>>
+        circle "C" as api_c_v3 <<v3>>
+    }
+    Boundary(version_2, "API Version 2") {
+        circle "A" as api_a_v2 <<v2>>
+        circle "B" as api_b_v2 <<v2>>
+        circle "C" as api_c_v2 <<v2>>
+    }
+    Boundary(version_1, "API Version 1") {
+        circle "A" as api_a_v1 <<v1>>
+        circle "B" as api_b_v1 <<v1>>
+        circle "C" as api_c_v1 <<v1>>
+    }
+
+}
+Lay_D(api_a_v1, api_b_v1)
+Lay_D(api_b_v1, api_c_v1)
+Lay_D(api_a_v2, api_b_v2)
+Lay_D(api_b_v2, api_c_v2)
+Lay_D(api_a_v3, api_b_v3)
+Lay_D(api_b_v3, api_c_v3)
+
+Lay_R(version_1, version_2)
+Lay_R(version_2, version_3)
+
+Boundary(cli, "CLI Commands") {
+    Container(command_b, "Command B", "")
+    Container(command_a, "Command A", "")
+    Container(command_c, "Command C", "")
+}
+
+Lay_R(command_a, command_b)
+Lay_R(command_b, command_c)
+
+Lay_D(cli, python_sdk)
+
+api_a_v1 -u-> command_a
+api_c_v2 -u-> command_c
+api_b_v3 -u-> command_b
+
+
+@enduml

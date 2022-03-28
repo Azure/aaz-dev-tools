@@ -45,7 +45,23 @@ So the definition of API in swagger is required before using AAZDev tool.
 
 ## 1.3 What is Atomic CLI Command?
 
+_An Atomic CLI Command operate on one azure resource without dependencies on other things, such as SDK or other commands._
 
+Azure api is designed to be restful. So usually one Atomic CLI command operates on one API.
+ But there is an exception, there are multiple APIs that list the same kind of resource in difference scopes. In that case, one list Atomic command operates on multiple APIs. 
+
+Atomic CLI commands do not depend on the SDK or other commands. This brings several advantages to CLI:
+- State of truth:
+  An Atomic CLI command has all required information in its model and code, so its current state tells how it works without the influence by the change in SDK or other commands. This feature can be used for breaking change detection or other command analysis tasks. 
+- Flexible:
+  Atomic CLI commands are decoupled from others commands, so it's easy to add, modify, upgrade and release an Atomic CLI command without influence other commands. And the change can be refined down to the API leve instead of SDK leave. 
+
+The degree of coupling between commands relay on SDK can be seen from the following PR.
+![BumpUpNetworkSDK](/Docs/images/az_cli_bump_up_network_sdk.png)
+The SDK packages a batch of APIs, and when one API has new change and is released in a new SDK version,
+ we have to test and update the commands that use the whole batch of APIs in SDK instead of the one API we care about.
+ Each time we bump up a SDK, hundreds of tests need to rerun in live and their recording files need to be updated, we also need to fix other commands that are broken by new SDK.
+ It wasted a lot of time and created a lot of hidden problems. By applying Atomic CLI commands, we can avoid them.
 
 ## 2 Overview
 ---
@@ -158,6 +174,8 @@ Workspaces are like containers, they are isolated so that changes in one do not 
 It's possible to add resources from different resource providers, but they should be in the same plane. Currently we only support Management plane.
 Another note is that a workspace don't allow to add a resource multiple times in different versions. For example, if virtual network resource('/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}') of version 2021-05-01 is added in a workspace, it's not allowed to add other versions of this resource in this workspace.
 
+Please jump to [Workspace Editor](/Docs/usage/workspace_editor_usage.md) for more details.
+
 ## 5 AAZ Repo
 ---
 
@@ -213,3 +231,22 @@ The data flow from Argument Section to Operation Section and then to Output Sect
 ## 6 CLI Generator and CLI Extension Generator
 ---
 
+### 6.1 Command Module
+
+CLI commands are separated into different command modules in Azure CLI repo or Azure CLI extension repo. So it's required to select a specific module for generators.
+
+![CommandModules](/Docs/images/az_cli_and_az_cli_extension_command_modules.png)
+
+### 6.2 Profile
+
+Azure CLI uses profiles to support Azure Stack. There are five profiles:
+- latest
+- 2020-09-01-hybrid
+- 2019-03-01-hybrid
+- 2018-03-01-hybrid
+- 2017-03-09-profile
+
+The `latest` profile contains a full set of commands and the rest profiles contains a sub set of commands from the `latest`.
+One command may call different api versions in different profiles. So its arguments and output schema may vary from profile to profile.
+
+Please jump to [CLI Generator](/Docs/usage/cli_generator_usage.md) for more details.
