@@ -406,15 +406,18 @@ class GenerationModuleEditor extends React.Component<
     }
   };
 
-  handleVersionChange = (node: NodeModel<CheckData>, version: string) => {
+  handleVersionChange = (node: NodeModel<CheckData>, currentVersion: string) => {
     let changeNode = this.state.treeData[Number(node.id) - 1];
-    changeNode.data!.versionIndex = changeNode.data!.versions.indexOf(version);
+    changeNode.data!.versionIndex = changeNode.data!.versions.indexOf(currentVersion);
     const namePath = this.getNamePath(node);
     let currentPointer = this.getProfileEntry();
     namePath.slice(0, -1).forEach((name) => {
       currentPointer = currentPointer["commandGroups"]![name];
     });
-    currentPointer["commands"]![node.text]["version"] = version;
+    delete currentPointer["commands"]![node.text]
+    const path = namePath.slice(0, -1).join("/");
+    const version = btoa(currentVersion)
+    this.insertLeaf(path, node.text, version);
   };
 
   render() {
