@@ -175,9 +175,9 @@ class CMDSchemaBase(Model):
                         diff["default"] = default_diff
 
         if level >= CMDDiffLevelEnum.Structure:
-            if self.read_only != old.read_only:
+            if (not self.read_only) != (not old.read_only):
                 diff["read_only"] = f"{old.read_only} != {self.read_only}"
-            if self.const != old.const:
+            if (not self.const) != (not old.const):
                 diff['const'] = f"{old.const} != {self.const}"
             if self.default:
                 default_diff = self.default.diff(old.default, level)
@@ -280,7 +280,7 @@ class CMDSchema(CMDSchemaBase):
                 diff["skip_url_encoding"] = f"{old.skip_url_encoding} != {self.skip_url_encoding}"
 
         if level >= CMDDiffLevelEnum.Structure:
-            if self.required != old.required:
+            if (not self.required) != (not old.required):
                 diff["required"] = f"{old.required} != {self.required}"
 
         if level >= CMDDiffLevelEnum.Associate:
@@ -376,7 +376,7 @@ class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
         # TODO: Handle Cls Schema compare with other Schema classes
         diff = super(CMDClsSchema, self)._diff(old, level, diff)
         if level >= CMDDiffLevelEnum.BreakingChange:
-            if self.client_flatten != old.client_flatten:
+            if (not self.client_flatten) != (not old.client_flatten):
                 diff["client_flatten"] = f"from {old.client_flatten} to {self.client_flatten}"
 
         return diff
@@ -864,7 +864,7 @@ class CMDObjectSchema(CMDObjectSchemaBase, CMDSchema):
     def _diff(self, old, level, diff):
         diff = super(CMDObjectSchema, self)._diff(old, level, diff)
         if level >= CMDDiffLevelEnum.BreakingChange:
-            if self.client_flatten != old.client_flatten:
+            if (not self.client_flatten) != (not old.client_flatten):
                 diff["client_flatten"] = f"from {old.client_flatten} to {self.client_flatten}"
 
         cls_diff = _diff_cls(self.cls, old.cls, level)

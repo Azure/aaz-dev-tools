@@ -240,7 +240,7 @@ class CMDHttpResponse(Model):
             elif self.status_codes and set(self.status_codes) != set(old.status_codes):
                 diff["status_codes"] = f"{old.status_codes} != {self.status_codes}"
 
-            if self.is_error != old.is_error:
+            if (not self.is_error) != (not old.is_error):
                 diff["is_error"] = f"{old.is_error} != {self.is_error}"
 
             if old.header is not None:
