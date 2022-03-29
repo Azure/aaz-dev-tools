@@ -400,8 +400,40 @@ class APIEditorTest(CommandTestCase):
             data = rv.get_json()
             self.assertTrue('list' not in data['commands'])
 
+    @workspace_name("test_list_merge")
+    def test_list_merge(self, ws_name):
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum.Mgmt,
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws = rv.get_json()
+            ws_url = ws['url']
 
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': 'edgeorder',
+                'version': '2021-12-01',
+                'resources': [
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses')},
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
 
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': 'edgeorder',
+                'version': '2021-12-01',
+                'resources': [
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses')},
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(len(data['commands']) == 1 and 'list' in data['commands'])
 
     @workspace_name("test_workspace_command_merge")
     def test_workspace_command_merge(self, ws_name):
