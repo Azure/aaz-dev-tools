@@ -54,7 +54,7 @@ Atomic CLI commands do not depend on the SDK or other commands. This brings seve
 - State of truth:
   An Atomic CLI command has all required information in its model and code, so its current state tells how it works without the influence by the change in SDK or other commands. This feature can be used for breaking change detection or other command analysis tasks. 
 - Flexible:
-  Atomic CLI commands are decoupled from others commands, so it's easy to add, modify, upgrade and release an Atomic CLI command without influence other commands. And the change can be refined down to the API leve instead of SDK leave. 
+  Atomic CLI commands are decoupled from others commands, so it's easy to add, modify, upgrade and release an Atomic CLI command without influence other commands. And the change can be refined down to the API level instead of SDK level. 
 
 The degree of coupling between commands relay on SDK can be seen from the following PR.
 ![BumpUpNetworkSDK](/Docs/images/az_cli_bump_up_network_sdk.png)
