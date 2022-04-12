@@ -771,7 +771,7 @@ function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsA
             }
             break
         case "integer32":
-        case "integer32":
+        case "integer64":
         case "integer":
             if (response.enum) {
                 argBase = {
@@ -912,7 +912,7 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
         case "string":
             break
         case "integer32":
-        case "integer32":
+        case "integer64":
         case "integer":
             break
         case "float32":

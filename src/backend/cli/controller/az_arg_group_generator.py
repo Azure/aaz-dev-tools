@@ -303,11 +303,11 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
         enum = parse_arg_enum(arg.enum)
         if enum:
             arg_kwargs['enum'] = enum
-
-        if isinstance(arg, CMDInteger32ArgBase):
-            raise NotImplementedError()
-        elif isinstance(arg, CMDInteger64ArgBase):
-            raise NotImplementedError()
+        # TODO: add format for integer32 and integer64
+        # if isinstance(arg, CMDInteger32ArgBase):
+        #     raise NotImplementedError()
+        # elif isinstance(arg, CMDInteger64ArgBase):
+        #     raise NotImplementedError()
 
     elif isinstance(arg, CMDBooleanArgBase):
         arg_type = "AAZBoolArg"
@@ -318,10 +318,11 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
         if enum:
             arg_kwargs['enum'] = enum
 
-        if isinstance(arg, CMDFloat32ArgBase):
-            raise NotImplementedError()
-        elif isinstance(arg, CMDFloat64ArgBase):
-            raise NotImplementedError()
+        # TODO: add format for float32 and float64
+        # if isinstance(arg, CMDFloat32ArgBase):
+        #     raise NotImplementedError()
+        # elif isinstance(arg, CMDFloat64ArgBase):
+        #     raise NotImplementedError()
 
     elif isinstance(arg, CMDObjectArgBase):
         if arg.args:
