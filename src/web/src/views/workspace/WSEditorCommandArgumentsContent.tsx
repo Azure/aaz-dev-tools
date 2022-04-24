@@ -19,7 +19,7 @@ function WSEditorCommandArgumentsContent(props: {
                 const { args, clsDefineMap } = decodeResponse(res.data);
                 setArgs(args);
                 setClsArgDefineMap(clsDefineMap);
-            }).catch(err => console.error(err.response));
+            }).catch(err => console.error(err));
     }, [props.commandUrl]);
 
     return (
@@ -290,12 +290,12 @@ function ArgNavBar(props: {
                     </ButtonBase>
                 ))}
                 <ButtonBase
-                        key={`${props.argIdxStack.length-1}`}
-                        onClick={() => {
-                            props.onChangeArgIdStack(props.argIdxStack.length)
-                        }}
-                    >
-                        <NavBarItemHightLightedTypography sx={{ flexShrink: 0 }} >{props.argIdxStack.length > 1 ? `.${props.argIdxStack[props.argIdxStack.length-1].displayKey}` : props.argIdxStack[props.argIdxStack.length-1].displayKey}</NavBarItemHightLightedTypography>
+                    key={`${props.argIdxStack.length - 1}`}
+                    onClick={() => {
+                        props.onChangeArgIdStack(props.argIdxStack.length)
+                    }}
+                >
+                    <NavBarItemHightLightedTypography sx={{ flexShrink: 0 }} >{props.argIdxStack.length > 1 ? `.${props.argIdxStack[props.argIdxStack.length - 1].displayKey}` : props.argIdxStack[props.argIdxStack.length - 1].displayKey}</NavBarItemHightLightedTypography>
                 </ButtonBase>
             </Box>
         </React.Fragment>
@@ -637,7 +637,7 @@ interface CMDDurationArg extends CMDDurationArgBase, CMDStringArg { }
 interface CMDDateArgBase extends CMDStringArgBase { }
 interface CMDDateArg extends CMDDateArgBase, CMDStringArg { }
 
-// type: date-time  As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
+// type: dateTime  As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
 interface CMDDateTimeArgBase extends CMDStringArgBase { }
 interface CMDDateTimeArg extends CMDDateTimeArgBase, CMDStringArg { }
 
@@ -755,7 +755,7 @@ function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsA
         case "binary":
         case "duration":
         case "date":
-        case "date-time":
+        case "dateTime":
         case "uuid":
         case "password":
         case "SubscriptionId":
@@ -902,7 +902,7 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
         case "binary":
         case "duration":
         case "date":
-        case "date-time":
+        case "dateTime":
         case "uuid":
         case "password":
         case "SubscriptionId":
