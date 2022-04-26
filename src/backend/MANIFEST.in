@@ -1,5 +1,0 @@
-include LICENSE
-include README.rst
-include HISTORY.rst
-recursive-include ui *
-recursive-include cli/templates *
