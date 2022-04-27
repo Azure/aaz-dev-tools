@@ -1,7 +1,7 @@
 from command.model.configuration import CMDHttpOperation, CMDHttpRequestJsonBody, CMDArraySchema, \
     CMDInstanceUpdateOperation, CMDRequestJson, CMDHttpResponseJsonBody, CMDObjectSchema, CMDSchema, \
     CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase, CMDBooleanSchemaBase, CMDObjectSchemaBase, \
-    CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction
+    CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction, CMDObjectSchemaDiscriminator, CMDSchemaEnum
 from utils import exceptions
 from utils.case import to_snack_case
 from utils.error_format import AAZErrorFormatEnum
@@ -250,9 +250,19 @@ class AzJsonUpdateOperationGenerator(AzOperationGenerator):
                     self._update_over_schema(prop)
             if s.additional_props and s.additional_props.item:
                 self._update_over_schema(s.additional_props.item)
+            if s.discriminators:
+                for disc in s.discriminators:
+                    self._update_over_schema(disc)
         elif isinstance(s, CMDArraySchemaBase):
             if s.item:
                 self._update_over_schema(s.item)
+        elif isinstance(s, CMDObjectSchemaDiscriminator):
+            if s.props:
+                for prop in s.props:
+                    self._update_over_schema(prop)
+            if s.discriminators:
+                for disc in s.discriminators:
+                    self._update_over_schema(disc)
 
     def iter_scopes(self):
         if not self._json.schema or not isinstance(self._json.schema, (CMDObjectSchema, CMDArraySchema)):
@@ -306,9 +316,19 @@ class AzHttpRequestContentGenerator:
                     self._update_over_schema(prop)
             if s.additional_props and s.additional_props.item:
                 self._update_over_schema(s.additional_props.item)
+            if s.discriminators:
+                for disc in s.discriminators:
+                    self._update_over_schema(disc)
         elif isinstance(s, CMDArraySchemaBase):
             if s.item:
                 self._update_over_schema(s.item)
+        elif isinstance(s, CMDObjectSchemaDiscriminator):
+            if s.props:
+                for prop in s.props:
+                    self._update_over_schema(prop)
+            if s.discriminators:
+                for disc in s.discriminators:
+                    self._update_over_schema(disc)
 
     def iter_scopes(self):
         if not self._json.schema or not isinstance(self._json.schema, (CMDObjectSchema, CMDArraySchema)):
@@ -398,9 +418,19 @@ class AzHttpResponseSchemaGenerator:
                     self._update_over_schema(prop)
             if s.additional_props and s.additional_props.item:
                 self._update_over_schema(s.additional_props.item)
+            if s.discriminators:
+                for disc in s.discriminators:
+                    self._update_over_schema(disc)
         elif isinstance(s, CMDArraySchemaBase):
             if s.item:
                 self._update_over_schema(s.item)
+        elif isinstance(s, CMDObjectSchemaDiscriminator):
+            if s.props:
+                for prop in s.props:
+                    self._update_over_schema(prop)
+            if s.discriminators:
+                for disc in s.discriminators:
+                    self._update_over_schema(disc)
 
     def iter_scopes(self):
         if not self.cls_builder_name and isinstance(self._schema, (CMDObjectSchemaBase, CMDArraySchemaBase)):
@@ -425,15 +455,23 @@ class AzResponseClsGenerator:
         self.typ, self.typ_kwargs, _ = render_schema_base(self.schema, self._response_cls_map)
 
         self.props = []
+        self.discriminators = []
         if isinstance(schema, CMDObjectSchemaBase):
             if schema.props and schema.additional_props:
                 raise NotImplementedError()
+            if schema.discriminators:
+                for disc in schema.discriminators:
+                    disc_key = to_snack_case(disc.property)
+                    disc_value = disc.value
+                    self.discriminators.append((disc_key, disc_value))
             if schema.props:
                 for s in schema.props:
                     s_name = to_snack_case(s.name)
                     self.props.append(s_name)
             elif schema.additional_props:
                 self.props.append("Element")
+            else:
+                raise NotImplementedError()
         elif isinstance(schema, CMDArraySchemaBase):
             self.props.append("Element")
 
@@ -447,12 +485,15 @@ class AzResponseClsGenerator:
 def _iter_request_scopes_by_schema_base(schema, name, scope_define, cls_map, arg_key, cmd_ctx):
     rendered_schemas = []
     search_schemas = {}
-
+    discriminators = []
     if isinstance(schema, CMDObjectSchemaBase):
         if schema.props and schema.additional_props:
             # not support for both props and additional props
             raise NotImplementedError()
-        # TODO: support discriminator
+
+        if schema.discriminators:
+            discriminators.extend(schema.discriminators)
+
         if schema.props:
             for s in schema.props:
                 s_name = s.name
@@ -464,13 +505,41 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, cls_map, arg
                 else:
                     s_arg_key = arg_key
 
-                r_key = s_arg_key.replace(arg_key, '')
-                if not r_key:
-                    r_key = '.' if s.required else None
+                # handle enum item attached with argument
+                has_enum_argument = False
+                if hasattr(s, "enum") and isinstance(s.enum, CMDSchemaEnum):
+                    for item in s.enum.items:
+                        if item.arg:
+                            item_arg_key, hide = cmd_ctx.get_argument(item.arg)
+                            if hide:
+                                continue
+                            has_enum_argument = True
+                            r_key = item_arg_key.replace(arg_key, '')
+                            if not r_key:
+                                r_key = '.'
+                            is_const = True
+                            const_value = item.value
+                            rendered_schemas.append(
+                                (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
+                            )
 
-                rendered_schemas.append((s_name, s_typ, r_key, s_typ_kwargs, cls_builder_name))
-                if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-                    search_schemas[s_name] = (s, s_arg_key)
+                if not has_enum_argument:
+                    r_key = s_arg_key.replace(arg_key, '')
+                    if not r_key:
+                        r_key = '.' if s.required else None
+
+                    is_const = False
+                    const_value = None
+                    if s.const:
+                        is_const = True
+                        const_value = s.default.value
+
+                    rendered_schemas.append(
+                        (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
+                    )
+                    if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                        search_schemas[s_name] = (s, s_arg_key)
+
         elif schema.additional_props:
             assert schema.additional_props.item is not None
             s = schema.additional_props.item
@@ -482,9 +551,17 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, cls_map, arg
             else:
                 r_key = None
 
-            rendered_schemas.append((s_name, s_typ, r_key, s_typ_kwargs, cls_builder_name))
+            is_const = False
+            const_value = None
+            rendered_schemas.append(
+                (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
+            )
             if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
                 search_schemas[s_name] = (s, s_arg_key)
+
+        else:
+            raise NotImplementedError()
+
     elif isinstance(schema, CMDArraySchemaBase):
         assert schema.item is not None
         s = schema.item
@@ -497,14 +574,70 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, cls_map, arg
         else:
             r_key = None
 
-        rendered_schemas.append((s_name, s_typ, r_key, s_typ_kwargs, cls_builder_name))
+        is_const = False
+        const_value = None
+        rendered_schemas.append(
+            (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
+        )
         if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
             search_schemas[s_name] = (s, s_arg_key)
+    elif isinstance(schema, CMDObjectSchemaDiscriminator):
+        if schema.discriminators:
+            discriminators.extend(schema.discriminators)
+
+        if schema.props:
+            for s in schema.props:
+                s_name = s.name
+                s_typ, s_typ_kwargs, cls_builder_name = render_schema(s, cls_map, s_name)
+                if s.arg:
+                    s_arg_key, hide = cmd_ctx.get_argument(s.arg)
+                    if hide:
+                        continue
+                else:
+                    s_arg_key = arg_key
+
+                # handle enum item attached with argument
+                has_enum_argument = False
+                if hasattr(s, "enum") and isinstance(s.enum, CMDSchemaEnum):
+                    for item in s.enum.items:
+                        if item.arg:
+                            item_arg_key, hide = cmd_ctx.get_argument(item.arg)
+                            if hide:
+                                continue
+                            has_enum_argument = True
+                            r_key = item_arg_key.replace(arg_key, '')
+                            if not r_key:
+                                r_key = '.'
+                            is_const = True
+                            const_value = item.value
+                            rendered_schemas.append(
+                                (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
+                            )
+
+                if not has_enum_argument:
+                    r_key = s_arg_key.replace(arg_key, '')
+                    if not r_key:
+                        r_key = '.' if s.required else None
+
+                    is_const = False
+                    const_value = None
+                    if s.const:
+                        is_const = True
+                        const_value = s.default.value
+
+                    rendered_schemas.append(
+                        (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
+                    )
+                    if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                        search_schemas[s_name] = (s, s_arg_key)
+        else:
+            raise NotImplementedError()
     else:
         raise NotImplementedError()
 
-    if rendered_schemas:
-        yield name, scope_define, rendered_schemas
+    if rendered_schemas or discriminators:
+        disc_defines = [(disc.property, disc.value) for disc in discriminators]
+        yield name, scope_define, rendered_schemas, disc_defines
 
     scope_define = scope_define or ""
     for s_name, (s, s_arg_key) in search_schemas.items():
@@ -519,15 +652,28 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, cls_map, arg
         for scopes in _iter_request_scopes_by_schema_base(s, to_snack_case(s_name), s_scope_define, cls_map, s_arg_key, cmd_ctx):
             yield scopes
 
+    for disc in discriminators:
+        key_name = disc.property
+        key_value = disc.value
+        disc_name = f"disc_{to_snack_case(disc.value)}"
+        disc_scope_define = scope_define + "{" + key_name + ":" + key_value + "}"
+        disc_arg_key = arg_key
+        for scopes in _iter_request_scopes_by_schema_base(disc, disc_name, disc_scope_define, cls_map, disc_arg_key, cmd_ctx):
+            yield scopes
+
 
 def _iter_response_scopes_by_schema_base(schema, name, scope_define, response_cls_map):
     rendered_schemas = []
     search_schemas = {}
+    discriminators = []
     if isinstance(schema, CMDObjectSchemaBase):
         if schema.props and schema.additional_props:
             # not support to parse schema with both props and additional_props
             raise NotImplementedError()
-        # TODO: support discriminator
+
+        if schema.discriminators:
+            discriminators.extend(schema.discriminators)
+
         if schema.props:
             for s in schema.props:
                 s_name = to_snack_case(s.name)
@@ -547,6 +693,9 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, response_cl
             else:
                 # TODO: handler additional props with no item schema
                 pass
+        else:
+            raise NotImplementedError()
+
     elif isinstance(schema, CMDArraySchemaBase):
         # AAZListType
         assert schema.item is not None
@@ -556,6 +705,19 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, response_cl
         rendered_schemas.append((s_name, s_typ, s_typ_kwargs, cls_builder_name))
         if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
             search_schemas[s_name] = s
+    elif isinstance(schema, CMDObjectSchemaDiscriminator):
+        if schema.discriminators:
+            discriminators.extend(schema.discriminators)
+
+        if schema.props:
+            for s in schema.props:
+                s_name = to_snack_case(s.name)
+                s_typ, s_typ_kwargs, cls_builder_name = render_schema(s, response_cls_map, s_name)
+                rendered_schemas.append((s_name, s_typ, s_typ_kwargs, cls_builder_name))
+                if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                    search_schemas[s_name] = s
+        else:
+            raise NotImplementedError()
     else:
         raise NotImplementedError()
 
@@ -567,6 +729,14 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, response_cl
         if s_name == "Element":
             s_name = '_element'
         for scopes in _iter_response_scopes_by_schema_base(s, s_name, s_scope_define, response_cls_map):
+            yield scopes
+
+    for disc in discriminators:
+        key_name = to_snack_case(disc.property)
+        key_value = disc.value
+        disc_name = f"disc_{to_snack_case(disc.value)}"
+        disc_scope_define = f'{scope_define}.discriminate_by("{key_name}", "{key_value}")'
+        for scopes in _iter_response_scopes_by_schema_base(disc, disc_name, disc_scope_define, response_cls_map):
             yield scopes
 
 
@@ -617,8 +787,7 @@ def render_schema_base(schema, cls_map, schema_kwargs=None):
     elif isinstance(schema, CMDFloatSchemaBase):
         schema_type = "AAZFloatType"
     elif isinstance(schema, CMDObjectSchemaBase):
-        # TODO: handle schema.discriminators
-        if schema.props:
+        if schema.props or schema.discriminators:
             schema_type = "AAZObjectType"
             if schema.additional_props:
                 raise NotImplementedError()

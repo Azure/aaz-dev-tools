@@ -346,7 +346,7 @@ class Update(AAZCommand):
     class InstanceUpdateByJson(AAZJsonInstanceUpdateOperation):
 
         def __call__(self, *args, **kwargs):
-            self.ctx.vars.instance = self._update_instance(self.ctx.vars.instance)
+            self._update_instance(self.ctx.vars.instance)
 
         def _update_instance(self, instance):
             _instance_value, _builder = self.new_content_builder(
@@ -380,7 +380,7 @@ class Update(AAZCommand):
     class InstanceUpdateByGeneric(AAZGenericInstanceUpdateOperation):
 
         def __call__(self, *args, **kwargs):
-            self.ctx.vars.instance = self._update_instance_by_generic(
+            self._update_instance_by_generic(
                 self.ctx.vars.instance,
                 self.ctx.args
             )

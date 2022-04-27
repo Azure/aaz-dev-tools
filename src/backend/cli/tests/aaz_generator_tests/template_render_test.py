@@ -481,3 +481,220 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)
+
+    # sentinel
+    # show
+    def test_render_sentinel_automation_rule_show(self):
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
+
+        tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
+        with open(tree_path, 'r') as f:
+            data = json.load(f)
+            tree = CMDSpecsCommandTree(data)
+
+        cmd_name = "show"
+
+        cmd = tree.root.command_groups['sentinel'].command_groups['automation-rule'].commands[cmd_name]
+        leaf = CLIAtomicCommand({
+            "names": cmd.names,
+            "help": {
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples or []]
+            },
+            "register_info": {
+                "stage": cmd.versions[0].stage,
+            },
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
+        })
+
+        cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-crud.xml")
+
+        with open(cfg_file_path, 'r') as f:
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        cfg_reader = CfgReader(cfg)
+        leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
+
+        data = tmpl.render(
+            leaf=AzCommandGenerator(leaf)
+        )
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "output", "sentinel", "automation-rule", f"_{cmd_name}.py")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write(data)
+
+    # create
+    def test_render_sentinel_automation_rule_create(self):
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
+
+        tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
+        with open(tree_path, 'r') as f:
+            data = json.load(f)
+            tree = CMDSpecsCommandTree(data)
+
+        cmd_name = "create"
+
+        cmd = tree.root.command_groups['sentinel'].command_groups['automation-rule'].commands[cmd_name]
+        leaf = CLIAtomicCommand({
+            "names": cmd.names,
+            "help": {
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples or []]
+            },
+            "register_info": {
+                "stage": cmd.versions[0].stage,
+            },
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
+        })
+
+        cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-crud.xml")
+
+        with open(cfg_file_path, 'r') as f:
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        cfg_reader = CfgReader(cfg)
+        leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
+
+        data = tmpl.render(
+            leaf=AzCommandGenerator(leaf)
+        )
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "output", "sentinel", "automation-rule", f"_{cmd_name}.py")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write(data)
+
+    # update
+    def test_render_sentinel_automation_rule_update(self):
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
+
+        tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
+        with open(tree_path, 'r') as f:
+            data = json.load(f)
+            tree = CMDSpecsCommandTree(data)
+
+        cmd_name = "update"
+
+        cmd = tree.root.command_groups['sentinel'].command_groups['automation-rule'].commands[cmd_name]
+        leaf = CLIAtomicCommand({
+            "names": cmd.names,
+            "help": {
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples or []]
+            },
+            "register_info": {
+                "stage": cmd.versions[0].stage,
+            },
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
+        })
+
+        cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-crud.xml")
+
+        with open(cfg_file_path, 'r') as f:
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        cfg_reader = CfgReader(cfg)
+        leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
+
+        data = tmpl.render(
+            leaf=AzCommandGenerator(leaf)
+        )
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "output", "sentinel", "automation-rule", f"_{cmd_name}.py")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write(data)
+
+    # delete
+    def test_render_sentinel_automation_rule_delete(self):
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
+
+        tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
+        with open(tree_path, 'r') as f:
+            data = json.load(f)
+            tree = CMDSpecsCommandTree(data)
+
+        cmd_name = "delete"
+
+        cmd = tree.root.command_groups['sentinel'].command_groups['automation-rule'].commands[cmd_name]
+        leaf = CLIAtomicCommand({
+            "names": cmd.names,
+            "help": {
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples or []]
+            },
+            "register_info": {
+                "stage": cmd.versions[0].stage,
+            },
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
+        })
+
+        cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-crud.xml")
+
+        with open(cfg_file_path, 'r') as f:
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        cfg_reader = CfgReader(cfg)
+        leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
+
+        data = tmpl.render(
+            leaf=AzCommandGenerator(leaf)
+        )
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "output", "sentinel", "automation-rule", f"_{cmd_name}.py")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write(data)
+
+    # list
+    def test_render_sentinel_automation_rule_list(self):
+        tmpl = get_templates()['aaz']['command']['_cmd.py']
+
+        tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
+        with open(tree_path, 'r') as f:
+            data = json.load(f)
+            tree = CMDSpecsCommandTree(data)
+
+        cmd_name = "list"
+
+        cmd = tree.root.command_groups['sentinel'].command_groups['automation-rule'].commands[cmd_name]
+        leaf = CLIAtomicCommand({
+            "names": cmd.names,
+            "help": {
+                "short": cmd.help.short,
+                "long": '\n'.join(cmd.help.lines) if cmd.help.lines else None,
+                "examples": [e.to_primitive() for e in cmd.versions[0].examples or []]
+            },
+            "register_info": {
+                "stage": cmd.versions[0].stage,
+            },
+            "version": cmd.versions[0].name,
+            "resources": [r.to_primitive() for r in cmd.versions[0].resources],
+        })
+
+        cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-list.xml")
+
+        with open(cfg_file_path, 'r') as f:
+            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        cfg_reader = CfgReader(cfg)
+        leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
+
+        data = tmpl.render(
+            leaf=AzCommandGenerator(leaf)
+        )
+
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "output", "sentinel", "automation-rule", f"_{cmd_name}.py")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as f:
+            f.write(data)
+

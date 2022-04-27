@@ -291,7 +291,9 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
         elif isinstance(arg, CMDDateArgBase):
             raise NotImplementedError()
         elif isinstance(arg, CMDDateTimeArgBase):
-            raise NotImplementedError()
+            arg_type = "AAZStrArg"
+            # TODO: add format for it
+            # raise NotImplementedError()
         elif isinstance(arg, CMDUuidArgBase):
             arg_type = "AAZStrArg"
             # TODO: add format for it
