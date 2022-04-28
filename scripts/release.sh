@@ -7,6 +7,7 @@ TAG=$(python -c 'from scripts.version import VERSION; print("v" + VERSION)')
 read -p "Creating new release for $TAG. Do you want to continue? [Y/n] " prompt
 
 if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]]; then
+    rm -fr src/backend/ui/*
     cp -r src/web/build/* src/backend/ui/
     git add -A
     git commit -m "Bump version to $TAG for release" || true && git push
