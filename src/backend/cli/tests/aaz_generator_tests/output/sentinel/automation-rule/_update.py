@@ -257,7 +257,6 @@ class Update(AAZCommand):
 
     class AutomationRulesGet(AAZHttpOperation):
         CLIENT_TYPE = "MgmtClient"
-        ERROR_FORMAT = "ODataV4Format"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
@@ -277,6 +276,10 @@ class Update(AAZCommand):
         @property
         def method(self):
             return "GET"
+
+        @property
+        def error_format(self):
+            return "ODataV4Format"
 
         @property
         def url_parameters(self):
@@ -341,7 +344,6 @@ class Update(AAZCommand):
 
     class AutomationRulesCreateOrUpdate(AAZHttpOperation):
         CLIENT_TYPE = "MgmtClient"
-        ERROR_FORMAT = "ODataV4Format"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
@@ -361,6 +363,10 @@ class Update(AAZCommand):
         @property
         def method(self):
             return "PUT"
+
+        @property
+        def error_format(self):
+            return "ODataV4Format"
 
         @property
         def url_parameters(self):
@@ -545,7 +551,7 @@ class Update(AAZCommand):
         def __call__(self, *args, **kwargs):
             self._update_instance_by_generic(
                 self.ctx.vars.instance,
-                self.ctx.args
+                self.ctx.generic_update_args
             )
 
 

@@ -35,7 +35,7 @@ class Update(AAZCommand):
 
     def _handler(self, command_args):
         super()._handler(command_args)
-        return self.build_lro_poller(self._execute_operations(), result_callback=self._output)
+        return self.build_lro_poller(self._execute_operations, self._output)
 
     _args_schema = None
 
@@ -146,7 +146,6 @@ class Update(AAZCommand):
 
     class VNetPeeringGet(AAZHttpOperation):
         CLIENT_TYPE = "MgmtClient"
-        ERROR_FORMAT = "ODataV4Format"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
@@ -168,6 +167,10 @@ class Update(AAZCommand):
         @property
         def method(self):
             return "GET"
+
+        @property
+        def error_format(self):
+            return "ODataV4Format"
 
         @property
         def url_parameters(self):
@@ -235,7 +238,6 @@ class Update(AAZCommand):
 
     class VNetPeeringCreateOrUpdate(AAZHttpOperation):
         CLIENT_TYPE = "MgmtClient"
-        ERROR_FORMAT = "ODataV4Format"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
@@ -269,6 +271,10 @@ class Update(AAZCommand):
         @property
         def method(self):
             return "PUT"
+
+        @property
+        def error_format(self):
+            return "ODataV4Format"
 
         @property
         def url_parameters(self):
@@ -382,7 +388,7 @@ class Update(AAZCommand):
         def __call__(self, *args, **kwargs):
             self._update_instance_by_generic(
                 self.ctx.vars.instance,
-                self.ctx.args
+                self.ctx.generic_update_args
             )
 
 

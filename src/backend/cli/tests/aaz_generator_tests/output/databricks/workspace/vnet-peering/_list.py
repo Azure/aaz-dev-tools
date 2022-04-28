@@ -31,8 +31,7 @@ class List(AAZCommand):
 
     def _handler(self, command_args):
         super()._handler(command_args)
-        self._execute_operations()
-        return self._output()
+        return self.build_paging(self._execute_operations, self._output)
 
     _args_schema = None
 
@@ -60,11 +59,11 @@ class List(AAZCommand):
 
     def _output(self, *args, **kwargs):
         result = self.deserialize_output(self.ctx.vars.instance.value, client_flatten=True)
-        return result
+        next_link = self.deserialize_output(self.ctx.vars.instance.next_link)
+        return result, next_link
 
     class VNetPeeringListByWorkspace(AAZHttpOperation):
         CLIENT_TYPE = "MgmtClient"
-        ERROR_FORMAT = "ODataV4Format"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
@@ -84,6 +83,10 @@ class List(AAZCommand):
         @property
         def method(self):
             return "GET"
+
+        @property
+        def error_format(self):
+            return "ODataV4Format"
 
         @property
         def url_parameters(self):

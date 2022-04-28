@@ -61,7 +61,9 @@ class {{ leaf.cls_name }}(AAZCommand):
     def _handler(self, command_args):
         super()._handler(command_args)
         {%- if leaf.lro_counts > 0 %}
-        return self.build_lro_poller(self._execute_operations(), result_callback={% if leaf.has_outputs() %}self._output{% else %}None{% endif %})
+        return self.build_lro_poller(self._execute_operations, {% if leaf.has_outputs() %}self._output{% else %}None{% endif %})
+        {%- elif leaf.paging %}
+        return self.build_paging(self._execute_operations, self._output)
         {%- else %}
         self._execute_operations()
         return {% if leaf.has_outputs() %}self._output(){% else %}None{% endif %}
@@ -178,17 +180,23 @@ class {{ leaf.cls_name }}(AAZCommand):
         {%- if output.ref is not none %}
         result = self.deserialize_output({{ output.ref }}, client_flatten={{ output.client_flatten }})
         {%- else %}
-        data = {{ output.value|constant_convert }}
+        result = {{ output.value|constant_convert }}
+        {%- endif %}
+        {%- if output.next_link is not none %}
+        next_link = self.deserialize_output({{ output.next_link }})
         {%- endif %}
         {%- endfor %}
+        {%- if leaf.paging %}
+        return result, next_link
+        {%- else %}
         return result
+        {%- endif %}
     {%- endif %}
 
     {%- for op in leaf.http_operations %}
 
     class {{ op.name }}(AAZHttpOperation):
         CLIENT_TYPE = "{{ leaf.client_type }}"
-        ERROR_FORMAT = "{{ op.error_format }}"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
@@ -236,6 +244,10 @@ class {{ leaf.cls_name }}(AAZCommand):
         @property
         def method(self):
             return "{{ op.method }}"
+
+        @property
+        def error_format(self):
+            return "{{ op.error_format }}"
 
         {%- if op.url_parameters is not none and op.url_parameters|length %}
 

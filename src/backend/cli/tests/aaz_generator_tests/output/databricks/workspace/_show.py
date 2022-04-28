@@ -65,7 +65,6 @@ class Show(AAZCommand):
 
     class WorkspacesGet(AAZHttpOperation):
         CLIENT_TYPE = "MgmtClient"
-        ERROR_FORMAT = "ODataV4Format"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
@@ -85,6 +84,10 @@ class Show(AAZCommand):
         @property
         def method(self):
             return "GET"
+
+        @property
+        def error_format(self):
+            return "ODataV4Format"
 
         @property
         def url_parameters(self):

@@ -262,7 +262,6 @@ class Create(AAZCommand):
 
     class AutomationRulesCreateOrUpdate(AAZHttpOperation):
         CLIENT_TYPE = "MgmtClient"
-        ERROR_FORMAT = "ODataV4Format"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
@@ -282,6 +281,10 @@ class Create(AAZCommand):
         @property
         def method(self):
             return "PUT"
+
+        @property
+        def error_format(self):
+            return "ODataV4Format"
 
         @property
         def url_parameters(self):

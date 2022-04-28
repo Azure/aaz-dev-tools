@@ -14,6 +14,12 @@ class AzOutputGenerator:
         return None
 
     @property
+    def next_link(self):
+        if isinstance(self._output, (CMDArrayOutput, )) and self._output.next_link:
+            return self._cmd_ctx.get_variant(self._output.next_link)
+        return None
+
+    @property
     def client_flatten(self):
         if isinstance(self._output, (CMDObjectOutput, CMDArrayOutput)):
             return self._output.client_flatten is True

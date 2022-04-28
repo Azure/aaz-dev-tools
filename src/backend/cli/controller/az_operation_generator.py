@@ -277,7 +277,7 @@ class AzGenericUpdateOperationGenerator(AzOperationGenerator):
     def __init__(self, cmd_ctx, variant_key):
         super().__init__("InstanceUpdateByGeneric", cmd_ctx, None)
         self.variant_key = variant_key
-        self.arg_key = "self.ctx.args"
+        self.arg_key = "self.ctx.generic_update_args"
 
     @property
     def when(self):
