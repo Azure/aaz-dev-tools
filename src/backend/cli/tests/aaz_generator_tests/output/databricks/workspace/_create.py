@@ -276,7 +276,8 @@ class Create(AAZCommand):
                 return self.client.build_lro_polling(
                     self.ctx.args.no_wait,
                     session,
-                    deserialization_callback=self.on_200_201,
+                    self.on_200_201,
+                    self.on_error,
                     lro_options={"final-state-via": "azure-async-operation"},
                     path_format_arguments=self.url_parameters,
                 )
@@ -284,12 +285,13 @@ class Create(AAZCommand):
                 return self.client.build_lro_polling(
                     self.ctx.args.no_wait,
                     session,
-                    deserialization_callback=self.on_200_201,
+                    self.on_200_201,
+                    self.on_error,
                     lro_options={"final-state-via": "azure-async-operation"},
                     path_format_arguments=self.url_parameters,
                 )
 
-            return self.on_error(session)
+            return self.on_error(session.http_response)
 
         @property
         def url(self):

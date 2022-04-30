@@ -80,7 +80,7 @@ class Show(AAZCommand):
             if session.http_response.status_code in [204]:
                 return self.on_204(session)
 
-            return self.on_error(session)
+            return self.on_error(session.http_response)
 
         @property
         def url(self):

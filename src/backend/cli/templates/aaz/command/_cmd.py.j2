@@ -208,10 +208,11 @@ class {{ leaf.cls_name }}(AAZCommand):
                     {% if leaf.support_no_wait %}self.ctx.args.no_wait{% else %}False{% endif %},
                     session,
                     {%- if op.success_202_response.callback_name is not none %}
-                    deserialization_callback=self.{{ op.success_202_response.callback_name }},
+                    self.{{ op.success_202_response.callback_name }},
                     {%- else %}
-                    deserialization_callback=None,
+                    None,
                     {%- endif %}
+                    self.on_error,
                     lro_options={{ op.lro_options|constant_convert }},
                     path_format_arguments=self.url_parameters,
                 )
@@ -223,7 +224,8 @@ class {{ leaf.cls_name }}(AAZCommand):
                 return self.client.build_lro_polling(
                     {% if leaf.support_no_wait %}self.ctx.args.no_wait{% else %}False{% endif %},
                     session,
-                    deserialization_callback=self.{{ response.callback_name }},
+                    self.{{ response.callback_name }},
+                    self.on_error,
                     lro_options={{ op.lro_options|constant_convert }},
                     path_format_arguments=self.url_parameters,
                 )
@@ -232,7 +234,7 @@ class {{ leaf.cls_name }}(AAZCommand):
                 {%- endif %}
             {%- endfor %}
 
-            return self.on_error(session)
+            return self.on_error(session.http_response)
 
         @property
         def url(self):

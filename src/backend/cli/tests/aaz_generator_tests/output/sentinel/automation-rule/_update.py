@@ -264,7 +264,7 @@ class Update(AAZCommand):
             if session.http_response.status_code in [200]:
                 return self.on_200(session)
 
-            return self.on_error(session)
+            return self.on_error(session.http_response)
 
         @property
         def url(self):
@@ -351,7 +351,7 @@ class Update(AAZCommand):
             if session.http_response.status_code in [200, 201]:
                 return self.on_200_201(session)
 
-            return self.on_error(session)
+            return self.on_error(session.http_response)
 
         @property
         def url(self):
