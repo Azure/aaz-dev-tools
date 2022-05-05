@@ -28,7 +28,7 @@ Every CLI command consists of 2 parts:
   ```
   We call `network vnet` the command group name and `create` the command operation name.
 - Argument:
-  CLI user can pass in various types of arguments. In addition to the primitive types, users can also pass object, array and dict. For more information, please review [CLI/Argument](/Docs/cli/argument.md).
+  CLI user can pass in various types of arguments. In addition to the primitive types, users can also pass object, array and dict. For more information, please review [CLI/Argument](cli/argument.md).
 
 
 There are two repos to maintain Azure CLI commands：
@@ -57,7 +57,7 @@ Atomic CLI commands do not depend on the SDK or other commands. This brings seve
   Atomic CLI commands are decoupled from others commands, so it's easy to add, modify, upgrade and release an Atomic CLI command without influence other commands. And the change can be refined down to the API level instead of SDK level. 
 
 The degree of coupling between commands relay on SDK can be seen from the following PR.
-![BumpUpNetworkSDK](/Docs/images/az_cli_bump_up_network_sdk.png)
+![BumpUpNetworkSDK](images/az_cli_bump_up_network_sdk.png)
 The SDK packages a batch of APIs, and when one API has new change and is released in a new SDK version,
  we have to test and update the commands that use the whole batch of APIs in SDK instead of the one API we care about.
  Each time we bump up a SDK, hundreds of tests need to rerun in live and their recording files need to be updated, we also need to fix other commands that are broken by new SDK.
@@ -66,7 +66,7 @@ The SDK packages a batch of APIs, and when one API has new change and is release
 ## 2 Overview
 ---
 
-![Architecture](/Docs/diagrams/out/archutecture/architecture.svg)
+![Architecture](diagrams/out/archutecture/architecture.svg)
 
 AAZDev Tool consists of 4 parts:
 - API Translators:
@@ -174,7 +174,7 @@ Workspaces are like containers, they are isolated so that changes in one do not 
 It's possible to add resources from different resource providers, but they should be in the same plane. Currently we only support Management plane.
 Another note is that a workspace don't allow to add a resource multiple times in different versions. For example, if virtual network resource('/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}') of version 2021-05-01 is added in a workspace, it's not allowed to add other versions of this resource in this workspace.
 
-Please jump to [Workspace Editor](/Docs/usage/workspace_editor_usage.md) for more details.
+Please jump to [Workspace Editor](usage/workspace_editor_usage.md) for more details.
 
 ## 5 AAZ Repo
 ---
@@ -191,11 +191,11 @@ There a two folders in the root of AAZ:
 
 The data of command tree is in [Commands/tree.json](https://github.com/kairu-ms/aaz/blob/demo/Commands/tree.json). Json files are hard to read, so the data is also rendered as Markdown files in a tree hierarchy.
 
-![CommandTreeNode](/Docs/images/aaz_command_tree_folder.png)
+![CommandTreeNode](images/aaz_command_tree_folder.png)
 
 Each folder represents each node of the tree and also represents a command group. Its readme.md file shows the summery, subgroups and commands of this group. And the links in the file help us to browse quickly.
 
-![CommandTreeLeaf](/Docs/images/aaz_command_tree_command_md.png)
+![CommandTreeLeaf](images/aaz_command_tree_command_md.png)
 
 Each Markdown files starts with '_' represents each leaf of the tree which also represents a command. Its contains the summery, versions and examples of this command. And each version links to a command configuration in Resources folder. 
 
@@ -207,12 +207,12 @@ The format of command configuration file path is:
 Resources/{plane}/{base64(resource_id)}/{api_version}.xml
 ```
 
-![CommandConfiguration](/Docs/images/aaz_command_configuration.png)
+![CommandConfiguration](images/aaz_command_configuration.png)
 
 A command configuration file contains more than one commands, which are generated from the same resource.
 
 The diagram below show the structure of command configuration file.
-![CommandConfigurationFileStructure](/Docs/diagrams/out/command_configuration/file_structure.svg)
+![CommandConfigurationFileStructure](diagrams/out/command_configuration/file_structure.svg)
 
 The commands in a configuration file organized in hierarchy.
 
@@ -235,7 +235,7 @@ The data flow from Argument Section to Operation Section and then to Output Sect
 
 CLI commands are separated into different command modules in Azure CLI repo or Azure CLI extension repo. So it's required to select a specific module for generators.
 
-![CommandModules](/Docs/images/az_cli_and_az_cli_extension_command_modules.png)
+![CommandModules](images/az_cli_and_az_cli_extension_command_modules.png)
 
 ### 6.2 Profile
 
@@ -249,4 +249,4 @@ Azure CLI uses profiles to support Azure Stack. There are five profiles:
 The `latest` profile contains a full set of commands and the rest profiles contains a sub set of commands from the `latest`.
 One command may call different api versions in different profiles. So its arguments and output schema may vary from profile to profile.
 
-Please jump to [CLI Generator](/Docs/usage/cli_generator_usage.md) for more details.
+Please jump to [CLI Generator](usage/cli_generator_usage.md) for more details.
