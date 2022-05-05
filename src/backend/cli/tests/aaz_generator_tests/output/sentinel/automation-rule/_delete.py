@@ -12,28 +12,23 @@ from azure.cli.core.aaz import *
 
 
 @register_command(
-    "databricks workspace delete",
-    is_preview=True,
+    "sentinel automation-rule delete",
 )
 class Delete(AAZCommand):
-    """Delete the workspace.
-
-    :example: Delete the workspace.
-        az databricks workspace delete --resource-group MyResourceGroup --name MyWorkspace
+    """Delete the automation rule
     """
 
     _aaz_info = {
-        "version": "2018-04-01",
+        "version": "2021-10-01",
         "resources": [
-            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}", "2018-04-01"],
+            ["mgmt-plane", "/subscriptions/{}/resourcegroups/{}/providers/microsoft.operationalinsights/workspaces/{}/providers/microsoft.securityinsights/automationrules/{}", "2021-10-01"],
         ]
     }
 
-    AZ_SUPPORT_NO_WAIT = True
-
     def _handler(self, command_args):
         super()._handler(command_args)
-        return self.build_lro_poller(self._execute_operations, None)
+        self._execute_operations()
+        return self._output()
 
     _args_schema = None
 
@@ -46,11 +41,17 @@ class Delete(AAZCommand):
         # define Arg Group ""
 
         _args_schema = cls._args_schema
+        _args_schema.automation_rule_id = AAZStrArg(
+            options=["--automation-rule-id", "--name", "-n"],
+            help="Automation rule ID",
+            required=True,
+            id_part="child_name_1",
+        )
         _args_schema.resource_group = AAZResourceGroupNameArg(
             required=True,
         )
         _args_schema.workspace_name = AAZStrArg(
-            options=["--workspace-name", "--name", "-n"],
+            options=["--workspace-name"],
             help="The name of the workspace.",
             required=True,
             id_part="name",
@@ -58,39 +59,27 @@ class Delete(AAZCommand):
         return _args_schema
 
     def _execute_operations(self):
-        yield self.WorkspacesDelete(ctx=self.ctx)()
+        self.AutomationRulesDelete(ctx=self.ctx)()
 
-    class WorkspacesDelete(AAZHttpOperation):
+    def _output(self, *args, **kwargs):
+        result = self.deserialize_output(self.ctx.vars.instance, client_flatten=True)
+        return result
+
+    class AutomationRulesDelete(AAZHttpOperation):
         CLIENT_TYPE = "MgmtClient"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
             session = self.client.send_request(request=request, stream=False, **kwargs)
-            if session.http_response.status_code in [202]:
-                return self.client.build_lro_polling(
-                    self.ctx.args.no_wait,
-                    session,
-                    self.on_200_202_204,
-                    self.on_error,
-                    lro_options={"final-state-via": "azure-async-operation"},
-                    path_format_arguments=self.url_parameters,
-                )
-            if session.http_response.status_code in [200, 202, 204]:
-                return self.client.build_lro_polling(
-                    self.ctx.args.no_wait,
-                    session,
-                    self.on_200_202_204,
-                    self.on_error,
-                    lro_options={"final-state-via": "azure-async-operation"},
-                    path_format_arguments=self.url_parameters,
-                )
+            if session.http_response.status_code in [200, 204]:
+                return self.on_200_204(session)
 
             return self.on_error(session.http_response)
 
         @property
         def url(self):
             return self.client.format_url(
-                "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}",
+                "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}/providers/Microsoft.SecurityInsights/automationRules/{automationRuleId}",
                 **self.url_parameters
             )
 
@@ -105,6 +94,10 @@ class Delete(AAZCommand):
         @property
         def url_parameters(self):
             parameters = {
+                **self.serialize_url_param(
+                    "automationRuleId", self.ctx.args.automation_rule_id,
+                    required=True,
+                ),
                 **self.serialize_url_param(
                     "resourceGroupName", self.ctx.args.resource_group,
                     required=True,
@@ -124,13 +117,13 @@ class Delete(AAZCommand):
         def query_parameters(self):
             parameters = {
                 **self.serialize_query_param(
-                    "api-version", "2018-04-01",
+                    "api-version", "2021-10-01",
                     required=True,
                 ),
             }
             return parameters
 
-        def on_200_202_204(self, session):
+        def on_200_204(self, session):
             pass
 
 

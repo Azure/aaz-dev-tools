@@ -1,0 +1,1704 @@
+<?xml version='1.0' encoding='utf-8'?>
+<CodeGen plane="mgmt-plane">
+  <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.operationalinsights/workspaces/{}/providers/microsoft.securityinsights/automationrules/{}" version="2021-10-01" swagger="mgmt-plane/securityinsights/ResourceProviders/Microsoft.SecurityInsights/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuT3BlcmF0aW9uYWxJbnNpZ2h0cy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfS9wcm92aWRlcnMvTWljcm9zb2Z0LlNlY3VyaXR5SW5zaWdodHMvYXV0b21hdGlvblJ1bGVzL3thdXRvbWF0aW9uUnVsZUlkfQ==/V/MjAyMS0xMC0wMQ=="/>
+  <commandGroup name="sentinel automation-rule">
+    <command name="show" version="2021-10-01">
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.operationalinsights/workspaces/{}/providers/microsoft.securityinsights/automationrules/{}" version="2021-10-01" swagger="mgmt-plane/securityinsights/ResourceProviders/Microsoft.SecurityInsights/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuT3BlcmF0aW9uYWxJbnNpZ2h0cy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfS9wcm92aWRlcnMvTWljcm9zb2Z0LlNlY3VyaXR5SW5zaWdodHMvYXV0b21hdGlvblJ1bGVzL3thdXRvbWF0aW9uUnVsZUlkfQ==/V/MjAyMS0xMC0wMQ=="/>
+      <argGroup name="">
+        <arg type="string" var="$Path.automationRuleId" options="automation-rule-id name n" required="True" idPart="child_name_1">
+          <help short="Automation rule ID"/>
+        </arg>
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="string" var="$Path.workspaceName" options="workspace-name" required="True" idPart="name">
+          <help short="The name of the workspace."/>
+          <format maxLength="90" minLength="1"/>
+        </arg>
+      </argGroup>
+      <operation operationId="AutomationRules_Get">
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}/providers/Microsoft.SecurityInsights/automationRules/{automationRuleId}">
+          <request method="get">
+            <path>
+              <param type="string" name="automationRuleId" arg="$Path.automationRuleId" required="True"/>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True">
+                <format minLength="1"/>
+              </param>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="90" minLength="1"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2021-10-01"/>
+                <format minLength="1"/>
+              </const>
+            </query>
+          </request>
+          <response statusCode="200">
+            <body>
+              <json var="$Instance">
+                <schema type="object">
+                  <prop type="string" name="etag"/>
+                  <prop readOnly="True" type="ResourceId" name="id">
+                    <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.OperationalInsights/workspaces/{}/providers/Microsoft.SecurityInsights/automationRules/{}"/>
+                  </prop>
+                  <prop readOnly="True" type="string" name="name"/>
+                  <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="array<object>" name="actions" required="True">
+                      <item type="object">
+                        <prop type="string" name="actionType" required="True">
+                          <enum>
+                            <item value="ModifyProperties"/>
+                            <item value="RunPlaybook"/>
+                          </enum>
+                        </prop>
+                        <prop type="integer32" name="order" required="True"/>
+                        <discriminator property="actionType" value="ModifyProperties">
+                          <prop type="object" name="actionConfiguration">
+                            <prop type="string" name="classification">
+                              <enum>
+                                <item value="BenignPositive"/>
+                                <item value="FalsePositive"/>
+                                <item value="TruePositive"/>
+                                <item value="Undetermined"/>
+                              </enum>
+                            </prop>
+                            <prop type="string" name="classificationComment"/>
+                            <prop type="string" name="classificationReason">
+                              <enum>
+                                <item value="InaccurateData"/>
+                                <item value="IncorrectAlertLogic"/>
+                                <item value="SuspiciousActivity"/>
+                                <item value="SuspiciousButExpected"/>
+                              </enum>
+                            </prop>
+                            <prop type="array<object>" name="labels">
+                              <item type="object">
+                                <prop type="string" name="labelName" required="True"/>
+                                <prop readOnly="True" type="string" name="labelType">
+                                  <enum>
+                                    <item value="AutoAssigned"/>
+                                    <item value="User"/>
+                                  </enum>
+                                </prop>
+                              </item>
+                            </prop>
+                            <prop type="object" name="owner">
+                              <prop type="string" name="assignedTo"/>
+                              <prop type="string" name="email"/>
+                              <prop type="uuid" name="objectId"/>
+                              <prop type="string" name="ownerType">
+                                <enum>
+                                  <item value="Group"/>
+                                  <item value="Unknown"/>
+                                  <item value="User"/>
+                                </enum>
+                              </prop>
+                              <prop type="string" name="userPrincipalName"/>
+                            </prop>
+                            <prop type="string" name="severity">
+                              <enum>
+                                <item value="High"/>
+                                <item value="Informational"/>
+                                <item value="Low"/>
+                                <item value="Medium"/>
+                              </enum>
+                            </prop>
+                            <prop type="string" name="status">
+                              <enum>
+                                <item value="Active"/>
+                                <item value="Closed"/>
+                                <item value="New"/>
+                              </enum>
+                            </prop>
+                          </prop>
+                        </discriminator>
+                        <discriminator property="actionType" value="RunPlaybook">
+                          <prop type="object" name="actionConfiguration">
+                            <prop type="string" name="logicAppResourceId" required="True"/>
+                            <prop type="uuid" name="tenantId"/>
+                          </prop>
+                        </discriminator>
+                      </item>
+                    </prop>
+                    <prop readOnly="True" type="@ClientInfo_read" name="createdBy"/>
+                    <prop readOnly="True" type="dateTime" name="createdTimeUtc"/>
+                    <prop type="string" name="displayName" required="True">
+                      <format maxLength="500"/>
+                    </prop>
+                    <prop readOnly="True" type="object" name="lastModifiedBy" cls="ClientInfo_read">
+                      <prop readOnly="True" type="string" name="email"/>
+                      <prop readOnly="True" type="string" name="name"/>
+                      <prop readOnly="True" type="uuid" name="objectId"/>
+                      <prop readOnly="True" type="string" name="userPrincipalName"/>
+                    </prop>
+                    <prop readOnly="True" type="dateTime" name="lastModifiedTimeUtc"/>
+                    <prop type="integer32" name="order" required="True">
+                      <format maximum="1000" minimum="1"/>
+                    </prop>
+                    <prop type="object" name="triggeringLogic" required="True">
+                      <prop type="array<object>" name="conditions">
+                        <item type="object">
+                          <prop type="string" name="conditionType" required="True">
+                            <enum>
+                              <item value="Property"/>
+                            </enum>
+                          </prop>
+                          <discriminator property="conditionType" value="Property">
+                            <prop type="object" name="conditionProperties">
+                              <prop type="string" name="operator">
+                                <enum>
+                                  <item value="Contains"/>
+                                  <item value="EndsWith"/>
+                                  <item value="Equals"/>
+                                  <item value="NotContains"/>
+                                  <item value="NotEndsWith"/>
+                                  <item value="NotEquals"/>
+                                  <item value="NotStartsWith"/>
+                                  <item value="StartsWith"/>
+                                </enum>
+                              </prop>
+                              <prop type="string" name="propertyName">
+                                <enum>
+                                  <item value="AccountAadTenantId"/>
+                                  <item value="AccountAadUserId"/>
+                                  <item value="AccountNTDomain"/>
+                                  <item value="AccountName"/>
+                                  <item value="AccountObjectGuid"/>
+                                  <item value="AccountPUID"/>
+                                  <item value="AccountSid"/>
+                                  <item value="AccountUPNSuffix"/>
+                                  <item value="AlertProductNames"/>
+                                  <item value="AzureResourceResourceId"/>
+                                  <item value="AzureResourceSubscriptionId"/>
+                                  <item value="CloudApplicationAppId"/>
+                                  <item value="CloudApplicationAppName"/>
+                                  <item value="DNSDomainName"/>
+                                  <item value="FileDirectory"/>
+                                  <item value="FileHashValue"/>
+                                  <item value="FileName"/>
+                                  <item value="HostAzureID"/>
+                                  <item value="HostNTDomain"/>
+                                  <item value="HostName"/>
+                                  <item value="HostNetBiosName"/>
+                                  <item value="HostOSVersion"/>
+                                  <item value="IPAddress"/>
+                                  <item value="IncidentDescription"/>
+                                  <item value="IncidentLabel"/>
+                                  <item value="IncidentProviderName"/>
+                                  <item value="IncidentRelatedAnalyticRuleIds"/>
+                                  <item value="IncidentSeverity"/>
+                                  <item value="IncidentStatus"/>
+                                  <item value="IncidentTactics"/>
+                                  <item value="IncidentTitle"/>
+                                  <item value="IoTDeviceId"/>
+                                  <item value="IoTDeviceModel"/>
+                                  <item value="IoTDeviceName"/>
+                                  <item value="IoTDeviceOperatingSystem"/>
+                                  <item value="IoTDeviceType"/>
+                                  <item value="IoTDeviceVendor"/>
+                                  <item value="MailMessageDeliveryAction"/>
+                                  <item value="MailMessageDeliveryLocation"/>
+                                  <item value="MailMessageP1Sender"/>
+                                  <item value="MailMessageP2Sender"/>
+                                  <item value="MailMessageRecipient"/>
+                                  <item value="MailMessageSenderIP"/>
+                                  <item value="MailMessageSubject"/>
+                                  <item value="MailboxDisplayName"/>
+                                  <item value="MailboxPrimaryAddress"/>
+                                  <item value="MailboxUPN"/>
+                                  <item value="MalwareCategory"/>
+                                  <item value="MalwareName"/>
+                                  <item value="ProcessCommandLine"/>
+                                  <item value="ProcessId"/>
+                                  <item value="RegistryKey"/>
+                                  <item value="RegistryValueData"/>
+                                  <item value="Url"/>
+                                </enum>
+                              </prop>
+                              <prop type="array<string>" name="propertyValues">
+                                <item type="string"/>
+                              </prop>
+                            </prop>
+                          </discriminator>
+                        </item>
+                      </prop>
+                      <prop type="dateTime" name="expirationTimeUtc"/>
+                      <prop type="boolean" name="isEnabled" required="True"/>
+                      <prop type="string" name="triggersOn" required="True">
+                        <enum>
+                          <item value="Incidents"/>
+                        </enum>
+                      </prop>
+                      <prop type="string" name="triggersWhen" required="True">
+                        <enum>
+                          <item value="Created"/>
+                        </enum>
+                      </prop>
+                    </prop>
+                  </prop>
+                  <prop readOnly="True" type="object" name="systemData">
+                    <prop readOnly="True" type="dateTime" name="createdAt"/>
+                    <prop readOnly="True" type="string" name="createdBy"/>
+                    <prop readOnly="True" type="string" name="createdByType">
+                      <enum>
+                        <item value="Application"/>
+                        <item value="Key"/>
+                        <item value="ManagedIdentity"/>
+                        <item value="User"/>
+                      </enum>
+                    </prop>
+                    <prop readOnly="True" type="dateTime" name="lastModifiedAt"/>
+                    <prop readOnly="True" type="string" name="lastModifiedBy"/>
+                    <prop readOnly="True" type="string" name="lastModifiedByType">
+                      <enum>
+                        <item value="Application"/>
+                        <item value="Key"/>
+                        <item value="ManagedIdentity"/>
+                        <item value="User"/>
+                      </enum>
+                    </prop>
+                  </prop>
+                  <prop readOnly="True" type="string" name="type"/>
+                </schema>
+              </json>
+            </body>
+          </response>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <output type="object" ref="$Instance" clientFlatten="True"/>
+    </command>
+    <command name="delete" version="2021-10-01">
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.operationalinsights/workspaces/{}/providers/microsoft.securityinsights/automationrules/{}" version="2021-10-01" swagger="mgmt-plane/securityinsights/ResourceProviders/Microsoft.SecurityInsights/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuT3BlcmF0aW9uYWxJbnNpZ2h0cy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfS9wcm92aWRlcnMvTWljcm9zb2Z0LlNlY3VyaXR5SW5zaWdodHMvYXV0b21hdGlvblJ1bGVzL3thdXRvbWF0aW9uUnVsZUlkfQ==/V/MjAyMS0xMC0wMQ=="/>
+      <argGroup name="">
+        <arg type="string" var="$Path.automationRuleId" options="automation-rule-id name n" required="True" idPart="child_name_1">
+          <help short="Automation rule ID"/>
+        </arg>
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="string" var="$Path.workspaceName" options="workspace-name" required="True" idPart="name">
+          <help short="The name of the workspace."/>
+          <format maxLength="90" minLength="1"/>
+        </arg>
+      </argGroup>
+      <operation operationId="AutomationRules_Delete">
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}/providers/Microsoft.SecurityInsights/automationRules/{automationRuleId}">
+          <request method="delete">
+            <path>
+              <param type="string" name="automationRuleId" arg="$Path.automationRuleId" required="True"/>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True">
+                <format minLength="1"/>
+              </param>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="90" minLength="1"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2021-10-01"/>
+                <format minLength="1"/>
+              </const>
+            </query>
+          </request>
+          <response statusCode="200 204"/>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <output type="object" ref="$Instance" clientFlatten="True"/>
+    </command>
+    <command name="create" version="2021-10-01">
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.operationalinsights/workspaces/{}/providers/microsoft.securityinsights/automationrules/{}" version="2021-10-01" swagger="mgmt-plane/securityinsights/ResourceProviders/Microsoft.SecurityInsights/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuT3BlcmF0aW9uYWxJbnNpZ2h0cy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfS9wcm92aWRlcnMvTWljcm9zb2Z0LlNlY3VyaXR5SW5zaWdodHMvYXV0b21hdGlvblJ1bGVzL3thdXRvbWF0aW9uUnVsZUlkfQ==/V/MjAyMS0xMC0wMQ=="/>
+      <argGroup name="">
+        <arg type="string" var="$Path.automationRuleId" options="automation-rule-id name n" required="True" idPart="child_name_1">
+          <help short="Automation rule ID"/>
+        </arg>
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="string" var="$Path.workspaceName" options="workspace-name" required="True" idPart="name">
+          <help short="The name of the workspace."/>
+          <format maxLength="90" minLength="1"/>
+        </arg>
+      </argGroup>
+      <argGroup name="AutomationRuleToUpsert">
+        <arg type="string" var="$automationRuleToUpsert.etag" options="etag" group="AutomationRuleToUpsert">
+          <help short="Etag of the azure resource"/>
+        </arg>
+        <arg type="array<object>" var="$automationRuleToUpsert.properties.actions" options="actions" required="True" group="AutomationRuleToUpsert" singularOptions="action">
+          <help short="The actions to execute when the automation rule is triggered"/>
+          <item type="object">
+            <arg type="object" var="$automationRuleToUpsert.properties.actions[].ModifyProperties" options="modify-properties">
+              <arg type="object" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration" options="action-configuration">
+                <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.classification" options="classification">
+                  <help short="The reason the incident was closed"/>
+                  <enum>
+                    <item name="BenignPositive" value="BenignPositive"/>
+                    <item name="FalsePositive" value="FalsePositive"/>
+                    <item name="TruePositive" value="TruePositive"/>
+                    <item name="Undetermined" value="Undetermined"/>
+                  </enum>
+                </arg>
+                <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.classificationComment" options="classification-comment">
+                  <help short="Describes the reason the incident was closed"/>
+                </arg>
+                <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.classificationReason" options="classification-reason">
+                  <help short="The classification reason the incident was closed with"/>
+                  <enum>
+                    <item name="InaccurateData" value="InaccurateData"/>
+                    <item name="IncorrectAlertLogic" value="IncorrectAlertLogic"/>
+                    <item name="SuspiciousActivity" value="SuspiciousActivity"/>
+                    <item name="SuspiciousButExpected" value="SuspiciousButExpected"/>
+                  </enum>
+                </arg>
+                <arg type="array<object>" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.labels" options="labels" singularOptions="label">
+                  <help short="List of labels to add to the incident"/>
+                  <item type="object">
+                    <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.labels[].labelName" options="label-name" required="True">
+                      <help short="The name of the label"/>
+                    </arg>
+                  </item>
+                </arg>
+                <arg type="object" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner" options="owner">
+                  <help short="Information on the user an incident is assigned to"/>
+                  <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.assignedTo" options="assigned-to">
+                    <help short="The name of the user the incident is assigned to."/>
+                  </arg>
+                  <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.email" options="email">
+                    <help short="The email of the user the incident is assigned to."/>
+                  </arg>
+                  <arg type="uuid" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.objectId" options="object-id">
+                    <help short="The object id of the user the incident is assigned to."/>
+                  </arg>
+                  <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.ownerType" options="owner-type">
+                    <help short="The type of the owner the incident is assigned to."/>
+                    <enum>
+                      <item name="Group" value="Group"/>
+                      <item name="Unknown" value="Unknown"/>
+                      <item name="User" value="User"/>
+                    </enum>
+                  </arg>
+                  <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.userPrincipalName" options="user-principal-name">
+                    <help short="The user principal name of the user the incident is assigned to."/>
+                  </arg>
+                </arg>
+                <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.severity" options="severity">
+                  <help short="The severity of the incident"/>
+                  <enum>
+                    <item name="High" value="High"/>
+                    <item name="Informational" value="Informational"/>
+                    <item name="Low" value="Low"/>
+                    <item name="Medium" value="Medium"/>
+                  </enum>
+                </arg>
+                <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.status" options="status">
+                  <help short="The status of the incident"/>
+                  <enum>
+                    <item name="Active" value="Active"/>
+                    <item name="Closed" value="Closed"/>
+                    <item name="New" value="New"/>
+                  </enum>
+                </arg>
+              </arg>
+            </arg>
+            <arg type="object" var="$automationRuleToUpsert.properties.actions[].RunPlaybook" options="run-playbook">
+              <arg type="object" var="$automationRuleToUpsert.properties.actions[].RunPlaybook.actionConfiguration" options="action-configuration">
+                <arg type="string" var="$automationRuleToUpsert.properties.actions[].RunPlaybook.actionConfiguration.logicAppResourceId" options="logic-app-resource-id" required="True">
+                  <help short="The resource id of the playbook resource"/>
+                </arg>
+                <arg type="uuid" var="$automationRuleToUpsert.properties.actions[].RunPlaybook.actionConfiguration.tenantId" options="tenant-id">
+                  <help short="The tenant id of the playbook resource"/>
+                </arg>
+              </arg>
+            </arg>
+            <arg type="integer32" var="$automationRuleToUpsert.properties.actions[].order" options="order" required="True"/>
+          </item>
+        </arg>
+        <arg type="string" var="$automationRuleToUpsert.properties.displayName" options="display-name" required="True" group="AutomationRuleToUpsert">
+          <help short="The display name of the automation rule"/>
+          <format maxLength="500"/>
+        </arg>
+        <arg type="integer32" var="$automationRuleToUpsert.properties.order" options="order" required="True" group="AutomationRuleToUpsert">
+          <help short="The order of execution of the automation rule"/>
+          <format maximum="1000" minimum="1"/>
+        </arg>
+        <arg type="object" var="$automationRuleToUpsert.properties.triggeringLogic" options="triggering-logic" required="True" group="AutomationRuleToUpsert">
+          <help short="Describes automation rule triggering logic"/>
+          <arg type="array<object>" var="$automationRuleToUpsert.properties.triggeringLogic.conditions" options="conditions" singularOptions="condition">
+            <help short="The conditions to evaluate to determine if the automation rule should be triggered on a given object"/>
+            <item type="object">
+              <arg type="object" var="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property" options="property">
+                <arg type="object" var="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties" options="condition-properties">
+                  <arg type="string" var="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties.operator" options="operator">
+                    <enum>
+                      <item name="Contains" value="Contains"/>
+                      <item name="EndsWith" value="EndsWith"/>
+                      <item name="Equals" value="Equals"/>
+                      <item name="NotContains" value="NotContains"/>
+                      <item name="NotEndsWith" value="NotEndsWith"/>
+                      <item name="NotEquals" value="NotEquals"/>
+                      <item name="NotStartsWith" value="NotStartsWith"/>
+                      <item name="StartsWith" value="StartsWith"/>
+                    </enum>
+                  </arg>
+                  <arg type="string" var="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties.propertyName" options="property-name">
+                    <help short="The property to evaluate in an automation rule property condition"/>
+                    <enum>
+                      <item name="AccountAadTenantId" value="AccountAadTenantId"/>
+                      <item name="AccountAadUserId" value="AccountAadUserId"/>
+                      <item name="AccountNTDomain" value="AccountNTDomain"/>
+                      <item name="AccountName" value="AccountName"/>
+                      <item name="AccountObjectGuid" value="AccountObjectGuid"/>
+                      <item name="AccountPUID" value="AccountPUID"/>
+                      <item name="AccountSid" value="AccountSid"/>
+                      <item name="AccountUPNSuffix" value="AccountUPNSuffix"/>
+                      <item name="AlertProductNames" value="AlertProductNames"/>
+                      <item name="AzureResourceResourceId" value="AzureResourceResourceId"/>
+                      <item name="AzureResourceSubscriptionId" value="AzureResourceSubscriptionId"/>
+                      <item name="CloudApplicationAppId" value="CloudApplicationAppId"/>
+                      <item name="CloudApplicationAppName" value="CloudApplicationAppName"/>
+                      <item name="DNSDomainName" value="DNSDomainName"/>
+                      <item name="FileDirectory" value="FileDirectory"/>
+                      <item name="FileHashValue" value="FileHashValue"/>
+                      <item name="FileName" value="FileName"/>
+                      <item name="HostAzureID" value="HostAzureID"/>
+                      <item name="HostNTDomain" value="HostNTDomain"/>
+                      <item name="HostName" value="HostName"/>
+                      <item name="HostNetBiosName" value="HostNetBiosName"/>
+                      <item name="HostOSVersion" value="HostOSVersion"/>
+                      <item name="IPAddress" value="IPAddress"/>
+                      <item name="IncidentDescription" value="IncidentDescription"/>
+                      <item name="IncidentLabel" value="IncidentLabel"/>
+                      <item name="IncidentProviderName" value="IncidentProviderName"/>
+                      <item name="IncidentRelatedAnalyticRuleIds" value="IncidentRelatedAnalyticRuleIds"/>
+                      <item name="IncidentSeverity" value="IncidentSeverity"/>
+                      <item name="IncidentStatus" value="IncidentStatus"/>
+                      <item name="IncidentTactics" value="IncidentTactics"/>
+                      <item name="IncidentTitle" value="IncidentTitle"/>
+                      <item name="IoTDeviceId" value="IoTDeviceId"/>
+                      <item name="IoTDeviceModel" value="IoTDeviceModel"/>
+                      <item name="IoTDeviceName" value="IoTDeviceName"/>
+                      <item name="IoTDeviceOperatingSystem" value="IoTDeviceOperatingSystem"/>
+                      <item name="IoTDeviceType" value="IoTDeviceType"/>
+                      <item name="IoTDeviceVendor" value="IoTDeviceVendor"/>
+                      <item name="MailMessageDeliveryAction" value="MailMessageDeliveryAction"/>
+                      <item name="MailMessageDeliveryLocation" value="MailMessageDeliveryLocation"/>
+                      <item name="MailMessageP1Sender" value="MailMessageP1Sender"/>
+                      <item name="MailMessageP2Sender" value="MailMessageP2Sender"/>
+                      <item name="MailMessageRecipient" value="MailMessageRecipient"/>
+                      <item name="MailMessageSenderIP" value="MailMessageSenderIP"/>
+                      <item name="MailMessageSubject" value="MailMessageSubject"/>
+                      <item name="MailboxDisplayName" value="MailboxDisplayName"/>
+                      <item name="MailboxPrimaryAddress" value="MailboxPrimaryAddress"/>
+                      <item name="MailboxUPN" value="MailboxUPN"/>
+                      <item name="MalwareCategory" value="MalwareCategory"/>
+                      <item name="MalwareName" value="MalwareName"/>
+                      <item name="ProcessCommandLine" value="ProcessCommandLine"/>
+                      <item name="ProcessId" value="ProcessId"/>
+                      <item name="RegistryKey" value="RegistryKey"/>
+                      <item name="RegistryValueData" value="RegistryValueData"/>
+                      <item name="Url" value="Url"/>
+                    </enum>
+                  </arg>
+                  <arg type="array<string>" var="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties.propertyValues" options="property-values" singularOptions="property-value">
+                    <item type="string"/>
+                  </arg>
+                </arg>
+              </arg>
+            </item>
+          </arg>
+          <arg type="dateTime" var="$automationRuleToUpsert.properties.triggeringLogic.expirationTimeUtc" options="expiration-time-utc">
+            <help short="Determines when the automation rule should automatically expire and be disabled."/>
+          </arg>
+          <arg type="boolean" var="$automationRuleToUpsert.properties.triggeringLogic.isEnabled" options="is-enabled" required="True">
+            <help short="Determines whether the automation rule is enabled or disabled"/>
+          </arg>
+          <arg type="string" var="$automationRuleToUpsert.properties.triggeringLogic.triggersOn" options="triggers-on" required="True">
+            <enum>
+              <item name="Incidents" value="Incidents"/>
+            </enum>
+          </arg>
+          <arg type="string" var="$automationRuleToUpsert.properties.triggeringLogic.triggersWhen" options="triggers-when" required="True">
+            <enum>
+              <item name="Created" value="Created"/>
+            </enum>
+          </arg>
+        </arg>
+      </argGroup>
+      <operation operationId="AutomationRules_CreateOrUpdate">
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}/providers/Microsoft.SecurityInsights/automationRules/{automationRuleId}">
+          <request method="put">
+            <path>
+              <param type="string" name="automationRuleId" arg="$Path.automationRuleId" required="True"/>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True">
+                <format minLength="1"/>
+              </param>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="90" minLength="1"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2021-10-01"/>
+                <format minLength="1"/>
+              </const>
+            </query>
+            <body>
+              <json>
+                <schema type="object" name="automationRuleToUpsert" clientFlatten="True">
+                  <prop type="string" name="etag" arg="$automationRuleToUpsert.etag"/>
+                  <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="array<object>" name="actions" arg="$automationRuleToUpsert.properties.actions" required="True">
+                      <item type="object">
+                        <prop type="string" name="actionType" required="True">
+                          <enum>
+                            <item arg="$automationRuleToUpsert.properties.actions[].ModifyProperties" value="ModifyProperties"/>
+                            <item arg="$automationRuleToUpsert.properties.actions[].RunPlaybook" value="RunPlaybook"/>
+                          </enum>
+                        </prop>
+                        <prop type="integer32" name="order" arg="$automationRuleToUpsert.properties.actions[].order" required="True"/>
+                        <discriminator property="actionType" value="ModifyProperties">
+                          <prop type="object" name="actionConfiguration" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration">
+                            <prop type="string" name="classification" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.classification">
+                              <enum>
+                                <item value="BenignPositive"/>
+                                <item value="FalsePositive"/>
+                                <item value="TruePositive"/>
+                                <item value="Undetermined"/>
+                              </enum>
+                            </prop>
+                            <prop type="string" name="classificationComment" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.classificationComment"/>
+                            <prop type="string" name="classificationReason" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.classificationReason">
+                              <enum>
+                                <item value="InaccurateData"/>
+                                <item value="IncorrectAlertLogic"/>
+                                <item value="SuspiciousActivity"/>
+                                <item value="SuspiciousButExpected"/>
+                              </enum>
+                            </prop>
+                            <prop type="array<object>" name="labels" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.labels">
+                              <item type="object">
+                                <prop type="string" name="labelName" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.labels[].labelName" required="True"/>
+                              </item>
+                            </prop>
+                            <prop type="object" name="owner" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner">
+                              <prop type="string" name="assignedTo" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.assignedTo"/>
+                              <prop type="string" name="email" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.email"/>
+                              <prop type="uuid" name="objectId" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.objectId"/>
+                              <prop type="string" name="ownerType" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.ownerType">
+                                <enum>
+                                  <item value="Group"/>
+                                  <item value="Unknown"/>
+                                  <item value="User"/>
+                                </enum>
+                              </prop>
+                              <prop type="string" name="userPrincipalName" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.userPrincipalName"/>
+                            </prop>
+                            <prop type="string" name="severity" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.severity">
+                              <enum>
+                                <item value="High"/>
+                                <item value="Informational"/>
+                                <item value="Low"/>
+                                <item value="Medium"/>
+                              </enum>
+                            </prop>
+                            <prop type="string" name="status" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.status">
+                              <enum>
+                                <item value="Active"/>
+                                <item value="Closed"/>
+                                <item value="New"/>
+                              </enum>
+                            </prop>
+                          </prop>
+                        </discriminator>
+                        <discriminator property="actionType" value="RunPlaybook">
+                          <prop type="object" name="actionConfiguration" arg="$automationRuleToUpsert.properties.actions[].RunPlaybook.actionConfiguration">
+                            <prop type="string" name="logicAppResourceId" arg="$automationRuleToUpsert.properties.actions[].RunPlaybook.actionConfiguration.logicAppResourceId" required="True"/>
+                            <prop type="uuid" name="tenantId" arg="$automationRuleToUpsert.properties.actions[].RunPlaybook.actionConfiguration.tenantId"/>
+                          </prop>
+                        </discriminator>
+                      </item>
+                    </prop>
+                    <prop type="string" name="displayName" arg="$automationRuleToUpsert.properties.displayName" required="True">
+                      <format maxLength="500"/>
+                    </prop>
+                    <prop type="integer32" name="order" arg="$automationRuleToUpsert.properties.order" required="True">
+                      <format maximum="1000" minimum="1"/>
+                    </prop>
+                    <prop type="object" name="triggeringLogic" arg="$automationRuleToUpsert.properties.triggeringLogic" required="True">
+                      <prop type="array<object>" name="conditions" arg="$automationRuleToUpsert.properties.triggeringLogic.conditions">
+                        <item type="object">
+                          <prop type="string" name="conditionType" required="True">
+                            <enum>
+                              <item arg="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property" value="Property"/>
+                            </enum>
+                          </prop>
+                          <discriminator property="conditionType" value="Property">
+                            <prop type="object" name="conditionProperties" arg="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties">
+                              <prop type="string" name="operator" arg="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties.operator">
+                                <enum>
+                                  <item value="Contains"/>
+                                  <item value="EndsWith"/>
+                                  <item value="Equals"/>
+                                  <item value="NotContains"/>
+                                  <item value="NotEndsWith"/>
+                                  <item value="NotEquals"/>
+                                  <item value="NotStartsWith"/>
+                                  <item value="StartsWith"/>
+                                </enum>
+                              </prop>
+                              <prop type="string" name="propertyName" arg="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties.propertyName">
+                                <enum>
+                                  <item value="AccountAadTenantId"/>
+                                  <item value="AccountAadUserId"/>
+                                  <item value="AccountNTDomain"/>
+                                  <item value="AccountName"/>
+                                  <item value="AccountObjectGuid"/>
+                                  <item value="AccountPUID"/>
+                                  <item value="AccountSid"/>
+                                  <item value="AccountUPNSuffix"/>
+                                  <item value="AlertProductNames"/>
+                                  <item value="AzureResourceResourceId"/>
+                                  <item value="AzureResourceSubscriptionId"/>
+                                  <item value="CloudApplicationAppId"/>
+                                  <item value="CloudApplicationAppName"/>
+                                  <item value="DNSDomainName"/>
+                                  <item value="FileDirectory"/>
+                                  <item value="FileHashValue"/>
+                                  <item value="FileName"/>
+                                  <item value="HostAzureID"/>
+                                  <item value="HostNTDomain"/>
+                                  <item value="HostName"/>
+                                  <item value="HostNetBiosName"/>
+                                  <item value="HostOSVersion"/>
+                                  <item value="IPAddress"/>
+                                  <item value="IncidentDescription"/>
+                                  <item value="IncidentLabel"/>
+                                  <item value="IncidentProviderName"/>
+                                  <item value="IncidentRelatedAnalyticRuleIds"/>
+                                  <item value="IncidentSeverity"/>
+                                  <item value="IncidentStatus"/>
+                                  <item value="IncidentTactics"/>
+                                  <item value="IncidentTitle"/>
+                                  <item value="IoTDeviceId"/>
+                                  <item value="IoTDeviceModel"/>
+                                  <item value="IoTDeviceName"/>
+                                  <item value="IoTDeviceOperatingSystem"/>
+                                  <item value="IoTDeviceType"/>
+                                  <item value="IoTDeviceVendor"/>
+                                  <item value="MailMessageDeliveryAction"/>
+                                  <item value="MailMessageDeliveryLocation"/>
+                                  <item value="MailMessageP1Sender"/>
+                                  <item value="MailMessageP2Sender"/>
+                                  <item value="MailMessageRecipient"/>
+                                  <item value="MailMessageSenderIP"/>
+                                  <item value="MailMessageSubject"/>
+                                  <item value="MailboxDisplayName"/>
+                                  <item value="MailboxPrimaryAddress"/>
+                                  <item value="MailboxUPN"/>
+                                  <item value="MalwareCategory"/>
+                                  <item value="MalwareName"/>
+                                  <item value="ProcessCommandLine"/>
+                                  <item value="ProcessId"/>
+                                  <item value="RegistryKey"/>
+                                  <item value="RegistryValueData"/>
+                                  <item value="Url"/>
+                                </enum>
+                              </prop>
+                              <prop type="array<string>" name="propertyValues" arg="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties.propertyValues">
+                                <item type="string"/>
+                              </prop>
+                            </prop>
+                          </discriminator>
+                        </item>
+                      </prop>
+                      <prop type="dateTime" name="expirationTimeUtc" arg="$automationRuleToUpsert.properties.triggeringLogic.expirationTimeUtc"/>
+                      <prop type="boolean" name="isEnabled" arg="$automationRuleToUpsert.properties.triggeringLogic.isEnabled" required="True"/>
+                      <prop type="string" name="triggersOn" arg="$automationRuleToUpsert.properties.triggeringLogic.triggersOn" required="True">
+                        <enum>
+                          <item value="Incidents"/>
+                        </enum>
+                      </prop>
+                      <prop type="string" name="triggersWhen" arg="$automationRuleToUpsert.properties.triggeringLogic.triggersWhen" required="True">
+                        <enum>
+                          <item value="Created"/>
+                        </enum>
+                      </prop>
+                    </prop>
+                  </prop>
+                </schema>
+              </json>
+            </body>
+          </request>
+          <response statusCode="200 201">
+            <body>
+              <json var="$Instance">
+                <schema type="object">
+                  <prop type="string" name="etag"/>
+                  <prop readOnly="True" type="ResourceId" name="id">
+                    <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.OperationalInsights/workspaces/{}/providers/Microsoft.SecurityInsights/automationRules/{}"/>
+                  </prop>
+                  <prop readOnly="True" type="string" name="name"/>
+                  <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="array<object>" name="actions" required="True">
+                      <item type="object">
+                        <prop type="string" name="actionType" required="True">
+                          <enum>
+                            <item value="ModifyProperties"/>
+                            <item value="RunPlaybook"/>
+                          </enum>
+                        </prop>
+                        <prop type="integer32" name="order" required="True"/>
+                        <discriminator property="actionType" value="ModifyProperties">
+                          <prop type="object" name="actionConfiguration">
+                            <prop type="string" name="classification">
+                              <enum>
+                                <item value="BenignPositive"/>
+                                <item value="FalsePositive"/>
+                                <item value="TruePositive"/>
+                                <item value="Undetermined"/>
+                              </enum>
+                            </prop>
+                            <prop type="string" name="classificationComment"/>
+                            <prop type="string" name="classificationReason">
+                              <enum>
+                                <item value="InaccurateData"/>
+                                <item value="IncorrectAlertLogic"/>
+                                <item value="SuspiciousActivity"/>
+                                <item value="SuspiciousButExpected"/>
+                              </enum>
+                            </prop>
+                            <prop type="array<object>" name="labels">
+                              <item type="object">
+                                <prop type="string" name="labelName" required="True"/>
+                                <prop readOnly="True" type="string" name="labelType">
+                                  <enum>
+                                    <item value="AutoAssigned"/>
+                                    <item value="User"/>
+                                  </enum>
+                                </prop>
+                              </item>
+                            </prop>
+                            <prop type="object" name="owner">
+                              <prop type="string" name="assignedTo"/>
+                              <prop type="string" name="email"/>
+                              <prop type="uuid" name="objectId"/>
+                              <prop type="string" name="ownerType">
+                                <enum>
+                                  <item value="Group"/>
+                                  <item value="Unknown"/>
+                                  <item value="User"/>
+                                </enum>
+                              </prop>
+                              <prop type="string" name="userPrincipalName"/>
+                            </prop>
+                            <prop type="string" name="severity">
+                              <enum>
+                                <item value="High"/>
+                                <item value="Informational"/>
+                                <item value="Low"/>
+                                <item value="Medium"/>
+                              </enum>
+                            </prop>
+                            <prop type="string" name="status">
+                              <enum>
+                                <item value="Active"/>
+                                <item value="Closed"/>
+                                <item value="New"/>
+                              </enum>
+                            </prop>
+                          </prop>
+                        </discriminator>
+                        <discriminator property="actionType" value="RunPlaybook">
+                          <prop type="object" name="actionConfiguration">
+                            <prop type="string" name="logicAppResourceId" required="True"/>
+                            <prop type="uuid" name="tenantId"/>
+                          </prop>
+                        </discriminator>
+                      </item>
+                    </prop>
+                    <prop readOnly="True" type="@ClientInfo_read" name="createdBy"/>
+                    <prop readOnly="True" type="dateTime" name="createdTimeUtc"/>
+                    <prop type="string" name="displayName" required="True">
+                      <format maxLength="500"/>
+                    </prop>
+                    <prop readOnly="True" type="object" name="lastModifiedBy" cls="ClientInfo_read">
+                      <prop readOnly="True" type="string" name="email"/>
+                      <prop readOnly="True" type="string" name="name"/>
+                      <prop readOnly="True" type="uuid" name="objectId"/>
+                      <prop readOnly="True" type="string" name="userPrincipalName"/>
+                    </prop>
+                    <prop readOnly="True" type="dateTime" name="lastModifiedTimeUtc"/>
+                    <prop type="integer32" name="order" required="True">
+                      <format maximum="1000" minimum="1"/>
+                    </prop>
+                    <prop type="object" name="triggeringLogic" required="True">
+                      <prop type="array<object>" name="conditions">
+                        <item type="object">
+                          <prop type="string" name="conditionType" required="True">
+                            <enum>
+                              <item value="Property"/>
+                            </enum>
+                          </prop>
+                          <discriminator property="conditionType" value="Property">
+                            <prop type="object" name="conditionProperties">
+                              <prop type="string" name="operator">
+                                <enum>
+                                  <item value="Contains"/>
+                                  <item value="EndsWith"/>
+                                  <item value="Equals"/>
+                                  <item value="NotContains"/>
+                                  <item value="NotEndsWith"/>
+                                  <item value="NotEquals"/>
+                                  <item value="NotStartsWith"/>
+                                  <item value="StartsWith"/>
+                                </enum>
+                              </prop>
+                              <prop type="string" name="propertyName">
+                                <enum>
+                                  <item value="AccountAadTenantId"/>
+                                  <item value="AccountAadUserId"/>
+                                  <item value="AccountNTDomain"/>
+                                  <item value="AccountName"/>
+                                  <item value="AccountObjectGuid"/>
+                                  <item value="AccountPUID"/>
+                                  <item value="AccountSid"/>
+                                  <item value="AccountUPNSuffix"/>
+                                  <item value="AlertProductNames"/>
+                                  <item value="AzureResourceResourceId"/>
+                                  <item value="AzureResourceSubscriptionId"/>
+                                  <item value="CloudApplicationAppId"/>
+                                  <item value="CloudApplicationAppName"/>
+                                  <item value="DNSDomainName"/>
+                                  <item value="FileDirectory"/>
+                                  <item value="FileHashValue"/>
+                                  <item value="FileName"/>
+                                  <item value="HostAzureID"/>
+                                  <item value="HostNTDomain"/>
+                                  <item value="HostName"/>
+                                  <item value="HostNetBiosName"/>
+                                  <item value="HostOSVersion"/>
+                                  <item value="IPAddress"/>
+                                  <item value="IncidentDescription"/>
+                                  <item value="IncidentLabel"/>
+                                  <item value="IncidentProviderName"/>
+                                  <item value="IncidentRelatedAnalyticRuleIds"/>
+                                  <item value="IncidentSeverity"/>
+                                  <item value="IncidentStatus"/>
+                                  <item value="IncidentTactics"/>
+                                  <item value="IncidentTitle"/>
+                                  <item value="IoTDeviceId"/>
+                                  <item value="IoTDeviceModel"/>
+                                  <item value="IoTDeviceName"/>
+                                  <item value="IoTDeviceOperatingSystem"/>
+                                  <item value="IoTDeviceType"/>
+                                  <item value="IoTDeviceVendor"/>
+                                  <item value="MailMessageDeliveryAction"/>
+                                  <item value="MailMessageDeliveryLocation"/>
+                                  <item value="MailMessageP1Sender"/>
+                                  <item value="MailMessageP2Sender"/>
+                                  <item value="MailMessageRecipient"/>
+                                  <item value="MailMessageSenderIP"/>
+                                  <item value="MailMessageSubject"/>
+                                  <item value="MailboxDisplayName"/>
+                                  <item value="MailboxPrimaryAddress"/>
+                                  <item value="MailboxUPN"/>
+                                  <item value="MalwareCategory"/>
+                                  <item value="MalwareName"/>
+                                  <item value="ProcessCommandLine"/>
+                                  <item value="ProcessId"/>
+                                  <item value="RegistryKey"/>
+                                  <item value="RegistryValueData"/>
+                                  <item value="Url"/>
+                                </enum>
+                              </prop>
+                              <prop type="array<string>" name="propertyValues">
+                                <item type="string"/>
+                              </prop>
+                            </prop>
+                          </discriminator>
+                        </item>
+                      </prop>
+                      <prop type="dateTime" name="expirationTimeUtc"/>
+                      <prop type="boolean" name="isEnabled" required="True"/>
+                      <prop type="string" name="triggersOn" required="True">
+                        <enum>
+                          <item value="Incidents"/>
+                        </enum>
+                      </prop>
+                      <prop type="string" name="triggersWhen" required="True">
+                        <enum>
+                          <item value="Created"/>
+                        </enum>
+                      </prop>
+                    </prop>
+                  </prop>
+                  <prop readOnly="True" type="object" name="systemData">
+                    <prop readOnly="True" type="dateTime" name="createdAt"/>
+                    <prop readOnly="True" type="string" name="createdBy"/>
+                    <prop readOnly="True" type="string" name="createdByType">
+                      <enum>
+                        <item value="Application"/>
+                        <item value="Key"/>
+                        <item value="ManagedIdentity"/>
+                        <item value="User"/>
+                      </enum>
+                    </prop>
+                    <prop readOnly="True" type="dateTime" name="lastModifiedAt"/>
+                    <prop readOnly="True" type="string" name="lastModifiedBy"/>
+                    <prop readOnly="True" type="string" name="lastModifiedByType">
+                      <enum>
+                        <item value="Application"/>
+                        <item value="Key"/>
+                        <item value="ManagedIdentity"/>
+                        <item value="User"/>
+                      </enum>
+                    </prop>
+                  </prop>
+                  <prop readOnly="True" type="string" name="type"/>
+                </schema>
+              </json>
+            </body>
+          </response>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <output type="object" ref="$Instance" clientFlatten="True"/>
+    </command>
+    <command name="update" version="2021-10-01">
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.operationalinsights/workspaces/{}/providers/microsoft.securityinsights/automationrules/{}" version="2021-10-01" swagger="mgmt-plane/securityinsights/ResourceProviders/Microsoft.SecurityInsights/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuT3BlcmF0aW9uYWxJbnNpZ2h0cy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfS9wcm92aWRlcnMvTWljcm9zb2Z0LlNlY3VyaXR5SW5zaWdodHMvYXV0b21hdGlvblJ1bGVzL3thdXRvbWF0aW9uUnVsZUlkfQ==/V/MjAyMS0xMC0wMQ=="/>
+      <argGroup name="">
+        <arg type="string" var="$Path.automationRuleId" options="automation-rule-id name n" required="True" idPart="child_name_1">
+          <help short="Automation rule ID"/>
+        </arg>
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="string" var="$Path.workspaceName" options="workspace-name" required="True" idPart="name">
+          <help short="The name of the workspace."/>
+          <format maxLength="90" minLength="1"/>
+        </arg>
+      </argGroup>
+      <argGroup name="AutomationRuleToUpsert">
+        <arg type="string" var="$automationRuleToUpsert.etag" options="etag" group="AutomationRuleToUpsert">
+          <help short="Etag of the azure resource"/>
+        </arg>
+        <arg type="array<object>" var="$automationRuleToUpsert.properties.actions" options="actions" group="AutomationRuleToUpsert" singularOptions="action">
+          <help short="The actions to execute when the automation rule is triggered"/>
+          <item type="object">
+            <arg type="object" var="$automationRuleToUpsert.properties.actions[].ModifyProperties" options="modify-properties">
+              <arg type="object" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration" options="action-configuration">
+                <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.classification" options="classification">
+                  <help short="The reason the incident was closed"/>
+                  <enum>
+                    <item name="BenignPositive" value="BenignPositive"/>
+                    <item name="FalsePositive" value="FalsePositive"/>
+                    <item name="TruePositive" value="TruePositive"/>
+                    <item name="Undetermined" value="Undetermined"/>
+                  </enum>
+                </arg>
+                <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.classificationComment" options="classification-comment">
+                  <help short="Describes the reason the incident was closed"/>
+                </arg>
+                <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.classificationReason" options="classification-reason">
+                  <help short="The classification reason the incident was closed with"/>
+                  <enum>
+                    <item name="InaccurateData" value="InaccurateData"/>
+                    <item name="IncorrectAlertLogic" value="IncorrectAlertLogic"/>
+                    <item name="SuspiciousActivity" value="SuspiciousActivity"/>
+                    <item name="SuspiciousButExpected" value="SuspiciousButExpected"/>
+                  </enum>
+                </arg>
+                <arg type="array<object>" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.labels" options="labels" singularOptions="label">
+                  <help short="List of labels to add to the incident"/>
+                  <item type="object">
+                    <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.labels[].labelName" options="label-name">
+                      <help short="The name of the label"/>
+                    </arg>
+                  </item>
+                </arg>
+                <arg type="object" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner" options="owner">
+                  <help short="Information on the user an incident is assigned to"/>
+                  <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.assignedTo" options="assigned-to">
+                    <help short="The name of the user the incident is assigned to."/>
+                  </arg>
+                  <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.email" options="email">
+                    <help short="The email of the user the incident is assigned to."/>
+                  </arg>
+                  <arg type="uuid" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.objectId" options="object-id">
+                    <help short="The object id of the user the incident is assigned to."/>
+                  </arg>
+                  <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.ownerType" options="owner-type">
+                    <help short="The type of the owner the incident is assigned to."/>
+                    <enum>
+                      <item name="Group" value="Group"/>
+                      <item name="Unknown" value="Unknown"/>
+                      <item name="User" value="User"/>
+                    </enum>
+                  </arg>
+                  <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.userPrincipalName" options="user-principal-name">
+                    <help short="The user principal name of the user the incident is assigned to."/>
+                  </arg>
+                </arg>
+                <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.severity" options="severity">
+                  <help short="The severity of the incident"/>
+                  <enum>
+                    <item name="High" value="High"/>
+                    <item name="Informational" value="Informational"/>
+                    <item name="Low" value="Low"/>
+                    <item name="Medium" value="Medium"/>
+                  </enum>
+                </arg>
+                <arg type="string" var="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.status" options="status">
+                  <help short="The status of the incident"/>
+                  <enum>
+                    <item name="Active" value="Active"/>
+                    <item name="Closed" value="Closed"/>
+                    <item name="New" value="New"/>
+                  </enum>
+                </arg>
+              </arg>
+            </arg>
+            <arg type="object" var="$automationRuleToUpsert.properties.actions[].RunPlaybook" options="run-playbook">
+              <arg type="object" var="$automationRuleToUpsert.properties.actions[].RunPlaybook.actionConfiguration" options="action-configuration">
+                <arg type="string" var="$automationRuleToUpsert.properties.actions[].RunPlaybook.actionConfiguration.logicAppResourceId" options="logic-app-resource-id">
+                  <help short="The resource id of the playbook resource"/>
+                </arg>
+                <arg type="uuid" var="$automationRuleToUpsert.properties.actions[].RunPlaybook.actionConfiguration.tenantId" options="tenant-id">
+                  <help short="The tenant id of the playbook resource"/>
+                </arg>
+              </arg>
+            </arg>
+            <arg type="integer32" var="$automationRuleToUpsert.properties.actions[].order" options="order"/>
+          </item>
+        </arg>
+        <arg type="string" var="$automationRuleToUpsert.properties.displayName" options="display-name" group="AutomationRuleToUpsert">
+          <help short="The display name of the automation rule"/>
+          <format maxLength="500"/>
+        </arg>
+        <arg type="integer32" var="$automationRuleToUpsert.properties.order" options="order" group="AutomationRuleToUpsert">
+          <help short="The order of execution of the automation rule"/>
+          <format maximum="1000" minimum="1"/>
+        </arg>
+        <arg type="object" var="$automationRuleToUpsert.properties.triggeringLogic" options="triggering-logic" group="AutomationRuleToUpsert">
+          <help short="Describes automation rule triggering logic"/>
+          <arg type="array<object>" var="$automationRuleToUpsert.properties.triggeringLogic.conditions" options="conditions" singularOptions="condition">
+            <help short="The conditions to evaluate to determine if the automation rule should be triggered on a given object"/>
+            <item type="object">
+              <arg type="object" var="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property" options="property">
+                <arg type="object" var="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties" options="condition-properties">
+                  <arg type="string" var="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties.operator" options="operator">
+                    <enum>
+                      <item name="Contains" value="Contains"/>
+                      <item name="EndsWith" value="EndsWith"/>
+                      <item name="Equals" value="Equals"/>
+                      <item name="NotContains" value="NotContains"/>
+                      <item name="NotEndsWith" value="NotEndsWith"/>
+                      <item name="NotEquals" value="NotEquals"/>
+                      <item name="NotStartsWith" value="NotStartsWith"/>
+                      <item name="StartsWith" value="StartsWith"/>
+                    </enum>
+                  </arg>
+                  <arg type="string" var="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties.propertyName" options="property-name">
+                    <help short="The property to evaluate in an automation rule property condition"/>
+                    <enum>
+                      <item name="AccountAadTenantId" value="AccountAadTenantId"/>
+                      <item name="AccountAadUserId" value="AccountAadUserId"/>
+                      <item name="AccountNTDomain" value="AccountNTDomain"/>
+                      <item name="AccountName" value="AccountName"/>
+                      <item name="AccountObjectGuid" value="AccountObjectGuid"/>
+                      <item name="AccountPUID" value="AccountPUID"/>
+                      <item name="AccountSid" value="AccountSid"/>
+                      <item name="AccountUPNSuffix" value="AccountUPNSuffix"/>
+                      <item name="AlertProductNames" value="AlertProductNames"/>
+                      <item name="AzureResourceResourceId" value="AzureResourceResourceId"/>
+                      <item name="AzureResourceSubscriptionId" value="AzureResourceSubscriptionId"/>
+                      <item name="CloudApplicationAppId" value="CloudApplicationAppId"/>
+                      <item name="CloudApplicationAppName" value="CloudApplicationAppName"/>
+                      <item name="DNSDomainName" value="DNSDomainName"/>
+                      <item name="FileDirectory" value="FileDirectory"/>
+                      <item name="FileHashValue" value="FileHashValue"/>
+                      <item name="FileName" value="FileName"/>
+                      <item name="HostAzureID" value="HostAzureID"/>
+                      <item name="HostNTDomain" value="HostNTDomain"/>
+                      <item name="HostName" value="HostName"/>
+                      <item name="HostNetBiosName" value="HostNetBiosName"/>
+                      <item name="HostOSVersion" value="HostOSVersion"/>
+                      <item name="IPAddress" value="IPAddress"/>
+                      <item name="IncidentDescription" value="IncidentDescription"/>
+                      <item name="IncidentLabel" value="IncidentLabel"/>
+                      <item name="IncidentProviderName" value="IncidentProviderName"/>
+                      <item name="IncidentRelatedAnalyticRuleIds" value="IncidentRelatedAnalyticRuleIds"/>
+                      <item name="IncidentSeverity" value="IncidentSeverity"/>
+                      <item name="IncidentStatus" value="IncidentStatus"/>
+                      <item name="IncidentTactics" value="IncidentTactics"/>
+                      <item name="IncidentTitle" value="IncidentTitle"/>
+                      <item name="IoTDeviceId" value="IoTDeviceId"/>
+                      <item name="IoTDeviceModel" value="IoTDeviceModel"/>
+                      <item name="IoTDeviceName" value="IoTDeviceName"/>
+                      <item name="IoTDeviceOperatingSystem" value="IoTDeviceOperatingSystem"/>
+                      <item name="IoTDeviceType" value="IoTDeviceType"/>
+                      <item name="IoTDeviceVendor" value="IoTDeviceVendor"/>
+                      <item name="MailMessageDeliveryAction" value="MailMessageDeliveryAction"/>
+                      <item name="MailMessageDeliveryLocation" value="MailMessageDeliveryLocation"/>
+                      <item name="MailMessageP1Sender" value="MailMessageP1Sender"/>
+                      <item name="MailMessageP2Sender" value="MailMessageP2Sender"/>
+                      <item name="MailMessageRecipient" value="MailMessageRecipient"/>
+                      <item name="MailMessageSenderIP" value="MailMessageSenderIP"/>
+                      <item name="MailMessageSubject" value="MailMessageSubject"/>
+                      <item name="MailboxDisplayName" value="MailboxDisplayName"/>
+                      <item name="MailboxPrimaryAddress" value="MailboxPrimaryAddress"/>
+                      <item name="MailboxUPN" value="MailboxUPN"/>
+                      <item name="MalwareCategory" value="MalwareCategory"/>
+                      <item name="MalwareName" value="MalwareName"/>
+                      <item name="ProcessCommandLine" value="ProcessCommandLine"/>
+                      <item name="ProcessId" value="ProcessId"/>
+                      <item name="RegistryKey" value="RegistryKey"/>
+                      <item name="RegistryValueData" value="RegistryValueData"/>
+                      <item name="Url" value="Url"/>
+                    </enum>
+                  </arg>
+                  <arg type="array<string>" var="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties.propertyValues" options="property-values" singularOptions="property-value">
+                    <item type="string"/>
+                  </arg>
+                </arg>
+              </arg>
+            </item>
+          </arg>
+          <arg type="dateTime" var="$automationRuleToUpsert.properties.triggeringLogic.expirationTimeUtc" options="expiration-time-utc">
+            <help short="Determines when the automation rule should automatically expire and be disabled."/>
+          </arg>
+          <arg type="boolean" var="$automationRuleToUpsert.properties.triggeringLogic.isEnabled" options="is-enabled">
+            <help short="Determines whether the automation rule is enabled or disabled"/>
+          </arg>
+          <arg type="string" var="$automationRuleToUpsert.properties.triggeringLogic.triggersOn" options="triggers-on">
+            <enum>
+              <item name="Incidents" value="Incidents"/>
+            </enum>
+          </arg>
+          <arg type="string" var="$automationRuleToUpsert.properties.triggeringLogic.triggersWhen" options="triggers-when">
+            <enum>
+              <item name="Created" value="Created"/>
+            </enum>
+          </arg>
+        </arg>
+      </argGroup>
+      <operation operationId="AutomationRules_Get">
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}/providers/Microsoft.SecurityInsights/automationRules/{automationRuleId}">
+          <request method="get">
+            <path>
+              <param type="string" name="automationRuleId" arg="$Path.automationRuleId" required="True"/>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True">
+                <format minLength="1"/>
+              </param>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="90" minLength="1"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2021-10-01"/>
+                <format minLength="1"/>
+              </const>
+            </query>
+          </request>
+          <response statusCode="200">
+            <body>
+              <json var="$Instance">
+                <schema type="object" cls="AutomationRule_read">
+                  <prop type="string" name="etag"/>
+                  <prop readOnly="True" type="ResourceId" name="id">
+                    <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.OperationalInsights/workspaces/{}/providers/Microsoft.SecurityInsights/automationRules/{}"/>
+                  </prop>
+                  <prop readOnly="True" type="string" name="name"/>
+                  <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="array<object>" name="actions" required="True">
+                      <item type="object">
+                        <prop type="string" name="actionType" required="True">
+                          <enum>
+                            <item value="ModifyProperties"/>
+                            <item value="RunPlaybook"/>
+                          </enum>
+                        </prop>
+                        <prop type="integer32" name="order" required="True"/>
+                        <discriminator property="actionType" value="ModifyProperties">
+                          <prop type="object" name="actionConfiguration">
+                            <prop type="string" name="classification">
+                              <enum>
+                                <item value="BenignPositive"/>
+                                <item value="FalsePositive"/>
+                                <item value="TruePositive"/>
+                                <item value="Undetermined"/>
+                              </enum>
+                            </prop>
+                            <prop type="string" name="classificationComment"/>
+                            <prop type="string" name="classificationReason">
+                              <enum>
+                                <item value="InaccurateData"/>
+                                <item value="IncorrectAlertLogic"/>
+                                <item value="SuspiciousActivity"/>
+                                <item value="SuspiciousButExpected"/>
+                              </enum>
+                            </prop>
+                            <prop type="array<object>" name="labels">
+                              <item type="object">
+                                <prop type="string" name="labelName" required="True"/>
+                                <prop readOnly="True" type="string" name="labelType">
+                                  <enum>
+                                    <item value="AutoAssigned"/>
+                                    <item value="User"/>
+                                  </enum>
+                                </prop>
+                              </item>
+                            </prop>
+                            <prop type="object" name="owner">
+                              <prop type="string" name="assignedTo"/>
+                              <prop type="string" name="email"/>
+                              <prop type="uuid" name="objectId"/>
+                              <prop type="string" name="ownerType">
+                                <enum>
+                                  <item value="Group"/>
+                                  <item value="Unknown"/>
+                                  <item value="User"/>
+                                </enum>
+                              </prop>
+                              <prop type="string" name="userPrincipalName"/>
+                            </prop>
+                            <prop type="string" name="severity">
+                              <enum>
+                                <item value="High"/>
+                                <item value="Informational"/>
+                                <item value="Low"/>
+                                <item value="Medium"/>
+                              </enum>
+                            </prop>
+                            <prop type="string" name="status">
+                              <enum>
+                                <item value="Active"/>
+                                <item value="Closed"/>
+                                <item value="New"/>
+                              </enum>
+                            </prop>
+                          </prop>
+                        </discriminator>
+                        <discriminator property="actionType" value="RunPlaybook">
+                          <prop type="object" name="actionConfiguration">
+                            <prop type="string" name="logicAppResourceId" required="True"/>
+                            <prop type="uuid" name="tenantId"/>
+                          </prop>
+                        </discriminator>
+                      </item>
+                    </prop>
+                    <prop readOnly="True" type="@ClientInfo_read" name="createdBy"/>
+                    <prop readOnly="True" type="dateTime" name="createdTimeUtc"/>
+                    <prop type="string" name="displayName" required="True">
+                      <format maxLength="500"/>
+                    </prop>
+                    <prop readOnly="True" type="object" name="lastModifiedBy" cls="ClientInfo_read">
+                      <prop readOnly="True" type="string" name="email"/>
+                      <prop readOnly="True" type="string" name="name"/>
+                      <prop readOnly="True" type="uuid" name="objectId"/>
+                      <prop readOnly="True" type="string" name="userPrincipalName"/>
+                    </prop>
+                    <prop readOnly="True" type="dateTime" name="lastModifiedTimeUtc"/>
+                    <prop type="integer32" name="order" required="True">
+                      <format maximum="1000" minimum="1"/>
+                    </prop>
+                    <prop type="object" name="triggeringLogic" required="True">
+                      <prop type="array<object>" name="conditions">
+                        <item type="object">
+                          <prop type="string" name="conditionType" required="True">
+                            <enum>
+                              <item value="Property"/>
+                            </enum>
+                          </prop>
+                          <discriminator property="conditionType" value="Property">
+                            <prop type="object" name="conditionProperties">
+                              <prop type="string" name="operator">
+                                <enum>
+                                  <item value="Contains"/>
+                                  <item value="EndsWith"/>
+                                  <item value="Equals"/>
+                                  <item value="NotContains"/>
+                                  <item value="NotEndsWith"/>
+                                  <item value="NotEquals"/>
+                                  <item value="NotStartsWith"/>
+                                  <item value="StartsWith"/>
+                                </enum>
+                              </prop>
+                              <prop type="string" name="propertyName">
+                                <enum>
+                                  <item value="AccountAadTenantId"/>
+                                  <item value="AccountAadUserId"/>
+                                  <item value="AccountNTDomain"/>
+                                  <item value="AccountName"/>
+                                  <item value="AccountObjectGuid"/>
+                                  <item value="AccountPUID"/>
+                                  <item value="AccountSid"/>
+                                  <item value="AccountUPNSuffix"/>
+                                  <item value="AlertProductNames"/>
+                                  <item value="AzureResourceResourceId"/>
+                                  <item value="AzureResourceSubscriptionId"/>
+                                  <item value="CloudApplicationAppId"/>
+                                  <item value="CloudApplicationAppName"/>
+                                  <item value="DNSDomainName"/>
+                                  <item value="FileDirectory"/>
+                                  <item value="FileHashValue"/>
+                                  <item value="FileName"/>
+                                  <item value="HostAzureID"/>
+                                  <item value="HostNTDomain"/>
+                                  <item value="HostName"/>
+                                  <item value="HostNetBiosName"/>
+                                  <item value="HostOSVersion"/>
+                                  <item value="IPAddress"/>
+                                  <item value="IncidentDescription"/>
+                                  <item value="IncidentLabel"/>
+                                  <item value="IncidentProviderName"/>
+                                  <item value="IncidentRelatedAnalyticRuleIds"/>
+                                  <item value="IncidentSeverity"/>
+                                  <item value="IncidentStatus"/>
+                                  <item value="IncidentTactics"/>
+                                  <item value="IncidentTitle"/>
+                                  <item value="IoTDeviceId"/>
+                                  <item value="IoTDeviceModel"/>
+                                  <item value="IoTDeviceName"/>
+                                  <item value="IoTDeviceOperatingSystem"/>
+                                  <item value="IoTDeviceType"/>
+                                  <item value="IoTDeviceVendor"/>
+                                  <item value="MailMessageDeliveryAction"/>
+                                  <item value="MailMessageDeliveryLocation"/>
+                                  <item value="MailMessageP1Sender"/>
+                                  <item value="MailMessageP2Sender"/>
+                                  <item value="MailMessageRecipient"/>
+                                  <item value="MailMessageSenderIP"/>
+                                  <item value="MailMessageSubject"/>
+                                  <item value="MailboxDisplayName"/>
+                                  <item value="MailboxPrimaryAddress"/>
+                                  <item value="MailboxUPN"/>
+                                  <item value="MalwareCategory"/>
+                                  <item value="MalwareName"/>
+                                  <item value="ProcessCommandLine"/>
+                                  <item value="ProcessId"/>
+                                  <item value="RegistryKey"/>
+                                  <item value="RegistryValueData"/>
+                                  <item value="Url"/>
+                                </enum>
+                              </prop>
+                              <prop type="array<string>" name="propertyValues">
+                                <item type="string"/>
+                              </prop>
+                            </prop>
+                          </discriminator>
+                        </item>
+                      </prop>
+                      <prop type="dateTime" name="expirationTimeUtc"/>
+                      <prop type="boolean" name="isEnabled" required="True"/>
+                      <prop type="string" name="triggersOn" required="True">
+                        <enum>
+                          <item value="Incidents"/>
+                        </enum>
+                      </prop>
+                      <prop type="string" name="triggersWhen" required="True">
+                        <enum>
+                          <item value="Created"/>
+                        </enum>
+                      </prop>
+                    </prop>
+                  </prop>
+                  <prop readOnly="True" type="object" name="systemData">
+                    <prop readOnly="True" type="dateTime" name="createdAt"/>
+                    <prop readOnly="True" type="string" name="createdBy"/>
+                    <prop readOnly="True" type="string" name="createdByType">
+                      <enum>
+                        <item value="Application"/>
+                        <item value="Key"/>
+                        <item value="ManagedIdentity"/>
+                        <item value="User"/>
+                      </enum>
+                    </prop>
+                    <prop readOnly="True" type="dateTime" name="lastModifiedAt"/>
+                    <prop readOnly="True" type="string" name="lastModifiedBy"/>
+                    <prop readOnly="True" type="string" name="lastModifiedByType">
+                      <enum>
+                        <item value="Application"/>
+                        <item value="Key"/>
+                        <item value="ManagedIdentity"/>
+                        <item value="User"/>
+                      </enum>
+                    </prop>
+                  </prop>
+                  <prop readOnly="True" type="string" name="type"/>
+                </schema>
+              </json>
+            </body>
+          </response>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <operation>
+        <instanceUpdate instance="$Instance">
+          <json>
+            <schema type="object" name="automationRuleToUpsert" clientFlatten="True">
+              <prop type="string" name="etag" arg="$automationRuleToUpsert.etag"/>
+              <prop type="object" name="properties" required="True" clientFlatten="True">
+                <prop type="array<object>" name="actions" arg="$automationRuleToUpsert.properties.actions" required="True">
+                  <item type="object">
+                    <prop type="string" name="actionType" required="True">
+                      <enum>
+                        <item arg="$automationRuleToUpsert.properties.actions[].ModifyProperties" value="ModifyProperties"/>
+                        <item arg="$automationRuleToUpsert.properties.actions[].RunPlaybook" value="RunPlaybook"/>
+                      </enum>
+                    </prop>
+                    <prop type="integer32" name="order" arg="$automationRuleToUpsert.properties.actions[].order" required="True"/>
+                    <discriminator property="actionType" value="ModifyProperties">
+                      <prop type="object" name="actionConfiguration" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration">
+                        <prop type="string" name="classification" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.classification">
+                          <enum>
+                            <item value="BenignPositive"/>
+                            <item value="FalsePositive"/>
+                            <item value="TruePositive"/>
+                            <item value="Undetermined"/>
+                          </enum>
+                        </prop>
+                        <prop type="string" name="classificationComment" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.classificationComment"/>
+                        <prop type="string" name="classificationReason" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.classificationReason">
+                          <enum>
+                            <item value="InaccurateData"/>
+                            <item value="IncorrectAlertLogic"/>
+                            <item value="SuspiciousActivity"/>
+                            <item value="SuspiciousButExpected"/>
+                          </enum>
+                        </prop>
+                        <prop type="array<object>" name="labels" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.labels">
+                          <item type="object">
+                            <prop type="string" name="labelName" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.labels[].labelName" required="True"/>
+                          </item>
+                        </prop>
+                        <prop type="object" name="owner" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner">
+                          <prop type="string" name="assignedTo" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.assignedTo"/>
+                          <prop type="string" name="email" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.email"/>
+                          <prop type="uuid" name="objectId" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.objectId"/>
+                          <prop type="string" name="ownerType" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.ownerType">
+                            <enum>
+                              <item value="Group"/>
+                              <item value="Unknown"/>
+                              <item value="User"/>
+                            </enum>
+                          </prop>
+                          <prop type="string" name="userPrincipalName" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.owner.userPrincipalName"/>
+                        </prop>
+                        <prop type="string" name="severity" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.severity">
+                          <enum>
+                            <item value="High"/>
+                            <item value="Informational"/>
+                            <item value="Low"/>
+                            <item value="Medium"/>
+                          </enum>
+                        </prop>
+                        <prop type="string" name="status" arg="$automationRuleToUpsert.properties.actions[].ModifyProperties.actionConfiguration.status">
+                          <enum>
+                            <item value="Active"/>
+                            <item value="Closed"/>
+                            <item value="New"/>
+                          </enum>
+                        </prop>
+                      </prop>
+                    </discriminator>
+                    <discriminator property="actionType" value="RunPlaybook">
+                      <prop type="object" name="actionConfiguration" arg="$automationRuleToUpsert.properties.actions[].RunPlaybook.actionConfiguration">
+                        <prop type="string" name="logicAppResourceId" arg="$automationRuleToUpsert.properties.actions[].RunPlaybook.actionConfiguration.logicAppResourceId" required="True"/>
+                        <prop type="uuid" name="tenantId" arg="$automationRuleToUpsert.properties.actions[].RunPlaybook.actionConfiguration.tenantId"/>
+                      </prop>
+                    </discriminator>
+                  </item>
+                </prop>
+                <prop type="string" name="displayName" arg="$automationRuleToUpsert.properties.displayName" required="True">
+                  <format maxLength="500"/>
+                </prop>
+                <prop type="integer32" name="order" arg="$automationRuleToUpsert.properties.order" required="True">
+                  <format maximum="1000" minimum="1"/>
+                </prop>
+                <prop type="object" name="triggeringLogic" arg="$automationRuleToUpsert.properties.triggeringLogic" required="True">
+                  <prop type="array<object>" name="conditions" arg="$automationRuleToUpsert.properties.triggeringLogic.conditions">
+                    <item type="object">
+                      <prop type="string" name="conditionType" required="True">
+                        <enum>
+                          <item arg="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property" value="Property"/>
+                        </enum>
+                      </prop>
+                      <discriminator property="conditionType" value="Property">
+                        <prop type="object" name="conditionProperties" arg="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties">
+                          <prop type="string" name="operator" arg="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties.operator">
+                            <enum>
+                              <item value="Contains"/>
+                              <item value="EndsWith"/>
+                              <item value="Equals"/>
+                              <item value="NotContains"/>
+                              <item value="NotEndsWith"/>
+                              <item value="NotEquals"/>
+                              <item value="NotStartsWith"/>
+                              <item value="StartsWith"/>
+                            </enum>
+                          </prop>
+                          <prop type="string" name="propertyName" arg="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties.propertyName">
+                            <enum>
+                              <item value="AccountAadTenantId"/>
+                              <item value="AccountAadUserId"/>
+                              <item value="AccountNTDomain"/>
+                              <item value="AccountName"/>
+                              <item value="AccountObjectGuid"/>
+                              <item value="AccountPUID"/>
+                              <item value="AccountSid"/>
+                              <item value="AccountUPNSuffix"/>
+                              <item value="AlertProductNames"/>
+                              <item value="AzureResourceResourceId"/>
+                              <item value="AzureResourceSubscriptionId"/>
+                              <item value="CloudApplicationAppId"/>
+                              <item value="CloudApplicationAppName"/>
+                              <item value="DNSDomainName"/>
+                              <item value="FileDirectory"/>
+                              <item value="FileHashValue"/>
+                              <item value="FileName"/>
+                              <item value="HostAzureID"/>
+                              <item value="HostNTDomain"/>
+                              <item value="HostName"/>
+                              <item value="HostNetBiosName"/>
+                              <item value="HostOSVersion"/>
+                              <item value="IPAddress"/>
+                              <item value="IncidentDescription"/>
+                              <item value="IncidentLabel"/>
+                              <item value="IncidentProviderName"/>
+                              <item value="IncidentRelatedAnalyticRuleIds"/>
+                              <item value="IncidentSeverity"/>
+                              <item value="IncidentStatus"/>
+                              <item value="IncidentTactics"/>
+                              <item value="IncidentTitle"/>
+                              <item value="IoTDeviceId"/>
+                              <item value="IoTDeviceModel"/>
+                              <item value="IoTDeviceName"/>
+                              <item value="IoTDeviceOperatingSystem"/>
+                              <item value="IoTDeviceType"/>
+                              <item value="IoTDeviceVendor"/>
+                              <item value="MailMessageDeliveryAction"/>
+                              <item value="MailMessageDeliveryLocation"/>
+                              <item value="MailMessageP1Sender"/>
+                              <item value="MailMessageP2Sender"/>
+                              <item value="MailMessageRecipient"/>
+                              <item value="MailMessageSenderIP"/>
+                              <item value="MailMessageSubject"/>
+                              <item value="MailboxDisplayName"/>
+                              <item value="MailboxPrimaryAddress"/>
+                              <item value="MailboxUPN"/>
+                              <item value="MalwareCategory"/>
+                              <item value="MalwareName"/>
+                              <item value="ProcessCommandLine"/>
+                              <item value="ProcessId"/>
+                              <item value="RegistryKey"/>
+                              <item value="RegistryValueData"/>
+                              <item value="Url"/>
+                            </enum>
+                          </prop>
+                          <prop type="array<string>" name="propertyValues" arg="$automationRuleToUpsert.properties.triggeringLogic.conditions[].Property.conditionProperties.propertyValues">
+                            <item type="string"/>
+                          </prop>
+                        </prop>
+                      </discriminator>
+                    </item>
+                  </prop>
+                  <prop type="dateTime" name="expirationTimeUtc" arg="$automationRuleToUpsert.properties.triggeringLogic.expirationTimeUtc"/>
+                  <prop type="boolean" name="isEnabled" arg="$automationRuleToUpsert.properties.triggeringLogic.isEnabled" required="True"/>
+                  <prop type="string" name="triggersOn" arg="$automationRuleToUpsert.properties.triggeringLogic.triggersOn" required="True">
+                    <enum>
+                      <item value="Incidents"/>
+                    </enum>
+                  </prop>
+                  <prop type="string" name="triggersWhen" arg="$automationRuleToUpsert.properties.triggeringLogic.triggersWhen" required="True">
+                    <enum>
+                      <item value="Created"/>
+                    </enum>
+                  </prop>
+                </prop>
+              </prop>
+            </schema>
+          </json>
+        </instanceUpdate>
+      </operation>
+      <operation operationId="AutomationRules_CreateOrUpdate">
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}/providers/Microsoft.SecurityInsights/automationRules/{automationRuleId}">
+          <request method="put">
+            <path>
+              <param type="string" name="automationRuleId" arg="$Path.automationRuleId" required="True"/>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True">
+                <format minLength="1"/>
+              </param>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="90" minLength="1"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2021-10-01"/>
+                <format minLength="1"/>
+              </const>
+            </query>
+            <body>
+              <json ref="$Instance"/>
+            </body>
+          </request>
+          <response statusCode="200 201">
+            <body>
+              <json var="$Instance">
+                <schema type="@AutomationRule_read"/>
+              </json>
+            </body>
+          </response>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <output type="object" ref="$Instance" clientFlatten="True"/>
+    </command>
+  </commandGroup>
+</CodeGen>

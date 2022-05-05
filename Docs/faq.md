@@ -13,3 +13,10 @@ AAZDev tool use declarative configuration because the model used in it is design
 ---
 Not Yet. Currently the AAZDev tool is focus on Management-plane APIs. However, the framework of AAZDev is designed to support Data-plane APIs. As we know data-plane APIs are much different cross resource providers. So we plane to support them case by case.
 
+## 3. Filename too long in Git for Windows
+---
+The path of configuration files in aaz repo will have more than 260 characters. It will cause a `Filename too long` issue while using `git`.
+Please enable the `core.longpaths` module by the following command in terminal which is in `Run as administrator` mode.
+```bash
+git config --system core.longpaths true
+```
