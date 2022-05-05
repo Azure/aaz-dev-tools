@@ -21,7 +21,7 @@ class Config:
     # Flask configurations
     HOST = os.environ.get("AAZ_HOST", '127.0.0.1')
     PORT = int(os.environ.get("AAZ_PORT", 5000))
-    STATIC_FOLDER = '../../backend/ui'
+    STATIC_FOLDER = '../ui'
     STATIC_URL_PATH = '/'
 
     CLI_DEFAULT_PROFILE = 'latest'
