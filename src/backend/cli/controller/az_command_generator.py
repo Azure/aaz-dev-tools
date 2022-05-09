@@ -170,9 +170,14 @@ class AzCommandGenerator:
 
         # prepare outputs
         self.outputs = []
+        self.paging = False
         if self.cmd.cfg.outputs:
             for output in self.cmd.cfg.outputs:
-                self.outputs.append(AzOutputGenerator(output, self.cmd_ctx))
+                output_generator = AzOutputGenerator(output, self.cmd_ctx)
+                self.outputs.append(output_generator)
+                if output_generator.next_link:
+                    self.paging = True
+
         if len(self.outputs) > 1:
             # TODO: add support for output larger than 1
             raise NotImplementedError()

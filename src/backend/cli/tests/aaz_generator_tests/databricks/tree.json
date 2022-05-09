@@ -394,6 +394,137 @@
             }
           }
         }
+      },
+      "sentinel": {
+        "commandGroups": {
+          "automation-rule": {
+            "commands": {
+              "create": {
+                "help": {
+                  "short": "Creates or updates the automation rule"
+                },
+                "names": [
+                  "sentinel",
+                  "automation-rule",
+                  "create"
+                ],
+                "versions": [
+                  {
+                    "name": "2021-10-01",
+                    "resources": [
+                      {
+                        "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.operationalinsights/workspaces/{}/providers/microsoft.securityinsights/automationrules/{}",
+                        "plane": "mgmt-plane",
+                        "version": "2021-10-01"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "delete": {
+                "help": {
+                  "short": "Delete the automation rule"
+                },
+                "names": [
+                  "sentinel",
+                  "automation-rule",
+                  "delete"
+                ],
+                "versions": [
+                  {
+                    "name": "2021-10-01",
+                    "resources": [
+                      {
+                        "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.operationalinsights/workspaces/{}/providers/microsoft.securityinsights/automationrules/{}",
+                        "plane": "mgmt-plane",
+                        "version": "2021-10-01"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "list": {
+                "help": {
+                  "short": "Gets all automation rules"
+                },
+                "names": [
+                  "sentinel",
+                  "automation-rule",
+                  "list"
+                ],
+                "versions": [
+                  {
+                    "name": "2021-10-01",
+                    "resources": [
+                      {
+                        "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.operationalinsights/workspaces/{}/providers/microsoft.securityinsights/automationrules",
+                        "plane": "mgmt-plane",
+                        "version": "2021-10-01"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "show": {
+                "help": {
+                  "short": "Gets the automation rule"
+                },
+                "names": [
+                  "sentinel",
+                  "automation-rule",
+                  "show"
+                ],
+                "versions": [
+                  {
+                    "name": "2021-10-01",
+                    "resources": [
+                      {
+                        "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.operationalinsights/workspaces/{}/providers/microsoft.securityinsights/automationrules/{}",
+                        "plane": "mgmt-plane",
+                        "version": "2021-10-01"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "update": {
+                "help": {
+                  "short": "Creates or updates the automation rule"
+                },
+                "names": [
+                  "sentinel",
+                  "automation-rule",
+                  "update"
+                ],
+                "versions": [
+                  {
+                    "name": "2021-10-01",
+                    "resources": [
+                      {
+                        "id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.operationalinsights/workspaces/{}/providers/microsoft.securityinsights/automationrules/{}",
+                        "plane": "mgmt-plane",
+                        "version": "2021-10-01"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "help": {
+              "short": "Manage Automation Rule"
+            },
+            "names": [
+              "sentinel",
+              "automation-rule"
+            ]
+          }
+        },
+        "help": {
+          "short": "Manage Security Insight."
+        },
+        "names": [
+          "sentinel"
+        ]
       }
     }
   }

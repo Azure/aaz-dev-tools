@@ -47,7 +47,7 @@ class Update(AAZCommand):
 
     def _handler(self, command_args):
         super()._handler(command_args)
-        return self.build_lro_poller(self._execute_operations(), result_callback=self._output)
+        return self.build_lro_poller(self._execute_operations, self._output)
 
     _args_schema = None
 
@@ -278,7 +278,6 @@ class Update(AAZCommand):
 
     class WorkspacesGet(AAZHttpOperation):
         CLIENT_TYPE = "MgmtClient"
-        ERROR_FORMAT = "ODataV4Format"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
@@ -286,7 +285,7 @@ class Update(AAZCommand):
             if session.http_response.status_code in [200]:
                 return self.on_200(session)
 
-            return self.on_error(session)
+            return self.on_error(session.http_response)
 
         @property
         def url(self):
@@ -298,6 +297,10 @@ class Update(AAZCommand):
         @property
         def method(self):
             return "GET"
+
+        @property
+        def error_format(self):
+            return "ODataV4Format"
 
         @property
         def url_parameters(self):
@@ -358,7 +361,6 @@ class Update(AAZCommand):
 
     class WorkspacesCreateOrUpdate(AAZHttpOperation):
         CLIENT_TYPE = "MgmtClient"
-        ERROR_FORMAT = "ODataV4Format"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
@@ -367,7 +369,8 @@ class Update(AAZCommand):
                 return self.client.build_lro_polling(
                     self.ctx.args.no_wait,
                     session,
-                    deserialization_callback=self.on_200_201,
+                    self.on_200_201,
+                    self.on_error,
                     lro_options={"final-state-via": "azure-async-operation"},
                     path_format_arguments=self.url_parameters,
                 )
@@ -375,12 +378,13 @@ class Update(AAZCommand):
                 return self.client.build_lro_polling(
                     self.ctx.args.no_wait,
                     session,
-                    deserialization_callback=self.on_200_201,
+                    self.on_200_201,
+                    self.on_error,
                     lro_options={"final-state-via": "azure-async-operation"},
                     path_format_arguments=self.url_parameters,
                 )
 
-            return self.on_error(session)
+            return self.on_error(session.http_response)
 
         @property
         def url(self):
@@ -392,6 +396,10 @@ class Update(AAZCommand):
         @property
         def method(self):
             return "PUT"
+
+        @property
+        def error_format(self):
+            return "ODataV4Format"
 
         @property
         def url_parameters(self):
@@ -465,7 +473,7 @@ class Update(AAZCommand):
     class InstanceUpdateByJson(AAZJsonInstanceUpdateOperation):
 
         def __call__(self, *args, **kwargs):
-            self.ctx.vars.instance = self._update_instance(self.ctx.vars.instance)
+            self._update_instance(self.ctx.vars.instance)
 
         def _update_instance(self, instance):
             _instance_value, _builder = self.new_content_builder(
@@ -536,9 +544,9 @@ class Update(AAZCommand):
     class InstanceUpdateByGeneric(AAZGenericInstanceUpdateOperation):
 
         def __call__(self, *args, **kwargs):
-            self.ctx.vars.instance = self._update_instance_by_generic(
+            self._update_instance_by_generic(
                 self.ctx.vars.instance,
-                self.ctx.args
+                self.ctx.generic_update_args
             )
 
 

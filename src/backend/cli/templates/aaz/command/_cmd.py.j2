@@ -61,7 +61,9 @@ class {{ leaf.cls_name }}(AAZCommand):
     def _handler(self, command_args):
         super()._handler(command_args)
         {%- if leaf.lro_counts > 0 %}
-        return self.build_lro_poller(self._execute_operations(), result_callback={% if leaf.has_outputs() %}self._output{% else %}None{% endif %})
+        return self.build_lro_poller(self._execute_operations, {% if leaf.has_outputs() %}self._output{% else %}None{% endif %})
+        {%- elif leaf.paging %}
+        return self.build_paging(self._execute_operations, self._output)
         {%- else %}
         self._execute_operations()
         return {% if leaf.has_outputs() %}self._output(){% else %}None{% endif %}
@@ -178,17 +180,23 @@ class {{ leaf.cls_name }}(AAZCommand):
         {%- if output.ref is not none %}
         result = self.deserialize_output({{ output.ref }}, client_flatten={{ output.client_flatten }})
         {%- else %}
-        data = {{ output.value|constant_convert }}
+        result = {{ output.value|constant_convert }}
+        {%- endif %}
+        {%- if output.next_link is not none %}
+        next_link = self.deserialize_output({{ output.next_link }})
         {%- endif %}
         {%- endfor %}
+        {%- if leaf.paging %}
+        return result, next_link
+        {%- else %}
         return result
+        {%- endif %}
     {%- endif %}
 
     {%- for op in leaf.http_operations %}
 
     class {{ op.name }}(AAZHttpOperation):
         CLIENT_TYPE = "{{ leaf.client_type }}"
-        ERROR_FORMAT = "{{ op.error_format }}"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
@@ -200,10 +208,11 @@ class {{ leaf.cls_name }}(AAZCommand):
                     {% if leaf.support_no_wait %}self.ctx.args.no_wait{% else %}False{% endif %},
                     session,
                     {%- if op.success_202_response.callback_name is not none %}
-                    deserialization_callback=self.{{ op.success_202_response.callback_name }},
+                    self.{{ op.success_202_response.callback_name }},
                     {%- else %}
-                    deserialization_callback=None,
+                    None,
                     {%- endif %}
+                    self.on_error,
                     lro_options={{ op.lro_options|constant_convert }},
                     path_format_arguments=self.url_parameters,
                 )
@@ -215,7 +224,8 @@ class {{ leaf.cls_name }}(AAZCommand):
                 return self.client.build_lro_polling(
                     {% if leaf.support_no_wait %}self.ctx.args.no_wait{% else %}False{% endif %},
                     session,
-                    deserialization_callback=self.{{ response.callback_name }},
+                    self.{{ response.callback_name }},
+                    self.on_error,
                     lro_options={{ op.lro_options|constant_convert }},
                     path_format_arguments=self.url_parameters,
                 )
@@ -224,7 +234,7 @@ class {{ leaf.cls_name }}(AAZCommand):
                 {%- endif %}
             {%- endfor %}
 
-            return self.on_error(session)
+            return self.on_error(session.http_response)
 
         @property
         def url(self):
@@ -236,6 +246,10 @@ class {{ leaf.cls_name }}(AAZCommand):
         @property
         def method(self):
             return "{{ op.method }}"
+
+        @property
+        def error_format(self):
+            return "{{ op.error_format }}"
 
         {%- if op.url_parameters is not none and op.url_parameters|length %}
 
@@ -336,7 +350,7 @@ class {{ leaf.cls_name }}(AAZCommand):
             {{ op.content.cls_builder_name }}({{ op.content.BUILDER_NAME }})
             {%- endif %}
 
-            {%- for scope, scope_define, props in op.content.iter_scopes() %}
+            {%- for scope, scope_define, props, discriminators in op.content.iter_scopes() %}
 
             {%- if scope_define is not none %}
 
@@ -344,19 +358,30 @@ class {{ leaf.cls_name }}(AAZCommand):
             if {{ scope }} is not None:
             {%- endif %}
 
-            {%- for prop_name, prop_type, arg_key, prop_type_kwargs, cls_builder_name in props %}
+            {%- for prop_name, prop_type, is_const, const_value, arg_key, prop_type_kwargs, cls_builder_name in props %}
             {% if scope_define is not none %}{{ "    " }}{% endif %}
             {%- if cls_builder_name is not none %}{{ cls_builder_name }}({% endif %}
             {%- if prop_name != '[]' and prop_name != '{}' -%}
+            {%- if is_const -%}
+            {{ scope }}.set_const({{ prop_name|constant_convert }}, {{ const_value|constant_convert }}, {{ prop_type }}
+                {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+                {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+            {%- else -%}
             {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}
                 {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
                 {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+            {%- endif %}
             {%- else -%}
             {{ scope }}.set_elements({{ prop_type }}
                 {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
                 {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
             {%- endif %}
             {%- if cls_builder_name is not none %}){% endif %}
+            {%- endfor %}
+
+            {%- for disc_name, disc_value in discriminators %}
+            {% if scope_define is not none %}{{ "    " }}{% endif -%}
+            {{ scope }}.discriminate_by({{ disc_name|constant_convert }}, {{ disc_value|constant_convert }})
             {%- endfor %}
 
             {%- endfor %}
@@ -461,7 +486,7 @@ class {{ leaf.cls_name }}(AAZCommand):
             {{ op.cls_builder_name }}({{ op.BUILDER_NAME }})
             {%- endif %}
 
-            {%- for scope, scope_define, props in op.iter_scopes() %}
+            {%- for scope, scope_define, props, discriminators in op.iter_scopes() %}
 
             {%- if scope_define is not none %}
 
@@ -469,19 +494,30 @@ class {{ leaf.cls_name }}(AAZCommand):
             if {{ scope }} is not None:
             {%- endif %}
 
-            {%- for prop_name, prop_type, arg_key, prop_type_kwargs, cls_builder_name in props %}
+            {%- for prop_name, prop_type, is_const, const_value, arg_key, prop_type_kwargs, cls_builder_name in props %}
             {% if scope_define is not none %}{{ "    " }}{% endif %}
             {%- if cls_builder_name is not none %}{{ cls_builder_name }}({% endif %}
             {%- if prop_name != '[]' and prop_name != '{}' -%}
+            {%- if is_const -%}
+            {{ scope }}.set_const({{ prop_name|constant_convert }}, {{ const_value|constant_convert }}, {{ prop_type }}
+                {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+                {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+            {%- else -%}
             {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}
                 {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
                 {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+            {%- endif %}
             {%- else -%}
             {{ scope }}.set_elements({{ prop_type }}
                 {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
                 {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
             {%- endif %}
             {%- if cls_builder_name is not none %}){% endif %}
+            {%- endfor %}
+
+            {%- for disc_name, disc_value in discriminators %}
+            {% if scope_define is not none %}{{ "    " }}{% endif -%}
+            {{ scope }}.discriminate_by({{ disc_name|constant_convert }}, {{ disc_value|constant_convert }})
             {%- endfor %}
 
             {%- endfor %}
@@ -510,7 +546,7 @@ def {{ update_cls.builder_name }}({{ update_cls.BUILDER_NAME }}):
     if {{ update_cls.BUILDER_NAME }} is None:
         return
 
-    {%- for scope, scope_define, props in update_cls.iter_scopes() %}
+    {%- for scope, scope_define, props, discriminators in update_cls.iter_scopes() %}
 
     {%- if scope_define is not none %}
 
@@ -518,19 +554,30 @@ def {{ update_cls.builder_name }}({{ update_cls.BUILDER_NAME }}):
     if {{ scope }} is not None:
     {%- endif %}
 
-    {%- for prop_name, prop_type, arg_key, prop_type_kwargs, cls_builder_name in props %}
+    {%- for prop_name, prop_type, is_const, const_value, arg_key, prop_type_kwargs, cls_builder_name in props %}
     {% if scope_define is not none %}{{ "    " }}{% endif %}
     {%- if cls_builder_name is not none %}{{ cls_builder_name }}({% endif %}
     {%- if prop_name != '[]' and prop_name != '{}' -%}
+    {%- if is_const -%}
+    {{ scope }}.set_const({{ prop_name|constant_convert }}, {{ const_value|constant_convert }}, {{ prop_type }}
+        {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+        {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+    {%- else -%}
     {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}
         {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
         {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+    {%- endif %}
     {%- else -%}
     {{ scope }}.set_elements({{ prop_type }}
         {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
         {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
     {%- endif %}
     {%- if cls_builder_name is not none %}){% endif %}
+    {%- endfor %}
+
+    {%- for disc_name, disc_value in discriminators %}
+    {% if scope_define is not none %}{{ "    " }}{% endif -%}
+    {{ scope }}.discriminate_by({{ disc_name|constant_convert }}, {{ disc_value|constant_convert }})
     {%- endfor %}
 
     {%- endfor %}
@@ -549,6 +596,16 @@ def {{ resp_cls.builder_name }}(_schema):
     if {{ resp_cls.schema_name }} is not None:
         {%- for prop_name in resp_cls.props %}
         _schema.{{ prop_name }} = {{ resp_cls.schema_name }}.{{ prop_name }}
+        {%- endfor %}
+        {%- for disc_key, disc_value in resp_cls.discriminators %}
+        _schema.discriminate_by(
+            {{ disc_key|constant_convert }},
+            {{ disc_value|constant_convert }},
+            {{ resp_cls.schema_name }}.discriminate_by(
+                {{ disc_key|constant_convert }},
+                {{ disc_value|constant_convert }},
+            )
+        )
         {%- endfor %}
         return
 
@@ -584,6 +641,17 @@ def {{ resp_cls.builder_name }}(_schema):
     {%- for prop_name in resp_cls.props %}
     _schema.{{ prop_name }} = {{ resp_cls.schema_name }}.{{ prop_name }}
     {%- endfor %}
+    {%- for disc_key, disc_value in resp_cls.discriminators %}
+    _schema.set_discriminator(
+        {{ disc_key|constant_convert }},
+        {{ disc_value|constant_convert }},
+        {{ resp_cls.schema_name }}.set_discriminator(
+            {{ disc_key|constant_convert }},
+            {{ disc_value|constant_convert }},
+        )
+    )
+    {%- endfor %}
+
 
 {%- endfor %}
 
