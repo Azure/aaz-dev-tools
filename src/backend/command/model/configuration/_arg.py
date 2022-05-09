@@ -6,6 +6,8 @@ from ._fields import CMDStageField, CMDVariantField, CMDPrimitiveField, CMDBoole
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, \
     CMDResourceIdFormat
 from ._help import CMDArgumentHelp
+from utils import exceptions
+
 import copy
 
 
@@ -526,7 +528,14 @@ class CMDObjectArgAdditionalProperties(Model):
 
     def reformat(self, **kwargs):
         if self.item:
-            self.item.reformat(**kwargs)
+            try:
+                self.item.reformat(**kwargs)
+            except exceptions.VerificationError as err:
+                err.payload['details'] = {
+                    "type": "AdditionalProperties",
+                    "details": err.payload['details']
+                }
+                raise err
 
 
 class CMDObjectArgBase(CMDArgBase):
@@ -563,8 +572,28 @@ class CMDObjectArgBase(CMDArgBase):
     def _reformat_base(self, **kwargs):
         super()._reformat_base(**kwargs)
         if self.args:
+            used_options = set()
             for arg in self.args:
-                arg.reformat(**kwargs)
+                try:
+                    arg.reformat(**kwargs)
+                except exceptions.VerificationError as err:
+                    err.payload['details'] = {
+                        "type": "Argument",
+                        "options": arg.options,
+                        "var": arg.var,
+                        "details": err.payload['details']
+                    }
+                    raise err
+                for option in arg.options:
+                    if option in used_options:
+                        raise exceptions.VerificationError(
+                            message=f"Argument option '{option}' duplicated.",
+                            details={
+                                "type": "Argument",
+                                "options": arg.options,
+                                "var": arg.var,
+                            }
+                        )
             self.args = sorted(self.args, key=lambda a: a.var)
         if self.additional_props:
             self.additional_props.reformat(**kwargs)
@@ -608,7 +637,14 @@ class CMDArrayArgBase(CMDArgBase):
 
     def _reformat_base(self, **kwargs):
         super()._reformat_base(**kwargs)
-        self.item.reformat(**kwargs)
+        try:
+            self.item.reformat(**kwargs)
+        except exceptions.VerificationError as err:
+            err.payload['details'] = {
+                "type": "ArrayItem",
+                "details": err.payload['details']
+            }
+            raise err
 
 
 class CMDArrayArg(CMDArrayArgBase, CMDArg):

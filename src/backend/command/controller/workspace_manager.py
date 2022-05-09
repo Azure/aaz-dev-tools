@@ -4,7 +4,6 @@ import os
 import shutil
 from datetime import datetime
 
-from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample
 from command.model.editor import CMDEditorWorkspace, CMDCommandTreeNode, CMDCommandTreeLeaf
 from swagger.controller.command_generator import CommandGenerator
 from swagger.controller.specs_manager import SwaggerSpecsManager
@@ -12,7 +11,7 @@ from utils import exceptions
 from utils.config import Config
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor
-from command.model.configuration import CMDStageField, CMDHelp, CMDResource, CMDCommandExample
+from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample
 
 logger = logging.getLogger('backend')
 
