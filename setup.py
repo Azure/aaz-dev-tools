@@ -30,7 +30,7 @@ VERSION = {}  # type: ignore
 with open("scripts/version.py", "r") as version_file:
     exec(version_file.read(), VERSION)
 
-with open("README.rst", "r", encoding="utf-8") as fp:
+with open("README.md", "r", encoding="utf-8") as fp:
     README = fp.read()
 with open("HISTORY.rst", "r", encoding="utf-8") as fp:
     HISTORY = fp.read()
