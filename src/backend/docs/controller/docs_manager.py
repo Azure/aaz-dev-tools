@@ -13,7 +13,7 @@ class DocsManager:
                 os.path.abspath(__file__)
             )
         ),
-        "static"
+        "Docs"
     )
 
     @classmethod

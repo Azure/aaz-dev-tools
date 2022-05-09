@@ -131,7 +131,6 @@ instance/
 .coverage
 htmlcov/
 
-ui/
 dist/
 build/
 *.egg-info/
