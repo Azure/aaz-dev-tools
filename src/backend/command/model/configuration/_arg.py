@@ -264,8 +264,13 @@ class CMDClsArg(CMDClsArgBase, CMDArg):
         arg = super().build_arg(builder)
         assert isinstance(arg, CMDClsArg)
         # TODO: if cls referenced to a list argument, then support get_singular_options
-        # arg.singular_options = builder.get_singular_options()
+        arg.singular_options = builder.get_singular_options()
         return arg
+
+    # def _reformat(self, **kwargs):
+    #     super()._reformat(**kwargs)
+    #     if self.singular_options:
+    #         self.singular_options = sorted(self.singular_options, key=lambda op: (len(op), op))
 
 
 # string

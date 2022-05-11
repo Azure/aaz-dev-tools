@@ -398,7 +398,6 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                 </Box>
                 {displayCommandDialog && <CommandDialog open={displayCommandDialog} workspaceUrl={workspaceUrl} command={command} onClose={this.handleCommandDialogClose} />}
                 {displayExampleDialog && <ExampleDialog open={displayExampleDialog} workspaceUrl={workspaceUrl} command={command} idx={exampleIdx} onClose={this.handleExampleDialogClose} />}
-
                 {displayCommandDeleteDialog && <CommandDeleteDialog open={displayCommandDeleteDialog} workspaceUrl={workspaceUrl} command={command} onClose={this.handleCommandDeleteDialogClose} />}
             </React.Fragment>
         )

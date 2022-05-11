@@ -1,9 +1,10 @@
-import { Accordion, AccordionDetails, AccordionSummaryProps, Box, Button, ButtonBase, CardActions, CardContent, CircularProgress, Typography, TypographyProps } from '@mui/material';
+import { Alert, Box, Button, ButtonBase, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputLabel, LinearProgress, Radio, RadioGroup, Switch, TextField, Typography, TypographyProps } from '@mui/material';
 import { styled } from '@mui/system';
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import { CardTitleTypography, ExperimentalTypography, LongHelpTypography, PreviewTypography, ShortHelpPlaceHolderTypography, ShortHelpTypography, SmallExperimentalTypography, SmallPreviewTypography, SmallStableTypography, StableTypography, SubtitleTypography } from './WSEditorTheme';
+import { CardTitleTypography, ExperimentalTypography, LongHelpTypography, PreviewTypography, ShortHelpPlaceHolderTypography, ShortHelpTypography, SmallExperimentalTypography, SmallPreviewTypography, StableTypography, SubtitleTypography } from './WSEditorTheme';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import EditIcon from '@mui/icons-material/Edit';
 
 
 function WSEditorCommandArgumentsContent(props: {
@@ -11,16 +12,35 @@ function WSEditorCommandArgumentsContent(props: {
 }) {
 
     const [args, setArgs] = useState<CMDArg[]>([]);
+    const [displayArgumentDialog, setDisplayArgumentDialog] = useState<boolean>(false);
+    const [editArg, setEditArg] = useState<CMDArg | undefined>(undefined);
     const [clsArgDefineMap, setClsArgDefineMap] = useState<ClsArgDefinitionMap>({});
 
-    useEffect(() => {
+    const refreshData = () => {
         axios.get(props.commandUrl)
             .then(res => {
                 const { args, clsDefineMap } = decodeResponse(res.data);
                 setArgs(args);
                 setClsArgDefineMap(clsDefineMap);
             }).catch(err => console.error(err));
+    }
+
+    useEffect(() => {
+        refreshData();
     }, [props.commandUrl]);
+
+    const handleArgumentDialogClose = (newArg?: CMDArg) => {
+        setDisplayArgumentDialog(false);
+        setEditArg(undefined);
+        if (newArg) {
+            refreshData();
+        }
+    }
+
+    const handleEditArgument = (arg: CMDArg) => {
+        setEditArg(arg)
+        setDisplayArgumentDialog(true)
+    }
 
     return (
         <React.Fragment>
@@ -40,8 +60,11 @@ function WSEditorCommandArgumentsContent(props: {
                         [ ARGUMENT ]
                     </CardTitleTypography>
                 </Box>
-                <ArgumentNavigation commandUrl={props.commandUrl} args={args} clsArgDefineMap={clsArgDefineMap} />
+                <ArgumentNavigation commandUrl={props.commandUrl} args={args} clsArgDefineMap={clsArgDefineMap} onEdit={handleEditArgument} />
             </CardContent>
+
+            {displayArgumentDialog && <ArgumentDialog commandUrl={props.commandUrl} arg={editArg!} clsArgDefineMap={clsArgDefineMap} open={displayArgumentDialog} onClose={handleArgumentDialogClose} />}
+
         </React.Fragment>
     )
 }
@@ -56,6 +79,7 @@ function ArgumentNavigation(props: {
     commandUrl: string,
     args: CMDArg[],
     clsArgDefineMap: ClsArgDefinitionMap,
+    onEdit: (arg: CMDArg) => void,
 }) {
     const [argIdxStack, setArgIdxStack] = useState<ArgIdx[]>([]);
 
@@ -200,8 +224,7 @@ function ArgumentNavigation(props: {
                         {stage}
                     </ExperimentalTypography>}
                 </Box>
-
-                <ArgumentReviewer arg={selectedArg} depth={argIdxStack.length} />
+                <ArgumentReviewer arg={selectedArg} depth={argIdxStack.length} onEdit={() => { props.onEdit(selectedArg) }} />
             </React.Fragment>
         )
     }
@@ -242,7 +265,6 @@ function ArgumentNavigation(props: {
         <React.Fragment>
             {buildArgumentPropsReviewer()}
         </React.Fragment>
-
     </React.Fragment>)
 }
 
@@ -338,9 +360,17 @@ const ArgRequiredTypography = styled(Typography)<TypographyProps>(({ theme }) =>
     fontWeight: 200,
 }))
 
+const ArgEditTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: "#5d64cf",
+    fontFamily: "'Work Sans', sans-serif",
+    fontSize: 14,
+    fontWeight: 400,
+}));
+
 function ArgumentReviewer(props: {
     arg: CMDArg,
     depth: number,
+    onEdit: () => void,
 }) {
     const buildArgOptionsString = () => {
         const argOptionsString = spliceArgOptionsString(props.arg, props.depth - 1);
@@ -357,7 +387,21 @@ function ArgumentReviewer(props: {
                 mt: 1,
                 mb: 2
             }}>
-            {buildArgOptionsString()}
+            <Box sx={{
+                flexGrow: 1,
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+            }}>
+                {buildArgOptionsString()}
+                <Button sx={{ flexShrink: 0, ml: 3 }}
+                    startIcon={<EditIcon color="info" fontSize='small' />}
+                    onClick={() => { props.onEdit() }}
+                >
+                    <ArgEditTypography>Edit</ArgEditTypography>
+                </Button>
+            </Box>
+
             <Box sx={{
                 display: "flex",
                 flexDirection: "row",
@@ -375,6 +419,234 @@ function ArgumentReviewer(props: {
             </Box>}
         </Box>
     </React.Fragment>)
+}
+
+function ArgumentDialog(props: {
+    commandUrl: string,
+    arg: CMDArg,
+    clsArgDefineMap: ClsArgDefinitionMap,
+    open: boolean,
+    onClose: (newArg?: CMDArg) => void,
+}) {
+    const [updating, setUpdating] = useState<boolean>(false);
+    const [stage, setStage] = useState<string>("");
+    const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
+    const [options, setOptions] = useState<string>("");
+    const [singularOptions, setSingularOptions] = useState<string | undefined>(undefined);
+    const [group, setGroup] = useState<string>("")
+    const [hide, setHide] = useState<boolean>(false);
+    const [shortHelp, setShortHelp] = useState<string>("");
+    const [longHelp, setLongHelp] = useState<string>("");
+
+    const handleClose = () => {
+        setInvalidText(undefined);
+        props.onClose();
+    }
+
+    const handleModify = (event: any) => {
+        let name = options.trim();
+        let sName = singularOptions?.trim() ?? undefined;
+        let sHelp = shortHelp.trim();
+        let lHelp = longHelp.trim();
+        let gName = group.trim();
+
+        const names = name.split(' ').filter(n => n.length > 0);
+        const sNames = sName?.split(' ').filter(n => n.length > 0) ?? undefined;
+
+        setInvalidText(undefined);
+
+        if (names.length < 1) {
+            setInvalidText(`Argument 'Option names' is required.`)
+            return
+        }
+
+        for (const idx in names) {
+            const piece = names[idx];
+            if (!/^[a-z0-9]+(\-[a-z0-9]+)*$/.test(piece)) {
+                setInvalidText( `Invalid 'Option name': '${piece}'. Supported regular expression is: [a-z0-9]+(\-[a-z0-9]+)* `)
+                return
+            }
+        }
+
+        if (sNames) {
+            for (const idx in sNames) {
+                const piece = sNames[idx];
+                if (!/^[a-z0-9]+(\-[a-z0-9]+)*$/.test(piece)) {
+                    setInvalidText( `Invalid 'Singular option name': '${piece}'. Supported regular expression is: [a-z0-9]+(\-[a-z0-9]+)* `)
+                    return
+                }
+            }
+        }
+
+        if (sHelp.length < 1) {
+            setInvalidText(`Field 'Short Summery' is required.`)
+            return
+        }
+
+        let lines: string[] | null = null;
+        if (lHelp.length > 1) {
+            lines = lHelp.split('\n').filter(l => l.length > 0);
+        }
+
+        setUpdating(true);
+
+        const argumentUrl = `${props.commandUrl}/Arguments/${props.arg.var}`
+
+        axios.patch(argumentUrl, {
+            options: names,
+            singularOptions: sNames,
+            stage: stage,
+            group: gName.length > 0 ? gName : null,
+            hide: hide,
+            help: {
+                short: sHelp,
+                lines: lines
+            }
+        }).then(res => {
+            let newArg = decodeArg(res.data).arg;
+            setUpdating(false);
+            props.onClose(newArg);
+
+        }).catch(err => {
+            console.error(err.response);
+            if (err.resource?.message) {
+                setInvalidText(`ResponseError: ${err.resource!.message!}`);
+            }
+            setUpdating(false);
+        })
+    }
+
+    useEffect(() => {
+        let {arg, clsArgDefineMap} = props;
+
+        setOptions(arg.options.join(" "));
+        
+        if (arg.type.startsWith("array")) {
+            setSingularOptions((arg as CMDArrayArg).singularOptions?.join(" ") ?? "")
+        } else if (arg.type.startsWith('@') && clsArgDefineMap[(arg as CMDClsArg).clsName].type.startsWith("array")) {
+            setSingularOptions((arg as CMDClsArg).singularOptions?.join(" ") ?? "")
+        } else {
+            setSingularOptions(undefined);
+        }
+        setStage(props.arg.stage);
+        setGroup(props.arg.group);
+        setHide(props.arg.hide);
+        setShortHelp(props.arg.help?.short ?? "");
+        setLongHelp(props.arg.help?.lines?.join("\n") ?? "");
+        setUpdating(false);
+    }, [props.arg]);
+
+    return (
+        <Dialog
+            disableEscapeKeyDown
+            open={props.open}
+            sx={{ '& .MuiDialog-paper': { width: '80%' } }}
+        >
+            <DialogTitle>Modify Argument</DialogTitle>
+            <DialogContent dividers={true}>
+                {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                <TextField
+                    id="options"
+                    label="Option names"
+                    type="text"
+                    fullWidth
+                    variant='standard'
+                    value={options}
+                    onChange={(event: any) => {
+                        setOptions(event.target.value)
+                    }}
+                    margin="normal"
+                    required
+                />
+                {singularOptions != undefined && <TextField
+                    id="singularOptions"
+                    label="Singular option names"
+                    type="text"
+                    fullWidth
+                    variant='standard'
+                    value={singularOptions}
+                    onChange={(event: any) => {
+                        setSingularOptions(event.target.value)
+                    }}
+                    margin="normal"
+                />}
+                <TextField
+                    id="group"
+                    label="Argument Group"
+                    type="text"
+                    fullWidth
+                    variant='standard'
+                    value={group}
+                    onChange={(event: any) => {
+                        setGroup(event.target.value)
+                    }}
+                    margin="normal"
+                />
+                <InputLabel required shrink sx={{ font: "inherit" }}>Stage</InputLabel>
+                <RadioGroup
+                    row
+                    value={stage}
+                    name="stage"
+                    onChange={(event: any) => {
+                        setStage(event.target.value);
+                    }}
+                >
+                    <FormControlLabel value="Stable" control={<Radio />} label="Stable" sx={{ ml: 4 }} />
+                    <FormControlLabel value="Preview" control={<Radio />} label="Preview" sx={{ ml: 4 }} />
+                    <FormControlLabel value="Experimental" control={<Radio />} label="Experimental" sx={{ ml: 4 }} />
+                </RadioGroup>
+                {!props.arg.required && <React.Fragment>
+                    <InputLabel shrink sx={{ font: "inherit" }}>Hide Argument</InputLabel>
+                    <Switch sx={{ ml: 4 }}
+                        checked={hide}
+                        onChange={(event: any) => {
+                            setHide(!hide);
+                        }}
+                    />
+                </React.Fragment>}
+                <TextField
+                    id="shortSummery"
+                    label="Short Summery"
+                    type="text"
+                    fullWidth
+                    variant='standard'
+                    value={shortHelp}
+                    onChange={(event: any) => {
+                        setShortHelp(event.target.value);
+                    }}
+                    margin="normal"
+                    required
+                />
+                <TextField
+                    id="longSummery"
+                    label="Long Summery"
+                    helperText="Please add long summer in lines."
+                    type="text"
+                    fullWidth
+                    multiline
+                    variant='standard'
+                    value={longHelp}
+                    onChange={(event: any) => {
+                        setLongHelp(event.target.value);
+                    }}
+                    margin="normal"
+                />
+
+            </DialogContent>
+            <DialogActions>
+                {updating &&
+                    <Box sx={{ width: '100%' }}>
+                        <LinearProgress color='info' />
+                    </Box>
+                }
+                {!updating && <React.Fragment>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleModify}>Save</Button>
+                </React.Fragment>}
+
+            </DialogActions>
+        </Dialog>
+    )
 }
 
 
@@ -554,6 +826,8 @@ function ArgumentPropsReviewer(props: {
         {groups.map(buildArgGroup)}
     </React.Fragment>)
 }
+
+// function 
 
 
 type CMDArgHelp = {
