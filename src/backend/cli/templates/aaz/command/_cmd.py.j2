@@ -104,7 +104,7 @@ class {{ leaf.cls_name }}(AAZCommand):
         {%- endfor %}
 
         {%- endfor %}
-        return {{ leaf.ARGS_SCHEMA_NAME }}
+        return cls.{{ leaf.ARGS_SCHEMA_NAME }}
     {%- endif %}
 
     {%- for arg_cls in leaf.get_arg_clses() %}
