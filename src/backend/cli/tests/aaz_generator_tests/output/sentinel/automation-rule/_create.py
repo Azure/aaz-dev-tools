@@ -251,7 +251,7 @@ class Create(AAZCommand):
 
         property_values = cls._args_schema.triggering_logic.conditions.Element.property.condition_properties.property_values
         property_values.Element = AAZStrArg()
-        return _args_schema
+        return cls._args_schema
 
     def _execute_operations(self):
         self.AutomationRulesCreateOrUpdate(ctx=self.ctx)()

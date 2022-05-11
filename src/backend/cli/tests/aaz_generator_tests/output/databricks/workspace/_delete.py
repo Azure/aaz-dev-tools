@@ -55,7 +55,7 @@ class Delete(AAZCommand):
             required=True,
             id_part="name",
         )
-        return _args_schema
+        return cls._args_schema
 
     def _execute_operations(self):
         yield self.WorkspacesDelete(ctx=self.ctx)()

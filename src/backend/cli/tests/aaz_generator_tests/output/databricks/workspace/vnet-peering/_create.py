@@ -108,7 +108,7 @@ class Create(AAZCommand):
             options=["id"],
             help="The Id of the remote virtual network.",
         )
-        return _args_schema
+        return cls._args_schema
 
     _args_address_space_create = None
 

@@ -52,7 +52,7 @@ class List(AAZCommand):
             help="The name of the workspace.",
             required=True,
         )
-        return _args_schema
+        return cls._args_schema
 
     def _execute_operations(self):
         self.VNetPeeringListByWorkspace(ctx=self.ctx)()

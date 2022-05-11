@@ -54,7 +54,7 @@ class Show(AAZCommand):
             required=True,
             id_part="name",
         )
-        return _args_schema
+        return cls._args_schema
 
     def _execute_operations(self):
         self.WorkspacesGet(ctx=self.ctx)()

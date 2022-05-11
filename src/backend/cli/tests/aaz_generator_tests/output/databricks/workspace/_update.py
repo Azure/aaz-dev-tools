@@ -226,7 +226,7 @@ class Update(AAZCommand):
 
         tags = cls._args_schema.tags
         tags.Element = AAZStrArg()
-        return _args_schema
+        return cls._args_schema
 
     _args_workspace_custom_boolean_parameter_update = None
 

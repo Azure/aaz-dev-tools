@@ -51,7 +51,7 @@ class List(AAZCommand):
         _args_schema.resource_group = AAZResourceGroupNameArg(
             required=True,
         )
-        return _args_schema
+        return cls._args_schema
 
     def _execute_operations(self):
         condition_0 = has_value(self.ctx.subscription_id) and has_value(self.ctx.args.resource_group) is not True
