@@ -367,15 +367,43 @@ const ArgEditTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     fontWeight: 400,
 }));
 
+const ArgChoicesTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: theme.palette.primary.main,
+    fontFamily: "'Roboto Condensed', sans-serif",
+    fontSize: 14,
+    fontWeight: 700,
+}))
+
 function ArgumentReviewer(props: {
     arg: CMDArg,
     depth: number,
     onEdit: () => void,
 }) {
+    const [choices, setChoices] = useState<string[]>([]);
+
     const buildArgOptionsString = () => {
         const argOptionsString = spliceArgOptionsString(props.arg, props.depth - 1);
         return (<ArgNameTypography>{argOptionsString}</ArgNameTypography>)
     }
+
+    useEffect(() => {
+        const newChoices: string[] = [];
+        if ((props.arg as CMDStringArg).enum) {
+            const items = (props.arg as CMDStringArg).enum!.items;
+            for (const idx in items) {
+                const enumItem = items[idx];
+                newChoices.push(enumItem.name);
+            }
+        } else if ((props.arg as CMDNumberArg).enum) {
+            const items = (props.arg as CMDNumberArg).enum!.items;
+            for (const idx in items) {
+                const enumItem = items[idx];
+                newChoices.push(enumItem.name);
+            }
+        }
+        setChoices(newChoices);
+    }, [props.arg]);
+
 
     return (<React.Fragment>
         <Box
@@ -412,11 +440,15 @@ function ArgumentReviewer(props: {
                 <Box sx={{ flexGrow: 1 }} />
                 {props.arg.required && <ArgRequiredTypography>[Required]</ArgRequiredTypography>}
             </Box>
+            {choices.length > 0 && <ArgChoicesTypography sx={{ ml: 6, mt:0.5}}>
+                {`Choices: ` + choices.join(', ')}
+                </ArgChoicesTypography>}
             {props.arg.help?.short && <ShortHelpTypography sx={{ ml: 6, mt: 1.5 }}> {props.arg.help?.short} </ShortHelpTypography>}
             {!(props.arg.help?.short) && <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>Please add argument short summery!</ShortHelpPlaceHolderTypography>}
             {props.arg.help?.lines && <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
                 {props.arg.help.lines.map((line, idx) => (<LongHelpTypography key={idx}>{line}</LongHelpTypography>))}
             </Box>}
+            
         </Box>
     </React.Fragment>)
 }
@@ -595,7 +627,8 @@ function ArgumentDialog(props: {
                     <FormControlLabel value="Preview" control={<Radio />} label="Preview" sx={{ ml: 4 }} />
                     <FormControlLabel value="Experimental" control={<Radio />} label="Experimental" sx={{ ml: 4 }} />
                 </RadioGroup>
-                {!props.arg.required && <React.Fragment>
+                {/* TODO: support hide argument */}
+                {/* {!props.arg.required && <React.Fragment>
                     <InputLabel shrink sx={{ font: "inherit" }}>Hide Argument</InputLabel>
                     <Switch sx={{ ml: 4 }}
                         checked={hide}
@@ -603,7 +636,7 @@ function ArgumentDialog(props: {
                             setHide(!hide);
                         }}
                     />
-                </React.Fragment>}
+                </React.Fragment>} */}
                 <TextField
                     id="shortSummery"
                     label="Short Summery"

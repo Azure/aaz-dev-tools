@@ -537,7 +537,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
         shortHelp = shortHelp.trim();
         longHelp = longHelp.trim();
 
-        const names = name.split(' ').filter((n) => n.length > 0);
+        const names = name.split(' ').filter(n => n.length > 0);
 
         this.setState({
             invalidText: undefined
@@ -564,6 +564,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
             this.setState({
                 invalidText: `Field 'Short Summery' is required.`
             })
+            return
         }
 
         let lines: string[] | null = null;
