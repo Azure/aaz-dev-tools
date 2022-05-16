@@ -92,6 +92,8 @@ class CMDArgBase(Model):
     # base types: "array", "boolean", "integer", "float", "object", "string",
     # special types: "ResourceId", "ResourceGroupName", "SubscriptionId", "ResourceLocation", "File"
 
+    nullable = CMDBooleanField()  # whether can pass null value or not.
+
     class Options:
         serialize_when_none = False
 
@@ -119,7 +121,9 @@ class CMDArgBase(Model):
 
     @classmethod
     def build_arg_base(cls, builder):
-        return cls()
+        arg_base = cls()
+        arg_base.nullable = builder.get_nullable()
+        return arg_base
 
     def _reformat_base(self, **kwargs):
         pass

@@ -258,6 +258,9 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
     if arg_kwargs is None:
         arg_kwargs = {}
 
+    if arg.nullable:
+        arg_kwargs['nullable'] = True
+
     if isinstance(arg, CMDStringArgBase):
         arg_type = "AAZStrArg"
         enum = parse_arg_enum(arg.enum)

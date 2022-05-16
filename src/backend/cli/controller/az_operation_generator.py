@@ -773,6 +773,9 @@ def render_schema_base(schema, cls_map, schema_kwargs=None):
     if schema_kwargs is None:
         schema_kwargs = {}
 
+    if schema.nullable:
+        schema_kwargs['nullable'] = True
+
     flags = schema_kwargs.get('flags', {})
 
     if schema.read_only:

@@ -168,6 +168,16 @@ class CMDArgBuilder:
             return self.schema.required
         return False
 
+    def get_nullable(self):
+        if isinstance(self.schema, CMDSchema):
+            if self.schema.nullable:
+                return True
+            # when updated and schema is not required then nullable is true.
+            # This can help update command to remove properties
+            if not self.schema.required and self._is_update_action:
+                return True
+        return False
+
     def get_default(self):
         if hasattr(self.schema, 'default') and self.schema.default:
             default = CMDArgDefault.build_default(self, self.schema.default)

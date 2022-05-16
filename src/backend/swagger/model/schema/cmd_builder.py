@@ -321,6 +321,11 @@ class CMDBuilder:
             model.default.value = schema.default
 
     @staticmethod
+    def setup_nullable(model, schema):
+        if getattr(schema, 'x_nullable', False):
+            model.nullable = True
+
+    @staticmethod
     def setup_description(model, schema):
         if schema.description:
             model.description = schema.description
