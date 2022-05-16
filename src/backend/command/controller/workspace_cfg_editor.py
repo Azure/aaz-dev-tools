@@ -3,9 +3,9 @@ import logging
 import os
 
 from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDDiffLevelEnum, \
-    CMDHttpRequest, CMDArgGroup, CMDObjectArg, CMDArrayArg, \
+    CMDHttpRequest, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDArg, CMDClsArg, \
     CMDObjectArgBase, CMDArrayArgBase, CMDCondition, CMDConditionNotOperator, CMDConditionHasValueOperator, \
-    CMDConditionAndOperator, CMDCommandGroup
+    CMDConditionAndOperator, CMDCommandGroup, CMDArgumentHelp
 from utils import exceptions
 from utils.base64 import b64encode_str
 from .cfg_reader import CfgReader
@@ -188,7 +188,7 @@ class WorkspaceCfgEditor(CfgReader):
                 new_args.update(args)
 
             for arg_group in plus_command.arg_groups:
-                arg_group = plus_cfg_editor.filter_args_in_arg_group(arg_group, new_args, copy=True)
+                arg_group = plus_cfg_editor._filter_args_in_arg_group(arg_group, new_args, copy=True)
                 if arg_group:
                     try:
                         main_editor._command_merge_arg_group(main_command, arg_group)
@@ -224,6 +224,108 @@ class WorkspaceCfgEditor(CfgReader):
 
         main_editor.reformat()
         return main_editor
+
+    def find_arg(self, *cmd_names, arg_var):
+        command = self.find_command(*cmd_names)
+        return self._find_arg_in_command(command, arg_var)
+
+    def update_arg(self, *cmd_names, arg_var, **kwargs):
+        arg = self.find_arg(*cmd_names, arg_var=arg_var)
+        if not arg:
+            return None
+        if isinstance(arg, CMDArg):
+            self._update_cmd_arg(arg, **kwargs)
+        if isinstance(arg, CMDClsArg):
+            self._update_cls_arg(arg, **kwargs)
+        if isinstance(arg, CMDArrayArg):
+            self._update_array_arg(arg, **kwargs)
+        return arg
+
+    def _update_cmd_arg(self, arg, **kwargs):
+        if 'options' in kwargs:
+            arg.options = kwargs['options']
+        if 'stage' in kwargs:
+            arg.stage = kwargs['stage']
+        if 'hide' in kwargs:
+            arg.hide = kwargs['hide']
+        if 'group' in kwargs:
+            arg.group = kwargs['group'] or None
+        if 'help' in kwargs:
+            arg.help = CMDArgumentHelp(kwargs['help'])
+
+    def _update_cls_arg(self, arg, **kwargs):
+        if 'singularOptions' in kwargs:
+            arg.singular_options = kwargs['singularOptions'] or None
+
+    def _update_array_arg(self, arg, **kwargs):
+        if 'singularOptions' in kwargs:
+            arg.singular_options = kwargs['singularOptions'] or None
+
+    def reformat(self):
+        self.cfg.reformat()
+
+    def _find_arg_in_command(self, command, arg_var):
+        if command is None:
+            return None
+        for arg_group in command.arg_groups:
+            arg = self._find_arg_in_arg_group(arg_group, arg_var)
+            if not arg:
+                continue
+            return arg
+
+    def _find_arg_in_arg_group(self, arg_group, arg_var):
+        assert isinstance(arg_group, CMDArgGroup)
+        for arg in arg_group.args:
+            if arg.var == arg_var:
+                return arg
+            elif isinstance(arg, CMDObjectArg):
+                sub_arg = self._find_arg_in_object_arg(arg, arg.var, arg_var)
+                if sub_arg:
+                    return sub_arg
+            elif isinstance(arg, CMDArrayArg):
+                sub_arg = self._find_arg_in_array_arg(arg, arg.var, arg_var)
+                if sub_arg:
+                    return sub_arg
+        return None
+
+    def _find_arg_in_object_arg(self, object_arg, object_var, arg_var):
+        assert isinstance(object_arg, CMDObjectArgBase)
+        if object_var == arg_var:
+            return object_arg
+
+        if object_arg.args:
+            for arg in object_arg.args:
+                if arg.var == arg_var:
+                    return arg
+                elif isinstance(arg, CMDObjectArg):
+                    sub_arg = self._find_arg_in_object_arg(arg, arg.var, arg_var)
+                    if sub_arg:
+                        return sub_arg
+                elif isinstance(arg, CMDArrayArg):
+                    sub_arg = self._find_arg_in_array_arg(arg, arg.var, arg_var)
+                    if sub_arg:
+                        return sub_arg
+
+        if object_arg.additional_props and object_arg.additional_props.item:
+            sub_arg = self._find_arg_in_item(object_arg.additional_props.item, object_var + "{}", arg_var)
+            if sub_arg:
+                return sub_arg
+        return None
+
+    def _find_arg_in_array_arg(self, array_arg, array_var, arg_var):
+        assert isinstance(array_arg, CMDArrayArgBase)
+        if array_var == arg_var:
+            return array_arg
+        return self._find_arg_in_item(array_arg.item, array_var + "[]", arg_var)
+
+    def _find_arg_in_item(self, item, item_var, arg_var):
+        if item_var == arg_var:
+            return item
+        if isinstance(item, CMDObjectArgBase):
+            return self._find_arg_in_object_arg(item, item_var, arg_var)
+        elif isinstance(item, CMDArrayArgBase):
+            return self._find_arg_in_array_arg(item, item_var, arg_var)
+        return None
 
     def _parse_command_http_op_url_args(self, command):
         operation_required_args = {}
@@ -315,7 +417,7 @@ class WorkspaceCfgEditor(CfgReader):
                         return False
         return True
 
-    def filter_args_in_arg_group(self, arg_group, arg_vars, copy=True):
+    def _filter_args_in_arg_group(self, arg_group, arg_vars, copy=True):
         assert isinstance(arg_group, CMDArgGroup)
         if copy:
             arg_group = arg_group.__class__(arg_group.to_primitive())
@@ -324,36 +426,36 @@ class WorkspaceCfgEditor(CfgReader):
             if arg.var in arg_vars:
                 args.append(arg)
             elif isinstance(arg, CMDObjectArg):
-                arg = self.filter_args_in_object_arg(arg, arg_vars, copy=False)
-                if arg:
-                    args.append(arg)
+                obj_arg = self._filter_args_in_object_arg(arg, arg_vars, copy=False)
+                if obj_arg:
+                    args.append(obj_arg)
             elif isinstance(arg, CMDArrayArg):
-                arg = self.filter_args_in_array_arg(arg, arg_vars, copy=False)
-                if arg:
-                    args.append(arg)
+                arr_arg = self._filter_args_in_array_arg(arg, arg_vars, copy=False)
+                if arr_arg:
+                    args.append(arr_arg)
         if args:
             arg_group.args = args
             return arg_group
         return None
 
-    def filter_args_in_array_arg(self, array_arg, arg_vars, copy=True):
+    def _filter_args_in_array_arg(self, array_arg, arg_vars, copy=True):
         assert isinstance(array_arg, CMDArrayArgBase)
         if copy:
             array_arg = array_arg.__class__(array_arg.to_primitive())
-        item = self.filter_args_in_item(array_arg.item, arg_vars, copy=False)
+        item = self._filter_args_in_item(array_arg.item, arg_vars, copy=False)
         if item:
             array_arg.item = item
             return array_arg
         return None
 
-    def filter_args_in_item(self, item, arg_vars, copy=True):
+    def _filter_args_in_item(self, item, arg_vars, copy=True):
         if isinstance(item, CMDObjectArgBase):
-            return self.filter_args_in_object_arg(item, arg_vars, copy)
+            return self._filter_args_in_object_arg(item, arg_vars, copy)
         elif isinstance(item, CMDArrayArgBase):
-            return self.filter_args_in_array_arg(item, arg_vars, copy)
+            return self._filter_args_in_array_arg(item, arg_vars, copy)
         return None
 
-    def filter_args_in_object_arg(self, object_arg, arg_vars, copy=True):
+    def _filter_args_in_object_arg(self, object_arg, arg_vars, copy=True):
         assert isinstance(object_arg, CMDObjectArgBase)
         if copy:
             object_arg = object_arg.__class__(object_arg.to_primitive())
@@ -364,13 +466,13 @@ class WorkspaceCfgEditor(CfgReader):
                 if arg.var in arg_vars:
                     args.append(arg)
                 elif isinstance(arg, CMDObjectArg):
-                    arg = self.filter_args_in_object_arg(arg, arg_vars, copy=False)
-                    if arg:
-                        args.append(arg)
+                    obj_arg = self._filter_args_in_object_arg(arg, arg_vars, copy=False)
+                    if obj_arg:
+                        args.append(obj_arg)
                 elif isinstance(arg, CMDArrayArg):
-                    arg = self.filter_args_in_array_arg(arg, arg_vars, copy=False)
-                    if arg:
-                        args.append(arg)
+                    arr_arg = self._filter_args_in_array_arg(arg, arg_vars, copy=False)
+                    if arr_arg:
+                        args.append(arr_arg)
             if args:
                 object_arg.args = args
                 contains = True
@@ -378,7 +480,7 @@ class WorkspaceCfgEditor(CfgReader):
         if object_arg.additional_props:
             additional_props = None
             if object_arg.additional_props.item:
-                item = self.filter_args_in_item(object_arg.additional_props.item, arg_vars, copy=False)
+                item = self._filter_args_in_item(object_arg.additional_props.item, arg_vars, copy=False)
                 if item:
                     additional_props = object_arg.additional_props
                     additional_props.item = item
@@ -477,6 +579,3 @@ class WorkspaceCfgEditor(CfgReader):
             new_operations.append(operation)
 
         return common_required_args, conditions, new_operations
-
-    def reformat(self):
-        self.cfg.reformat()

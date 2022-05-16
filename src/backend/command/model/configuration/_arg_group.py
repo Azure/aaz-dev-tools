@@ -2,6 +2,7 @@ from schematics.models import Model
 from schematics.types import StringType, PolyModelType, ListType
 
 from ._arg import CMDArg
+from utils import exceptions
 
 
 class CMDArgGroup(Model):
@@ -13,5 +14,14 @@ class CMDArgGroup(Model):
 
     def reformat(self, **kwargs):
         for arg in self.args:
-            arg.reformat(**kwargs)
+            try:
+                arg.reformat(**kwargs)
+            except exceptions.VerificationError as err:
+                err.payload['details'] = {
+                    "type": "Argument",
+                    "options": arg.options,
+                    "var": arg.var,
+                    "details": err.payload['details']
+                }
+                raise err
         self.args = sorted(self.args, key=lambda a: a.var)

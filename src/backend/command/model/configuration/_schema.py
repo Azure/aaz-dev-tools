@@ -130,6 +130,7 @@ class CMDSchemaBase(Model):
 
     # properties as nodes
     default = ModelType(CMDSchemaDefault)
+    nullable = CMDBooleanField()  # whether null value is supported
 
     # base types: "array", "boolean", "integer", "float", "object", "string",
 

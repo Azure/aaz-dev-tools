@@ -223,6 +223,43 @@ def editor_workspace_command_rename(name, node_names, leaf_name):
     return jsonify(result)
 
 
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>",
+          methods=("GET", "PATCH"))
+def editor_workspace_command_argument(name, node_names, leaf_name, arg_var):
+    if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
+        raise exceptions.ResourceNotFind("Command not exist")
+    node_names = node_names[1:]
+
+    manager = WorkspaceManager(name)
+    manager.load()
+    leaf = manager.find_command_tree_leaf(*node_names, leaf_name)
+    if not leaf:
+        raise exceptions.ResourceNotFind("Command not exist")
+    cfg_editor = manager.load_cfg_editor_by_command(leaf)
+    arg = cfg_editor.find_arg(*node_names, leaf_name, arg_var=arg_var)
+    if not arg:
+        raise exceptions.ResourceNotFind("Argument not exit")
+
+    if request.method == "GET":
+        result = arg.to_primitive()
+    elif request.method == "PATCH":
+        data = request.get_json()
+        cfg_editor.update_arg(*node_names, leaf_name, arg_var=arg_var, **data)
+        manager.save()
+        arg = cfg_editor.find_arg(*node_names, leaf_name, arg_var=arg_var)
+        result = arg.to_primitive()
+    else:
+        raise NotImplementedError()
+    return jsonify(result)
+
+
+# @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>/FindSimilar",
+#           methods=("POST",))
+# def editor_workspace_command_argument_find_similar(name, node_names, leaf_name, arg_var):
+# TODO: support it later
+#     pass
+
+
 # command tree resource operations
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/AddSwagger", methods=("POST",))
 def editor_workspace_tree_node_resources(name, node_names):

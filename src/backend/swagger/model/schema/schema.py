@@ -240,7 +240,7 @@ class Schema(Model, Linkable):
 
     x_ms_secret = XmsSecretField()  # TODO:
 
-    x_nullable = XNullableField()  # TODO: # when true, specifies that null is a valid value for the associated schema
+    x_nullable = XNullableField()  # when true, specifies that null is a valid value for the associated schema
 
     # specific properties, will not support
     _x_accessibility = XAccessibilityField()  # only used in ContainerRegistry Data plane
@@ -566,6 +566,7 @@ class Schema(Model, Linkable):
         builder.setup_fmt(model, self)
         builder.setup_enum(model, self)
         builder.setup_default(model, self)
+        builder.setup_nullable(model, self)
 
         if isinstance(model, CMDSchema):
             builder.setup_description(model, self)
