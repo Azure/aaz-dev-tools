@@ -69,12 +69,6 @@ jobs:
         with:
           node-version: '16.x'
 
-      - name: Npm install and build
-        run: |
-          cd src/web
-          npm ci
-          npm run build
-
       - name: Setup Python
         uses: actions/setup-python@v3
         with:
@@ -107,6 +101,8 @@ jobs:
           test -d .venv || virtualenv -p $(which python) --copies --reset-app-data .venv
           . .venv/bin/activate
           pip install -e .[dev]
+          cd src/web
+          npm ci
 
       - name: Install editable (cache hit)
         if: steps.virtualenv-cache.outputs.cache-hit == 'true'
@@ -120,6 +116,15 @@ jobs:
           which python
           python --version
           pip freeze
+          which node
+          node --version
+
+      - name: Build Web
+        run: |
+          cd src/web
+          npm run build
+        env:
+          CI: false
 
       - name: ${{ matrix.task.name }}
         run: |
