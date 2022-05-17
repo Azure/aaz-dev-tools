@@ -8,12 +8,13 @@ from flask import send_file
 class DocsManager:
 
     docs_folder = os.path.join(
+        os.path.dirname(
             os.path.dirname(
-                os.path.dirname(
-                    os.path.dirname(
-                        os.path.dirname(
-                            os.path.dirname(os.path.abspath(__file__))
-                        )))), 'Docs')
+                os.path.abspath(__file__)
+            )
+        ),
+        "Docs"
+    )
 
     @classmethod
     def _iter_over_page(cls, pages):

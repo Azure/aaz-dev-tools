@@ -134,3 +134,5 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+src/backend/ui
