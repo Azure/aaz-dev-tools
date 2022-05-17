@@ -48,9 +48,6 @@ jobs:
             task:
               name: Build
               run: |
-                cd src/web
-                npm run build
-                cd ../../
                 python setup.py check
                 python setup.py bdist_wheel sdist
 
@@ -67,15 +64,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16.x'
+
+      - name: Npm install and build
+        run: |
+          cd src/web
+          npm ci
+          npm run build
+
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python }}
 
       - name: Install prerequisites
         run: |
@@ -104,8 +107,6 @@ jobs:
           test -d .venv || virtualenv -p $(which python) --copies --reset-app-data .venv
           . .venv/bin/activate
           pip install -e .[dev]
-          cd src/web
-          npm ci
 
       - name: Install editable (cache hit)
         if: steps.virtualenv-cache.outputs.cache-hit == 'true'
