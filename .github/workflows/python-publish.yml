@@ -49,7 +49,6 @@ jobs:
               name: Build
               run: |
                 cd src/web
-                npm ci
                 npm run build
                 cd ../../
                 python setup.py check
@@ -105,6 +104,8 @@ jobs:
           test -d .venv || virtualenv -p $(which python) --copies --reset-app-data .venv
           . .venv/bin/activate
           pip install -e .[dev]
+          cd src/web
+          npm ci
 
       - name: Install editable (cache hit)
         if: steps.virtualenv-cache.outputs.cache-hit == 'true'
