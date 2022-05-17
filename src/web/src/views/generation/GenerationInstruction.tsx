@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Typography, Box, Link } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import CLIModuleSelector from './CLIModuleSelector';
 import { AppAppBar } from '../../components/AppAppBar';

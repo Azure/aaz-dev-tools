@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Typography, Box, Link, Stepper, Step, StepButton, StepLabel, StepContent, TypographyProps } from '@mui/material';
+import { Typography, Box, Link, Stepper, Step, StepButton, StepContent, TypographyProps } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 import withRoot from '../../withRoot';

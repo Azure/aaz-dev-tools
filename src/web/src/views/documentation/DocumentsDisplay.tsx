@@ -42,7 +42,7 @@ function DocumentsDisplay(props: {
         if (props.params.docId) {
             handleTreeSelect(props.params.docId);
         }
-    }, [props.params.docId])
+    }, [props.params.docId])   // eslint-disable-line react-hooks/exhaustive-deps
 
 
     const loadDocumentIndex = async () => {
@@ -74,7 +74,7 @@ function DocumentsDisplay(props: {
                 }
             }
         })
-    }, [])
+    }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <React.Fragment>

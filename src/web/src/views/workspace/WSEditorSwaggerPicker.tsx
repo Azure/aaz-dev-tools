@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Typography, Box, AppBar, Toolbar, IconButton, Button, Container, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText, Paper, RadioGroup, InputLabel, FormControlLabel, Radio } from '@mui/material';
+import { Typography, Box, AppBar, Toolbar, IconButton, Button, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import EditorPageLayout from '../../components/EditorPageLayout';
@@ -168,7 +168,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 // let preVersion: string | null = null;
 
                 if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-                    const pieces = res.data[0].swagger.slice().replace(`/ResourceProviders/`, ' ').split(' ')
+                    // const pieces = res.data[0].swagger.slice().replace(`/ResourceProviders/`, ' ').split(' ')
                     // preModuleName = `/Swagger/Specs/${pieces[0]}`;
                     // preResourceProvider = pieces[1].split('/')[0]
                     // preVersion = res.data[0].version
@@ -287,7 +287,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     }
 
     onModuleSelectorUpdate = (moduleValueUrl: string | null) => {
-        if (this.state.selectedModule != moduleValueUrl) {
+        if (this.state.selectedModule !== moduleValueUrl) {
             this.loadResourceProviders(moduleValueUrl);
         }
         this.setState({
@@ -296,7 +296,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     }
 
     onResourceProviderUpdate = (resourceProviderUrl: string | null) => {
-        if (this.state.selectedResourceProvider != resourceProviderUrl) {
+        if (this.state.selectedResourceProvider !== resourceProviderUrl) {
             this.loadResources(resourceProviderUrl);
         }
         this.setState({

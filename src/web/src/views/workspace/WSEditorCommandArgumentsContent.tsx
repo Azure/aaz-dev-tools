@@ -1,4 +1,4 @@
-import { Alert, Box, Button, ButtonBase, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputLabel, LinearProgress, Radio, RadioGroup, Switch, TextField, Typography, TypographyProps } from '@mui/material';
+import { Alert, Box, Button, ButtonBase, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps } from '@mui/material';
 import { styled } from '@mui/system';
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
@@ -494,8 +494,8 @@ function ArgumentDialog(props: {
 
         for (const idx in names) {
             const piece = names[idx];
-            if (!/^[a-z0-9]+(\-[a-z0-9]+)*$/.test(piece)) {
-                setInvalidText( `Invalid 'Option name': '${piece}'. Supported regular expression is: [a-z0-9]+(\-[a-z0-9]+)* `)
+            if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(piece)) {
+                setInvalidText( `Invalid 'Option name': '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `)
                 return
             }
         }
@@ -503,8 +503,8 @@ function ArgumentDialog(props: {
         if (sNames) {
             for (const idx in sNames) {
                 const piece = sNames[idx];
-                if (!/^[a-z0-9]+(\-[a-z0-9]+)*$/.test(piece)) {
-                    setInvalidText( `Invalid 'Singular option name': '${piece}'. Supported regular expression is: [a-z0-9]+(\-[a-z0-9]+)* `)
+                if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(piece)) {
+                    setInvalidText( `Invalid 'Singular option name': '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `)
                     return
                 }
             }
@@ -590,7 +590,7 @@ function ArgumentDialog(props: {
                     margin="normal"
                     required
                 />
-                {singularOptions != undefined && <TextField
+                {singularOptions !== undefined && <TextField
                     id="singularOptions"
                     label="Singular option names"
                     type="text"
