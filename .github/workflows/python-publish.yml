@@ -84,16 +84,19 @@ jobs:
           # Get the exact Python version to use in the cache key.
           echo "PYTHON_VERSION=$(python --version)" >> $GITHUB_ENV
           echo "RUNNER_ARCH=$(uname -m)" >> $GITHUB_ENV
+          echo "NODE_VERSION=$(node --version)" >> $GITHUB_ENV
           # Use week number in cache key so we can refresh the cache weekly.
           echo "WEEK_NUMBER=$(date +%V)" >> $GITHUB_ENV
 
       - uses: actions/cache@v3
         id: virtualenv-cache
         with:
-          path: .venv
-          key: ${{ env.CACHE_PREFIX }}-${{ env.WEEK_NUMBER }}-${{ runner.os }}-${{ env.RUNNER_ARCH }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements.txt') }}
+          path: |
+            .venv
+            src/web/node_modules
+          key: ${{ env.CACHE_PREFIX }}-${{ env.WEEK_NUMBER }}-${{ runner.os }}-${{ env.RUNNER_ARCH }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements.txt') }}-${{ env.NODE_VERSION }}-${{ hashFiles('src/web/package-lock.json') }}
           restore-keys: |
-            ${{ env.CACHE_PREFIX }}-${{ env.WEEK_NUMBER }}-${{ runner.os }}-${{ env.RUNNER_ARCH }}-${{ env.PYTHON_VERSION }}
+            ${{ env.CACHE_PREFIX }}-${{ env.WEEK_NUMBER }}-${{ runner.os }}-${{ env.RUNNER_ARCH }}-${{ env.PYTHON_VERSION }}-${{ env.NODE_VERSION }}
 
       - name: Setup virtual environment (no cache hit)
         if: steps.virtualenv-cache.outputs.cache-hit != 'true'
