@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Accordion, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps, AccordionSummary, AccordionDetails, IconButton, Input, InputAdornment, InputBase, AccordionActions, Paper, PaperProps, AccordionSummaryProps, Tooltip } from '@mui/material';
+import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Accordion, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps, AccordionDetails, IconButton, Input, InputAdornment, AccordionSummaryProps } from '@mui/material';
 import { styled } from '@mui/system';
 import axios from 'axios';
 import * as React from 'react';
@@ -432,7 +432,7 @@ function CommandDeleteDialog(props: {
                     const responseCommands: ResponseCommand[] = response.data
                     responseCommands
                         .map(responseCommand => DecodeResponseCommand(responseCommand))
-                        .map(cmd => { commands.add(cmd.names.join(" ")) });
+                        .forEach(cmd => { commands.add(cmd.names.join(" ")) });
                 });
 
                 const cmdNames: string[] = [];
@@ -552,9 +552,9 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
 
         for (const idx in names) {
             const piece = names[idx];
-            if (!/^[a-z0-9]+(\-[a-z0-9]+)*$/.test(piece)) {
+            if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(piece)) {
                 this.setState({
-                    invalidText: `Invalid Name part: '${piece}'. Supported regular expression is: [a-z0-9]+(\-[a-z0-9]+)* `
+                    invalidText: `Invalid Name part: '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `
                 })
                 return
             }
@@ -894,7 +894,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
     onRemoveExampleCommand = (idx: number) => {
         this.setState(preState => {
             let exampleCommands: string[] = [...preState.exampleCommands.slice(0, idx), ...preState.exampleCommands.slice(idx + 1)];
-            if (exampleCommands.length == 0) {
+            if (exampleCommands.length === 0) {
                 exampleCommands.push("");
             }
             return {

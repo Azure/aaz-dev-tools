@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps } from '@mui/material';
+import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography } from '@mui/material';
 import axios from 'axios';
 import * as React from 'react';
 import { ResponseCommands } from './WSEditorCommandContent';
@@ -298,9 +298,9 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
 
         for (const idx in names) {
             const piece = names[idx];
-            if (!/^[a-z0-9]+(\-[a-z0-9]+)*$/.test(piece)) {
+            if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(piece)) {
                 this.setState({
-                    invalidText: `Invalid Name part: '${piece}'. Supported regular expression is: [a-z0-9]+(\-[a-z0-9]+)* `
+                    invalidText: `Invalid Name part: '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `
                 })
                 return
             }

@@ -11,18 +11,6 @@ import WSEditorCommandGroupContent, { CommandGroup, DecodeResponseCommandGroup, 
 import WSEditorCommandContent, { Command, DecodeResponseCommand, ResponseCommand } from './WSEditorCommandContent';
 import { Alert } from 'reactstrap';
 
-
-const TopPadding = styled(Box)(({ theme }) => ({
-    [theme.breakpoints.up('sm')]: {
-        height: '12vh',
-    },
-}));
-
-const MiddlePadding = styled(Box)(({ theme }) => ({
-    height: '6vh'
-}));
-
-
 interface CommandGroupMap {
     [id: string]: CommandGroup
 }

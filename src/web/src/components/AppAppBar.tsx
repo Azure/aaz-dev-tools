@@ -13,10 +13,6 @@ type AppAppBarProps = {
 
 class AppAppBar extends React.Component<AppAppBarProps> {
 
-    constructor(props: AppAppBarProps) {
-        super(props);
-    }
-
     render() {
 
         return (
@@ -31,7 +27,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                             
                             href="/?#/HomePage"
                             fontWeight={
-                                this.props.pageName == "HomePage" ? 
+                                this.props.pageName === "HomePage" ? 
                                 theme.typography.fontWeightMedium : 
                                 theme.typography.fontWeightLight
                             }
@@ -45,7 +41,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                             color="inherit"
                             href="/?#/Workspace"
                             fontWeight={
-                                this.props.pageName == "Workspace" ? 
+                                this.props.pageName === "Workspace" ? 
                                 theme.typography.fontWeightMedium : 
                                 theme.typography.fontWeightLight
                             }
@@ -59,7 +55,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                             color="inherit"
                             href="/?#/Commands"
                             fontWeight={
-                                this.props.pageName == "Commands" ? 
+                                this.props.pageName === "Commands" ? 
                                 theme.typography.fontWeightMedium : 
                                 theme.typography.fontWeightLight
                             }
@@ -73,7 +69,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                             color="inherit"
                             href="/?#/Generation"
                             fontWeight={
-                                this.props.pageName == "Generation" ? 
+                                this.props.pageName === "Generation" ? 
                                 theme.typography.fontWeightMedium : 
                                 theme.typography.fontWeightLight
                             }
@@ -89,7 +85,7 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                                 underline="none"
                                 href="/?#/Documents"
                                 fontWeight={
-                                    this.props.pageName == "Documents" ?
+                                    this.props.pageName === "Documents" ?
                                     theme.typography.fontWeightMedium : 
                                     theme.typography.fontWeightLight
                                 }

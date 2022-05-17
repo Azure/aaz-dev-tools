@@ -1,6 +1,5 @@
-import { BorderColor } from '@mui/icons-material';
-import { AppBar, Button, Container, IconButton, styled, Theme, Toolbar, Typography, Tooltip } from '@mui/material';
-import { borderBottom, Box } from '@mui/system';
+import { AppBar, Button, IconButton, styled, Toolbar, Typography, Tooltip } from '@mui/material';
+import { Box } from '@mui/system';
 import HomeIcon from '@mui/icons-material/Home';
 
 import * as React from 'react';
@@ -11,11 +10,6 @@ interface WSEditorToolBarProps {
     onHomePage: () => void
     onGenerate: () => void
 }
-
-
-const MiddlePadding = styled(Box)(({ theme }) => ({
-    height: '6vh'
-}));
 
 class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
 
