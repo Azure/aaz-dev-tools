@@ -347,6 +347,17 @@ class XNullableField(BooleanType):
         )
 
 
+class XCadlNameField(StringType):
+    """ https://github.com/microsoft/cadl """
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            serialized_name='x-cadl-name',
+            deserialize_from='x-cadl-name',
+            **kwargs
+        )
+
+
 class XmsHeaderCollectionPrefix(StringType):
     """ only used in Storage Data plane """
 

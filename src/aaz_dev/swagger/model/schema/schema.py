@@ -16,7 +16,7 @@ from .fields import DataTypeFormatEnum, RegularExpressionField, XmsClientNameFie
     XmsDiscriminatorValueField, XmsClientFlattenField, XmsMutabilityField, XmsClientDefaultField, XNullableField, \
     XmsAzureResourceField
 from .fields import XmsSecretField, XAccessibilityField, XAzSearchDeprecatedField, XSfClientLibField, \
-    XApimCodeNillableField, XCommentField, XAbstractField, XADLNameField
+    XApimCodeNillableField, XCommentField, XAbstractField, XADLNameField, XCadlNameField
 from .reference import ReferenceField, Linkable
 from .x_ms_enum import XmsEnumField
 from .xml import XML
@@ -254,6 +254,8 @@ class Schema(Model, Linkable):
     _x_enum_flags = BooleanType(serialized_name="x-enumFlags", deserialize_from="x-enumFlags")  # Only used in Marketplane Catalog Data Plane
     _x_dictionary_key = ModelType(ReferenceSchema, serialized_name="x-dictionaryKey", deserialize_from="x-dictionaryKey")  # Only used in Marketplane Catalog Data Plane
     _x_ms_identifiers = ListType(BaseType(), serialized_name="x-ms-identifiers", deserialize_from="x-ms-identifiers")  # Only used in Open Energy Platform Mgmt Plane
+
+    _x_cadl_name = XCadlNameField()  # Cadl field name
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
