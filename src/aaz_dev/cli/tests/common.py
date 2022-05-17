@@ -1,4 +1,4 @@
-from aazdev.tests.common import ApiTestCase
+from app.tests.common import ApiTestCase
 from command.tests.common import workspace_name
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.plane import PlaneEnum

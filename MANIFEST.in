@@ -1,6 +1,8 @@
 include LICENSE
 include README.md
 include HISTORY.rst
-recursive-include src/backend/ui *
-recursive-include src/backend/docs/Docs *
-recursive-include src/backend/cli/templates *
+include version.py
+include requirements.txt
+recursive-include src/aaz_dev/ui *
+recursive-include src/aaz_dev/docs/Docs *
+recursive-include src/aaz_dev/cli/templates *

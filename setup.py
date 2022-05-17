@@ -1,4 +1,5 @@
 from setuptools import find_packages, setup
+from version import VERSION
 
 
 def read_requirements(filename: str):
@@ -24,11 +25,11 @@ def read_requirements(filename: str):
     return requirements
 
 
-# version.py defines the VERSION and VERSION_SHORT variables.
-# We use exec here, so we don't import cached_path whilst setting up.
-VERSION = {}  # type: ignore
-with open("scripts/version.py", "r") as version_file:
-    exec(version_file.read(), VERSION)
+# # version.py defines the VERSION and VERSION_SHORT variables.
+# # We use exec here, so we don't import cached_path whilst setting up.
+# VERSION = {}  # type: ignore
+# with open("version.py", "r") as version_file:
+#     exec(version_file.read(), VERSION)
 
 with open("README.md", "r", encoding="utf-8") as fp:
     README = fp.read()
@@ -38,7 +39,7 @@ with open("HISTORY.rst", "r", encoding="utf-8") as fp:
 
 setup(
     name='aaz-dev',
-    version=VERSION["VERSION"],
+    version=VERSION,
     description='Microsoft Atomic Azure CLI Commands Developer Tools',
     long_description=README + "\n\n" + HISTORY,
     classifiers=[
@@ -59,7 +60,9 @@ setup(
     author="Microsoft Corporation",
     author_email="azpycli@microsoft.com",
     license='MIT',
-    package_dir={"": "src"},
+    package_dir={
+        "": "src"
+    },
     packages=find_packages(
         where="src",
         exclude=["*.tests", "*.tests.*", "tests.*", "tests"],
@@ -68,6 +71,6 @@ setup(
     install_requires=read_requirements("requirements.txt"),
     python_requires=">=3.6",
     entry_points={
-        "console_scripts": ["aaz-dev=backend.aazdev.main:main"]
+        "console_scripts": ["aaz-dev=aaz_dev.app.main:main"]
     },
 )

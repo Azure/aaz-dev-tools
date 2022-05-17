@@ -1,5 +1,5 @@
 from unittest import TestCase
-from aazdev.app import create_app
+from app.app import create_app
 from utils.config import Config
 import shutil
 import os

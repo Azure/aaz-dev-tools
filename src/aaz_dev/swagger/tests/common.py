@@ -1,6 +1,6 @@
 import os
 from swagger.model.specs import SwaggerSpecs
-from aazdev.tests.common import ApiTestCase
+from app.tests.common import ApiTestCase
 from utils.plane import PlaneEnum
 
 

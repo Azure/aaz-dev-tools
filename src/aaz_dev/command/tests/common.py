@@ -1,4 +1,4 @@
-from aazdev.tests.common import ApiTestCase
+from app.tests.common import ApiTestCase
 
 
 class CommandTestCase(ApiTestCase):
