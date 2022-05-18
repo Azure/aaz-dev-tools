@@ -1,35 +1,35 @@
-from jinja2.filters import environmentfilter
+from jinja2.filters import pass_environment
 from utils.stage import AAZStageEnum
 from utils.case import to_camel_case, to_snack_case
 import json
 
 
-@environmentfilter
+@pass_environment
 def camel_case(env, name):
     return to_camel_case(name)
 
 
-@environmentfilter
+@pass_environment
 def snake_case(env, name):
     return to_snack_case(name)
 
 
-@environmentfilter
+@pass_environment
 def is_experimental(env, stage):
     return stage == AAZStageEnum.Experimental
 
 
-@environmentfilter
+@pass_environment
 def is_preview(env, stage):
     return stage == AAZStageEnum.Preview
 
 
-@environmentfilter
+@pass_environment
 def is_stable(env, stage):
     return stage == AAZStageEnum.Stable
 
 
-@environmentfilter
+@pass_environment
 def constant_convert(env, data):
     if isinstance(data, str):
         return f'"%s"' % data.replace('"', '\\"')

@@ -1,24 +1,24 @@
-from jinja2.filters import environmentfilter
+from jinja2.filters import pass_environment
 from utils.base64 import b64encode_str
 from utils.stage import AAZStageEnum
 
 
-@environmentfilter
+@pass_environment
 def command_group_readme_path(env, names):
     return '/'.join(["", "Commands", *names, 'readme.md'])
 
 
-@environmentfilter
+@pass_environment
 def command_readme_path(env, names):
     return '/'.join(["", "Commands", *names[:-1], f'_{names[-1]}.md'])
 
 
-@environmentfilter
+@pass_environment
 def resource_cfg_path(env, resource):
     return '/'.join(["", "Resources", resource.plane, b64encode_str(resource.id), f"{resource.version}.xml"])
 
 
-@environmentfilter
+@pass_environment
 def stage_label(env, stage, bold=True):
     text = stage
     if stage is None:
