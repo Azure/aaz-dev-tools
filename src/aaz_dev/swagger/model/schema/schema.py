@@ -519,11 +519,9 @@ class Schema(Model, Linkable):
                         assert isinstance(v, CMDSchemaBase)
                         model.additional_props = CMDObjectSchemaAdditionalProperties()
                         model.additional_props.item = v
-                elif self.additional_properties is True:
-                    model.additional_props = CMDObjectSchemaAdditionalProperties()
-            elif not model.props and not model.discriminators:
-                # to handle object schema without any properties
-                model.additional_props = CMDObjectSchemaAdditionalProperties()
+                # Note: not support additional_properties without schema define
+                # elif self.additional_properties is True:
+                #     model.additional_props = CMDObjectSchemaAdditionalProperties()
 
             if model.additional_props:
                 if builder.read_only:
@@ -552,6 +550,7 @@ class Schema(Model, Linkable):
                         if not disc.frozen:
                             need_frozen = False
                             break
+                # Note: model will always frozen when object without any props, additional_props or discriminators
                 model.frozen = need_frozen
         else:
             if self.all_of is not None:
