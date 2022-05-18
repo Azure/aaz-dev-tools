@@ -11,10 +11,47 @@ Currently, we can install it with a [.whl file](https://github.com/kairu-ms/aaz-
    - For Azure CLI Extension: https://github.com/Azure/azure-cli-extensions (or any other repository that you might have access to that contains CLI extensions);
    - For Swagger Specs: https://github.com/Azure/azure-rest-api-specs (or private one: https://github.com/Azure/azure-rest-api-specs-pr);
    - For AAZ: https://github.com/kairu-ms/aaz;
-2. Run a local development server:
-   ```text
-   $ aaz-dev run --cli-path <repo-path> --cli-extension-path <repo-path> --swagger-path <repo-path> --aaz-path <repo-path>
-   ```
+
+2. Install python(>= 3.8) and create an virtual environment for azure-cli development
+```bash
+python3 -m venv /path/to/new/azure-cli-venv
+```
+
+3. Active venv
+
+Windows powershell
+```powershell
+.\path\to\new\azure-cli-venv\Scripts\Activate.ps1
+```
+
+Linux bash
+```bash
+source /path/to/new/azure-cli-venv/bin/activate
+```
+
+4. Install [azure-cli-dev-tools](https://github.com/Azure/azure-cli-dev-tools) and setup azure-cli environment
+```bash
+pip install azdev
+azdev setup -c /path/to/azure-cli -r /path/to/azure-cli-extensions
+```
+
+5. Install aaz-dev-tools
+```bash
+AAZDevVersion=0.1.0
+pip install https://github.com/kairu-ms/aaz-dev-tools/releases/download/v$AAZDevVersion/aaz_dev-$AAZDevVersion-py3-none-any.whl
+```
+
+## Run aaz-dev tool
+
+Show help message of `aaz-dev run`
+```bash
+aaz-dev run --help
+```
+
+Run `aaz-dev`
+```bash
+aaz-dev run -c /path/to/azure-cli -e /path/to/azure-cli-extensions -s /path/to/swagger -a /path/to/aaz
+```
 
 ## Reporting issues and feedback
 If you encounter any bugs with the tool please file an issue in the [Issues](https://github.com/kairu-ms/aaz-dev-tools/issues) section of our GitHub repository.
