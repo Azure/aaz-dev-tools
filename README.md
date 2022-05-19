@@ -127,6 +127,12 @@ azdev setup --cli {path to azure-cli} --repo {path to azure-cli-extensions}
 aaz-dev run -c {path to azure-cli} -e {path to azure-cli-extensions} -s {path swagger or swagger-pr} -a {path to aaz}
 ```
 
+## Before using generated commands
+
+1. Make sure you have logined by `az login`.
+2. Make sure you have switched to the subscription for test by `az account set -s {subscription ID for test}`
+3. If your commands are in extensions, make sure you have loaded this extension by `azdev extension add {your extension name}`
+
 ## Other documentations
 
 - [extension](https://github.com/Azure/azure-cli/blob/dev/doc/extensions/README.md)
