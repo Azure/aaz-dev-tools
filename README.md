@@ -6,25 +6,40 @@ The *aaz-dev* tool is designed to generate atomic Azure CLI commands from OpenAP
 Currently, we can install it with a [.whl file](https://github.com/kairu-ms/aaz-dev-tools/releases). Later on, we'll publish it to PyPI to support *pip install* way of installation.
 
 ## Setting up your development environment
-1. Fork and clone the repositories that will be needed later:
-   - For Azure CLI: Azure CLI: https://github.com/Azure/azure-cli;
-   - For Azure CLI Extension: https://github.com/Azure/azure-cli-extensions (or any other repository that you might have access to that contains CLI extensions);
-   - For Swagger Specs: https://github.com/Azure/azure-rest-api-specs (or private one: https://github.com/Azure/azure-rest-api-specs-pr);
-   - For AAZ: https://github.com/kairu-ms/aaz;
+
+### Code repos
+
+1. Please `Fork` the following repos in your github account and `Clone` them in your local disk:
+   - [Azure CLI](https://github.com/Azure/azure-cli)
+   - [Azure CLI Extension](https://github.com/Azure/azure-cli-extensions)
+   - [AAZ](https://github.com/kairu-ms/aaz): Used to upload the command model generated.
+   - [azure-rest-api-specs](https://github.com/Azure/azure-rest-api-specs) or [azure-rest-api-specs-pr](https://github.com/Azure/azure-rest-api-specs-pr)
+
+2. Add upstream for every repos in your local clone by using command:
+```
+git remote add upstream {upstream url}
+```
+
+
+2. Install python(>= 3.8)
+    - Install python in windows: Download and run full installer from [Python Download](https://www.python.org/downloads/).
+    
 
 2. Install python(>= 3.8) and create an virtual environment for azure-cli development
+
+
 ```bash
 python3 -m venv /path/to/new/azure-cli-venv
 ```
 
 3. Active venv
 
-Windows powershell
+For Windows powershell
 ```powershell
 .\path\to\new\azure-cli-venv\Scripts\Activate.ps1
 ```
 
-Linux bash
+For Linux bash
 ```bash
 source /path/to/new/azure-cli-venv/bin/activate
 ```
@@ -36,9 +51,17 @@ azdev setup -c /path/to/azure-cli -r /path/to/azure-cli-extensions
 ```
 
 5. Install aaz-dev-tools
+
+For Command Prompt
+
+For powershell
 ```bash
-AAZDevVersion=0.1.0
-pip install https://github.com/kairu-ms/aaz-dev-tools/releases/download/v$AAZDevVersion/aaz_dev-$AAZDevVersion-py3-none-any.whl
+
+```
+
+For bash
+```bash
+pip install $(curl https://api.github.com/repos/kairu-ms/aaz-dev-tools/releases/latest -s | grep -o "https.*.whl")
 ```
 
 ## Run aaz-dev tool
