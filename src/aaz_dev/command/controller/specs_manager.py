@@ -54,7 +54,7 @@ class AAZSpecsManager:
         return os.path.join(self.commands_folder, *cg_names)
 
     def get_command_group_readme_path(self, *cg_names):
-        # when len(cg_names) == 0, the path will be the Commands/readme.md
+        # when len(cg_names) == 0, the path will be the CommandGroup/readme.md
         return os.path.join(self.get_command_group_folder(*cg_names), "readme.md")
 
     def get_command_readme_path(self, *cmd_names):

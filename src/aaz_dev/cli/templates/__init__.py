@@ -26,7 +26,7 @@ def get_templates():
             },
             'extension': {
                 "HISTORY.rst": env.get_template("extension/HISTORY.rst.j2"),
-                "readme.md": env.get_template("extension/readme.md.j2"),
+                "README.md": env.get_template("extension/README.md.j2"),
                 "setup.cfg": env.get_template("extension/setup.cfg.j2"),
                 "setup.py": env.get_template("extension/setup.py.j2"),
                 "azext_": {
