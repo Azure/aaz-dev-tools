@@ -16,11 +16,11 @@ class CliExtensionTemplateRenderTest(CommandTestCase):
         with open(output_path, 'w') as f:
             f.write(data)
 
-        tmpl = get_templates()['extension']['readme.md']
+        tmpl = get_templates()['extension']['README.md']
         data = tmpl.render(
             mod_name=mod_name
         )
-        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name, "readme.md")
+        output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name, "README.md")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)

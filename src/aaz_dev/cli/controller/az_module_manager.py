@@ -592,11 +592,11 @@ class AzExtensionManager(AzModuleManager):
         tmpl = templates['HISTORY.rst']
         new_files[file_path] = tmpl.render()
 
-        # render readme.md
-        file_path = os.path.join(mod_path, 'readme.md')
+        # render README.md
+        file_path = os.path.join(mod_path, 'README.md')
         if os.path.exists(file_path):
             raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
-        tmpl = templates['readme.md']
+        tmpl = templates['README.md']
         new_files[file_path] = tmpl.render(
             mod_name=mod_name
         )
