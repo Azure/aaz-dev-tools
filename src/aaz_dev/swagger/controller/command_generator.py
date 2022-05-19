@@ -3,7 +3,7 @@ import logging
 import inflect
 from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, CMDSchemaDefault, \
     CMDHttpResponseJsonBody, CMDObjectOutput, CMDArrayOutput, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, \
-    CMDRequestJson, CMDArgGroup, CMDDiffLevelEnum, CMDClsSchemaBase, CMDArraySchema, CMDStringSchema, CMDObjectSchemaBase, \
+    CMDRequestJson, CMDArgGroup, CMDDiffLevelEnum, CMDClsSchemaBase, CMDObjectSchemaBase, \
     CMDArraySchemaBase, CMDStringSchemaBase, CMDStringOutput
 from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.schema.fields import MutabilityEnum
@@ -154,7 +154,7 @@ class CommandGenerator:
         output = self._generate_output(
             cmd_builder,
             op,
-            pageable=path_item.get.x_ms_pageable if cmd_builder.method == 'get' else None,
+            pageable=cmd_builder.get_pageable(path_item, op),
         )
         if output is not None:
             command.outputs = []
@@ -241,29 +241,6 @@ class CommandGenerator:
 
     def _generate_output(self, cmd_builder, op, pageable: XmsPageable = None):
         assert isinstance(op, CMDHttpOperation)
-        if pageable is None and op.http.request.method == "get":
-            # some list operation may miss pageable
-            for resp in op.http.responses:
-                if resp.is_error:
-                    continue
-                if not isinstance(resp.body, CMDHttpResponseJsonBody):
-                    continue
-                if not isinstance(resp.body.json.schema, CMDObjectSchemaBase):
-                    continue
-                body_schema = resp.body.json.schema
-                if not body_schema.props:
-                    continue
-
-                has_value = False
-                has_next_link = False
-                for prop in body_schema.props:
-                    if prop.name == "value" and isinstance(prop, CMDArraySchema):
-                        has_value = True
-                    if prop.name == "nextLink" and isinstance(prop, CMDStringSchema):
-                        has_next_link = True
-                if has_value and has_next_link:
-                    pageable = XmsPageable()
-                    pageable.next_link_name = "nextLink"
 
         output = None
         for resp in op.http.responses:

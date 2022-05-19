@@ -17,11 +17,15 @@ from command.model.configuration import CMDSchemaDefault, \
     CMDFloatSchema, CMDFloatSchemaBase, \
     CMDFloat32Schema, CMDFloat32SchemaBase, \
     CMDFloat64Schema, CMDFloat64SchemaBase, \
-    CMDObjectSchema, CMDObjectSchemaBase, CMDArraySchema, CMDArraySchemaBase, CMDClsSchema, CMDClsSchemaBase
+    CMDObjectSchema, CMDObjectSchemaBase, \
+    CMDArraySchema, CMDArraySchemaBase, \
+    CMDClsSchema, CMDClsSchemaBase, \
+    CMDHttpResponseJsonBody
 
 from swagger.utils import exceptions
 from .fields import MutabilityEnum
 from .schema import ReferenceSchema
+from .x_ms_pageable import XmsPageable
 
 
 class CMDBuilder:
@@ -540,3 +544,31 @@ class CMDBuilder:
         for name, definition in self.cls_definitions.items():
             if definition['count'] > 1:
                 definition['model'].cls = name
+
+    def get_pageable(self, path_item, op):
+        pageable = getattr(path_item, self.method).x_ms_pageable
+        if pageable is None and self.method == "get":
+            # some list operation may miss pageable
+            for resp in op.http.responses:
+                if resp.is_error:
+                    continue
+                if not isinstance(resp.body, CMDHttpResponseJsonBody):
+                    continue
+                if not isinstance(resp.body.json.schema, CMDObjectSchemaBase):
+                    continue
+                body_schema = resp.body.json.schema
+                if not body_schema.props:
+                    continue
+
+                has_value = False
+                has_next_link = False
+                for prop in body_schema.props:
+                    if prop.name == "value" and isinstance(prop, CMDArraySchema):
+                        has_value = True
+                    if prop.name == "nextLink" and isinstance(prop, CMDStringSchema):
+                        has_next_link = True
+                if has_value and has_next_link:
+                    pageable = XmsPageable()
+                    pageable.next_link_name = "nextLink"
+
+        return pageable
