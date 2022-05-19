@@ -39,12 +39,13 @@ class AzProfileGenerator:
             remain_folders, _ = self._list_package(self.profile_folder_name)
             for command_group in self.profile.command_groups.values():
                 assert len(command_group.names) == 1, f"Invalid command group name: {command_group.names}"
+                command_group_folder_name = command_group.names[-1].replace('-', '_')
                 self._generate_by_command_group(
                     profile_folder_name=self.profile_folder_name,
                     command_group=command_group
                 )
-                if command_group.names[-1] in remain_folders:
-                    remain_folders.remove(command_group.names[-1])
+                if command_group_folder_name in remain_folders:
+                    remain_folders.remove(command_group_folder_name)
             for name in remain_folders:
                 self._delete_folder(self.profile_folder_name, name)
 
@@ -66,7 +67,8 @@ class AzProfileGenerator:
     def _generate_by_command_group(self, profile_folder_name, command_group):
         assert command_group.command_groups or command_group.commands
 
-        cur_folders, cur_files = self._list_package(profile_folder_name, *command_group.names)
+        command_group_folder_names = self._command_group_folder_names(*command_group.names)
+        cur_folders, cur_files = self._list_package(profile_folder_name, *command_group_folder_names)
 
         folders = set()
         if command_group.command_groups:
@@ -78,7 +80,7 @@ class AzProfileGenerator:
         # delete other folders
         del_folders = cur_folders.difference(folders)
         for name in del_folders:
-            self._delete_folder(profile_folder_name, *command_group.names, name)
+            self._delete_folder(profile_folder_name, *command_group_folder_names, name)
 
         files = set()
         if command_group.commands:
@@ -100,7 +102,7 @@ class AzProfileGenerator:
         data = tmpl.render(
             node=command_group
         )
-        self._update_file(profile_folder_name, *command_group.names, file_name, data=data)
+        self._update_file(profile_folder_name, *command_group_folder_names, file_name, data=data)
         files.add(file_name)
 
         # update __init__.py file
@@ -109,13 +111,13 @@ class AzProfileGenerator:
         data = tmpl.render(
             file_names=sorted(files)
         )
-        self._update_file(profile_folder_name, *command_group.names, file_name, data=data)
+        self._update_file(profile_folder_name, *command_group_folder_names, file_name, data=data)
         files.add(file_name)
 
         # delete other files
         del_files = cur_files.difference(files)
         for name in del_files:
-            self._delete_file(profile_folder_name, *command_group.names, name)
+            self._delete_file(profile_folder_name, *command_group_folder_names, name)
 
     def _generate_by_command(self, profile_folder_name, command):
         assert isinstance(command.cfg, CMDCommand)
@@ -124,7 +126,8 @@ class AzProfileGenerator:
         data = tmpl.render(
             leaf=AzCommandGenerator(command)
         )
-        self._update_file(profile_folder_name, *command.names[:-1], file_name, data=data)
+        self._update_file(
+            profile_folder_name, *self._command_group_folder_names(*command.names[:-1]), file_name, data=data)
 
     # folder operations
     def _get_path(self, *names):
@@ -175,3 +178,7 @@ class AzProfileGenerator:
     @staticmethod
     def _command_file_name(name):
         return f"_{to_snack_case(name)}.py"
+
+    @staticmethod
+    def _command_group_folder_names(*names):
+        return [name.replace('-', '_') for name in names]

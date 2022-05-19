@@ -305,7 +305,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "output", "databricks", "workspace", "vnet-peering", f"_{cmd_name}.py")
+                                   "output", "databricks", "workspace", "vnet_peering", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)
@@ -348,7 +348,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "output", "databricks", "workspace", "vnet-peering", f"_{cmd_name}.py")
+                                   "output", "databricks", "workspace", "vnet_peering", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)
@@ -391,7 +391,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "output", "databricks", "workspace", "vnet-peering", f"_{cmd_name}.py")
+                                   "output", "databricks", "workspace", "vnet_peering", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)
@@ -434,7 +434,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "output", "databricks", "workspace", "vnet-peering", f"_{cmd_name}.py")
+                                   "output", "databricks", "workspace", "vnet_peering", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)
@@ -477,7 +477,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "output", "databricks", "workspace", "vnet-peering", f"_{cmd_name}.py")
+                                   "output", "databricks", "workspace", "vnet_peering", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)
@@ -521,7 +521,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "output", "sentinel", "automation-rule", f"_{cmd_name}.py")
+                                   "output", "sentinel", "automation_rule", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)
@@ -564,7 +564,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "output", "sentinel", "automation-rule", f"_{cmd_name}.py")
+                                   "output", "sentinel", "automation_rule", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)
@@ -607,7 +607,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "output", "sentinel", "automation-rule", f"_{cmd_name}.py")
+                                   "output", "sentinel", "automation_rule", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)
@@ -650,7 +650,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "output", "sentinel", "automation-rule", f"_{cmd_name}.py")
+                                   "output", "sentinel", "automation_rule", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)
@@ -693,7 +693,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   "output", "sentinel", "automation-rule", f"_{cmd_name}.py")
+                                   "output", "sentinel", "automation_rule", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(data)

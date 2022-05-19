@@ -78,6 +78,7 @@ class AzModuleManager:
     _def_import_load_aaz = re.compile("\s+(import\s+(\w+.)*load_aaz_command_table)\s*$")
 
     def _patch_module(self, mod_name):
+        """Patch the __init__.py file of module"""
         file = os.path.join(os.path.dirname(self.get_aaz_path(mod_name)), '__init__.py')
         if not os.path.exists(file) or not os.path.isfile(file):
             logger.error(f"Patch Module failed: Cannot find file: {file}")
@@ -146,12 +147,14 @@ class AzModuleManager:
         return profile
 
     def _load_command_groups(self, *names, path):
+        """Load command groups folder in the folder"""
         command_groups = {}
         assert os.path.isdir(path), f'Invalid folder path {path}'
         for name in os.listdir(path):
             sub_path = os.path.join(path, name)
-            if os.path.isdir(sub_path):
-                command_group = self._load_command_group(*names, name, path=sub_path)
+            if not name.startswith('_') and os.path.isdir(sub_path):
+                name = name.replace('_', '-')  # transform folder_name to command_group_name
+                command_group = self._load_command_group(*names, name, path=sub_path)  # load command group definition
                 if command_group:
                     command_groups[name] = command_group
         if not command_groups:
@@ -159,13 +162,14 @@ class AzModuleManager:
         return command_groups
 
     def _load_commands(self, *names, path):
+        """Load commands in the folder"""
         commands = {}
         assert os.path.isdir(path), f'Invalid folder path {path}'
         for name in os.listdir(path):
             sub_path = os.path.join(path, name)
             if os.path.isfile(sub_path) and name.endswith('.py') and not name.startswith('__') and name.startswith('_'):
-                name = name[1:-3].replace('_', '-')
-                command = self._load_command(*names, name, path=sub_path)
+                name = name[1:-3].replace('_', '-')  # transform file_name to command_name
+                command = self._load_command(*names, name, path=sub_path)  # load command definition
                 if command:
                     commands[name] = command
         if not commands:
