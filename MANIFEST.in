@@ -6,3 +6,4 @@ include requirements.txt
 recursive-include src/aaz_dev/ui *
 recursive-include src/aaz_dev/docs/Docs *
 recursive-include src/aaz_dev/cli/templates *
+recursive-include src/aaz_dev/command/templates *

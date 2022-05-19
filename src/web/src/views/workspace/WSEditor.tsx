@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button } from '@mui/material';
-import { styled } from '@mui/material/styles';
 import { useParams } from 'react-router';
 import axios from 'axios';
 import { TransitionProps } from '@mui/material/transitions';
@@ -18,7 +17,6 @@ interface CommandGroupMap {
 interface CommandMap {
     [id: string]: Command
 }
-
 
 interface WSEditorProps {
     params: {
