@@ -1,6 +1,6 @@
 # Microsoft Atomic Azure CLI Dev Tools
 
-The *aaz-dev* tool is designed to generate atomic Azure CLI commands from OpenAPI specifications. For more information, please refer to [detailed documentation](https://github.com/necusjz/aaz-dev-tools/tree/release-pipeline/src/backend/docs/Docs). 
+The *aaz-dev* tool is designed to generate atomic Azure CLI commands from OpenAPI specifications. For more information, please refer to [Introduction](./src/aaz_dev/docs/Docs#introduction-to-aazdev). 
 
 ## Installation
 Currently, we can install it with a [.whl file](https://github.com/kairu-ms/aaz-dev-tools/releases). Later on, we'll publish it to PyPI to support *pip install* way of installation.
@@ -91,7 +91,7 @@ pip install azdev
 - For Windows
     - Powershell
     ```
-    pip install $(curl https://api.github.com/repos/kairu-ms/aaz-dev-tools/releases/latest -s | Select-String -Pattern "https.*.whl" -AllMatches | % { $_.Matches } | % { $_.Value })
+    pip install $(Invoke-WebRequest https://api.github.com/repos/kairu-ms/aaz-dev-tools/releases/latest  | % { $_.Content } | ConvertFrom-Json | % { $_.assets.browser_download_url } | Select-String -Pattern "https.*.whl" -AllMatches | % { $_.Matches } | % { $_.Value })
     ```
     - Command Prompt
     ```
