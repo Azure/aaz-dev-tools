@@ -13,6 +13,7 @@ from ._arg_builder import CMDArgBuilder
 from ._arg import CMDResourceGroupNameArg, CMDSubscriptionIdArg, CMDResourceLocationArg
 from ._utils import CMDDiffLevelEnum
 from msrestazure.tools import parse_resource_id, is_valid_resource_id
+from ._utils import CMDArgBuildPrefix
 
 
 class CMDHttpRequestArgs(Model):
@@ -46,7 +47,7 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
             resource_name = None
         args = []
         if self.params:
-            var_prefix = '$Path'
+            var_prefix = CMDArgBuildPrefix.Path
             for param in self.params:
                 id_part = None
                 placeholder = '{' + param.name + '}'
@@ -97,7 +98,7 @@ class CMDHttpRequestQuery(CMDHttpRequestArgs):
     def generate_args(self):
         args = []
         for param in self.params:
-            builder = CMDArgBuilder.new_builder(schema=param, var_prefix='$Query')
+            builder = CMDArgBuilder.new_builder(schema=param, var_prefix=CMDArgBuildPrefix.Query)
             args.extend(builder.get_args())
         return args
 
@@ -112,7 +113,7 @@ class CMDHttpRequestHeader(CMDHttpRequestArgs):
     def generate_args(self):
         args = []
         for param in self.params:
-            builder = CMDArgBuilder.new_builder(schema=param, var_prefix='$Header')
+            builder = CMDArgBuilder.new_builder(schema=param, var_prefix=CMDArgBuildPrefix.Header)
             args.extend(builder.get_args())
         return args
 
