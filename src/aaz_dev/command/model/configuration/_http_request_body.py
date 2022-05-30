@@ -19,7 +19,7 @@ class CMDHttpRequestBody(Model):
 
         return False
 
-    def generate_args(self):
+    def generate_args(self, ref_args):
         raise NotImplementedError()
 
     def diff(self, old, level):
@@ -34,8 +34,8 @@ class CMDHttpRequestJsonBody(CMDHttpRequestBody):
 
     json = ModelType(CMDRequestJson, required=True)
 
-    def generate_args(self):
-        return self.json.generate_args()
+    def generate_args(self, ref_args):
+        return self.json.generate_args(ref_args=ref_args)
 
     def diff(self, old, level):
         if not isinstance(old, self.__class__):

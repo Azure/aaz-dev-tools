@@ -1,7 +1,7 @@
 from schematics.models import Model
 from schematics.types import PolyModelType, ModelType, ListType, StringType
 
-from ._fields import CMDVariantField, CMDBooleanField, CMDDescriptionField
+from ._fields import CMDVariantField, CMDDescriptionField
 from ._http import CMDHttpAction
 from ._instance_update import CMDInstanceUpdateAction
 
@@ -26,7 +26,7 @@ class CMDOperation(Model):
             return hasattr(data, cls.POLYMORPHIC_KEY)
         return False
 
-    def generate_args(self):
+    def generate_args(self, ref_args):
         raise NotImplementedError()
 
     def reformat(self, **kwargs):
@@ -71,8 +71,8 @@ class CMDHttpOperation(CMDOperation):
     # properties as nodes
     http = ModelType(CMDHttpAction, required=True)
 
-    def generate_args(self):
-        return self.http.generate_args()
+    def generate_args(self, ref_args):
+        return self.http.generate_args(ref_args=ref_args)
 
     def reformat(self, **kwargs):
         self.http.reformat(**kwargs)
@@ -90,8 +90,8 @@ class CMDInstanceUpdateOperation(CMDOperation):
         deserialize_from="instanceUpdate"
     )
 
-    def generate_args(self):
-        return self.instance_update.generate_args()
+    def generate_args(self, ref_args):
+        return self.instance_update.generate_args(ref_args=ref_args)
 
     def reformat(self, **kwargs):
         self.instance_update.reformat(**kwargs)

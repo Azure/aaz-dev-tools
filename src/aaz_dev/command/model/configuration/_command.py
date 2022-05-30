@@ -37,9 +37,15 @@ class CMDCommand(Model):
         serialize_when_none = False
 
     def generate_args(self):
+        ref_args = []
+        if self.arg_groups:
+            for group in self.arg_groups:
+                ref_args.extend(group.args)
+        ref_args = ref_args or None
+
         arguments = {}
         for op in self.operations:
-            for arg in op.generate_args():
+            for arg in op.generate_args(ref_args=ref_args):
                 if arg.var not in arguments:
                     arguments[arg.var] = arg
 
