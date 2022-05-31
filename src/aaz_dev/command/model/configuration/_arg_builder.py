@@ -267,7 +267,9 @@ class CMDArgBuilder:
 
     def get_singular_options(self):
         if self._ref_arg:
-            return [*getattr(self._ref_arg, 'singular_options', [])] or None
+            singular_options = getattr(self._ref_arg, 'singular_options', None)
+            if singular_options:
+                return [*singular_options]
         return None
 
         # disable to auto generate singular option by default

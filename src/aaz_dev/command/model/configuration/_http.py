@@ -99,11 +99,12 @@ class CMDHttpRequestQuery(CMDHttpRequestArgs):
 
     def generate_args(self, ref_args):
         args = []
-        for param in self.params:
-            builder = CMDArgBuilder.new_builder(
-                schema=param, var_prefix=CMDArgBuildPrefix.Query,
-            )
-            args.extend(builder.get_args())
+        if self.params:
+            for param in self.params:
+                builder = CMDArgBuilder.new_builder(
+                    schema=param, var_prefix=CMDArgBuildPrefix.Query, ref_args=ref_args
+                )
+                args.extend(builder.get_args())
         return args
 
 
@@ -118,7 +119,7 @@ class CMDHttpRequestHeader(CMDHttpRequestArgs):
         args = []
         for param in self.params:
             builder = CMDArgBuilder.new_builder(
-                schema=param, var_prefix=CMDArgBuildPrefix.Header
+                schema=param, var_prefix=CMDArgBuildPrefix.Header, ref_args=ref_args
             )
             args.extend(builder.get_args())
         return args

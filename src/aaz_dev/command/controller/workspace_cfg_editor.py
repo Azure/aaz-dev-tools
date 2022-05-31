@@ -292,7 +292,7 @@ class WorkspaceCfgEditor(CfgReader):
         # regenerate args and its relation ship with schema
         command.generate_args()
 
-    def unflatten_arg(self, *cmd_names, arg_var, options, help, sub_args_options):
+    def unflatten_arg(self, *cmd_names, arg_var, options, help, sub_args_options=None):
         command = self.find_command(*cmd_names)
         parent, arg = self._find_arg_var_in_command(command, arg_var)
         if arg:
@@ -308,7 +308,7 @@ class WorkspaceCfgEditor(CfgReader):
         for a in parent.args:
             if a.var.startswith(f'{arg_var}.'):
                 a.group = None
-                if a.var in sub_args_options:
+                if sub_args_options and a.var in sub_args_options:
                     a.options = sub_args_options[a.var]
                 sub_args.append(a)
             else:
