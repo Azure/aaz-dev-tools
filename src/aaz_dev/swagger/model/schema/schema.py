@@ -350,7 +350,6 @@ class Schema(Model, Linkable):
                 self.disc_parent.disc_children[disc_value] = self
 
     def to_cmd(self, builder, **kwargs):
-
         if self.ref_instance is not None:
             model = builder(self.ref_instance, support_cls_schema=True)
         else:
@@ -358,10 +357,14 @@ class Schema(Model, Linkable):
 
         if isinstance(model, CMDArraySchemaBase):
             if self.all_of is not None:
-                raise exceptions.InvalidSwaggerValueError(
-                    msg=f"allOf is not supported for `array` type schema",
-                    key=self.traces, value=None
-                )
+                # inherent from allOf
+                if len(self.all_of) > 1:
+                    raise exceptions.InvalidSwaggerValueError(
+                        msg=f"Multiple allOf is not supported for `{model.type}` type schema",
+                        key=self.traces, value=None
+                    )
+                model = builder(self.all_of[0], support_cls_schema=True)
+
             if self.items:
                 assert isinstance(self.items, (Schema, ReferenceSchema))
                 v = builder(self.items, in_base=True, support_cls_schema=True)
@@ -371,6 +374,7 @@ class Schema(Model, Linkable):
                 # freeze because array item is frozen
                 if not model.frozen and model.item.frozen:
                     model.frozen = True
+
         elif isinstance(model, CMDObjectSchemaBase):
             # props
             prop_dict = {}
@@ -554,10 +558,13 @@ class Schema(Model, Linkable):
                 model.frozen = need_frozen
         else:
             if self.all_of is not None:
-                raise exceptions.InvalidSwaggerValueError(
-                    msg=f"allOf is not supported for `{model.type}` type schema",
-                    key=self.traces, value=None
-                )
+                # inherent from allOf
+                if len(self.all_of) > 1:
+                    raise exceptions.InvalidSwaggerValueError(
+                        msg=f"Multiple allOf is not supported for `{model.type}` type schema",
+                        key=self.traces, value=None
+                    )
+                model = builder(self.all_of[0], support_cls_schema=True)
 
         if getattr(self, "_looped", False):
             assert isinstance(model, (CMDObjectSchemaBase, CMDArraySchemaBase))

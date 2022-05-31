@@ -70,7 +70,7 @@ class Response(Model, Linkable):
             for name in sorted(self.headers):
                 header = CMDHttpResponseHeaderItem()
                 header.name = name
-                response.header.items.append(header.name)
+                response.header.items.append(header)
 
         if self.schema:
             v = builder(
