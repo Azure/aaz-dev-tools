@@ -8,6 +8,7 @@ from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDD
     CMDConditionAndOperator, CMDCommandGroup, CMDArgumentHelp
 from utils import exceptions
 from utils.base64 import b64encode_str
+from utils.case import to_camel_case
 from .cfg_reader import CfgReader
 
 logger = logging.getLogger('backend')
@@ -227,7 +228,8 @@ class WorkspaceCfgEditor(CfgReader):
 
     def find_arg(self, *cmd_names, arg_var):
         command = self.find_command(*cmd_names)
-        return self._find_arg_in_command(command, arg_var)
+        _, arg = self._find_arg_var_in_command(command, arg_var)
+        return arg
 
     def update_arg(self, *cmd_names, arg_var, **kwargs):
         arg = self.find_arg(*cmd_names, arg_var=arg_var)
@@ -261,71 +263,143 @@ class WorkspaceCfgEditor(CfgReader):
         if 'singularOptions' in kwargs:
             arg.singular_options = kwargs['singularOptions'] or None
 
+    def unwrap_cls(self):
+        # TODO: unwrap cls definition
+        pass
+
+    def flatten_arg(self, *cmd_names, arg_var, sub_args_options=None):
+        command = self.find_command(*cmd_names)
+        parent, arg = self._find_arg_var_in_command(command, arg_var)
+        if not arg:
+            raise exceptions.InvalidAPIUsage(
+                f"Argument not exist: {arg.var}")
+        assert parent is not None
+        if not isinstance(arg, CMDObjectArg):
+            raise exceptions.InvalidAPIUsage(f"Cannot flatten argument in type: '{type(arg)}'")
+        if arg.additional_props:
+            raise exceptions.InvalidAPIUsage(f"Cannot flatten argument with additional properties")
+        if arg.cls:
+            # argument should unwrap cls first
+            raise exceptions.InvalidAPIUsage(f"Cannot flatten argument with cls definition, please unwrap it first.")
+
+        parent.args.remove(arg)
+        for sub_arg in arg.args:
+            if sub_args_options and sub_arg.var in sub_args_options:
+                sub_arg.options = sub_args_options[sub_arg.var]
+            sub_arg.group = to_camel_case(arg.options[0])
+            parent.args.append(sub_arg)
+
+        # regenerate args and its relation ship with schema
+        command.generate_args()
+
+    def unflatten_arg(self, *cmd_names, arg_var, options, help, sub_args_options):
+        command = self.find_command(*cmd_names)
+        parent, arg = self._find_arg_var_in_command(command, arg_var)
+        if arg:
+            raise exceptions.InvalidAPIUsage(
+                f"Argument already exist: {arg_var}")
+        if not parent:
+            assert not arg
+            raise exceptions.InvalidAPIUsage(
+                f"Sub arguments not exist: {arg_var}")
+
+        sub_args = []
+        args = []
+        for a in parent.args:
+            if a.var.startswith(f'{arg_var}.'):
+                a.group = None
+                if a.var in sub_args_options:
+                    a.options = sub_args_options[a.var]
+                sub_args.append(a)
+            else:
+                args.append(a)
+        assert sub_args
+
+        new_arg = CMDObjectArg()
+        new_arg.var = arg_var
+        new_arg.options = options
+        new_arg.help = CMDArgumentHelp(raw_data=help)
+        new_arg.args = sub_args
+
+        args.append(new_arg)
+        parent.args = args
+
+        # regenerate args and its relation ship with schema
+        command.generate_args()
+
     def reformat(self):
         self.cfg.reformat()
 
-    def _find_arg_in_command(self, command, arg_var):
+    def _find_arg_var_in_command(self, command, arg_var):
         if command is None:
-            return None
+            return None, None
         for arg_group in command.arg_groups:
-            arg = self._find_arg_in_arg_group(arg_group, arg_var)
-            if not arg:
+            parent, arg = self._find_arg_var_in_arg_group(arg_group, arg_var)
+            if not arg and not parent:
                 continue
-            return arg
+            return parent, arg
 
-    def _find_arg_in_arg_group(self, arg_group, arg_var):
+    def _find_arg_var_in_arg_group(self, arg_group, arg_var):
         assert isinstance(arg_group, CMDArgGroup)
         for arg in arg_group.args:
             if arg.var == arg_var:
-                return arg
+                return arg_group, arg
+            elif arg.var.startswith(f'{arg_var}.'):
+                # arg_var already been flattened
+                return arg_group, None
             elif isinstance(arg, CMDObjectArg):
-                sub_arg = self._find_arg_in_object_arg(arg, arg.var, arg_var)
-                if sub_arg:
-                    return sub_arg
+                parent, sub_arg = self._find_arg_var_in_object_arg(arg, arg.var, arg_var)
+                if sub_arg or parent:
+                    return parent, sub_arg
             elif isinstance(arg, CMDArrayArg):
-                sub_arg = self._find_arg_in_array_arg(arg, arg.var, arg_var)
-                if sub_arg:
-                    return sub_arg
-        return None
+                parent, sub_arg = self._find_arg_var_in_array_arg(arg, arg.var, arg_var)
+                if sub_arg or parent:
+                    return parent, sub_arg
+        return None, None
 
-    def _find_arg_in_object_arg(self, object_arg, object_var, arg_var):
+    def _find_arg_var_in_object_arg(self, object_arg, object_var, arg_var):
         assert isinstance(object_arg, CMDObjectArgBase)
-        if object_var == arg_var:
-            return object_arg
+        assert object_var != arg_var
 
         if object_arg.args:
             for arg in object_arg.args:
                 if arg.var == arg_var:
-                    return arg
+                    return object_arg, arg
+                elif arg.var.startswith(f'{arg_var}.'):
+                    # arg_var already been flattened
+                    return object_arg, None
                 elif isinstance(arg, CMDObjectArg):
-                    sub_arg = self._find_arg_in_object_arg(arg, arg.var, arg_var)
-                    if sub_arg:
-                        return sub_arg
+                    parent, sub_arg = self._find_arg_var_in_object_arg(arg, arg.var, arg_var)
+                    if sub_arg or parent:
+                        return parent, sub_arg
                 elif isinstance(arg, CMDArrayArg):
-                    sub_arg = self._find_arg_in_array_arg(arg, arg.var, arg_var)
-                    if sub_arg:
-                        return sub_arg
+                    parent, sub_arg = self._find_arg_var_in_array_arg(arg, arg.var, arg_var)
+                    if sub_arg or parent:
+                        return parent, sub_arg
 
         if object_arg.additional_props and object_arg.additional_props.item:
-            sub_arg = self._find_arg_in_item(object_arg.additional_props.item, object_var + "{}", arg_var)
-            if sub_arg:
-                return sub_arg
-        return None
+            item = object_arg.additional_props.item
+            item_var = object_var + "{}"
+            if item_var == arg_var:
+                return object_arg, item
+            return self._find_arg_var_in_item(item, item_var, arg_var)
+        return None, None
 
-    def _find_arg_in_array_arg(self, array_arg, array_var, arg_var):
+    def _find_arg_var_in_array_arg(self, array_arg, array_var, arg_var):
         assert isinstance(array_arg, CMDArrayArgBase)
-        if array_var == arg_var:
-            return array_arg
-        return self._find_arg_in_item(array_arg.item, array_var + "[]", arg_var)
-
-    def _find_arg_in_item(self, item, item_var, arg_var):
+        item = array_arg.item
+        item_var = array_var + "[]"
         if item_var == arg_var:
-            return item
+            return array_arg, item
+        return self._find_arg_var_in_item(item, item_var, arg_var)
+
+    def _find_arg_var_in_item(self, item, item_var, arg_var):
+        assert item_var != arg_var
         if isinstance(item, CMDObjectArgBase):
-            return self._find_arg_in_object_arg(item, item_var, arg_var)
+            return self._find_arg_var_in_object_arg(item, item_var, arg_var)
         elif isinstance(item, CMDArrayArgBase):
-            return self._find_arg_in_array_arg(item, item_var, arg_var)
-        return None
+            return self._find_arg_var_in_array_arg(item, item_var, arg_var)
+        return None, None
 
     def _parse_command_http_op_url_args(self, command):
         operation_required_args = {}

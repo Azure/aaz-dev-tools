@@ -132,6 +132,8 @@ class CMDArgBuilder:
                     for sub_arg in arg.args:
                         if not sub_arg.group:
                             sub_arg.group = to_camel_case(self.schema.name)
+                        if not arg.required:
+                            sub_arg.required = False
             return arg.args or []
         elif isinstance(self.schema, CMDSchema):
             self.schema.arg = arg.var
