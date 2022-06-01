@@ -13,6 +13,7 @@ from ._arg_builder import CMDArgBuilder
 from ._arg import CMDResourceGroupNameArg, CMDSubscriptionIdArg, CMDResourceLocationArg
 from ._utils import CMDDiffLevelEnum
 from msrestazure.tools import parse_resource_id, is_valid_resource_id
+from ._utils import CMDArgBuildPrefix
 
 
 class CMDHttpRequestArgs(Model):
@@ -36,7 +37,7 @@ class CMDHttpRequestArgs(Model):
 
 class CMDHttpRequestPath(CMDHttpRequestArgs):
 
-    def generate_args(self, path):
+    def generate_args(self, path, ref_args):
         if is_valid_resource_id(path):
             id_parts = parse_resource_id(path)
         else:
@@ -46,7 +47,7 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
             resource_name = None
         args = []
         if self.params:
-            var_prefix = '$Path'
+            var_prefix = CMDArgBuildPrefix.Path
             for param in self.params:
                 id_part = None
                 placeholder = '{' + param.name + '}'
@@ -77,7 +78,9 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                     param.arg = arg.var
                     arg.ref_schema = param
                 else:
-                    builder = CMDArgBuilder.new_builder(schema=param, var_prefix=var_prefix)
+                    builder = CMDArgBuilder.new_builder(
+                        schema=param, var_prefix=var_prefix, ref_args=ref_args
+                    )
                     result = builder.get_args()
                     assert len(result) == 1
                     arg = result[0]
@@ -94,11 +97,14 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
 
 class CMDHttpRequestQuery(CMDHttpRequestArgs):
 
-    def generate_args(self):
+    def generate_args(self, ref_args):
         args = []
-        for param in self.params:
-            builder = CMDArgBuilder.new_builder(schema=param, var_prefix='$Query')
-            args.extend(builder.get_args())
+        if self.params:
+            for param in self.params:
+                builder = CMDArgBuilder.new_builder(
+                    schema=param, var_prefix=CMDArgBuildPrefix.Query, ref_args=ref_args
+                )
+                args.extend(builder.get_args())
         return args
 
 
@@ -109,10 +115,12 @@ class CMDHttpRequestHeader(CMDHttpRequestArgs):
         deserialize_from="clientRequestId",
     )  # specifies the header parameter to be used instead of `x-ms-client-request-id`
 
-    def generate_args(self):
+    def generate_args(self, ref_args):
         args = []
         for param in self.params:
-            builder = CMDArgBuilder.new_builder(schema=param, var_prefix='$Header')
+            builder = CMDArgBuilder.new_builder(
+                schema=param, var_prefix=CMDArgBuildPrefix.Header, ref_args=ref_args
+            )
             args.extend(builder.get_args())
         return args
 
@@ -130,16 +138,16 @@ class CMDHttpRequest(Model):
     class Options:
         serialize_when_none = False
 
-    def generate_args(self, path):
+    def generate_args(self, path, ref_args):
         args = []
         if self.path:
-            args.extend(self.path.generate_args(path))
+            args.extend(self.path.generate_args(path, ref_args))
         if self.query:
-            args.extend(self.query.generate_args())
+            args.extend(self.query.generate_args(ref_args))
         if self.header:
-            args.extend(self.header.generate_args())
+            args.extend(self.header.generate_args(ref_args))
         if self.body:
-            args.extend(self.body.generate_args())
+            args.extend(self.body.generate_args(ref_args))
         return args
 
     def reformat(self, **kwargs):
@@ -286,8 +294,8 @@ class CMDHttpAction(Model):
     request = ModelType(CMDHttpRequest)
     responses = ListType(ModelType(CMDHttpResponse))
 
-    def generate_args(self):
-        return self.request.generate_args(path=self.path)
+    def generate_args(self, ref_args):
+        return self.request.generate_args(path=self.path, ref_args=ref_args)
 
     def reformat(self, **kwargs):
         if self.request:

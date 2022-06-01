@@ -23,10 +23,11 @@ class CMDArgEnumItem(Model):
         serialize_when_none = False
 
     @classmethod
-    def build_enum_item(cls, builder, schema_item):
+    def build_enum_item(cls, schema_item, ref_enum_item):
         item = cls()
         item.value = copy.deepcopy(schema_item.value)
-        item.name = str(item.value)
+        item.hide = ref_enum_item.hide if ref_enum_item else None
+        item.name = ref_enum_item.name if ref_enum_item else str(item.value)
         return item
 
 
@@ -37,11 +38,17 @@ class CMDArgEnum(Model):
     items = ListType(ModelType(CMDArgEnumItem), min_size=1)
 
     @classmethod
-    def build_enum(cls, builder, schema_enum):
+    def build_enum(cls, schema_enum, ref_enum):
         enum = cls()
         enum.items = []
         for schema_item in schema_enum.items:
-            item = builder.get_enum_item(schema_item)
+            ref_enum_item = None
+            if ref_enum:
+                for enum_item in ref_enum.items:
+                    if enum_item.value == schema_item.value:
+                        ref_enum_item = enum_item
+                        break
+            item = CMDArgEnumItem.build_enum_item(schema_item, ref_enum_item)
             enum.items.append(item)
         return enum
 
@@ -267,14 +274,13 @@ class CMDClsArg(CMDClsArgBase, CMDArg):
     def build_arg(cls, builder):
         arg = super().build_arg(builder)
         assert isinstance(arg, CMDClsArg)
-        # TODO: if cls referenced to a list argument, then support get_singular_options
-        # arg.singular_options = builder.get_singular_options()
+        arg.singular_options = builder.get_singular_options()
         return arg
 
-    # def _reformat(self, **kwargs):
-    #     super()._reformat(**kwargs)
-    #     if self.singular_options:
-    #         self.singular_options = sorted(self.singular_options, key=lambda op: (len(op), op))
+    def _reformat(self, **kwargs):
+        super()._reformat(**kwargs)
+        if self.singular_options:
+            self.singular_options = sorted(self.singular_options, key=lambda op: (len(op), op))
 
 
 # string
@@ -603,6 +609,7 @@ class CMDObjectArgBase(CMDArgBase):
                                 "var": arg.var,
                             }
                         )
+                    used_options.add(option)
             self.args = sorted(self.args, key=lambda a: a.var)
         if self.additional_props:
             self.additional_props.reformat(**kwargs)

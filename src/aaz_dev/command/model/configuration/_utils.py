@@ -8,3 +8,8 @@ class CMDDiffLevelEnum:
     Associate = 5    # include diff for links
     All = 10    # including description and help messages
 
+
+class CMDArgBuildPrefix:
+    Query = '$Query'
+    Header = '$Header'
+    Path = '$Path'

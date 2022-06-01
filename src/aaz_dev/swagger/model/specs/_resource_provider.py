@@ -26,6 +26,7 @@ class ResourceProvider:
             logger.warning(f"MissReadmeFile: {self} : {map_path_2_repo(folder_path)}")
         self._tags = None
         self._resource_map = None
+        self._ignore_resources = {f'/providers/{self.name}/operations'.lower(), }
 
     def __str__(self):
         return f'{self.swagger_module}/ResourceProviders/{self.name}'
@@ -41,6 +42,8 @@ class ResourceProvider:
                         continue
                     file_path = os.path.join(root, file)
                     for resource in self._parse_resources_in_file(file_path):
+                        if resource.id in self._ignore_resources:
+                            continue
                         if resource.id not in resource_map:
                             resource_map[resource.id] = {}
                         if self._replace_current_resource(

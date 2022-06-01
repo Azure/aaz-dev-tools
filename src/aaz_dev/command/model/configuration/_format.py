@@ -9,7 +9,7 @@ class CMDFormat(Model):
     class Options:
         serialize_when_none = False
 
-    def build_arg_fmt(self, builder):
+    def build_arg_fmt(self, builder, ref_fmt):
         raise NotImplementedError()
 
 
@@ -27,7 +27,8 @@ class CMDStringFormat(CMDFormat):
         min_value=0
     )
 
-    def build_arg_fmt(self, builder):
+    def build_arg_fmt(self, builder, ref_fmt):
+        # TODO: support ref_fmt
         fmt = CMDStringFormat()
         fmt.pattern = self.pattern
         fmt.max_length = self.max_length
@@ -58,7 +59,8 @@ class CMDStringFormat(CMDFormat):
 class CMDResourceIdFormat(CMDFormat):
     template = StringType(required=True)
 
-    def build_arg_fmt(self, builder):
+    def build_arg_fmt(self, builder, ref_fmt):
+        # TODO: support ref_fmt
         fmt = CMDResourceIdFormat()
         fmt.template = self.template
         # TODO: add supports for
@@ -84,7 +86,8 @@ class CMDIntegerFormat(CMDFormat):
     maximum = IntType()
     minimum = IntType()
 
-    def build_arg_fmt(self, builder):
+    def build_arg_fmt(self, builder, ref_fmt):
+        # TODO: support ref_fmt
         fmt = CMDIntegerFormat()
         fmt.multiple_of = self.multiple_of
         fmt.maximum = self.maximum
@@ -133,7 +136,8 @@ class CMDFloatFormat(CMDFormat):
         deserialize_from='exclusiveMinimum'
     )
 
-    def build_arg_fmt(self, builder):
+    def build_arg_fmt(self, builder, ref_fmt):
+        # TODO: support ref_fmt
         fmt = CMDFloatFormat()
         fmt.multiple_of = self.multiple_of
         fmt.maximum = self.maximum
@@ -187,7 +191,8 @@ class CMDObjectFormat(CMDFormat):
         deserialize_from='minProperties'
     )
 
-    def build_arg_fmt(self, builder):
+    def build_arg_fmt(self, builder, ref_fmt):
+        # TODO: support ref_fmt
         fmt = CMDObjectFormat()
         fmt.max_properties = self.max_properties
         fmt.min_properties = self.min_properties
@@ -238,7 +243,8 @@ class CMDArrayFormat(CMDFormat):
         deserialize_from="strFormat",
     )   # the format convert an array instance to a string
 
-    def build_arg_fmt(self, builder):
+    def build_arg_fmt(self, builder, ref_fmt):
+        # TODO: support ref_fmt
         fmt = CMDArrayFormat()
         fmt.unique = self.unique
         fmt.max_length = self.max_length

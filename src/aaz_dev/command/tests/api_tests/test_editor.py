@@ -172,7 +172,7 @@ class APIEditorTest(CommandTestCase):
             assert rv.status_code == 200
             command = rv.get_json()
             assert command['names'] == ['edge-order', 'address', 'create']
-            assert len(command['argGroups']) == 2
+            assert len(command['argGroups']) == 3
             assert 'conditions' not in command
             assert len(command['operations']) == 1
             assert len(command['outputs']) == 1
@@ -183,7 +183,7 @@ class APIEditorTest(CommandTestCase):
             assert rv.status_code == 200
             command = rv.get_json()
             assert command['names'] == ['edge-order', 'address', 'update']
-            assert len(command['argGroups']) == 2
+            assert len(command['argGroups']) == 3
             assert 'conditions' not in command
             assert len(command['operations']) == 3  # Get, InstanceUpdate, Put
             assert len(command['outputs']) == 1
