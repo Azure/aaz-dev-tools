@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Typography, Box, AppBar, Toolbar, IconButton, Button, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText } from '@mui/material';
+import { Typography, Box, AppBar, Toolbar, IconButton, Button, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText, FormControlLabel } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import EditorPageLayout from '../../components/EditorPageLayout';
@@ -344,6 +344,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 } else if (!preState.existingResources.has(resourceId)) {
                     selectedResources.add(resourceId);
                 }
+
                 return {
                     ...preState,
                     selectedResources: selectedResources,
@@ -352,8 +353,26 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         }
     }
 
+    onSelectedAllClick = () => {
+        this.setState(preState => {
+            const selectedResources = new Set(preState.selectedResources);
+            if (selectedResources.size == preState.resourceOptions.length) {
+                selectedResources.clear()
+            } else {
+                preState.resourceOptions.forEach((value) => {
+                    selectedResources.add(value)
+                })
+            }
+            return {
+                ...preState,
+                selectedResources: selectedResources,
+            }
+        })
+    }
+
     render() {
         const { selectedResources, existingResources, resourceOptions, selectedVersion, selectedModule } = this.state;
+        
         return (
             <React.Fragment>
                 <AppBar sx={{ position: "fixed" }}>
@@ -427,7 +446,36 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     <List
                         dense
                         sx={{ flexGrow: 1 }}
-                        subheader={<ListSubheader>Resource Url</ListSubheader>}
+                        subheader={<ListSubheader>
+                            <Box sx={{
+                                mt: 1,
+                                flexDirection: 'column',
+                                display: 'flex',
+                                alignItems: 'stretch',
+                                justifyContent: 'flex-start', 
+                            }} color='inherit'>
+                                <Typography component='h6'>Resource Url</Typography>
+
+                                {resourceOptions.length > 0 && <ListItemButton sx={{paddingLeft:0}} dense onClick={this.onSelectedAllClick}>
+                                    <ListItemIcon>
+                                        <Checkbox
+                                            edge="start"
+                                            checked={selectedResources.size == resourceOptions.length}
+                                            indeterminate={selectedResources.size > 0 && selectedResources.size < resourceOptions.length}
+                                            tabIndex={-1}
+                                            disableRipple
+                                            inputProps={{ 'aria-labelledby': 'SelectAll' }}
+                                        />
+                                    </ListItemIcon>
+                                    <ListItemText id="SelectAll"
+                                        primary={`All (${resourceOptions.length})`}
+                                        primaryTypographyProps={{
+                                            variant: "h6",
+                                        }}
+                                    />
+                                    </ListItemButton>}
+                            </Box>
+                        </ListSubheader>}
                     >
                         {resourceOptions.map((option) => {
                             const labelId = `resource-${option}`;
@@ -525,6 +573,9 @@ class SwaggerItemSelector extends React.Component<SwaggerItemsSelectorProps> {
         )
     }
 }
+
+
+// class WSEditorResourceListHeader extends React.Com
 
 
 export default WSEditorSwaggerPicker;
