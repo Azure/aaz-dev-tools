@@ -7,6 +7,12 @@ from flask.helpers import get_debug_flag, get_env
 from utils.config import Config
 
 
+def is_port_in_use(host, port):
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex((host, port)) == 0
+
+
 @click.command("run", short_help="Run a development server.")
 @click.option(
     "--host", "-h",
@@ -90,9 +96,16 @@ from utils.config import Config
             f" are separated by {os.path.pathsep!r}."
     ),
 )
+@click.option(
+    "--quiet", '-q',
+    is_flag=True,
+    default=False,
+    is_eager=True,
+    help="Without open web browser page."
+)
 @pass_script_info
 def run_command(
-        info, host, port, reload, debugger, eager_loading, with_threads, extra_files
+        info, host, port, reload, debugger, eager_loading, with_threads, extra_files, quiet
 ):
     """Run a local development server.
 
@@ -113,9 +126,15 @@ def run_command(
     show_server_banner(get_env(), debug, info.app_import_path, eager_loading)
     app = DispatchingApp(info.load_app, use_eager_loading=eager_loading)
 
+    if is_port_in_use(host, port):
+        raise ValueError(f"The port '{port}' already been used in '{host}', please specify a new port in '--port' argument.")
+
     from werkzeug.serving import run_simple
 
-    webbrowser.open_new(f'http://{host}:{port}/')
+    if quiet:
+        print(f'Please open http://{host}:{port}/')
+    else:
+        webbrowser.open_new(f'http://{host}:{port}/')
 
     run_simple(
         host,

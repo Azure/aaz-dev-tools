@@ -3,6 +3,11 @@
 Release History
 ===============
 
+0.1.2
+++++
+* Support `--quiet` argument in aaz-dev run to disable web browser page opening.
+* Raise error when port is used by others.
+
 0.1.1
 +++++
 * Use Jinja version 3.0.3;
