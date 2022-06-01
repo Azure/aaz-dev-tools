@@ -391,7 +391,10 @@ function WSEditorExportDialog(props: {
             }).catch(err => {
                 console.error(err.response)
                 if (err.response?.data?.message) {
-                    setInvalidText(`ResponseError: ${err.response!.data!.message!}`);
+                    const data = err.response!.data!;
+                    setInvalidText(
+                        `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
+                    );
                 }
                 setUpdating(false);
             })

@@ -352,8 +352,9 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
         }).catch(err => {
             console.error(err.response);
             if (err.response?.data?.message) {
+                const data = err.response!.data!;
                 this.setState({
-                    invalidText: `ResponseError: ${err.response!.data!.message!}`,
+                    invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
                 })
             }
             this.setState({

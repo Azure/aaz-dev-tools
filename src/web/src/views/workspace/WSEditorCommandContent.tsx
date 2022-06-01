@@ -607,8 +607,9 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
         }).catch(err => {
             console.error(err.response);
             if (err.response?.data?.message) {
+                const data = err.response!.data!;
                 this.setState({
-                    invalidText: `ResponseError: ${err.response!.data?.message!}`,
+                    invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
                 })
             }
             this.setState({
@@ -783,8 +784,9 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
         }).catch(err => {
             console.error(err.response);
             if (err.response?.data?.message) {
+                const data = err.response!.data!;
                 this.setState({
-                    invalidText: `ResponseError: ${err.response!.data!.message!}`,
+                    invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
                 })
             }
             this.setState({

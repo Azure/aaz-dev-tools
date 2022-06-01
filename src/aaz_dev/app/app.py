@@ -1,5 +1,8 @@
+import json
+
 from flask import Flask, jsonify
 from flask.cli import FlaskGroup, shell_command, routes_command
+from flask.logging import create_logger
 
 from utils import exceptions
 from utils.config import Config
@@ -8,6 +11,7 @@ from .run import run_command
 
 def create_app():
     app = Flask(__name__, static_folder=Config.STATIC_FOLDER, static_url_path=Config.STATIC_URL_PATH)
+    logger = create_logger(app)
 
     @app.route('/', defaults={'path': ''})
     @app.route('/<string:path>')
@@ -19,6 +23,7 @@ def create_app():
 
     @app.errorhandler(exceptions.InvalidAPIUsage)
     def invalid_api_usage(e):
+        logger.error(f'InvalidAPIUsage:\n{json.dumps(e.to_dict(), indent=2)}',)
         return jsonify(e.to_dict()), e.status_code
 
     # register url converters
