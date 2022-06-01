@@ -216,7 +216,7 @@ function CommandGroupDeleteDialog(props: {
                 props.onClose(true);
             }).catch(err => {
                 setUpdating(false);
-                console.error(err.response)
+                console.error(err.response.data)
             })
     }
 
@@ -351,9 +351,9 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
             }
         }).catch(err => {
             console.error(err.response);
-            if (err.resource?.message) {
+            if (err.response?.data?.message) {
                 this.setState({
-                    invalidText: `ResponseError: ${err.resource!.message!}`,
+                    invalidText: `ResponseError: ${err.response!.data!.message!}`,
                 })
             }
             this.setState({

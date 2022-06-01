@@ -135,7 +135,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     }
                 });
             })
-            .catch((err) => console.error(err.response));
+            .catch((err) => console.error(err.response.data));
     }
 
     loadResourceProviders = (moduleUrl: string | null) => {
@@ -150,7 +150,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     });
                     this.onResourceProviderUpdate(selectedResourceProvider);
                 })
-                .catch((err) => console.error(err.response.message));
+                .catch((err) => console.error(err.response.data));
         } else {
             this.setState({
                 resourceProviderOptions: [],
@@ -183,7 +183,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     existingResources: existingResources,
                 })
             })
-            .catch((err) => console.error(err.response));
+            .catch((err) => console.error(err.response.data));
     }
 
     loadResources = (resourceProviderUrl: string | null) => {
@@ -225,7 +225,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     this.onVersionUpdate(selectVersion);
                 })
                 .catch((err) => {
-                    console.error(err.response);
+                    console.error(err.response.data);
                     this.setState({
                         loading: false,
                     });
@@ -283,7 +283,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 });
                 this.props.onClose(true);
             })
-            .catch((err) => console.error(err.response));
+            .catch((err) => console.error(err.response.data));
     }
 
     onModuleSelectorUpdate = (moduleValueUrl: string | null) => {

@@ -5,6 +5,8 @@ import React, { useState, useEffect } from 'react';
 import { CardTitleTypography, ExperimentalTypography, LongHelpTypography, PreviewTypography, ShortHelpPlaceHolderTypography, ShortHelpTypography, SmallExperimentalTypography, SmallPreviewTypography, StableTypography, SubtitleTypography } from './WSEditorTheme';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import EditIcon from '@mui/icons-material/Edit';
+import CallSplitSharpIcon from '@mui/icons-material/CallSplitSharp';
+// import CallMergeSharpIcon from '@mui/icons-material/CallMergeSharp';
 
 
 function WSEditorCommandArgumentsContent(props: {
@@ -14,6 +16,7 @@ function WSEditorCommandArgumentsContent(props: {
     const [args, setArgs] = useState<CMDArg[]>([]);
     const [displayArgumentDialog, setDisplayArgumentDialog] = useState<boolean>(false);
     const [editArg, setEditArg] = useState<CMDArg | undefined>(undefined);
+    const [displayFlattenDialog, setDisplayFlattenDialog] = useState<boolean>(false);
     const [clsArgDefineMap, setClsArgDefineMap] = useState<ClsArgDefinitionMap>({});
 
     const refreshData = () => {
@@ -42,6 +45,19 @@ function WSEditorCommandArgumentsContent(props: {
         setDisplayArgumentDialog(true)
     }
 
+    const handleFlattenDialogClose = (flattened: boolean) => {
+        setDisplayFlattenDialog(false)
+        setEditArg(undefined);
+        if (flattened) {
+            refreshData();
+        }
+    }
+
+    const handleArgumentFlatten = (arg: CMDArg) => {
+        setEditArg(arg)
+        setDisplayFlattenDialog(true)
+    }
+
     return (
         <React.Fragment>
             <CardContent sx={{
@@ -60,11 +76,11 @@ function WSEditorCommandArgumentsContent(props: {
                         [ ARGUMENT ]
                     </CardTitleTypography>
                 </Box>
-                <ArgumentNavigation commandUrl={props.commandUrl} args={args} clsArgDefineMap={clsArgDefineMap} onEdit={handleEditArgument} />
+                <ArgumentNavigation commandUrl={props.commandUrl} args={args} clsArgDefineMap={clsArgDefineMap} onEdit={handleEditArgument} onFlatten={handleArgumentFlatten} />
             </CardContent>
 
             {displayArgumentDialog && <ArgumentDialog commandUrl={props.commandUrl} arg={editArg!} clsArgDefineMap={clsArgDefineMap} open={displayArgumentDialog} onClose={handleArgumentDialogClose} />}
-
+            {displayFlattenDialog && <FlattenDialog commandUrl={props.commandUrl} arg={editArg! as CMDObjectArg} clsArgDefineMap={clsArgDefineMap} open={displayFlattenDialog} onClose={handleFlattenDialogClose} />}
         </React.Fragment>
     )
 }
@@ -80,10 +96,11 @@ function ArgumentNavigation(props: {
     args: CMDArg[],
     clsArgDefineMap: ClsArgDefinitionMap,
     onEdit: (arg: CMDArg) => void,
+    onFlatten: (arg: CMDArg) => void,
 }) {
     const [argIdxStack, setArgIdxStack] = useState<ArgIdx[]>([]);
 
-    const getArgProps = (selectedArgBase: CMDArgBase): { title: string, props: CMDArg[] } | undefined => {
+    const getArgProps = (selectedArgBase: CMDArgBase): { title: string, props: CMDArg[], flattenArgVar: string | undefined } | undefined => {
         if (selectedArgBase.type.startsWith('@')) {
             return getArgProps(props.clsArgDefineMap[(selectedArgBase as CMDClsArgBase).clsName]);
         }
@@ -91,6 +108,7 @@ function ArgumentNavigation(props: {
             return {
                 title: "Props",
                 props: (selectedArgBase as CMDObjectArgBase).args,
+                flattenArgVar: (selectedArgBase as CMDObjectArg).var,
             }
         } else if (selectedArgBase.type.startsWith("dict<")) {
             const itemProps = getArgProps((selectedArgBase as CMDDictArgBase).item);
@@ -100,6 +118,7 @@ function ArgumentNavigation(props: {
             return {
                 title: "Dict Element Props",
                 props: itemProps.props,
+                flattenArgVar: undefined,
             }
         } else if (selectedArgBase.type.startsWith("array<")) {
             const itemProps = getArgProps((selectedArgBase as CMDArrayArgBase).item);
@@ -109,6 +128,7 @@ function ArgumentNavigation(props: {
             return {
                 title: "Array Element Props",
                 props: itemProps.props,
+                flattenArgVar: undefined,
             }
         } else {
             return undefined;
@@ -183,7 +203,6 @@ function ArgumentNavigation(props: {
             argIdx.displayKey += "[]"
         }
 
-
         setArgIdxStack([...argIdxStack, argIdx]);
     }
 
@@ -224,7 +243,11 @@ function ArgumentNavigation(props: {
                         {stage}
                     </ExperimentalTypography>}
                 </Box>
-                <ArgumentReviewer arg={selectedArg} depth={argIdxStack.length} onEdit={() => { props.onEdit(selectedArg) }} />
+                <ArgumentReviewer
+                    arg={selectedArg}
+                    depth={argIdxStack.length}
+                    onEdit={() => { props.onEdit(selectedArg) }}
+                />
             </React.Fragment>
         )
     }
@@ -237,6 +260,7 @@ function ArgumentNavigation(props: {
             return (<ArgumentPropsReviewer
                 title={"Argument Groups"}
                 args={props.args}
+                onFlatten={undefined}
                 depth={argIdxStack.length}
                 onSelectSubArg={handleSelectSubArg}
             />)
@@ -249,10 +273,14 @@ function ArgumentNavigation(props: {
             if (!argProps) {
                 return (<></>)
             }
+            const canFlatten = argProps.flattenArgVar !== undefined
             return (<ArgumentPropsReviewer
                 title={argProps.title}
                 args={argProps.props}
                 depth={argIdxStack.length}
+                onFlatten={canFlatten ? () => {
+                    props.onFlatten(selectedArg!)
+                } : undefined}
                 onSelectSubArg={handleSelectSubArg}
             />)
         }
@@ -448,7 +476,6 @@ function ArgumentReviewer(props: {
             {props.arg.help?.lines && <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
                 {props.arg.help.lines.map((line, idx) => (<LongHelpTypography key={idx}>{line}</LongHelpTypography>))}
             </Box>}
-            
         </Box>
     </React.Fragment>)
 }
@@ -538,14 +565,13 @@ function ArgumentDialog(props: {
             let newArg = decodeArg(res.data).arg;
             setUpdating(false);
             props.onClose(newArg);
-
         }).catch(err => {
             console.error(err.response);
-            if (err.resource?.message) {
-                setInvalidText(`ResponseError: ${err.resource!.message!}`);
+            if (err.response?.data?.message) {
+                setInvalidText(`ResponseError: ${err.response!.data!.message!}`);
             }
             setUpdating(false);
-        })
+        });
     }
 
     useEffect(() => {
@@ -580,6 +606,7 @@ function ArgumentDialog(props: {
                 <TextField
                     id="options"
                     label="Option names"
+                    helperText="You can input multiple names separated by a space character"
                     type="text"
                     fullWidth
                     variant='standard'
@@ -664,7 +691,6 @@ function ArgumentDialog(props: {
                     }}
                     margin="normal"
                 />
-
             </DialogContent>
             <DialogActions>
                 {updating &&
@@ -676,12 +702,137 @@ function ArgumentDialog(props: {
                     <Button onClick={handleClose}>Cancel</Button>
                     <Button onClick={handleModify}>Save</Button>
                 </React.Fragment>}
-
             </DialogActions>
         </Dialog>
     )
 }
 
+function FlattenDialog(props: {
+    commandUrl: string,
+    arg: CMDObjectArg,
+    clsArgDefineMap: ClsArgDefinitionMap,
+    open: boolean,
+    onClose: (flattened: boolean) => void,
+}) {
+    const [updating, setUpdating] = useState<boolean>(false);
+    const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
+    const [subArgOptions, setSubArgOptions] = useState<{var: string, options: string}[]>([]);
+
+    useEffect(() => {
+        let {arg} = props;
+        const subArgOptions = arg.args.map(value => {
+            return {
+                var: value.var,
+                options: value.options.join(" "),
+            };
+        });
+        
+        setSubArgOptions(subArgOptions);
+    }, [props.arg]);
+
+    const handleClose = () => {
+        setInvalidText(undefined);
+        props.onClose(false);
+    }
+
+    const handleFlatten = () => {
+        setInvalidText(undefined);
+
+        const argOptions: {[argVar:string]: string[]} = {};
+        let invalidText: string | undefined = undefined;
+
+        subArgOptions.forEach((arg, idx) => {
+            const names = arg.options.split(' ').filter(n => n.length > 0);
+            if (names.length < 1) {
+                invalidText = `Prop ${idx+1} option name is required.`
+                return
+            }
+            
+            for (const idx in names) {
+                const piece = names[idx];
+                if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(piece)) {
+                    invalidText = `Invalid 'Prop ${idx+1} option name': '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `
+                    return
+                }
+            }
+            argOptions[arg.var] = names;
+        });
+        if (invalidText !== undefined) {
+            setInvalidText(invalidText);
+            return
+        }
+
+        setUpdating(true);
+
+        const flattenUrl = `${props.commandUrl}/Arguments/${props.arg.var}/Flatten`
+
+        axios.post(flattenUrl, {
+            subArgsOptions: argOptions,
+        }).then(res => {
+            setUpdating(false);
+            props.onClose(true);
+        }).catch(err => {
+            console.error(err.response);
+            if (err.response?.data?.message) {
+                setInvalidText(`ResponseError: ${err.response!.data!.message!}`);
+            }
+            setUpdating(false);
+        });
+    }
+
+    const buildSubArgText = (arg: {var: string, options: string}, idx: number) => {
+        return (<TextField
+            id={`subArg-${arg.var}`}
+            key={arg.var}
+            label={`Prop ${idx+1}`}
+            helperText={ idx === 0 ? "You can input multiple names separated by a space character" : undefined}
+            type="text"
+            fullWidth
+            variant='standard'
+            value={arg.options}
+            onChange={(event: any) => {
+                const options = subArgOptions.map(value => {
+                    if (value.var == arg.var) {
+                        return {
+                            ...value,
+                            options: event.target.value,
+                        }
+                    } else {
+                        return value
+                    }
+                });
+                setSubArgOptions(options)
+            }}
+            margin="normal"
+            required
+        />)
+    }
+
+    return (
+        <Dialog
+            disableEscapeKeyDown
+            open={props.open}
+            sx={{ '& .MuiDialog-paper': { width: '80%' } }}
+        >
+            <DialogTitle>Flatten Props</DialogTitle>
+            <DialogContent dividers={true}>
+                {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                {subArgOptions.map(buildSubArgText)}
+            </DialogContent>
+            <DialogActions>
+                {updating &&
+                    <Box sx={{ width: '100%' }}>
+                        <LinearProgress color='info' />
+                    </Box>
+                }
+                {!updating && <React.Fragment>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleFlatten}>Flatten</Button>
+                </React.Fragment>}
+            </DialogActions>
+        </Dialog>
+    )
+}
 
 interface ArgGroup {
     name: string,
@@ -727,6 +878,8 @@ const PropArgShortSummeryTypography = styled(Typography)<TypographyProps>(({ the
 function ArgumentPropsReviewer(props: {
     title: string,
     args: CMDArg[],
+    onFlatten?: () => void,
+    // onUnflatten?: () => void,
     depth: number,
     onSelectSubArg: (subArgVar: string) => void,
 }) {
@@ -852,16 +1005,29 @@ function ArgumentPropsReviewer(props: {
 
     return (<React.Fragment>
         <Box sx={{
-            p: 2
+            p: 2,
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
         }}>
             <SubtitleTypography>{props.title}</SubtitleTypography>
+            {props.onFlatten !== undefined && <Button sx={{ flexShrink: 0, ml: 3 }}
+                    startIcon={<CallSplitSharpIcon color="info" fontSize='small' />}
+                    onClick={props.onFlatten}
+                >
+                    <ArgEditTypography>Flatten</ArgEditTypography>
+            </Button>}
+
+            {/* {props.onUnflatten !== undefined && <Button sx={{ flexShrink: 0, ml: 3 }}
+                    startIcon={<CallMergeSharpIcon color="info" fontSize='small' />}
+                    onClick={props.onUnflatten}
+                >
+                    <ArgEditTypography>Unflatten</ArgEditTypography>
+            </Button>} */}
         </Box>
         {groups.map(buildArgGroup)}
     </React.Fragment>)
 }
-
-// function 
-
 
 type CMDArgHelp = {
     short: string
