@@ -273,8 +273,8 @@ class WorkspaceManager:
                 # add into reusable leaves in case it's added in add_cfg again.
                 self._reusable_leaves[tuple(cmd_names)] = node.commands.pop(name)
 
-    def load_cfg_editor_by_resource(self, resource_id, version):
-        if resource_id in self._cfg_editors:
+    def load_cfg_editor_by_resource(self, resource_id, version, reload=False):
+        if not reload and resource_id in self._cfg_editors:
             # load from modified dict
             return self._cfg_editors[resource_id]
         try:
@@ -286,8 +286,8 @@ class WorkspaceManager:
             logger.error(f"load workspace resource cfg failed: {e}: {self.name} {resource_id} {version}")
             return None
 
-    def load_cfg_editor_by_command(self, cmd):
-        return self.load_cfg_editor_by_resource(cmd.resources[0].id, cmd.resources[0].version)
+    def load_cfg_editor_by_command(self, cmd, reload=False):
+        return self.load_cfg_editor_by_resource(cmd.resources[0].id, cmd.resources[0].version, reload=reload)
 
     def update_command_tree_node_help(self, *node_names, help):
         node = self.find_command_tree_node(*node_names)

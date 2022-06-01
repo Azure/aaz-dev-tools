@@ -280,7 +280,9 @@ class WorkspaceCfgEditor(CfgReader):
             raise exceptions.InvalidAPIUsage(f"Cannot flatten argument with additional properties")
         if arg.cls:
             # argument should unwrap cls first
-            raise exceptions.InvalidAPIUsage(f"Cannot flatten argument with cls definition, please unwrap it first.")
+            raise exceptions.InvalidAPIUsage(
+                f"Cannot flatten argument with cls definition, please unwrap it first."
+            )
 
         parent.args.remove(arg)
         for sub_arg in arg.args:
@@ -291,6 +293,7 @@ class WorkspaceCfgEditor(CfgReader):
 
         # regenerate args and its relation ship with schema
         command.generate_args()
+        self.reformat()
 
     def unflatten_arg(self, *cmd_names, arg_var, options, help, sub_args_options=None):
         command = self.find_command(*cmd_names)
@@ -326,6 +329,7 @@ class WorkspaceCfgEditor(CfgReader):
 
         # regenerate args and its relation ship with schema
         command.generate_args()
+        self.reformat()
 
     def reformat(self):
         self.cfg.reformat()

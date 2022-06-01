@@ -271,7 +271,7 @@ def editor_workspace_command_argument_flatten(name, node_names, leaf_name, arg_v
     if not cfg_editor.find_arg(*node_names, leaf_name, arg_var=arg_var):
         raise exceptions.ResourceNotFind("Argument not exit")
     data = request.get_json()
-    sub_args_options = data.get('sub_args_options', None)
+    sub_args_options = data.get('subArgsOptions', None)
     cfg_editor.flatten_arg(*node_names, leaf_name, arg_var=arg_var, sub_args_options=sub_args_options)
     manager.save()
 
@@ -295,7 +295,7 @@ def editor_workspace_command_argument_unflatten(name, node_names, leaf_name, arg
     if cfg_editor.find_arg(*node_names, leaf_name, arg_var=arg_var):
         raise exceptions.ResourceConflict("Argument already exit")
     data = request.get_json()
-    sub_args_options = data.get('sub_args_options', None)
+    sub_args_options = data.get('subArgsOptions', None)
     cfg_editor.unflatten_arg(*node_names, leaf_name, arg_var=arg_var, options=data['options'], help=data['help'],
                              sub_args_options=sub_args_options)
     manager.save()

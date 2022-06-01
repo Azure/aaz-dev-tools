@@ -609,6 +609,7 @@ class CMDObjectArgBase(CMDArgBase):
                                 "var": arg.var,
                             }
                         )
+                    used_options.add(option)
             self.args = sorted(self.args, key=lambda a: a.var)
         if self.additional_props:
             self.additional_props.reformat(**kwargs)
