@@ -3,8 +3,13 @@
 Release History
 ===============
 
+0.2.0
++++++
+* Support argument flatten in Workspace Editor
+* Optimize error message display
+
 0.1.2
-++++
++++++
 * Support `--quiet` argument in aaz-dev run to disable web browser page opening.
 * Raise error when port is used by others.
 
