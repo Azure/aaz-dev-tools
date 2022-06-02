@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.2.1
++++++
+* Suppress the style issues for generated code
+
 0.2.0
 +++++
 * Support argument flatten in Workspace Editor
