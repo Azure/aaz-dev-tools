@@ -91,7 +91,7 @@ pip install azdev
 - For Windows
     - Powershell
     ```
-    pip install $(Invoke-WebRequest https://api.github.com/repos/kairu-ms/aaz-dev-tools/releases/latest  | % { $_.Content } | ConvertFrom-Json | % { $_.assets.browser_download_url } | Select-String -Pattern "https.*.whl" -AllMatches | % { $_.Matches } | % { $_.Value })
+    pip install $(Invoke-WebRequest https://api.github.com/repos/kairu-ms/aaz-dev-tools/releases/latest -UseBasicParsing | % { $_.Content } | ConvertFrom-Json | % { $_.assets.browser_download_url } | Select-String -Pattern "https.*.whl" -AllMatches | % { $_.Matches } | % { $_.Value })
     ```
     - Command Prompt
     ```
