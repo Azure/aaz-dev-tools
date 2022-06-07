@@ -572,11 +572,13 @@ class AzExtensionManager(AzModuleManager):
                 "azext.isExperimental": True,
                 "azext.minCliCoreVersion": str(Config.MIN_CLI_CORE_VERSION),
             }
-        return metadata
+        return metadata_path, metadata
 
     def update_module(self, mod_name, profiles, **kwargs):
         module = super().update_module(mod_name, profiles, **kwargs)
-        self.create_or_update_mod_azext_metadata(mod_name)
+        file_path, ext_metadata = self.create_or_update_mod_azext_metadata(mod_name)
+        with open(file_path, 'w') as f:
+            f.write(json.dumps(ext_metadata, indent=4, sort_keys=True))
         return module
 
     def create_new_mod(self, mod_name):
@@ -666,7 +668,7 @@ class AzExtensionManager(AzModuleManager):
         file_path = os.path.join(ext_path, 'azext_metadata.json')
         if os.path.exists(file_path):
             raise exceptions.ResourceConflict(f"File already exist: '{file_path}'")
-        ext_metadata = self.create_or_update_mod_azext_metadata(mod_name)
+        file_path, ext_metadata = self.create_or_update_mod_azext_metadata(mod_name)
         new_files[file_path] = json.dumps(ext_metadata, indent=4, sort_keys=True)
 
         # test_folder
