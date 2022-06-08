@@ -21,6 +21,10 @@ from azure.cli.core.aaz import *
     {%- if leaf.register_info.stage|is_experimental %}
     is_experimental=True,
     {%- endif %}
+
+    {%- if leaf.register_info.confirmation is not none %}
+    confirmation={{ leaf.register_info.confirmation|constant_convert }},
+    {%- endif %}
 )
 {%- endif %}
 class {{ leaf.cls_name }}(AAZCommand):

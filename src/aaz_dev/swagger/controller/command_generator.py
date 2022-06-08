@@ -3,8 +3,8 @@ import logging
 import inflect
 from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, CMDSchemaDefault, \
     CMDHttpResponseJsonBody, CMDObjectOutput, CMDArrayOutput, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, \
-    CMDRequestJson, CMDArgGroup, CMDDiffLevelEnum, CMDClsSchemaBase, CMDObjectSchemaBase, \
-    CMDArraySchemaBase, CMDStringSchemaBase, CMDStringOutput
+    CMDRequestJson, CMDClsSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDStringSchemaBase, CMDStringOutput, \
+    DEFAULT_CONFIRMATION_PROMPT
 from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
@@ -52,6 +52,7 @@ class CommandGenerator:
         if path_item.delete is not None:
             cmd_builder = CMDBuilder(path=resource.path, method='delete', mutability=MutabilityEnum.Create)
             delete_command = self.generate_command(path_item, resource, cmd_builder)
+            delete_command.confirmation = DEFAULT_CONFIRMATION_PROMPT   # add confirmation for delete command by default
             command_group.commands.append(delete_command)
 
         if path_item.put is not None:

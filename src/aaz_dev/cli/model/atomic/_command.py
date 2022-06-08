@@ -8,7 +8,11 @@ from schematics.types import ModelType, ListType
 
 class CLIAtomicCommandRegisterInfo(Model):
     stage = AAZStageField(required=True)    # the stage used in code, usually it should be consist with command.stage
+
     # TODO: add support for deprecate_info
+
+    class Options:
+        serialize_when_none = False
 
 
 class CLIAtomicCommand(Model):

@@ -1,11 +1,11 @@
 import logging
 
 from schematics.models import Model
-from schematics.types import ModelType, ListType, PolyModelType
+from schematics.types import ModelType, ListType, PolyModelType, StringType
 
 from ._arg_group import CMDArgGroup
 from ._condition import CMDCondition
-from ._fields import CMDDescriptionField, CMDVersionField, CMDCommandNameField
+from ._fields import CMDDescriptionField, CMDVersionField, CMDCommandNameField, CMDBooleanField
 from ._operation import CMDOperation
 from ._output import CMDOutput
 from ._resource import CMDResource
@@ -32,6 +32,8 @@ class CMDCommand(Model):
     conditions = ListType(ModelType(CMDCondition))
     operations = ListType(PolyModelType(CMDOperation, allow_subclasses=True), min_size=1)
     outputs = ListType(PolyModelType(CMDOutput, allow_subclasses=True), min_size=1)  # support to add outputs in different formats, such table
+
+    confirmation = StringType(min_length=1)  # support to prompt for confirmation
 
     class Options:
         serialize_when_none = False
