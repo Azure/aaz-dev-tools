@@ -306,7 +306,6 @@ class AzModuleManager:
                 break
         if not version:
             return None
-
         command = CLIAtomicCommand()
         command.names = [*names]
         command.help = CLICommandHelp()
@@ -348,6 +347,7 @@ class AzModuleManager:
         cmd_cfg = cfg_reader.find_command(*command.names)
         assert cmd_cfg is not None, f"command configuration miss: '{' '.join(command.names)}'"
         command.cfg = cmd_cfg
+        command.register_info.confirmation = cmd_cfg.confirmation
 
 
 class AzMainManager(AzModuleManager):

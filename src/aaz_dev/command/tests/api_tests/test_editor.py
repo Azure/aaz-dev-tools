@@ -8,6 +8,7 @@ from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.base64 import b64encode_str
 from utils.plane import PlaneEnum
 from utils.stage import AAZStageEnum
+from command.model.configuration import DEFAULT_CONFIRMATION_PROMPT
 
 
 class APIEditorTest(CommandTestCase):
@@ -167,6 +168,7 @@ class APIEditorTest(CommandTestCase):
             assert 'outputs' not in command
             assert len(command['resources']) == 1
             assert command['version'] == '2021-12-01'
+            assert command['confirmation'] == DEFAULT_CONFIRMATION_PROMPT
 
             rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address/Leaves/create")
             assert rv.status_code == 200
