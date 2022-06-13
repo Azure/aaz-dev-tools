@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='utf-8'?>
+<CodeGen plane="mgmt-plane">
+  <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfS92aXJ0dWFsTmV0d29ya1BlZXJpbmdz/V/MjAxOC0wNC0wMQ=="/>
+  <commandGroup name="databricks workspace vnet-peering">
+    <command name="list" version="2018-04-01">
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfS92aXJ0dWFsTmV0d29ya1BlZXJpbmdz/V/MjAxOC0wNC0wMQ=="/>
+      <argGroup name="">
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True"/>
+        <arg type="string" var="$Path.workspaceName" options="workspace-name" required="True">
+          <help short="The name of the workspace."/>
+          <format maxLength="64" minLength="3"/>
+        </arg>
+      </argGroup>
+      <operation operationId="vNetPeering_ListByWorkspace">
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings">
+          <request method="get">
+            <path>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format pattern="^[-\w\._\(\)]+$" maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True"/>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="64" minLength="3"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2018-04-01"/>
+              </const>
+            </query>
+          </request>
+          <response statusCode="200">
+            <body>
+              <json var="$Instance">
+                <schema type="object">
+                  <prop type="string" name="nextLink"/>
+                  <prop type="array<object>" name="value">
+                    <item type="object">
+                      <prop readOnly="True" type="ResourceId" name="id">
+                        <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}/virtualNetworkPeerings/{}"/>
+                      </prop>
+                      <prop readOnly="True" type="string" name="name"/>
+                      <prop type="object" name="properties" required="True" clientFlatten="True">
+                        <prop type="boolean" name="allowForwardedTraffic"/>
+                        <prop type="boolean" name="allowGatewayTransit"/>
+                        <prop type="boolean" name="allowVirtualNetworkAccess"/>
+                        <prop type="object" name="databricksAddressSpace" cls="AddressSpace_read">
+                          <prop type="array<string>" name="addressPrefixes">
+                            <item type="string"/>
+                          </prop>
+                        </prop>
+                        <prop type="object" name="databricksVirtualNetwork">
+                          <prop type="string" name="id"/>
+                        </prop>
+                        <prop readOnly="True" type="string" name="peeringState">
+                          <enum>
+                            <item value="Connected"/>
+                            <item value="Disconnected"/>
+                            <item value="Initiated"/>
+                          </enum>
+                        </prop>
+                        <prop readOnly="True" type="string" name="provisioningState">
+                          <enum>
+                            <item value="Deleting"/>
+                            <item value="Failed"/>
+                            <item value="Succeeded"/>
+                            <item value="Updating"/>
+                          </enum>
+                        </prop>
+                        <prop type="@AddressSpace_read" name="remoteAddressSpace"/>
+                        <prop type="object" name="remoteVirtualNetwork" required="True">
+                          <prop type="string" name="id"/>
+                        </prop>
+                        <prop type="boolean" name="useRemoteGateways"/>
+                      </prop>
+                      <prop readOnly="True" type="string" name="type"/>
+                    </item>
+                  </prop>
+                </schema>
+              </json>
+            </body>
+          </response>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <output type="array" ref="$Instance.value" clientFlatten="True" nextLink="$Instance.nextLink"/>
+    </command>
+  </commandGroup>
+</CodeGen>

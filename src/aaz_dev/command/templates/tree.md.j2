@@ -1,0 +1,11 @@
+# Atomic Azure CLI Commands
+{%- if tree.root.command_groups is not none and tree.root.command_groups|length %}
+
+## Groups
+{%- for _, group in tree.root.command_groups.items()|sort(attribute='0') %}
+
+- [{{ group.names|last }}]({{ group.names|command_group_readme_path }})
+: {{ group.help.short }}
+{%- endfor %}
+{%- endif %}
+{{ "" }}

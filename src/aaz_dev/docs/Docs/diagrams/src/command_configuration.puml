@@ -1,0 +1,109 @@
+@startuml file_structure
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+
+' skinparam Linetype ortho
+
+HIDE_STEREOTYPE()
+
+AddElementTag("command", $bgColor="#4764a8", $borderColor="#798ab0",  $fontColor=$ELEMENT_FONT_COLOR)
+
+' AddElementTag("command", $bgColor="#4b8235", $fontColor=$ELEMENT_FONT_COLOR,  $borderColor="#8bb37b")
+
+AddElementTag("Boundary", $bgColor="#f0f0f0")
+
+AddElementTag("CommandGroupBoundary", $bgColor="#e4e8eb")
+
+AddElementTag("SubCommandGroupBoundary", $bgColor="#dae0e6")
+
+Boundary(configuration, "Command Configuration File", $tags="Boundary"){
+    Boundary(command_group, "Command Group", $tags="CommandGroupBoundary") {
+        Container(command_a, "Command A", "", $tags="command")
+        Container(command_b, "Command B", "", $tags="command")
+        Boundary(sub_command_group, "Sub Command Group", "", $tags="SubCommandGroupBoundary") {
+            Container(command_1, "Sub Command A", "", $tags="command")
+            Container(command_2, "Sub Command B", "", $tags="command")
+        }
+    }
+}
+
+Lay_D(command_a, command_b)
+
+Lay_D(command_b, command_1)
+
+Lay_D(command_1, command_2)
+
+
+AddElementTag("argument", $bgColor="#4b8235", $borderColor="#8bb37b",  $fontColor=$ELEMENT_FONT_COLOR)
+AddElementTag("operation", $bgColor="#2c858a", $borderColor="#7bb0b3",  $fontColor=$ELEMENT_FONT_COLOR,)
+AddElementTag("output", $bgColor="#4b8235", $borderColor="#8bb37b",  $fontColor=$ELEMENT_FONT_COLOR)
+
+AddElementTag("commandDetail", $bgColor="#dfe5f0")
+
+Boundary(command_detail, "Command", $tags="commandDetail") {
+    Container(arguments, "Argument Section", "", $tags="argument")
+    Container(operations, "Operation Section", "", $tags="operation")
+    Container(outputs, "Output Section", "", $tags="output")
+}
+
+Lay_D(arguments, operations)
+Lay_D(operations, outputs)
+
+command_a *-[#798ab0,thickness=3]r-+ command_detail
+
+AddElementTag("argumentSection", $bgColor="#ebf5e9")
+AddElementTag("argumentGroup", $bgColor="#deebda")
+
+Boundary(argument_section, "Argument Section", $tags="argumentSection") {
+    Boundary(argument_group_b, "Argument Group B", $tags="argumentGroup") {
+        Container(arg_c, "--arg-c", "", $tags="argument")
+        Container(arg_d, "--arg-d", "", $tags="argument")
+    }
+    Boundary(argument_group_a, "Argument Group A", $tags="argumentGroup") {
+        Container(arg_a, "--arg-a", "", $tags="argument")
+        Container(arg_b, "--arg-b", "", $tags="argument")
+    }
+}
+
+Lay_R(arg_a, arg_b)
+Lay_R(argument_group_a, argument_group_b)
+Lay_R(arg_c, arg_d)
+
+AddElementTag("operationSection", $bgColor="#dfeef0")
+
+Boundary(operation_section, "Operation Section", $tags="operationSection") {
+    Container(http_get_operation, "Http GET Operation", "", $tags="operation")
+    Container(instance_update_operation, "Instance Update Operatoin", "", $tags="operation")
+    Container(http_put_operatoin, "Http PUT Operatoin", "", $tags="operation")
+}
+
+AddElementTag("outputSection", $bgColor="#ebf5e9")
+
+Boundary(output_section, "Output Section", $tags="outputSection") {
+    Container(json_format_output, "Output in json", "", $tags="output")
+}
+
+Lay_D(argument_group_a, operation_section)
+Lay_D(http_put_operatoin, output_section)
+
+arguments *-[#4b8235,thickness=3]r-+ argument_section
+
+operations *-[#2c858a,thickness=3]r-+ operation_section
+
+outputs *-[#4b8235,thickness=3]r-+ output_section
+
+
+arg_a -[#2e800d,dashed,thickness=2]d-> http_get_operation
+arg_b -[#2e800d,dashed,thickness=2]d-> http_get_operation
+
+arg_c -[#2e800d,dashed,thickness=2]d-> instance_update_operation
+arg_d -[#2e800d,dashed,thickness=2]d-> instance_update_operation
+
+arg_a -[#2e800d,dashed,thickness=2]d-> http_put_operatoin
+arg_b -[#2e800d,dashed,thickness=2]d-> http_put_operatoin
+
+http_get_operation -[#0d7a80,thickness=2]d-> instance_update_operation
+instance_update_operation -[#0d7a80,thickness=2]d-> http_put_operatoin
+
+http_put_operatoin -[#0d7a80,thickness=2]d-> json_format_output
+
+@enduml

@@ -1,0 +1,26 @@
+# [Group] _{{ group.names|join(' ') }}_
+
+{{ group.help.short }}
+{%- if group.help.lines is not none and group.help.lines|length %}
+
+{{ group.help.lines|join('\\\n')}}
+{%- endif %}
+{%- if group.command_groups is not none and group.command_groups|length %}
+
+## Subgroups
+{%- for _, sub_group in group.command_groups.items()|sort(attribute='0') %}
+
+- [{{ sub_group.names|last }}]({{ sub_group.names|command_group_readme_path }})
+: {{ sub_group.help.short }}
+{%- endfor %}
+{%- endif %}
+{%- if group.commands is not none and group.commands|length %}
+
+## Commands
+{%- for _, command in group.commands.items()|sort(attribute='0') %}
+
+- [{{ command.names|last }}]({{ command.names|command_readme_path }})
+: {{ command.help.short }}
+{%- endfor %}
+{%- endif %}
+{{ "" }}

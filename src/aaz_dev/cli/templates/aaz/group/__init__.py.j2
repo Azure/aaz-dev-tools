@@ -1,0 +1,13 @@
+{% extends "python.j2" %}
+{% block pylint %}
+# pylint: skip-file
+# flake8: noqa
+{% endblock %}
+
+{% block imports %}
+{%- for file_name in file_names %}
+{%- if file_name.endswith('.py') and file_name[:-3] != '__init__' %}
+from .{{ file_name[:-3] }} import *
+{%- endif %}
+{%- endfor %}
+{% endblock %}

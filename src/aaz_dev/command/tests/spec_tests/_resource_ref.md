@@ -1,0 +1,1 @@
+Reference [/subscriptions/{}/providers/microsoft.edgeorder/orders 2020-12-01-preview](/Resources/mgmt-plane/L3N1YnNjcmlwdGlvbnMve30vcHJvdmlkZXJzL21pY3Jvc29mdC5lZGdlb3JkZXIvb3JkZXJz/2020-12-01-preview.xml)

@@ -1,0 +1,35 @@
+{% extends "python.j2" %}
+{% block pylint %}
+# pylint: skip-file
+# flake8: noqa
+{% endblock %}
+
+{% block imports %}
+from azure.cli.core.aaz import *
+{% endblock %}
+
+{% block code %}
+{{ "" }}
+{%- if node.register_info is not none %}
+@register_command_group(
+    "{{ node.names|join(' ') }}",
+    {%- if node.register_info.stage|is_preview %}
+    is_preview=True,
+    {%- endif %}
+    {%- if node.register_info.stage|is_experimental %}
+    is_experimental=True,
+    {%- endif %}
+)
+{%- endif %}
+class __CMDGroup(AAZCommandGroup):
+    """{{ node.help.short }}
+    {%- if node.help.long is not none and node.help.long|length %}
+
+    {{ node.help.long.split('\n')|join('\n    ') }}
+    {%- endif %}
+    """
+    pass
+
+
+__all__ = ["__CMDGroup"]
+{% endblock %}

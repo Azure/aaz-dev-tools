@@ -1,0 +1,30 @@
+# [Command] _{{ command.names|join(' ') }}_
+
+{{ command.help.short }}
+{%- if command.help.lines is not none and command.help.lines|length %}
+
+{{ command.help.lines|join('\\\n')}}
+{%- endif %}
+
+## Versions
+{%- for version in command.versions|sort(attribute='name') %}
+
+### [{{ version.name }}]({{ version.resources|first|resource_cfg_path }}) {{ version.stage|stage_label }}
+{% for resource in version.resources %}
+<!-- {{ resource.plane }} {{ resource.id }} {{ resource.version }} -->
+{%- endfor %}
+{%- if version.examples is not none and version.examples|length %}
+
+#### examples
+{%- for example in version.examples %}
+
+- {{ example.name }}
+    ```bash
+    {%- for line in example.commands %}
+        {{ line }}
+    {%- endfor %}
+    ```
+{%- endfor %}
+{%- endif %}
+{%- endfor %}
+{{ "" }}

@@ -1,0 +1,1116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="864px" preserveAspectRatio="none" style="width:1200px;height:864px;background:#FFFFFF;" version="1.1" viewBox="0 0 1200 864" width="1200px" zoomAndPan="magnify"><defs/><g><!--MD5=[5a55b731792d22909a2631efc8afae35]
+cluster configuration--><rect fill="#F0F0F0" height="601" style="stroke:#444444;stroke-width:1.0;stroke-dasharray:7.0,7.0;" width="278" x="7" y="114.07"/><text fill="#444444" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="219" x="36.5" y="132.6794">Command Configuration File</text><!--MD5=[8339fc1a172db2f192cddd6cd9cce28f]
+cluster command_group--><rect fill="#E4E8EB" height="530" style="stroke:#444444;stroke-width:1.0;stroke-dasharray:7.0,7.0;" width="230" x="31" y="161.07"/><text fill="#444444" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="131" x="80.5" y="179.6794">Command Group</text><!--MD5=[fe25f9de4b264dbc6f702c8bceea655e]
+cluster sub_command_group--><rect fill="#DAE0E6" height="205" style="stroke:#444444;stroke-width:1.0;stroke-dasharray:7.0,7.0;" width="182" x="55" y="462.07"/><text fill="#444444" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="166" x="63" y="480.6794">Sub Command Group</text><!--MD5=[baa307019d84d3620c24067deb87385a]
+cluster command_detail--><rect fill="#DFE5F0" height="412" style="stroke:#444444;stroke-width:1.0;stroke-dasharray:7.0,7.0;" width="225" x="317" y="153.07"/><text fill="#444444" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="79" x="390" y="171.6794">Command</text><!--MD5=[bc0804c4f1070895c7e8e0c41ca84f91]
+cluster argument_section--><rect fill="#EBF5E9" height="214" style="stroke:#444444;stroke-width:1.0;stroke-dasharray:7.0,7.0;" width="612" x="582" y="90.07"/><text fill="#444444" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="137" x="819.5" y="108.6794">Argument Section</text><!--MD5=[2a57e933bb6bff056d0368f6e52e51f6]
+cluster argument_group_b--><rect fill="#DEEBDA" height="111" style="stroke:#444444;stroke-width:1.0;stroke-dasharray:7.0,7.0;" width="242" x="912" y="153.07"/><text fill="#444444" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="143" x="961.5" y="171.6794">Argument Group B</text><!--MD5=[cdc8e842f580fd99736c107915a89a49]
+cluster argument_group_a--><rect fill="#DEEBDA" height="111" style="stroke:#444444;stroke-width:1.0;stroke-dasharray:7.0,7.0;" width="242" x="630" y="153.07"/><text fill="#444444" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="142" x="680" y="171.6794">Argument Group A</text><!--MD5=[ec788aad2981849f720212e4c279d5ab]
+cluster operation_section--><rect fill="#DFEEF0" height="331" style="stroke:#444444;stroke-width:1.0;stroke-dasharray:7.0,7.0;" width="235" x="582" y="344.07"/><text fill="#444444" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="137" x="631" y="362.6794">Operation Section</text><!--MD5=[1b579db9598341033ef9774c61e48d85]
+cluster output_section--><rect fill="#EBF5E9" height="111" style="stroke:#444444;stroke-width:1.0;stroke-dasharray:7.0,7.0;" width="195" x="602" y="747.07"/><text fill="#444444" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="114" x="642.5" y="765.6794">Output Section</text><!--MD5=[a22d997dd647ba31146ba936d659a53c]
+entity command_a--><rect fill="#4764A8" height="40.125" style="stroke:#798AB0;stroke-width:1.5;" width="114" x="120" y="200.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="94" x="130" y="226.6794">Command A</text><!--MD5=[bf1e7762aba72e950ab2ffe13de8078e]
+entity command_b--><rect fill="#4764A8" height="40.125" style="stroke:#798AB0;stroke-width:1.5;" width="115" x="108.5" y="391.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="95" x="118.5" y="417.6794">Command B</text><!--MD5=[d738e73bafb69608c41720b9f0f65d39]
+entity command_1--><rect fill="#4764A8" height="40.125" style="stroke:#798AB0;stroke-width:1.5;" width="149" x="71.5" y="501.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="129" x="81.5" y="527.6794">Sub Command A</text><!--MD5=[bcf9bee1f2986b0dc8a9255a14f61bf0]
+entity command_2--><rect fill="#4764A8" height="40.125" style="stroke:#798AB0;stroke-width:1.5;" width="150" x="71" y="611.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="130" x="81" y="637.6794">Sub Command B</text><!--MD5=[b2f5923dc3301da9b597a8f308e919e6]
+entity arguments--><rect fill="#4B8235" height="40.125" style="stroke:#8BB37B;stroke-width:1.5;" width="157" x="360.5" y="200.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="137" x="370.5" y="226.6794">Argument Section</text><!--MD5=[1228233ccd09d7da8af5ad09a4f8ff0c]
+entity operations--><rect fill="#2C858A" height="40.125" style="stroke:#7BB0B3;stroke-width:1.5;" width="157" x="360.5" y="391.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="137" x="370.5" y="417.6794">Operation Section</text><!--MD5=[44793c62249599c23c919b20d1693da0]
+entity outputs--><rect fill="#4B8235" height="40.125" style="stroke:#8BB37B;stroke-width:1.5;" width="134" x="378" y="501.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="114" x="388" y="527.6794">Output Section</text><!--MD5=[23d1637bbb0be351f4e448f95e1a1d9d]
+entity arg_c--><rect fill="#4B8235" height="40.125" style="stroke:#8BB37B;stroke-width:1.5;" width="69" x="955.5" y="200.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="49" x="965.5" y="226.6794">--arg-c</text><!--MD5=[a8f72d28102585081ea6a3479ff6330f]
+entity arg_d--><rect fill="#4B8235" height="40.125" style="stroke:#8BB37B;stroke-width:1.5;" width="70" x="1060" y="200.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="50" x="1070" y="226.6794">--arg-d</text><!--MD5=[fa91d8adc33e51cf3e7d24548a698d81]
+entity arg_a--><rect fill="#4B8235" height="40.125" style="stroke:#8BB37B;stroke-width:1.5;" width="69" x="673.5" y="200.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="49" x="683.5" y="226.6794">--arg-a</text><!--MD5=[d510704a137919683d3ce2f8b344189e]
+entity arg_b--><rect fill="#4B8235" height="40.125" style="stroke:#8BB37B;stroke-width:1.5;" width="70" x="778" y="200.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="50" x="788" y="226.6794">--arg-b</text><!--MD5=[b688f37a24bc7235f4ce6b4867deaf1f]
+entity http_get_operation--><rect fill="#2C858A" height="40.125" style="stroke:#7BB0B3;stroke-width:1.5;" width="168" x="625" y="391.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="148" x="635" y="417.6794">Http GET Operation</text><!--MD5=[4fc3de5762f35e769b4317eebcbd6ce4]
+entity instance_update_operation--><rect fill="#2C858A" height="60.25" style="stroke:#7BB0B3;stroke-width:1.5;" width="148" x="640" y="491.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="124" x="650" y="517.6794">Instance Update</text><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="75" x="676.5" y="537.8044">Operatoin</text><!--MD5=[efa8504473263697a32e7f32be1c09b4]
+entity http_put_operatoin--><rect fill="#2C858A" height="40.125" style="stroke:#7BB0B3;stroke-width:1.5;" width="168" x="625" y="611.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="148" x="635" y="637.6794">Http PUT Operatoin</text><!--MD5=[22628c0167f78e8e2905efe06f81bf9b]
+entity json_format_output--><rect fill="#4B8235" height="40.125" style="stroke:#8BB37B;stroke-width:1.5;" width="127" x="645.5" y="794.07"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="107" x="655.5" y="820.6794">Output in json</text><!--MD5=[0712a18599d9e6dce342afa35b2d73d4]
+link command_a to command_b--><!--MD5=[cdcaf6aa2caf3f9177c8e73ff5edc39c]
+link command_b to command_1--><!--MD5=[eca1543deac47d090696496b1c1a5e6a]
+link command_1 to command_2--><!--MD5=[64fe9af00e3074b20489443db471adef]
+link arguments to operations--><!--MD5=[82ea52005825a57bd87d2f29a06d4006]
+link operations to outputs--><!--MD5=[798399d164f49a6ccdcf9b2f5e5aecdf]
+link command_a to command_detail--><path d="M246.23,220.07 C246.23,220.07 272.93,220.07 285.77,220.07 C292.19,220.07 298.61,220.07 305.03,220.07 C308.24,220.07 311.45,220.07 314.66,220.07 C315.0613,220.07 315.4625,220.07 315.8638,220.07 C316.0644,220.07 316.265,220.07 316.4656,220.07 C316.5659,220.07 316.6663,220.07 316.7666,220.07 " fill="none" id="command_a-command_detail" style="stroke:#798AB0;stroke-width:3.0;"/><ellipse cx="308.7666" cy="220.07" fill="#FFFFFF" rx="8" ry="8" style="stroke:#798AB0;stroke-width:3.0;"/><line style="stroke:#798AB0;stroke-width:3.0;" x1="300.7666" x2="316.7666" y1="220.07" y2="220.07"/><line style="stroke:#798AB0;stroke-width:3.0;" x1="308.7666" x2="308.7666" y1="212.07" y2="228.07"/><polygon fill="#798AB0" points="234.23,220.07,240.23,224.07,246.23,220.07,240.23,216.07,234.23,220.07" style="stroke:#798AB0;stroke-width:3.0;"/><!--MD5=[d1c8cac81ff78974b1ea1bd3de9cb328]
+link arg_a to arg_b--><!--MD5=[345e5afb95c224c4c8013253c3213359]
+link argument_group_a to argument_group_b--><!--MD5=[e0778b3cf6900d1e22dd4ae25bca2731]
+link arg_c to arg_d--><!--MD5=[d1f1ab5624b1fa6ba63248afd226ad55]
+link argument_group_a to operation_section--><!--MD5=[93be8b7ccbbcb691c2d8f8132c1cf51d]
+link http_put_operatoin to output_section--><!--MD5=[58b4f3d879740813fc39ce750665cb8a]
+link arguments to argument_section--><path d="M529.74,220.07 C529.74,220.07 550.42,220.07 560.175,220.07 C565.0525,220.07 569.93,220.07 574.8075,220.07 C576.0269,220.07 577.2462,220.07 578.4656,220.07 C579.0753,220.07 579.685,220.07 580.2947,220.07 C580.5995,220.07 580.9044,220.07 581.2092,220.07 C581.3616,220.07 581.5141,220.07 581.6665,220.07 C581.7427,220.07 581.8189,220.07 581.8951,220.07 " fill="none" id="arguments-argument_section" style="stroke:#4B8235;stroke-width:3.0;"/><ellipse cx="573.8951" cy="220.07" fill="#FFFFFF" rx="8" ry="8" style="stroke:#4B8235;stroke-width:3.0;"/><line style="stroke:#4B8235;stroke-width:3.0;" x1="565.8951" x2="581.8951" y1="220.07" y2="220.07"/><line style="stroke:#4B8235;stroke-width:3.0;" x1="573.8951" x2="573.8951" y1="212.07" y2="228.07"/><polygon fill="#4B8235" points="517.74,220.07,523.74,224.07,529.74,220.07,523.74,216.07,517.74,220.07" style="stroke:#4B8235;stroke-width:3.0;"/><!--MD5=[ece01870b730e32caacc7ee5c8598dd1]
+link operations to operation_section--><path d="M529.74,411.07 C529.74,411.07 550.42,411.07 560.175,411.07 C565.0525,411.07 569.93,411.07 574.8075,411.07 C576.0269,411.07 577.2462,411.07 578.4656,411.07 C579.0753,411.07 579.685,411.07 580.2947,411.07 C580.5995,411.07 580.9044,411.07 581.2092,411.07 C581.3616,411.07 581.5141,411.07 581.6665,411.07 C581.7427,411.07 581.8189,411.07 581.8951,411.07 " fill="none" id="operations-operation_section" style="stroke:#2C858A;stroke-width:3.0;"/><ellipse cx="573.8951" cy="411.07" fill="#FFFFFF" rx="8" ry="8" style="stroke:#2C858A;stroke-width:3.0;"/><line style="stroke:#2C858A;stroke-width:3.0;" x1="565.8951" x2="581.8951" y1="411.07" y2="411.07"/><line style="stroke:#2C858A;stroke-width:3.0;" x1="573.8951" x2="573.8951" y1="403.07" y2="419.07"/><polygon fill="#2C858A" points="517.74,411.07,523.74,415.07,529.74,411.07,523.74,407.07,517.74,411.07" style="stroke:#2C858A;stroke-width:3.0;"/><!--MD5=[f433a509ce8cdca0feb4b70fd9df5609]
+link outputs to output_section--><path d="M461.7481,551.5991 C461.7481,551.5991 519.3125,653.1275 550.5475,708.2175 C566.165,735.7625 580.5844,761.1944 591.31,780.1119 C593.9914,784.8413 596.442,789.1635 598.6226,793.0098 C599.713,794.9329 600.7359,796.7371 601.6864,798.4137 " fill="none" id="outputs-output_section" style="stroke:#4B8235;stroke-width:3.0;"/><ellipse cx="597.7408" cy="791.4544" fill="#FFFFFF" rx="8" ry="8" style="stroke:#4B8235;stroke-width:3.0;"/><line style="stroke:#4B8235;stroke-width:3.0;" x1="593.7953" x2="601.6864" y1="784.495" y2="798.4137"/><line style="stroke:#4B8235;stroke-width:3.0;" x1="604.7002" x2="590.7815" y1="787.5088" y2="795.4"/><polygon fill="#4B8235" points="455.83,541.16,455.3094,548.3523,461.7481,551.5991,462.2688,544.4069,455.83,541.16" style="stroke:#4B8235;stroke-width:3.0;"/><!--MD5=[4a1d13131d22babe0250aae9f89379fe]
+link arg_a to http_get_operation--><path d="M708.1,240.23 C708.28,274.76 708.67,347.36 708.87,385.49 " fill="none" id="arg_a-to-http_get_operation" style="stroke:#2E800D;stroke-width:2.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#2E800D" points="708.9,390.86,712.8485,381.8373,708.8714,385.8601,704.8486,381.883,708.9,390.86" style="stroke:#2E800D;stroke-width:2.0;"/><!--MD5=[045096c509c12335ff2e423b15a18c31]
+link arg_b to http_get_operation--><path d="M802.97,240.12 C792.42,260.11 775.24,292.41 760,320.07 C747.54,342.69 732.98,368.3 722.62,386.4 " fill="none" id="arg_b-to-http_get_operation" style="stroke:#2E800D;stroke-width:2.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#2E800D" points="720.08,390.83,728.045,385.037,722.5807,386.5003,721.1174,381.0359,720.08,390.83" style="stroke:#2E800D;stroke-width:2.0;"/><!--MD5=[84c653bc79933d939128c59d86c436a3]
+link arg_c to instance_update_operation--><path d="M985.69,240.33 C980.32,261.36 969.63,295.33 952,320.07 C901.12,391.46 818.99,452.78 765.75,488.06 " fill="none" id="arg_c-to-instance_update_operation" style="stroke:#2E800D;stroke-width:2.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#2E800D" points="761.33,490.97,771.0438,489.3444,765.5012,488.213,766.6326,482.6704,761.33,490.97" style="stroke:#2E800D;stroke-width:2.0;"/><!--MD5=[88843b3424fbf0842ab5adb0d17010ab]
+link arg_d to instance_update_operation--><path d="M1087.17,240.09 C1078.08,260.91 1061.77,294.7 1042,320.07 C996.94,377.89 981.6,391.33 920,431.07 C880.68,456.44 832.9,477.6 793.27,492.91 " fill="none" id="arg_d-to-instance_update_operation" style="stroke:#2E800D;stroke-width:2.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#2E800D" points="788.48,494.75,798.315,495.2727,793.1504,492.9647,795.4585,487.8001,788.48,494.75" style="stroke:#2E800D;stroke-width:2.0;"/><!--MD5=[d4dd3fa60bbdf5e181c15ae303684bc2]
+link arg_a to http_put_operatoin--><path d="M712.67,240.17 C719.32,263.05 733.85,300.73 761,320.07 C779.33,333.13 796.4,310.95 811,328.07 C827.13,346.99 821.31,557.08 806,581.07 C798.59,592.68 787.51,601.66 775.46,608.56 " fill="none" id="arg_a-to-http_put_operatoin" style="stroke:#2E800D;stroke-width:2.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#2E800D" points="770.98,611,780.7954,610.1885,775.3662,608.5997,776.9549,603.1706,770.98,611" style="stroke:#2E800D;stroke-width:2.0;"/><!--MD5=[197de066b54e8890def7b55826314489]
+link arg_b to http_put_operatoin--><path d="M821.98,240.09 C847.72,297.63 915.12,472.58 839,581.07 C828.96,595.38 814.17,605.52 798.14,612.7 " fill="none" id="arg_b-to-http_put_operatoin" style="stroke:#2E800D;stroke-width:2.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#2E800D" points="793.13,614.83,802.9776,614.9872,797.7309,612.8725,799.8456,607.6258,793.13,614.83" style="stroke:#2E800D;stroke-width:2.0;"/><!--MD5=[8d85950c1287a2fb6a086d9179b718e7]
+link http_get_operation to instance_update_operation--><path d="M709.88,431.13 C710.58,446.3 711.59,467.91 712.42,486.03 " fill="none" id="http_get_operation-to-instance_update_operation" style="stroke:#0D7A80;stroke-width:2.0;"/><polygon fill="#0D7A80" points="712.66,491.04,716.2436,481.8663,712.431,486.0452,708.252,482.2326,712.66,491.04" style="stroke:#0D7A80;stroke-width:2.0;"/><!--MD5=[a103fc2a0f1d73a5b7cd8a0030931555]
+link instance_update_operation to http_put_operatoin--><path d="M712.65,551.3 C711.86,568.36 710.87,589.63 710.12,605.77 " fill="none" id="instance_update_operation-to-http_put_operatoin" style="stroke:#0D7A80;stroke-width:2.0;"/><polygon fill="#0D7A80" points="709.88,611.03,714.2868,602.2221,710.1083,606.0352,706.2952,601.8567,709.88,611.03" style="stroke:#0D7A80;stroke-width:2.0;"/><!--MD5=[79df9c13ed26459781362f11b8ece161]
+link http_put_operatoin to json_format_output--><path d="M709,651.1 C709,684.23 709,752.46 709,788.89 " fill="none" id="http_put_operatoin-to-json_format_output" style="stroke:#0D7A80;stroke-width:2.0;"/><polygon fill="#0D7A80" points="709,794.03,713,785.03,709,789.03,705,785.03,709,794.03" style="stroke:#0D7A80;stroke-width:2.0;"/><!--MD5=[220b5f48543ea7f24b99ebd4768782ea]
+@startuml file_structure
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+
+' skinparam Linetype ortho
+
+HIDE_STEREOTYPE()
+
+AddElementTag("command", $bgColor="#4764a8", $borderColor="#798ab0",  $fontColor=$ELEMENT_FONT_COLOR)
+
+' AddElementTag("command", $bgColor="#4b8235", $fontColor=$ELEMENT_FONT_COLOR,  $borderColor="#8bb37b")
+
+AddElementTag("Boundary", $bgColor="#f0f0f0")
+
+AddElementTag("CommandGroupBoundary", $bgColor="#e4e8eb")
+
+AddElementTag("SubCommandGroupBoundary", $bgColor="#dae0e6")
+
+Boundary(configuration, "Command Configuration File", $tags="Boundary"){
+    Boundary(command_group, "Command Group", $tags="CommandGroupBoundary") {
+        Container(command_a, "Command A", "", $tags="command")
+        Container(command_b, "Command B", "", $tags="command")
+        Boundary(sub_command_group, "Sub Command Group", "", $tags="SubCommandGroupBoundary") {
+            Container(command_1, "Sub Command A", "", $tags="command")
+            Container(command_2, "Sub Command B", "", $tags="command")
+        }
+    }
+}
+
+Lay_D(command_a, command_b)
+
+Lay_D(command_b, command_1)
+
+Lay_D(command_1, command_2)
+
+
+AddElementTag("argument", $bgColor="#4b8235", $borderColor="#8bb37b",  $fontColor=$ELEMENT_FONT_COLOR)
+AddElementTag("operation", $bgColor="#2c858a", $borderColor="#7bb0b3",  $fontColor=$ELEMENT_FONT_COLOR,)
+AddElementTag("output", $bgColor="#4b8235", $borderColor="#8bb37b",  $fontColor=$ELEMENT_FONT_COLOR)
+
+AddElementTag("commandDetail", $bgColor="#dfe5f0")
+
+Boundary(command_detail, "Command", $tags="commandDetail") {
+    Container(arguments, "Argument Section", "", $tags="argument")
+    Container(operations, "Operation Section", "", $tags="operation")
+    Container(outputs, "Output Section", "", $tags="output")
+}
+
+Lay_D(arguments, operations)
+Lay_D(operations, outputs)
+
+command_a *-[#798ab0,thickness=3]r-+ command_detail
+
+AddElementTag("argumentSection", $bgColor="#ebf5e9")
+AddElementTag("argumentGroup", $bgColor="#deebda")
+
+Boundary(argument_section, "Argument Section", $tags="argumentSection") {
+    Boundary(argument_group_b, "Argument Group B", $tags="argumentGroup") {
+        Container(arg_c, "- -arg-c", "", $tags="argument")
+        Container(arg_d, "- -arg-d", "", $tags="argument")
+    }
+    Boundary(argument_group_a, "Argument Group A", $tags="argumentGroup") {
+        Container(arg_a, "- -arg-a", "", $tags="argument")
+        Container(arg_b, "- -arg-b", "", $tags="argument")
+    }
+}
+
+Lay_R(arg_a, arg_b)
+Lay_R(argument_group_a, argument_group_b)
+Lay_R(arg_c, arg_d)
+
+AddElementTag("operationSection", $bgColor="#dfeef0")
+
+Boundary(operation_section, "Operation Section", $tags="operationSection") {
+    Container(http_get_operation, "Http GET Operation", "", $tags="operation")
+    Container(instance_update_operation, "Instance Update Operatoin", "", $tags="operation")
+    Container(http_put_operatoin, "Http PUT Operatoin", "", $tags="operation")
+}
+
+AddElementTag("outputSection", $bgColor="#ebf5e9")
+
+Boundary(output_section, "Output Section", $tags="outputSection") {
+    Container(json_format_output, "Output in json", "", $tags="output")
+}
+
+Lay_D(argument_group_a, operation_section)
+Lay_D(http_put_operatoin, output_section)
+
+arguments *-[#4b8235,thickness=3]r-+ argument_section
+
+operations *-[#2c858a,thickness=3]r-+ operation_section
+
+outputs *-[#4b8235,thickness=3]r-+ output_section
+
+
+arg_a -[#2e800d,dashed,thickness=2]d-> http_get_operation
+arg_b -[#2e800d,dashed,thickness=2]d-> http_get_operation
+
+arg_c -[#2e800d,dashed,thickness=2]d-> instance_update_operation
+arg_d -[#2e800d,dashed,thickness=2]d-> instance_update_operation
+
+arg_a -[#2e800d,dashed,thickness=2]d-> http_put_operatoin
+arg_b -[#2e800d,dashed,thickness=2]d-> http_put_operatoin
+
+http_get_operation -[#0d7a80,thickness=2]d-> instance_update_operation
+instance_update_operation -[#0d7a80,thickness=2]d-> http_put_operatoin
+
+http_put_operatoin -[#0d7a80,thickness=2]d-> json_format_output
+
+@enduml
+
+@startuml file_structure
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+skinparam defaultTextAlignment center
+
+skinparam wrapWidth 200
+skinparam maxMessageSize 150
+
+skinparam LegendBorderColor transparent
+skinparam LegendBackgroundColor transparent
+skinparam LegendFontColor #FFFFFF
+
+skinparam shadowing<<legendArea>> false
+skinparam rectangle<<legendArea>> {
+    backgroundcolor #00000000
+    bordercolor #00000000
+}
+
+skinparam rectangle {
+    StereotypeFontSize 12
+    shadowing false
+}
+
+skinparam database {
+    StereotypeFontSize 12
+    shadowing false
+}
+
+skinparam queue {
+    StereotypeFontSize 12
+    shadowing false
+}
+
+skinparam arrow {
+    Color #666666
+    FontColor #666666
+    FontSize 12
+}
+
+skinparam actor {
+    StereotypeFontSize 12
+    shadowing false
+    style awesome
+}
+
+skinparam person {
+    StereotypeFontSize 12
+    shadowing false
+}
+
+skinparam package {
+    StereotypeFontSize 6
+    StereotypeFontColor transparent
+    FontStyle plain
+    BackgroundColor transparent
+}
+
+skinparam rectangle<<boundary>> {
+    Shadowing false
+    StereotypeFontSize 6
+    StereotypeFontColor transparent
+    FontColor #444444
+    BorderColor #444444
+    BackgroundColor transparent
+    BorderStyle dashed
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+skinparam rectangle<<person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #08427B
+    BorderColor #073B6F
+}
+skinparam database<<person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #08427B
+    BorderColor #073B6F
+}
+skinparam queue<<person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #08427B
+    BorderColor #073B6F
+}
+skinparam actor<<person>> {
+    StereotypeFontColor #08427B
+    FontColor #08427B
+    BackgroundColor #08427B
+    BorderColor #073B6F
+}
+skinparam person<<person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #08427B
+    BorderColor #073B6F
+}
+
+
+skinparam rectangle<<external_person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #686868
+    BorderColor #8A8A8A
+}
+skinparam database<<external_person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #686868
+    BorderColor #8A8A8A
+}
+skinparam queue<<external_person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #686868
+    BorderColor #8A8A8A
+}
+skinparam actor<<external_person>> {
+    StereotypeFontColor #686868
+    FontColor #686868
+    BackgroundColor #686868
+    BorderColor #8A8A8A
+}
+skinparam person<<external_person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #686868
+    BorderColor #8A8A8A
+}
+
+
+skinparam rectangle<<system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #1168BD
+    BorderColor #3C7FC0
+}
+skinparam database<<system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #1168BD
+    BorderColor #3C7FC0
+}
+skinparam queue<<system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #1168BD
+    BorderColor #3C7FC0
+}
+skinparam actor<<system>> {
+    StereotypeFontColor #1168BD
+    FontColor #1168BD
+    BackgroundColor #1168BD
+    BorderColor #3C7FC0
+}
+skinparam person<<system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #1168BD
+    BorderColor #3C7FC0
+}
+
+
+skinparam rectangle<<external_system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #999999
+    BorderColor #8A8A8A
+}
+skinparam database<<external_system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #999999
+    BorderColor #8A8A8A
+}
+skinparam queue<<external_system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #999999
+    BorderColor #8A8A8A
+}
+skinparam actor<<external_system>> {
+    StereotypeFontColor #999999
+    FontColor #999999
+    BackgroundColor #999999
+    BorderColor #8A8A8A
+}
+skinparam person<<external_system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #999999
+    BorderColor #8A8A8A
+}
+
+
+
+
+
+sprite $person [48x48/16] {
+000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000
+0000000000000000000049BCCA7200000000000000000000
+0000000000000000006EFFFFFFFFB3000000000000000000
+00000000000000001CFFFFFFFFFFFF700000000000000000
+0000000000000001EFFFFFFFFFFFFFF80000000000000000
+000000000000000CFFFFFFFFFFFFFFFF6000000000000000
+000000000000007FFFFFFFFFFFFFFFFFF100000000000000
+00000000000001FFFFFFFFFFFFFFFFFFF900000000000000
+00000000000006FFFFFFFFFFFFFFFFFFFF00000000000000
+0000000000000BFFFFFFFFFFFFFFFFFFFF40000000000000
+0000000000000EFFFFFFFFFFFFFFFFFFFF70000000000000
+0000000000000FFFFFFFFFFFFFFFFFFFFF80000000000000
+0000000000000FFFFFFFFFFFFFFFFFFFFF80000000000000
+0000000000000DFFFFFFFFFFFFFFFFFFFF60000000000000
+0000000000000AFFFFFFFFFFFFFFFFFFFF40000000000000
+00000000000006FFFFFFFFFFFFFFFFFFFE00000000000000
+00000000000000EFFFFFFFFFFFFFFFFFF800000000000000
+000000000000007FFFFFFFFFFFFFFFFFF100000000000000
+000000000000000BFFFFFFFFFFFFFFFF5000000000000000
+0000000000000001DFFFFFFFFFFFFFF70000000000000000
+00000000000000000BFFFFFFFFFFFF500000000000000000
+0000000000000000005DFFFFFFFFA1000000000000000000
+0000000000000000000037ABB96100000000000000000000
+000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000
+000000000000025788300000000005886410000000000000
+000000000007DFFFFFFD9643347BFFFFFFFB400000000000
+0000000004EFFFFFFFFFFFFFFFFFFFFFFFFFFB1000000000
+000000007FFFFFFFFFFFFFFFFFFFFFFFFFFFFFD200000000
+00000006FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE10000000
+0000003FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB0000000
+000000BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5000000
+000003FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD000000
+000009FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF200000
+00000DFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF600000
+00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF800000
+00001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA00000
+00001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB00000
+00001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB00000
+00001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB00000
+00001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA00000
+00000EFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF700000
+000006FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE100000
+0000008FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD3000000
+000000014555555555555555555555555555555300000000
+000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000
+}
+
+sprite $person2 [48x48/16] {
+0000000000000000000049BCCA7200000000000000000000
+0000000000000000006EFFFFFFFFB3000000000000000000
+00000000000000001CFFFFFFFFFFFF700000000000000000
+0000000000000001EFFFFFFFFFFFFFF80000000000000000
+000000000000000CFFFFFFFFFFFFFFFF6000000000000000
+000000000000007FFFFFFFFFFFFFFFFFF100000000000000
+00000000000001FFFFFFFFFFFFFFFFFFF900000000000000
+00000000000006FFFFFFFFFFFFFFFFFFFF00000000000000
+0000000000000BFFFFFFFFFFFFFFFFFFFF40000000000000
+0000000000000EFFFFFFFFFFFFFFFFFFFF70000000000000
+0000000000000FFFFFFFFFFFFFFFFFFFFF80000000000000
+0000000000000FFFFFFFFFFFFFFFFFFFFF80000000000000
+0000000000000DFFFFFFFFFFFFFFFFFFFF60000000000000
+0000000000000AFFFFFFFFFFFFFFFFFFFF40000000000000
+00000000000006FFFFFFFFFFFFFFFFFFFE00000000000000
+00000000000000EFFFFFFFFFFFFFFFFFF800000000000000
+000000000000007FFFFFFFFFFFFFFFFFF100000000000000
+000000000000000BFFFFFFFFFFFFFFFF5000000000000000
+0000000000000001DFFFFFFFFFFFFFF70000000000000000
+00000000000000000BFFFFFFFFFFFF500000000000000000
+0000000000000000005DFFFFFFFFA1000000000000000000
+0000000000000000000037ABB96100000000000000000000
+000000000002578888300000000005888864100000000000
+0000000007DFFFFFFFFD9643347BFFFFFFFFFB4000000000
+00000004EFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB10000000
+0000007FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD2000000
+000006FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE100000
+00003FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB00000
+0000BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF50000
+0003FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD0000
+0009FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF2000
+000DFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF6000
+000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8000
+001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB000
+001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB000
+001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB000
+001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA000
+000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8000
+000DFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF6000
+0009FFFFFFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFFFFFF2000
+0003FFFFFFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFFFFFD0000
+0000BFFFFFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFFFFF50000
+00003FFFFFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFFFFB00000
+000006FFFFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFFFE100000
+0000007FFFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFFD2000000
+00000004EFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFB10000000
+0000000007DF8FFFFFFFFFFFFFFFFFFFFFF8FB4000000000
+000000000002578888888888888888888864100000000000
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+skinparam rectangle<<container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #438DD5
+    BorderColor #3C7FC0
+}
+skinparam database<<container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #438DD5
+    BorderColor #3C7FC0
+}
+skinparam queue<<container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #438DD5
+    BorderColor #3C7FC0
+}
+skinparam actor<<container>> {
+    StereotypeFontColor #438DD5
+    FontColor #438DD5
+    BackgroundColor #438DD5
+    BorderColor #3C7FC0
+}
+skinparam person<<container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #438DD5
+    BorderColor #3C7FC0
+}
+
+
+skinparam rectangle<<external_container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #B3B3B3
+    BorderColor #A6A6A6
+}
+skinparam database<<external_container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #B3B3B3
+    BorderColor #A6A6A6
+}
+skinparam queue<<external_container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #B3B3B3
+    BorderColor #A6A6A6
+}
+skinparam actor<<external_container>> {
+    StereotypeFontColor #B3B3B3
+    FontColor #B3B3B3
+    BackgroundColor #B3B3B3
+    BorderColor #A6A6A6
+}
+skinparam person<<external_container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #B3B3B3
+    BorderColor #A6A6A6
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+skinparam rectangle<<node>> {
+    StereotypeFontColor #000000
+    FontColor #000000
+    BackgroundColor #FFFFFF
+    BorderColor #A2A2A2
+}
+skinparam database<<node>> {
+    StereotypeFontColor #000000
+    FontColor #000000
+    BackgroundColor #FFFFFF
+    BorderColor #A2A2A2
+}
+skinparam queue<<node>> {
+    StereotypeFontColor #000000
+    FontColor #000000
+    BackgroundColor #FFFFFF
+    BorderColor #A2A2A2
+}
+skinparam actor<<node>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #FFFFFF
+    BorderColor #A2A2A2
+}
+skinparam person<<node>> {
+    StereotypeFontColor #000000
+    FontColor #000000
+    BackgroundColor #FFFFFF
+    BorderColor #A2A2A2
+}
+
+
+skinparam rectangle<<node>> {
+    FontStyle normal
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+hide stereotype
+
+skinparam rectangle<<command>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+skinparam database<<command>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+skinparam queue<<command>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+skinparam actor<<command>> {
+    StereotypeFontColor #4764a8
+    FontColor #4764a8
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+skinparam person<<command>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+
+
+
+
+skinparam rectangle<<Boundary>> {
+    BackgroundColor #f0f0f0
+}
+skinparam database<<Boundary>> {
+    BackgroundColor #f0f0f0
+}
+skinparam queue<<Boundary>> {
+    BackgroundColor #f0f0f0
+}
+skinparam actor<<Boundary>> {
+    StereotypeFontColor #f0f0f0
+    FontColor #f0f0f0
+    BackgroundColor #f0f0f0
+}
+skinparam person<<Boundary>> {
+    BackgroundColor #f0f0f0
+}
+
+
+
+skinparam rectangle<<CommandGroupBoundary>> {
+    BackgroundColor #e4e8eb
+}
+skinparam database<<CommandGroupBoundary>> {
+    BackgroundColor #e4e8eb
+}
+skinparam queue<<CommandGroupBoundary>> {
+    BackgroundColor #e4e8eb
+}
+skinparam actor<<CommandGroupBoundary>> {
+    StereotypeFontColor #e4e8eb
+    FontColor #e4e8eb
+    BackgroundColor #e4e8eb
+}
+skinparam person<<CommandGroupBoundary>> {
+    BackgroundColor #e4e8eb
+}
+
+
+
+skinparam rectangle<<SubCommandGroupBoundary>> {
+    BackgroundColor #dae0e6
+}
+skinparam database<<SubCommandGroupBoundary>> {
+    BackgroundColor #dae0e6
+}
+skinparam queue<<SubCommandGroupBoundary>> {
+    BackgroundColor #dae0e6
+}
+skinparam actor<<SubCommandGroupBoundary>> {
+    StereotypeFontColor #dae0e6
+    FontColor #dae0e6
+    BackgroundColor #dae0e6
+}
+skinparam person<<SubCommandGroupBoundary>> {
+    BackgroundColor #dae0e6
+}
+
+
+
+rectangle "==Command Configuration File" <<Boundary>><<boundary>> as configuration {
+    rectangle "==Command Group" <<CommandGroupBoundary>><<boundary>> as command_group  {
+        rectangle "==Command A" <<command>><<container>> as command_a 
+        rectangle "==Command B" <<command>><<container>> as command_b 
+        rectangle "==Sub Command Group" <<SubCommandGroupBoundary>><<boundary>> as sub_command_group  {
+            rectangle "==Sub Command A" <<command>><<container>> as command_1 
+            rectangle "==Sub Command B" <<command>><<container>> as command_2 
+        }
+    }
+}
+
+command_a -[hidden]D- command_b
+
+command_b -[hidden]D- command_1
+
+command_1 -[hidden]D- command_2
+
+
+skinparam rectangle<<argument>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #4b8235
+    BorderColor #8bb37b
+}
+skinparam database<<argument>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #4b8235
+    BorderColor #8bb37b
+}
+skinparam queue<<argument>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #4b8235
+    BorderColor #8bb37b
+}
+skinparam actor<<argument>> {
+    StereotypeFontColor #4b8235
+    FontColor #4b8235
+    BackgroundColor #4b8235
+    BorderColor #8bb37b
+}
+skinparam person<<argument>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #4b8235
+    BorderColor #8bb37b
+}
+
+
+skinparam rectangle<<operation>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #2c858a
+    BorderColor #7bb0b3
+}
+skinparam database<<operation>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #2c858a
+    BorderColor #7bb0b3
+}
+skinparam queue<<operation>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #2c858a
+    BorderColor #7bb0b3
+}
+skinparam actor<<operation>> {
+    StereotypeFontColor #2c858a
+    FontColor #2c858a
+    BackgroundColor #2c858a
+    BorderColor #7bb0b3
+}
+skinparam person<<operation>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #2c858a
+    BorderColor #7bb0b3
+}
+
+
+skinparam rectangle<<output>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #4b8235
+    BorderColor #8bb37b
+}
+skinparam database<<output>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #4b8235
+    BorderColor #8bb37b
+}
+skinparam queue<<output>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #4b8235
+    BorderColor #8bb37b
+}
+skinparam actor<<output>> {
+    StereotypeFontColor #4b8235
+    FontColor #4b8235
+    BackgroundColor #4b8235
+    BorderColor #8bb37b
+}
+skinparam person<<output>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #4b8235
+    BorderColor #8bb37b
+}
+
+
+
+skinparam rectangle<<commandDetail>> {
+    BackgroundColor #dfe5f0
+}
+skinparam database<<commandDetail>> {
+    BackgroundColor #dfe5f0
+}
+skinparam queue<<commandDetail>> {
+    BackgroundColor #dfe5f0
+}
+skinparam actor<<commandDetail>> {
+    StereotypeFontColor #dfe5f0
+    FontColor #dfe5f0
+    BackgroundColor #dfe5f0
+}
+skinparam person<<commandDetail>> {
+    BackgroundColor #dfe5f0
+}
+
+
+
+rectangle "==Command" <<commandDetail>><<boundary>> as command_detail  {
+    rectangle "==Argument Section" <<argument>><<container>> as arguments 
+    rectangle "==Operation Section" <<operation>><<container>> as operations 
+    rectangle "==Output Section" <<output>><<container>> as outputs 
+}
+
+arguments -[hidden]D- operations
+operations -[hidden]D- outputs
+
+command_a *-[#798ab0,thickness=3]r-+ command_detail
+
+skinparam rectangle<<argumentSection>> {
+    BackgroundColor #ebf5e9
+}
+skinparam database<<argumentSection>> {
+    BackgroundColor #ebf5e9
+}
+skinparam queue<<argumentSection>> {
+    BackgroundColor #ebf5e9
+}
+skinparam actor<<argumentSection>> {
+    StereotypeFontColor #ebf5e9
+    FontColor #ebf5e9
+    BackgroundColor #ebf5e9
+}
+skinparam person<<argumentSection>> {
+    BackgroundColor #ebf5e9
+}
+
+
+skinparam rectangle<<argumentGroup>> {
+    BackgroundColor #deebda
+}
+skinparam database<<argumentGroup>> {
+    BackgroundColor #deebda
+}
+skinparam queue<<argumentGroup>> {
+    BackgroundColor #deebda
+}
+skinparam actor<<argumentGroup>> {
+    StereotypeFontColor #deebda
+    FontColor #deebda
+    BackgroundColor #deebda
+}
+skinparam person<<argumentGroup>> {
+    BackgroundColor #deebda
+}
+
+
+
+rectangle "==Argument Section" <<argumentSection>><<boundary>> as argument_section  {
+    rectangle "==Argument Group B" <<argumentGroup>><<boundary>> as argument_group_b  {
+        rectangle "==- -arg-c" <<argument>><<container>> as arg_c 
+        rectangle "==- -arg-d" <<argument>><<container>> as arg_d 
+    }
+    rectangle "==Argument Group A" <<argumentGroup>><<boundary>> as argument_group_a  {
+        rectangle "==- -arg-a" <<argument>><<container>> as arg_a 
+        rectangle "==- -arg-b" <<argument>><<container>> as arg_b 
+    }
+}
+
+arg_a -[hidden]R- arg_b
+argument_group_a -[hidden]R- argument_group_b
+arg_c -[hidden]R- arg_d
+
+skinparam rectangle<<operationSection>> {
+    BackgroundColor #dfeef0
+}
+skinparam database<<operationSection>> {
+    BackgroundColor #dfeef0
+}
+skinparam queue<<operationSection>> {
+    BackgroundColor #dfeef0
+}
+skinparam actor<<operationSection>> {
+    StereotypeFontColor #dfeef0
+    FontColor #dfeef0
+    BackgroundColor #dfeef0
+}
+skinparam person<<operationSection>> {
+    BackgroundColor #dfeef0
+}
+
+
+
+rectangle "==Operation Section" <<operationSection>><<boundary>> as operation_section  {
+    rectangle "==Http GET Operation" <<operation>><<container>> as http_get_operation 
+    rectangle "==Instance Update Operatoin" <<operation>><<container>> as instance_update_operation 
+    rectangle "==Http PUT Operatoin" <<operation>><<container>> as http_put_operatoin 
+}
+
+skinparam rectangle<<outputSection>> {
+    BackgroundColor #ebf5e9
+}
+skinparam database<<outputSection>> {
+    BackgroundColor #ebf5e9
+}
+skinparam queue<<outputSection>> {
+    BackgroundColor #ebf5e9
+}
+skinparam actor<<outputSection>> {
+    StereotypeFontColor #ebf5e9
+    FontColor #ebf5e9
+    BackgroundColor #ebf5e9
+}
+skinparam person<<outputSection>> {
+    BackgroundColor #ebf5e9
+}
+
+
+
+rectangle "==Output Section" <<outputSection>><<boundary>> as output_section  {
+    rectangle "==Output in json" <<output>><<container>> as json_format_output 
+}
+
+argument_group_a -[hidden]D- operation_section
+http_put_operatoin -[hidden]D- output_section
+
+arguments *-[#4b8235,thickness=3]r-+ argument_section
+
+operations *-[#2c858a,thickness=3]r-+ operation_section
+
+outputs *-[#4b8235,thickness=3]r-+ output_section
+
+
+arg_a -[#2e800d,dashed,thickness=2]d-> http_get_operation
+arg_b -[#2e800d,dashed,thickness=2]d-> http_get_operation
+
+arg_c -[#2e800d,dashed,thickness=2]d-> instance_update_operation
+arg_d -[#2e800d,dashed,thickness=2]d-> instance_update_operation
+
+arg_a -[#2e800d,dashed,thickness=2]d-> http_put_operatoin
+arg_b -[#2e800d,dashed,thickness=2]d-> http_put_operatoin
+
+http_get_operation -[#0d7a80,thickness=2]d-> instance_update_operation
+instance_update_operation -[#0d7a80,thickness=2]d-> http_put_operatoin
+
+http_put_operatoin -[#0d7a80,thickness=2]d-> json_format_output
+
+@enduml
+
+PlantUML version 1.2022.0(Wed Jan 12 00:16:42 CST 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: Cp1252
+Language: en
+Country: US
+--></g></svg>

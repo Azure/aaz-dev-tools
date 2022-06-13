@@ -1,0 +1,321 @@
+<?xml version='1.0' encoding='utf-8'?>
+<CodeGen plane="mgmt-plane">
+  <resource id="/subscriptions/{}/providers/microsoft.databricks/workspaces" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9wcm92aWRlcnMvTWljcm9zb2Z0LkRhdGFicmlja3Mvd29ya3NwYWNlcw==/V/MjAxOC0wNC0wMQ=="/>
+  <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2Vz/V/MjAxOC0wNC0wMQ=="/>
+  <commandGroup name="databricks workspace">
+    <command name="list" version="2018-04-01">
+      <resource id="/subscriptions/{}/providers/microsoft.databricks/workspaces" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9wcm92aWRlcnMvTWljcm9zb2Z0LkRhdGFicmlja3Mvd29ya3NwYWNlcw==/V/MjAxOC0wNC0wMQ=="/>
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2Vz/V/MjAxOC0wNC0wMQ=="/>
+      <argGroup name="">
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True"/>
+      </argGroup>
+      <condition var="$Condition_Workspaces_ListBySubscription">
+        <operator type="and">
+          <operator type="hasValue" arg="$Path.subscriptionId"/>
+          <operator type="not">
+            <operator type="hasValue" arg="$Path.resourceGroupName"/>
+          </operator>
+        </operator>
+      </condition>
+      <condition var="$Condition_Workspaces_ListByResourceGroup">
+        <operator type="and">
+          <operator type="hasValue" arg="$Path.resourceGroupName"/>
+          <operator type="hasValue" arg="$Path.subscriptionId"/>
+        </operator>
+      </condition>
+      <operation when="$Condition_Workspaces_ListBySubscription" operationId="Workspaces_ListBySubscription">
+        <http path="/subscriptions/{subscriptionId}/providers/Microsoft.Databricks/workspaces">
+          <request method="get">
+            <path>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True"/>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2018-04-01"/>
+              </const>
+            </query>
+          </request>
+          <response statusCode="200">
+            <body>
+              <json var="$Instance">
+                <schema type="object">
+                  <prop type="string" name="nextLink"/>
+                  <prop type="array<object>" name="value">
+                    <item type="object">
+                      <prop readOnly="True" type="ResourceId" name="id">
+                        <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"/>
+                      </prop>
+                      <prop type="ResourceLocation" name="location" required="True"/>
+                      <prop readOnly="True" type="string" name="name"/>
+                      <prop type="object" name="properties" required="True" clientFlatten="True">
+                        <prop type="array<object>" name="authorizations">
+                          <item type="object">
+                            <prop type="uuid" name="principalId" required="True"/>
+                            <prop type="uuid" name="roleDefinitionId" required="True"/>
+                          </item>
+                        </prop>
+                        <prop type="object" name="createdBy" cls="CreatedBy_read">
+                          <prop readOnly="True" type="uuid" name="applicationId"/>
+                          <prop readOnly="True" type="uuid" name="oid"/>
+                          <prop readOnly="True" type="string" name="puid"/>
+                        </prop>
+                        <prop readOnly="True" type="dateTime" name="createdDateTime"/>
+                        <prop type="string" name="managedResourceGroupId" required="True"/>
+                        <prop type="object" name="parameters">
+                          <prop type="object" name="amlWorkspaceId" cls="WorkspaceCustomStringParameter_read">
+                            <prop readOnly="True" type="string" name="type">
+                              <enum>
+                                <item value="Bool"/>
+                                <item value="Object"/>
+                                <item value="String"/>
+                              </enum>
+                            </prop>
+                            <prop type="string" name="value" required="True"/>
+                          </prop>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="customPrivateSubnetName"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="customPublicSubnetName"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="customVirtualNetworkId"/>
+                          <prop type="object" name="enableNoPublicIp" cls="WorkspaceCustomBooleanParameter_read">
+                            <prop readOnly="True" type="string" name="type">
+                              <enum>
+                                <item value="Bool"/>
+                                <item value="Object"/>
+                                <item value="String"/>
+                              </enum>
+                            </prop>
+                            <prop type="boolean" name="value" required="True"/>
+                          </prop>
+                          <prop type="object" name="encryption">
+                            <prop readOnly="True" type="string" name="type">
+                              <enum>
+                                <item value="Bool"/>
+                                <item value="Object"/>
+                                <item value="String"/>
+                              </enum>
+                            </prop>
+                            <prop type="object" name="value">
+                              <prop type="string" name="KeyName"/>
+                              <prop type="string" name="keySource">
+                                <default value="Default"/>
+                                <enum>
+                                  <item value="Default"/>
+                                  <item value="Microsoft.Keyvault"/>
+                                </enum>
+                              </prop>
+                              <prop type="string" name="keyvaulturi"/>
+                              <prop type="string" name="keyversion"/>
+                            </prop>
+                          </prop>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerBackendPoolName"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerId"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="natGatewayName"/>
+                          <prop type="@WorkspaceCustomBooleanParameter_read" name="prepareEncryption"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="publicIpName"/>
+                          <prop type="@WorkspaceCustomBooleanParameter_read" name="requireInfrastructureEncryption"/>
+                          <prop readOnly="True" type="object" name="resourceTags">
+                            <prop readOnly="True" type="string" name="type">
+                              <enum>
+                                <item value="Bool"/>
+                                <item value="Object"/>
+                                <item value="String"/>
+                              </enum>
+                            </prop>
+                            <prop readOnly="True" type="object" name="value" required="True">
+                              <additionalProp readOnly="True"/>
+                            </prop>
+                          </prop>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountSkuName"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="vnetAddressPrefix"/>
+                        </prop>
+                        <prop readOnly="True" type="string" name="provisioningState">
+                          <enum>
+                            <item value="Accepted"/>
+                            <item value="Canceled"/>
+                            <item value="Created"/>
+                            <item value="Creating"/>
+                            <item value="Deleted"/>
+                            <item value="Deleting"/>
+                            <item value="Failed"/>
+                            <item value="Ready"/>
+                            <item value="Running"/>
+                            <item value="Succeeded"/>
+                            <item value="Updating"/>
+                          </enum>
+                        </prop>
+                        <prop type="object" name="storageAccountIdentity">
+                          <prop readOnly="True" type="uuid" name="principalId"/>
+                          <prop readOnly="True" type="uuid" name="tenantId"/>
+                          <prop readOnly="True" type="string" name="type"/>
+                        </prop>
+                        <prop type="string" name="uiDefinitionUri"/>
+                        <prop type="@CreatedBy_read" name="updatedBy"/>
+                        <prop readOnly="True" type="string" name="workspaceId"/>
+                        <prop readOnly="True" type="string" name="workspaceUrl"/>
+                      </prop>
+                      <prop type="object" name="sku">
+                        <prop type="string" name="name" required="True"/>
+                        <prop type="string" name="tier"/>
+                      </prop>
+                      <prop type="object" name="tags">
+                        <additionalProp>
+                          <item type="string"/>
+                        </additionalProp>
+                      </prop>
+                      <prop readOnly="True" type="string" name="type"/>
+                    </item>
+                  </prop>
+                </schema>
+              </json>
+            </body>
+          </response>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <operation when="$Condition_Workspaces_ListByResourceGroup" operationId="Workspaces_ListByResourceGroup">
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces">
+          <request method="get">
+            <path>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format pattern="^[-\w\._\(\)]+$" maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True"/>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2018-04-01"/>
+              </const>
+            </query>
+          </request>
+          <response statusCode="200">
+            <body>
+              <json var="$Instance">
+                <schema type="object">
+                  <prop type="string" name="nextLink"/>
+                  <prop type="array<object>" name="value">
+                    <item type="object">
+                      <prop readOnly="True" type="ResourceId" name="id">
+                        <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"/>
+                      </prop>
+                      <prop type="ResourceLocation" name="location" required="True"/>
+                      <prop readOnly="True" type="string" name="name"/>
+                      <prop type="object" name="properties" required="True" clientFlatten="True">
+                        <prop type="array<object>" name="authorizations">
+                          <item type="object">
+                            <prop type="uuid" name="principalId" required="True"/>
+                            <prop type="uuid" name="roleDefinitionId" required="True"/>
+                          </item>
+                        </prop>
+                        <prop type="@CreatedBy_read" name="createdBy"/>
+                        <prop readOnly="True" type="dateTime" name="createdDateTime"/>
+                        <prop type="string" name="managedResourceGroupId" required="True"/>
+                        <prop type="object" name="parameters">
+                          <prop type="@WorkspaceCustomStringParameter_read" name="amlWorkspaceId"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="customPrivateSubnetName"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="customPublicSubnetName"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="customVirtualNetworkId"/>
+                          <prop type="@WorkspaceCustomBooleanParameter_read" name="enableNoPublicIp"/>
+                          <prop type="object" name="encryption">
+                            <prop readOnly="True" type="string" name="type">
+                              <enum>
+                                <item value="Bool"/>
+                                <item value="Object"/>
+                                <item value="String"/>
+                              </enum>
+                            </prop>
+                            <prop type="object" name="value">
+                              <prop type="string" name="KeyName"/>
+                              <prop type="string" name="keySource">
+                                <default value="Default"/>
+                                <enum>
+                                  <item value="Default"/>
+                                  <item value="Microsoft.Keyvault"/>
+                                </enum>
+                              </prop>
+                              <prop type="string" name="keyvaulturi"/>
+                              <prop type="string" name="keyversion"/>
+                            </prop>
+                          </prop>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerBackendPoolName"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerId"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="natGatewayName"/>
+                          <prop type="@WorkspaceCustomBooleanParameter_read" name="prepareEncryption"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="publicIpName"/>
+                          <prop type="@WorkspaceCustomBooleanParameter_read" name="requireInfrastructureEncryption"/>
+                          <prop readOnly="True" type="object" name="resourceTags">
+                            <prop readOnly="True" type="string" name="type">
+                              <enum>
+                                <item value="Bool"/>
+                                <item value="Object"/>
+                                <item value="String"/>
+                              </enum>
+                            </prop>
+                            <prop readOnly="True" type="object" name="value" required="True">
+                              <additionalProp readOnly="True"/>
+                            </prop>
+                          </prop>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountSkuName"/>
+                          <prop type="@WorkspaceCustomStringParameter_read" name="vnetAddressPrefix"/>
+                        </prop>
+                        <prop readOnly="True" type="string" name="provisioningState">
+                          <enum>
+                            <item value="Accepted"/>
+                            <item value="Canceled"/>
+                            <item value="Created"/>
+                            <item value="Creating"/>
+                            <item value="Deleted"/>
+                            <item value="Deleting"/>
+                            <item value="Failed"/>
+                            <item value="Ready"/>
+                            <item value="Running"/>
+                            <item value="Succeeded"/>
+                            <item value="Updating"/>
+                          </enum>
+                        </prop>
+                        <prop type="object" name="storageAccountIdentity">
+                          <prop readOnly="True" type="uuid" name="principalId"/>
+                          <prop readOnly="True" type="uuid" name="tenantId"/>
+                          <prop readOnly="True" type="string" name="type"/>
+                        </prop>
+                        <prop type="string" name="uiDefinitionUri"/>
+                        <prop type="@CreatedBy_read" name="updatedBy"/>
+                        <prop readOnly="True" type="string" name="workspaceId"/>
+                        <prop readOnly="True" type="string" name="workspaceUrl"/>
+                      </prop>
+                      <prop type="object" name="sku">
+                        <prop type="string" name="name" required="True"/>
+                        <prop type="string" name="tier"/>
+                      </prop>
+                      <prop type="object" name="tags">
+                        <additionalProp>
+                          <item type="string"/>
+                        </additionalProp>
+                      </prop>
+                      <prop readOnly="True" type="string" name="type"/>
+                    </item>
+                  </prop>
+                </schema>
+              </json>
+            </body>
+          </response>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <output type="array" ref="$Instance.value" clientFlatten="True" nextLink="$Instance.nextLink"/>
+    </command>
+  </commandGroup>
+</CodeGen>

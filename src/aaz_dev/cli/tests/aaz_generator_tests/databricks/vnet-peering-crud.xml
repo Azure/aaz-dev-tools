@@ -1,0 +1,477 @@
+<?xml version='1.0' encoding='utf-8'?>
+<CodeGen plane="mgmt-plane">
+  <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfS92aXJ0dWFsTmV0d29ya1BlZXJpbmdzL3twZWVyaW5nTmFtZX0=/V/MjAxOC0wNC0wMQ=="/>
+  <commandGroup name="databricks workspace vnet-peering">
+    <command name="show" version="2018-04-01">
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfS92aXJ0dWFsTmV0d29ya1BlZXJpbmdzL3twZWVyaW5nTmFtZX0=/V/MjAxOC0wNC0wMQ=="/>
+      <argGroup name="">
+        <arg type="string" var="$Path.peeringName" options="peering-name name n" required="True" idPart="child_name_1">
+          <help short="The name of the workspace vNet peering."/>
+        </arg>
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="string" var="$Path.workspaceName" options="workspace-name" required="True" idPart="name">
+          <help short="The name of the workspace."/>
+          <format maxLength="64" minLength="3"/>
+        </arg>
+      </argGroup>
+      <operation operationId="vNetPeering_Get">
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings/{peeringName}">
+          <request method="get">
+            <path>
+              <param type="string" name="peeringName" arg="$Path.peeringName" required="True"/>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format pattern="^[-\w\._\(\)]+$" maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True"/>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="64" minLength="3"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2018-04-01"/>
+              </const>
+            </query>
+          </request>
+          <response statusCode="200">
+            <body>
+              <json var="$Instance">
+                <schema type="object">
+                  <prop readOnly="True" type="ResourceId" name="id">
+                    <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}/virtualNetworkPeerings/{}"/>
+                  </prop>
+                  <prop readOnly="True" type="string" name="name"/>
+                  <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="boolean" name="allowForwardedTraffic"/>
+                    <prop type="boolean" name="allowGatewayTransit"/>
+                    <prop type="boolean" name="allowVirtualNetworkAccess"/>
+                    <prop type="object" name="databricksAddressSpace" cls="AddressSpace_read">
+                      <prop type="array<string>" name="addressPrefixes">
+                        <item type="string"/>
+                      </prop>
+                    </prop>
+                    <prop type="object" name="databricksVirtualNetwork">
+                      <prop type="string" name="id"/>
+                    </prop>
+                    <prop readOnly="True" type="string" name="peeringState">
+                      <enum>
+                        <item value="Connected"/>
+                        <item value="Disconnected"/>
+                        <item value="Initiated"/>
+                      </enum>
+                    </prop>
+                    <prop readOnly="True" type="string" name="provisioningState">
+                      <enum>
+                        <item value="Deleting"/>
+                        <item value="Failed"/>
+                        <item value="Succeeded"/>
+                        <item value="Updating"/>
+                      </enum>
+                    </prop>
+                    <prop type="@AddressSpace_read" name="remoteAddressSpace"/>
+                    <prop type="object" name="remoteVirtualNetwork" required="True">
+                      <prop type="string" name="id"/>
+                    </prop>
+                    <prop type="boolean" name="useRemoteGateways"/>
+                  </prop>
+                  <prop readOnly="True" type="string" name="type"/>
+                </schema>
+              </json>
+            </body>
+          </response>
+          <response statusCode="204"/>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <output type="object" ref="$Instance" clientFlatten="True"/>
+    </command>
+    <command name="delete" version="2018-04-01">
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfS92aXJ0dWFsTmV0d29ya1BlZXJpbmdzL3twZWVyaW5nTmFtZX0=/V/MjAxOC0wNC0wMQ=="/>
+      <argGroup name="">
+        <arg type="string" var="$Path.peeringName" options="peering-name name n" required="True" idPart="child_name_1">
+          <help short="The name of the workspace vNet peering."/>
+        </arg>
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="string" var="$Path.workspaceName" options="workspace-name" required="True" idPart="name">
+          <help short="The name of the workspace."/>
+          <format maxLength="64" minLength="3"/>
+        </arg>
+      </argGroup>
+      <operation operationId="vNetPeering_Delete">
+        <longRunning finalStateVia="azure-async-operation"/>
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings/{peeringName}">
+          <request method="delete">
+            <path>
+              <param type="string" name="peeringName" arg="$Path.peeringName" required="True"/>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format pattern="^[-\w\._\(\)]+$" maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True"/>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="64" minLength="3"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2018-04-01"/>
+              </const>
+            </query>
+          </request>
+          <response statusCode="200 202 204"/>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+    </command>
+    <command name="create" version="2018-04-01">
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfS92aXJ0dWFsTmV0d29ya1BlZXJpbmdzL3twZWVyaW5nTmFtZX0=/V/MjAxOC0wNC0wMQ=="/>
+      <argGroup name="">
+        <arg type="string" var="$Path.peeringName" options="peering-name name n" required="True" idPart="child_name_1">
+          <help short="The name of the workspace vNet peering."/>
+        </arg>
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="string" var="$Path.workspaceName" options="workspace-name" required="True" idPart="name">
+          <help short="The name of the workspace."/>
+          <format maxLength="64" minLength="3"/>
+        </arg>
+        <arg type="boolean" var="$VirtualNetworkPeeringParameters.properties.allowForwardedTraffic" options="allow-forwarded-traffic">
+          <help short="Whether the forwarded traffic from the VMs in the local virtual network will be allowed/disallowed in remote virtual network."/>
+        </arg>
+        <arg type="boolean" var="$VirtualNetworkPeeringParameters.properties.allowGatewayTransit" options="allow-gateway-transit">
+          <help short="If gateway links can be used in remote virtual networking to link to this virtual network."/>
+        </arg>
+        <arg type="boolean" var="$VirtualNetworkPeeringParameters.properties.allowVirtualNetworkAccess" options="allow-virtual-network-access">
+          <help short="Whether the VMs in the local virtual network space would be able to access the VMs in remote virtual network space."/>
+        </arg>
+        <arg type="object" var="$VirtualNetworkPeeringParameters.properties.databricksAddressSpace" options="databricks-address-space" cls="AddressSpace_create">
+          <help short="The reference to the databricks virtual network address space."/>
+          <arg type="array<string>" var="@AddressSpace_create.addressPrefixes" options="address-prefixes" singularOptions="address-prefix">
+            <help short="A list of address blocks reserved for this virtual network in CIDR notation."/>
+            <item type="string"/>
+          </arg>
+        </arg>
+        <arg type="object" var="$VirtualNetworkPeeringParameters.properties.databricksVirtualNetwork" options="databricks-virtual-network">
+          <help short=" The remote virtual network should be in the same region. See here to learn more (https://docs.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-peering)."/>
+          <arg type="string" var="$VirtualNetworkPeeringParameters.properties.databricksVirtualNetwork.id" options="id">
+            <help short="The Id of the databricks virtual network."/>
+          </arg>
+        </arg>
+        <arg type="@AddressSpace_create" var="$VirtualNetworkPeeringParameters.properties.remoteAddressSpace" options="remote-address-space">
+          <help short="The reference to the remote virtual network address space."/>
+        </arg>
+        <arg type="object" var="$VirtualNetworkPeeringParameters.properties.remoteVirtualNetwork" options="remote-virtual-network" required="True">
+          <help short=" The remote virtual network should be in the same region. See here to learn more (https://docs.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-peering)."/>
+          <arg type="string" var="$VirtualNetworkPeeringParameters.properties.remoteVirtualNetwork.id" options="id">
+            <help short="The Id of the remote virtual network."/>
+          </arg>
+        </arg>
+        <arg type="boolean" var="$VirtualNetworkPeeringParameters.properties.useRemoteGateways" options="use-remote-gateways">
+          <help short="If remote gateways can be used on this virtual network. If the flag is set to true, and allowGatewayTransit on remote peering is also true, virtual network will use gateways of remote virtual network for transit. Only one peering can have this flag set to true. This flag cannot be set if virtual network already has a gateway."/>
+        </arg>
+      </argGroup>
+      <operation operationId="vNetPeering_CreateOrUpdate">
+        <longRunning finalStateVia="azure-async-operation"/>
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings/{peeringName}">
+          <request method="put">
+            <path>
+              <param type="string" name="peeringName" arg="$Path.peeringName" required="True"/>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format pattern="^[-\w\._\(\)]+$" maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True"/>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="64" minLength="3"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2018-04-01"/>
+              </const>
+            </query>
+            <body>
+              <json>
+                <schema type="object" name="VirtualNetworkPeeringParameters" clientFlatten="True">
+                  <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="boolean" name="allowForwardedTraffic" arg="$VirtualNetworkPeeringParameters.properties.allowForwardedTraffic"/>
+                    <prop type="boolean" name="allowGatewayTransit" arg="$VirtualNetworkPeeringParameters.properties.allowGatewayTransit"/>
+                    <prop type="boolean" name="allowVirtualNetworkAccess" arg="$VirtualNetworkPeeringParameters.properties.allowVirtualNetworkAccess"/>
+                    <prop type="object" name="databricksAddressSpace" arg="$VirtualNetworkPeeringParameters.properties.databricksAddressSpace" cls="AddressSpace_create">
+                      <prop type="array<string>" name="addressPrefixes" arg="@AddressSpace_create.addressPrefixes">
+                        <item type="string"/>
+                      </prop>
+                    </prop>
+                    <prop type="object" name="databricksVirtualNetwork" arg="$VirtualNetworkPeeringParameters.properties.databricksVirtualNetwork">
+                      <prop type="string" name="id" arg="$VirtualNetworkPeeringParameters.properties.databricksVirtualNetwork.id"/>
+                    </prop>
+                    <prop type="@AddressSpace_create" name="remoteAddressSpace" arg="$VirtualNetworkPeeringParameters.properties.remoteAddressSpace"/>
+                    <prop type="object" name="remoteVirtualNetwork" arg="$VirtualNetworkPeeringParameters.properties.remoteVirtualNetwork" required="True">
+                      <prop type="string" name="id" arg="$VirtualNetworkPeeringParameters.properties.remoteVirtualNetwork.id"/>
+                    </prop>
+                    <prop type="boolean" name="useRemoteGateways" arg="$VirtualNetworkPeeringParameters.properties.useRemoteGateways"/>
+                  </prop>
+                </schema>
+              </json>
+            </body>
+          </request>
+          <response statusCode="200 201">
+            <body>
+              <json var="$Instance">
+                <schema type="object">
+                  <prop readOnly="True" type="ResourceId" name="id">
+                    <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}/virtualNetworkPeerings/{}"/>
+                  </prop>
+                  <prop readOnly="True" type="string" name="name"/>
+                  <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="boolean" name="allowForwardedTraffic"/>
+                    <prop type="boolean" name="allowGatewayTransit"/>
+                    <prop type="boolean" name="allowVirtualNetworkAccess"/>
+                    <prop type="object" name="databricksAddressSpace" cls="AddressSpace_read">
+                      <prop type="array<string>" name="addressPrefixes">
+                        <item type="string"/>
+                      </prop>
+                    </prop>
+                    <prop type="object" name="databricksVirtualNetwork">
+                      <prop type="string" name="id"/>
+                    </prop>
+                    <prop readOnly="True" type="string" name="peeringState">
+                      <enum>
+                        <item value="Connected"/>
+                        <item value="Disconnected"/>
+                        <item value="Initiated"/>
+                      </enum>
+                    </prop>
+                    <prop readOnly="True" type="string" name="provisioningState">
+                      <enum>
+                        <item value="Deleting"/>
+                        <item value="Failed"/>
+                        <item value="Succeeded"/>
+                        <item value="Updating"/>
+                      </enum>
+                    </prop>
+                    <prop type="@AddressSpace_read" name="remoteAddressSpace"/>
+                    <prop type="object" name="remoteVirtualNetwork" required="True">
+                      <prop type="string" name="id"/>
+                    </prop>
+                    <prop type="boolean" name="useRemoteGateways"/>
+                  </prop>
+                  <prop readOnly="True" type="string" name="type"/>
+                </schema>
+              </json>
+            </body>
+          </response>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <output type="object" ref="$Instance" clientFlatten="True"/>
+    </command>
+    <command name="update" version="2018-04-01">
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}/virtualnetworkpeerings/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfS92aXJ0dWFsTmV0d29ya1BlZXJpbmdzL3twZWVyaW5nTmFtZX0=/V/MjAxOC0wNC0wMQ=="/>
+      <argGroup name="">
+        <arg type="string" var="$Path.peeringName" options="peering-name name n" required="True" idPart="child_name_1">
+          <help short="The name of the workspace vNet peering."/>
+        </arg>
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="string" var="$Path.workspaceName" options="workspace-name" required="True" idPart="name">
+          <help short="The name of the workspace."/>
+          <format maxLength="64" minLength="3"/>
+        </arg>
+        <arg type="boolean" var="$VirtualNetworkPeeringParameters.properties.allowForwardedTraffic" options="allow-forwarded-traffic">
+          <help short="Whether the forwarded traffic from the VMs in the local virtual network will be allowed/disallowed in remote virtual network."/>
+        </arg>
+        <arg type="boolean" var="$VirtualNetworkPeeringParameters.properties.allowGatewayTransit" options="allow-gateway-transit">
+          <help short="If gateway links can be used in remote virtual networking to link to this virtual network."/>
+        </arg>
+        <arg type="boolean" var="$VirtualNetworkPeeringParameters.properties.allowVirtualNetworkAccess" options="allow-virtual-network-access">
+          <help short="Whether the VMs in the local virtual network space would be able to access the VMs in remote virtual network space."/>
+        </arg>
+        <arg type="object" var="$VirtualNetworkPeeringParameters.properties.databricksAddressSpace" options="databricks-address-space" cls="AddressSpace_update">
+          <help short="The reference to the databricks virtual network address space."/>
+          <arg type="array<string>" var="@AddressSpace_update.addressPrefixes" options="address-prefixes" singularOptions="address-prefix">
+            <help short="A list of address blocks reserved for this virtual network in CIDR notation."/>
+            <item type="string"/>
+          </arg>
+        </arg>
+        <arg type="object" var="$VirtualNetworkPeeringParameters.properties.databricksVirtualNetwork" options="databricks-virtual-network">
+          <help short=" The remote virtual network should be in the same region. See here to learn more (https://docs.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-peering)."/>
+          <arg type="string" var="$VirtualNetworkPeeringParameters.properties.databricksVirtualNetwork.id" options="id">
+            <help short="The Id of the databricks virtual network."/>
+          </arg>
+        </arg>
+        <arg type="@AddressSpace_update" var="$VirtualNetworkPeeringParameters.properties.remoteAddressSpace" options="remote-address-space">
+          <help short="The reference to the remote virtual network address space."/>
+        </arg>
+        <arg type="object" var="$VirtualNetworkPeeringParameters.properties.remoteVirtualNetwork" options="remote-virtual-network" required="True">
+          <help short=" The remote virtual network should be in the same region. See here to learn more (https://docs.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-peering)."/>
+          <arg type="string" var="$VirtualNetworkPeeringParameters.properties.remoteVirtualNetwork.id" options="id">
+            <help short="The Id of the remote virtual network."/>
+          </arg>
+        </arg>
+        <arg type="boolean" var="$VirtualNetworkPeeringParameters.properties.useRemoteGateways" options="use-remote-gateways">
+          <help short="If remote gateways can be used on this virtual network. If the flag is set to true, and allowGatewayTransit on remote peering is also true, virtual network will use gateways of remote virtual network for transit. Only one peering can have this flag set to true. This flag cannot be set if virtual network already has a gateway."/>
+        </arg>
+      </argGroup>
+      <operation operationId="vNetPeering_Get">
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings/{peeringName}">
+          <request method="get">
+            <path>
+              <param type="string" name="peeringName" arg="$Path.peeringName" required="True"/>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format pattern="^[-\w\._\(\)]+$" maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True"/>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="64" minLength="3"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2018-04-01"/>
+              </const>
+            </query>
+          </request>
+          <response statusCode="200">
+            <body>
+              <json var="$Instance">
+                <schema type="object" cls="VirtualNetworkPeering_read">
+                  <prop readOnly="True" type="ResourceId" name="id">
+                    <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}/virtualNetworkPeerings/{}"/>
+                  </prop>
+                  <prop readOnly="True" type="string" name="name"/>
+                  <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="boolean" name="allowForwardedTraffic"/>
+                    <prop type="boolean" name="allowGatewayTransit"/>
+                    <prop type="boolean" name="allowVirtualNetworkAccess"/>
+                    <prop type="object" name="databricksAddressSpace" cls="AddressSpace_read">
+                      <prop type="array<string>" name="addressPrefixes">
+                        <item type="string"/>
+                      </prop>
+                    </prop>
+                    <prop type="object" name="databricksVirtualNetwork">
+                      <prop type="string" name="id"/>
+                    </prop>
+                    <prop readOnly="True" type="string" name="peeringState">
+                      <enum>
+                        <item value="Connected"/>
+                        <item value="Disconnected"/>
+                        <item value="Initiated"/>
+                      </enum>
+                    </prop>
+                    <prop readOnly="True" type="string" name="provisioningState">
+                      <enum>
+                        <item value="Deleting"/>
+                        <item value="Failed"/>
+                        <item value="Succeeded"/>
+                        <item value="Updating"/>
+                      </enum>
+                    </prop>
+                    <prop type="@AddressSpace_read" name="remoteAddressSpace"/>
+                    <prop type="object" name="remoteVirtualNetwork" required="True">
+                      <prop type="string" name="id"/>
+                    </prop>
+                    <prop type="boolean" name="useRemoteGateways"/>
+                  </prop>
+                  <prop readOnly="True" type="string" name="type"/>
+                </schema>
+              </json>
+            </body>
+          </response>
+          <response statusCode="204"/>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <operation>
+        <instanceUpdate instance="$Instance">
+          <json>
+            <schema type="object" name="VirtualNetworkPeeringParameters" clientFlatten="True">
+              <prop type="object" name="properties" required="True" clientFlatten="True">
+                <prop type="boolean" name="allowForwardedTraffic" arg="$VirtualNetworkPeeringParameters.properties.allowForwardedTraffic"/>
+                <prop type="boolean" name="allowGatewayTransit" arg="$VirtualNetworkPeeringParameters.properties.allowGatewayTransit"/>
+                <prop type="boolean" name="allowVirtualNetworkAccess" arg="$VirtualNetworkPeeringParameters.properties.allowVirtualNetworkAccess"/>
+                <prop type="object" name="databricksAddressSpace" arg="$VirtualNetworkPeeringParameters.properties.databricksAddressSpace" cls="AddressSpace_update">
+                  <prop type="array<string>" name="addressPrefixes" arg="@AddressSpace_update.addressPrefixes">
+                    <item type="string"/>
+                  </prop>
+                </prop>
+                <prop type="object" name="databricksVirtualNetwork" arg="$VirtualNetworkPeeringParameters.properties.databricksVirtualNetwork">
+                  <prop type="string" name="id" arg="$VirtualNetworkPeeringParameters.properties.databricksVirtualNetwork.id"/>
+                </prop>
+                <prop type="@AddressSpace_update" name="remoteAddressSpace" arg="$VirtualNetworkPeeringParameters.properties.remoteAddressSpace"/>
+                <prop type="object" name="remoteVirtualNetwork" arg="$VirtualNetworkPeeringParameters.properties.remoteVirtualNetwork" required="True">
+                  <prop type="string" name="id" arg="$VirtualNetworkPeeringParameters.properties.remoteVirtualNetwork.id"/>
+                </prop>
+                <prop type="boolean" name="useRemoteGateways" arg="$VirtualNetworkPeeringParameters.properties.useRemoteGateways"/>
+              </prop>
+            </schema>
+          </json>
+        </instanceUpdate>
+      </operation>
+      <operation operationId="vNetPeering_CreateOrUpdate">
+        <longRunning finalStateVia="azure-async-operation"/>
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings/{peeringName}">
+          <request method="put">
+            <path>
+              <param type="string" name="peeringName" arg="$Path.peeringName" required="True"/>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format pattern="^[-\w\._\(\)]+$" maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True"/>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="64" minLength="3"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2018-04-01"/>
+              </const>
+            </query>
+            <body>
+              <json ref="$Instance"/>
+            </body>
+          </request>
+          <response statusCode="200 201">
+            <body>
+              <json var="$Instance">
+                <schema type="@VirtualNetworkPeering_read"/>
+              </json>
+            </body>
+          </response>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <output type="object" ref="$Instance" clientFlatten="True"/>
+    </command>
+  </commandGroup>
+</CodeGen>

@@ -1,0 +1,925 @@
+<?xml version='1.0' encoding='utf-8'?>
+<CodeGen plane="mgmt-plane">
+  <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfQ==/V/MjAxOC0wNC0wMQ=="/>
+  <commandGroup name="databricks workspace">
+    <command name="show" version="2018-04-01">
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfQ==/V/MjAxOC0wNC0wMQ=="/>
+      <argGroup name="">
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="string" var="$Path.workspaceName" options="workspace-name name n" required="True" idPart="name">
+          <help short="The name of the workspace."/>
+          <format maxLength="64" minLength="3"/>
+        </arg>
+      </argGroup>
+      <operation operationId="Workspaces_Get">
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}">
+          <request method="get">
+            <path>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format pattern="^[-\w\._\(\)]+$" maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True"/>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="64" minLength="3"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2018-04-01"/>
+              </const>
+            </query>
+          </request>
+          <response statusCode="200">
+            <body>
+              <json var="$Instance">
+                <schema type="object">
+                  <prop readOnly="True" type="ResourceId" name="id">
+                    <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"/>
+                  </prop>
+                  <prop type="ResourceLocation" name="location" required="True"/>
+                  <prop readOnly="True" type="string" name="name"/>
+                  <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="array<object>" name="authorizations">
+                      <item type="object">
+                        <prop type="uuid" name="principalId" required="True"/>
+                        <prop type="uuid" name="roleDefinitionId" required="True"/>
+                      </item>
+                    </prop>
+                    <prop type="object" name="createdBy" cls="CreatedBy_read">
+                      <prop readOnly="True" type="uuid" name="applicationId"/>
+                      <prop readOnly="True" type="uuid" name="oid"/>
+                      <prop readOnly="True" type="string" name="puid"/>
+                    </prop>
+                    <prop readOnly="True" type="dateTime" name="createdDateTime"/>
+                    <prop type="string" name="managedResourceGroupId" required="True"/>
+                    <prop type="object" name="parameters">
+                      <prop type="object" name="amlWorkspaceId" cls="WorkspaceCustomStringParameter_read">
+                        <prop readOnly="True" type="string" name="type">
+                          <enum>
+                            <item value="Bool"/>
+                            <item value="Object"/>
+                            <item value="String"/>
+                          </enum>
+                        </prop>
+                        <prop type="string" name="value" required="True"/>
+                      </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customPrivateSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customPublicSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customVirtualNetworkId"/>
+                      <prop type="object" name="enableNoPublicIp" cls="WorkspaceCustomBooleanParameter_read">
+                        <prop readOnly="True" type="string" name="type">
+                          <enum>
+                            <item value="Bool"/>
+                            <item value="Object"/>
+                            <item value="String"/>
+                          </enum>
+                        </prop>
+                        <prop type="boolean" name="value" required="True"/>
+                      </prop>
+                      <prop type="object" name="encryption">
+                        <prop readOnly="True" type="string" name="type">
+                          <enum>
+                            <item value="Bool"/>
+                            <item value="Object"/>
+                            <item value="String"/>
+                          </enum>
+                        </prop>
+                        <prop type="object" name="value">
+                          <prop type="string" name="KeyName"/>
+                          <prop type="string" name="keySource">
+                            <default value="Default"/>
+                            <enum>
+                              <item value="Default"/>
+                              <item value="Microsoft.Keyvault"/>
+                            </enum>
+                          </prop>
+                          <prop type="string" name="keyvaulturi"/>
+                          <prop type="string" name="keyversion"/>
+                        </prop>
+                      </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerBackendPoolName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerId"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="natGatewayName"/>
+                      <prop type="@WorkspaceCustomBooleanParameter_read" name="prepareEncryption"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="publicIpName"/>
+                      <prop type="@WorkspaceCustomBooleanParameter_read" name="requireInfrastructureEncryption"/>
+                      <prop readOnly="True" type="object" name="resourceTags">
+                        <prop readOnly="True" type="string" name="type">
+                          <enum>
+                            <item value="Bool"/>
+                            <item value="Object"/>
+                            <item value="String"/>
+                          </enum>
+                        </prop>
+                        <prop readOnly="True" type="object" name="value" required="True">
+                          <additionalProp readOnly="True"/>
+                        </prop>
+                      </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountSkuName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="vnetAddressPrefix"/>
+                    </prop>
+                    <prop readOnly="True" type="string" name="provisioningState">
+                      <enum>
+                        <item value="Accepted"/>
+                        <item value="Canceled"/>
+                        <item value="Created"/>
+                        <item value="Creating"/>
+                        <item value="Deleted"/>
+                        <item value="Deleting"/>
+                        <item value="Failed"/>
+                        <item value="Ready"/>
+                        <item value="Running"/>
+                        <item value="Succeeded"/>
+                        <item value="Updating"/>
+                      </enum>
+                    </prop>
+                    <prop type="object" name="storageAccountIdentity">
+                      <prop readOnly="True" type="uuid" name="principalId"/>
+                      <prop readOnly="True" type="uuid" name="tenantId"/>
+                      <prop readOnly="True" type="string" name="type"/>
+                    </prop>
+                    <prop type="string" name="uiDefinitionUri"/>
+                    <prop type="@CreatedBy_read" name="updatedBy"/>
+                    <prop readOnly="True" type="string" name="workspaceId"/>
+                    <prop readOnly="True" type="string" name="workspaceUrl"/>
+                  </prop>
+                  <prop type="object" name="sku">
+                    <prop type="string" name="name" required="True"/>
+                    <prop type="string" name="tier"/>
+                  </prop>
+                  <prop type="object" name="tags">
+                    <additionalProp>
+                      <item type="string"/>
+                    </additionalProp>
+                  </prop>
+                  <prop readOnly="True" type="string" name="type"/>
+                </schema>
+              </json>
+            </body>
+          </response>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <output type="object" ref="$Instance" clientFlatten="True"/>
+    </command>
+    <command name="delete" version="2018-04-01">
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfQ==/V/MjAxOC0wNC0wMQ=="/>
+      <argGroup name="">
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="string" var="$Path.workspaceName" options="workspace-name name n" required="True" idPart="name">
+          <help short="The name of the workspace."/>
+          <format maxLength="64" minLength="3"/>
+        </arg>
+      </argGroup>
+      <operation operationId="Workspaces_Delete">
+        <longRunning finalStateVia="azure-async-operation"/>
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}">
+          <request method="delete">
+            <path>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format pattern="^[-\w\._\(\)]+$" maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True"/>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="64" minLength="3"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2018-04-01"/>
+              </const>
+            </query>
+          </request>
+          <response statusCode="200 202 204"/>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+    </command>
+    <command name="create" version="2018-04-01">
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfQ==/V/MjAxOC0wNC0wMQ=="/>
+      <argGroup name="">
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="string" var="$Path.workspaceName" options="workspace-name name n" required="True" idPart="name">
+          <help short="The name of the workspace."/>
+          <format maxLength="64" minLength="3"/>
+        </arg>
+        <arg type="ResourceLocation" var="$parameters.location" options="location l" required="True">
+          <help short="The geo-location where the resource lives"/>
+        </arg>
+        <arg type="array<object>" var="$parameters.properties.authorizations" options="authorizations" singularOptions="authorization">
+          <help short="The workspace provider authorizations."/>
+          <item type="object">
+            <arg type="uuid" var="$parameters.properties.authorizations[].principalId" options="principal-id" required="True">
+              <help short="The provider's principal identifier. This is the identity that the provider will use to call ARM to manage the workspace resources."/>
+            </arg>
+            <arg type="uuid" var="$parameters.properties.authorizations[].roleDefinitionId" options="role-definition-id" required="True">
+              <help short="The provider's role definition identifier. This role will define all the permissions that the provider must have on the workspace's container resource group. This role definition cannot have permission to delete the resource group."/>
+            </arg>
+          </item>
+        </arg>
+        <arg type="string" var="$parameters.properties.managedResourceGroupId" options="managed-resource-group-id" required="True">
+          <help short="The managed resource group Id."/>
+        </arg>
+        <arg type="object" var="$parameters.properties.parameters" options="parameters">
+          <help short="The workspace's custom parameters."/>
+          <arg type="object" var="$parameters.properties.parameters.amlWorkspaceId" options="aml-workspace-id" cls="WorkspaceCustomStringParameter_create">
+            <help short="The ID of a Azure Machine Learning workspace to link with Databricks workspace"/>
+            <arg type="string" var="@WorkspaceCustomStringParameter_create.value" options="value" required="True">
+              <help short="The value which should be used for this field."/>
+            </arg>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_create" var="$parameters.properties.parameters.customPrivateSubnetName" options="custom-private-subnet-name">
+            <help short="The name of the Private Subnet within the Virtual Network"/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_create" var="$parameters.properties.parameters.customPublicSubnetName" options="custom-public-subnet-name">
+            <help short="The name of a Public Subnet within the Virtual Network"/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_create" var="$parameters.properties.parameters.customVirtualNetworkId" options="custom-virtual-network-id">
+            <help short="The ID of a Virtual Network where this Databricks Cluster should be created"/>
+          </arg>
+          <arg type="object" var="$parameters.properties.parameters.enableNoPublicIp" options="enable-no-public-ip" cls="WorkspaceCustomBooleanParameter_create">
+            <help short="Should the Public IP be Disabled?"/>
+            <arg type="boolean" var="@WorkspaceCustomBooleanParameter_create.value" options="value" required="True">
+              <help short="The value which should be used for this field."/>
+            </arg>
+          </arg>
+          <arg type="object" var="$parameters.properties.parameters.encryption" options="encryption">
+            <help short="Contains the encryption details for Customer-Managed Key (CMK) enabled workspace."/>
+            <arg type="object" var="$parameters.properties.parameters.encryption.value" options="value">
+              <help short="The value which should be used for this field."/>
+              <arg type="string" var="$parameters.properties.parameters.encryption.value.KeyName" options="key-name">
+                <help short="The name of KeyVault key."/>
+              </arg>
+              <arg type="string" var="$parameters.properties.parameters.encryption.value.keySource" options="key-source">
+                <help short="The encryption keySource (provider). Possible values (case-insensitive):  Default, Microsoft.Keyvault"/>
+                <default value="Default"/>
+                <enum>
+                  <item name="Default" value="Default"/>
+                  <item name="Microsoft.Keyvault" value="Microsoft.Keyvault"/>
+                </enum>
+              </arg>
+              <arg type="string" var="$parameters.properties.parameters.encryption.value.keyvaulturi" options="keyvaulturi">
+                <help short="The Uri of KeyVault."/>
+              </arg>
+              <arg type="string" var="$parameters.properties.parameters.encryption.value.keyversion" options="keyversion">
+                <help short="The version of KeyVault key."/>
+              </arg>
+            </arg>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_create" var="$parameters.properties.parameters.loadBalancerBackendPoolName" options="load-balancer-backend-pool-name">
+            <help short="Name of the outbound Load Balancer Backend Pool for Secure Cluster Connectivity (No Public IP)."/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_create" var="$parameters.properties.parameters.loadBalancerId" options="load-balancer-id">
+            <help short="Resource URI of Outbound Load balancer for Secure Cluster Connectivity (No Public IP) workspace."/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_create" var="$parameters.properties.parameters.natGatewayName" options="nat-gateway-name">
+            <help short="Name of the NAT gateway for Secure Cluster Connectivity (No Public IP) workspace subnets."/>
+          </arg>
+          <arg type="@WorkspaceCustomBooleanParameter_create" var="$parameters.properties.parameters.prepareEncryption" options="prepare-encryption">
+            <help short="Prepare the workspace for encryption. Enables the Managed Identity for managed storage account."/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_create" var="$parameters.properties.parameters.publicIpName" options="public-ip-name">
+            <help short="Name of the Public IP for No Public IP workspace with managed vNet."/>
+          </arg>
+          <arg type="@WorkspaceCustomBooleanParameter_create" var="$parameters.properties.parameters.requireInfrastructureEncryption" options="require-infrastructure-encryption">
+            <help short="A boolean indicating whether or not the DBFS root file system will be enabled with secondary layer of encryption with platform managed keys for data at rest."/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_create" var="$parameters.properties.parameters.storageAccountName" options="storage-account-name">
+            <help short="Default DBFS storage account name."/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_create" var="$parameters.properties.parameters.storageAccountSkuName" options="storage-account-sku-name">
+            <help short="Storage account SKU name, ex: Standard_GRS, Standard_LRS. Refer https://aka.ms/storageskus for valid inputs."/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_create" var="$parameters.properties.parameters.vnetAddressPrefix" options="vnet-address-prefix">
+            <help short="Address prefix for Managed virtual network. Default value for this input is 10.139."/>
+          </arg>
+        </arg>
+        <arg type="string" var="$parameters.properties.uiDefinitionUri" options="ui-definition-uri">
+          <help short="The blob URI where the UI definition file is located."/>
+        </arg>
+        <arg type="object" var="$parameters.sku" options="sku">
+          <help short="The SKU of the resource."/>
+          <arg type="string" var="$parameters.sku.name" options="name" required="True">
+            <help short="The SKU name."/>
+          </arg>
+          <arg type="string" var="$parameters.sku.tier" options="tier">
+            <help short="The SKU tier."/>
+          </arg>
+        </arg>
+        <arg type="object" var="$parameters.tags" options="tags">
+          <help short="Resource tags."/>
+          <additionalProp>
+            <item type="string"/>
+          </additionalProp>
+        </arg>
+      </argGroup>
+      <operation operationId="Workspaces_CreateOrUpdate">
+        <longRunning finalStateVia="azure-async-operation"/>
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}">
+          <request method="put">
+            <path>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format pattern="^[-\w\._\(\)]+$" maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True"/>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="64" minLength="3"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2018-04-01"/>
+              </const>
+            </query>
+            <body>
+              <json>
+                <schema type="object" name="parameters" clientFlatten="True">
+                  <prop type="ResourceLocation" name="location" arg="$parameters.location" required="True"/>
+                  <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="array<object>" name="authorizations" arg="$parameters.properties.authorizations">
+                      <item type="object">
+                        <prop type="uuid" name="principalId" arg="$parameters.properties.authorizations[].principalId" required="True"/>
+                        <prop type="uuid" name="roleDefinitionId" arg="$parameters.properties.authorizations[].roleDefinitionId" required="True"/>
+                      </item>
+                    </prop>
+                    <prop type="string" name="managedResourceGroupId" arg="$parameters.properties.managedResourceGroupId" required="True"/>
+                    <prop type="object" name="parameters" arg="$parameters.properties.parameters">
+                      <prop type="object" name="amlWorkspaceId" arg="$parameters.properties.parameters.amlWorkspaceId" cls="WorkspaceCustomStringParameter_create">
+                        <prop type="string" name="value" arg="@WorkspaceCustomStringParameter_create.value" required="True"/>
+                      </prop>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="customPrivateSubnetName" arg="$parameters.properties.parameters.customPrivateSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="customPublicSubnetName" arg="$parameters.properties.parameters.customPublicSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="customVirtualNetworkId" arg="$parameters.properties.parameters.customVirtualNetworkId"/>
+                      <prop type="object" name="enableNoPublicIp" arg="$parameters.properties.parameters.enableNoPublicIp" cls="WorkspaceCustomBooleanParameter_create">
+                        <prop type="boolean" name="value" arg="@WorkspaceCustomBooleanParameter_create.value" required="True"/>
+                      </prop>
+                      <prop type="object" name="encryption" arg="$parameters.properties.parameters.encryption">
+                        <prop type="object" name="value" arg="$parameters.properties.parameters.encryption.value">
+                          <prop type="string" name="KeyName" arg="$parameters.properties.parameters.encryption.value.KeyName"/>
+                          <prop type="string" name="keySource" arg="$parameters.properties.parameters.encryption.value.keySource">
+                            <default value="Default"/>
+                            <enum>
+                              <item value="Default"/>
+                              <item value="Microsoft.Keyvault"/>
+                            </enum>
+                          </prop>
+                          <prop type="string" name="keyvaulturi" arg="$parameters.properties.parameters.encryption.value.keyvaulturi"/>
+                          <prop type="string" name="keyversion" arg="$parameters.properties.parameters.encryption.value.keyversion"/>
+                        </prop>
+                      </prop>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="loadBalancerBackendPoolName" arg="$parameters.properties.parameters.loadBalancerBackendPoolName"/>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="loadBalancerId" arg="$parameters.properties.parameters.loadBalancerId"/>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="natGatewayName" arg="$parameters.properties.parameters.natGatewayName"/>
+                      <prop type="@WorkspaceCustomBooleanParameter_create" name="prepareEncryption" arg="$parameters.properties.parameters.prepareEncryption"/>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="publicIpName" arg="$parameters.properties.parameters.publicIpName"/>
+                      <prop type="@WorkspaceCustomBooleanParameter_create" name="requireInfrastructureEncryption" arg="$parameters.properties.parameters.requireInfrastructureEncryption"/>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="storageAccountName" arg="$parameters.properties.parameters.storageAccountName"/>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="storageAccountSkuName" arg="$parameters.properties.parameters.storageAccountSkuName"/>
+                      <prop type="@WorkspaceCustomStringParameter_create" name="vnetAddressPrefix" arg="$parameters.properties.parameters.vnetAddressPrefix"/>
+                    </prop>
+                    <prop type="string" name="uiDefinitionUri" arg="$parameters.properties.uiDefinitionUri"/>
+                  </prop>
+                  <prop type="object" name="sku" arg="$parameters.sku">
+                    <prop type="string" name="name" arg="$parameters.sku.name" required="True"/>
+                    <prop type="string" name="tier" arg="$parameters.sku.tier"/>
+                  </prop>
+                  <prop type="object" name="tags" arg="$parameters.tags">
+                    <additionalProp>
+                      <item type="string"/>
+                    </additionalProp>
+                  </prop>
+                </schema>
+              </json>
+            </body>
+          </request>
+          <response statusCode="200 201">
+            <body>
+              <json var="$Instance">
+                <schema type="object">
+                  <prop readOnly="True" type="ResourceId" name="id">
+                    <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"/>
+                  </prop>
+                  <prop type="ResourceLocation" name="location" required="True"/>
+                  <prop readOnly="True" type="string" name="name"/>
+                  <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="array<object>" name="authorizations">
+                      <item type="object">
+                        <prop type="uuid" name="principalId" required="True"/>
+                        <prop type="uuid" name="roleDefinitionId" required="True"/>
+                      </item>
+                    </prop>
+                    <prop type="object" name="createdBy" cls="CreatedBy_read">
+                      <prop readOnly="True" type="uuid" name="applicationId"/>
+                      <prop readOnly="True" type="uuid" name="oid"/>
+                      <prop readOnly="True" type="string" name="puid"/>
+                    </prop>
+                    <prop readOnly="True" type="dateTime" name="createdDateTime"/>
+                    <prop type="string" name="managedResourceGroupId" required="True"/>
+                    <prop type="object" name="parameters">
+                      <prop type="object" name="amlWorkspaceId" cls="WorkspaceCustomStringParameter_read">
+                        <prop readOnly="True" type="string" name="type">
+                          <enum>
+                            <item value="Bool"/>
+                            <item value="Object"/>
+                            <item value="String"/>
+                          </enum>
+                        </prop>
+                        <prop type="string" name="value" required="True"/>
+                      </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customPrivateSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customPublicSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customVirtualNetworkId"/>
+                      <prop type="object" name="enableNoPublicIp" cls="WorkspaceCustomBooleanParameter_read">
+                        <prop readOnly="True" type="string" name="type">
+                          <enum>
+                            <item value="Bool"/>
+                            <item value="Object"/>
+                            <item value="String"/>
+                          </enum>
+                        </prop>
+                        <prop type="boolean" name="value" required="True"/>
+                      </prop>
+                      <prop type="object" name="encryption">
+                        <prop readOnly="True" type="string" name="type">
+                          <enum>
+                            <item value="Bool"/>
+                            <item value="Object"/>
+                            <item value="String"/>
+                          </enum>
+                        </prop>
+                        <prop type="object" name="value">
+                          <prop type="string" name="KeyName"/>
+                          <prop type="string" name="keySource">
+                            <default value="Default"/>
+                            <enum>
+                              <item value="Default"/>
+                              <item value="Microsoft.Keyvault"/>
+                            </enum>
+                          </prop>
+                          <prop type="string" name="keyvaulturi"/>
+                          <prop type="string" name="keyversion"/>
+                        </prop>
+                      </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerBackendPoolName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerId"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="natGatewayName"/>
+                      <prop type="@WorkspaceCustomBooleanParameter_read" name="prepareEncryption"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="publicIpName"/>
+                      <prop type="@WorkspaceCustomBooleanParameter_read" name="requireInfrastructureEncryption"/>
+                      <prop readOnly="True" type="object" name="resourceTags">
+                        <prop readOnly="True" type="string" name="type">
+                          <enum>
+                            <item value="Bool"/>
+                            <item value="Object"/>
+                            <item value="String"/>
+                          </enum>
+                        </prop>
+                        <prop readOnly="True" type="object" name="value" required="True">
+                          <additionalProp readOnly="True"/>
+                        </prop>
+                      </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountSkuName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="vnetAddressPrefix"/>
+                    </prop>
+                    <prop readOnly="True" type="string" name="provisioningState">
+                      <enum>
+                        <item value="Accepted"/>
+                        <item value="Canceled"/>
+                        <item value="Created"/>
+                        <item value="Creating"/>
+                        <item value="Deleted"/>
+                        <item value="Deleting"/>
+                        <item value="Failed"/>
+                        <item value="Ready"/>
+                        <item value="Running"/>
+                        <item value="Succeeded"/>
+                        <item value="Updating"/>
+                      </enum>
+                    </prop>
+                    <prop type="object" name="storageAccountIdentity">
+                      <prop readOnly="True" type="uuid" name="principalId"/>
+                      <prop readOnly="True" type="uuid" name="tenantId"/>
+                      <prop readOnly="True" type="string" name="type"/>
+                    </prop>
+                    <prop type="string" name="uiDefinitionUri"/>
+                    <prop type="@CreatedBy_read" name="updatedBy"/>
+                    <prop readOnly="True" type="string" name="workspaceId"/>
+                    <prop readOnly="True" type="string" name="workspaceUrl"/>
+                  </prop>
+                  <prop type="object" name="sku">
+                    <prop type="string" name="name" required="True"/>
+                    <prop type="string" name="tier"/>
+                  </prop>
+                  <prop type="object" name="tags">
+                    <additionalProp>
+                      <item type="string"/>
+                    </additionalProp>
+                  </prop>
+                  <prop readOnly="True" type="string" name="type"/>
+                </schema>
+              </json>
+            </body>
+          </response>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <output type="object" ref="$Instance" clientFlatten="True"/>
+    </command>
+    <command name="update" version="2018-04-01">
+      <resource id="/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}" version="2018-04-01" swagger="mgmt-plane/databricks/ResourceProviders/Microsoft.Databricks/Paths/L3N1YnNjcmlwdGlvbnMve3N1YnNjcmlwdGlvbklkfS9yZXNvdXJjZUdyb3Vwcy97cmVzb3VyY2VHcm91cE5hbWV9L3Byb3ZpZGVycy9NaWNyb3NvZnQuRGF0YWJyaWNrcy93b3Jrc3BhY2VzL3t3b3Jrc3BhY2VOYW1lfQ==/V/MjAxOC0wNC0wMQ=="/>
+      <argGroup name="">
+        <arg type="ResourceGroupName" var="$Path.resourceGroupName" options="resource-group g" required="True" idPart="resource_group"/>
+        <arg type="SubscriptionId" var="$Path.subscriptionId" options="subscription" required="True" idPart="subscription"/>
+        <arg type="string" var="$Path.workspaceName" options="workspace-name name n" required="True" idPart="name">
+          <help short="The name of the workspace."/>
+          <format maxLength="64" minLength="3"/>
+        </arg>
+        <arg type="array<object>" var="$parameters.properties.authorizations" options="authorizations" singularOptions="authorization">
+          <help short="The workspace provider authorizations."/>
+          <item type="object">
+            <arg type="uuid" var="$parameters.properties.authorizations[].principalId" options="principal-id" required="True">
+              <help short="The provider's principal identifier. This is the identity that the provider will use to call ARM to manage the workspace resources."/>
+            </arg>
+            <arg type="uuid" var="$parameters.properties.authorizations[].roleDefinitionId" options="role-definition-id" required="True">
+              <help short="The provider's role definition identifier. This role will define all the permissions that the provider must have on the workspace's container resource group. This role definition cannot have permission to delete the resource group."/>
+            </arg>
+          </item>
+        </arg>
+        <arg type="string" var="$parameters.properties.managedResourceGroupId" options="managed-resource-group-id" required="True">
+          <help short="The managed resource group Id."/>
+        </arg>
+        <arg type="object" var="$parameters.properties.parameters" options="parameters">
+          <help short="The workspace's custom parameters."/>
+          <arg type="object" var="$parameters.properties.parameters.amlWorkspaceId" options="aml-workspace-id" cls="WorkspaceCustomStringParameter_update">
+            <help short="The ID of a Azure Machine Learning workspace to link with Databricks workspace"/>
+            <arg type="string" var="@WorkspaceCustomStringParameter_update.value" options="value" required="True">
+              <help short="The value which should be used for this field."/>
+            </arg>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_update" var="$parameters.properties.parameters.customPrivateSubnetName" options="custom-private-subnet-name">
+            <help short="The name of the Private Subnet within the Virtual Network"/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_update" var="$parameters.properties.parameters.customPublicSubnetName" options="custom-public-subnet-name">
+            <help short="The name of a Public Subnet within the Virtual Network"/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_update" var="$parameters.properties.parameters.customVirtualNetworkId" options="custom-virtual-network-id">
+            <help short="The ID of a Virtual Network where this Databricks Cluster should be created"/>
+          </arg>
+          <arg type="object" var="$parameters.properties.parameters.enableNoPublicIp" options="enable-no-public-ip" cls="WorkspaceCustomBooleanParameter_update">
+            <help short="Should the Public IP be Disabled?"/>
+            <arg type="boolean" var="@WorkspaceCustomBooleanParameter_update.value" options="value" required="True">
+              <help short="The value which should be used for this field."/>
+            </arg>
+          </arg>
+          <arg type="object" var="$parameters.properties.parameters.encryption" options="encryption">
+            <help short="Contains the encryption details for Customer-Managed Key (CMK) enabled workspace."/>
+            <arg type="object" var="$parameters.properties.parameters.encryption.value" options="value">
+              <help short="The value which should be used for this field."/>
+              <arg type="string" var="$parameters.properties.parameters.encryption.value.KeyName" options="key-name">
+                <help short="The name of KeyVault key."/>
+              </arg>
+              <arg type="string" var="$parameters.properties.parameters.encryption.value.keySource" options="key-source">
+                <help short="The encryption keySource (provider). Possible values (case-insensitive):  Default, Microsoft.Keyvault"/>
+                <default value="Default"/>
+                <enum>
+                  <item name="Default" value="Default"/>
+                  <item name="Microsoft.Keyvault" value="Microsoft.Keyvault"/>
+                </enum>
+              </arg>
+              <arg type="string" var="$parameters.properties.parameters.encryption.value.keyvaulturi" options="keyvaulturi">
+                <help short="The Uri of KeyVault."/>
+              </arg>
+              <arg type="string" var="$parameters.properties.parameters.encryption.value.keyversion" options="keyversion">
+                <help short="The version of KeyVault key."/>
+              </arg>
+            </arg>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_update" var="$parameters.properties.parameters.loadBalancerBackendPoolName" options="load-balancer-backend-pool-name">
+            <help short="Name of the outbound Load Balancer Backend Pool for Secure Cluster Connectivity (No Public IP)."/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_update" var="$parameters.properties.parameters.loadBalancerId" options="load-balancer-id">
+            <help short="Resource URI of Outbound Load balancer for Secure Cluster Connectivity (No Public IP) workspace."/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_update" var="$parameters.properties.parameters.natGatewayName" options="nat-gateway-name">
+            <help short="Name of the NAT gateway for Secure Cluster Connectivity (No Public IP) workspace subnets."/>
+          </arg>
+          <arg type="@WorkspaceCustomBooleanParameter_update" var="$parameters.properties.parameters.prepareEncryption" options="prepare-encryption">
+            <help short="Prepare the workspace for encryption. Enables the Managed Identity for managed storage account."/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_update" var="$parameters.properties.parameters.publicIpName" options="public-ip-name">
+            <help short="Name of the Public IP for No Public IP workspace with managed vNet."/>
+          </arg>
+          <arg type="@WorkspaceCustomBooleanParameter_update" var="$parameters.properties.parameters.requireInfrastructureEncryption" options="require-infrastructure-encryption">
+            <help short="A boolean indicating whether or not the DBFS root file system will be enabled with secondary layer of encryption with platform managed keys for data at rest."/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_update" var="$parameters.properties.parameters.storageAccountName" options="storage-account-name">
+            <help short="Default DBFS storage account name."/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_update" var="$parameters.properties.parameters.storageAccountSkuName" options="storage-account-sku-name">
+            <help short="Storage account SKU name, ex: Standard_GRS, Standard_LRS. Refer https://aka.ms/storageskus for valid inputs."/>
+          </arg>
+          <arg type="@WorkspaceCustomStringParameter_update" var="$parameters.properties.parameters.vnetAddressPrefix" options="vnet-address-prefix">
+            <help short="Address prefix for Managed virtual network. Default value for this input is 10.139."/>
+          </arg>
+        </arg>
+        <arg type="string" var="$parameters.properties.uiDefinitionUri" options="ui-definition-uri">
+          <help short="The blob URI where the UI definition file is located."/>
+        </arg>
+        <arg type="object" var="$parameters.sku" options="sku">
+          <help short="The SKU of the resource."/>
+          <arg type="string" var="$parameters.sku.name" options="name" required="True">
+            <help short="The SKU name."/>
+          </arg>
+          <arg type="string" var="$parameters.sku.tier" options="tier">
+            <help short="The SKU tier."/>
+          </arg>
+        </arg>
+        <arg type="object" var="$parameters.tags" options="tags">
+          <help short="Resource tags."/>
+          <additionalProp>
+            <item type="string"/>
+          </additionalProp>
+        </arg>
+      </argGroup>
+      <operation operationId="Workspaces_Get">
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}">
+          <request method="get">
+            <path>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format pattern="^[-\w\._\(\)]+$" maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True"/>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="64" minLength="3"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2018-04-01"/>
+              </const>
+            </query>
+          </request>
+          <response statusCode="200">
+            <body>
+              <json var="$Instance">
+                <schema type="object" cls="Workspace_read">
+                  <prop readOnly="True" type="ResourceId" name="id">
+                    <format template="/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"/>
+                  </prop>
+                  <prop type="ResourceLocation" name="location" required="True"/>
+                  <prop readOnly="True" type="string" name="name"/>
+                  <prop type="object" name="properties" required="True" clientFlatten="True">
+                    <prop type="array<object>" name="authorizations">
+                      <item type="object">
+                        <prop type="uuid" name="principalId" required="True"/>
+                        <prop type="uuid" name="roleDefinitionId" required="True"/>
+                      </item>
+                    </prop>
+                    <prop type="object" name="createdBy" cls="CreatedBy_read">
+                      <prop readOnly="True" type="uuid" name="applicationId"/>
+                      <prop readOnly="True" type="uuid" name="oid"/>
+                      <prop readOnly="True" type="string" name="puid"/>
+                    </prop>
+                    <prop readOnly="True" type="dateTime" name="createdDateTime"/>
+                    <prop type="string" name="managedResourceGroupId" required="True"/>
+                    <prop type="object" name="parameters">
+                      <prop type="object" name="amlWorkspaceId" cls="WorkspaceCustomStringParameter_read">
+                        <prop readOnly="True" type="string" name="type">
+                          <enum>
+                            <item value="Bool"/>
+                            <item value="Object"/>
+                            <item value="String"/>
+                          </enum>
+                        </prop>
+                        <prop type="string" name="value" required="True"/>
+                      </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customPrivateSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customPublicSubnetName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="customVirtualNetworkId"/>
+                      <prop type="object" name="enableNoPublicIp" cls="WorkspaceCustomBooleanParameter_read">
+                        <prop readOnly="True" type="string" name="type">
+                          <enum>
+                            <item value="Bool"/>
+                            <item value="Object"/>
+                            <item value="String"/>
+                          </enum>
+                        </prop>
+                        <prop type="boolean" name="value" required="True"/>
+                      </prop>
+                      <prop type="object" name="encryption">
+                        <prop readOnly="True" type="string" name="type">
+                          <enum>
+                            <item value="Bool"/>
+                            <item value="Object"/>
+                            <item value="String"/>
+                          </enum>
+                        </prop>
+                        <prop type="object" name="value">
+                          <prop type="string" name="KeyName"/>
+                          <prop type="string" name="keySource">
+                            <default value="Default"/>
+                            <enum>
+                              <item value="Default"/>
+                              <item value="Microsoft.Keyvault"/>
+                            </enum>
+                          </prop>
+                          <prop type="string" name="keyvaulturi"/>
+                          <prop type="string" name="keyversion"/>
+                        </prop>
+                      </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerBackendPoolName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="loadBalancerId"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="natGatewayName"/>
+                      <prop type="@WorkspaceCustomBooleanParameter_read" name="prepareEncryption"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="publicIpName"/>
+                      <prop type="@WorkspaceCustomBooleanParameter_read" name="requireInfrastructureEncryption"/>
+                      <prop readOnly="True" type="object" name="resourceTags">
+                        <prop readOnly="True" type="string" name="type">
+                          <enum>
+                            <item value="Bool"/>
+                            <item value="Object"/>
+                            <item value="String"/>
+                          </enum>
+                        </prop>
+                        <prop readOnly="True" type="object" name="value" required="True">
+                          <additionalProp readOnly="True"/>
+                        </prop>
+                      </prop>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountSkuName"/>
+                      <prop type="@WorkspaceCustomStringParameter_read" name="vnetAddressPrefix"/>
+                    </prop>
+                    <prop readOnly="True" type="string" name="provisioningState">
+                      <enum>
+                        <item value="Accepted"/>
+                        <item value="Canceled"/>
+                        <item value="Created"/>
+                        <item value="Creating"/>
+                        <item value="Deleted"/>
+                        <item value="Deleting"/>
+                        <item value="Failed"/>
+                        <item value="Ready"/>
+                        <item value="Running"/>
+                        <item value="Succeeded"/>
+                        <item value="Updating"/>
+                      </enum>
+                    </prop>
+                    <prop type="object" name="storageAccountIdentity">
+                      <prop readOnly="True" type="uuid" name="principalId"/>
+                      <prop readOnly="True" type="uuid" name="tenantId"/>
+                      <prop readOnly="True" type="string" name="type"/>
+                    </prop>
+                    <prop type="string" name="uiDefinitionUri"/>
+                    <prop type="@CreatedBy_read" name="updatedBy"/>
+                    <prop readOnly="True" type="string" name="workspaceId"/>
+                    <prop readOnly="True" type="string" name="workspaceUrl"/>
+                  </prop>
+                  <prop type="object" name="sku">
+                    <prop type="string" name="name" required="True"/>
+                    <prop type="string" name="tier"/>
+                  </prop>
+                  <prop type="object" name="tags">
+                    <additionalProp>
+                      <item type="string"/>
+                    </additionalProp>
+                  </prop>
+                  <prop readOnly="True" type="string" name="type"/>
+                </schema>
+              </json>
+            </body>
+          </response>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <operation>
+        <instanceUpdate instance="$Instance">
+          <json>
+            <schema type="object" name="parameters" clientFlatten="True">
+              <prop type="object" name="properties" required="True" clientFlatten="True">
+                <prop type="array<object>" name="authorizations" arg="$parameters.properties.authorizations">
+                  <item type="object">
+                    <prop type="uuid" name="principalId" arg="$parameters.properties.authorizations[].principalId" required="True"/>
+                    <prop type="uuid" name="roleDefinitionId" arg="$parameters.properties.authorizations[].roleDefinitionId" required="True"/>
+                  </item>
+                </prop>
+                <prop type="string" name="managedResourceGroupId" arg="$parameters.properties.managedResourceGroupId" required="True"/>
+                <prop type="object" name="parameters" arg="$parameters.properties.parameters">
+                  <prop type="object" name="amlWorkspaceId" arg="$parameters.properties.parameters.amlWorkspaceId" cls="WorkspaceCustomStringParameter_update">
+                    <prop type="string" name="value" arg="@WorkspaceCustomStringParameter_update.value" required="True"/>
+                  </prop>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="customPrivateSubnetName" arg="$parameters.properties.parameters.customPrivateSubnetName"/>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="customPublicSubnetName" arg="$parameters.properties.parameters.customPublicSubnetName"/>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="customVirtualNetworkId" arg="$parameters.properties.parameters.customVirtualNetworkId"/>
+                  <prop type="object" name="enableNoPublicIp" arg="$parameters.properties.parameters.enableNoPublicIp" cls="WorkspaceCustomBooleanParameter_update">
+                    <prop type="boolean" name="value" arg="@WorkspaceCustomBooleanParameter_update.value" required="True"/>
+                  </prop>
+                  <prop type="object" name="encryption" arg="$parameters.properties.parameters.encryption">
+                    <prop type="object" name="value" arg="$parameters.properties.parameters.encryption.value">
+                      <prop type="string" name="KeyName" arg="$parameters.properties.parameters.encryption.value.KeyName"/>
+                      <prop type="string" name="keySource" arg="$parameters.properties.parameters.encryption.value.keySource">
+                        <default value="Default"/>
+                        <enum>
+                          <item value="Default"/>
+                          <item value="Microsoft.Keyvault"/>
+                        </enum>
+                      </prop>
+                      <prop type="string" name="keyvaulturi" arg="$parameters.properties.parameters.encryption.value.keyvaulturi"/>
+                      <prop type="string" name="keyversion" arg="$parameters.properties.parameters.encryption.value.keyversion"/>
+                    </prop>
+                  </prop>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="loadBalancerBackendPoolName" arg="$parameters.properties.parameters.loadBalancerBackendPoolName"/>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="loadBalancerId" arg="$parameters.properties.parameters.loadBalancerId"/>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="natGatewayName" arg="$parameters.properties.parameters.natGatewayName"/>
+                  <prop type="@WorkspaceCustomBooleanParameter_update" name="prepareEncryption" arg="$parameters.properties.parameters.prepareEncryption"/>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="publicIpName" arg="$parameters.properties.parameters.publicIpName"/>
+                  <prop type="@WorkspaceCustomBooleanParameter_update" name="requireInfrastructureEncryption" arg="$parameters.properties.parameters.requireInfrastructureEncryption"/>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="storageAccountName" arg="$parameters.properties.parameters.storageAccountName"/>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="storageAccountSkuName" arg="$parameters.properties.parameters.storageAccountSkuName"/>
+                  <prop type="@WorkspaceCustomStringParameter_update" name="vnetAddressPrefix" arg="$parameters.properties.parameters.vnetAddressPrefix"/>
+                </prop>
+                <prop type="string" name="uiDefinitionUri" arg="$parameters.properties.uiDefinitionUri"/>
+              </prop>
+              <prop type="object" name="sku" arg="$parameters.sku">
+                <prop type="string" name="name" arg="$parameters.sku.name" required="True"/>
+                <prop type="string" name="tier" arg="$parameters.sku.tier"/>
+              </prop>
+              <prop type="object" name="tags" arg="$parameters.tags">
+                <additionalProp>
+                  <item type="string"/>
+                </additionalProp>
+              </prop>
+            </schema>
+          </json>
+        </instanceUpdate>
+      </operation>
+      <operation operationId="Workspaces_CreateOrUpdate">
+        <longRunning finalStateVia="azure-async-operation"/>
+        <http path="/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}">
+          <request method="put">
+            <path>
+              <param type="string" name="resourceGroupName" arg="$Path.resourceGroupName" required="True">
+                <format pattern="^[-\w\._\(\)]+$" maxLength="90" minLength="1"/>
+              </param>
+              <param type="string" name="subscriptionId" arg="$Path.subscriptionId" required="True"/>
+              <param type="string" name="workspaceName" arg="$Path.workspaceName" required="True">
+                <format maxLength="64" minLength="3"/>
+              </param>
+            </path>
+            <query>
+              <const readOnly="True" const="True" type="string" name="api-version" required="True">
+                <default value="2018-04-01"/>
+              </const>
+            </query>
+            <body>
+              <json ref="$Instance"/>
+            </body>
+          </request>
+          <response statusCode="200 201">
+            <body>
+              <json var="$Instance">
+                <schema type="@Workspace_read"/>
+              </json>
+            </body>
+          </response>
+          <response isError="True">
+            <body>
+              <json>
+                <schema type="@ODataV4Format"/>
+              </json>
+            </body>
+          </response>
+        </http>
+      </operation>
+      <output type="object" ref="$Instance" clientFlatten="True"/>
+    </command>
+  </commandGroup>
+</CodeGen>
