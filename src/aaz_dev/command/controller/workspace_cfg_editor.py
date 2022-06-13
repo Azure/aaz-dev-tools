@@ -226,13 +226,8 @@ class WorkspaceCfgEditor(CfgReader):
         main_editor.reformat()
         return main_editor
 
-    def find_arg(self, *cmd_names, arg_var):
-        command = self.find_command(*cmd_names)
-        _, arg = self._find_arg_var_in_command(command, arg_var)
-        return arg
-
-    def update_arg(self, *cmd_names, arg_var, **kwargs):
-        arg = self.find_arg(*cmd_names, arg_var=arg_var)
+    def update_arg_by_var(self, *cmd_names, arg_var, **kwargs):
+        _, arg = self.find_arg_by_var(*cmd_names, arg_var=arg_var)
         if not arg:
             return None
         if isinstance(arg, CMDArg):
@@ -269,7 +264,7 @@ class WorkspaceCfgEditor(CfgReader):
 
     def flatten_arg(self, *cmd_names, arg_var, sub_args_options=None):
         command = self.find_command(*cmd_names)
-        parent, arg = self._find_arg_var_in_command(command, arg_var)
+        parent, _, arg = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
         if not arg:
             raise exceptions.InvalidAPIUsage(
                 f"Argument not exist: {arg.var}")
@@ -297,7 +292,7 @@ class WorkspaceCfgEditor(CfgReader):
 
     def unflatten_arg(self, *cmd_names, arg_var, options, help, sub_args_options=None):
         command = self.find_command(*cmd_names)
-        parent, arg = self._find_arg_var_in_command(command, arg_var)
+        parent, _, arg = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
         if arg:
             raise exceptions.InvalidAPIUsage(
                 f"Argument already exist: {arg_var}")
@@ -333,77 +328,6 @@ class WorkspaceCfgEditor(CfgReader):
 
     def reformat(self):
         self.cfg.reformat()
-
-    def _find_arg_var_in_command(self, command, arg_var):
-        if command is None:
-            return None, None
-        for arg_group in command.arg_groups:
-            parent, arg = self._find_arg_var_in_arg_group(arg_group, arg_var)
-            if not arg and not parent:
-                continue
-            return parent, arg
-
-    def _find_arg_var_in_arg_group(self, arg_group, arg_var):
-        assert isinstance(arg_group, CMDArgGroup)
-        for arg in arg_group.args:
-            if arg.var == arg_var:
-                return arg_group, arg
-            elif arg.var.startswith(f'{arg_var}.'):
-                # arg_var already been flattened
-                return arg_group, None
-            elif isinstance(arg, CMDObjectArg):
-                parent, sub_arg = self._find_arg_var_in_object_arg(arg, arg.var, arg_var)
-                if sub_arg or parent:
-                    return parent, sub_arg
-            elif isinstance(arg, CMDArrayArg):
-                parent, sub_arg = self._find_arg_var_in_array_arg(arg, arg.var, arg_var)
-                if sub_arg or parent:
-                    return parent, sub_arg
-        return None, None
-
-    def _find_arg_var_in_object_arg(self, object_arg, object_var, arg_var):
-        assert isinstance(object_arg, CMDObjectArgBase)
-        assert object_var != arg_var
-
-        if object_arg.args:
-            for arg in object_arg.args:
-                if arg.var == arg_var:
-                    return object_arg, arg
-                elif arg.var.startswith(f'{arg_var}.'):
-                    # arg_var already been flattened
-                    return object_arg, None
-                elif isinstance(arg, CMDObjectArg):
-                    parent, sub_arg = self._find_arg_var_in_object_arg(arg, arg.var, arg_var)
-                    if sub_arg or parent:
-                        return parent, sub_arg
-                elif isinstance(arg, CMDArrayArg):
-                    parent, sub_arg = self._find_arg_var_in_array_arg(arg, arg.var, arg_var)
-                    if sub_arg or parent:
-                        return parent, sub_arg
-
-        if object_arg.additional_props and object_arg.additional_props.item:
-            item = object_arg.additional_props.item
-            item_var = object_var + "{}"
-            if item_var == arg_var:
-                return object_arg, item
-            return self._find_arg_var_in_item(item, item_var, arg_var)
-        return None, None
-
-    def _find_arg_var_in_array_arg(self, array_arg, array_var, arg_var):
-        assert isinstance(array_arg, CMDArrayArgBase)
-        item = array_arg.item
-        item_var = array_var + "[]"
-        if item_var == arg_var:
-            return array_arg, item
-        return self._find_arg_var_in_item(item, item_var, arg_var)
-
-    def _find_arg_var_in_item(self, item, item_var, arg_var):
-        assert item_var != arg_var
-        if isinstance(item, CMDObjectArgBase):
-            return self._find_arg_var_in_object_arg(item, item_var, arg_var)
-        elif isinstance(item, CMDArrayArgBase):
-            return self._find_arg_var_in_array_arg(item, item_var, arg_var)
-        return None, None
 
     def _parse_command_http_op_url_args(self, command):
         operation_required_args = {}
@@ -657,3 +581,20 @@ class WorkspaceCfgEditor(CfgReader):
             new_operations.append(operation)
 
         return common_required_args, conditions, new_operations
+
+    def find_similar_args(self, arg_var, arg):
+        for cmd_names, command in self.iter_commands():
+            _, similar_arg = self.find_arg_by_var(*cmd_names, arg_var=arg_var)
+            if similar_arg is None:
+                continue
+            if set(similar_arg.options) != set(arg.options):
+                continue
+            if similar_arg.stage != arg.stage:
+                continue
+            if similar_arg.hide != arg.hide:
+                continue
+            if similar_arg.type != arg.type:
+                # handle cls argument
+                if not (similar_arg.type.startswith("@") and similar_arg.type == getattr(arg, 'cls', None) or
+                        arg.type.startswith("@") and arg.type == getattr(similar_arg, 'cls', None)):
+                    continue

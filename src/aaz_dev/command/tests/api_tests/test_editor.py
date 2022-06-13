@@ -1332,7 +1332,7 @@ class APIEditorTest(CommandTestCase):
                 'version': '2021-12-01',
                 'resources': [
                     {'id': swagger_resource_path_to_resource_id(
-                        '/providers/Microsoft.EdgeOrder/operations')},
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses')},
                 ]
             })
             self.assertTrue(rv.status_code == 200)
@@ -1349,7 +1349,7 @@ class APIEditorTest(CommandTestCase):
             })
             self.assertTrue(rv.status_code == 200)
 
-            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/operation", json={
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address", json={
                 "help": {
                     "short": "Manage edge order.",
                 },
@@ -1357,7 +1357,7 @@ class APIEditorTest(CommandTestCase):
             })
             self.assertTrue(rv.status_code == 200)
 
-            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/operation/Leaves/list", json={
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/edge-order/address/Leaves/list", json={
                 "help": {
                     "short": "Manage edge order.",
                 },
