@@ -4,6 +4,7 @@ from cli.templates import get_templates
 from command.model.configuration import CMDCommand
 from utils.case import to_snack_case
 from .az_command_generator import AzCommandGenerator
+from utils import exceptions
 
 
 class AzProfileGenerator:
@@ -123,9 +124,13 @@ class AzProfileGenerator:
         assert isinstance(command.cfg, CMDCommand)
         file_name = self._command_file_name(command.names[-1])
         tmpl = get_templates()['aaz']['command']['_cmd.py']
-        data = tmpl.render(
-            leaf=AzCommandGenerator(command)
-        )
+        try:
+            data = tmpl.render(
+                leaf=AzCommandGenerator(command)
+            )
+        except exceptions.InvalidAPIUsage as err:
+            err.message = f"CommandGenerationError: {' '.join(command.names)}: {err.message}"
+            raise err
         self._update_file(
             profile_folder_name, *self._command_group_folder_names(*command.names[:-1]), file_name, data=data)
 
