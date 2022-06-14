@@ -643,32 +643,43 @@ class WorkspaceManager:
             self.aaz_specs.update_command_group_by_ws(ws_node)
         self.aaz_specs.save()
 
-    def find_similar_args(self, arg):
+    def find_similar_args(self, *cmd_names, arg):
         assert isinstance(arg, CMDArg)
         results = {}
-        for leaf in self.iter_command_tree_leaves():
-            cfg_editor = self.load_cfg_editor_by_command(leaf)
-            similar_arg, similar_arg_idx = cfg_editor.find_arg_by_var(*leaf.names, arg_var=arg.var)
-            if similar_arg is None:
-                continue
-            if cfg_editor.is_similar_args(arg, similar_arg):
-                assert leaf.names not in results
-                results[leaf.names] = {
-                    "leaf": leaf,
-                    "args": [similar_arg_idx],
-                }
         if arg.var.startswith("@"):
-            # find similar for arg cls
             cls_name = arg.var[1:].replace('[', '.[').replace('{', '.{').split('.')[0]
-            for cmd_names, result in results.items():
-                leaf = result['leaf']
+            leaf = self.find_command_tree_leaf(*cmd_names)
+            assert leaf is not None
+            cfg_editor = self.load_cfg_editor_by_command(leaf)
+            _, cls_arg, cls_arg_idx = cfg_editor.find_arg_cls_definition(*cmd_names, cls_name=cls_name)
+            _, arg_idx = cfg_editor.find_arg_by_var(*cmd_names, arg_var=arg.var)
+            assert arg_idx.startswith(cls_arg_idx)
+            idx_suffix = arg_idx[len(cls_arg_idx):]
+
+            cls_name_prefix = cls_name.split('_')[0]
+            for leaf in self.iter_command_tree_leaves():
                 cfg_editor = self.load_cfg_editor_by_command(leaf)
-                _, _, def_arg_idx = cfg_editor.find_arg_cls_definition(*cmd_names, cls_name=cls_name)
-                arg_idx = result['args'][0]
-                assert arg_idx.startswith(def_arg_idx)
-                idx_suffix = arg_idx[len(def_arg_idx):]
-                for _, _, ref_arg_idx in cfg_editor.iter_arg_cls_reference(*cmd_names, cls_name=cls_name):
-                    similar_arg_idx = ref_arg_idx + idx_suffix
-                    result['args'].append(similar_arg_idx)
-        results = {cmd_names: result['args'] for cmd_names, result in results.items()}
+                for _, similar_cls_arg, similar_cls_arg_idx in cfg_editor.iter_arg_cls_definition(
+                        *leaf.names, cls_name_prefix=cls_name_prefix):
+                    if not cfg_editor.is_similar_args(similar_cls_arg, cls_arg):
+                        continue
+
+                    key = tuple(leaf.names)
+                    if key not in results:
+                        results[key] = []
+                    results[key].append(similar_cls_arg_idx + idx_suffix)
+
+                    for _, _, ref_arg_idx in cfg_editor.iter_arg_cls_reference(*leaf.names, cls_name=similar_cls_arg.cls):
+                        results[key].append(ref_arg_idx + idx_suffix)
+
+        else:
+            for leaf in self.iter_command_tree_leaves():
+                cfg_editor = self.load_cfg_editor_by_command(leaf)
+                similar_arg, similar_arg_idx = cfg_editor.find_arg_by_var(*leaf.names, arg_var=arg.var)
+                if similar_arg is None:
+                    continue
+                if cfg_editor.is_similar_args(arg, similar_arg):
+                    key = tuple(leaf.names)
+                    assert key not in results
+                    results[key] = [similar_arg_idx]
         return results

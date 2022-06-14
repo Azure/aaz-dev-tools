@@ -338,7 +338,7 @@ def editor_workspace_command_argument_find_similar(name, node_names, leaf_name, 
         raise exceptions.ResourceNotFind("Argument not exist")
 
     result = []
-    for cmd_names, arg_idx_list in manager.find_similar_args(arg):
+    for cmd_names, arg_idx_list in manager.find_similar_args(*leaf.names, arg=arg).items():
         result.append({
             "command": cmd_names,
             "args": sorted(arg_idx_list)

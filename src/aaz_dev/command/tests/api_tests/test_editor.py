@@ -1686,3 +1686,130 @@ class APIEditorTest(CommandTestCase):
 
             rv = c.post(f"{ws_url}/Generate")
             self.assertTrue(rv.status_code == 200)
+
+    @workspace_name("test_workspace_command_argument_find_similar")
+    def test_workspace_command_argument_find_similar(self, ws_name):
+        api_version = '2021-04-01-preview'
+        module = 'databricks'
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum.Mgmt,
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws = rv.get_json()
+            ws_url = ws['url']
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': module,
+                'version': api_version,
+                'resources': [
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/providers/Microsoft.Databricks/workspaces')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings/{peeringName}')},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces/{workspaceName}/virtualNetworkPeerings')},
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/databricks/Rename", json={
+                'name': "data-bricks"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/virtual-network-peering/Rename", json={
+                'name': "data-bricks workspace vnet-peering"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            manager = WorkspaceManager(ws_name)
+            manager.load()
+            leaf = manager.find_command_tree_leaf('data-bricks', 'workspace', 'create')
+            cfg_editor = manager.load_cfg_editor_by_command(leaf)
+
+            arg = cfg_editor.find_arg(*leaf.names, idx='workspace-name')
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Arguments/{arg.var}/FindSimilar")
+            self.assertTrue(rv.status_code == 200)
+            results = rv.get_json()
+            assert len(results) == 4
+            for i in results:
+                assert i['args'] == ['workspace-name']
+                assert i['command'][:2] == ['data-bricks', 'workspace']
+                assert i['command'][2] in {'create', 'delete', 'show', 'update'}
+
+            arg = cfg_editor.find_arg(*leaf.names, idx='resource-group')
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Arguments/{arg.var}/FindSimilar")
+            self.assertTrue(rv.status_code == 200)
+            results = rv.get_json()
+            assert len(results) == 10
+            for i in results:
+                assert i['args'] == ['resource-group']
+
+            arg = cfg_editor.find_arg(*leaf.names, idx='authorizations[].principal-id')
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Arguments/{arg.var}/FindSimilar")
+            self.assertTrue(rv.status_code == 200)
+            results = rv.get_json()
+            assert len(results) == 2
+            for i in results:
+                assert i['args'] == ['authorizations[].principal-id']
+                assert i['command'][:2] == ['data-bricks', 'workspace']
+                assert i['command'][2] in {'create', 'update'}
+
+            arg = cfg_editor.find_arg(*leaf.names, idx='parameters.aml-workspace-id')
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Arguments/{arg.var}/FindSimilar")
+            self.assertTrue(rv.status_code == 200)
+            results = rv.get_json()
+            assert len(results) == 2
+            for i in results:
+                assert i['args'] == ['parameters.aml-workspace-id']
+                assert i['command'][:2] == ['data-bricks', 'workspace']
+                assert i['command'][2] in {'create', 'update'}
+
+            arg = cfg_editor.find_arg(*leaf.names, idx='parameters.aml-workspace-id.value')
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Arguments/{arg.var}/FindSimilar")
+            self.assertTrue(rv.status_code == 200)
+            results = rv.get_json()
+            assert len(results) == 2
+            for i in results:
+                assert len(i['args']) == 11
+                for k in i['args']:
+                    assert k.endswith('.value')
+                assert i['command'][:2] == ['data-bricks', 'workspace']
+                assert i['command'][2] in {'create', 'update'}
+
+            leaf = manager.find_command_tree_leaf('data-bricks', 'workspace', 'vnet-peering', 'create')
+            cfg_editor = manager.load_cfg_editor_by_command(leaf)
+
+            arg = cfg_editor.find_arg(*leaf.names, idx='databricks-address-space')
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/create/Arguments/{arg.var}/FindSimilar")
+            self.assertTrue(rv.status_code == 200)
+            results = rv.get_json()
+            assert len(results) == 2
+            for i in results:
+                assert i['args'] == ['databricks-address-space']
+                assert i['command'][:3] == ['data-bricks', 'workspace', 'vnet-peering']
+                assert i['command'][3] in {'create', 'update'}
+
+            arg = cfg_editor.find_arg(*leaf.names, idx='databricks-address-space.address-prefixes')
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/create/Arguments/{arg.var}/FindSimilar")
+            self.assertTrue(rv.status_code == 200)
+            results = rv.get_json()
+            assert len(results) == 2
+            for i in results:
+                assert len(i['args']) == 2
+                assert 'databricks-address-space.address-prefixes' in i['args']
+                assert 'remote-address-space.address-prefixes' in i['args']
+                assert i['command'][:3] == ['data-bricks', 'workspace', 'vnet-peering']
+                assert i['command'][3] in {'create', 'update'}
+

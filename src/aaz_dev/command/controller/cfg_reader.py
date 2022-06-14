@@ -288,7 +288,7 @@ class CfgReader:
         assert isinstance(cls_name, str) and not cls_name.startswith('@')
 
         def arg_filter(_parent, _arg, _arg_idx, _arg_var):
-            if hasattr(_arg, 'cls') and _arg.cls == cls_name:
+            if getattr(_arg, 'cls', None) == cls_name:
                 # find match
                 return (_parent, _arg, _arg_idx), True
             return None, False
@@ -306,6 +306,28 @@ class CfgReader:
                 arg_idx = self.arg_idx_to_str(arg_idx)
             return parent, arg, arg_idx
         return None, None, None
+
+    def iter_arg_cls_definition(self, *cmd_names, cls_name_prefix):
+        command = self.find_command(*cmd_names)
+        if not command:
+            return
+
+        assert isinstance(cls_name_prefix, str) and not cls_name_prefix.startswith('@')
+        if not cls_name_prefix.endswith('_'):
+            cls_name_prefix += '_'
+
+        def arg_filter(_parent, _arg, _arg_idx, _arg_var):
+            _cls = getattr(_arg, 'cls', None)
+            if _cls is not None and _cls.startswith(cls_name_prefix):
+                # find match
+                return (_parent, _arg, _arg_idx), False
+            return None, False
+
+        for arg_group in command.arg_groups:
+            for parent, arg, arg_idx in self._iter_args_in_group(arg_group, arg_filter=arg_filter):
+                if arg_idx:
+                    arg_idx = self.arg_idx_to_str(arg_idx)
+                yield parent, arg, arg_idx
 
     def iter_arg_cls_reference(self, *cmd_names, cls_name):
         command = self.find_command(*cmd_names)
@@ -332,8 +354,8 @@ class CfgReader:
     def _iter_args_in_group(self, arg_group, arg_filter):
         assert isinstance(arg_group, CMDArgGroup)
         for arg in arg_group.args:
-
-            match, ret = arg_filter(arg_group, arg, [arg.options[0]], arg.var)
+            arg_option = max(arg.options, key=lambda item: len(item))
+            match, ret = arg_filter(arg_group, arg, [arg_option], arg.var)
             if match:
                 yield match
             if ret:
@@ -342,15 +364,15 @@ class CfgReader:
             if isinstance(arg, (CMDObjectArg, CMDArrayArg)):
                 for sub_parent, sub_arg, sub_arg_idx in self._iter_sub_args(arg, arg.var, arg_filter):
                     if sub_arg_idx:
-                        sub_arg_idx = [arg.options[0], *sub_arg_idx]
+                        sub_arg_idx = [arg_option, *sub_arg_idx]
                     yield sub_parent, sub_arg, sub_arg_idx
 
     def _iter_sub_args(self, parent, arg_var, arg_filter):
         if isinstance(parent, CMDObjectArgBase):
             if parent.args:
                 for arg in parent.args:
-
-                    match, ret = arg_filter(parent, arg, [arg.options[0]], arg.var)
+                    arg_option = max(arg.options, key=lambda item: len(item))
+                    match, ret = arg_filter(parent, arg, [arg_option], arg.var)
                     if match:
                         yield match
                     if ret:
@@ -359,7 +381,7 @@ class CfgReader:
                     if isinstance(arg, (CMDObjectArg, CMDArrayArg)):
                         for sub_parent, sub_arg, sub_arg_idx in self._iter_sub_args(arg, arg.var, arg_filter):
                             if sub_arg:
-                                sub_arg_idx = [arg.options[0], *sub_arg_idx]
+                                sub_arg_idx = [arg_option, *sub_arg_idx]
                             yield sub_parent, sub_arg, sub_arg_idx
 
             if parent.additional_props and parent.additional_props.item:
