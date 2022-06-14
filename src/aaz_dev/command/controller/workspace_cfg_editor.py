@@ -227,7 +227,7 @@ class WorkspaceCfgEditor(CfgReader):
         return main_editor
 
     def update_arg_by_var(self, *cmd_names, arg_var, **kwargs):
-        _, arg = self.find_arg_by_var(*cmd_names, arg_var=arg_var)
+        arg, _ = self.find_arg_by_var(*cmd_names, arg_var=arg_var)
         if not arg:
             return None
         if isinstance(arg, CMDArg):
@@ -264,7 +264,7 @@ class WorkspaceCfgEditor(CfgReader):
 
     def flatten_arg(self, *cmd_names, arg_var, sub_args_options=None):
         command = self.find_command(*cmd_names)
-        parent, _, arg = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
+        parent, arg, _ = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
         if not arg:
             raise exceptions.InvalidAPIUsage(
                 f"Argument not exist: {arg.var}")
@@ -292,7 +292,7 @@ class WorkspaceCfgEditor(CfgReader):
 
     def unflatten_arg(self, *cmd_names, arg_var, options, help, sub_args_options=None):
         command = self.find_command(*cmd_names)
-        parent, _, arg = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
+        parent, arg, _ = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
         if arg:
             raise exceptions.InvalidAPIUsage(
                 f"Argument already exist: {arg_var}")
@@ -581,20 +581,3 @@ class WorkspaceCfgEditor(CfgReader):
             new_operations.append(operation)
 
         return common_required_args, conditions, new_operations
-
-    def find_similar_args(self, arg_var, arg):
-        for cmd_names, command in self.iter_commands():
-            _, similar_arg = self.find_arg_by_var(*cmd_names, arg_var=arg_var)
-            if similar_arg is None:
-                continue
-            if set(similar_arg.options) != set(arg.options):
-                continue
-            if similar_arg.stage != arg.stage:
-                continue
-            if similar_arg.hide != arg.hide:
-                continue
-            if similar_arg.type != arg.type:
-                # handle cls argument
-                if not (similar_arg.type.startswith("@") and similar_arg.type == getattr(arg, 'cls', None) or
-                        arg.type.startswith("@") and arg.type == getattr(similar_arg, 'cls', None)):
-                    continue

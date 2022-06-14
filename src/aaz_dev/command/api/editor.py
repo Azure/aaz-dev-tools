@@ -236,7 +236,7 @@ def editor_workspace_command_argument(name, node_names, leaf_name, arg_var):
     if not leaf:
         raise exceptions.ResourceNotFind("Command not exist")
     cfg_editor = manager.load_cfg_editor_by_command(leaf)
-    _, arg = cfg_editor.find_arg_by_var(*node_names, leaf_name, arg_var=arg_var)
+    arg, _ = cfg_editor.find_arg_by_var(*node_names, leaf_name, arg_var=arg_var)
     if not arg:
         raise exceptions.ResourceNotFind("Argument not exit")
 
@@ -246,7 +246,7 @@ def editor_workspace_command_argument(name, node_names, leaf_name, arg_var):
         data = request.get_json()
         cfg_editor.update_arg_by_var(*node_names, leaf_name, arg_var=arg_var, **data)
         manager.save()
-        _, arg = cfg_editor.find_arg_by_var(*node_names, leaf_name, arg_var=arg_var)
+        arg, _ = cfg_editor.find_arg_by_var(*node_names, leaf_name, arg_var=arg_var)
         result = arg.to_primitive()
     else:
         raise NotImplementedError()
@@ -268,7 +268,7 @@ def editor_workspace_command_argument_flatten(name, node_names, leaf_name, arg_v
     cfg_editor = manager.load_cfg_editor_by_command(leaf)
 
     # flatten argument variant
-    _, arg = cfg_editor.find_arg_by_var(*node_names, leaf_name, arg_var=arg_var)
+    arg, _ = cfg_editor.find_arg_by_var(*node_names, leaf_name, arg_var=arg_var)
     if not arg:
         raise exceptions.ResourceNotFind("Argument not exit")
     data = request.get_json()
@@ -293,7 +293,7 @@ def editor_workspace_command_argument_unflatten(name, node_names, leaf_name, arg
         raise exceptions.ResourceNotFind("Command not exist")
     cfg_editor = manager.load_cfg_editor_by_command(leaf)
 
-    parent, _, arg = cfg_editor.find_arg_with_parent_by_var(*node_names, leaf_name, arg_var=arg_var)
+    parent, arg, _ = cfg_editor.find_arg_with_parent_by_var(*node_names, leaf_name, arg_var=arg_var)
     if arg:
         raise exceptions.ResourceConflict("Argument already exit")
     elif not parent:
@@ -304,7 +304,7 @@ def editor_workspace_command_argument_unflatten(name, node_names, leaf_name, arg
     cfg_editor.unflatten_arg(*node_names, leaf_name, arg_var=arg_var, options=data['options'], help=data['help'],
                              sub_args_options=sub_args_options)
     manager.save()
-    _, arg = cfg_editor.find_arg_by_var(*node_names, leaf_name, arg_var=arg_var)
+    arg, _ = cfg_editor.find_arg_by_var(*node_names, leaf_name, arg_var=arg_var)
     result = arg.to_primitive()
 
     return jsonify(result)
@@ -333,12 +333,18 @@ def editor_workspace_command_argument_find_similar(name, node_names, leaf_name, 
         raise exceptions.ResourceNotFind("Command not exist")
     cfg_editor = manager.load_cfg_editor_by_command(leaf)
 
-    _, arg = cfg_editor.find_arg_by_var(*node_names, leaf_name, arg_var=arg_var)
+    arg, _ = cfg_editor.find_arg_by_var(*node_names, leaf_name, arg_var=arg_var)
     if not arg:
         raise exceptions.ResourceNotFind("Argument not exist")
-    
 
-    pass
+    result = []
+    for cmd_names, arg_idx_list in manager.find_similar_args(arg):
+        result.append({
+            "command": cmd_names,
+            "args": sorted(arg_idx_list)
+        })
+    result.sort(key=lambda item: item['command'])
+    return jsonify(result)
 
 
 # command tree resource operations

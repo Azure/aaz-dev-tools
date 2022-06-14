@@ -11,7 +11,7 @@ from utils import exceptions
 from utils.config import Config
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor
-from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample
+from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg
 
 logger = logging.getLogger('backend')
 
@@ -642,3 +642,33 @@ class WorkspaceManager:
                 continue
             self.aaz_specs.update_command_group_by_ws(ws_node)
         self.aaz_specs.save()
+
+    def find_similar_args(self, arg):
+        assert isinstance(arg, CMDArg)
+        results = {}
+        for leaf in self.iter_command_tree_leaves():
+            cfg_editor = self.load_cfg_editor_by_command(leaf)
+            similar_arg, similar_arg_idx = cfg_editor.find_arg_by_var(*leaf.names, arg_var=arg.var)
+            if similar_arg is None:
+                continue
+            if cfg_editor.is_similar_args(arg, similar_arg):
+                assert leaf.names not in results
+                results[leaf.names] = {
+                    "leaf": leaf,
+                    "args": [similar_arg_idx],
+                }
+        if arg.var.startswith("@"):
+            # find similar for arg cls
+            cls_name = arg.var[1:].replace('[', '.[').replace('{', '.{').split('.')[0]
+            for cmd_names, result in results.items():
+                leaf = result['leaf']
+                cfg_editor = self.load_cfg_editor_by_command(leaf)
+                _, _, def_arg_idx = cfg_editor.find_arg_cls_definition(*cmd_names, cls_name=cls_name)
+                arg_idx = result['args'][0]
+                assert arg_idx.startswith(def_arg_idx)
+                idx_suffix = arg_idx[len(def_arg_idx):]
+                for _, _, ref_arg_idx in cfg_editor.iter_arg_cls_reference(*cmd_names, cls_name=cls_name):
+                    similar_arg_idx = ref_arg_idx + idx_suffix
+                    result['args'].append(similar_arg_idx)
+        results = {cmd_names: result['args'] for cmd_names, result in results.items()}
+        return results

@@ -30,10 +30,10 @@ class ArgumentsGenerationTest(CommandTestCase):
         cfg_editor = manager.load_cfg_editor_by_command(leaf)
         command = cfg_editor.find_command(*cmd_names)
         arg_var = '$addressResource.properties.contactDetails'
-        _, arg = cfg_editor.find_arg_by_var(*cmd_names, arg_var=arg_var)
+        arg, _ = cfg_editor.find_arg_by_var(*cmd_names, arg_var=arg_var)
         assert arg is not None
         assert not arg.required
-        _, arg = cfg_editor.find_arg_by_var(*cmd_names, arg_var='$addressResource.properties.contactDetails.contactName')
+        arg, _ = cfg_editor.find_arg_by_var(*cmd_names, arg_var='$addressResource.properties.contactDetails.contactName')
         assert arg.required is True
 
         properties = command.operations[0].http.request.body.json.schema.props[1]
@@ -47,16 +47,16 @@ class ArgumentsGenerationTest(CommandTestCase):
         cfg_editor = manager.load_cfg_editor_by_command(leaf)
         command = cfg_editor.find_command(*cmd_names)
 
-        _, arg = cfg_editor.find_arg_by_var(*cmd_names, arg_var=arg_var)
+        arg, _ = cfg_editor.find_arg_by_var(*cmd_names, arg_var=arg_var)
         assert arg is None
 
         properties = command.operations[0].http.request.body.json.schema.props[1]
         assert properties.props[0].arg is None
 
-        _, arg = cfg_editor.find_arg_by_var(*cmd_names, arg_var='$addressResource.properties.contactDetails.phoneExtension')
+        arg, _ = cfg_editor.find_arg_by_var(*cmd_names, arg_var='$addressResource.properties.contactDetails.phoneExtension')
         assert arg.options == ['phone-ext']
 
-        _, arg = cfg_editor.find_arg_by_var(*cmd_names, arg_var='$addressResource.properties.contactDetails.contactName')
+        arg, _ = cfg_editor.find_arg_by_var(*cmd_names, arg_var='$addressResource.properties.contactDetails.contactName')
         assert not arg.required
 
         group = command.arg_groups[2]
@@ -74,10 +74,10 @@ class ArgumentsGenerationTest(CommandTestCase):
         assert properties.props[0].arg == arg_var
         assert len(command.arg_groups) == 3
 
-        _, arg = cfg_editor.find_arg_by_var(*cmd_names, arg_var='$addressResource.properties.contactDetails.phoneExtension')
+        arg, _ = cfg_editor.find_arg_by_var(*cmd_names, arg_var='$addressResource.properties.contactDetails.phoneExtension')
         assert arg.options == ['phone-ext']
         assert arg.group is None
-        _, arg = cfg_editor.find_arg_by_var(*cmd_names, arg_var='$addressResource.properties.contactDetails.contactName')
+        arg, _ = cfg_editor.find_arg_by_var(*cmd_names, arg_var='$addressResource.properties.contactDetails.contactName')
         assert arg.required is True
 
     @workspace_name("test_flatten_object_argument_invalid")
@@ -103,10 +103,10 @@ class ArgumentsGenerationTest(CommandTestCase):
         cfg_editor = manager.load_cfg_editor_by_command(leaf)
         command = cfg_editor.find_command(*cmd_names)
         arg_var = '$addressResource.properties.contactDetails'
-        _, arg = cfg_editor.find_arg_by_var(*cmd_names, arg_var=arg_var)
+        arg, _ = cfg_editor.find_arg_by_var(*cmd_names, arg_var=arg_var)
         assert arg is not None
         assert not arg.required
-        _, arg = cfg_editor.find_arg_by_var(
+        arg, _ = cfg_editor.find_arg_by_var(
             *cmd_names, arg_var='$addressResource.properties.contactDetails.contactName')
         assert arg.required is True
 

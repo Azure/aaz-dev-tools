@@ -1,7 +1,7 @@
 import json
 
 from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDInstanceUpdateOperation, \
-    CMDCommandGroup, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDObjectArgBase, CMDArrayArgBase
+    CMDCommandGroup, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDObjectArgBase, CMDArrayArgBase, CMDArg
 
 
 class CfgReader:
@@ -109,7 +109,7 @@ class CfgReader:
                     return command
         return None
 
-    # command
+    # command specific
 
     def find_arg(self, *cmd_names, idx):
         command = self.find_command(*cmd_names)
@@ -188,8 +188,8 @@ class CfgReader:
         return None
 
     def find_arg_by_var(self, *cmd_names, arg_var):
-        _, arg_idx, arg = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
-        return arg_idx, arg
+        _, arg, arg_idx = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
+        return arg, arg_idx
 
     def find_arg_with_parent_by_var(self, *cmd_names, arg_var):
         """
@@ -208,99 +208,200 @@ class CfgReader:
             return None, None, None
         assert isinstance(arg_var, str), f"invalid arg_var type: {type(arg_var)}"
 
+        def arg_filter(_parent, _arg, _arg_idx, _arg_var):
+            if arg_var == _arg_var:
+                # find match
+                return (_parent, _arg, _arg_idx), True
+            elif _arg_var.startswith(f'{arg_var}.'):
+                # arg_var already been flattened
+                return (_parent, None, None), True
+            return None, False
+
         for arg_group in command.arg_groups:
-            parent, arg_idx, arg = self._find_arg_in_group_by_var(arg_group, arg_var)
-            if arg or parent:
+            matches = [match for match in self._iter_args_in_group(
+                arg_group, arg_filter=arg_filter
+            )]
+            if not matches:
+                continue
+            assert len(matches) == 1
+
+            parent, arg, arg_idx = matches[0]
+            if arg_idx:
+                arg_idx = self.arg_idx_to_str(arg_idx)
+            return parent, arg, arg_idx
+        return None, None, None
+
+    @classmethod
+    def is_similar_args(cls, arg1, arg2):
+        if set(arg1.options) != set(arg2.options):
+            return False
+        if arg1.stage != arg2.stage:
+            return False
+        if arg1.hide != arg2.hide:
+            return False
+
+        return cls._is_similar_args_in_base(arg1, arg2)
+
+    @classmethod
+    def _is_similar_args_in_base(cls, arg1, arg2):
+        if isinstance(arg1, CMDArrayArgBase) and isinstance(arg2, CMDArrayArgBase):
+            return cls._is_similar_args_in_base(arg1.item, arg2.item)
+        elif isinstance(arg1, CMDObjectArgBase) and isinstance(arg2, CMDObjectArgBase):
+            # verify args
+            if (not arg1.args) != (not arg2.args):
+                return False
+            if arg1.args:
+                if len(arg1.args) != len(arg2.args):
+                    return False
+                for sub_arg1 in arg1.args:
+                    find_match = False
+                    for sub_arg2 in arg2.args:
+                        if cls.is_similar_args(sub_arg1, sub_arg2):
+                            find_match = True
+                            break
+                    if not find_match:
+                        return False
+
+            # verify additional props
+            if (arg1.additional_props is not None) != (arg2.additional_props is not None):
+                return False
+            if arg1.additional_props:
+                if (arg1.additional_props.item is not None) != (arg2.additional_props.item is not None):
+                    return False
+                if arg1.additional_props.item:
+                    if not cls._is_similar_args_in_base(arg1.additional_props.item, arg2.additional_props.item):
+                        return False
+        elif arg1.type != arg2.type:
+            # handle cls argument
+            if arg1.type.stratswith("@") and arg1.type == getattr(arg2, 'cls', None):
+                return True
+            if arg2.type.startswith("@") and arg2.type == getattr(arg1, 'cls', None):
+                return True
+            return False
+        return True
+
+    def find_arg_cls_definition(self, *cmd_names, cls_name):
+        command = self.find_command(*cmd_names)
+        if not command:
+            return None, None, None
+
+        assert isinstance(cls_name, str) and not cls_name.startswith('@')
+
+        def arg_filter(_parent, _arg, _arg_idx, _arg_var):
+            if hasattr(_arg, 'cls') and _arg.cls == cls_name:
+                # find match
+                return (_parent, _arg, _arg_idx), True
+            return None, False
+
+        for arg_group in command.arg_groups:
+            matches = [match for match in self._iter_args_in_group(
+                arg_group, arg_filter=arg_filter
+            )]
+            if not matches:
+                continue
+            assert len(matches) == 1
+
+            parent, arg, arg_idx = matches[0]
+            if arg_idx:
+                arg_idx = self.arg_idx_to_str(arg_idx)
+            return parent, arg, arg_idx
+        return None, None, None
+
+    def iter_arg_cls_reference(self, *cmd_names, cls_name):
+        command = self.find_command(*cmd_names)
+        if not command:
+            return
+
+        assert isinstance(cls_name, str) and not cls_name.startswith('@')
+
+        cls_type_name = f"@{cls_name}"
+
+        def arg_filter(_parent, _arg, _arg_idx, _arg_var):
+            if _arg.type == cls_type_name:
+                # find match
+                return (_parent, _arg, _arg_idx), False
+            return None, False
+
+        for arg_group in command.arg_groups:
+            for parent, arg, arg_idx in self._iter_args_in_group(
+                    arg_group, arg_filter=arg_filter):
                 if arg_idx:
                     arg_idx = self.arg_idx_to_str(arg_idx)
-                return parent, arg_idx, arg
-        return None, None, None
+                yield parent, arg, arg_idx
 
-    def _find_arg_in_group_by_var(self, arg_group, arg_var):
+    def _iter_args_in_group(self, arg_group, arg_filter):
         assert isinstance(arg_group, CMDArgGroup)
         for arg in arg_group.args:
-            if arg.var == arg_var:
-                # find match
-                arg_idx = [arg.options[0]]
-                return arg_group, arg_idx, arg
-            elif arg.var.startswith(f'{arg_var}.'):
-                # arg_var already been flattened
-                return arg_group, None, None
-            elif isinstance(arg, (CMDObjectArg, CMDArrayArg)):
-                sub_parent, sub_arg_idx, sub_arg = self._find_sub_arg_by_var(arg, arg.var, arg_var)
-                if sub_arg or sub_parent:
-                    if sub_arg:
-                        sub_arg_idx = [arg.options[0], *sub_arg_idx]
-                    return sub_parent, sub_arg_idx, sub_arg
-        return None, None, None
 
-    def _find_sub_arg_by_var(self, parent, arg_var, sub_arg_var):
-        assert arg_var != sub_arg_var
+            match, ret = arg_filter(arg_group, arg, [arg.options[0]], arg.var)
+            if match:
+                yield match
+            if ret:
+                return
+
+            if isinstance(arg, (CMDObjectArg, CMDArrayArg)):
+                for sub_parent, sub_arg, sub_arg_idx in self._iter_sub_args(arg, arg.var, arg_filter):
+                    if sub_arg_idx:
+                        sub_arg_idx = [arg.options[0], *sub_arg_idx]
+                    yield sub_parent, sub_arg, sub_arg_idx
+
+    def _iter_sub_args(self, parent, arg_var, arg_filter):
         if isinstance(parent, CMDObjectArgBase):
             if parent.args:
                 for arg in parent.args:
-                    if arg.var == sub_arg_var:
-                        # find match
-                        arg_idx = [arg.options[0]]
-                        return parent, arg_idx, arg
-                    elif arg.var.startswith(f'{sub_arg_var}.'):
-                        # sub_arg_var already been flattened
-                        return parent, None, None
-                    elif isinstance(arg, (CMDObjectArg, CMDArrayArg)):
-                        sub_parent, sub_arg_idx, sub_arg = self._find_sub_arg_by_var(arg, arg.var, sub_arg_var)
-                        if sub_arg or sub_parent:
+
+                    match, ret = arg_filter(parent, arg, [arg.options[0]], arg.var)
+                    if match:
+                        yield match
+                    if ret:
+                        return
+
+                    if isinstance(arg, (CMDObjectArg, CMDArrayArg)):
+                        for sub_parent, sub_arg, sub_arg_idx in self._iter_sub_args(arg, arg.var, arg_filter):
                             if sub_arg:
                                 sub_arg_idx = [arg.options[0], *sub_arg_idx]
-                            return sub_parent, sub_arg_idx, sub_arg
+                            yield sub_parent, sub_arg, sub_arg_idx
 
             if parent.additional_props and parent.additional_props.item:
                 item = parent.additional_props.item
                 item_var = arg_var + "{}"
-                if item_var == sub_arg_var:
-                    # find match
-                    item_idx = ['{}']
-                    return parent, item_idx, item
 
-                sub_parent, sub_arg_idx, sub_arg = self._find_sub_arg_by_var(item, item_var, sub_arg_var)
-                if sub_arg or sub_parent:
+                match, ret = arg_filter(parent, item, ["{}"], item_var)
+                if match:
+                    yield match
+                if ret:
+                    return
+
+                for sub_parent, sub_arg, sub_arg_idx in self._iter_sub_args(item, item_var, arg_filter):
                     if sub_arg:
                         sub_arg_idx = ['{}', *sub_arg_idx]
-                    return sub_parent, sub_arg_idx, sub_arg
+                    yield sub_parent, sub_arg, sub_arg_idx
 
         elif isinstance(parent, CMDArrayArgBase):
             item = parent.item
             item_var = arg_var + '[]'
-            if item_var == sub_arg_var:
-                # find match
-                item_idx = ['[]']
-                return parent, item_idx, item
 
-            sub_parent, sub_arg_idx, sub_arg = self._find_sub_arg_by_var(item, item_var, sub_arg_var)
-            if sub_arg or sub_parent:
+            match, ret = arg_filter(parent, item, ["[]"], item_var)
+            if match:
+                yield match
+            if ret:
+                return
+
+            for sub_parent, sub_arg, sub_arg_idx in self._iter_sub_args(item, item_var, arg_filter):
                 if sub_arg:
                     sub_arg_idx = ['[]', *sub_arg_idx]
-                return sub_parent, sub_arg_idx, sub_arg
+                yield sub_parent, sub_arg, sub_arg_idx
 
-        return None, None, None
-
-    def iter_similar_args(self, arg_var, arg):
-        pass
-    
-    # def find_arg_cls_definition(self, *cmd_names, cls_name):
-    #     command = self.find_command(*cmd_names)
-    #     if not command:
-    #         return None
-    #
-    #     pass
-
-    def arg_idx_to_list(self, arg_idx):
+    @staticmethod
+    def arg_idx_to_list(arg_idx):
         if isinstance(arg_idx, list):
             return arg_idx
         assert isinstance(arg_idx, str)
         arg_idx = arg_idx.replace('{}', '.{}').replace('[]', '.[]').split('.')
         return [idx for idx in arg_idx if idx]
 
-    def arg_idx_to_str(self, arg_idx):
+    @staticmethod
+    def arg_idx_to_str(arg_idx):
         if isinstance(arg_idx, str):
             return arg_idx
         assert isinstance(arg_idx, list)
