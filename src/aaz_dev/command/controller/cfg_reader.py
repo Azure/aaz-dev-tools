@@ -1,7 +1,7 @@
 import json
 
 from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDInstanceUpdateOperation, \
-    CMDCommandGroup, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDObjectArgBase, CMDArrayArgBase, CMDArg
+    CMDCommandGroup, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDObjectArgBase, CMDArrayArgBase
 
 
 class CfgReader:
@@ -121,7 +121,7 @@ class CfgReader:
         assert isinstance(idx, list), f"invalid arg_idx type: {type(idx)}"
 
         for arg_group in command.arg_groups:
-            arg = self._find_arg_in_group(arg_group, idx)
+            arg = self.find_arg_in_group(arg_group, idx)
             if arg:
                 return arg
 
@@ -138,7 +138,7 @@ class CfgReader:
 
         if len(idx) == 1:
             for arg_group in command.arg_groups:
-                if self._find_arg_in_group(arg_group, idx) is not None:
+                if self.find_arg_in_group(arg_group, idx) is not None:
                     return None, arg_group
         else:
             parent_idx = idx[:-1]
@@ -147,19 +147,27 @@ class CfgReader:
                 return parent_idx, parent_arg
         return None, None
 
-    def _find_arg_in_group(self, arg_group, idx):
+    def find_arg_in_group(self, arg_group, idx):
         assert isinstance(arg_group, CMDArgGroup)
+
+        if isinstance(idx, str):
+            idx = self.arg_idx_to_list(idx)
+        assert isinstance(idx, list) and len(idx) > 0
+
         current_idx = idx[0]
         remain_idx = idx[1:]
         for arg in arg_group.args:
             if current_idx in arg.options:
                 if not remain_idx:
                     return arg
-                return self._find_sub_arg(arg, remain_idx)
+                return self.find_sub_arg(arg, remain_idx)
         return None
 
-    def _find_sub_arg(self, arg, idx):
+    def find_sub_arg(self, arg, idx):
+        if isinstance(idx, str):
+            idx = self.arg_idx_to_list(idx)
         assert isinstance(idx, list) and len(idx) > 0
+
         if isinstance(arg, CMDObjectArgBase):
             current_idx = idx[0]
             remain_idx = idx[1:]
@@ -168,13 +176,13 @@ class CfgReader:
                     item = arg.additional_props.item
                     if not remain_idx:
                         return item
-                    return self._find_sub_arg(item, remain_idx)
+                    return self.find_sub_arg(item, remain_idx)
             elif arg.args:
                 for sub_arg in arg.args:
                     if current_idx in sub_arg.options:
                         if not remain_idx:
                             return sub_arg
-                        return self._find_sub_arg(sub_arg, remain_idx)
+                        return self.find_sub_arg(sub_arg, remain_idx)
 
         elif isinstance(arg, CMDArrayArgBase):
             current_idx = idx[0]
@@ -183,7 +191,7 @@ class CfgReader:
                 item = arg.item
                 if not remain_idx:
                     return item
-                return self._find_sub_arg(item, remain_idx)
+                return self.find_sub_arg(item, remain_idx)
 
         return None
 

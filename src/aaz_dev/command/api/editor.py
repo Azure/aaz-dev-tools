@@ -337,13 +337,30 @@ def editor_workspace_command_argument_find_similar(name, node_names, leaf_name, 
     if not arg:
         raise exceptions.ResourceNotFind("Argument not exist")
 
-    result = []
-    for cmd_names, arg_idx_list in manager.find_similar_args(*leaf.names, arg=arg).items():
-        result.append({
-            "command": cmd_names,
-            "args": sorted(arg_idx_list)
-        })
-    result.sort(key=lambda item: item['command'])
+    result = {
+        WorkspaceManager.COMMAND_TREE_ROOT_NAME: {}
+    }
+    for cmd_names, args_map in manager.find_similar_args(*leaf.names, arg=arg).items():
+        node = result[WorkspaceManager.COMMAND_TREE_ROOT_NAME]
+        for group_name in cmd_names[:-1]:
+            if 'commandGroups' not in node:
+                node['commandGroups'] = {}
+            if group_name not in node['commandGroups']:
+                node['commandGroups'][group_name] = {}
+            node = node['commandGroups'][group_name]
+        if 'commands' not in node:
+            node['commands'] = {}
+        if cmd_names[-1] not in node['commands']:
+            node['commands'][cmd_names[-1]] = {
+                "names": cmd_names,
+                "args": []
+            }
+        args = node['commands'][cmd_names[-1]]['args']
+        for arg_var, arg_idx_list in args_map.items():
+            args.append({
+                "var": arg_var,
+                "indexes": sorted(arg_idx_list)
+            })
     return jsonify(result)
 
 
