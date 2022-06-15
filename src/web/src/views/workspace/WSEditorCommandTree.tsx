@@ -6,6 +6,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Box, IconButton, Tooltip, Typography, TypographyProps } from '@mui/material';
 import { styled } from '@mui/system';
 import AddIcon from '@mui/icons-material/Add';
+import { CheckBox } from '@mui/icons-material';
 
 
 interface CommandTreeLeaf {

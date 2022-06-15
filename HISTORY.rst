@@ -3,9 +3,14 @@
 Release History
 ===============
 
+0.3.0
++++++
+* Support similar arguments modification
+* Fix swagger parse issue: Support `allOf{$ref}` format reference for polymorphic definition.
+
 0.2.2
 +++++
-* Suppress confirmation prompt for delete command;
+* Support confirmation prompt for delete command;
 * Fix ext metadata update;
 
 0.2.1

@@ -338,29 +338,41 @@ def editor_workspace_command_argument_find_similar(name, node_names, leaf_name, 
         raise exceptions.ResourceNotFind("Argument not exist")
 
     result = {
-        WorkspaceManager.COMMAND_TREE_ROOT_NAME: {}
+        WorkspaceManager.COMMAND_TREE_ROOT_NAME: {
+            "id": url_for('editor.editor_workspace_command_tree_node',
+                          name=name,
+                          node_names=[WorkspaceManager.COMMAND_TREE_ROOT_NAME])
+        }
     }
     for cmd_names, args_map in manager.find_similar_args(*leaf.names, arg=arg).items():
         node = result[WorkspaceManager.COMMAND_TREE_ROOT_NAME]
-        for group_name in cmd_names[:-1]:
+        for idx, group_name in enumerate(cmd_names[:-1]):
             if 'commandGroups' not in node:
                 node['commandGroups'] = {}
             if group_name not in node['commandGroups']:
-                node['commandGroups'][group_name] = {}
+                node['commandGroups'][group_name] = {
+                    "id": url_for('editor.editor_workspace_command_tree_node',
+                                  name=name,
+                                  node_names=[WorkspaceManager.COMMAND_TREE_ROOT_NAME, *cmd_names[:idx+1]])
+                }
             node = node['commandGroups'][group_name]
         if 'commands' not in node:
             node['commands'] = {}
         if cmd_names[-1] not in node['commands']:
             node['commands'][cmd_names[-1]] = {
+                "id": url_for('editor.editor_workspace_command',
+                              name=name,
+                              node_names=[WorkspaceManager.COMMAND_TREE_ROOT_NAME, *cmd_names[:-1]],
+                              leaf_name=cmd_names[-1]),
                 "names": cmd_names,
-                "args": []
+                "args": {}
             }
         args = node['commands'][cmd_names[-1]]['args']
         for arg_var, arg_idx_list in args_map.items():
-            args.append({
-                "var": arg_var,
-                "indexes": sorted(arg_idx_list)
-            })
+            if arg_var not in args:
+                args[arg_var] = []
+            args[arg_var].extend(arg_idx_list)
+            args[arg_var] = sorted(set(args[arg_var]))
     return jsonify(result)
 
 
