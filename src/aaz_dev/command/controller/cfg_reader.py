@@ -281,7 +281,7 @@ class CfgReader:
                         return False
         elif arg1.type != arg2.type:
             # handle cls argument
-            if arg1.type.stratswith("@") and arg1.type == getattr(arg2, 'cls', None):
+            if arg1.type.startswith("@") and arg1.type == getattr(arg2, 'cls', None):
                 return True
             if arg2.type.startswith("@") and arg2.type == getattr(arg1, 'cls', None):
                 return True

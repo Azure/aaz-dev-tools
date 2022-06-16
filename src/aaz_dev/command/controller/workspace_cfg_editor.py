@@ -269,15 +269,20 @@ class WorkspaceCfgEditor(CfgReader):
             raise exceptions.InvalidAPIUsage(
                 f"Argument not exist: {arg.var}")
         assert parent is not None
+        if isinstance(arg, CMDClsArg):
+            # argument should unwrap cls first
+            raise exceptions.InvalidAPIUsage(
+                f"Cannot flatten class argument, please unwrap it first."
+            )
         if not isinstance(arg, CMDObjectArg):
             raise exceptions.InvalidAPIUsage(f"Cannot flatten argument in type: '{type(arg)}'")
-        if arg.additional_props:
-            raise exceptions.InvalidAPIUsage(f"Cannot flatten argument with additional properties")
         if arg.cls:
             # argument should unwrap cls first
             raise exceptions.InvalidAPIUsage(
-                f"Cannot flatten argument with cls definition, please unwrap it first."
+                f"Cannot flatten class argument, please unwrap it first."
             )
+        if arg.additional_props:
+            raise exceptions.InvalidAPIUsage(f"Cannot flatten argument with additional properties")
 
         parent.args.remove(arg)
         for sub_arg in arg.args:

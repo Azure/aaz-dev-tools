@@ -6,7 +6,7 @@ import { CardTitleTypography, ExperimentalTypography, LongHelpTypography, Previe
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import EditIcon from '@mui/icons-material/Edit';
 import CallSplitSharpIcon from '@mui/icons-material/CallSplitSharp';
-import SimilarArgumentView, { ArgSimilarTree, BuildArgSimilarTree } from './argument/WSECArgumentSimilarPicker';
+import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from './argument/WSECArgumentSimilarPicker';
 // import CallMergeSharpIcon from '@mui/icons-material/CallMergeSharp';
 
 
@@ -33,10 +33,10 @@ function WSEditorCommandArgumentsContent(props: {
         refreshData();
     }, [props.commandUrl]);
 
-    const handleArgumentDialogClose = (newArg?: CMDArg) => {
+    const handleArgumentDialogClose = (updated: boolean) => {
         setDisplayArgumentDialog(false);
         setEditArg(undefined);
-        if (newArg) {
+        if (updated) {
             refreshData();
         }
     }
@@ -486,7 +486,7 @@ function ArgumentDialog(props: {
     arg: CMDArg,
     clsArgDefineMap: ClsArgDefinitionMap,
     open: boolean,
-    onClose: (newArg?: CMDArg) => void,
+    onClose: (updated: boolean) => void,
 }) {
     const [updating, setUpdating] = useState<boolean>(false);
     const [stage, setStage] = useState<string>("");
@@ -498,14 +498,16 @@ function ArgumentDialog(props: {
     const [shortHelp, setShortHelp] = useState<string>("");
     const [longHelp, setLongHelp] = useState<string>("");
     const [argSimilarTree, setArgSimilarTree] = useState<ArgSimilarTree | undefined>(undefined);
-    const [argSimilarTreeExpanded, setArgSimilarTreeExpanded] = useState<string[]>([]);
+    const [argSimilarTreeExpandedIds, setArgSimilarTreeExpandedIds] = useState<string[]>([]);
+    const [argSimilarTreeArgIdsUpdated, setArgSimilarTreeArgIdsUpdated] = useState<string[]>([]);
 
     const handleClose = () => {
         setInvalidText(undefined);
-        props.onClose();
+        props.onClose(false);
     }
 
-    const handleModify = (event: any) => {
+    const verifyModification = () => {
+        setInvalidText(undefined);
         let name = options.trim();
         let sName = singularOptions?.trim() ?? undefined;
         let sHelp = shortHelp.trim();
@@ -515,18 +517,16 @@ function ArgumentDialog(props: {
         const names = name.split(' ').filter(n => n.length > 0);
         const sNames = sName?.split(' ').filter(n => n.length > 0) ?? undefined;
 
-        setInvalidText(undefined);
-
         if (names.length < 1) {
             setInvalidText(`Argument 'Option names' is required.`)
-            return
+            return undefined
         }
 
         for (const idx in names) {
             const piece = names[idx];
             if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(piece)) {
                 setInvalidText(`Invalid 'Option name': '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `)
-                return
+                return undefined
             }
         }
 
@@ -535,14 +535,14 @@ function ArgumentDialog(props: {
                 const piece = sNames[idx];
                 if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(piece)) {
                     setInvalidText(`Invalid 'Singular option name': '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `)
-                    return
+                    return undefined
                 }
             }
         }
 
         if (sHelp.length < 1) {
             setInvalidText(`Field 'Short Summery' is required.`)
-            return
+            return undefined
         }
 
         let lines: string[] | null = null;
@@ -550,11 +550,7 @@ function ArgumentDialog(props: {
             lines = lHelp.split('\n').filter(l => l.length > 0);
         }
 
-        setUpdating(true);
-
-        const argumentUrl = `${props.commandUrl}/Arguments/${props.arg.var}`
-
-        axios.patch(argumentUrl, {
+        return {
             options: names,
             singularOptions: sNames,
             stage: stage,
@@ -564,10 +560,26 @@ function ArgumentDialog(props: {
                 short: sHelp,
                 lines: lines
             }
+        }
+    }
+
+    const handleModify = (event: any) => {
+
+        const data = verifyModification();
+        if (data === undefined) {
+            return;
+        }
+
+        setUpdating(true);
+
+        const argumentUrl = `${props.commandUrl}/Arguments/${props.arg.var}`
+
+        axios.patch(argumentUrl, {
+            ...data,
         }).then(res => {
             let newArg = decodeArg(res.data).arg;
             setUpdating(false);
-            props.onClose(newArg);
+            props.onClose(true);
         }).catch(err => {
             console.error(err.response);
             if (err.response?.data?.message) {
@@ -581,15 +593,19 @@ function ArgumentDialog(props: {
     }
 
     const handleDisplaySimilar = () => {
-        setInvalidText(undefined);
+        if (verifyModification() === undefined) {
+            return;
+        }
 
         setUpdating(true);
 
         const similarUrl = `${props.commandUrl}/Arguments/${props.arg.var}/FindSimilar`
         axios.post(similarUrl).then(res => {
             setUpdating(false);
-            const similarTree = BuildArgSimilarTree(res);
-            setArgSimilarTree(similarTree);
+            const { tree, expandedIds } = BuildArgSimilarTree(res);
+            setArgSimilarTree(tree);
+            setArgSimilarTreeExpandedIds(expandedIds);
+            setArgSimilarTreeArgIdsUpdated([]);
         }).catch(err => {
             console.error(err.response);
             if (err.response?.data?.message) {
@@ -604,11 +620,51 @@ function ArgumentDialog(props: {
 
     const handleDisableSimilar = () => {
         setArgSimilarTree(undefined);
+        setArgSimilarTreeExpandedIds([]);
     }
 
-    const handleModifySimilar = () => {
-        // TODO:
+    const onSimilarTreeUpdated = (newTree: ArgSimilarTree) => {
+        setArgSimilarTree(newTree);
+    }
 
+    const onSimilarTreeExpandedIdsUpdated = (expandedIds: string[]) => {
+        setArgSimilarTreeExpandedIds(expandedIds);
+    }
+
+    const handleModifySimilar = async () => {
+        const data = verifyModification();
+        if (data === undefined) {
+            return;
+        }
+
+        setUpdating(true);
+        let invalidText = "";
+        const updatedIds: string[] = [...argSimilarTreeArgIdsUpdated]
+        for (const idx in argSimilarTree!.selectedArgIds) {
+            const argId = argSimilarTree!.selectedArgIds[idx];
+            if (updatedIds.indexOf(argId) === -1) {
+                try {
+                    await axios.patch(argId, {
+                        ...data
+                    })
+                    updatedIds.push(argId);
+                    setArgSimilarTreeArgIdsUpdated([...updatedIds]);
+                } catch (err: any) {
+                    console.error(err.response);
+                    if (err.response?.data?.message) {
+                        const data = err.response!.data!;
+                        invalidText += `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
+                    }
+                }
+            }
+        }
+
+        setUpdating(false);
+        if (invalidText.length > 0) {
+            setInvalidText(invalidText);
+        } else {
+            props.onClose(true);
+        }
     }
 
     useEffect(() => {
@@ -630,6 +686,7 @@ function ArgumentDialog(props: {
         setLongHelp(props.arg.help?.lines?.join("\n") ?? "");
         setUpdating(false);
         setArgSimilarTree(undefined);
+        setArgSimilarTreeExpandedIds([]);
     }, [props.arg]);
 
     return (
@@ -736,7 +793,8 @@ function ArgumentDialog(props: {
             {argSimilarTree && <>
                 <DialogTitle>Modify Similar Arguments</DialogTitle>
                 <DialogContent dividers={true}>
-                    <SimilarArgumentView tree={argSimilarTree}/>
+                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                    <WSECArgumentSimilarPicker tree={argSimilarTree} expandedIds={argSimilarTreeExpandedIds} updatedIds={argSimilarTreeArgIdsUpdated} onTreeUpdated={onSimilarTreeUpdated} onToggle={onSimilarTreeExpandedIdsUpdated} />
                 </DialogContent>
             </>}
             <DialogActions>
@@ -747,12 +805,14 @@ function ArgumentDialog(props: {
                 }
                 {!updating && !argSimilarTree && <>
                     <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleModify}>Update</Button>
+                    {/* cls argument should flatten similar. Customer should unwrap cls argument before to modify it*/}
+                    {!props.arg.var.startsWith("@") && <Button onClick={handleModify}>Update</Button>}
+                    {/* TODO: support unwrap and update */}
                     <Button onClick={handleDisplaySimilar}>Update Similar</Button>
                 </>}
                 {!updating && argSimilarTree && <>
                     <Button onClick={handleDisableSimilar}>Back</Button>
-                    <Button onClick={handleModifySimilar} disabled={argSimilarTree.root.selectedCount === 0}>Update</Button>
+                    <Button onClick={handleModifySimilar} disabled={argSimilarTree.selectedArgIds.length === 0}>Update</Button>
                 </>}
             </DialogActions>
         </Dialog>
@@ -770,6 +830,8 @@ function FlattenDialog(props: {
     const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
     const [subArgOptions, setSubArgOptions] = useState<{ var: string, options: string }[]>([]);
     const [argSimilarTree, setArgSimilarTree] = useState<ArgSimilarTree | undefined>(undefined);
+    const [argSimilarTreeExpandedIds, setArgSimilarTreeExpandedIds] = useState<string[]>([]);
+    const [argSimilarTreeArgIdsUpdated, setArgSimilarTreeArgIdsUpdated] = useState<string[]>([]);
 
     useEffect(() => {
         let { arg } = props;
@@ -782,6 +844,7 @@ function FlattenDialog(props: {
 
         setSubArgOptions(subArgOptions);
         setArgSimilarTree(undefined);
+        setArgSimilarTreeExpandedIds([]);
     }, [props.arg]);
 
     const handleClose = () => {
@@ -789,9 +852,8 @@ function FlattenDialog(props: {
         props.onClose(false);
     }
 
-    const handleFlatten = () => {
+    const verifyFlatten = () => {
         setInvalidText(undefined);
-
         const argOptions: { [argVar: string]: string[] } = {};
         let invalidText: string | undefined = undefined;
 
@@ -799,21 +861,32 @@ function FlattenDialog(props: {
             const names = arg.options.split(' ').filter(n => n.length > 0);
             if (names.length < 1) {
                 invalidText = `Prop ${idx + 1} option name is required.`
-                return
+                return undefined
             }
 
             for (const idx in names) {
                 const piece = names[idx];
                 if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(piece)) {
                     invalidText = `Invalid 'Prop ${idx + 1} option name': '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `
-                    return
+                    return undefined
                 }
             }
             argOptions[arg.var] = names;
         });
         if (invalidText !== undefined) {
             setInvalidText(invalidText);
-            return
+            return undefined
+        }
+
+        return {
+            subArgsOptions: argOptions,
+        }
+    }
+
+    const handleFlatten = () => {
+        const data = verifyFlatten();
+        if (data === undefined) {
+            return;
         }
 
         setUpdating(true);
@@ -821,7 +894,7 @@ function FlattenDialog(props: {
         const flattenUrl = `${props.commandUrl}/Arguments/${props.arg.var}/Flatten`
 
         axios.post(flattenUrl, {
-            subArgsOptions: argOptions,
+            ...data
         }).then(res => {
             setUpdating(false);
             props.onClose(true);
@@ -838,15 +911,19 @@ function FlattenDialog(props: {
     }
 
     const handleDisplaySimilar = () => {
-        setInvalidText(undefined);
+        if (verifyFlatten() === undefined) {
+            return;
+        }
 
         setUpdating(true);
 
         const similarUrl = `${props.commandUrl}/Arguments/${props.arg.var}/FindSimilar`
         axios.post(similarUrl).then(res => {
             setUpdating(false);
-            const similarTree = BuildArgSimilarTree(res);
-            setArgSimilarTree(similarTree);
+            const { tree, expandedIds } = BuildArgSimilarTree(res);
+            setArgSimilarTree(tree);
+            setArgSimilarTreeExpandedIds(expandedIds);
+            setArgSimilarTreeArgIdsUpdated([]);
         }).catch(err => {
             console.error(err.response);
             if (err.response?.data?.message) {
@@ -857,6 +934,55 @@ function FlattenDialog(props: {
             }
             setUpdating(false);
         });
+    }
+
+    const handleDisableSimilar = () => {
+        setArgSimilarTree(undefined);
+        setArgSimilarTreeExpandedIds([]);
+    }
+
+    const onSimilarTreeUpdated = (newTree: ArgSimilarTree) => {
+        setArgSimilarTree(newTree);
+    }
+
+    const onSimilarTreeExpandedIdsUpdated = (expandedIds: string[]) => {
+        setArgSimilarTreeExpandedIds(expandedIds);
+    }
+
+    const handleFlattenSimilar = async () => {
+        const data = verifyFlatten();
+        if (data === undefined) {
+            return;
+        }
+        setUpdating(true);
+        let invalidText = "";
+        const updatedIds: string[] = [...argSimilarTreeArgIdsUpdated]
+        for (const idx in argSimilarTree!.selectedArgIds) {
+            const argId = argSimilarTree!.selectedArgIds[idx];
+            if (updatedIds.indexOf(argId) === -1) {
+                const flattenUrl = `${argId}/Flatten`
+                try {
+                    await axios.post(flattenUrl, {
+                        ...data
+                    })
+                    updatedIds.push(argId);
+                    setArgSimilarTreeArgIdsUpdated([...updatedIds]);
+                } catch (err: any) {
+                    console.error(err.response);
+                    if (err.response?.data?.message) {
+                        const data = err.response!.data!;
+                        invalidText += `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
+                    }
+                }
+            }
+        }
+
+        setUpdating(false);
+        if (invalidText.length > 0) {
+            setInvalidText(invalidText);
+        } else {
+            props.onClose(true);
+        }
     }
 
     const buildSubArgText = (arg: { var: string, options: string }, idx: number) => {
@@ -893,22 +1019,38 @@ function FlattenDialog(props: {
             open={props.open}
             sx={{ '& .MuiDialog-paper': { width: '80%' } }}
         >
-            <DialogTitle>Flatten Props</DialogTitle>
-            <DialogContent dividers={true}>
-                {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
-                {subArgOptions.map(buildSubArgText)}
-            </DialogContent>
+            {!argSimilarTree && <>
+                <DialogTitle>Flatten Props</DialogTitle>
+                <DialogContent dividers={true}>
+                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                    {subArgOptions.map(buildSubArgText)}
+                </DialogContent>
+            </>}
+
+            {argSimilarTree && <>
+                <DialogTitle>Flatten Similar Argument Props</DialogTitle>
+                <DialogContent dividers={true}>
+                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                    <WSECArgumentSimilarPicker tree={argSimilarTree} expandedIds={argSimilarTreeExpandedIds} updatedIds={argSimilarTreeArgIdsUpdated} onTreeUpdated={onSimilarTreeUpdated} onToggle={onSimilarTreeExpandedIdsUpdated} />
+                </DialogContent>
+            </>}
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
                         <LinearProgress color='info' />
                     </Box>
                 }
-                {!updating && <React.Fragment>
+                {!updating && !argSimilarTree && <>
                     <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleFlatten}>Flatten</Button>
+                    {/* cls argument should flatten similar. Customer should unwrap cls argument before to modify it*/}
+                    {!props.arg.var.startsWith("@") && <Button onClick={handleFlatten}>Flatten</Button>}
+                    {/* TODO: support unwrap and flatten */}
                     <Button onClick={handleDisplaySimilar}>Flatten Similar</Button>
-                </React.Fragment>}
+                </>}
+                {!updating && argSimilarTree && <>
+                    <Button onClick={handleDisableSimilar}>Back</Button>
+                    <Button onClick={handleFlattenSimilar} disabled={argSimilarTree.selectedArgIds.length === 0}>Update</Button>
+                </>}
             </DialogActions>
         </Dialog>
     )
