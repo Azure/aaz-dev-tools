@@ -105,7 +105,7 @@ jobs:
           . .venv/bin/activate
           pip install -e .[dev]
           cd src/web
-          npm ci
+          npm install
 
       - name: Install editable (cache hit)
         if: steps.virtualenv-cache.outputs.cache-hit == 'true'
