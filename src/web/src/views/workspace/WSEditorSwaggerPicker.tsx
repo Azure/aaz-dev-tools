@@ -455,12 +455,11 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                                 justifyContent: 'flex-start', 
                             }} color='inherit'>
                                 <Typography component='h6'>Resource Url</Typography>
-
                                 {resourceOptions.length > 0 && <ListItemButton sx={{paddingLeft:0}} dense onClick={this.onSelectedAllClick}>
                                     <ListItemIcon>
                                         <Checkbox
                                             edge="start"
-                                            checked={selectedResources.size == resourceOptions.length}
+                                            checked={selectedResources.size === resourceOptions.length}
                                             indeterminate={selectedResources.size > 0 && selectedResources.size < resourceOptions.length}
                                             tabIndex={-1}
                                             disableRipple
