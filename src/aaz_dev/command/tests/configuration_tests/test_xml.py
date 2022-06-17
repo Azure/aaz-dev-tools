@@ -26,13 +26,13 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
         generator.load_resources([resource])
         command_group = generator.create_draft_command_group(resource)
 
-        model = CMDConfiguration({"resources": [resource.to_cmd()], "commandGroups": [command_group]})
+        cfg = CMDConfiguration({"resources": [resource.to_cmd()], "commandGroups": [command_group]})
         with TemporaryFile("w+t", encoding="utf-8") as fp:
-            xml = XMLSerializer(model).to_xml()
+            xml = XMLSerializer.to_xml(cfg)
             fp.write(xml)
             fp.seek(0)
-            deserialized_model = XMLSerializer(CMDConfiguration).from_xml(fp.read())
-            assert xml == XMLSerializer(deserialized_model).to_xml()
+            deserialized_cfg = XMLSerializer.from_xml(CMDConfiguration, fp.read())
+            assert xml == XMLSerializer.to_xml(deserialized_cfg)
 
     def test_all_mgmt_modules_coverage(self):
         total = count = 0
@@ -53,16 +53,16 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
                     else:
                         total += 1
                         try:
-                            model = CMDConfiguration({"resources": [resource.to_cmd()], "commandGroups": [command_group]})
+                            cfg = CMDConfiguration({"resources": [resource.to_cmd()], "commandGroups": [command_group]})
                             with TemporaryFile("w+t", encoding="utf-8") as fp:
-                                xml = XMLSerializer(model).to_xml()
+                                xml = XMLSerializer.to_xml(cfg)
                                 fp.write(xml)
                                 fp.seek(0)
-                                deserialized_model = XMLSerializer(CMDConfiguration).from_xml(fp.read())
+                                deserialized_cfg = XMLSerializer.from_xml(CMDConfiguration, fp.read())
                         except Exception:
                             print(f"--module {rp.swagger_module.name} --resource-id {r_id} --version {v}")
                         else:
-                            if xml == XMLSerializer(deserialized_model).to_xml():
+                            if xml == XMLSerializer.to_xml(deserialized_cfg):
                                 count += 1
                             else:
                                 print(f"--module {rp.swagger_module.name} --resource-id {r_id} --version {v}")

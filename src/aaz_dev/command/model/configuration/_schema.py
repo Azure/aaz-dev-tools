@@ -36,7 +36,7 @@ class CMDSchemaEnumItem(Model):
     arg = CMDVariantField()  # value will be used when specific argument is provided
 
     # properties as nodes
-    value = CMDPrimitiveField(required=True)
+    value = CMDPrimitiveField(required=True)  # json value format string, support null
 
     class Options:
         serialize_when_none = False
@@ -104,7 +104,7 @@ class CMDSchemaDefault(Model):
     """ The argument value if an argument is not used """
 
     # properties as nodes
-    value = CMDPrimitiveField()  # json value format string, support null
+    value = CMDPrimitiveField(required=True)  # json value format string, support null
 
     def diff(self, old, level):
         if type(self) is not type(old):

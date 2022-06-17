@@ -80,7 +80,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-crud.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
@@ -123,7 +123,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-crud.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
@@ -166,7 +166,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-crud.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
@@ -209,7 +209,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-crud.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
@@ -252,7 +252,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-list.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
@@ -296,7 +296,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-crud.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
@@ -339,7 +339,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-crud.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
@@ -382,7 +382,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-crud.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
@@ -425,7 +425,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-crud.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
@@ -468,7 +468,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-list.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
@@ -512,7 +512,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-crud.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
@@ -555,7 +555,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-crud.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
@@ -598,7 +598,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-crud.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
@@ -641,7 +641,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-crud.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
@@ -684,7 +684,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-list.xml")
 
         with open(cfg_file_path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+            cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 

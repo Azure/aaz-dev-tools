@@ -1,5 +1,6 @@
 from unittest import TestCase
 from command.model.configuration._arg import *
+from command.model.configuration._xml import XMLSerializer
 
 
 class ArgumentTest(TestCase):
@@ -16,7 +17,7 @@ class ArgumentTest(TestCase):
             "stage": "Stable",
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -57,8 +58,15 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        data = arg.to_primitive()
+
+        xml_data = XMLSerializer.to_xml(arg)
+        new_arg = XMLSerializer.from_xml(CMDStringArg, xml_data)
+        print(data)
+        print(new_arg.to_primitive())
+        assert new_arg.to_primitive() == data
+
 
     def test_byte_argument(self):
         arg = CMDByteArg({
