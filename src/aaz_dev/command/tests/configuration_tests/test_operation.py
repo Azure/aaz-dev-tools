@@ -83,7 +83,7 @@ class OperationTest(TestCase):
                             ],
                             "discriminators": [
                                 {
-                                    "prop": "type",
+                                    "property": "type",
                                     "value": "Managed",
                                     "props": [
                                         {
@@ -136,7 +136,7 @@ class OperationTest(TestCase):
                                                                         ],
                                                                         "discriminators": [
                                                                             {
-                                                                                "prop": "type",
+                                                                                "property": "type",
                                                                                 "value": "CmdkeySetup",
                                                                                 "props": [
                                                                                     {
@@ -179,7 +179,7 @@ class OperationTest(TestCase):
                                                                                                 ],
                                                                                                 "discriminators": [
                                                                                                     {
-                                                                                                        "prop": "type",
+                                                                                                        "property": "type",
                                                                                                         "value": "SecureString",
                                                                                                         "props": [
                                                                                                             {
@@ -236,7 +236,7 @@ class OperationTest(TestCase):
                                     ],
                                 },
                                 {
-                                    "prop": "type",
+                                    "property": "type",
                                     "value": "SelfHosted",
                                     "props": [
                                         {
@@ -303,7 +303,7 @@ class OperationTest(TestCase):
                                 ],
                                 "discriminators": [
                                     {
-                                        "prop": "type",
+                                        "property": "type",
                                         "value": "Managed",
                                         "props": [
                                             {
@@ -350,7 +350,7 @@ class OperationTest(TestCase):
                                                                             ],
                                                                             "discriminators": [
                                                                                 {
-                                                                                    "prop": "type",
+                                                                                    "property": "type",
                                                                                     "value": "CmdkeySetup",
                                                                                     "props": [
                                                                                         {
@@ -389,7 +389,7 @@ class OperationTest(TestCase):
                                                                                                     ],
                                                                                                     "discriminators": [
                                                                                                         {
-                                                                                                            "prop": "type",
+                                                                                                            "property": "type",
                                                                                                             "value": "SecureString",
                                                                                                             "props": [
                                                                                                                 {
@@ -442,7 +442,7 @@ class OperationTest(TestCase):
                                         ],
                                     },
                                     {
-                                        "prop": "type",
+                                        "property": "type",
                                         "value": "SelfHosted",
                                         "props": [
                                             {
@@ -521,8 +521,8 @@ class OperationTest(TestCase):
             }
         })
         operation.validate()
-        print(operation.to_native())
-        print(operation.to_primitive())
+        operation.to_native()
+        operation.to_primitive()
 
     def test_instance_update_operation(self):
         operation = CMDInstanceUpdateOperation({
@@ -541,5 +541,5 @@ class OperationTest(TestCase):
             }
         })
         operation.validate()
-        print(operation.to_native())
-        print(operation.to_primitive())
+        operation.to_native()
+        operation.to_primitive()

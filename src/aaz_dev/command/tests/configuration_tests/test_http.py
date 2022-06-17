@@ -1,5 +1,6 @@
 from unittest import TestCase
 from command.model.configuration._http import *
+from command.tests.common import verify_xml
 
 
 class HttpTest(TestCase):
@@ -77,7 +78,7 @@ class HttpTest(TestCase):
                         ],
                         "discriminators": [
                             {
-                                "prop": "type",
+                                "property": "type",
                                 "value": "Managed",
                                 "props": [
                                     {
@@ -130,7 +131,7 @@ class HttpTest(TestCase):
                                                                     ],
                                                                     "discriminators": [
                                                                         {
-                                                                            "prop": "type",
+                                                                            "property": "type",
                                                                             "value": "CmdkeySetup",
                                                                             "props": [
                                                                                 {
@@ -173,7 +174,7 @@ class HttpTest(TestCase):
                                                                                             ],
                                                                                             "discriminators": [
                                                                                                 {
-                                                                                                    "prop": "type",
+                                                                                                    "property": "type",
                                                                                                     "value": "SecureString",
                                                                                                     "props": [
                                                                                                         {
@@ -230,7 +231,7 @@ class HttpTest(TestCase):
                                 ],
                             },
                             {
-                                "prop": "type",
+                                "property": "type",
                                 "value": "SelfHosted",
                                 "props": [
                                     {
@@ -297,7 +298,7 @@ class HttpTest(TestCase):
                             ],
                             "discriminators": [
                                 {
-                                    "prop": "type",
+                                    "property": "type",
                                     "value": "Managed",
                                     "props": [
                                         {
@@ -344,7 +345,7 @@ class HttpTest(TestCase):
                                                                         ],
                                                                         "discriminators": [
                                                                             {
-                                                                                "prop": "type",
+                                                                                "property": "type",
                                                                                 "value": "CmdkeySetup",
                                                                                 "props": [
                                                                                     {
@@ -383,7 +384,7 @@ class HttpTest(TestCase):
                                                                                                 ],
                                                                                                 "discriminators": [
                                                                                                     {
-                                                                                                        "prop": "type",
+                                                                                                        "property": "type",
                                                                                                         "value": "SecureString",
                                                                                                         "props": [
                                                                                                             {
@@ -436,7 +437,7 @@ class HttpTest(TestCase):
                                     ],
                                 },
                                 {
-                                    "prop": "type",
+                                    "property": "type",
                                     "value": "SelfHosted",
                                     "props": [
                                         {
@@ -515,5 +516,7 @@ class HttpTest(TestCase):
         })
 
         http_action.validate()
-        print(http_action.to_native())
-        print(http_action.to_primitive())
+        http_action.to_native()
+        http_action.to_primitive()
+
+        verify_xml(self, http_action)

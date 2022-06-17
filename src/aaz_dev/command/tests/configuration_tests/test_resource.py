@@ -11,5 +11,5 @@ class ResourceTest(TestCase):
         })
 
         resource.validate()
-        print(resource.to_native())
-        print(resource.to_primitive())
+        resource.to_native()
+        resource.to_primitive()

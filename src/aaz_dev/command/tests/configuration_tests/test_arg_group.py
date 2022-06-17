@@ -1,5 +1,6 @@
 from unittest import TestCase
 from command.model.configuration._arg_group import *
+from command.tests.common import verify_xml
 
 
 class ArgumentGroupTest(TestCase):
@@ -55,5 +56,7 @@ class ArgumentGroupTest(TestCase):
         })
 
         arg_group.validate()
-        print(arg_group.to_native())
-        print(arg_group.to_primitive())
+        arg_group.to_native()
+        arg_group.to_primitive()
+
+        verify_xml(self, arg_group)

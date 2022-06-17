@@ -1,12 +1,11 @@
 from unittest import TestCase
 from command.model.configuration._arg import *
-from command.model.configuration._xml import XMLSerializer
+from command.tests.common import verify_xml
 
 
 class ArgumentTest(TestCase):
 
     def test_string_argument(self):
-
         arg = CMDStringArg({
             "var": "$argName",
             "options": [
@@ -59,13 +58,9 @@ class ArgumentTest(TestCase):
 
         arg.validate()
         arg.to_native()
-        data = arg.to_primitive()
+        arg.to_primitive()
 
-        xml_data = XMLSerializer.to_xml(arg)
-        new_arg = XMLSerializer.from_xml(CMDStringArg, xml_data)
-        print(data)
-        print(new_arg.to_primitive())
-        assert new_arg.to_primitive() == data
+        verify_xml(self, arg)
 
 
     def test_byte_argument(self):
@@ -79,7 +74,7 @@ class ArgumentTest(TestCase):
             "stage": "Stable",
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -120,8 +115,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_binary_argument(self):
         arg = CMDBinaryArg({
@@ -134,7 +131,7 @@ class ArgumentTest(TestCase):
             "stage": "Stable",
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -175,8 +172,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_duration_argument(self):
         arg = CMDDurationArg({
@@ -189,7 +188,7 @@ class ArgumentTest(TestCase):
             "stage": "Stable",
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -230,8 +229,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_date_argument(self):
         arg = CMDDateArg({
@@ -244,7 +245,7 @@ class ArgumentTest(TestCase):
             "stage": "Stable",
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -285,8 +286,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_date_time_argument(self):
         arg = CMDDateTimeArg({
@@ -299,7 +302,7 @@ class ArgumentTest(TestCase):
             "stage": "Stable",
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -340,8 +343,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_uuid_argument(self):
         arg = CMDUuidArg({
@@ -354,7 +359,7 @@ class ArgumentTest(TestCase):
             "stage": "Stable",
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -395,8 +400,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_password_argument(self):
         arg = CMDPasswordArg({
@@ -409,7 +416,7 @@ class ArgumentTest(TestCase):
             "stage": "Stable",
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -450,8 +457,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_integer_argument(self):
 
@@ -465,7 +474,7 @@ class ArgumentTest(TestCase):
             "stage": "Preview",
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -506,8 +515,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_integer32_argument(self):
 
@@ -521,7 +532,7 @@ class ArgumentTest(TestCase):
             "stage": "Preview",
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -562,8 +573,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_integer64_argument(self):
 
@@ -577,7 +590,7 @@ class ArgumentTest(TestCase):
             "stage": "Preview",
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -618,8 +631,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_boolean_argument(self):
 
@@ -633,7 +648,7 @@ class ArgumentTest(TestCase):
             "stage": "Experimental",
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -651,8 +666,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_float_argument(self):
 
@@ -665,7 +682,7 @@ class ArgumentTest(TestCase):
             "required": True,
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -707,8 +724,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_float32_argument(self):
 
@@ -721,7 +740,7 @@ class ArgumentTest(TestCase):
             "required": True,
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -763,8 +782,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_float64_argument(self):
 
@@ -777,7 +798,7 @@ class ArgumentTest(TestCase):
             "required": True,
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -819,8 +840,10 @@ class ArgumentTest(TestCase):
         })
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_object_argument(self):
 
@@ -833,7 +856,7 @@ class ArgumentTest(TestCase):
             "required": True,
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -856,9 +879,12 @@ class ArgumentTest(TestCase):
                 "minProperties": 2,
             }
         })
+
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_array_argument(self):
         arg = CMDArrayArg({
@@ -870,7 +896,7 @@ class ArgumentTest(TestCase):
             "required": True,
             "help": {
                 "short": "The Name Of Argument",
-                "long": [
+                "lines": [
                     "Sentence 1",
                     "Sentence 2"
                 ],
@@ -903,9 +929,12 @@ class ArgumentTest(TestCase):
                 "type": "string"
             }
         })
+
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
 
     def test_complicated_argument(self):
         data = {
@@ -916,7 +945,7 @@ class ArgumentTest(TestCase):
             "type": "array<object>",
             "help": {
                 "short": "The specification of data flows.",
-                "long": [
+                "lines": [
                     "The specification of data flows.",
                     "Multiple actions can be specified by using more than one --data-flows argument.",
                 ]
@@ -993,5 +1022,7 @@ class ArgumentTest(TestCase):
         arg = field(data)
 
         arg.validate()
-        print(arg.to_native())
-        print(arg.to_primitive())
+        arg.to_native()
+        arg.to_primitive()
+
+        verify_xml(self, arg)
