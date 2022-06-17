@@ -882,7 +882,7 @@ class ArgumentTest(TestCase):
 
         arg.validate()
         arg.to_native()
-        arg.to_primitive()
+        print(arg.to_primitive())
 
         verify_xml(self, arg)
 

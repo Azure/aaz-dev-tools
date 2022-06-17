@@ -17,7 +17,7 @@ class CMDArgEnumItem(Model):
     hide = CMDBooleanField()
 
     # properties as nodes
-    value = CMDPrimitiveField(required=True)  # json value format string, support null
+    value = CMDPrimitiveField()  # json value format string, support null
 
     class Options:
         serialize_when_none = False
@@ -60,7 +60,7 @@ class CMDArgDefault(Model):
     """ The argument value if an argument is not used """
 
     # properties as nodes
-    value = CMDPrimitiveField(required=True)  # json value format string, support null
+    value = CMDPrimitiveField()  # json value format string, support null
 
     @classmethod
     def build_default(cls, builder, schema_default):
@@ -90,7 +90,7 @@ class CMDArgBlank(Model):
     """
 
     # properties as nodes
-    value = CMDPrimitiveField(required=True)  # json value format string, support null
+    value = CMDPrimitiveField()  # json value format string, support null
 
 
 class CMDArgBase(Model):

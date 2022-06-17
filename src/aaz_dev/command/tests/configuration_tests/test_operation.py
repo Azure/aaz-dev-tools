@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 from command.model.configuration._operation import *
 
 
@@ -6,520 +7,644 @@ class OperationTest(TestCase):
 
     def test_http_operation(self):
         operation = CMDHttpOperation({
-            "when": [
-                "$condition_1",
-                "$condition_2",
-            ],
-            "longRunning": True,
+            "when": ["$Condition_Workspaces_ListByResourceGroup", "$Condition_Workspaces_ListBySubscription"],
+            "operationId": "Workspaces_ListByResourceGroup",
+            "longRunning": { "finalStateVia": "azure-async-operation" },
             "http": {
-                "path": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DataFactory/factories/{factoryName}/integrationRuntimes/{integrationRuntimeName}",
+                "path": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Databricks/workspaces",
                 "request": {
-                    "method": "put",
+                    "method": "get",
                     "path": {
                         "params": [
                             {
-                                "name": "subscriptionId",
-                                "required": True,
-                                "arg": "$subscription",
-                            },
-                            {
+                                "type": "string",
                                 "name": "resourceGroupName",
+                                "arg": "$Path.resourceGroupName",
                                 "required": True,
-                                "arg": "$resourceGroup",
+                                "format": {
+                                    "pattern": "^[-\\w\\._\\(\\)]+$",
+                                    "maxLength": 90,
+                                    "minLength": 1
+                                }
                             },
                             {
-                                "name": "factoryName",
-                                "required": True,
-                                "arg": "$factoryName",
-                            },
-                            {
-                                "name": "integrationRuntimeName",
-                                "required": True,
-                                "arg": "$integrationRuntimeName",
+                                "type": "string",
+                                "name": "subscriptionId",
+                                "arg": "$Path.subscriptionId",
+                                "required": True
                             }
                         ]
                     },
                     "query": {
                         "consts": [
                             {
+                                "readOnly": True,
+                                "const": True,
+                                "default": {"value": "2021-04-01-preview"},
+                                "type": "string",
                                 "name": "api-version",
-                                "value": "2018-06-01",
+                                "required": True
                             }
                         ]
-                    },
-                    "header": {
-                        "params": [
-                            {
-                                "name": "If-Match",
-                                "arg": "$ifMatch",
-                            },
-                        ]
-                    },
-                    "body": {
-                        "json": {
-                            "type": "object",
-                            "props": [
-                                {
-                                    "name": "type",
-                                    "type": "string",
-                                    "required": True,
-                                    "arg": "$type",
-                                    "enum": {
-                                        "items": [
-                                            {
-                                                "value": "Managed",
-                                            },
-                                            {
-                                                "value": "SelfHosted",
-                                            }
-                                        ]
-                                    },
-                                },
-                                {
-                                    "name": "description",
-                                    "type": "string",
-                                    "arg": "$description"
-                                }
-                            ],
-                            "discriminators": [
-                                {
-                                    "property": "type",
-                                    "value": "Managed",
-                                    "props": [
-                                        {
-                                            "name": "typeProperties",
-                                            "type": "object",
-                                            "required": True,
-                                            "props": [
-                                                {
-                                                    "name": "typeProperties",
-                                                    "type": "object",
-                                                    "required": True,
-                                                    "props": [
-                                                        {
-                                                            "name": "ssisProperties",
-                                                            "type": "object",
-                                                            "arg": "$ssisProperties",
-                                                            "props": [
-                                                                {
-                                                                    "name": "expressCustomSetupProperties",
-                                                                    "type": "array<object>",
-                                                                    "arg": "$ssisProperties.expressCustomSetupProperties",
-                                                                    "item": {
-                                                                        "type": "object",
-                                                                        "props": [
-                                                                            {
-                                                                                "name": "type",
-                                                                                "type": "string",
-                                                                                "required": True,
-                                                                                "enum": {
-                                                                                    "items": [
-                                                                                        {
-                                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup",
-                                                                                            "value": "CmdkeySetup",
-                                                                                        },
-                                                                                        {
-                                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].EnvironmentVariableSetup",
-                                                                                            "value": "EnvironmentVariableSetup",
-                                                                                        },
-                                                                                        {
-                                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].ComponentSetup",
-                                                                                            "value": "ComponentSetup",
-                                                                                        },
-                                                                                        {
-                                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].AzPowerShellSetup",
-                                                                                            "value": "AzPowerShellSetup",
-                                                                                        }
-                                                                                    ]
-                                                                                }
-                                                                            },
-                                                                        ],
-                                                                        "discriminators": [
-                                                                            {
-                                                                                "property": "type",
-                                                                                "value": "CmdkeySetup",
-                                                                                "props": [
-                                                                                    {
-                                                                                        "name": "typeProperties",
-                                                                                        "type": "object",
-                                                                                        "required": True,
-                                                                                        "props": [
-                                                                                            {
-                                                                                                "name": "targetName",
-                                                                                                "type": "object",
-                                                                                                "required": True,
-                                                                                                "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.targetName",
-                                                                                            },
-                                                                                            {
-                                                                                                "name": "userName",
-                                                                                                "type": "object",
-                                                                                                "required": True,
-                                                                                                "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.userName",
-                                                                                            },
-                                                                                            {
-                                                                                                "name": "password",
-                                                                                                "type": "object",
-                                                                                                "required": True,
-                                                                                                "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password",
-                                                                                                "props": [
-                                                                                                    {
-                                                                                                        "name": "type",
-                                                                                                        "type": "string",
-                                                                                                        "required": True,
-                                                                                                        "enum": {
-                                                                                                            "items": [
-                                                                                                                {
-                                                                                                                    "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString",
-                                                                                                                    "value": "SecureString",
-                                                                                                                }
-                                                                                                            ],
-                                                                                                        },
-                                                                                                    }
-
-                                                                                                ],
-                                                                                                "discriminators": [
-                                                                                                    {
-                                                                                                        "property": "type",
-                                                                                                        "value": "SecureString",
-                                                                                                        "props": [
-                                                                                                            {
-                                                                                                                "name": "value",
-                                                                                                                "type": "string",
-                                                                                                                "required": True,
-                                                                                                                "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString.value"
-                                                                                                            }
-                                                                                                        ]
-                                                                                                    }
-                                                                                                ]
-                                                                                            }
-                                                                                        ]
-
-                                                                                    }
-
-                                                                                ]
-                                                                            }
-                                                                        ]
-                                                                    }
-                                                                }
-                                                            ]
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "managedVirtualNetwork",
-                                            "type": "object",
-                                            "arg": "$managedVirtualNetwork",
-                                            "props": [
-                                                {
-                                                    "name": "type",
-                                                    "type": "string",
-                                                    "required": True,
-                                                    "arg": "$managedVirtualNetwork.type",
-                                                    "enum": {
-                                                        "items": [
-                                                            {
-                                                                "value": "ManagedVirtualNetworkReference"
-                                                            }
-                                                        ]
-                                                    }
-                                                },
-                                                {
-                                                    "name": "referenceName",
-                                                    "type": "string",
-                                                    "required": True,
-                                                    "arg": "$managedVirtualNetwork.referenceName"
-                                                }
-                                            ]
-                                        }
-                                    ],
-                                },
-                                {
-                                    "property": "type",
-                                    "value": "SelfHosted",
-                                    "props": [
-                                        {
-                                            "name": "typeProperties",
-                                            "type": "object",
-                                            "required": True,
-                                            "props": [
-                                                {
-                                                    "name": "linkedInfo",
-                                                    "type": "object",
-                                                    "arg": "$linkedInfo",
-                                                    "props": [
-                                                        {
-                                                            "name": "authorizationType",
-                                                            "type": "string",
-                                                            "required": True,
-                                                            "arg": "$linkedInfo.authorizationType"
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ],
-                        }
                     }
                 },
                 "responses": [
                     {
-                        "statusCode": [200, 201],
-                        "header": {
-                            "items": [
-                                {
-                                    "name": "Sync-Token",
-                                    "var": "$SyncTokenHeader"
-                                }
-                            ]
-                        },
+                        "statusCode": [200],
                         "body": {
                             "json": {
-                                "var": "$instance",
-                                "type": "object",
-                                "props": [
-                                    {
-                                        "name": "type",
-                                        "type": "string",
-                                        "required": True,
-                                        "enum": {
-                                            "items": [
-                                                {
-                                                    "value": "Managed",
-                                                },
-                                                {
-                                                    "value": "SelfHosted",
-                                                }
-                                            ]
-                                        },
-                                    },
-                                    {
-                                        "name": "description",
-                                        "type": "string",
-                                    }
-                                ],
-                                "discriminators": [
-                                    {
-                                        "property": "type",
-                                        "value": "Managed",
-                                        "props": [
-                                            {
-                                                "name": "typeProperties",
-                                                "type": "object",
-                                                "required": True,
-                                                "props": [
-                                                    {
-                                                        "name": "typeProperties",
-                                                        "type": "object",
-                                                        "required": True,
-                                                        "props": [
-                                                            {
-                                                                "name": "ssisProperties",
-                                                                "type": "object",
-                                                                "props": [
-                                                                    {
-                                                                        "name": "expressCustomSetupProperties",
-                                                                        "type": "array<object>",
-                                                                        "item": {
-                                                                            "type": "object",
-                                                                            "props": [
-                                                                                {
-                                                                                    "name": "type",
-                                                                                    "type": "string",
-                                                                                    "required": True,
-                                                                                    "enum": {
-                                                                                        "items": [
-                                                                                            {
-                                                                                                "value": "CmdkeySetup",
-                                                                                            },
-                                                                                            {
-                                                                                                "value": "EnvironmentVariableSetup",
-                                                                                            },
-                                                                                            {
-                                                                                                "value": "ComponentSetup",
-                                                                                            },
-                                                                                            {
-                                                                                                "value": "AzPowerShellSetup",
-                                                                                            }
-                                                                                        ]
-                                                                                    }
-                                                                                },
-                                                                            ],
-                                                                            "discriminators": [
-                                                                                {
-                                                                                    "property": "type",
-                                                                                    "value": "CmdkeySetup",
-                                                                                    "props": [
-                                                                                        {
-                                                                                            "name": "typeProperties",
-                                                                                            "type": "object",
-                                                                                            "required": True,
-                                                                                            "props": [
-                                                                                                {
-                                                                                                    "name": "targetName",
-                                                                                                    "type": "object",
-                                                                                                    "required": True,
-                                                                                                    },
-                                                                                                {
-                                                                                                    "name": "userName",
-                                                                                                    "type": "object",
-                                                                                                    "required": True,
-                                                                                                    },
-                                                                                                {
-                                                                                                    "name": "password",
-                                                                                                    "type": "object",
-                                                                                                    "required": True,
-                                                                                                    "props": [
-                                                                                                        {
-                                                                                                            "name": "type",
-                                                                                                            "type": "string",
-                                                                                                            "required": True,
-                                                                                                            "enum": {
-                                                                                                                "items": [
-                                                                                                                    {
-                                                                                                                        "value": "SecureString",
-                                                                                                                    }
-                                                                                                                ],
-                                                                                                            },
-                                                                                                        }
-
-                                                                                                    ],
-                                                                                                    "discriminators": [
-                                                                                                        {
-                                                                                                            "property": "type",
-                                                                                                            "value": "SecureString",
-                                                                                                            "props": [
-                                                                                                                {
-                                                                                                                    "name": "value",
-                                                                                                                    "type": "string",
-                                                                                                                    "required": True,
-                                                                                                                }
-                                                                                                            ]
-                                                                                                        }
-                                                                                                    ]
-                                                                                                }
-                                                                                            ]
-
-                                                                                        }
-
-                                                                                    ]
-                                                                                }
-                                                                            ]
-                                                                        }
-                                                                    }
-                                                                ]
-                                                            }
-                                                        ]
-                                                    }
-                                                ]
-                                            },
-                                            {
-                                                "name": "managedVirtualNetwork",
+                                "var": "$Instance",
+                                "schema": {
+                                    "type": "object",
+                                    "props": [
+                                        {"type": "string", "name": "nextLink"},
+                                        {
+                                            "type": "array<object>",
+                                            "name": "value",
+                                            "item": {
                                                 "type": "object",
                                                 "props": [
                                                     {
-                                                        "name": "type",
-                                                        "type": "string",
-                                                        "required": True,
-                                                        "enum": {
-                                                            "items": [
-                                                                {
-                                                                    "value": "ManagedVirtualNetworkReference"
-                                                                }
-                                                            ]
+                                                        "readOnly": True,
+                                                        "type": "ResourceId",
+                                                        "name": "id",
+                                                        "format": {
+                                                            "template": "/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}"
                                                         }
                                                     },
                                                     {
-                                                        "name": "referenceName",
-                                                        "type": "string",
-                                                        "required": True,
-                                                    }
-                                                ]
-                                            }
-                                        ],
-                                    },
-                                    {
-                                        "property": "type",
-                                        "value": "SelfHosted",
-                                        "props": [
-                                            {
-                                                "name": "typeProperties",
-                                                "type": "object",
-                                                "required": True,
-                                                "props": [
+                                                        "type": "ResourceLocation",
+                                                        "name": "location",
+                                                        "required": True
+                                                    },
                                                     {
-                                                        "name": "linkedInfo",
+                                                        "readOnly": True,
+                                                        "type": "string",
+                                                        "name": "name"
+                                                    },
+                                                    {
                                                         "type": "object",
+                                                        "name": "properties",
+                                                        "required": True,
                                                         "props": [
                                                             {
-                                                                "name": "authorizationType",
+                                                                "type": "array<object>",
+                                                                "name": "authorizations",
+                                                                "item": {
+                                                                    "type": "object",
+                                                                    "props": [
+                                                                        {
+                                                                            "type": "uuid",
+                                                                            "name": "principalId",
+                                                                            "required": True
+                                                                        },
+                                                                        {
+                                                                            "type": "uuid",
+                                                                            "name": "roleDefinitionId",
+                                                                            "required": True
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "type": "object",
+                                                                "name": "createdBy",
+                                                                "props": [
+                                                                    {
+                                                                        "readOnly": True,
+                                                                        "type": "uuid",
+                                                                        "name": "applicationId"
+                                                                    },
+                                                                    {
+                                                                        "readOnly": True,
+                                                                        "type": "uuid",
+                                                                        "name": "oid"
+                                                                    },
+                                                                    {
+                                                                        "readOnly": True,
+                                                                        "type": "string",
+                                                                        "name": "puid"
+                                                                    }
+                                                                ],
+                                                                "cls": "CreatedBy_read"
+                                                            },
+                                                            {
+                                                                "readOnly": True,
+                                                                "type": "dateTime",
+                                                                "name": "createdDateTime"
+                                                            },
+                                                            {
+                                                                "type": "object",
+                                                                "name": "encryption",
+                                                                "props": [
+                                                                    {
+                                                                        "type": "object",
+                                                                        "name": "entities",
+                                                                        "required": True,
+                                                                        "props": [
+                                                                            {
+                                                                                "type": "object",
+                                                                                "name": "managedServices",
+                                                                                "props": [
+                                                                                    {
+                                                                                        "type": "string",
+                                                                                        "name": "keySource",
+                                                                                        "required": True,
+                                                                                        "enum": {
+                                                                                            "items": [
+                                                                                                {
+                                                                                                    "value": "Microsoft.Keyvault"
+                                                                                                }
+                                                                                            ]
+                                                                                        }
+                                                                                    },
+                                                                                    {
+                                                                                        "type": "object",
+                                                                                        "name": "keyVaultProperties",
+                                                                                        "props": [
+                                                                                            {
+                                                                                                "type": "string",
+                                                                                                "name": "keyName",
+                                                                                                "required": True
+                                                                                            },
+                                                                                            {
+                                                                                                "type": "string",
+                                                                                                "name": "keyVaultUri",
+                                                                                                "required": True
+                                                                                            },
+                                                                                            {
+                                                                                                "type": "string",
+                                                                                                "name": "keyVersion",
+                                                                                                "required": True
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
                                                                 "type": "string",
-                                                                "required": True,
+                                                                "name": "managedResourceGroupId",
+                                                                "required": True
+                                                            },
+                                                            {
+                                                                "type": "object",
+                                                                "name": "parameters",
+                                                                "props": [
+                                                                    {
+                                                                        "type": "object",
+                                                                        "name": "amlWorkspaceId",
+                                                                        "props": [
+                                                                            {
+                                                                                "readOnly": True,
+                                                                                "type": "string",
+                                                                                "name": "type",
+                                                                                "enum": {
+                                                                                    "items": [
+                                                                                        {"value": "Bool"},
+                                                                                        {"value": "Object"},
+                                                                                        {"value": "String"}
+                                                                                    ]
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "type": "string",
+                                                                                "name": "value",
+                                                                                "required": True
+                                                                            }
+                                                                        ],
+                                                                        "cls": "WorkspaceCustomStringParameter_read"
+                                                                    },
+                                                                    {
+                                                                        "type": "@WorkspaceCustomStringParameter_read",
+                                                                        "name": "customPrivateSubnetName"
+                                                                    },
+                                                                    {
+                                                                        "type": "@WorkspaceCustomStringParameter_read",
+                                                                        "name": "customPublicSubnetName"
+                                                                    },
+                                                                    {
+                                                                        "type": "@WorkspaceCustomStringParameter_read",
+                                                                        "name": "customVirtualNetworkId"
+                                                                    },
+                                                                    {
+                                                                        "type": "object",
+                                                                        "name": "enableNoPublicIp",
+                                                                        "props": [
+                                                                            {
+                                                                                "readOnly": True,
+                                                                                "type": "string",
+                                                                                "name": "type",
+                                                                                "enum": {
+                                                                                    "items": [
+                                                                                        {"value": "Bool"},
+                                                                                        {"value": "Object"},
+                                                                                        {"value": "String"}
+                                                                                    ]
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "type": "boolean",
+                                                                                "name": "value",
+                                                                                "required": True
+                                                                            }
+                                                                        ],
+                                                                        "cls": "WorkspaceCustomBooleanParameter_read"
+                                                                    },
+                                                                    {
+                                                                        "type": "object",
+                                                                        "name": "encryption",
+                                                                        "props": [
+                                                                            {
+                                                                                "readOnly": True,
+                                                                                "type": "string",
+                                                                                "name": "type",
+                                                                                "enum": {
+                                                                                    "items": [
+                                                                                        {"value": "Bool"},
+                                                                                        {"value": "Object"},
+                                                                                        {"value": "String"}
+                                                                                    ]
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "type": "object",
+                                                                                "name": "value",
+                                                                                "props": [
+                                                                                    {
+                                                                                        "type": "string",
+                                                                                        "name": "KeyName"
+                                                                                    },
+                                                                                    {
+                                                                                        "default": {
+                                                                                            "value": "Default"
+                                                                                        },
+                                                                                        "type": "string",
+                                                                                        "name": "keySource",
+                                                                                        "enum": {
+                                                                                            "items": [
+                                                                                                {"value": "Default"},
+                                                                                                {
+                                                                                                    "value": "Microsoft.Keyvault"
+                                                                                                }
+                                                                                            ]
+                                                                                        }
+                                                                                    },
+                                                                                    {
+                                                                                        "type": "string",
+                                                                                        "name": "keyvaulturi"
+                                                                                    },
+                                                                                    {
+                                                                                        "type": "string",
+                                                                                        "name": "keyversion"
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "type": "@WorkspaceCustomStringParameter_read",
+                                                                        "name": "loadBalancerBackendPoolName"
+                                                                    },
+                                                                    {
+                                                                        "type": "@WorkspaceCustomStringParameter_read",
+                                                                        "name": "loadBalancerId"
+                                                                    },
+                                                                    {
+                                                                        "type": "@WorkspaceCustomStringParameter_read",
+                                                                        "name": "natGatewayName"
+                                                                    },
+                                                                    {
+                                                                        "type": "@WorkspaceCustomBooleanParameter_read",
+                                                                        "name": "prepareEncryption"
+                                                                    },
+                                                                    {
+                                                                        "type": "@WorkspaceCustomStringParameter_read",
+                                                                        "name": "publicIpName"
+                                                                    },
+                                                                    {
+                                                                        "type": "@WorkspaceCustomBooleanParameter_read",
+                                                                        "name": "requireInfrastructureEncryption"
+                                                                    },
+                                                                    {
+                                                                        "readOnly": True,
+                                                                        "type": "object",
+                                                                        "name": "resourceTags",
+                                                                        "props": [
+                                                                            {
+                                                                                "readOnly": True,
+                                                                                "type": "string",
+                                                                                "name": "type",
+                                                                                "enum": {
+                                                                                    "items": [
+                                                                                        {"value": "Bool"},
+                                                                                        {"value": "Object"},
+                                                                                        {"value": "String"}
+                                                                                    ]
+                                                                                }
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "type": "@WorkspaceCustomStringParameter_read",
+                                                                        "name": "storageAccountName"
+                                                                    },
+                                                                    {
+                                                                        "type": "@WorkspaceCustomStringParameter_read",
+                                                                        "name": "storageAccountSkuName"
+                                                                    },
+                                                                    {
+                                                                        "type": "@WorkspaceCustomStringParameter_read",
+                                                                        "name": "vnetAddressPrefix"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "readOnly": True,
+                                                                "type": "array<object>",
+                                                                "name": "privateEndpointConnections",
+                                                                "item": {
+                                                                    "readOnly": True,
+                                                                    "type": "object",
+                                                                    "props": [
+                                                                        {
+                                                                            "readOnly": True,
+                                                                            "type": "ResourceId",
+                                                                            "name": "id",
+                                                                            "format": {
+                                                                                "template": "/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Databricks/workspaces/{}/privateEndpointConnections/{}"
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "readOnly": True,
+                                                                            "type": "string",
+                                                                            "name": "name"
+                                                                        },
+                                                                        {
+                                                                            "readOnly": True,
+                                                                            "type": "object",
+                                                                            "name": "properties",
+                                                                            "required": True,
+                                                                            "props": [
+                                                                                {
+                                                                                    "readOnly": True,
+                                                                                    "type": "object",
+                                                                                    "name": "privateEndpoint",
+                                                                                    "props": [
+                                                                                        {
+                                                                                            "readOnly": True,
+                                                                                            "type": "string",
+                                                                                            "name": "id"
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                {
+                                                                                    "readOnly": True,
+                                                                                    "type": "object",
+                                                                                    "name": "privateLinkServiceConnectionState",
+                                                                                    "required": True,
+                                                                                    "props": [
+                                                                                        {
+                                                                                            "readOnly": True,
+                                                                                            "type": "string",
+                                                                                            "name": "actionRequired"
+                                                                                        },
+                                                                                        {
+                                                                                            "readOnly": True,
+                                                                                            "type": "string",
+                                                                                            "name": "description"
+                                                                                        },
+                                                                                        {
+                                                                                            "readOnly": True,
+                                                                                            "type": "string",
+                                                                                            "name": "status",
+                                                                                            "required": True,
+                                                                                            "enum": {
+                                                                                                "items": [
+                                                                                                    {
+                                                                                                        "value": "Approved"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "value": "Disconnected"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "value": "Pending"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "value": "Rejected"
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                {
+                                                                                    "readOnly": True,
+                                                                                    "type": "string",
+                                                                                    "name": "provisioningState",
+                                                                                    "enum": {
+                                                                                        "items": [
+                                                                                            {"value": "Creating"},
+                                                                                            {"value": "Deleting"},
+                                                                                            {"value": "Failed"},
+                                                                                            {"value": "Succeeded"},
+                                                                                            {"value": "Updating"}
+                                                                                        ]
+                                                                                    }
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "readOnly": True,
+                                                                            "type": "string",
+                                                                            "name": "type"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "readOnly": True,
+                                                                "type": "string",
+                                                                "name": "provisioningState",
+                                                                "enum": {
+                                                                    "items": [
+                                                                        {"value": "Accepted"},
+                                                                        {"value": "Canceled"},
+                                                                        {"value": "Created"},
+                                                                        {"value": "Creating"},
+                                                                        {"value": "Deleted"},
+                                                                        {"value": "Deleting"},
+                                                                        {"value": "Failed"},
+                                                                        {"value": "Ready"},
+                                                                        {"value": "Running"},
+                                                                        {"value": "Succeeded"},
+                                                                        {"value": "Updating"}
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "type": "string",
+                                                                "name": "publicNetworkAccess",
+                                                                "enum": {
+                                                                    "items": [
+                                                                        {"value": "Disabled"},
+                                                                        {"value": "Enabled"}
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "type": "string",
+                                                                "name": "requiredNsgRules",
+                                                                "enum": {
+                                                                    "items": [
+                                                                        {"value": "AllRules"},
+                                                                        {
+                                                                            "value": "NoAzureDatabricksRules"
+                                                                        },
+                                                                        {"value": "NoAzureServiceRules"}
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "type": "object",
+                                                                "name": "storageAccountIdentity",
+                                                                "props": [
+                                                                    {
+                                                                        "readOnly": True,
+                                                                        "type": "uuid",
+                                                                        "name": "principalId"
+                                                                    },
+                                                                    {
+                                                                        "readOnly": True,
+                                                                        "type": "uuid",
+                                                                        "name": "tenantId"
+                                                                    },
+                                                                    {
+                                                                        "readOnly": True,
+                                                                        "type": "string",
+                                                                        "name": "type"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "type": "string",
+                                                                "name": "uiDefinitionUri"
+                                                            },
+                                                            {
+                                                                "type": "@CreatedBy_read",
+                                                                "name": "updatedBy"
+                                                            },
+                                                            {
+                                                                "readOnly": True,
+                                                                "type": "string",
+                                                                "name": "workspaceId"
+                                                            },
+                                                            {
+                                                                "readOnly": True,
+                                                                "type": "string",
+                                                                "name": "workspaceUrl"
+                                                            }
+                                                        ],
+                                                        "clientFlatten": True
+                                                    },
+                                                    {
+                                                        "type": "object",
+                                                        "name": "sku",
+                                                        "props": [
+                                                            {
+                                                                "type": "string",
+                                                                "name": "name",
+                                                                "required": True
+                                                            },
+                                                            {"type": "string", "name": "tier"}
+                                                        ]
+                                                    },
+                                                    {
+                                                        "readOnly": True,
+                                                        "type": "object",
+                                                        "name": "systemData",
+                                                        "props": [
+                                                            {
+                                                                "readOnly": True,
+                                                                "type": "dateTime",
+                                                                "name": "createdAt"
+                                                            },
+                                                            {
+                                                                "readOnly": True,
+                                                                "type": "string",
+                                                                "name": "createdBy"
+                                                            },
+                                                            {
+                                                                "readOnly": True,
+                                                                "type": "string",
+                                                                "name": "createdByType",
+                                                                "enum": {
+                                                                    "items": [
+                                                                        {"value": "Application"},
+                                                                        {"value": "Key"},
+                                                                        {"value": "ManagedIdentity"},
+                                                                        {"value": "User"}
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "readOnly": True,
+                                                                "type": "dateTime",
+                                                                "name": "lastModifiedAt"
+                                                            },
+                                                            {
+                                                                "readOnly": True,
+                                                                "type": "string",
+                                                                "name": "lastModifiedBy"
+                                                            },
+                                                            {
+                                                                "readOnly": True,
+                                                                "type": "string",
+                                                                "name": "lastModifiedByType",
+                                                                "enum": {
+                                                                    "items": [
+                                                                        {"value": "Application"},
+                                                                        {"value": "Key"},
+                                                                        {"value": "ManagedIdentity"},
+                                                                        {"value": "User"}
+                                                                    ]
+                                                                }
                                                             }
                                                         ]
+                                                    },
+                                                    {
+                                                        "type": "object",
+                                                        "name": "tags",
+                                                        "additionalProps": {
+                                                            "item": {"type": "string"}
+                                                        }
+                                                    },
+                                                    {
+                                                        "readOnly": True,
+                                                        "type": "string",
+                                                        "name": "type"
                                                     }
                                                 ]
                                             }
-                                        ]
-                                    }
-                                ],
+                                        }
+                                    ]
+                                }
                             }
                         }
                     },
                     {
                         "isError": True,
-                        "header": {
-                            "items": [
-                                {
-                                    "name": "x-ms-request-id",
-                                }
-                            ]
-                        },
                         "body": {
-                            "json": {
-                                "type": "object",
-                                "cls": "@CloudError",
-                                "props": [
-                                    {
-                                        "name": "error",
-                                        "type": "object",
-                                        "clientFlatten": True,
-                                        "props": [
-                                            {
-                                                "name": "code",
-                                                "type": "string",
-                                                "required": True,
-                                            },
-                                            {
-                                                "name": "message",
-                                                "type": "string",
-                                                "required": True,
-                                            },
-                                            {
-                                                "name": "target",
-                                                "type": "string",
-                                            },
-                                            {
-                                                "name": "details",
-                                                "type": "array<@CloudError>",
-                                                "item": {
-                                                    "type": "@CloudError"
-                                                }
-                                            }
-                                        ]
-                                    }
-                                ]
-
-                            }
+                            "json": {"schema": {"type": "@ODataV4Format"}}
                         }
                     }
-
                 ]
             }
-        })
+        }
+        )
         operation.validate()
         operation.to_native()
         operation.to_primitive()

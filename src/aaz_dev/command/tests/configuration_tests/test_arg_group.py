@@ -44,7 +44,7 @@ class ArgumentGroupTest(TestCase):
                                 "required": True,
                                 "help": {
                                     "short": "A friendly name for the destination.",
-                                    "long": [
+                                    "lines": [
                                         "This name should be unique across all destinations (regardless of type) within the data collection rule."
                                     ]
                                 }
