@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.4.0
++++++
+* [Breaking Change] Replace *.xml by *.json file in `/Resources` folder of `aaz` repo, keep `*.xml` only for model review.
+
 0.3.0
 +++++
 * Support similar arguments modification
