@@ -24,4 +24,4 @@ def verify_xml(self, value):
     new_data = new_arg.to_primitive()
     # print(json.dumps(data, indent=4))
     # print(json.dumps(new_data, indent=4))
-    # self.assertEqual(new_data, data)
+    self.assertEqual(new_data, data)
