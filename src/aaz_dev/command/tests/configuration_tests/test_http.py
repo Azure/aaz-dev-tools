@@ -1,519 +1,118 @@
 from unittest import TestCase
+
 from command.model.configuration._http import *
+from command.tests.common import verify_xml
 
 
 class HttpTest(TestCase):
 
     def test_http_action(self):
         http_action = CMDHttpAction({
-            "path": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DataFactory/factories/{factoryName}/integrationRuntimes/{integrationRuntimeName}",
+            "path": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Sql/managedInstances/{managedInstanceName}/dnsAliases/{dnsAliasName}",
             "request": {
-                "method": "put",
+                "method": "get",
                 "path": {
                     "params": [
                         {
-                            "name": "subscriptionId",
-                            "required": True,
-                            "arg": "$subscription",
+                            "type": "string",
+                            "name": "dnsAliasName",
+                            "arg": "$Path.dnsAliasName",
+                            "required": True
                         },
                         {
+                            "type": "string",
+                            "name": "managedInstanceName",
+                            "arg": "$Path.managedInstanceName",
+                            "required": True
+                        },
+                        {
+                            "type": "string",
                             "name": "resourceGroupName",
-                            "required": True,
-                            "arg": "$resourceGroup",
+                            "arg": "$Path.resourceGroupName",
+                            "required": True
                         },
                         {
-                            "name": "factoryName",
-                            "required": True,
-                            "arg": "$factoryName",
-                        },
-                        {
-                            "name": "integrationRuntimeName",
-                            "required": True,
-                            "arg": "$integrationRuntimeName",
+                            "type": "string",
+                            "name": "subscriptionId",
+                            "arg": "$Path.subscriptionId",
+                            "required": True
                         }
                     ]
                 },
                 "query": {
                     "consts": [
                         {
+                            "readOnly": True,
+                            "const": True,
+                            "default": {"value": "2021-11-01-preview"},
+                            "type": "string",
                             "name": "api-version",
-                            "value": "2018-06-01",
+                            "required": True
                         }
                     ]
-                },
-                "header": {
-                    "params": [
-                        {
-                            "name": "If-Match",
-                            "arg": "$ifMatch",
-                        },
-                    ]
-                },
-                "body": {
-                    "json": {
-                        "type": "object",
-                        "props": [
-                            {
-                                "name": "type",
-                                "type": "string",
-                                "required": True,
-                                "arg": "$type",
-                                "enum": {
-                                    "items": [
-                                        {
-                                            "value": "Managed",
-                                        },
-                                        {
-                                            "value": "SelfHosted",
-                                        }
-                                    ]
-                                },
-                            },
-                            {
-                                "name": "description",
-                                "type": "string",
-                                "arg": "$description"
-                            }
-                        ],
-                        "discriminators": [
-                            {
-                                "prop": "type",
-                                "value": "Managed",
-                                "props": [
-                                    {
-                                        "name": "typeProperties",
-                                        "type": "object",
-                                        "required": True,
-                                        "props": [
-                                            {
-                                                "name": "typeProperties",
-                                                "type": "object",
-                                                "required": True,
-                                                "props": [
-                                                    {
-                                                        "name": "ssisProperties",
-                                                        "type": "object",
-                                                        "arg": "$ssisProperties",
-                                                        "props": [
-                                                            {
-                                                                "name": "expressCustomSetupProperties",
-                                                                "type": "array<object>",
-                                                                "arg": "$ssisProperties.expressCustomSetupProperties",
-                                                                "item": {
-                                                                    "type": "object",
-                                                                    "props": [
-                                                                        {
-                                                                            "name": "type",
-                                                                            "type": "string",
-                                                                            "required": True,
-                                                                            "enum": {
-                                                                                "items": [
-                                                                                    {
-                                                                                        "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup",
-                                                                                        "value": "CmdkeySetup",
-                                                                                    },
-                                                                                    {
-                                                                                        "arg": "$ssisProperties.expressCustomSetupProperties[].EnvironmentVariableSetup",
-                                                                                        "value": "EnvironmentVariableSetup",
-                                                                                    },
-                                                                                    {
-                                                                                        "arg": "$ssisProperties.expressCustomSetupProperties[].ComponentSetup",
-                                                                                        "value": "ComponentSetup",
-                                                                                    },
-                                                                                    {
-                                                                                        "arg": "$ssisProperties.expressCustomSetupProperties[].AzPowerShellSetup",
-                                                                                        "value": "AzPowerShellSetup",
-                                                                                    }
-                                                                                ]
-                                                                            }
-                                                                        },
-                                                                    ],
-                                                                    "discriminators": [
-                                                                        {
-                                                                            "prop": "type",
-                                                                            "value": "CmdkeySetup",
-                                                                            "props": [
-                                                                                {
-                                                                                    "name": "typeProperties",
-                                                                                    "type": "object",
-                                                                                    "required": True,
-                                                                                    "props": [
-                                                                                        {
-                                                                                            "name": "targetName",
-                                                                                            "type": "object",
-                                                                                            "required": True,
-                                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.targetName",
-                                                                                        },
-                                                                                        {
-                                                                                            "name": "userName",
-                                                                                            "type": "object",
-                                                                                            "required": True,
-                                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.userName",
-                                                                                        },
-                                                                                        {
-                                                                                            "name": "password",
-                                                                                            "type": "object",
-                                                                                            "required": True,
-                                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password",
-                                                                                            "props": [
-                                                                                                {
-                                                                                                    "name": "type",
-                                                                                                    "type": "string",
-                                                                                                    "required": True,
-                                                                                                    "enum": {
-                                                                                                        "items": [
-                                                                                                            {
-                                                                                                                "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString",
-                                                                                                                "value": "SecureString",
-                                                                                                            }
-                                                                                                        ],
-                                                                                                    },
-                                                                                                }
-
-                                                                                            ],
-                                                                                            "discriminators": [
-                                                                                                {
-                                                                                                    "prop": "type",
-                                                                                                    "value": "SecureString",
-                                                                                                    "props": [
-                                                                                                        {
-                                                                                                            "name": "value",
-                                                                                                            "type": "string",
-                                                                                                            "required": True,
-                                                                                                            "arg": "$ssisProperties.expressCustomSetupProperties[].CmdkeySetup.password.SecureString.value"
-                                                                                                        }
-                                                                                                    ]
-                                                                                                }
-                                                                                            ]
-                                                                                        }
-                                                                                    ]
-
-                                                                                }
-
-                                                                            ]
-                                                                        }
-                                                                    ]
-                                                                }
-                                                            }
-                                                        ]
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "name": "managedVirtualNetwork",
-                                        "type": "object",
-                                        "arg": "$managedVirtualNetwork",
-                                        "props": [
-                                            {
-                                                "name": "type",
-                                                "type": "string",
-                                                "required": True,
-                                                "arg": "$managedVirtualNetwork.type",
-                                                "enum": {
-                                                    "items": [
-                                                        {
-                                                            "value": "ManagedVirtualNetworkReference"
-                                                        }
-                                                    ]
-                                                }
-                                            },
-                                            {
-                                                "name": "referenceName",
-                                                "type": "string",
-                                                "required": True,
-                                                "arg": "$managedVirtualNetwork.referenceName"
-                                            }
-                                        ]
-                                    }
-                                ],
-                            },
-                            {
-                                "prop": "type",
-                                "value": "SelfHosted",
-                                "props": [
-                                    {
-                                        "name": "typeProperties",
-                                        "type": "object",
-                                        "required": True,
-                                        "props": [
-                                            {
-                                                "name": "linkedInfo",
-                                                "type": "object",
-                                                "arg": "$linkedInfo",
-                                                "props": [
-                                                    {
-                                                        "name": "authorizationType",
-                                                        "type": "string",
-                                                        "required": True,
-                                                        "arg": "$linkedInfo.authorizationType"
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }
-                        ],
-                    }
                 }
             },
             "responses": [
                 {
-                    "statusCode": [200, 201],
-                    "header": {
-                        "items": [
-                            {
-                                "name": "Sync-Token",
-                                "var": "$SyncTokenHeader"
-                            }
-                        ]
-                    },
+                    "statusCode": [200],
                     "body": {
                         "json": {
-                            "var": "$instance",
-                            "type": "object",
-                            "props": [
-                                {
-                                    "name": "type",
-                                    "type": "string",
-                                    "required": True,
-                                    "enum": {
-                                        "items": [
+                            "var": "$Instance",
+                            "schema": {
+                                "type": "object",
+                                "props": [
+                                    {
+                                        "readOnly": True,
+                                        "type": "ResourceId",
+                                        "name": "id",
+                                        "format": {
+                                            "template": "/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Sql/managedInstances/{}/dnsAliases/{}"
+                                        }
+                                    },
+                                    {
+                                        "readOnly": True,
+                                        "type": "string",
+                                        "name": "name"
+                                    },
+                                    {
+                                        "type": "object",
+                                        "name": "properties",
+                                        "props": [
                                             {
-                                                "value": "Managed",
+                                                "readOnly": True,
+                                                "type": "string",
+                                                "name": "azureDnsRecord"
                                             },
                                             {
-                                                "value": "SelfHosted",
+                                                "readOnly": True,
+                                                "type": "string",
+                                                "name": "publicAzureDnsRecord"
                                             }
-                                        ]
+                                        ],
+                                        "clientFlatten": True
                                     },
-                                },
-                                {
-                                    "name": "description",
-                                    "type": "string",
-                                }
-                            ],
-                            "discriminators": [
-                                {
-                                    "prop": "type",
-                                    "value": "Managed",
-                                    "props": [
-                                        {
-                                            "name": "typeProperties",
-                                            "type": "object",
-                                            "required": True,
-                                            "props": [
-                                                {
-                                                    "name": "typeProperties",
-                                                    "type": "object",
-                                                    "required": True,
-                                                    "props": [
-                                                        {
-                                                            "name": "ssisProperties",
-                                                            "type": "object",
-                                                            "props": [
-                                                                {
-                                                                    "name": "expressCustomSetupProperties",
-                                                                    "type": "array<object>",
-                                                                    "item": {
-                                                                        "type": "object",
-                                                                        "props": [
-                                                                            {
-                                                                                "name": "type",
-                                                                                "type": "string",
-                                                                                "required": True,
-                                                                                "enum": {
-                                                                                    "items": [
-                                                                                        {
-                                                                                            "value": "CmdkeySetup",
-                                                                                        },
-                                                                                        {
-                                                                                            "value": "EnvironmentVariableSetup",
-                                                                                        },
-                                                                                        {
-                                                                                            "value": "ComponentSetup",
-                                                                                        },
-                                                                                        {
-                                                                                            "value": "AzPowerShellSetup",
-                                                                                        }
-                                                                                    ]
-                                                                                }
-                                                                            },
-                                                                        ],
-                                                                        "discriminators": [
-                                                                            {
-                                                                                "prop": "type",
-                                                                                "value": "CmdkeySetup",
-                                                                                "props": [
-                                                                                    {
-                                                                                        "name": "typeProperties",
-                                                                                        "type": "object",
-                                                                                        "required": True,
-                                                                                        "props": [
-                                                                                            {
-                                                                                                "name": "targetName",
-                                                                                                "type": "object",
-                                                                                                "required": True,
-                                                                                                },
-                                                                                            {
-                                                                                                "name": "userName",
-                                                                                                "type": "object",
-                                                                                                "required": True,
-                                                                                                },
-                                                                                            {
-                                                                                                "name": "password",
-                                                                                                "type": "object",
-                                                                                                "required": True,
-                                                                                                "props": [
-                                                                                                    {
-                                                                                                        "name": "type",
-                                                                                                        "type": "string",
-                                                                                                        "required": True,
-                                                                                                        "enum": {
-                                                                                                            "items": [
-                                                                                                                {
-                                                                                                                    "value": "SecureString",
-                                                                                                                }
-                                                                                                            ],
-                                                                                                        },
-                                                                                                    }
-    
-                                                                                                ],
-                                                                                                "discriminators": [
-                                                                                                    {
-                                                                                                        "prop": "type",
-                                                                                                        "value": "SecureString",
-                                                                                                        "props": [
-                                                                                                            {
-                                                                                                                "name": "value",
-                                                                                                                "type": "string",
-                                                                                                                "required": True,
-                                                                                                            }
-                                                                                                        ]
-                                                                                                    }
-                                                                                                ]
-                                                                                            }
-                                                                                        ]
-    
-                                                                                    }
-    
-                                                                                ]
-                                                                            }
-                                                                        ]
-                                                                    }
-                                                                }
-                                                            ]
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "name": "managedVirtualNetwork",
-                                            "type": "object",
-                                            "props": [
-                                                {
-                                                    "name": "type",
-                                                    "type": "string",
-                                                    "required": True,
-                                                    "enum": {
-                                                        "items": [
-                                                            {
-                                                                "value": "ManagedVirtualNetworkReference"
-                                                            }
-                                                        ]
-                                                    }
-                                                },
-                                                {
-                                                    "name": "referenceName",
-                                                    "type": "string",
-                                                    "required": True,
-                                                }
-                                            ]
-                                        }
-                                    ],
-                                },
-                                {
-                                    "prop": "type",
-                                    "value": "SelfHosted",
-                                    "props": [
-                                        {
-                                            "name": "typeProperties",
-                                            "type": "object",
-                                            "required": True,
-                                            "props": [
-                                                {
-                                                    "name": "linkedInfo",
-                                                    "type": "object",
-                                                    "props": [
-                                                        {
-                                                            "name": "authorizationType",
-                                                            "type": "string",
-                                                            "required": True,
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ],
+                                    {
+                                        "readOnly": True,
+                                        "type": "string",
+                                        "name": "type"
+                                    }
+                                ],
+                                "cls": "ManagedServerDnsAlias_read"
+                            }
                         }
                     }
                 },
                 {
                     "isError": True,
-                    "header": {
-                        "items": [
-                            {
-                                "name": "x-ms-request-id",
-                            }
-                        ]
-                    },
                     "body": {
-                        "json": {
-                            "type": "object",
-                            "cls": "@CloudError",
-                            "props": [
-                                {
-                                    "name": "error",
-                                    "type": "object",
-                                    "clientFlatten": True,
-                                    "props": [
-                                        {
-                                            "name": "code",
-                                            "type": "string",
-                                            "required": True,
-                                        },
-                                        {
-                                            "name": "message",
-                                            "type": "string",
-                                            "required": True,
-                                        },
-                                        {
-                                            "name": "target",
-                                            "type": "string",
-                                        },
-                                        {
-                                            "name": "details",
-                                            "type": "array<@CloudError>",
-                                            "item": {
-                                                "type": "@CloudError"
-                                            }
-                                        }
-                                    ]
-                                }
-                            ]
-
-                        }
+                        "json": {"schema": {"type": "@ODataV4Format"}}
                     }
                 }
-
             ]
         })
 
         http_action.validate()
-        print(http_action.to_native())
-        print(http_action.to_primitive())
+        http_action.to_native()
+        http_action.to_primitive()
+
+        verify_xml(self, http_action)

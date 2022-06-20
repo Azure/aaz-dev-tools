@@ -46,7 +46,7 @@ class CMDVariantField(StringType):
 
     def __init__(self, *args, **kwargs):
         super(CMDVariantField, self).__init__(
-            regex=r'\$[a-zA-Z0-9_\[\]\.]+',
+            regex=r'[$@][a-zA-Z0-9_\[\]\.]+',
             *args,
             **kwargs
         )
@@ -56,7 +56,7 @@ class CMDClassField(StringType):
 
     def __init__(self, *args, **kwargs):
         super(CMDClassField, self).__init__(
-            regex=r'\@[a-zA-Z0-9_]+',
+            regex=r'[A-Z][a-zA-Z0-9_]+',
             *args, **kwargs
         )
 
@@ -78,6 +78,7 @@ class CMDPrimitiveField(BaseType):
     def __init__(self, *args, **kwargs):
         super(CMDPrimitiveField, self).__init__(
             serialize_when_none=True,
+            default=None,
             *args, **kwargs,
         )
 
