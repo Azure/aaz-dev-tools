@@ -1,4 +1,4 @@
-import { Alert, Box, Button, ButtonBase, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps } from '@mui/material';
+import { Alert, Box, Button, ButtonBase, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputLabel, LinearProgress, Radio, RadioGroup, Switch, TextField, Typography, TypographyProps } from '@mui/material';
 import { styled } from '@mui/system';
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
@@ -750,16 +750,15 @@ function ArgumentDialog(props: {
                         <FormControlLabel value="Preview" control={<Radio />} label="Preview" sx={{ ml: 4 }} />
                         <FormControlLabel value="Experimental" control={<Radio />} label="Experimental" sx={{ ml: 4 }} />
                     </RadioGroup>
-                    {/* TODO: support hide argument */}
-                    {/* {!props.arg.required && <React.Fragment>
-                    <InputLabel shrink sx={{ font: "inherit" }}>Hide Argument</InputLabel>
-                    <Switch sx={{ ml: 4 }}
-                        checked={hide}
-                        onChange={(event: any) => {
-                            setHide(!hide);
-                        }}
-                    />
-                </React.Fragment>} */}
+                    {!props.arg.required && <>
+                        <InputLabel shrink sx={{ font: "inherit" }}>Hide Argument</InputLabel>
+                        <Switch sx={{ ml: 4 }}
+                            checked={hide}
+                            onChange={(event: any) => {
+                                setHide(!hide);
+                            }}
+                        />
+                    </>}
                     <TextField
                         id="shortSummery"
                         label="Short Summery"
@@ -1071,6 +1070,13 @@ const PropRequiredTypography = styled(Typography)<TypographyProps>(({ theme }) =
     fontWeight: 400,
 }))
 
+const PropHiddenTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: '#8888C3',
+    fontFamily: "'Work Sans', sans-serif",
+    fontSize: 10,
+    fontWeight: 400,
+}))
+
 const ArgGroupTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     color: theme.palette.primary.main,
     fontFamily: "'Roboto Condensed', sans-serif",
@@ -1080,6 +1086,13 @@ const ArgGroupTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
 
 const PropArgOptionTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     color: theme.palette.primary.main,
+    fontFamily: "'Roboto Condensed', sans-serif",
+    fontSize: 16,
+    fontWeight: 700,
+}))
+
+const PropHiddenArgOptionTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: '#8888C3',
     fontFamily: "'Roboto Condensed', sans-serif",
     fontSize: 16,
     fontWeight: 700,
@@ -1146,8 +1159,8 @@ function ArgumentPropsReviewer(props: {
                 <ButtonBase onClick={() => {
                     props.onSelectSubArg(arg.var)
                 }}>
-                    <PropArgOptionTypography sx={{ flexShrink: 0 }}>{argOptionsString}</PropArgOptionTypography>
-
+                    {!arg.hide && <PropArgOptionTypography sx={{ flexShrink: 0 }}>{argOptionsString}</PropArgOptionTypography> }
+                    {arg.hide && <PropHiddenArgOptionTypography sx={{ flexShrink: 0 }}>{argOptionsString}</PropHiddenArgOptionTypography>}
                 </ButtonBase>
                 <Box sx={{ flexGrow: 1 }} />
                 {arg.stage === "Preview" && <SmallPreviewTypography
@@ -1179,6 +1192,7 @@ function ArgumentPropsReviewer(props: {
                     }}>{`/${arg.type}/`}</PropArgTypeTypography>
                     <Box sx={{ flexGrow: 1 }} />
                     {arg.required && <PropRequiredTypography>[Required]</PropRequiredTypography>}
+                    {arg.hide && <PropHiddenTypography>[Hidden]</PropHiddenTypography>}
                 </Box>
                 {arg.help && <Box sx={{
                     ml: 4
