@@ -432,8 +432,12 @@ class Schema(Model, Linkable):
             if self.required:
                 for name in self.required:
                     if name in prop_dict:
-                        # because required property will not be included in a cls definition, so it's fine to update it in parent level when prop_dict[name] is a cls definition.
+                        # because required property will not be included in a cls definition,
+                        # so it's fine to update it in parent level when prop_dict[name] is a cls definition.
                         prop_dict[name].required = True
+                        # when a property is required, it's frozen status must be consist with the defined schema.
+                        # This can help to for empty object schema.
+                        prop_dict[name].frozen = builder.frozen
 
             # discriminators
             if self.disc_children:
@@ -559,7 +563,8 @@ class Schema(Model, Linkable):
                         if not disc.frozen:
                             need_frozen = False
                             break
-                # Note: model will always frozen when object without any props, additional_props or discriminators
+                # Note: model will always frozen when object without any props, additional_props or discriminators,
+                # If this property is required by parent schema, it will be updated in parent.
                 model.frozen = need_frozen
         else:
             if self.all_of is not None:

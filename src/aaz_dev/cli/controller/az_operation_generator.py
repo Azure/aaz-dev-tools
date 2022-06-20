@@ -533,11 +533,16 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, cls_map, arg
                     if s.const:
                         is_const = True
                         const_value = s.default.value
+                    elif isinstance(s, CMDObjectSchema) and not s.props and not s.additional_props and s.required:
+                        # required property which is empty
+                        is_const = True
+                        const_value = {}
 
                     rendered_schemas.append(
                         (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
                     )
-                    if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                    if not cls_builder_name and not is_const \
+                            and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
                         search_schemas[s_name] = (s, s_arg_key)
 
         elif schema.additional_props:
@@ -797,7 +802,8 @@ def render_schema_base(schema, cls_map, schema_kwargs=None):
         elif schema.additional_props:
             schema_type = "AAZDictType"
         else:
-            raise NotImplementedError()
+            # empty object
+            schema_type = "AAZObjectType"
     elif isinstance(schema, CMDArraySchemaBase):
         schema_type = "AAZListType"
     else:
