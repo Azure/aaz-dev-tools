@@ -566,26 +566,6 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, cls_map, arg
 
         else:
             raise NotImplementedError()
-
-    elif isinstance(schema, CMDArraySchemaBase):
-        assert schema.item is not None
-        s = schema.item
-        s_name = "[]"
-        s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, cls_map)
-        s_arg_key = arg_key + '[]'
-
-        if not isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-            r_key = '.'
-        else:
-            r_key = None
-
-        is_const = False
-        const_value = None
-        rendered_schemas.append(
-            (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
-        )
-        if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-            search_schemas[s_name] = (s, s_arg_key)
     elif isinstance(schema, CMDObjectSchemaDiscriminator):
         if schema.discriminators:
             discriminators.extend(schema.discriminators)
@@ -629,14 +609,40 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, cls_map, arg
                     if s.const:
                         is_const = True
                         const_value = s.default.value
+                    elif isinstance(s, CMDObjectSchema) and not s.props and not s.additional_props and s.required:
+                        # required property which is empty
+                        is_const = True
+                        const_value = {}
 
                     rendered_schemas.append(
                         (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
                     )
-                    if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                    if not cls_builder_name and not is_const \
+                            and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
                         search_schemas[s_name] = (s, s_arg_key)
         else:
             raise NotImplementedError()
+
+    elif isinstance(schema, CMDArraySchemaBase):
+        assert schema.item is not None
+        s = schema.item
+        s_name = "[]"
+        s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, cls_map)
+        s_arg_key = arg_key + '[]'
+
+        if not isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+            r_key = '.'
+        else:
+            r_key = None
+
+        is_const = False
+        const_value = None
+        rendered_schemas.append(
+            (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
+        )
+        if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+            search_schemas[s_name] = (s, s_arg_key)
+
     else:
         raise NotImplementedError()
 
