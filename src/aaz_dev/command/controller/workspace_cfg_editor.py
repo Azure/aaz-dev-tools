@@ -244,6 +244,8 @@ class WorkspaceCfgEditor(CfgReader):
         if 'stage' in kwargs:
             arg.stage = kwargs['stage']
         if 'hide' in kwargs:
+            if kwargs['hide'] and arg.required:
+                raise exceptions.ResourceConflict("Cannot hide required argument")
             arg.hide = kwargs['hide']
         if 'group' in kwargs:
             arg.group = kwargs['group'] or None
