@@ -3,6 +3,12 @@
 Release History
 ===============
 
+0.5.0
++++++
+* Support argument hidden in Workspace Editor.
+* Fix body parameter required issue.
+* Support to pass a required empty object property.
+
 0.4.0
 +++++
 * [Breaking Change] Replace *.xml by *.json file in `/Resources` folder of `aaz` repo, keep `*.xml` only for model review.
