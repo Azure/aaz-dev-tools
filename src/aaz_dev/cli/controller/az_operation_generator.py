@@ -300,7 +300,7 @@ class AzHttpRequestContentGenerator:
             if self._json.schema.arg:
                 self.arg_key, hide = self._cmd_ctx.get_argument(self._json.schema.arg)
                 assert not hide
-            self.typ, _, self.cls_builder_name = render_schema(
+            self.typ, self.typ_kwargs, self.cls_builder_name = render_schema(
                 self._json.schema, self._request_cls_map, name=self._json.schema.name)
 
             self._update_over_schema(self._json.schema)
@@ -533,10 +533,6 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, cls_map, arg
                     if s.const:
                         is_const = True
                         const_value = s.default.value
-                    elif isinstance(s, CMDObjectSchema) and not s.props and not s.additional_props and s.required:
-                        # required property which is empty
-                        is_const = True
-                        const_value = {}
 
                     rendered_schemas.append(
                         (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
@@ -564,8 +560,6 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, cls_map, arg
             if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
                 search_schemas[s_name] = (s, s_arg_key)
 
-        else:
-            raise NotImplementedError()
     elif isinstance(schema, CMDObjectSchemaDiscriminator):
         if schema.discriminators:
             discriminators.extend(schema.discriminators)
@@ -609,10 +603,6 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, cls_map, arg
                     if s.const:
                         is_const = True
                         const_value = s.default.value
-                    elif isinstance(s, CMDObjectSchema) and not s.props and not s.additional_props and s.required:
-                        # required property which is empty
-                        is_const = True
-                        const_value = {}
 
                     rendered_schemas.append(
                         (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
@@ -620,8 +610,6 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, cls_map, arg
                     if not cls_builder_name and not is_const \
                             and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
                         search_schemas[s_name] = (s, s_arg_key)
-        else:
-            raise NotImplementedError()
 
     elif isinstance(schema, CMDArraySchemaBase):
         assert schema.item is not None
@@ -704,18 +692,10 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, response_cl
             else:
                 # TODO: handler additional props with no item schema
                 pass
+
         else:
             raise NotImplementedError()
 
-    elif isinstance(schema, CMDArraySchemaBase):
-        # AAZListType
-        assert schema.item is not None
-        s = schema.item
-        s_name = "Element"
-        s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, response_cls_map)
-        rendered_schemas.append((s_name, s_typ, s_typ_kwargs, cls_builder_name))
-        if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-            search_schemas[s_name] = s
     elif isinstance(schema, CMDObjectSchemaDiscriminator):
         if schema.discriminators:
             discriminators.extend(schema.discriminators)
@@ -729,6 +709,17 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, response_cl
                     search_schemas[s_name] = s
         else:
             raise NotImplementedError()
+
+    elif isinstance(schema, CMDArraySchemaBase):
+        # AAZListType
+        assert schema.item is not None
+        s = schema.item
+        s_name = "Element"
+        s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, response_cls_map)
+        rendered_schemas.append((s_name, s_typ, s_typ_kwargs, cls_builder_name))
+        if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+            search_schemas[s_name] = s
+
     else:
         raise NotImplementedError()
 
