@@ -304,8 +304,7 @@ class CommandGenerator:
             name = camel_case_to_snake_case(part, '-')
             singular_name = cls._inflect_engine.singular_noun(name) or name
             names.append(singular_name)
-
-        return " ".join(names)
+        return " ".join([name for name in names if name])
 
     def _generate_command_name(self, path_item, resource, method, output):
         group_name = self.generate_command_group_name_by_resource(
