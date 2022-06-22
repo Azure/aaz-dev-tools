@@ -290,9 +290,13 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
         elif isinstance(arg, CMDBinaryArgBase):
             raise NotImplementedError()
         elif isinstance(arg, CMDDurationArgBase):
-            raise NotImplementedError()
+            arg_type = "AAZStrArg"
+            # TODO: add format for it
+            # raise NotImplementedError()
         elif isinstance(arg, CMDDateArgBase):
-            raise NotImplementedError()
+            arg_type = "AAZStrArg"
+            # TODO: add format for it
+            # raise NotImplementedError()
         elif isinstance(arg, CMDDateTimeArgBase):
             arg_type = "AAZStrArg"
             # TODO: add format for it
