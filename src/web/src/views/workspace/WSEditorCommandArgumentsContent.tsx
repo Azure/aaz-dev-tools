@@ -354,7 +354,7 @@ function ArgNavBar(props: {
 }
 
 const spliceArgOptionsString = (arg: CMDArg, depth: number) => {
-    return arg.options.map((option) => {
+    let optionsString = arg.options.map((option) => {
         if (depth === 0) {
             if (option.length === 1) {
                 return '-' + option;
@@ -364,7 +364,37 @@ const spliceArgOptionsString = (arg: CMDArg, depth: number) => {
         } else {
             return '.' + option;
         }
-    }).join(" ")
+    }).join(" ");
+
+    if ((arg as CMDArrayArg).singularOptions) {
+        let singularOptionString = (arg as CMDArrayArg).singularOptions!.map((option) => {
+            if (depth === 0) {
+                if (option.length === 1) {
+                    return '-' + option;
+                } else {
+                    return '--' + option;
+                }
+            } else {
+                return '.' + option;
+            }
+        }).join(" ");
+        optionsString += ` (${singularOptionString})`;
+    } else if ((arg as CMDClsArg).singularOptions) {
+        let singularOptionString = (arg as CMDArrayArg).singularOptions!.map((option) => {
+            if (depth === 0) {
+                if (option.length === 1) {
+                    return '-' + option;
+                } else {
+                    return '--' + option;
+                }
+            } else {
+                return '.' + option;
+            }
+        }).join(" ");
+        optionsString += ` (${singularOptionString})`;
+    }
+
+    return optionsString;
 }
 
 
@@ -473,7 +503,7 @@ function ArgumentReviewer(props: {
                 {`Choices: ` + choices.join(', ')}
             </ArgChoicesTypography>}
             {props.arg.help?.short && <ShortHelpTypography sx={{ ml: 6, mt: 1.5 }}> {props.arg.help?.short} </ShortHelpTypography>}
-            {!(props.arg.help?.short) && <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>Please add argument short summery!</ShortHelpPlaceHolderTypography>}
+            {!(props.arg.help?.short) && <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>Please add argument short summary!</ShortHelpPlaceHolderTypography>}
             {props.arg.help?.lines && <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
                 {props.arg.help.lines.map((line, idx) => (<LongHelpTypography key={idx}>{line}</LongHelpTypography>))}
             </Box>}
@@ -541,7 +571,7 @@ function ArgumentDialog(props: {
         }
 
         if (sHelp.length < 1) {
-            setInvalidText(`Field 'Short Summery' is required.`)
+            setInvalidText(`Field 'Short Summary' is required.`)
             return undefined
         }
 
@@ -760,8 +790,8 @@ function ArgumentDialog(props: {
                         />
                     </>}
                     <TextField
-                        id="shortSummery"
-                        label="Short Summery"
+                        id="shortSummary"
+                        label="Short Summary"
                         type="text"
                         fullWidth
                         variant='standard'
@@ -773,8 +803,8 @@ function ArgumentDialog(props: {
                         required
                     />
                     <TextField
-                        id="longSummery"
-                        label="Long Summery"
+                        id="longSummary"
+                        label="Long Summary"
                         helperText="Please add long summer in lines."
                         type="text"
                         fullWidth
@@ -1098,7 +1128,7 @@ const PropHiddenArgOptionTypography = styled(Typography)<TypographyProps>(({ the
     fontWeight: 700,
 }))
 
-const PropArgShortSummeryTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+const PropArgShortSummaryTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     color: theme.palette.primary.main,
     fontFamily: "'Roboto Condensed', sans-serif",
     fontSize: 14,
@@ -1197,7 +1227,7 @@ function ArgumentPropsReviewer(props: {
                 {arg.help && <Box sx={{
                     ml: 4
                 }}>
-                    <PropArgShortSummeryTypography>{arg.help.short}</PropArgShortSummeryTypography>
+                    <PropArgShortSummaryTypography>{arg.help.short}</PropArgShortSummaryTypography>
                 </Box>}
             </Box>
 
