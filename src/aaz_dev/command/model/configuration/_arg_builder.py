@@ -1,17 +1,17 @@
 import re
 
-# import inflect
+import inflect
 from utils.case import to_camel_case
 
 from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgDefault, CMDBooleanArgBase, \
     CMDArgBlank, CMDObjectArgAdditionalProperties
 from ._format import CMDFormat
 from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
-    CMDArraySchemaBase, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema
+    CMDArraySchemaBase, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema, CMDArraySchema
 
 
 class CMDArgBuilder:
-    # _inflect_engine = inflect.engine()
+    _inflect_engine = inflect.engine()
 
     @classmethod
     def new_builder(cls, schema, parent=None, var_prefix=None, ref_args=None, ref_arg=None, is_update_action=False):
@@ -275,16 +275,14 @@ class CMDArgBuilder:
             singular_options = getattr(self._ref_arg, 'singular_options', None)
             if singular_options:
                 return [*singular_options]
-        return None
 
-        # disable to auto generate singular option by default
-        # if not isinstance(self.schema, CMDArraySchema):
-        #     raise NotImplementedError()
-        # opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
-        # singular_opt_name = self._inflect_engine.singular_noun(opt_name) or opt_name
-        # if singular_opt_name != opt_name:
-        #     return [singular_opt_name, ]
-        # return None
+        if isinstance(self.schema, CMDArraySchema):
+            opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
+            singular_opt_name = self._inflect_engine.singular_noun(opt_name) or opt_name
+            if singular_opt_name != opt_name:
+                return [singular_opt_name, ]
+        # TODO: support CMDClsSchema when it reference from array schema
+        return None
 
     def get_help(self):
         if self._ref_arg:

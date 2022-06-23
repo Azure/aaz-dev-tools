@@ -193,11 +193,11 @@ The data of command tree is in [Commands/tree.json](https://github.com/kairu-ms/
 
 ![CommandTreeNode](/Docs/images/aaz_command_tree_folder.png)
 
-Each folder represents each node of the tree and also represents a command group. Its readme.md file shows the summery, subgroups and commands of this group. And the links in the file help us to browse quickly.
+Each folder represents each node of the tree and also represents a command group. Its readme.md file shows the summary, subgroups and commands of this group. And the links in the file help us to browse quickly.
 
 ![CommandTreeLeaf](/Docs/images/aaz_command_tree_command_md.png)
 
-Each Markdown files starts with '_' represents each leaf of the tree which also represents a command. Its contains the summery, versions and examples of this command. And each version links to a command configuration in Resources folder. 
+Each Markdown files starts with '_' represents each leaf of the tree which also represents a command. Its contains the summary, versions and examples of this command. And each version links to a command configuration in Resources folder. 
 
 ### 5.2 Command Configuration
 
