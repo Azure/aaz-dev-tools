@@ -3,6 +3,13 @@
 Release History
 ===============
 
+0.5.1
++++++
+* Fix command name generation with url endwith slash (#75)
+* Enable more arg types in command generation (#76)
+* Fix left over `set_discriminator` in _cmd.py.j2 template (#77)
+* Support `nullable` for elements of list and dict args in `update` commands (#77)
+
 0.5.0
 +++++
 * Support argument hidden in Workspace Editor.
