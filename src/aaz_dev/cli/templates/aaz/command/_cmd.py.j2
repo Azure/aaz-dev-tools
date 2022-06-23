@@ -646,14 +646,14 @@ def {{ resp_cls.builder_name }}(_schema):
     _schema.{{ prop_name }} = {{ resp_cls.schema_name }}.{{ prop_name }}
     {%- endfor %}
     {%- for disc_key, disc_value in resp_cls.discriminators %}
-    _schema.set_discriminator(
-        {{ disc_key|constant_convert }},
-        {{ disc_value|constant_convert }},
-        {{ resp_cls.schema_name }}.set_discriminator(
+    _schema.discriminate_by(
             {{ disc_key|constant_convert }},
             {{ disc_value|constant_convert }},
+            {{ resp_cls.schema_name }}.discriminate_by(
+                {{ disc_key|constant_convert }},
+                {{ disc_value|constant_convert }},
+            )
         )
-    )
     {%- endfor %}
 
 
