@@ -3,6 +3,11 @@
 Release History
 ===============
 
+0.6.0
+++++
+* Support singular options for list argument (#78)
+* Fix argument long summary generation (#78)
+
 0.5.1
 +++++
 * Fix command name generation with url endwith slash (#75)
