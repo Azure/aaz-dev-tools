@@ -1,6 +1,6 @@
 import re
 
-import inflect
+# import inflect
 from utils.case import to_camel_case
 
 from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgDefault, CMDBooleanArgBase, \
@@ -11,7 +11,7 @@ from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaB
 
 
 class CMDArgBuilder:
-    _inflect_engine = inflect.engine()
+    # _inflect_engine = inflect.engine()
 
     @classmethod
     def new_builder(cls, schema, parent=None, var_prefix=None, ref_args=None, ref_arg=None, is_update_action=False):
@@ -276,12 +276,12 @@ class CMDArgBuilder:
             if singular_options:
                 return [*singular_options]
 
-        if isinstance(self.schema, CMDArraySchema):
-            opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
-            singular_opt_name = self._inflect_engine.singular_noun(opt_name) or opt_name
-            if singular_opt_name != opt_name:
-                return [singular_opt_name, ]
-        # TODO: support CMDClsSchema when it reference from array schema
+        # Disable singular options by default
+        # if isinstance(self.schema, CMDArraySchema):
+        #     opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
+        #     singular_opt_name = self._inflect_engine.singular_noun(opt_name) or opt_name
+        #     if singular_opt_name != opt_name:
+        #         return [singular_opt_name, ]
         return None
 
     def get_help(self):
