@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.6.1
+++++
+* Disable `singular options` generation for list argument by default (#79)
+
 0.6.0
 ++++
 * Support singular options for list argument (#78)
