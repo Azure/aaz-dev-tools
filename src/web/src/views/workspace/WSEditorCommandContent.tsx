@@ -287,7 +287,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                                 {name}
                             </NameTypography>
                             {shortHelp && <ShortHelpTypography sx={{ ml: 6, mt: 2 }}> {shortHelp} </ShortHelpTypography>}
-                            {!shortHelp && <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>Please add command short summery!</ShortHelpPlaceHolderTypography>}
+                            {!shortHelp && <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>Please add command short summary!</ShortHelpPlaceHolderTypography>}
                             {longHelp && <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
                                 {lines.map((line, idx) => (<LongHelpTypography key={idx}>{line}</LongHelpTypography>))}
                             </Box>}
@@ -562,7 +562,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
 
         if (shortHelp.length < 1) {
             this.setState({
-                invalidText: `Field 'Short Summery' is required.`
+                invalidText: `Field 'Short Summary' is required.`
             })
             return
         }
@@ -668,8 +668,8 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                         required
                     />
                     <TextField
-                        id="shortSummery"
-                        label="Short Summery"
+                        id="shortSummary"
+                        label="Short Summary"
                         type="text"
                         fullWidth
                         variant='standard'
@@ -683,8 +683,8 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                         required
                     />
                     <TextField
-                        id="longSummery"
-                        label="Long Summery"
+                        id="longSummary"
+                        label="Long Summary"
                         helperText="Please add long summer in lines."
                         type="text"
                         fullWidth

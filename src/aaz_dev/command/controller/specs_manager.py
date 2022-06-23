@@ -393,14 +393,14 @@ class AAZSpecsManager:
             if not group.help or not group.help.short:
                 details[' '.join(group.names)] = {
                     'type': 'group',
-                    'help': "Miss short summery."
+                    'help': "Miss short summary."
                 }
 
         for cmd in self.iter_commands():
             if not cmd.help or not cmd.help.short:
                 details[' '.join(cmd.names)] = {
                     'type': 'command',
-                    'help': "Miss short summery."
+                    'help': "Miss short summary."
                 }
         if details:
             raise exceptions.VerificationError(message="Invalid Command Tree", details=details)
