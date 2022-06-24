@@ -146,7 +146,7 @@ class {{ leaf.cls_name }}(AAZCommand):
         )
         {%- endif %}
         {%- if cls_builder_name is not none %}
-        {{ cls_builder_name }}({{ scope }}.{{ arg_name }})
+        cls.{{ cls_builder_name }}({{ scope }}.{{ arg_name }})
         {%- endif %}
         {%- endfor %}
 
