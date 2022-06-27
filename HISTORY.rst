@@ -3,12 +3,18 @@
 Release History
 ===============
 
+0.6.2
++++++
+* Fix issue in _cmd.py.j2 (#80)
+* Fix nullable issue for discriminators (#81)
+* Fix frozen issue for additional_props (#81)
+
 0.6.1
-++++
++++++
 * Disable `singular options` generation for list argument by default (#79)
 
 0.6.0
-++++
++++++
 * Support singular options for list argument (#78)
 * Fix argument long summary generation (#78)
 
