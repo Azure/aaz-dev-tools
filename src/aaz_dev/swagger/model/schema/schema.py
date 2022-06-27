@@ -532,6 +532,7 @@ class Schema(Model, Linkable):
                         assert isinstance(v, CMDSchemaBase)
                         model.additional_props = CMDObjectSchemaAdditionalProperties()
                         model.additional_props.item = v
+                        model.additional_props.frozen = v.frozen
                 # Note: not support additional_properties without schema define
                 # elif self.additional_properties is True:
                 #     model.additional_props = CMDObjectSchemaAdditionalProperties()
