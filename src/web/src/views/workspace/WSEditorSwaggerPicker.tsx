@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Typography, Box, AppBar, Toolbar, IconButton, Button, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText, FormControlLabel } from '@mui/material';
+import { Typography, Box, AppBar, Toolbar, IconButton, Button, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText, FormControlLabel, Alert, Card, CardContent, AlertTitle } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import EditorPageLayout from '../../components/EditorPageLayout';
@@ -41,6 +41,7 @@ interface WSEditorSwaggerPickerState {
 
     updateOptions: string[],
     updateOption: string,
+    invalidText?: string,
 }
 
 type ResourceVersionOperations = {
@@ -84,6 +85,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         super(props);
         this.state = {
             loading: false,
+            invalidText: undefined,
             // preModuleName: null,
             // preResourceProvider: null,
             // preVersion: null,
@@ -135,7 +137,15 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     }
                 });
             })
-            .catch((err) => console.error(err.response.data));
+            .catch((err) => {
+                console.error(err.response);
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    this.setState({
+                        invalidText: `ResponseError: ${data.message!}`,
+                    })
+                }
+            });
     }
 
     loadResourceProviders = (moduleUrl: string | null) => {
@@ -150,7 +160,15 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     });
                     this.onResourceProviderUpdate(selectedResourceProvider);
                 })
-                .catch((err) => console.error(err.response.data));
+                .catch((err) => {
+                    console.error(err.response);
+                    if (err.response?.data?.message) {
+                        const data = err.response!.data!;
+                        this.setState({
+                            invalidText: `ResponseError: ${data.message!}`,
+                        })
+                    }
+                });
         } else {
             this.setState({
                 resourceProviderOptions: [],
@@ -183,12 +201,21 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     existingResources: existingResources,
                 })
             })
-            .catch((err) => console.error(err.response.data));
+            .catch((err) => {
+                console.error(err.response);
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    this.setState({
+                        invalidText: `ResponseError: ${data.message!}`,
+                    })
+                }
+            });
     }
 
     loadResources = (resourceProviderUrl: string | null) => {
         if (resourceProviderUrl != null) {
             this.setState({
+                invalidText: undefined,
                 loading: true,
             })
             axios.get(`${resourceProviderUrl}/Resources`)
@@ -225,11 +252,14 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     this.onVersionUpdate(selectVersion);
                 })
                 .catch((err) => {
-                    console.error(err.response.data);
-                    this.setState({
-                        loading: false,
-                    });
-                })
+                    console.error(err.response);
+                    if (err.response?.data?.message) {
+                        const data = err.response!.data!;
+                        this.setState({
+                            invalidText: `ResponseError: ${data.message!}`,
+                        })
+                    }
+                });
         } else {
             this.setState({
                 versionOptions: [],
@@ -239,7 +269,6 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     }
 
     addSwagger = () => {
-
         const { selectedResources, selectedVersion, selectedModule, moduleOptionsCommonPrefix, updateOption, resourceMap } = this.state;
         const resources: { id: string, options?: { update_by: string } }[] = [];
         selectedResources.forEach((resourceId) => {
@@ -273,6 +302,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         }
 
         this.setState({
+            invalidText: undefined,
             loading: true
         });
 
@@ -283,7 +313,15 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 });
                 this.props.onClose(true);
             })
-            .catch((err) => console.error(err.response.data));
+            .catch((err) => {
+                console.error(err.response);
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    this.setState({
+                        invalidText: `ResponseError: ${data.message!}`,
+                    })
+                }
+            });
     }
 
     onModuleSelectorUpdate = (moduleValueUrl: string | null) => {
@@ -372,7 +410,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
 
     render() {
         const { selectedResources, existingResources, resourceOptions, selectedVersion, selectedModule } = this.state;
-        
+
         return (
             <React.Fragment>
                 <AppBar sx={{ position: "fixed" }}>
@@ -452,10 +490,10 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                                 flexDirection: 'column',
                                 display: 'flex',
                                 alignItems: 'stretch',
-                                justifyContent: 'flex-start', 
+                                justifyContent: 'flex-start',
                             }} color='inherit'>
                                 <Typography component='h6'>Resource Url</Typography>
-                                {resourceOptions.length > 0 && <ListItemButton sx={{paddingLeft:0}} dense onClick={this.onSelectedAllClick}>
+                                {resourceOptions.length > 0 && <ListItemButton sx={{ paddingLeft: 0 }} dense onClick={this.onSelectedAllClick}>
                                     <ListItemIcon>
                                         <Checkbox
                                             edge="start"
@@ -472,7 +510,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                                             variant: "h6",
                                         }}
                                     />
-                                    </ListItemButton>}
+                                </ListItemButton>}
                             </Box>
                         </ListSubheader>}
                     >
@@ -507,7 +545,27 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     sx={{ color: '#fff', zIndex: (theme: any) => theme.zIndex.drawer + 1 }}
                     open={this.state.loading}
                 >
-                    <CircularProgress color='inherit' />
+                    {this.state.invalidText !== undefined &&
+                        <Alert sx={{
+                            maxWidth: "80%",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "stretch",
+                            justifyContent: "flex-start",
+                        }}
+                            variant="filled"
+                            severity='error'
+                            onClose={() => {
+                                this.setState({
+                                    invalidText: undefined,
+                                    loading: false,
+                                })
+                            }}
+                        >
+                            {this.state.invalidText}
+                        </Alert>
+                    }
+                    {this.state.invalidText === undefined && <CircularProgress color='inherit' />}
                 </Backdrop>
             </React.Fragment>
         )
