@@ -3,6 +3,11 @@
 Release History
 ===============
 
+0.7.0
++++++
+* Improve message display in swagger picker (#83)
+* Update MIN_CLI_CORE_VERSION to 2.38.0 (#83)
+
 0.6.2
 +++++
 * Fix issue in _cmd.py.j2 (#80)
