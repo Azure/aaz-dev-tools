@@ -7,6 +7,7 @@ from datetime import datetime
 from command.model.editor import CMDEditorWorkspace, CMDCommandTreeNode, CMDCommandTreeLeaf
 from swagger.controller.command_generator import CommandGenerator
 from swagger.controller.specs_manager import SwaggerSpecsManager
+from swagger.utils.exceptions import InvalidSwaggerValueError
 from utils import exceptions
 from utils.config import Config
 from .specs_manager import AAZSpecsManager
@@ -441,7 +442,12 @@ class WorkspaceManager:
 
         cfg_editors = []
         for resource, options in zip(swagger_resources, resource_options):
-            command_group = self.swagger_command_generator.create_draft_command_group(resource, **options)
+            try:
+                command_group = self.swagger_command_generator.create_draft_command_group(resource, **options)
+            except InvalidSwaggerValueError as err:
+                raise exceptions.InvalidAPIUsage(
+                    message=str(err)
+                ) from err
             assert not command_group.command_groups, "The logic to support sub command groups is not supported"
             cfg_editors.append(WorkspaceCfgEditor.new_cfg(
                 plane=self.ws.plane,
