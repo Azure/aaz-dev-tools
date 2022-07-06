@@ -168,15 +168,16 @@ def parse_arg_help(help):
     assert isinstance(help, CMDArgumentHelp)
     if not help.lines and not help.ref_commands:
         if not help.short:
-            raise exceptions.InvalidAPIUsage("Invalid argument help, short summery is miss.")
+            raise exceptions.InvalidAPIUsage("Invalid argument help, short summary is miss.")
         return help.short
     h = {
-        "short-summery": help.short
+        "short-summary": help.short
     }
     if help.lines:
-        h["long-summery"] = '\n'.join(help.lines)
+        h["long-summary"] = '\n'.join(help.lines)
     if help.ref_commands:
         h["populator-commands"] = [*help.ref_commands]
+    return h
 
 
 def parse_arg_enum(enum):
@@ -290,9 +291,13 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
         elif isinstance(arg, CMDBinaryArgBase):
             raise NotImplementedError()
         elif isinstance(arg, CMDDurationArgBase):
-            raise NotImplementedError()
+            arg_type = "AAZStrArg"
+            # TODO: add format for it
+            # raise NotImplementedError()
         elif isinstance(arg, CMDDateArgBase):
-            raise NotImplementedError()
+            arg_type = "AAZStrArg"
+            # TODO: add format for it
+            # raise NotImplementedError()
         elif isinstance(arg, CMDDateTimeArgBase):
             arg_type = "AAZStrArg"
             # TODO: add format for it

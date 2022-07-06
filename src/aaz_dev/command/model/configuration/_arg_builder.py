@@ -7,7 +7,7 @@ from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgDefault
     CMDArgBlank, CMDObjectArgAdditionalProperties
 from ._format import CMDFormat
 from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
-    CMDArraySchemaBase, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema
+    CMDArraySchemaBase, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema, CMDArraySchema
 
 
 class CMDArgBuilder:
@@ -200,13 +200,21 @@ class CMDArgBuilder:
         return False
 
     def get_nullable(self):
+        if isinstance(self.schema, CMDSchemaBase) and self.schema.nullable:
+            return True
+
         if isinstance(self.schema, CMDSchema):
-            if self.schema.nullable:
-                return True
             # when updated and schema is not required then nullable is true.
             # This can help update command to remove properties
             if not self.schema.required and self._is_update_action:
                 return True
+
+        elif isinstance(self.schema, CMDSchemaBase):
+            # when updated and the element is nullable
+            # This can help update command to remove elements.
+            if self._is_update_action:
+                return True
+
         return False
 
     def get_default(self):
@@ -270,16 +278,14 @@ class CMDArgBuilder:
             singular_options = getattr(self._ref_arg, 'singular_options', None)
             if singular_options:
                 return [*singular_options]
-        return None
 
-        # disable to auto generate singular option by default
-        # if not isinstance(self.schema, CMDArraySchema):
-        #     raise NotImplementedError()
-        # opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
-        # singular_opt_name = self._inflect_engine.singular_noun(opt_name) or opt_name
-        # if singular_opt_name != opt_name:
-        #     return [singular_opt_name, ]
-        # return None
+        # Disable singular options by default
+        # if isinstance(self.schema, CMDArraySchema):
+        #     opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
+        #     singular_opt_name = self._inflect_engine.singular_noun(opt_name) or opt_name
+        #     if singular_opt_name != opt_name:
+        #         return [singular_opt_name, ]
+        return None
 
     def get_help(self):
         if self._ref_arg:

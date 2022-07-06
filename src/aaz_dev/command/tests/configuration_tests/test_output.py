@@ -11,8 +11,8 @@ class OutputTest(TestCase):
             "clientFlatten": True
         })
         output.validate()
-        print(output.to_native())
-        print(output.to_primitive())
+        output.to_native()
+        output.to_primitive()
 
     def test_array_output(self):
         output = CMDArrayOutput({
@@ -22,8 +22,8 @@ class OutputTest(TestCase):
             "clientFlatten": True
         })
         output.validate()
-        print(output.to_native())
-        print(output.to_primitive())
+        output.to_native()
+        output.to_primitive()
 
     def test_string_output(self):
         output = CMDStringOutput({
@@ -31,5 +31,5 @@ class OutputTest(TestCase):
             "value": "delete success",
         })
         output.validate()
-        print(output.to_native())
-        print(output.to_primitive())
+        output.to_native()
+        output.to_primitive()

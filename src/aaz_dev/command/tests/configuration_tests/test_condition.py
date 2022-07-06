@@ -1,5 +1,6 @@
 from unittest import TestCase
 from command.model.configuration._condition import *
+from command.tests.common import verify_xml
 
 
 class ConditionTest(TestCase):
@@ -12,8 +13,10 @@ class ConditionTest(TestCase):
         assert operator.type == "hasValue"
         assert operator.arg == "$arg1"
         operator.validate()
-        print(operator.to_native())
-        print(operator.to_primitive())
+        operator.to_native()
+        operator.to_primitive()
+
+        verify_xml(self, operator)
 
     def test_operators(self):
         operator = CMDConditionAndOperator({
@@ -48,8 +51,10 @@ class ConditionTest(TestCase):
         assert operator.operators[1].type == CMDConditionOrOperator.TYPE_VALUE
         assert len(operator.operators[1].operators) == 2
         operator.validate()
-        print(operator.to_native())
-        print(operator.to_primitive())
+        operator.to_native()
+        operator.to_primitive()
+
+        verify_xml(self, operator)
 
     def test_condition(self):
         condition = CMDCondition(
@@ -83,5 +88,8 @@ class ConditionTest(TestCase):
             }
         )
         condition.validate()
-        print(condition.to_native())
-        print(condition.to_primitive())
+        condition.to_native()
+        condition.to_primitive()
+
+        verify_xml(self, condition)
+

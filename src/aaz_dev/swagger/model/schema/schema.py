@@ -338,10 +338,9 @@ class Schema(Model, Linkable):
                 elif len(self.traces) > 2 and self.traces[-2] == 'definitions':
                     disc_value = self.traces[-1]  # use the definition name as discriminator value
                 else:
-                    raise exceptions.InvalidSwaggerValueError(
-                        msg="Discriminator value is empty.",
-                        key=self.traces, value=None
-                    )
+                    # Discriminator value is empty. Its not a discriminator
+                    logger.warning(f"Discriminator value is empty. : {self.traces}")
+                    continue
                 if disc_value in self.disc_parent.disc_children:
                     raise exceptions.InvalidSwaggerValueError(
                         msg=f"Duplicated discriminator children for same value",
@@ -402,13 +401,19 @@ class Schema(Model, Linkable):
                     if disc_parent is not None and not builder.find_traces(disc_parent.traces):
                         # directly use child definition instead of polymorphism.
                         # So the value for discriminator property is const.
+                        is_children = False
                         disc_prop = disc_parent.discriminator
                         for disc_value, disc_child in disc_parent.disc_children.items():
                             if disc_child == self:
                                 prop_dict[disc_prop].const = True
                                 prop_dict[disc_prop].default = CMDSchemaDefault()
                                 prop_dict[disc_prop].default.value = disc_value
+                                is_children = True
                                 break
+                        if not is_children and len(self.all_of) == 1 and \
+                                model.props is None and model.additional_props is None:
+                            # inherent from allOf as reference only
+                            model.discriminators = v.discriminators
 
                     if v.additional_props:
                         model.additional_props = v.additional_props
@@ -427,8 +432,12 @@ class Schema(Model, Linkable):
             if self.required:
                 for name in self.required:
                     if name in prop_dict:
-                        prop_dict[
-                            name].required = True  # because required property will not be included in a cls definition, so it's fine to update it in parent level when prop_dict[name] is a cls definition.
+                        # because required property will not be included in a cls definition,
+                        # so it's fine to update it in parent level when prop_dict[name] is a cls definition.
+                        prop_dict[name].required = True
+                        # when a property is required, it's frozen status must be consist with the defined schema.
+                        # This can help to for empty object schema.
+                        prop_dict[name].frozen = builder.frozen
 
             # discriminators
             if self.disc_children:
@@ -502,7 +511,7 @@ class Schema(Model, Linkable):
                             key=self.traces,
                             value=self.resource_id_templates
                         )
-                        # logger.warning(err)
+                        logger.warning(err)
                 if 'location' in prop_dict and not prop_dict['location'].frozen:
                     location_prop = prop_dict['location']
                     if not isinstance(location_prop, CMDResourceLocationSchema):
@@ -523,6 +532,7 @@ class Schema(Model, Linkable):
                         assert isinstance(v, CMDSchemaBase)
                         model.additional_props = CMDObjectSchemaAdditionalProperties()
                         model.additional_props.item = v
+                        model.additional_props.frozen = v.frozen
                 # Note: not support additional_properties without schema define
                 # elif self.additional_properties is True:
                 #     model.additional_props = CMDObjectSchemaAdditionalProperties()
@@ -554,7 +564,8 @@ class Schema(Model, Linkable):
                         if not disc.frozen:
                             need_frozen = False
                             break
-                # Note: model will always frozen when object without any props, additional_props or discriminators
+                # Note: model will always frozen when object without any props, additional_props or discriminators,
+                # If this property is required by parent schema, it will be updated in parent.
                 model.frozen = need_frozen
         else:
             if self.all_of is not None:
@@ -565,11 +576,6 @@ class Schema(Model, Linkable):
                         key=self.traces, value=None
                     )
                 model = builder(self.all_of[0], support_cls_schema=True)
-
-        if getattr(self, "_looped", False):
-            assert isinstance(model, (CMDObjectSchemaBase, CMDArraySchemaBase))
-            model.cls = self._schema_cls
-            setattr(self, "_looped", False)
 
         builder.setup_fmt(model, self)
         builder.setup_enum(model, self)

@@ -7,11 +7,12 @@ from datetime import datetime
 from command.model.editor import CMDEditorWorkspace, CMDCommandTreeNode, CMDCommandTreeLeaf
 from swagger.controller.command_generator import CommandGenerator
 from swagger.controller.specs_manager import SwaggerSpecsManager
+from swagger.utils.exceptions import InvalidSwaggerValueError
 from utils import exceptions
 from utils.config import Config
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor
-from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample
+from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg
 
 logger = logging.getLogger('backend')
 
@@ -441,7 +442,12 @@ class WorkspaceManager:
 
         cfg_editors = []
         for resource, options in zip(swagger_resources, resource_options):
-            command_group = self.swagger_command_generator.create_draft_command_group(resource, **options)
+            try:
+                command_group = self.swagger_command_generator.create_draft_command_group(resource, **options)
+            except InvalidSwaggerValueError as err:
+                raise exceptions.InvalidAPIUsage(
+                    message=str(err)
+                ) from err
             assert not command_group.command_groups, "The logic to support sub command groups is not supported"
             cfg_editors.append(WorkspaceCfgEditor.new_cfg(
                 plane=self.ws.plane,
@@ -642,3 +648,53 @@ class WorkspaceManager:
                 continue
             self.aaz_specs.update_command_group_by_ws(ws_node)
         self.aaz_specs.save()
+
+    def find_similar_args(self, *cmd_names, arg):
+        assert isinstance(arg, CMDArg)
+        results = {}
+        if arg.var.startswith("@"):
+            # specify idx_suffix
+            cls_name = arg.var[1:].replace('[', '.[').replace('{', '.{').split('.')[0]
+            leaf = self.find_command_tree_leaf(*cmd_names)
+            assert leaf is not None
+            cfg_editor = self.load_cfg_editor_by_command(leaf)
+            _, cls_arg, cls_arg_idx = cfg_editor.find_arg_cls_definition(*cmd_names, cls_name=cls_name)
+            _, arg_idx = cfg_editor.find_arg_by_var(*cmd_names, arg_var=arg.var)
+            assert arg_idx.startswith(cls_arg_idx)
+            idx_suffix = arg_idx[len(cls_arg_idx):]
+            assert len(idx_suffix) > 0
+
+            cls_name_prefix = cls_name.split('_')[0]
+            for leaf in self.iter_command_tree_leaves():
+                cfg_editor = self.load_cfg_editor_by_command(leaf)
+                for _, similar_cls_arg, similar_cls_arg_idx in cfg_editor.iter_arg_cls_definition(
+                        *leaf.names, cls_name_prefix=cls_name_prefix):
+                    # search cls definition in command
+                    # find sub arg by idx_suffix
+                    similar_arg = cfg_editor.find_sub_arg(similar_cls_arg, idx=idx_suffix)
+                    if similar_arg is None or not cfg_editor.is_similar_args(arg, similar_arg):
+                        continue
+                    similar_arg_idx = similar_cls_arg_idx + idx_suffix
+
+                    key = tuple(leaf.names)
+                    assert key not in results
+                    results[key] = {
+                        similar_arg.var: [similar_arg_idx]
+                    }
+
+                    # search cls reference in command
+                    for _, _, ref_arg_idx in cfg_editor.iter_arg_cls_reference(*leaf.names, cls_name=similar_cls_arg.cls):
+                        results[key][similar_arg.var].append(ref_arg_idx + idx_suffix)
+
+        else:
+            for leaf in self.iter_command_tree_leaves():
+                cfg_editor = self.load_cfg_editor_by_command(leaf)
+                similar_arg, similar_arg_idx = cfg_editor.find_arg_by_var(*leaf.names, arg_var=arg.var)
+                if similar_arg is None or not cfg_editor.is_similar_args(arg, similar_arg):
+                    continue
+                key = tuple(leaf.names)
+                assert key not in results
+                results[key] = {
+                    similar_arg.var: [similar_arg_idx]
+                }
+        return results

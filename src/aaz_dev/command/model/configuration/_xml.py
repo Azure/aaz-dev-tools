@@ -9,25 +9,25 @@ from xmltodict import parse
 from schematics.types import ListType, ModelType
 from schematics.types.compound import PolyModelType
 from schematics.types.serializable import Serializable
+from ._fields import CMDPrimitiveField
 
 XML_ROOT = "CodeGen"
 
 
 class XMLSerializer:
 
-    def __init__(self, model):
-        self.model = model
-
-    def to_xml(self):
-        primitive = self.model.to_primitive()
+    @classmethod
+    def to_xml(cls, value):
+        primitive = value.to_primitive(context={"to_xml": True})
         root = build_xml(primitive)
         return unescape(
             tostring(root, xml_declaration=True, pretty_print=True, encoding="utf-8").decode()
         )
 
-    def from_xml(self, xml):
-        primitive = parse(self._escape(xml), attr_prefix="")
-        return build_model(self.model, primitive[XML_ROOT])
+    @classmethod
+    def from_xml(cls, model, xml):
+        primitive = parse(cls._escape(xml), attr_prefix="")
+        return build_model(model, primitive[XML_ROOT])
 
     @staticmethod
     def _escape(data):
@@ -98,7 +98,12 @@ def build_model(model, primitive):
         return instance
     else:
         # handle primitive field
-        cast = model.primitive_type or str
+        if model.primitive_type is not None:
+            cast = model.primitive_type
+        elif isinstance(model, CMDPrimitiveField):
+            cast = model.convert_from_xml
+        else:
+            raise NotImplementedError(f"Cannot convert value from xml for field type: {type(model)}")
         return cast(primitive)
 
 

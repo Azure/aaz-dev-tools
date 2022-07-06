@@ -69,8 +69,10 @@ class AAZSpecsManager:
     def get_resource_cfg_folder(self, plane, resource_id):
         return os.path.join(self.get_resource_plane_folder(plane), b64encode_str(resource_id))
 
-    def get_resource_cfg_file_path(self, plane, resource_id, version):
-        return os.path.join(self.get_resource_cfg_folder(plane, resource_id), f"{version}.xml")
+    def get_resource_cfg_file_paths(self, plane, resource_id, version):
+        """Return Json and XML path"""
+        path = os.path.join(self.get_resource_cfg_folder(plane, resource_id), f"{version}")
+        return f"{path}.json", f"{path}.xml"
 
     def get_resource_cfg_ref_file_path(self, plane, resource_id, version):
         return os.path.join(self.get_resource_cfg_folder(plane, resource_id), f"{version}.md")
@@ -121,27 +123,46 @@ class AAZSpecsManager:
         if key in self._modified_resource_cfgs:
             return self._modified_resource_cfgs[key]
 
-        path = self.get_resource_cfg_file_path(plane, resource_id, version)
-        if not os.path.exists(path):
+        json_path, xml_path = self.get_resource_cfg_file_paths(plane, resource_id, version)
+        if not os.path.exists(json_path) and not os.path.exists(xml_path):
             ref_path = self.get_resource_cfg_ref_file_path(plane, resource_id, version)
             if not os.path.exists(ref_path):
                 return None
-            path = None
+            json_path = None
             with open(ref_path, 'r') as f:
                 for line in f.readlines():
                     match = self.REFERENCE_LINE.fullmatch(line)
                     if match:
                         resource_id, version = match[1], match[2]
-                        path = self.get_resource_cfg_file_path(plane, resource_id, version)
+                        json_path, xml_path = self.get_resource_cfg_file_paths(plane, resource_id, version)
                         break
-            if not path or not os.path.exists(path):
+            if not json_path or not os.path.exists(json_path):
                 raise ValueError(f"Invalid reference file: {ref_path}")
 
-        if not os.path.isfile(path):
-            raise ValueError(f"Invalid file path: {path}")
+        if not os.path.exists(json_path) and os.path.exists(xml_path):
+            if not os.path.isfile(xml_path):
+                raise ValueError(f"Invalid file path: {xml_path}")
+            # Convert existing xml to json.
+            # Not recommend to use xml, because there are some issues in XMLSerializer
+            if not os.path.isfile(xml_path):
+                raise ValueError(f"Invalid file path: {xml_path}")
+            with open(xml_path, 'r') as f:
+                cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
+            data = self.render_resource_cfg_to_json(cfg)
+            with open(json_path, 'w') as f:
+                f.write(data)
+            data = self.render_resource_cfg_to_xml(cfg)
+            with open(xml_path, 'w') as f:
+                f.write(data)
 
-        with open(path, 'r') as f:
-            cfg = XMLSerializer(CMDConfiguration).from_xml(f.read())
+        if not os.path.isfile(json_path):
+            raise ValueError(f"Invalid file path: {json_path}")
+
+        with open(json_path, 'r') as f:
+            print(json_path)
+            data = json.load(f)
+        cfg = CMDConfiguration(data)
+
         return CfgReader(cfg)
 
     def load_resource_cfg_reader_by_command_with_version(self, cmd, version):
@@ -372,14 +393,14 @@ class AAZSpecsManager:
             if not group.help or not group.help.short:
                 details[' '.join(group.names)] = {
                     'type': 'group',
-                    'help': "Miss short summery."
+                    'help': "Miss short summary."
                 }
 
         for cmd in self.iter_commands():
             if not cmd.help or not cmd.help.short:
                 details[' '.join(cmd.names)] = {
                     'type': 'command',
-                    'help': "Miss short summery."
+                    'help': "Miss short summary."
                 }
         if details:
             raise exceptions.VerificationError(message="Invalid Command Tree", details=details)
@@ -427,10 +448,11 @@ class AAZSpecsManager:
 
         # cfg files
         for (plane, resource_id, version), cfg in self._modified_resource_cfgs.items():
-            file_path = self.get_resource_cfg_file_path(plane, resource_id, version)
+            json_file_path, xml_file_path = self.get_resource_cfg_file_paths(plane, resource_id, version)
             ref_file_path = self.get_resource_cfg_ref_file_path(plane, resource_id, version)
             if not cfg:
-                remove_files.append(file_path)
+                remove_files.append(json_file_path)
+                remove_files.append(xml_file_path)
                 remove_files.append(ref_file_path)
             else:
                 main_resource = cfg.resources[0]
@@ -438,7 +460,8 @@ class AAZSpecsManager:
                     update_files[ref_file_path] = self.render_resource_ref_readme(
                         plane=cfg.plane, ref_resource_id=main_resource.id, ref_resource_version=main_resource.version)
                 else:
-                    update_files[file_path] = self.render_resource_cfg(cfg)
+                    update_files[json_file_path] = self.render_resource_cfg_to_json(cfg)
+                    update_files[xml_file_path] = self.render_resource_cfg_to_xml(cfg)
 
         for remove_file in remove_files:
             if os.path.exists(remove_file):
@@ -485,5 +508,10 @@ class AAZSpecsManager:
         return tmpl.render(ref_resource=ref_resource)
 
     @staticmethod
-    def render_resource_cfg(cfg):
-        return XMLSerializer(cfg).to_xml()
+    def render_resource_cfg_to_json(cfg):
+        data = cfg.to_primitive()
+        return json.dumps(data, ensure_ascii=False, indent=4)
+
+    @staticmethod
+    def render_resource_cfg_to_xml(cfg):
+        return XMLSerializer.to_xml(cfg)

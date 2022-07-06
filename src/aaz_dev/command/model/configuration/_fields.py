@@ -1,5 +1,10 @@
 from schematics.types import StringType, BaseType, BooleanType
 from utils.stage import AAZStageEnum, AAZStageField
+import json
+import logging
+
+
+logger = logging.getLogger('backend')
 
 
 class CMDBooleanField(BooleanType):
@@ -41,7 +46,7 @@ class CMDVariantField(StringType):
 
     def __init__(self, *args, **kwargs):
         super(CMDVariantField, self).__init__(
-            regex=r'\$[a-zA-Z0-9_\[\]\.]+',
+            regex=r'[$@][a-zA-Z0-9_\[\]\.]+',
             *args,
             **kwargs
         )
@@ -51,21 +56,38 @@ class CMDClassField(StringType):
 
     def __init__(self, *args, **kwargs):
         super(CMDClassField, self).__init__(
-            regex=r'\@[a-zA-Z0-9_]+',
+            regex=r'[A-Z][a-zA-Z0-9_]+',
             *args, **kwargs
         )
 
 
 class CMDPrimitiveField(BaseType):
     """
-    Can parse json value format string, the result type can be None, integer, float, bool, string, list or dict
+    Can parse json value format string, the result type can be null, integer, float, bool, string, list or dict
     """
+
+    @staticmethod
+    def convert_from_xml(raw_data):
+        try:
+            return json.loads(raw_data)
+        except json.JSONDecodeError as err:
+            logging.error(f'Parse primitive field value from xml failed: "{raw_data}"({type(raw_data)}): {err}\n'
+                          f'Please export Command Model field again. ')
+            return raw_data
 
     def __init__(self, *args, **kwargs):
         super(CMDPrimitiveField, self).__init__(
             serialize_when_none=True,
+            default=None,
             *args, **kwargs,
         )
+
+    def to_primitive(self, value, context=None):
+        # TODO: when value is None, will not call to_primitive, so it will not be converted to null in json.
+        data = super().to_primitive(value, context)
+        if context is not None and "to_xml" in context and context.to_xml is True:
+            data = json.dumps(data, ensure_ascii=False, indent=None, separators=(',', ':'))
+        return data
 
 
 class CMDRegularExpressionField(StringType):

@@ -56,18 +56,35 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
         const { commandTreeNodes, selected, onAdd, expanded } = this.props;
 
         const renderLeaf = (leaf: CommandTreeLeaf) => {
-            // const leafId = 'command:' +  leaf.names.join('/');
             const leafName = leaf.names[leaf.names.length - 1];
             return (
-                <TreeItem key={leaf.id} nodeId={leaf.id} label={leafName} color='inherit' />
+                <TreeItem key={leaf.id} nodeId={leaf.id} color='inherit' label={leafName}
+                    onClick={(event) => {
+                        if (selected !== leaf.id) {
+                            this.onNodeSelected(event, leaf.id);
+                        }
+                        event.stopPropagation();
+                        event.preventDefault();
+                    }}
+                />
             )
         }
 
         const renderNode = (node: CommandTreeNode) => {
-            // const nodeId = 'group:' +  node.names.join('/');
             const nodeName = node.names[node.names.length - 1];
             return (
-                <TreeItem key={node.id} nodeId={node.id} label={nodeName} color='inherit'>
+                <TreeItem key={node.id} nodeId={node.id} color='inherit' label={nodeName}
+                    onClick={(event) => {
+                        if (selected !== node.id || expanded.indexOf(node.id) === -1) {
+                            this.onNodeSelected(event, node.id);
+                            this.onNodeToggle(event, [...expanded, node.id]);
+                        } else {
+                            this.onNodeToggle(event, expanded.filter(v => v !== node.id));
+                        }
+                        event.stopPropagation();
+                        event.preventDefault();
+                    }}
+                >
                     {Array.isArray(node.leaves) ? node.leaves.map((leaf) => renderLeaf(leaf)) : null}
                     {Array.isArray(node.nodes) ? node.nodes.map((subNode) => renderNode(subNode)) : null}
                 </TreeItem>
@@ -84,7 +101,7 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
                     justifyContent: "flex-start",
                 }}>
                     <HeaderTypography>Command Tree</HeaderTypography>
-                    <Box sx={{flexGrow: 1}}/>
+                    <Box sx={{ flexGrow: 1 }} />
                     <Tooltip title='Add from Swagger'>
                         <IconButton
                             color='info'
@@ -98,8 +115,6 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
                 <TreeView
                     defaultCollapseIcon={<ExpandMoreIcon />}
                     defaultExpandIcon={<ChevronRightIcon />}
-                    onNodeSelect={this.onNodeSelected}
-                    onNodeToggle={this.onNodeToggle}
                     selected={selected}
                     expanded={expanded}
                     sx={{

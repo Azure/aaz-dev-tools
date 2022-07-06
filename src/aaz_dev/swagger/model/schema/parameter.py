@@ -210,6 +210,7 @@ class BodyParameter(ParameterBase, Linkable):
         )):
             model = CMDRequestJson()
             model.schema = v
+            v.required = self.required
             if isinstance(v, CMDObjectSchema):
                 # flatten body parameter
                 v.client_flatten = True

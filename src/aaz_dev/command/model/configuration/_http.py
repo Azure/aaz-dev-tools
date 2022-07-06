@@ -231,7 +231,7 @@ class CMDHttpResponse(Model):
         serialized_name='isError',
         deserialize_from='isError'
     )
-    description = CMDDescriptionField(required=True)
+    description = CMDDescriptionField()
 
     # properties as nodes
     header = ModelType(CMDHttpResponseHeader)

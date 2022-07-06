@@ -17,7 +17,7 @@ class CMDArgEnumItem(Model):
     hide = CMDBooleanField()
 
     # properties as nodes
-    value = CMDPrimitiveField(required=True)
+    value = CMDPrimitiveField()  # json value format string, support null
 
     class Options:
         serialize_when_none = False

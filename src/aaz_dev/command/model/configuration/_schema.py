@@ -36,7 +36,7 @@ class CMDSchemaEnumItem(Model):
     arg = CMDVariantField()  # value will be used when specific argument is provided
 
     # properties as nodes
-    value = CMDPrimitiveField(required=True)
+    value = CMDPrimitiveField()  # json value format string, support null
 
     class Options:
         serialize_when_none = False
