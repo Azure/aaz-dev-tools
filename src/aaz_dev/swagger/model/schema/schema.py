@@ -511,7 +511,7 @@ class Schema(Model, Linkable):
                             key=self.traces,
                             value=self.resource_id_templates
                         )
-                        # logger.warning(err)
+                        logger.warning(err)
                 if 'location' in prop_dict and not prop_dict['location'].frozen:
                     location_prop = prop_dict['location']
                     if not isinstance(location_prop, CMDResourceLocationSchema):
