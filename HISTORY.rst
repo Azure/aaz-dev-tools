@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.7.1
++++++
+* Fix parse swagger file path version
+
 0.7.0
 +++++
 * Improve message display in swagger picker (#83)
