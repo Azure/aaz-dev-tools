@@ -403,6 +403,13 @@ class CMDResourceIdArgBase(CMDStringArgBase):
         deserialize_from='format'
     )
 
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super().build_arg_base(builder)
+        assert isinstance(arg, CMDResourceIdArgBase)
+        arg.fmt = builder.get_fmt()
+        return arg
+
 
 class CMDResourceIdArg(CMDResourceIdArgBase, CMDStringArg):
     pass
@@ -411,6 +418,15 @@ class CMDResourceIdArg(CMDResourceIdArgBase, CMDStringArg):
 # resourceLocation
 class CMDResourceLocationArgBase(CMDStringArgBase):
     TYPE_VALUE = "ResourceLocation"
+
+    no_rg_default = CMDBooleanField()  # the default value will not be the location of resource group
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super().build_arg_base(builder)
+        assert isinstance(arg, CMDResourceLocationArgBase)
+        arg.fmt = builder.get_fmt()
+        return arg
 
 
 class CMDResourceLocationArg(CMDResourceLocationArgBase, CMDStringArg):
@@ -474,6 +490,16 @@ class CMDInteger64Arg(CMDInteger64ArgBase, CMDIntegerArg):
 # boolean
 class CMDBooleanArgBase(CMDArgBase):
     TYPE_VALUE = "boolean"
+
+    reverse = CMDBooleanField()
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super().build_arg_base(builder)
+        assert isinstance(arg, CMDBooleanArgBase)
+        arg.fmt = builder.get_fmt()
+        arg.reverse = builder.get_reverse_boolean()
+        return arg
 
 
 class CMDBooleanArg(CMDBooleanArgBase, CMDArg):
