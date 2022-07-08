@@ -4,6 +4,8 @@ from command.model.configuration import CMDStringArgBase, CMDByteArgBase, CMDBin
     CMDIntegerArgBase, CMDInteger32ArgBase, CMDInteger64ArgBase, CMDBooleanArgBase, CMDFloatArgBase, \
     CMDFloat32ArgBase, CMDFloat64ArgBase, CMDObjectArgBase, CMDArrayArgBase, CMDClsArgBase, CMDSubscriptionIdArg, CMDArg
 from command.model.configuration import CMDArgGroup, CMDArgumentHelp
+from command.model.configuration import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, \
+    CMDArrayFormat
 from utils.case import to_camel_case, to_snack_case
 from utils import exceptions
 from utils.stage import AAZStageEnum
@@ -248,7 +250,6 @@ def render_arg(arg, cls_map, arg_group=None):
 
 
 def render_arg_base(arg, cls_map, arg_kwargs=None):
-    # TODO: add format in argument
     if isinstance(arg, CMDClsArgBase):
         cls_name = arg.type[1:]
         arg = cls_map[cls_name].arg
@@ -268,6 +269,18 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
         if enum:
             arg_kwargs['enum'] = enum
 
+        if arg.fmt and isinstance(arg.fmt, CMDStringFormat):
+            arg_kwargs['fmt'] = fmt = {
+                "cls": "AAZStrArgFormat",
+                "kwargs": {}
+            }
+            if arg.fmt.pattern is not None:
+                fmt['kwargs']["pattern"] = arg.fmt.pattern
+            if arg.fmt.max_length is not None:
+                fmt['kwargs']["max_length"] = arg.fmt.max_length
+            if arg.fmt.min_length is not None:
+                fmt['kwargs']["min_length"] = arg.fmt.min_length
+
         if isinstance(arg, CMDSubscriptionIdArgBase):
             arg_type = "AAZSubscriptionIdArg"
         elif isinstance(arg, CMDResourceGroupNameArgBase):
@@ -280,12 +293,28 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
                 del arg_kwargs['id_part']
         elif isinstance(arg, CMDResourceIdArgBase):
             arg_type = "AAZResourceIdArg"
-            # TODO: add format for it
+            if arg.fmt:
+                arg_kwargs['fmt'] = fmt = {
+                    "cls": "AAZResourceIdArgFormat",
+                    "kwargs": {}
+                }
+                if arg.fmt.template is not None:
+                    template = arg.fmt.template
+                    # TODO: implement placeholder linked with other arguments.
+                    fmt['kwargs']['template'] = template
+
         elif isinstance(arg, CMDResourceLocationArgBase):
             arg_type = "AAZResourceLocationArg"
             if 'options' in arg_kwargs and set(arg_kwargs['options']) == {'--location', '-l'}:
                 # it's default value
                 del arg_kwargs['options']
+            if not arg.no_rg_default:
+                arg_kwargs['fmt'] = fmt = {
+                    "cls": "AAZResourceLocationArgFormat",
+                    "kwargs": {}
+                }
+                # TODO: find resource_group_arg
+
         elif isinstance(arg, CMDByteArgBase):
             raise NotImplementedError()
         elif isinstance(arg, CMDBinaryArgBase):
@@ -293,15 +322,12 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
         elif isinstance(arg, CMDDurationArgBase):
             arg_type = "AAZStrArg"
             # TODO: add format for it
-            # raise NotImplementedError()
         elif isinstance(arg, CMDDateArgBase):
             arg_type = "AAZStrArg"
             # TODO: add format for it
-            # raise NotImplementedError()
         elif isinstance(arg, CMDDateTimeArgBase):
             arg_type = "AAZStrArg"
             # TODO: add format for it
-            # raise NotImplementedError()
         elif isinstance(arg, CMDUuidArgBase):
             arg_type = "AAZStrArg"
             # TODO: add format for it
@@ -313,6 +339,19 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
         enum = parse_arg_enum(arg.enum)
         if enum:
             arg_kwargs['enum'] = enum
+
+        if arg.fmt and isinstance(arg.fmt, CMDIntegerFormat):
+            arg_kwargs['fmt'] = fmt = {
+                "cls": "AAZIntArgFormat",
+                "kwargs": {}
+            }
+            if arg.fmt.multiple_of is not None:
+                fmt['kwargs']["multiple_of"] = arg.fmt.multiple_of
+            if arg.fmt.maximum is not None:
+                fmt['kwargs']["maximum"] = arg.fmt.maximum
+            if arg.fmt.minimum is not None:
+                fmt['kwargs']["minimum"] = arg.fmt.minimum
+
         # TODO: add format for integer32 and integer64
         # if isinstance(arg, CMDInteger32ArgBase):
         #     raise NotImplementedError()
@@ -321,12 +360,35 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
 
     elif isinstance(arg, CMDBooleanArgBase):
         arg_type = "AAZBoolArg"
+        if arg.reverse:
+            arg_kwargs['fmt'] = {
+                "cls": "AAZBoolArgFormat",
+                "kwargs": {
+                    "reverse": arg.reverse,
+                }
+            }
 
     elif isinstance(arg, CMDFloatArgBase):
         arg_type = "AAZFloatArg"
         enum = parse_arg_enum(arg.enum)
         if enum:
             arg_kwargs['enum'] = enum
+
+        if arg.fmt and isinstance(arg.fmt, CMDFloatFormat):
+            arg_kwargs['fmt'] = fmt = {
+                "cls": "AAZFloatArgFormat",
+                "kwargs": {}
+            }
+            if arg.fmt.multiple_of is not None:
+                fmt['kwargs']["multiple_of"] = arg.fmt.multiple_of
+            if arg.fmt.maximum is not None:
+                fmt['kwargs']['maximum'] = arg.fmt.maximum
+            if arg.fmt.minimum is not None:
+                fmt['kwargs']['minimum'] = arg.fmt.minimum
+            if arg.fmt.exclusive_maximum is not None:
+                fmt['kwargs']['exclusive_maximum'] = arg.fmt.exclusive_maximum
+            if arg.fmt.exclusive_minimum is not None:
+                fmt['kwargs']['exclusive_minimum'] = arg.fmt.exclusive_minimum
 
         # TODO: add format for float32 and float64
         # if isinstance(arg, CMDFloat32ArgBase):
@@ -339,14 +401,45 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
             arg_type = "AAZObjectArg"
             if arg.additional_props:
                 raise NotImplementedError()
+            if arg.fmt is not None:
+                assert isinstance(arg.fmt, CMDObjectFormat)
+                arg_kwargs['fmt'] = fmt = {
+                    "cls": "AAZObjectArgFormat",
+                    "kwargs": {}
+                }
+                if arg.fmt.max_properties is not None:
+                    fmt['kwargs']['max_properties'] = arg.fmt.max_properties
+                if arg.fmt.min_properties is not None:
+                    fmt['kwargs']['min_properties'] = arg.fmt.min_properties
         elif arg.additional_props:
             arg_type = "AAZDictArg"
+            if arg.fmt is not None:
+                assert isinstance(arg.fmt, CMDObjectFormat)
+                arg_kwargs['fmt'] = fmt = {
+                    "cls": "AAZDictArgFormat",
+                    "kwargs": {}
+                }
+                if arg.fmt.max_properties is not None:
+                    fmt['kwargs']['max_properties'] = arg.fmt.max_properties
+                if arg.fmt.min_properties is not None:
+                    fmt['kwargs']['min_properties'] = arg.fmt.min_properties
         else:
             raise NotImplementedError()
 
     elif isinstance(arg, CMDArrayArgBase):
         arg_type = "AAZListArg"
-
+        if arg.fmt is not None:
+            arg_kwargs['fmt'] = fmt = {
+                "cls": "AAZListArgFormat",
+                "kwargs": {}
+            }
+            assert isinstance(arg.fmt, CMDArrayFormat)
+            if arg.fmt.unique is not None:
+                fmt['kwargs']['unique'] = arg.fmt.unique
+            if arg.fmt.max_length is not None:
+                fmt['kwargs']['max_length'] = arg.fmt.max_length
+            if arg.fmt.min_length is not None:
+                fmt['kwargs']['min_length'] = arg.fmt.min_length
     else:
         raise NotImplementedError()
 

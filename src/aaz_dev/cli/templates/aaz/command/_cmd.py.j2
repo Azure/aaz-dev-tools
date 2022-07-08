@@ -95,7 +95,15 @@ class {{ leaf.cls_name }}(AAZCommand):
         {%- if not arg_kwargs|length %})
         {%- else %}
             {%- for key, value in arg_kwargs.items() %}
+            {%- if key != 'fmt' %}
             {{ key }}={{ value|constant_convert }},
+            {%- else %}
+            {{ key }}={{ value['cls'] }}(
+                {%- for f_key, f_value in value['kwargs'].items() %}
+                {{ f_key }}={{ f_value|constant_convert }},
+                {%- endfor %}
+            ),
+            {%- endif %}
             {%- endfor %}
         )
         {%- endif %}
@@ -127,7 +135,15 @@ class {{ leaf.cls_name }}(AAZCommand):
         {%- if not arg_cls.arg_kwargs|length %})
         {%- else %}
             {%- for key, value in arg_cls.arg_kwargs.items() %}
+            {%- if key != 'fmt' %}
             {{ key }}={{ value|constant_convert }},
+            {%- else %}
+            {{ key }}={{ value['cls'] }}(
+                {%- for f_key, f_value in value['kwargs'].items() %}
+                {{ f_key }}={{ f_value|constant_convert }},
+                {%- endfor %}
+            ),
+            {%- endif %}
             {%- endfor %}
         )
         {%- endif %}
@@ -141,7 +157,15 @@ class {{ leaf.cls_name }}(AAZCommand):
         {%- if not arg_kwargs|length %})
         {%- else %}
             {%- for key, value in arg_kwargs.items() %}
+            {%- if key != 'fmt' %}
             {{ key }}={{ value|constant_convert }},
+            {%- else %}
+            {{ key }}={{ value['cls'] }}(
+                {%- for f_key, f_value in value['kwargs'].items() %}
+                {{ f_key }}={{ f_value|constant_convert }},
+                {%- endfor %}
+            ),
+            {%- endif %}
             {%- endfor %}
         )
         {%- endif %}
