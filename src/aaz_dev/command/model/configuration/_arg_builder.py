@@ -4,10 +4,11 @@ import re
 from utils.case import to_camel_case
 
 from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgDefault, CMDBooleanArgBase, \
-    CMDArgBlank, CMDObjectArgAdditionalProperties
+    CMDArgBlank, CMDObjectArgAdditionalProperties, CMDResourceLocationArgBase
 from ._format import CMDFormat
 from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
-    CMDArraySchemaBase, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema, CMDArraySchema
+    CMDArraySchemaBase, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema, CMDBooleanSchemaBase, \
+    CMDResourceLocationSchemaBase
 
 
 class CMDArgBuilder:
@@ -324,3 +325,17 @@ class CMDArgBuilder:
 
     def get_type(self):
         return self.schema._get_type()
+
+    def get_reverse_boolean(self):
+        assert isinstance(self.schema, CMDBooleanSchemaBase)
+        if self._ref_arg:
+            assert isinstance(self._ref_arg, CMDBooleanArgBase)
+            return self._ref_arg.reverse
+        return False
+
+    def get_resource_location_no_rg_default(self):
+        assert isinstance(self.schema, CMDResourceLocationSchemaBase)
+        if self._ref_arg:
+            assert isinstance(self._ref_arg, CMDResourceLocationArgBase)
+            return self._ref_arg.no_rg_default
+        return False
