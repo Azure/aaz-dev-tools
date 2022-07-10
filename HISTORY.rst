@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.8.0
++++++
+* Support argument validation (#85)
+
 0.7.1
 +++++
 * Fix parse swagger file path version
