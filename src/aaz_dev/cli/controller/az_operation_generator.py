@@ -39,6 +39,8 @@ class AzHttpOperationGenerator(AzOperationGenerator):
         for response in self._operation.http.responses:
             if not response.is_error:
                 if self.is_long_running and response.status_codes == [202]:
+                    # ignore 202 response for long running operation.
+                    # Long running operation should use 200 or 201 schema to deserialize the final response.
                     continue
                 self.success_responses.append(AzHttpResponseGenerator(self._cmd_ctx, response))
             else:
