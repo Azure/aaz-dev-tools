@@ -242,6 +242,8 @@ class Schema(Model, Linkable):
 
     x_nullable = XNullableField()  # when true, specifies that null is a valid value for the associated schema
 
+    x_ms_identifiers = ListType(BaseType(), serialized_name="x-ms-identifiers", deserialize_from="x-ms-identifiers")  # TODO: used to indentify element in array
+
     # specific properties, will not support
     _x_accessibility = XAccessibilityField()  # only used in ContainerRegistry Data plane
     _x_az_search_deprecated = XAzSearchDeprecatedField()  # only used in Search Data Plane
@@ -253,7 +255,6 @@ class Schema(Model, Linkable):
     _x_enum_Names = ListType(BaseType(), serialized_name="x-enumNames", deserialize_from="x-enumNames")  # Only used in Marketplane Catalog Data Plane
     _x_enum_flags = BooleanType(serialized_name="x-enumFlags", deserialize_from="x-enumFlags")  # Only used in Marketplane Catalog Data Plane
     _x_dictionary_key = ModelType(ReferenceSchema, serialized_name="x-dictionaryKey", deserialize_from="x-dictionaryKey")  # Only used in Marketplane Catalog Data Plane
-    _x_ms_identifiers = ListType(BaseType(), serialized_name="x-ms-identifiers", deserialize_from="x-ms-identifiers")  # Only used in Open Energy Platform Mgmt Plane
 
     _x_cadl_name = XCadlNameField()  # Cadl field name
 

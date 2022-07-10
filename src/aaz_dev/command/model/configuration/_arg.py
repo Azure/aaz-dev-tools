@@ -420,12 +420,13 @@ class CMDResourceLocationArgBase(CMDStringArgBase):
     TYPE_VALUE = "ResourceLocation"
 
     no_rg_default = CMDBooleanField()  # the default value will not be the location of resource group
+    # TODO: support global as default
 
     @classmethod
     def build_arg_base(cls, builder):
         arg = super().build_arg_base(builder)
         assert isinstance(arg, CMDResourceLocationArgBase)
-        arg.fmt = builder.get_fmt()
+        arg.no_rg_default = builder.get_resource_location_no_rg_default()
         return arg
 
 
@@ -497,7 +498,6 @@ class CMDBooleanArgBase(CMDArgBase):
     def build_arg_base(cls, builder):
         arg = super().build_arg_base(builder)
         assert isinstance(arg, CMDBooleanArgBase)
-        arg.fmt = builder.get_fmt()
         arg.reverse = builder.get_reverse_boolean()
         return arg
 

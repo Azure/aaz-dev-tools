@@ -13,11 +13,10 @@ from utils.stage import AAZStageEnum
 
 class AzArgGroupGenerator:
 
-    def __init__(self, args_schema_name, cmd_ctx, cls_map, arg_group):
+    def __init__(self, args_schema_name, cmd_ctx, arg_group):
         assert isinstance(arg_group, CMDArgGroup)
         assert arg_group.name is not None   # empty string is valid
         self.name = arg_group.name
-        self._cls_map = cls_map
         self._arg_group = arg_group
         self._args_schema_name = args_schema_name
         self._cmd_ctx = cmd_ctx
@@ -31,14 +30,12 @@ class AzArgGroupGenerator:
             if isinstance(arg, CMDSubscriptionIdArg) \
                     and arg_keys == ('subscription', ) and arg.options == ['subscription']:
                 # use self.ctx.subscription_id
-                self._cmd_ctx.set_argument(('subscription_id', ), arg.var, arg.hide, ctx_namespace='self.ctx')
+                self._cmd_ctx.set_argument(('subscription_id', ), arg, ctx_namespace='self.ctx')
             else:
-                self._cmd_ctx.set_argument(arg_keys, arg.var, arg.hide)
+                self._cmd_ctx.set_argument(arg_keys, arg)
 
         if getattr(arg, 'cls', None):
-            assert arg.cls not in self._cls_map
-            self._cls_map[arg.cls] = AzArgClsGenerator(arg.cls, self._cls_map, arg)
-            self._cmd_ctx.set_argument_cls(arg.cls)
+            self._cmd_ctx.set_argument_cls(arg)
             arg_keys = (f"@{arg.cls}", )  # prepare for cls sub property use
 
         if isinstance(arg, CMDObjectArgBase):
@@ -66,7 +63,7 @@ class AzArgGroupGenerator:
                 continue
 
             a_name = parse_arg_name(a)
-            a_type, a_kwargs, cls_builder_name = render_arg(a, self._cls_map, arg_group=self.name)
+            a_type, a_kwargs, cls_builder_name = render_arg(a, self._cmd_ctx, arg_group=self.name)
 
             rendered_args.append((a_name, a_type, a_kwargs, cls_builder_name))
             if not cls_builder_name and isinstance(a, (CMDObjectArgBase, CMDArrayArgBase)):
@@ -75,19 +72,19 @@ class AzArgGroupGenerator:
             yield scope, scope_define, rendered_args
 
         for a_name, a in search_args.items():
-            for scopes in _iter_scopes_by_arg_base(a, a_name, f"{scope_define}.{a_name}", self._cls_map):
+            for scopes in _iter_scopes_by_arg_base(a, a_name, f"{scope_define}.{a_name}", self._cmd_ctx):
                 yield scopes
 
 
 class AzArgClsGenerator:
 
-    def __init__(self, name, cls_map, arg):
+    def __init__(self, name, cmd_ctx, arg):
         self.arg = arg
         self.name = name
         self.args_schema_name = f"_args_{to_snack_case(name)}"
         self.builder_name = parse_cls_builder_name(name)
-        self._cls_map = cls_map
-        self.arg_type, self.arg_kwargs, _ = render_arg_base(self.arg, self._cls_map)
+        self._cmd_ctx = cmd_ctx
+        self.arg_type, self.arg_kwargs, _ = render_arg_base(self.arg, self._cmd_ctx)
 
         self.props = []
         if isinstance(arg, CMDObjectArgBase):
@@ -108,11 +105,11 @@ class AzArgClsGenerator:
         self.props = sorted(self.props)
 
     def iter_scopes(self):
-        for scopes in _iter_scopes_by_arg_base(self.arg, to_snack_case(self.name), f"cls.{self.args_schema_name}", self._cls_map):
+        for scopes in _iter_scopes_by_arg_base(self.arg, to_snack_case(self.name), f"cls.{self.args_schema_name}", self._cmd_ctx):
             yield scopes
 
 
-def _iter_scopes_by_arg_base(arg, name, scope_define, cls_map):
+def _iter_scopes_by_arg_base(arg, name, scope_define, cmd_ctx):
     rendered_args = []
     search_args = {}
 
@@ -126,7 +123,7 @@ def _iter_scopes_by_arg_base(arg, name, scope_define, cls_map):
                     # escape hide argument
                     continue
                 a_name = parse_arg_name(a)
-                a_type, a_kwargs, cls_builder_name = render_arg(a, cls_map)
+                a_type, a_kwargs, cls_builder_name = render_arg(a, cmd_ctx)
                 rendered_args.append((a_name, a_type, a_kwargs, cls_builder_name))
                 if not cls_builder_name and isinstance(a, (CMDObjectArgBase, CMDArrayArgBase)):
                     search_args[a_name] = a
@@ -135,7 +132,7 @@ def _iter_scopes_by_arg_base(arg, name, scope_define, cls_map):
             assert arg.additional_props.item is not None
             a = arg.additional_props.item
             a_name = "Element"
-            a_type, a_kwargs, cls_builder_name = render_arg_base(a, cls_map)
+            a_type, a_kwargs, cls_builder_name = render_arg_base(a, cmd_ctx)
             rendered_args.append((a_name, a_type, a_kwargs, cls_builder_name))
             if not cls_builder_name and isinstance(a, (CMDObjectArgBase, CMDArrayArgBase)):
                 search_args[a_name] = a
@@ -144,7 +141,7 @@ def _iter_scopes_by_arg_base(arg, name, scope_define, cls_map):
         assert arg.item is not None
         a = arg.item
         a_name = "Element"
-        a_type, a_kwargs, cls_builder_name = render_arg_base(a, cls_map)
+        a_type, a_kwargs, cls_builder_name = render_arg_base(a, cmd_ctx)
         rendered_args.append((a_name, a_type, a_kwargs, cls_builder_name))
         if not cls_builder_name and isinstance(a, (CMDObjectArgBase, CMDArrayArgBase)):
             search_args[a_name] = a
@@ -158,7 +155,7 @@ def _iter_scopes_by_arg_base(arg, name, scope_define, cls_map):
         a_scope_define = f"{scope_define}.{a_name}"
         if a_name == "Element":
             a_name = '_element'
-        for scopes in _iter_scopes_by_arg_base(a, a_name, a_scope_define, cls_map):
+        for scopes in _iter_scopes_by_arg_base(a, a_name, a_scope_define, cmd_ctx):
             yield scopes
 
 
@@ -203,7 +200,7 @@ def parse_arg_name(arg):
     return arg_name
 
 
-def render_arg(arg, cls_map, arg_group=None):
+def render_arg(arg, cmd_ctx, arg_group=None):
     arg_kwargs = {
         "options": []
     }
@@ -244,15 +241,15 @@ def render_arg(arg, cls_map, arg_group=None):
     if arg.blank:
         arg_kwargs["blank"] = arg.blank.value
 
-    arg_type, arg_kwargs, cls_builder_name = render_arg_base(arg, cls_map, arg_kwargs)
+    arg_type, arg_kwargs, cls_builder_name = render_arg_base(arg, cmd_ctx, arg_kwargs)
 
     return arg_type, arg_kwargs, cls_builder_name
 
 
-def render_arg_base(arg, cls_map, arg_kwargs=None):
+def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
     if isinstance(arg, CMDClsArgBase):
         cls_name = arg.type[1:]
-        arg = cls_map[cls_name].arg
+        arg = cmd_ctx.arg_clses[cls_name].arg
     else:
         cls_name = getattr(arg, 'cls', None)
     cls_builder_name = parse_cls_builder_name(cls_name) if cls_name else None
@@ -299,22 +296,23 @@ def render_arg_base(arg, cls_map, arg_kwargs=None):
                     "kwargs": {}
                 }
                 if arg.fmt.template is not None:
-                    template = arg.fmt.template
-                    # TODO: implement placeholder linked with other arguments.
-                    fmt['kwargs']['template'] = template
+                    fmt['kwargs']['template'] = cmd_ctx.render_arg_resource_id_template(arg.fmt.template)
 
         elif isinstance(arg, CMDResourceLocationArgBase):
             arg_type = "AAZResourceLocationArg"
             if 'options' in arg_kwargs and set(arg_kwargs['options']) == {'--location', '-l'}:
                 # it's default value
                 del arg_kwargs['options']
-            if not arg.no_rg_default:
-                arg_kwargs['fmt'] = fmt = {
-                    "cls": "AAZResourceLocationArgFormat",
-                    "kwargs": {}
-                }
-                # TODO: find resource_group_arg
-
+            if not arg.no_rg_default and cmd_ctx.rg_arg_var:
+                resource_group_arg, hide = cmd_ctx.get_argument(cmd_ctx.rg_arg_var)
+                if not hide:
+                    resource_group_arg = resource_group_arg.replace('self.ctx.args.', '')
+                    arg_kwargs['fmt'] = fmt = {
+                        "cls": "AAZResourceLocationArgFormat",
+                        "kwargs": {
+                            "resource_group_arg": resource_group_arg
+                        }
+                    }
         elif isinstance(arg, CMDByteArgBase):
             raise NotImplementedError()
         elif isinstance(arg, CMDBinaryArgBase):
