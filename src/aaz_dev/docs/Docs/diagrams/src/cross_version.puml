@@ -1,0 +1,54 @@
+@startuml multi-api_1
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+HIDE_STEREOTYPE()
+
+AddElementTag("swagger", $bgColor="#2c858a", $borderColor="#7bb0b3")
+AddElementTag("config", $bgColor="#4b8235", $borderColor="#8bb37b",)
+AddElementTag("command", $bgColor="#2c858a", $borderColor="#7bb0b3",)
+
+
+AddRelTag("output", $lineStyle = DashedLine())
+
+
+System_Boundary(swagger, "REST API") {
+    Container(apiV1, "Network Vnet Resources", "Swagger", "2019-10-01", $tags="swagger")
+    Container(apiV2, "Network Vnet Resources", "Swagger", "2020-01-01", $tags="swagger")
+    Container(apiV3, "Network Vnet Resources", "Swagger", "2021-05-01", $tags="swagger")
+}
+
+Lay_D(apiV1, apiV2)
+Lay_D(apiV2, apiV3)
+
+System_Boundary(command_configs, "Comamnd Model") {
+    Container(configV1, "az network vnet", "Command Model", "2019-10-01", $tags="config")
+    Container(configV2, "az network vnet", "Command Model", "2020-01-01", $tags="config")
+    Container(configV3, "az network vnet", "Command Model", "2021-05-01", $tags="config")
+}
+
+Lay_D(configV1, configV2)
+Lay_D(configV2, configV3)
+
+System_Boundary(azure_cli, "Command Code") {
+    Container(commandV1, "az network vnet", "Code", "2019-10-01", $tags="command")
+    Container(commandV2, "az network vnet", "Code", "2020-01-01", $tags="command")
+    Container(commandV3, "az network vnet", "Code", "2021-05-01", $tags="command")
+}
+
+Lay_D(commandV1, commandV2)
+Lay_D(commandV2, commandV3)
+
+Rel_R(apiV1, configV1, "parse swagger")
+Rel(configV1, configV1, "customize")
+Rel_R(configV1, commandV1, "generate", $tags="output")
+
+Rel_R(apiV2, configV2, "parse swagger")
+Rel_D(configV1, configV2, "inherit customization")
+Rel(configV2, configV2, "customize")
+Rel_R(configV2, commandV2, "generate", $tags="output")
+
+Rel_R(apiV3, configV3, "parse swagger")
+Rel_D(configV2, configV3, "inherit customization")
+Rel(configV3, configV3, "customize")
+Rel_R(configV3, commandV3, "generate", $tags="output")
+
+@enduml
