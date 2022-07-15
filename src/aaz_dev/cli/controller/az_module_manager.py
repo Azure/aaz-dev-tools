@@ -22,7 +22,7 @@ logger = logging.getLogger('backend')
 class AzModuleManager:
 
     _command_group_pattern = re.compile(r'^class\s+(.*)\(.*AAZCommandGroup.*\)\s*:\s*$')
-    _command_pattern = re.compile(r'^class\s+(.*)\(.*AAZCommand.*\)\s*:\s*$')
+    _command_pattern = re.compile(r'^class\s+(.*)\(.*AAZ(Wait)?Command.*\)\s*:\s*$')
     _is_preview_param = re.compile(r'\s*is_preview\s*=\s*True\s*')
     _is_experimental_param = re.compile(r'\s*is_experimental\s*=\s*True\s*')
     _def_pattern = re.compile(r'^\s*def\s+')
@@ -276,6 +276,10 @@ class AzModuleManager:
 
         try:
             data = ast.literal_eval(aaz_info_lines)
+            if 'version' not in data:
+                # wait command will be ignored here.
+                logger.info(f"Ignore command without version: '{' '.join(names)}'")
+                return None
             version_name = data['version']
         except Exception as err:
             logger.error(f"Command info invalid in code: '{' '.join(names)}': {err}: {aaz_info_lines}")
