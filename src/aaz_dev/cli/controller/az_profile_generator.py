@@ -27,7 +27,7 @@ class AzProfileGenerator:
             self._update_file(file_name, data=data)
 
         if not self.profile.command_groups:
-            # remove the whole profile
+            # remove the whole aaz/{profile}
             self._delete_folder(self.profile_folder_name)
         else:
             # check aaz/{profile}/__init__.py

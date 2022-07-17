@@ -47,6 +47,7 @@ def az_utils_leaves(node_names, leaf_name, version_name):
 def az_main_modules():
     manager = AzMainManager()
     if request.method == "POST":
+        # create a new module in azure-cli
         data = request.get_json()
         if not data or not isinstance(data, dict) or 'name' not in data:
             raise exceptions.InvalidAPIUsage("Invalid request body")
@@ -95,6 +96,7 @@ def az_main_module(module_name):
 def az_extension_modules():
     manager = AzExtensionManager()
     if request.method == "POST":
+        # create a new extension in azure-cli-extensions
         data = request.get_json()
         if not data or not isinstance(data, dict) or 'name' not in data:
             raise exceptions.InvalidAPIUsage("Invalid request body")
