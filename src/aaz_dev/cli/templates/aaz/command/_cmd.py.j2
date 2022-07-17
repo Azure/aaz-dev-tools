@@ -27,7 +27,13 @@ from azure.cli.core.aaz import *
     {%- endif %}
 )
 {%- endif %}
-class {{ leaf.cls_name }}(AAZCommand):
+class {{ leaf.cls_name }}(
+    {%- if leaf.is_wait -%}
+        AAZWaitCommand
+    {%- else -%}
+        AAZCommand
+    {%- endif -%}
+):
     """{{ leaf.help.short }}
     {%- if leaf.help.long is not none and leaf.help.long|length %}
 
@@ -45,7 +51,9 @@ class {{ leaf.cls_name }}(AAZCommand):
     """
 
     _aaz_info = {
+        {%- if leaf.version %}
         "version": {{ leaf.version|constant_convert }},
+        {%- endif %}
         "resources": [
             {%- for resource in leaf.resources %}
             [{{ resource.plane|constant_convert }}, {{ resource.id|constant_convert }}, {{ resource.version|constant_convert }}],

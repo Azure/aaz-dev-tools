@@ -3,11 +3,12 @@ from cli.model.atomic._help import CLICommandHelp
 from cli.model.atomic._resource import CLISpecsResource
 from schematics.models import Model
 from utils.stage import AAZStageField
-from schematics.types import ModelType, ListType
+from schematics.types import ModelType, ListType, StringType, BooleanType
 
 
 class CLIAtomicCommandRegisterInfo(Model):
     stage = AAZStageField(required=True)    # the stage used in code, usually it should be consist with command.stage
+    confirmation = StringType(min_length=1)
 
     # TODO: add support for deprecate_info
 
@@ -25,10 +26,14 @@ class CLIAtomicCommand(Model):
         deserialize_from="registerInfo"
     )  # register info in command table. If it's not registered in command table, this field is None
 
-    version = CLIVersionField(required=True)
+    version = CLIVersionField()  # the version of wait command is not required.
     resources = ListType(ModelType(CLISpecsResource), required=True, min_size=1)
 
     cfg = CLICommandConfigurationField()
+    support_no_wait = BooleanType(
+        serialized_name="supportNoWait",
+        deserialize_from="supportNoWait",
+    )
 
     class Options:
         serialize_when_none = False

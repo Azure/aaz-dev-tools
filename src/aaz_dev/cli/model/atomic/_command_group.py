@@ -2,14 +2,12 @@ from cli.model.atomic._command import CLIAtomicCommand
 from cli.model.atomic._fields import CLICommandNameField
 from cli.model.atomic._help import CLICommandGroupHelp
 from schematics.models import Model
-from schematics.types import ModelType, ListType, DictType, StringType
+from schematics.types import ModelType, ListType, DictType
 from utils.stage import AAZStageField
 
 
 class CLIAtomicCommandGroupRegisterInfo(Model):
     stage = AAZStageField(required=True)    # the stage of command group used in code
-    confirmation = StringType(min_length=1)
-
     # TODO: add support for deprecate_info
 
 
@@ -31,6 +29,7 @@ class CLIAtomicCommandGroup(Model):
     commands = DictType(
         field=ModelType(CLIAtomicCommand)
     )
+    wait_command = ModelType(CLIAtomicCommand)
 
     class Options:
         serialize_when_none = False

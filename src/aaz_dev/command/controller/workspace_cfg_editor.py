@@ -342,27 +342,32 @@ class WorkspaceCfgEditor(CfgReader):
         for http_op in command.operations:
             if not isinstance(http_op, CMDHttpOperation):
                 continue
-            required_args = set()
-            optional_args = set()
-            request = http_op.http.request
-            assert isinstance(request, CMDHttpRequest)
-            if request.path and request.path.params:
-                for param in request.path.params:
-                    if param.arg:
-                        if param.required:
-                            required_args.add(param.arg)
-                        else:
-                            optional_args.add(param.arg)
-            if request.query and request.query.params:
-                for param in request.query.params:
-                    if param.arg:
-                        if param.required:
-                            required_args.add(param.arg)
-                        else:
-                            optional_args.add(param.arg)
+            required_args, optional_args = self.parse_http_operation_url_args(http_op)
             operation_required_args[http_op.operation_id] = required_args
             operation_optional_args[http_op.operation_id] = optional_args
         return operation_required_args, operation_optional_args
+
+    @staticmethod
+    def parse_http_operation_url_args(op):
+        required_args = set()
+        optional_args = set()
+        request = op.http.request
+        assert isinstance(request, CMDHttpRequest)
+        if request.path and request.path.params:
+            for param in request.path.params:
+                if param.arg:
+                    if param.required:
+                        required_args.add(param.arg)
+                    else:
+                        optional_args.add(param.arg)
+        if request.query and request.query.params:
+            for param in request.query.params:
+                if param.arg:
+                    if param.required:
+                        required_args.add(param.arg)
+                    else:
+                        optional_args.add(param.arg)
+        return required_args, optional_args
 
     def _can_merge(self, plus_cfg_editor):
         if len([*plus_cfg_editor.iter_commands()]) != 1:
