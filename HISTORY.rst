@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.9.0
++++++
+* Support wait command generation (#)
+
 0.8.0
 +++++
 * Support argument validation (#85)
