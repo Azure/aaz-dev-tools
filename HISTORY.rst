@@ -5,7 +5,7 @@ Release History
 
 0.9.0
 +++++
-* Support wait command generation (#)
+* Support wait command generation (#86)
 
 0.8.0
 +++++
