@@ -101,11 +101,9 @@ class AzCommandGenerator:
 
     ARGS_SCHEMA_NAME = "_args_schema"
 
-    def __init__(self, cmd: CLIAtomicCommand):
+    def __init__(self, cmd: CLIAtomicCommand, is_wait=False):
         self.cmd = cmd
-        self.name = ' '.join(self.cmd.names)
-        self.cls_name = to_camel_case(self.cmd.names[-1])
-
+        self.is_wait = is_wait
         self.cmd_ctx = AzCommandCtx()
 
         assert isinstance(self.cmd.cfg, CMDCommand)
@@ -154,8 +152,6 @@ class AzCommandGenerator:
                 self.lro_counts += 1
             self.operations.append(op)
 
-        self.support_no_wait = self.lro_counts == 1  # not support no wait if there are multiple long running operations
-
         # generic_update_op
         if self.json_update_operations:
             self.support_generic_update = self.cmd.names[-1] == "update"
@@ -182,8 +178,6 @@ class AzCommandGenerator:
                     self.generic_update_op = AzGenericUpdateOperationGenerator(self.cmd_ctx, variant_key)
                     self.operations = [*self.operations[:max_idx+1], self.generic_update_op, *self.operations[max_idx+1:]]
 
-        self.version = cmd.version
-        self.resources = cmd.resources
         self.plane = None
         for resource in self.cmd.resources:
             if not self.plane:
@@ -208,12 +202,32 @@ class AzCommandGenerator:
             raise NotImplementedError()
 
     @property
+    def name(self):
+        return ' '.join(self.cmd.names)
+
+    @property
+    def cls_name(self):
+        return to_camel_case(self.cmd.names[-1])
+
+    @property
     def help(self):
         return self.cmd.help
 
     @property
     def register_info(self):
         return self.cmd.register_info
+
+    @property
+    def support_no_wait(self):
+        return self.cmd.support_no_wait or False
+
+    @property
+    def version(self):
+        return self.cmd.version
+
+    @property
+    def resources(self):
+        return self.cmd.resources
 
     def get_arg_clses(self):
         return sorted(self.cmd_ctx.arg_clses.values(), key=lambda a: a.name)

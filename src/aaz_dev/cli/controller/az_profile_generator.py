@@ -27,7 +27,7 @@ class AzProfileGenerator:
             self._update_file(file_name, data=data)
 
         if not self.profile.command_groups:
-            # remove the whole profile
+            # remove the whole aaz/{profile}
             self._delete_folder(self.profile_folder_name)
         else:
             # check aaz/{profile}/__init__.py
@@ -56,7 +56,10 @@ class AzProfileGenerator:
         for folder in self._removed_folders:
             shutil.rmtree(folder, ignore_errors=True)
         for file in self._removed_files:
-            os.remove(file)
+            try:
+                os.remove(file)
+            except FileNotFoundError:
+                pass
         for path, data in self._modified_files.items():
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, 'w') as f:
@@ -96,6 +99,11 @@ class AzProfileGenerator:
                     assert command.cfg is not None
                     self._generate_by_command(profile_folder_name, command)
                 files.add(cmd_file_name)
+            if command_group.wait_command:
+                command = command_group.wait_command
+                cmd_file_name = self._command_file_name(command.names[-1])
+                self._generate_by_command(profile_folder_name, command, is_wait=True)
+                files.add(cmd_file_name)
 
         # update __cmd_group.py file
         file_name = '__cmd_group.py'
@@ -120,13 +128,13 @@ class AzProfileGenerator:
         for name in del_files:
             self._delete_file(profile_folder_name, *command_group_folder_names, name)
 
-    def _generate_by_command(self, profile_folder_name, command):
+    def _generate_by_command(self, profile_folder_name, command, is_wait=False):
         assert isinstance(command.cfg, CMDCommand)
         file_name = self._command_file_name(command.names[-1])
         tmpl = get_templates()['aaz']['command']['_cmd.py']
         try:
             data = tmpl.render(
-                leaf=AzCommandGenerator(command)
+                leaf=AzCommandGenerator(command, is_wait=is_wait)
             )
         except exceptions.InvalidAPIUsage as err:
             err.message = f"CommandGenerationError: {' '.join(command.names)}: {err.message}"

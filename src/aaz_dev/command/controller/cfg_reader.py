@@ -115,16 +115,18 @@ class CfgReader:
         command = self.find_command(*cmd_names)
         if not command:
             return None
+        return self.find_arg_in_command(command, idx)
 
+    @classmethod
+    def find_arg_in_command(cls, command, idx):
         if isinstance(idx, str):
-            idx = self.arg_idx_to_list(idx)
+            idx = cls.arg_idx_to_list(idx)
         assert isinstance(idx, list), f"invalid arg_idx type: {type(idx)}"
 
         for arg_group in command.arg_groups:
-            arg = self.find_arg_in_group(arg_group, idx)
+            arg = cls.find_arg_in_group(arg_group, idx)
             if arg:
                 return arg
-
         return None
 
     def find_arg_parent(self, *cmd_names, idx):
@@ -132,26 +134,31 @@ class CfgReader:
         if not command:
             return None, None
 
+        return self.find_arg_parent_in_command(command, idx)
+
+    @classmethod
+    def find_arg_parent_in_command(cls, command, idx):
         if isinstance(idx, str):
-            idx = self.arg_idx_to_list(idx)
+            idx = cls.arg_idx_to_list(idx)
         assert isinstance(idx, list), f"invalid arg_idx type: {type(idx)}"
 
         if len(idx) == 1:
             for arg_group in command.arg_groups:
-                if self.find_arg_in_group(arg_group, idx) is not None:
+                if cls.find_arg_in_group(arg_group, idx) is not None:
                     return None, arg_group
         else:
             parent_idx = idx[:-1]
-            parent_arg = self.find_arg(*cmd_names, idx=parent_idx)
+            parent_arg = cls.find_arg_in_command(command, idx=parent_idx)
             if parent_arg is not None:
                 return parent_idx, parent_arg
         return None, None
 
-    def find_arg_in_group(self, arg_group, idx):
+    @classmethod
+    def find_arg_in_group(cls, arg_group, idx):
         assert isinstance(arg_group, CMDArgGroup)
 
         if isinstance(idx, str):
-            idx = self.arg_idx_to_list(idx)
+            idx = cls.arg_idx_to_list(idx)
         assert isinstance(idx, list) and len(idx) > 0
 
         current_idx = idx[0]
@@ -160,12 +167,13 @@ class CfgReader:
             if current_idx in arg.options:
                 if not remain_idx:
                     return arg
-                return self.find_sub_arg(arg, remain_idx)
+                return cls.find_sub_arg(arg, remain_idx)
         return None
 
-    def find_sub_arg(self, arg, idx):
+    @classmethod
+    def find_sub_arg(cls, arg, idx):
         if isinstance(idx, str):
-            idx = self.arg_idx_to_list(idx)
+            idx = cls.arg_idx_to_list(idx)
         assert isinstance(idx, list) and len(idx) > 0
 
         if isinstance(arg, CMDObjectArgBase):
@@ -176,13 +184,13 @@ class CfgReader:
                     item = arg.additional_props.item
                     if not remain_idx:
                         return item
-                    return self.find_sub_arg(item, remain_idx)
+                    return cls.find_sub_arg(item, remain_idx)
             elif arg.args:
                 for sub_arg in arg.args:
                     if current_idx in sub_arg.options:
                         if not remain_idx:
                             return sub_arg
-                        return self.find_sub_arg(sub_arg, remain_idx)
+                        return cls.find_sub_arg(sub_arg, remain_idx)
 
         elif isinstance(arg, CMDArrayArgBase):
             current_idx = idx[0]
@@ -191,13 +199,15 @@ class CfgReader:
                 item = arg.item
                 if not remain_idx:
                     return item
-                return self.find_sub_arg(item, remain_idx)
+                return cls.find_sub_arg(item, remain_idx)
 
         return None
 
     def find_arg_by_var(self, *cmd_names, arg_var):
-        _, arg, arg_idx = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
-        return arg, arg_idx
+        command = self.find_command(*cmd_names)
+        if not command:
+            return None, None
+        return self.find_arg_in_command_by_var(command, arg_var=arg_var)
 
     def find_arg_with_parent_by_var(self, *cmd_names, arg_var):
         """
@@ -214,6 +224,15 @@ class CfgReader:
         command = self.find_command(*cmd_names)
         if not command:
             return None, None, None
+        return self.find_arg_in_command_with_parent_by_var(command, arg_var=arg_var)
+
+    @classmethod
+    def find_arg_in_command_by_var(cls, command, arg_var):
+        _, arg, arg_idx = cls.find_arg_in_command_with_parent_by_var(command, arg_var=arg_var)
+        return arg, arg_idx
+
+    @classmethod
+    def find_arg_in_command_with_parent_by_var(cls, command, arg_var):
         assert isinstance(arg_var, str), f"invalid arg_var type: {type(arg_var)}"
 
         def arg_filter(_parent, _arg, _arg_idx, _arg_var):
@@ -226,7 +245,7 @@ class CfgReader:
             return None, False
 
         for arg_group in command.arg_groups:
-            matches = [match for match in self._iter_args_in_group(
+            matches = [match for match in cls._iter_args_in_group(
                 arg_group, arg_filter=arg_filter
             )]
             if not matches:
@@ -235,7 +254,7 @@ class CfgReader:
 
             parent, arg, arg_idx = matches[0]
             if arg_idx:
-                arg_idx = self.arg_idx_to_str(arg_idx)
+                arg_idx = cls.arg_idx_to_str(arg_idx)
             return parent, arg, arg_idx
         return None, None, None
 
@@ -359,7 +378,8 @@ class CfgReader:
                     arg_idx = self.arg_idx_to_str(arg_idx)
                 yield parent, arg, arg_idx
 
-    def _iter_args_in_group(self, arg_group, arg_filter):
+    @classmethod
+    def _iter_args_in_group(cls, arg_group, arg_filter):
         assert isinstance(arg_group, CMDArgGroup)
         for arg in arg_group.args:
             arg_option = max(arg.options, key=lambda item: len(item))
@@ -370,12 +390,13 @@ class CfgReader:
                 return
 
             if isinstance(arg, (CMDObjectArg, CMDArrayArg)):
-                for sub_parent, sub_arg, sub_arg_idx in self._iter_sub_args(arg, arg.var, arg_filter):
+                for sub_parent, sub_arg, sub_arg_idx in cls._iter_sub_args(arg, arg.var, arg_filter):
                     if sub_arg_idx:
                         sub_arg_idx = [arg_option, *sub_arg_idx]
                     yield sub_parent, sub_arg, sub_arg_idx
 
-    def _iter_sub_args(self, parent, arg_var, arg_filter):
+    @classmethod
+    def _iter_sub_args(cls, parent, arg_var, arg_filter):
         if isinstance(parent, CMDObjectArgBase):
             if parent.args:
                 for arg in parent.args:
@@ -387,7 +408,7 @@ class CfgReader:
                         return
 
                     if isinstance(arg, (CMDObjectArg, CMDArrayArg)):
-                        for sub_parent, sub_arg, sub_arg_idx in self._iter_sub_args(arg, arg.var, arg_filter):
+                        for sub_parent, sub_arg, sub_arg_idx in cls._iter_sub_args(arg, arg.var, arg_filter):
                             if sub_arg:
                                 sub_arg_idx = [arg_option, *sub_arg_idx]
                             yield sub_parent, sub_arg, sub_arg_idx
@@ -402,7 +423,7 @@ class CfgReader:
                 if ret:
                     return
 
-                for sub_parent, sub_arg, sub_arg_idx in self._iter_sub_args(item, item_var, arg_filter):
+                for sub_parent, sub_arg, sub_arg_idx in cls._iter_sub_args(item, item_var, arg_filter):
                     if sub_arg:
                         sub_arg_idx = ['{}', *sub_arg_idx]
                     yield sub_parent, sub_arg, sub_arg_idx
@@ -417,7 +438,7 @@ class CfgReader:
             if ret:
                 return
 
-            for sub_parent, sub_arg, sub_arg_idx in self._iter_sub_args(item, item_var, arg_filter):
+            for sub_parent, sub_arg, sub_arg_idx in cls._iter_sub_args(item, item_var, arg_filter):
                 if sub_arg:
                     sub_arg_idx = ['[]', *sub_arg_idx]
                 yield sub_parent, sub_arg, sub_arg_idx
