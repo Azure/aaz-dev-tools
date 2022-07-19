@@ -7,7 +7,6 @@ from cli.model.atomic import CLIAtomicProfile, CLIModule, CLIAtomicCommandGroup,
 from cli.templates import get_templates
 from command.controller.specs_manager import AAZSpecsManager
 from command.controller.cfg_reader import CfgReader
-from command.controller.workspace_cfg_editor import WorkspaceCfgEditor
 from command.model.configuration import CMDHttpOperation, CMDCommand, CMDArgGroup, CMDObjectOutput, CMDHttpResponseJsonBody
 from cli.controller.az_profile_generator import AzProfileGenerator
 from swagger.utils.tools import swagger_resource_path_to_resource_id
@@ -408,7 +407,14 @@ class AzModuleManager:
                     if rid == resource.id:
                         wait_cmd_rids[rid]['resource'] = resource.__class__(resource.to_primitive())
 
-                for param in operation.http.request.path.params or []:
+                params = []
+                if operation.http.request.path and operation.http.request.path.params:
+                    params += operation.http.request.path.params
+                if operation.http.request.query and operation.http.request.query.params:
+                    params += operation.http.request.query.params
+                if operation.http.request.header and operation.http.request.header.params:
+                    params += operation.http.request.header.params
+                for param in params:
                     if not param.arg:
                         continue
                     assert param.arg.startswith("$"), f"Not support path arg name: '{param.arg}'"
