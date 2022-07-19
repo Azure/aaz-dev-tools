@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.9.1
++++++
+* Fix wait command generation while get operation contains query or header parameters (#88)
+
 0.9.0
 +++++
 * Support wait command generation (#86)
