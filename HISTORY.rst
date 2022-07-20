@@ -3,6 +3,12 @@
 Release History
 ===============
 
+0.9.2
++++++
+* Support empty object argument.
+* Add `CMDIdentityObjectSchemaBas` and `CMDIdentityObjectSchema` schema.
+* Support use null to unset object or array type elements in dict or array.
+
 0.9.1
 +++++
 * Fix wait command generation while get operation contains query or header parameters (#88)
