@@ -187,8 +187,8 @@ class CMDBuilder:
             else:
                 raise exceptions.InvalidSwaggerValueError(
                     f"format is not supported", key=getattr(schema, "traces", None), value=[schema_type, schema.format])
-        elif schema_type == "object" or getattr(schema, "properties", None) or getattr(schema, "additional_properties",
-                                                                                       None):
+        elif schema_type == "object" or getattr(schema, "properties", None) or \
+                getattr(schema, "additional_properties", None):
             if schema.format is None:
                 if self.in_base:
                     model = CMDObjectSchemaBase()

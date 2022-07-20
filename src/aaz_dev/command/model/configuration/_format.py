@@ -1,6 +1,6 @@
 from schematics.models import Model
 from schematics.types import StringType, FloatType, IntType
-from ._fields import CMDRegularExpressionField, CMDBooleanField, CMDVariantField
+from ._fields import CMDRegularExpressionField, CMDBooleanField
 from ._utils import CMDDiffLevelEnum
 
 

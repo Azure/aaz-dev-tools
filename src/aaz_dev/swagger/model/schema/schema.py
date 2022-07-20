@@ -521,6 +521,9 @@ class Schema(Model, Linkable):
                         prop_dict['location'] = CMDResourceLocationSchema(raw_data=raw_data)
 
             if prop_dict:
+                if "userAssignedIdentities" in prop_dict and "type" in prop_dict:
+                    # TODO: Transfer to IdentityObjectSchemaBase or IdentityObjectSchema
+                    pass
                 model.props = []
                 for prop in prop_dict.values():
                     model.props.append(prop)
@@ -570,6 +573,7 @@ class Schema(Model, Linkable):
                 # Note: model will always frozen when object without any props, additional_props or discriminators,
                 # If this property is required by parent schema, it will be updated in parent.
                 model.frozen = need_frozen
+
         else:
             if self.all_of is not None:
                 # inherent from allOf

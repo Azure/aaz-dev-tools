@@ -45,7 +45,8 @@ class AzHttpOperationGenerator(AzOperationGenerator):
                 self.success_responses.append(AzHttpResponseGenerator(self._cmd_ctx, response))
             else:
                 if not isinstance(response.body, CMDHttpResponseJsonBody):
-                    raise NotImplementedError()
+                    raise exceptions.InvalidAPIUsage(
+                        f"Invalid error response body: Only support json, current is '{type(response.body)}'")
                 schema = response.body.json.schema
                 if not isinstance(schema, CMDClsSchemaBase):
                     raise NotImplementedError()
@@ -490,10 +491,12 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
                 s_name = s.name
                 s_typ, s_typ_kwargs, cls_builder_name = render_schema(s, cmd_ctx.update_clses, s_name)
                 if s.arg:
+                    # current schema linked with argument
                     s_arg_key, hide = cmd_ctx.get_argument(s.arg)
                     if hide:
                         continue
                 else:
+                    # current schema not linked with argument, then use current arg_key
                     s_arg_key = arg_key
 
                 # handle enum item attached with argument
@@ -501,13 +504,14 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
                 if hasattr(s, "enum") and isinstance(s.enum, CMDSchemaEnum):
                     for item in s.enum.items:
                         if item.arg:
+                            # enum item linked with argument
                             item_arg_key, hide = cmd_ctx.get_argument(item.arg)
                             if hide:
                                 continue
                             has_enum_argument = True
                             r_key = item_arg_key.replace(arg_key, '')
                             if not r_key:
-                                r_key = '.'
+                                r_key = '.'  # which means if the arg exist, fill it
                             is_const = True
                             const_value = item.value
                             rendered_schemas.append(
@@ -517,7 +521,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
                 if not has_enum_argument:
                     r_key = s_arg_key.replace(arg_key, '')
                     if not r_key:
-                        r_key = '.' if s.required else None
+                        r_key = '.' if s.required else None  # which means if the parent exist, fill it
 
                     is_const = False
                     const_value = None
@@ -533,15 +537,12 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
                         search_schemas[s_name] = (s, s_arg_key)
 
         elif schema.additional_props:
-            assert schema.additional_props.item is not None
+            assert schema.additional_props.item is not None  # make sure additional props schema defined its element schema
             s = schema.additional_props.item
             s_name = '{}'
             s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, cmd_ctx.update_clses)
             s_arg_key = arg_key + '{}'
-            if not isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-                r_key = '.'
-            else:
-                r_key = None
+            r_key = '.'  # if element exist, always fill it
 
             is_const = False
             const_value = None
@@ -560,10 +561,12 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
                 s_name = s.name
                 s_typ, s_typ_kwargs, cls_builder_name = render_schema(s, cmd_ctx.update_clses, s_name)
                 if s.arg:
+                    # current schema linked with argument
                     s_arg_key, hide = cmd_ctx.get_argument(s.arg)
                     if hide:
                         continue
                 else:
+                    # current schema not linked with argument, then use current arg_key
                     s_arg_key = arg_key
 
                 # handle enum item attached with argument
@@ -571,6 +574,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
                 if hasattr(s, "enum") and isinstance(s.enum, CMDSchemaEnum):
                     for item in s.enum.items:
                         if item.arg:
+                            # enum item linked with argument
                             item_arg_key, hide = cmd_ctx.get_argument(item.arg)
                             if hide:
                                 continue
@@ -600,19 +604,16 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
                     )
                     if not cls_builder_name and not is_const \
                             and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                        # step into object and array schemas
                         search_schemas[s_name] = (s, s_arg_key)
 
     elif isinstance(schema, CMDArraySchemaBase):
-        assert schema.item is not None
+        assert schema.item is not None  # make sure array schema defined its element schema
         s = schema.item
         s_name = "[]"
         s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, cmd_ctx.update_clses)
         s_arg_key = arg_key + '[]'
-
-        if not isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-            r_key = '.'
-        else:
-            r_key = None
+        r_key = '.'  # if element exist, always fill it
 
         is_const = False
         const_value = None
