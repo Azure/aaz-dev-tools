@@ -8,7 +8,7 @@ from command.model.configuration import CMDSchemaDefault, \
     CMDStringSchema, CMDResourceIdSchema, CMDResourceIdFormat, \
     CMDResourceLocationSchema, \
     CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, \
-    CMDArraySchemaBase, CMDObjectSchema
+    CMDArraySchemaBase, CMDObjectSchema, CMDIdentityObjectSchema, CMDIdentityObjectSchemaBase
 from command.model.configuration import CMDSchemaEnum, CMDSchemaEnumItem, CMDSchema, CMDSchemaBase
 from swagger.utils import exceptions
 from .external_documentation import ExternalDocumentation
@@ -522,8 +522,14 @@ class Schema(Model, Linkable):
 
             if prop_dict:
                 if "userAssignedIdentities" in prop_dict and "type" in prop_dict:
-                    # TODO: Transfer to IdentityObjectSchemaBase or IdentityObjectSchema
-                    pass
+                    if isinstance(model, CMDObjectSchema):
+                        # Transfer to IdentityObjectSchema
+                        model = CMDIdentityObjectSchema(model.to_native())
+                    elif isinstance(model, CMDObjectSchemaBase):
+                        # Transfer to IdentityObjectSchemaBase
+                        model = CMDIdentityObjectSchemaBase(model.to_native())
+                    else:
+                        raise NotImplementedError()
                 model.props = []
                 for prop in prop_dict.values():
                     model.props.append(prop)
