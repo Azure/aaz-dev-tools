@@ -318,17 +318,13 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
         elif isinstance(arg, CMDBinaryArgBase):
             raise NotImplementedError()
         elif isinstance(arg, CMDDurationArgBase):
-            arg_type = "AAZStrArg"
-            # TODO: add format for it
+            arg_type = "AAZDurationArg"
         elif isinstance(arg, CMDDateArgBase):
-            arg_type = "AAZStrArg"
-            # TODO: add format for it
+            arg_type = "AAZDateArg"
         elif isinstance(arg, CMDDateTimeArgBase):
-            arg_type = "AAZStrArg"
-            # TODO: add format for it
+            arg_type = "AAZDateTimeArg"
         elif isinstance(arg, CMDUuidArgBase):
-            arg_type = "AAZStrArg"
-            # TODO: add format for it
+            arg_type = "AAZUuidArg"
         elif isinstance(arg, CMDPasswordArgBase):
             raise NotImplementedError()
 
