@@ -68,6 +68,7 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDFloat32SchemaBase, CMDFloat32Schema, \
     CMDFloat64SchemaBase, CMDFloat64Schema, \
     CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, CMDObjectSchemaBase, CMDObjectSchema, \
+    CMDIdentityObjectSchemaBase, CMDIdentityObjectSchema, \
     CMDArraySchemaBase, CMDArraySchema
 from ._utils import CMDDiffLevelEnum, DEFAULT_CONFIRMATION_PROMPT
 from ._xml import XMLSerializer

@@ -238,9 +238,6 @@ def render_arg(arg, cmd_ctx, arg_group=None):
     if arg.default:
         arg_kwargs["default"] = arg.default.value
 
-    if arg.blank:
-        arg_kwargs["blank"] = arg.blank.value
-
     arg_type, arg_kwargs, cls_builder_name = render_arg_base(arg, cmd_ctx, arg_kwargs)
 
     return arg_type, arg_kwargs, cls_builder_name
@@ -259,6 +256,9 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
 
     if arg.nullable:
         arg_kwargs['nullable'] = True
+
+    if arg.blank:
+        arg_kwargs["blank"] = arg.blank.value
 
     if isinstance(arg, CMDStringArgBase):
         arg_type = "AAZStrArg"
@@ -395,7 +395,19 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
         #     raise NotImplementedError()
 
     elif isinstance(arg, CMDObjectArgBase):
-        if arg.args:
+        if arg.additional_props:
+            arg_type = "AAZDictArg"
+            if arg.fmt is not None:
+                assert isinstance(arg.fmt, CMDObjectFormat)
+                arg_kwargs['fmt'] = fmt = {
+                    "cls": "AAZDictArgFormat",
+                    "kwargs": {}
+                }
+                if arg.fmt.max_properties is not None:
+                    fmt['kwargs']['max_properties'] = arg.fmt.max_properties
+                if arg.fmt.min_properties is not None:
+                    fmt['kwargs']['min_properties'] = arg.fmt.min_properties
+        else:
             arg_type = "AAZObjectArg"
             if arg.additional_props:
                 raise NotImplementedError()
@@ -409,20 +421,6 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
                     fmt['kwargs']['max_properties'] = arg.fmt.max_properties
                 if arg.fmt.min_properties is not None:
                     fmt['kwargs']['min_properties'] = arg.fmt.min_properties
-        elif arg.additional_props:
-            arg_type = "AAZDictArg"
-            if arg.fmt is not None:
-                assert isinstance(arg.fmt, CMDObjectFormat)
-                arg_kwargs['fmt'] = fmt = {
-                    "cls": "AAZDictArgFormat",
-                    "kwargs": {}
-                }
-                if arg.fmt.max_properties is not None:
-                    fmt['kwargs']['max_properties'] = arg.fmt.max_properties
-                if arg.fmt.min_properties is not None:
-                    fmt['kwargs']['min_properties'] = arg.fmt.min_properties
-        else:
-            raise NotImplementedError()
 
     elif isinstance(arg, CMDArrayArgBase):
         arg_type = "AAZListArg"

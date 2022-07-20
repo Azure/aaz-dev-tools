@@ -8,7 +8,7 @@ from command.model.configuration import CMDSchemaDefault, \
     CMDStringSchema, CMDResourceIdSchema, CMDResourceIdFormat, \
     CMDResourceLocationSchema, \
     CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, \
-    CMDArraySchemaBase, CMDObjectSchema
+    CMDArraySchemaBase, CMDObjectSchema, CMDIdentityObjectSchema, CMDIdentityObjectSchemaBase
 from command.model.configuration import CMDSchemaEnum, CMDSchemaEnumItem, CMDSchema, CMDSchemaBase
 from swagger.utils import exceptions
 from .external_documentation import ExternalDocumentation
@@ -436,7 +436,7 @@ class Schema(Model, Linkable):
                         # because required property will not be included in a cls definition,
                         # so it's fine to update it in parent level when prop_dict[name] is a cls definition.
                         prop_dict[name].required = True
-                        # when a property is required, it's frozen status must be consist with the defined schema.
+                        # when a property is required, it's frozen status must be consisted with the defined schema.
                         # This can help to for empty object schema.
                         prop_dict[name].frozen = builder.frozen
 
@@ -521,6 +521,15 @@ class Schema(Model, Linkable):
                         prop_dict['location'] = CMDResourceLocationSchema(raw_data=raw_data)
 
             if prop_dict:
+                if "userAssignedIdentities" in prop_dict and "type" in prop_dict:
+                    if isinstance(model, CMDObjectSchema):
+                        # Transfer to IdentityObjectSchema
+                        model = CMDIdentityObjectSchema(model.to_native())
+                    elif isinstance(model, CMDObjectSchemaBase):
+                        # Transfer to IdentityObjectSchemaBase
+                        model = CMDIdentityObjectSchemaBase(model.to_native())
+                    else:
+                        raise NotImplementedError()
                 model.props = []
                 for prop in prop_dict.values():
                     model.props.append(prop)
@@ -533,7 +542,9 @@ class Schema(Model, Linkable):
                         assert isinstance(v, CMDSchemaBase)
                         model.additional_props = CMDObjectSchemaAdditionalProperties()
                         model.additional_props.item = v
-                        model.additional_props.frozen = v.frozen
+                        # item is required, it's frozen status must be consisted with the defined schema.
+                        # This can help to for empty object.
+                        model.additional_props.item.frozen = builder.frozen
                 # Note: not support additional_properties without schema define
                 # elif self.additional_properties is True:
                 #     model.additional_props = CMDObjectSchemaAdditionalProperties()
@@ -568,6 +579,7 @@ class Schema(Model, Linkable):
                 # Note: model will always frozen when object without any props, additional_props or discriminators,
                 # If this property is required by parent schema, it will be updated in parent.
                 model.frozen = need_frozen
+
         else:
             if self.all_of is not None:
                 # inherent from allOf

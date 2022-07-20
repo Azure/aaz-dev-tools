@@ -875,6 +875,18 @@ class CMDObjectSchema(CMDObjectSchemaBase, CMDSchema):
         return diff
 
 
+class CMDIdentityObjectSchemaBase(CMDObjectSchemaBase):
+    """ And identity object which contains 'userAssignedIdentities' property and 'type' property
+    with "SystemAssigned", "UserAssigned", "SystemAssigned, UserAssigned" and "None" enum values.
+    """
+    TYPE_VALUE = "IdentityObject"
+    ARG_TYPE = CMDObjectArgBase
+
+
+class CMDIdentityObjectSchema(CMDIdentityObjectSchemaBase, CMDObjectSchema):
+    ARG_TYPE = CMDObjectArg
+
+
 # array
 class CMDArraySchemaBase(CMDSchemaBase):
     TYPE_VALUE = "array"

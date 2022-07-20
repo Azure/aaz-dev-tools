@@ -101,6 +101,8 @@ class CMDArgBase(Model):
 
     nullable = CMDBooleanField()  # whether can pass null value or not.
 
+    blank = ModelType(CMDArgBlank)  # blank value is used when argument don't have any value
+
     class Options:
         serialize_when_none = False
 
@@ -130,6 +132,7 @@ class CMDArgBase(Model):
     def build_arg_base(cls, builder):
         arg_base = cls()
         arg_base.nullable = builder.get_nullable()
+        arg_base.blank = builder.get_blank()
         return arg_base
 
     def _reformat_base(self, **kwargs):
@@ -196,7 +199,6 @@ class CMDArg(CMDArgBase):
     # properties as nodes
     help = ModelType(CMDArgumentHelp)
     default = ModelType(CMDArgDefault)  # default value is used when argument isn't in command
-    blank = ModelType(CMDArgBlank)  # blank value is used when argument don't have any value
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -222,7 +224,6 @@ class CMDArg(CMDArgBase):
 
         arg.required = builder.get_required()
         arg.default = builder.get_default()
-        arg.blank = builder.get_blank()
 
         arg.hide = builder.get_hide()
         return arg
@@ -607,6 +608,10 @@ class CMDObjectArgBase(CMDArgBase):
             raise
         arg.args = builder.get_sub_args()
         arg.additional_props = builder.get_additional_props()
+        if not arg.args and not arg.additional_props:
+            # when object arg don't have args or additional_props, set its blank value as empty dict
+            arg.blank = CMDArgBlank()
+            arg.blank.value = {}
         arg.cls = builder.get_cls()
         return arg
 
