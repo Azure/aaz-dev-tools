@@ -5,9 +5,9 @@ Release History
 
 0.9.2
 +++++
-* Support empty object argument.
-* Add `CMDIdentityObjectSchemaBas` and `CMDIdentityObjectSchema` schema.
-* Support use null to unset object or array type elements in dict or array.
+* Support empty object argument (#89)
+* Add `CMDIdentityObjectSchemaBas` and `CMDIdentityObjectSchema` schema (#89)
+* Support use null to unset object or array type elements in dict or array (#89)
 
 0.9.1
 +++++
