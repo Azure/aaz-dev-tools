@@ -3,6 +3,32 @@
 Release History
 ===============
 
+0.9.3
++++++
+* Support `DurationArg`, `DateArg`, `DateTimeArg` and `UuidArg` generation (#90)
+
+0.9.2
++++++
+* Support empty object argument (#89)
+* Add `CMDIdentityObjectSchemaBas` and `CMDIdentityObjectSchema` schema (#89)
+* Support use null to unset object or array type elements in dict or array (#89)
+
+0.9.1
++++++
+* Fix wait command generation while get operation contains query or header parameters (#88)
+
+0.9.0
++++++
+* Support wait command generation (#86)
+
+0.8.0
++++++
+* Support argument validation (#85)
+
+0.7.1
++++++
+* Fix parse swagger file path version
+
 0.7.0
 +++++
 * Improve message display in swagger picker (#83)

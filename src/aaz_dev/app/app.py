@@ -6,7 +6,7 @@ from flask.logging import create_logger
 
 from utils import exceptions
 from utils.config import Config
-from .run import run_command
+from aaz_dev.app.run import run_command
 
 
 def create_app():

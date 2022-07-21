@@ -6,7 +6,10 @@ from cli.model.atomic import CLIAtomicProfile, CLIModule, CLIAtomicCommandGroup,
     CLIAtomicCommand, CLIAtomicCommandRegisterInfo, CLISpecsResource, CLICommandGroupHelp, CLICommandHelp, CLICommandExample
 from cli.templates import get_templates
 from command.controller.specs_manager import AAZSpecsManager
+from command.controller.cfg_reader import CfgReader
+from command.model.configuration import CMDHttpOperation, CMDCommand, CMDArgGroup, CMDObjectOutput, CMDHttpResponseJsonBody
 from cli.controller.az_profile_generator import AzProfileGenerator
+from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils import exceptions
 from utils.config import Config
 from utils.stage import AAZStageEnum
@@ -22,7 +25,7 @@ logger = logging.getLogger('backend')
 class AzModuleManager:
 
     _command_group_pattern = re.compile(r'^class\s+(.*)\(.*AAZCommandGroup.*\)\s*:\s*$')
-    _command_pattern = re.compile(r'^class\s+(.*)\(.*AAZCommand.*\)\s*:\s*$')
+    _command_pattern = re.compile(r'^class\s+(.*)\(.*AAZ(Wait)?Command.*\)\s*:\s*$')
     _is_preview_param = re.compile(r'\s*is_preview\s*=\s*True\s*')
     _is_experimental_param = re.compile(r'\s*is_experimental\s*=\s*True\s*')
     _def_pattern = re.compile(r'^\s*def\s+')
@@ -58,7 +61,7 @@ class AzModuleManager:
         for profile_name, profile in profiles.items():
             if profile.command_groups:
                 for command_group in profile.command_groups.values():
-                    self._load_commands_cfg(command_group)
+                    self._complete_command_group(command_group)
             generators[profile_name] = AzProfileGenerator(aaz_folder, profile)
         for generator in generators.values():
             generator.generate()
@@ -276,6 +279,10 @@ class AzModuleManager:
 
         try:
             data = ast.literal_eval(aaz_info_lines)
+            if 'version' not in data:
+                # wait command will be ignored here.
+                logger.info(f"Ignore command without version: '{' '.join(names)}'")
+                return None
             version_name = data['version']
         except Exception as err:
             logger.error(f"Command info invalid in code: '{' '.join(names)}': {err}: {aaz_info_lines}")
@@ -324,15 +331,18 @@ class AzModuleManager:
         })
         return command
 
-    def _load_commands_cfg(self, command_group):
+    def _complete_command_group(self, command_group):
+        # fill more information for command group
         if command_group.commands:
             for command in command_group.commands.values():
-                self._load_command_cfg(command)
+                self._complete_command(command)
+            self._complete_command_wait_info(command_group)
         if command_group.command_groups:
             for sub_group in command_group.command_groups.values():
-                self._load_commands_cfg(sub_group)
+                self._complete_command_group(sub_group)
 
-    def _load_command_cfg(self, command):
+    def _complete_command(self, command):
+        # fill more properties for command
         aaz_cmd = self._aaz_spec_manager.find_command(*command.names)
         if not aaz_cmd:
             raise exceptions.InvalidAPIUsage(f"Command miss in aaz repo: '{' '.join(command.names)}'")
@@ -347,7 +357,121 @@ class AzModuleManager:
         cmd_cfg = cfg_reader.find_command(*command.names)
         assert cmd_cfg is not None, f"command configuration miss: '{' '.join(command.names)}'"
         command.cfg = cmd_cfg
-        command.register_info.confirmation = cmd_cfg.confirmation
+        if command.register_info is not None:
+            command.register_info.confirmation = cmd_cfg.confirmation
+
+    @staticmethod
+    def _complete_command_wait_info(command_group):
+        assert command_group.commands
+        wait_cmd_rids = {}
+        for command in command_group.commands.values():
+            lro_list = []
+            for operation in command.cfg.operations:
+                if isinstance(operation, CMDHttpOperation):
+                    if operation.long_running:
+                        lro_list.append(operation)
+
+            if len(lro_list) == 1:
+                # support no wait if there are only one long running operation
+                # not support multiple long running operations
+                command.support_no_wait = True
+                if command.register_info is not None:
+                    # command is registered
+                    rid = swagger_resource_path_to_resource_id(lro_list[0].http.path)
+                    if rid not in wait_cmd_rids:
+                        wait_cmd_rids[rid] = {
+                            "methods": set()
+                        }
+
+        if not wait_cmd_rids:
+            return
+
+        # build wait command
+        for command in command_group.commands.values():
+            for operation in command.cfg.operations:
+                # find get operations for wait command
+                if not isinstance(operation, CMDHttpOperation):
+                    continue
+                rid = swagger_resource_path_to_resource_id(operation.http.path)
+                if rid not in wait_cmd_rids:
+                    continue
+                if operation.http.request.method != 'get':
+                    wait_cmd_rids[rid]['methods'].add(operation.http.request.method)
+                    continue
+                if 'get_op' in wait_cmd_rids[rid]:
+                    continue
+
+                wait_cmd_rids[rid]['get_op'] = operation.__class__(operation.to_primitive())
+                wait_cmd_rids[rid]['args'] = {}
+                for resource in command.resources:
+                    if rid == resource.id:
+                        wait_cmd_rids[rid]['resource'] = resource.__class__(resource.to_primitive())
+
+                params = []
+                if operation.http.request.path and operation.http.request.path.params:
+                    params += operation.http.request.path.params
+                if operation.http.request.query and operation.http.request.query.params:
+                    params += operation.http.request.query.params
+                if operation.http.request.header and operation.http.request.header.params:
+                    params += operation.http.request.header.params
+                for param in params:
+                    if not param.arg:
+                        continue
+                    assert param.arg.startswith("$"), f"Not support path arg name: '{param.arg}'"
+                    arg, arg_idx = CfgReader.find_arg_in_command_by_var(
+                        command=command.cfg,
+                        arg_var=param.arg
+                    )
+                    assert arg is not None
+                    wait_cmd_rids[rid]['args'][arg_idx] = arg.__class__(arg.to_primitive())
+
+        for rid, value in [*wait_cmd_rids.items()]:
+            if "get_op" not in value:
+                logger.error(f'Failed to support wait command for resource: Get operation does not exist: {rid}')
+                del wait_cmd_rids[rid]
+
+        if not wait_cmd_rids:
+            return
+
+        if len(wait_cmd_rids) > 1:
+            # Not support to generate wait command for multiple resources
+            logger.error(f'A wait command cannot apply on multiple resources')
+            return
+
+        wait_cmd_info = [*wait_cmd_rids.values()][0]
+
+        command_group.wait_command = wait_command = CLIAtomicCommand()
+        wait_command.names = [*command_group.names, "wait"]
+        wait_command.help = CLICommandHelp()
+        wait_command.help.short = "Place the CLI in a waiting state until a condition is met."
+        wait_command.register_info = CLIAtomicCommandRegisterInfo()
+        wait_command.resources = [wait_cmd_info['resource']]
+        wait_command.cfg = cfg = CMDCommand()
+        cfg.name = "wait"
+        cfg.version = "undefined"
+
+        arg_group = CMDArgGroup()
+        cfg.arg_groups = [arg_group]
+        arg_group.name = ""
+        arg_group.args = [
+            *wait_cmd_info['args'].values()
+        ]
+        get_op = wait_cmd_info['get_op']
+        cfg.operations = [get_op]
+
+        output = CMDObjectOutput()
+        for response in get_op.http.responses:
+            if response.is_error:
+                continue
+            if not isinstance(response.body, CMDHttpResponseJsonBody):
+                continue
+            if response.body.json.var:
+                output.ref = response.body.json.var
+                break
+        if not output.ref:
+            raise ValueError("Output ref is empty")
+        output.client_flatten = False
+        cfg.outputs = [output]
 
 
 class AzMainManager(AzModuleManager):

@@ -101,6 +101,8 @@ class CMDArgBase(Model):
 
     nullable = CMDBooleanField()  # whether can pass null value or not.
 
+    blank = ModelType(CMDArgBlank)  # blank value is used when argument don't have any value
+
     class Options:
         serialize_when_none = False
 
@@ -130,6 +132,7 @@ class CMDArgBase(Model):
     def build_arg_base(cls, builder):
         arg_base = cls()
         arg_base.nullable = builder.get_nullable()
+        arg_base.blank = builder.get_blank()
         return arg_base
 
     def _reformat_base(self, **kwargs):
@@ -196,7 +199,6 @@ class CMDArg(CMDArgBase):
     # properties as nodes
     help = ModelType(CMDArgumentHelp)
     default = ModelType(CMDArgDefault)  # default value is used when argument isn't in command
-    blank = ModelType(CMDArgBlank)  # blank value is used when argument don't have any value
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -222,7 +224,6 @@ class CMDArg(CMDArgBase):
 
         arg.required = builder.get_required()
         arg.default = builder.get_default()
-        arg.blank = builder.get_blank()
 
         arg.hide = builder.get_hide()
         return arg
@@ -403,6 +404,13 @@ class CMDResourceIdArgBase(CMDStringArgBase):
         deserialize_from='format'
     )
 
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super().build_arg_base(builder)
+        assert isinstance(arg, CMDResourceIdArgBase)
+        arg.fmt = builder.get_fmt()
+        return arg
+
 
 class CMDResourceIdArg(CMDResourceIdArgBase, CMDStringArg):
     pass
@@ -411,6 +419,16 @@ class CMDResourceIdArg(CMDResourceIdArgBase, CMDStringArg):
 # resourceLocation
 class CMDResourceLocationArgBase(CMDStringArgBase):
     TYPE_VALUE = "ResourceLocation"
+
+    no_rg_default = CMDBooleanField()  # the default value will not be the location of resource group
+    # TODO: support global as default
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super().build_arg_base(builder)
+        assert isinstance(arg, CMDResourceLocationArgBase)
+        arg.no_rg_default = builder.get_resource_location_no_rg_default()
+        return arg
 
 
 class CMDResourceLocationArg(CMDResourceLocationArgBase, CMDStringArg):
@@ -474,6 +492,15 @@ class CMDInteger64Arg(CMDInteger64ArgBase, CMDIntegerArg):
 # boolean
 class CMDBooleanArgBase(CMDArgBase):
     TYPE_VALUE = "boolean"
+
+    reverse = CMDBooleanField()
+
+    @classmethod
+    def build_arg_base(cls, builder):
+        arg = super().build_arg_base(builder)
+        assert isinstance(arg, CMDBooleanArgBase)
+        arg.reverse = builder.get_reverse_boolean()
+        return arg
 
 
 class CMDBooleanArg(CMDBooleanArgBase, CMDArg):
@@ -581,6 +608,10 @@ class CMDObjectArgBase(CMDArgBase):
             raise
         arg.args = builder.get_sub_args()
         arg.additional_props = builder.get_additional_props()
+        if not arg.args and not arg.additional_props:
+            # when object arg don't have args or additional_props, set its blank value as empty dict
+            arg.blank = CMDArgBlank()
+            arg.blank.value = {}
         arg.cls = builder.get_cls()
         return arg
 

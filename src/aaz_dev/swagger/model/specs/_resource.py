@@ -10,6 +10,7 @@ from fuzzywuzzy import fuzz
 from command.model.configuration import CMDResource
 from ._utils import map_path_2_repo
 from utils.base64 import b64encode_str, b64decode_str
+from swagger.utils import exceptions
 
 logger = logging.getLogger('backend')
 
@@ -114,16 +115,17 @@ class Resource:
                 break
         return op_group_name
 
-    @staticmethod
-    def _get_file_path_version(file_path):
-        dir_path = os.path.dirname(file_path)
-        version = os.path.basename(dir_path)
-        dir_path = os.path.dirname(dir_path)
-        readiness = os.path.basename(dir_path)
+    def _get_file_path_version(self, file_path):
+        dir_parts = file_path.split(self.resource_provider.folder_path)[-1].split(os.sep)[:-1]
+        dir_parts = [part for part in dir_parts if part]
+        if len(dir_parts) < 2:
+            raise exceptions.InvalidSwaggerValueError(f"Cannot parse file version", file_path)
+        readiness, version = dir_parts[:2]
         file_path_version = ResourceVersion(version)
         if file_path_version.readiness == ResourceVersion.Readiness.Stable and readiness.lower() != 'stable':
             if readiness not in ('preview',):
-                raise ValueError(f'InvalidReadiness: in file path: {file_path}')
+                raise exceptions.InvalidSwaggerValueError(
+                    f"Invalid readiness value '{readiness}' in file path", file_path)
             file_path_version.readiness = ResourceVersion.Readiness.Preview
         return file_path_version
 

@@ -1145,13 +1145,16 @@ function ArgumentPropsReviewer(props: {
     onSelectSubArg: (subArgVar: string) => void,
 }) {
     const groupArgs: { [name: string]: CMDArg[] } = {};
-    props.args.forEach((arg) => {
-        const groupName: string = arg.group.length > 0 ? arg.group : "";
-        if (!(groupName in groupArgs)) {
-            groupArgs[groupName] = []
-        }
-        groupArgs[groupName].push(arg)
-    })
+    if (props.args !== undefined) {
+        props.args.forEach((arg) => {
+            const groupName: string = arg.group.length > 0 ? arg.group : "";
+            if (!(groupName in groupArgs)) {
+                groupArgs[groupName] = []
+            }
+            groupArgs[groupName].push(arg)
+        })
+    }
+    
     const groups: ArgGroup[] = []
 
     for (const groupName in groupArgs) {
@@ -1263,6 +1266,10 @@ function ArgumentPropsReviewer(props: {
                     {group.args.map(buildArg)}
                 </Box>
             </Box>)
+    }
+
+    if (groups.length == 0) {
+        return (<></>)
     }
 
     return (<React.Fragment>
@@ -1560,8 +1567,6 @@ function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsA
                     type: argBaseType,
                     item: itemArgBaseParse.argBase
                 }
-            } else {
-                throw Error("Invalid object arguments, neither args nor additionalProps exist")
             }
 
             if (response.cls) {

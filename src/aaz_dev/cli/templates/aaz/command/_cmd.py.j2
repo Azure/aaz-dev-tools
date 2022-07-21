@@ -27,7 +27,13 @@ from azure.cli.core.aaz import *
     {%- endif %}
 )
 {%- endif %}
-class {{ leaf.cls_name }}(AAZCommand):
+class {{ leaf.cls_name }}(
+    {%- if leaf.is_wait -%}
+        AAZWaitCommand
+    {%- else -%}
+        AAZCommand
+    {%- endif -%}
+):
     """{{ leaf.help.short }}
     {%- if leaf.help.long is not none and leaf.help.long|length %}
 
@@ -45,7 +51,9 @@ class {{ leaf.cls_name }}(AAZCommand):
     """
 
     _aaz_info = {
+        {%- if leaf.version %}
         "version": {{ leaf.version|constant_convert }},
+        {%- endif %}
         "resources": [
             {%- for resource in leaf.resources %}
             [{{ resource.plane|constant_convert }}, {{ resource.id|constant_convert }}, {{ resource.version|constant_convert }}],
@@ -95,7 +103,15 @@ class {{ leaf.cls_name }}(AAZCommand):
         {%- if not arg_kwargs|length %})
         {%- else %}
             {%- for key, value in arg_kwargs.items() %}
+            {%- if key != 'fmt' %}
             {{ key }}={{ value|constant_convert }},
+            {%- else %}
+            {{ key }}={{ value['cls'] }}(
+                {%- for f_key, f_value in value['kwargs'].items() %}
+                {{ f_key }}={{ f_value|constant_convert }},
+                {%- endfor %}
+            ),
+            {%- endif %}
             {%- endfor %}
         )
         {%- endif %}
@@ -127,7 +143,15 @@ class {{ leaf.cls_name }}(AAZCommand):
         {%- if not arg_cls.arg_kwargs|length %})
         {%- else %}
             {%- for key, value in arg_cls.arg_kwargs.items() %}
+            {%- if key != 'fmt' %}
             {{ key }}={{ value|constant_convert }},
+            {%- else %}
+            {{ key }}={{ value['cls'] }}(
+                {%- for f_key, f_value in value['kwargs'].items() %}
+                {{ f_key }}={{ f_value|constant_convert }},
+                {%- endfor %}
+            ),
+            {%- endif %}
             {%- endfor %}
         )
         {%- endif %}
@@ -141,7 +165,15 @@ class {{ leaf.cls_name }}(AAZCommand):
         {%- if not arg_kwargs|length %})
         {%- else %}
             {%- for key, value in arg_kwargs.items() %}
+            {%- if key != 'fmt' %}
             {{ key }}={{ value|constant_convert }},
+            {%- else %}
+            {{ key }}={{ value['cls'] }}(
+                {%- for f_key, f_value in value['kwargs'].items() %}
+                {{ f_key }}={{ f_value|constant_convert }},
+                {%- endfor %}
+            ),
+            {%- endif %}
             {%- endfor %}
         )
         {%- endif %}

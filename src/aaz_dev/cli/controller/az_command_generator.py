@@ -1,12 +1,12 @@
 from cli.model.atomic import CLIAtomicCommand
 from command.model.configuration import CMDCommand, CMDHttpOperation, CMDCondition, CMDConditionAndOperator, \
     CMDConditionOrOperator, CMDConditionNotOperator, CMDConditionHasValueOperator, CMDInstanceUpdateOperation, \
-    CMDJsonInstanceUpdateAction
+    CMDJsonInstanceUpdateAction, CMDResourceGroupNameArg
 from utils.case import to_camel_case, to_snack_case
 from utils.plane import PlaneEnum
 from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator, \
-    AzGenericUpdateOperationGenerator
-from .az_arg_group_generator import AzArgGroupGenerator
+    AzGenericUpdateOperationGenerator, AzRequestClsGenerator, AzResponseClsGenerator
+from .az_arg_group_generator import AzArgGroupGenerator, AzArgClsGenerator
 from .az_output_generator import AzOutputGenerator
 from utils import exceptions
 
@@ -16,11 +16,21 @@ class AzCommandCtx:
     def __init__(self):
         self._cls_arg_maps = {}
         self._ctx_arg_map = {}
+        self.rg_arg_var = None
 
-    def set_argument_cls(self, cls_name):
+        self.arg_clses = {}
+        self.update_clses = {}
+        self.response_clses = {}
+
+    def set_argument_cls(self, arg):
+        cls_name = arg.cls
         self._cls_arg_maps[f"@{cls_name}"] = {}
+        assert cls_name not in self.arg_clses, f"Argument class {cls_name} is defined more than one place"
+        self.arg_clses[cls_name] = AzArgClsGenerator(cls_name, self, arg)
 
-    def set_argument(self, keys, var_name, hide, ctx_namespace='self.ctx.args'):
+    def set_argument(self, keys, arg, ctx_namespace='self.ctx.args'):
+        var_name = arg.var
+        hide = arg.hide
         if var_name.startswith('@'):
             map_name = var_name.replace('[', '.[').replace('{', '.{').split('.', maxsplit=1)[0]
             if map_name != keys[0]:
@@ -36,6 +46,10 @@ class AzCommandCtx:
                 '.'.join([ctx_namespace, *keys]).replace('.[', '[').replace('.{', '{'),
                 hide
             )
+
+        if isinstance(arg, CMDResourceGroupNameArg):
+            assert self.rg_arg_var is None, "Resource Group Argument defined twice"
+            self.rg_arg_var = arg.var
 
     def get_argument(self, var_name):
         if var_name.startswith('@'):
@@ -67,16 +81,29 @@ class AzCommandCtx:
             return variant
         return f'self.ctx.vars.{variant}'
 
+    def set_update_cls(self, schema):
+        cls_name = schema.cls
+        assert cls_name not in self.update_clses, f"Schema cls '{cls_name}', is defined more than once"
+        self.update_clses[cls_name] = AzRequestClsGenerator(self, cls_name, schema)
+
+    def set_response_cls(self, schema):
+        cls_name = schema.cls
+        assert cls_name not in self.response_clses, f"Schema cls '{cls_name}', is defined more than once"
+        self.response_clses[cls_name] = AzResponseClsGenerator(self, cls_name, schema)
+
+    def render_arg_resource_id_template(self, template):
+        # TODO: fill blank placeholders as much as possible
+
+        return template
+
 
 class AzCommandGenerator:
 
     ARGS_SCHEMA_NAME = "_args_schema"
 
-    def __init__(self, cmd: CLIAtomicCommand):
+    def __init__(self, cmd: CLIAtomicCommand, is_wait=False):
         self.cmd = cmd
-        self.name = ' '.join(self.cmd.names)
-        self.cls_name = to_camel_case(self.cmd.names[-1])
-
+        self.is_wait = is_wait
         self.cmd_ctx = AzCommandCtx()
 
         assert isinstance(self.cmd.cfg, CMDCommand)
@@ -87,17 +114,13 @@ class AzCommandGenerator:
 
         # prepare arguments
         self.arg_groups = []
-        self._arg_cls_map = {}    # shared between arg_groups
         if self.cmd.cfg.arg_groups:
             for arg_group in self.cmd.cfg.arg_groups:
                 if arg_group.args:
-                    self.arg_groups.append(AzArgGroupGenerator(
-                        self.ARGS_SCHEMA_NAME, self.cmd_ctx, self._arg_cls_map, arg_group))
+                    self.arg_groups.append(AzArgGroupGenerator(self.ARGS_SCHEMA_NAME, self.cmd_ctx, arg_group))
 
         # prepare operations
         self.lro_counts = 0
-        self._op_update_cls_map = {}    # shared between operation request and instance update
-        self._op_response_cls_map = {}   # shared between operation response
         self.operations = []
         self.http_operations = []
         self.json_update_operations = []
@@ -111,14 +134,14 @@ class AzCommandGenerator:
                 op_cls_name = to_camel_case(operation.operation_id)
                 if operation.long_running:
                     lr = True
-                op = AzHttpOperationGenerator(op_cls_name, self.cmd_ctx, operation, self._op_update_cls_map, self._op_response_cls_map)
+                op = AzHttpOperationGenerator(op_cls_name, self.cmd_ctx, operation)
                 self.http_operations.append(op)
             elif isinstance(operation, CMDInstanceUpdateOperation):
                 if isinstance(operation.instance_update, CMDJsonInstanceUpdateAction):
                     op_cls_name = f'InstanceUpdateByJson'
                     if json_update_counts > 0:
                         op_cls_name += f'_{json_update_counts}'
-                    op = AzJsonUpdateOperationGenerator(op_cls_name, self.cmd_ctx, operation, self._op_update_cls_map)
+                    op = AzJsonUpdateOperationGenerator(op_cls_name, self.cmd_ctx, operation)
                     self.json_update_operations.append(op)
                     json_update_counts += 1
                 else:
@@ -128,8 +151,6 @@ class AzCommandGenerator:
             if lr:
                 self.lro_counts += 1
             self.operations.append(op)
-
-        self.support_no_wait = self.lro_counts == 1  # not support no wait if there are multiple long running operations
 
         # generic_update_op
         if self.json_update_operations:
@@ -157,8 +178,6 @@ class AzCommandGenerator:
                     self.generic_update_op = AzGenericUpdateOperationGenerator(self.cmd_ctx, variant_key)
                     self.operations = [*self.operations[:max_idx+1], self.generic_update_op, *self.operations[max_idx+1:]]
 
-        self.version = cmd.version
-        self.resources = cmd.resources
         self.plane = None
         for resource in self.cmd.resources:
             if not self.plane:
@@ -183,6 +202,14 @@ class AzCommandGenerator:
             raise NotImplementedError()
 
     @property
+    def name(self):
+        return ' '.join(self.cmd.names)
+
+    @property
+    def cls_name(self):
+        return to_camel_case(self.cmd.names[-1])
+
+    @property
     def help(self):
         return self.cmd.help
 
@@ -190,14 +217,26 @@ class AzCommandGenerator:
     def register_info(self):
         return self.cmd.register_info
 
+    @property
+    def support_no_wait(self):
+        return self.cmd.support_no_wait or False
+
+    @property
+    def version(self):
+        return self.cmd.version
+
+    @property
+    def resources(self):
+        return self.cmd.resources
+
     def get_arg_clses(self):
-        return sorted(self._arg_cls_map.values(), key=lambda a: a.name)
+        return sorted(self.cmd_ctx.arg_clses.values(), key=lambda a: a.name)
 
     def get_update_clses(self):
-        return sorted(self._op_update_cls_map.values(), key=lambda s: s.name)
+        return sorted(self.cmd_ctx.update_clses.values(), key=lambda s: s.name)
 
     def get_response_clses(self):
-        return sorted(self._op_response_cls_map.values(), key=lambda s: s.name)
+        return sorted(self.cmd_ctx.response_clses.values(), key=lambda s: s.name)
 
     def has_outputs(self):
         return len(self.outputs) > 0

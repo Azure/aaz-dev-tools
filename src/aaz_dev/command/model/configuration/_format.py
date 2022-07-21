@@ -10,6 +10,7 @@ class CMDFormat(Model):
         serialize_when_none = False
 
     def build_arg_fmt(self, builder, ref_fmt):
+        """Build argument format from schema format"""
         raise NotImplementedError()
 
 
@@ -28,7 +29,6 @@ class CMDStringFormat(CMDFormat):
     )
 
     def build_arg_fmt(self, builder, ref_fmt):
-        # TODO: support ref_fmt
         fmt = CMDStringFormat()
         fmt.pattern = self.pattern
         fmt.max_length = self.max_length
@@ -60,10 +60,8 @@ class CMDResourceIdFormat(CMDFormat):
     template = StringType(required=True)
 
     def build_arg_fmt(self, builder, ref_fmt):
-        # TODO: support ref_fmt
         fmt = CMDResourceIdFormat()
         fmt.template = self.template
-        # TODO: add supports for
         return fmt
 
     def diff(self, old, level):
@@ -87,7 +85,6 @@ class CMDIntegerFormat(CMDFormat):
     minimum = IntType()
 
     def build_arg_fmt(self, builder, ref_fmt):
-        # TODO: support ref_fmt
         fmt = CMDIntegerFormat()
         fmt.multiple_of = self.multiple_of
         fmt.maximum = self.maximum
@@ -137,7 +134,6 @@ class CMDFloatFormat(CMDFormat):
     )
 
     def build_arg_fmt(self, builder, ref_fmt):
-        # TODO: support ref_fmt
         fmt = CMDFloatFormat()
         fmt.multiple_of = self.multiple_of
         fmt.maximum = self.maximum
@@ -192,7 +188,6 @@ class CMDObjectFormat(CMDFormat):
     )
 
     def build_arg_fmt(self, builder, ref_fmt):
-        # TODO: support ref_fmt
         fmt = CMDObjectFormat()
         fmt.max_properties = self.max_properties
         fmt.min_properties = self.min_properties
@@ -244,12 +239,11 @@ class CMDArrayFormat(CMDFormat):
     )   # the format convert an array instance to a string
 
     def build_arg_fmt(self, builder, ref_fmt):
-        # TODO: support ref_fmt
         fmt = CMDArrayFormat()
         fmt.unique = self.unique
         fmt.max_length = self.max_length
         fmt.min_length = self.min_length
-        fmt.str_format = self.str_format
+        # ignore str_format, it's not required for argument
         return fmt
 
     def diff(self, old, level):
