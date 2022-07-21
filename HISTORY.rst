@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.9.3
++++++
+* Support `DurationArg`, `DateArg`, `DateTimeArg` and `UuidArg` generation (#90)
+
 0.9.2
 +++++
 * Support empty object argument (#89)
