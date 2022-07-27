@@ -3,7 +3,7 @@
 The *aaz-dev* tool is designed to generate atomic Azure CLI commands from OpenAPI specifications. For more information, please refer to [Introduction](./src/aaz_dev/docs/Docs#introduction-to-aazdev). 
 
 ## Installation
-Currently, we can install it with a [.whl file](https://github.com/kairu-ms/aaz-dev-tools/releases). Later on, we'll publish it to PyPI to support *pip install* way of installation.
+Currently, we can install it with a [.whl file](https://github.com/Azure/aaz-dev-tools/releases). Later on, we'll publish it to PyPI to support *pip install* way of installation.
 
 ## Setting up your development environment
 
@@ -13,7 +13,7 @@ Please `Fork` the following repos in your github account and `Clone` them in you
    
    - [Azure CLI](https://github.com/Azure/azure-cli)
    - [Azure CLI Extension](https://github.com/Azure/azure-cli-extensions)
-   - [AAZ](https://github.com/kairu-ms/aaz): Used to upload the command model generated.
+   - [AAZ](https://github.com/Azure/aaz): Used to upload the command model generated.
    - [azure-rest-api-specs](https://github.com/Azure/azure-rest-api-specs) or [azure-rest-api-specs-pr](https://github.com/Azure/azure-rest-api-specs-pr)
 
 After clone you can add `upstream` for every repos in your local clone by using `git remote add upstream`.
@@ -91,16 +91,16 @@ pip install azdev
 - For Windows
     - Powershell
     ```
-    pip install $(Invoke-WebRequest https://api.github.com/repos/kairu-ms/aaz-dev-tools/releases/latest -UseBasicParsing | % { $_.Content } | ConvertFrom-Json | % { $_.assets.browser_download_url } | Select-String -Pattern "https.*.whl" -AllMatches | % { $_.Matches } | % { $_.Value })
+    pip install $(Invoke-WebRequest https://api.github.com/repos/Azure/aaz-dev-tools/releases/latest -UseBasicParsing | % { $_.Content } | ConvertFrom-Json | % { $_.assets.browser_download_url } | Select-String -Pattern "https.*.whl" -AllMatches | % { $_.Matches } | % { $_.Value })
     ```
     - Command Prompt
     ```
-    curl https://api.github.com/repos/kairu-ms/aaz-dev-tools/releases/latest -s | findstr https.*.whl
+    curl https://api.github.com/repos/Azure/aaz-dev-tools/releases/latest -s | findstr https.*.whl
     pip install {the url find in above command}
     ```
 - For linux
     ```bash
-    pip install $(curl https://api.github.com/repos/kairu-ms/aaz-dev-tools/releases/latest -s | grep -o "https.*.whl")
+    pip install $(curl https://api.github.com/repos/Azure/aaz-dev-tools/releases/latest -s | grep -o "https.*.whl")
     ```
 
 ### 5. Code repos setup
@@ -146,11 +146,11 @@ After finish the development, you should push the change in your forked repos fi
 
 - azure-cli: create a Pull Request to `dev` branch of `Azure/azure-cli`
 - azure-cli-extensions: create a Pull Request to `main` branch of `Azure/azure-cli-extensions` 
-- aaz: create a Pull Request to `main` branch of `kairu-ms/azz`
+- aaz: create a Pull Request to `main` branch of `Azure/azz`
 
 
 ## Reporting issues and feedback
-If you encounter any bugs with the tool please file an issue in the [Issues](https://github.com/kairu-ms/aaz-dev-tools/issues) section of our GitHub repository.
+If you encounter any bugs with the tool please file an issue in the [Issues](https://github.com/Azure/aaz-dev-tools/issues) section of our GitHub repository.
 
 ## License
 ```
