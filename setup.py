@@ -56,7 +56,7 @@ setup(
         "Programming Language :: Python :: 3.10"
     ],
     keywords="azure",
-    url="https://github.com/kairu-ms/aaz-dev-tools",
+    url="https://github.com/Azure/aaz-dev-tools",
     author="Microsoft Corporation",
     author_email="azpycli@microsoft.com",
     license='MIT',
