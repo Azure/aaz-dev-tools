@@ -102,6 +102,14 @@ pip install azdev
     ```bash
     pip install $(curl https://api.github.com/repos/Azure/aaz-dev-tools/releases/latest -s | grep -o "https.*.whl")
     ```
+#### 4.3 Set up build env
+- For linux users, set up python3 build tools would avoid other unseen installation issues
+  ```
+  Ubuntu: apt-get install python3-dev build-essential
+  Centos: yum install python3-devel
+  ```
+#### 4.4 Possible problems
+- For windows users, dependency python-levenshtein installation might run into trouble. developers might need to download [.whl](https://www.lfd.uci.edu/~gohlke/pythonlibs/#python-levenshtein) file and install it manually (reference to [link](https://stackoverflow.com/questions/37676623/cant-install-levenshtein-distance-package-on-windows-python-3-5/46414982))
 
 ### 5. Code repos setup
 
