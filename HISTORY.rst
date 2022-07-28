@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.9.4
+++++
+* Update docs (#94)(#95)(#96)
+
 0.9.3
 +++++
 * Support `DurationArg`, `DateArg`, `DateTimeArg` and `UuidArg` generation (#90)
