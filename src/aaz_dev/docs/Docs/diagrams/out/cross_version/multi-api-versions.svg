@@ -1,0 +1,857 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="507px" preserveAspectRatio="none" style="width:804px;height:507px;background:#FFFFFF;" version="1.1" viewBox="0 0 804 507" width="804px" zoomAndPan="magnify"><defs/><g><!--MD5=[7f2c4be2c81879f8009409d771a58eca]
+cluster swagger--><g id="cluster_swagger"><rect fill="#F0F0F0" height="494" rx="2.5" ry="2.5" style="stroke:#444444;stroke-width:1.0;stroke-dasharray:7.0,7.0;" width="156" x="7" y="7"/><text fill="#444444" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="74" x="48" y="25.6094">REST API</text><text fill="#444444" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="51" x="59.5" y="41.582">[System]</text></g><!--MD5=[54676e355c4af38aaadef239bf65dcca]
+cluster command_configs--><g id="cluster_command_configs"><rect fill="#F0F0F0" height="494" rx="2.5" ry="2.5" style="stroke:#444444;stroke-width:1.0;stroke-dasharray:7.0,7.0;" width="283" x="266" y="7"/><text fill="#444444" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="129" x="343" y="25.6094">Comamnd Model</text><text fill="#444444" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="51" x="382" y="41.582">[System]</text></g><!--MD5=[f79a2506ef13214aba6c98555f832d4a]
+cluster azure_cli--><g id="cluster_azure_cli"><rect fill="#F0F0F0" height="494" rx="2.5" ry="2.5" style="stroke:#444444;stroke-width:1.0;stroke-dasharray:7.0,7.0;" width="174" x="624" y="7"/><text fill="#444444" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="124" x="649" y="25.6094">Command Code</text><text fill="#444444" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="51" x="685.5" y="41.582">[System]</text></g><!--MD5=[08a6b26c19fa7c28516db462bf931612]
+entity apiV1--><g id="elem_apiV1"><rect fill="#4764A8" height="90.4375" rx="2.5" ry="2.5" style="stroke:#798AB0;stroke-width:0.5;" width="123" x="23.5" y="61"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="103" x="33.5" y="87.6094">Network Vnet</text><text fill="#FFFFFF" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="54" x="58" y="103.582">[Swagger]</text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="4" x="83" y="120.752"> </text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="74" x="48" y="138.3613">2019-10-01</text></g><!--MD5=[f53b455cbae2716469bc3d5691bd1fda]
+entity apiV2--><g id="elem_apiV2"><rect fill="#4764A8" height="90.4375" rx="2.5" ry="2.5" style="stroke:#798AB0;stroke-width:0.5;" width="123" x="23.5" y="228"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="103" x="33.5" y="254.6094">Network Vnet</text><text fill="#FFFFFF" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="54" x="58" y="270.582">[Swagger]</text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="4" x="83" y="287.752"> </text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="74" x="48" y="305.3613">2020-01-01</text></g><!--MD5=[b9524f05d22dac508d6c28106b5ce6f2]
+entity apiV3--><g id="elem_apiV3"><rect fill="#4764A8" height="90.4375" rx="2.5" ry="2.5" style="stroke:#798AB0;stroke-width:0.5;" width="123" x="23.5" y="395"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="103" x="33.5" y="421.6094">Network Vnet</text><text fill="#FFFFFF" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="54" x="58" y="437.582">[Swagger]</text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="4" x="83" y="454.752"> </text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="74" x="48" y="472.3613">2021-05-01</text></g><!--MD5=[93fc2edbac189e09bed29bdd6528f4e0]
+entity configV1--><g id="elem_configV1"><rect fill="#2C858A" height="90.4375" rx="2.5" ry="2.5" style="stroke:#7BB0B3;stroke-width:0.5;" width="141" x="285.5" y="61"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="121" x="295.5" y="87.6094">az network vnet</text><text fill="#FFFFFF" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="101" x="305.5" y="103.582">[Command Model]</text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="4" x="354" y="120.752"> </text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="74" x="319" y="138.3613">2019-10-01</text></g><!--MD5=[5817197bdd9a7f1b19b9af740522925a]
+entity configV2--><g id="elem_configV2"><rect fill="#2C858A" height="90.4375" rx="2.5" ry="2.5" style="stroke:#7BB0B3;stroke-width:0.5;" width="141" x="286.5" y="228"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="121" x="296.5" y="254.6094">az network vnet</text><text fill="#FFFFFF" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="101" x="306.5" y="270.582">[Command Model]</text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="4" x="355" y="287.752"> </text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="74" x="320" y="305.3613">2020-01-01</text></g><!--MD5=[de69d087496de70af201b0cb3694ca02]
+entity configV3--><g id="elem_configV3"><rect fill="#2C858A" height="90.4375" rx="2.5" ry="2.5" style="stroke:#7BB0B3;stroke-width:0.5;" width="141" x="282.5" y="395"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="121" x="292.5" y="421.6094">az network vnet</text><text fill="#FFFFFF" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="101" x="302.5" y="437.582">[Command Model]</text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="4" x="351" y="454.752"> </text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="74" x="316" y="472.3613">2021-05-01</text></g><!--MD5=[d28a1c7b38dcb7c641e5d11dd35a884a]
+entity commandV1--><g id="elem_commandV1"><rect fill="#4764A8" height="90.4375" rx="2.5" ry="2.5" style="stroke:#798AB0;stroke-width:0.5;" width="141" x="640.5" y="61"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="121" x="650.5" y="87.6094">az network vnet</text><text fill="#FFFFFF" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="36" x="693" y="103.582">[Code]</text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="4" x="709" y="120.752"> </text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="74" x="674" y="138.3613">2019-10-01</text></g><!--MD5=[cf765163b561e439bee7347214073189]
+entity commandV2--><g id="elem_commandV2"><rect fill="#4764A8" height="90.4375" rx="2.5" ry="2.5" style="stroke:#798AB0;stroke-width:0.5;" width="141" x="640.5" y="228"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="121" x="650.5" y="254.6094">az network vnet</text><text fill="#FFFFFF" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="36" x="693" y="270.582">[Code]</text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="4" x="709" y="287.752"> </text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="74" x="674" y="305.3613">2020-01-01</text></g><!--MD5=[abdaf227e7921fe610af215fcae431b9]
+entity commandV3--><g id="elem_commandV3"><rect fill="#4764A8" height="90.4375" rx="2.5" ry="2.5" style="stroke:#798AB0;stroke-width:0.5;" width="141" x="640.5" y="395"/><text fill="#FFFFFF" font-family="sans-serif" font-size="16" font-weight="bold" lengthAdjust="spacing" textLength="121" x="650.5" y="421.6094">az network vnet</text><text fill="#FFFFFF" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="36" x="693" y="437.582">[Code]</text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="4" x="709" y="454.752"> </text><text fill="#FFFFFF" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="74" x="674" y="472.3613">2021-05-01</text></g><!--MD5=[afde6d31bba68102b6656307e0b4ddc9]
+link apiV1 to apiV2--><!--MD5=[65ac216a7f415d8fd71c36767fa53a65]
+link apiV2 to apiV3--><!--MD5=[91b30abddfcc94c08dd2e22b231f4d0e]
+link configV1 to configV2--><!--MD5=[91b30abddfcc94c08dd2e22b231f4d0e]
+link configV1 to configV2--><g id="link_configV1_configV2"><path d="M356.27,151.22 C356.4,172.29 356.55,197.65 356.68,219.68 " fill="none" id="configV1-to-configV2" style="stroke:#666666;stroke-width:1.0;"/><polygon fill="#666666" points="356.73,227.95,359.6871,219.934,353.6872,219.9662,356.73,227.95" style="stroke:#666666;stroke-width:1.0;"/><text fill="#666666" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="132" x="357" y="194.457">5: inherit customization</text></g><!--MD5=[b9ad3ea75dc19ed8a3522a2a4bc0ea23]
+link configV2 to configV3--><!--MD5=[b9ad3ea75dc19ed8a3522a2a4bc0ea23]
+link configV2 to configV3--><g id="link_configV2_configV3"><path d="M355.93,318.22 C355.42,339.29 354.8,364.65 354.27,386.68 " fill="none" id="configV2-to-configV3" style="stroke:#666666;stroke-width:1.0;"/><polygon fill="#666666" points="354.07,394.95,357.269,387.0275,351.2709,386.8775,354.07,394.95" style="stroke:#666666;stroke-width:1.0;"/><text fill="#666666" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="132" x="356" y="361.457">9: inherit customization</text></g><!--MD5=[2df012e30fffe9e0a07f4450cf423a59]
+link commandV1 to commandV2--><!--MD5=[07f565117f8501de566fbd067fa33bc4]
+link commandV2 to commandV3--><!--MD5=[d65b570e918881f50a27cec406c5ada7]
+link apiV1 to configV1--><g id="link_apiV1_configV1"><path d="M146.83,106 C185.5,106 235.66,106 277.17,106 " fill="none" id="apiV1-to-configV1" style="stroke:#666666;stroke-width:1.0;"/><polygon fill="#666666" points="285.35,106,277.35,103,277.35,109,285.35,106" style="stroke:#666666;stroke-width:1.0;"/><text fill="#666666" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="99" x="166.5" y="99.457">1: parse swagger</text></g><!--MD5=[c7bc2875f2f060c67f55607c1ba64184]
+link configV1 to configV1--><g id="link_configV1_configV1"><path d="M426.5,90.7 C446.3,91.37 461.5,96.47 461.5,106 C461.5,114.19 450.28,119.11 434.55,120.75 " fill="none" id="configV1-to-configV1" style="stroke:#666666;stroke-width:1.0;"/><polygon fill="#666666" points="426.5,121.3,434.6807,123.7651,434.2844,117.7782,426.5,121.3" style="stroke:#666666;stroke-width:1.0;"/><text fill="#666666" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="72" x="467.5" y="110.957">2: customize</text></g><!--MD5=[db8c7c89ed55c0449b1fae7a5c5518fd]
+link configV1 to commandV1--><g id="link_configV1_commandV1"><path d="M426.56,106 C485.87,106 570.59,106 632.12,106 " fill="none" id="configV1-to-commandV1" style="stroke:#666666;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#666666" points="640.27,106,632.27,103,632.27,109,640.27,106" style="stroke:#666666;stroke-width:1.0;"/><text fill="#666666" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="64" x="501.5" y="99.457">3: generate</text></g><!--MD5=[f097fbd75a41c23bbde7d141646ad897]
+link apiV2 to configV2--><g id="link_apiV2_configV2"><path d="M146.72,273 C185.66,273 236.32,273 278.16,273 " fill="none" id="apiV2-to-configV2" style="stroke:#666666;stroke-width:1.0;"/><polygon fill="#666666" points="286.4,273,278.4,270,278.4,276,286.4,273" style="stroke:#666666;stroke-width:1.0;"/><text fill="#666666" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="99" x="167" y="266.457">4: parse swagger</text></g><!--MD5=[f9edf164d54ee9cd0d8f4e99522d9ef1]
+link configV2 to configV2--><g id="link_configV2_configV2"><path d="M427.5,257.7 C447.3,258.37 462.5,263.47 462.5,273 C462.5,281.19 451.28,286.11 435.55,287.75 " fill="none" id="configV2-to-configV2" style="stroke:#666666;stroke-width:1.0;"/><polygon fill="#666666" points="427.5,288.3,435.6807,290.7651,435.2844,284.7782,427.5,288.3" style="stroke:#666666;stroke-width:1.0;"/><text fill="#666666" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="72" x="468.5" y="277.957">6: customize</text></g><!--MD5=[2ea00bc8839c8dd5a36810c12cd5bed8]
+link configV2 to commandV2--><g id="link_configV2_commandV2"><path d="M427.79,273 C486.88,273 571.02,273 632.23,273 " fill="none" id="configV2-to-commandV2" style="stroke:#666666;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#666666" points="640.34,273,632.34,270,632.34,276,640.34,273" style="stroke:#666666;stroke-width:1.0;"/><text fill="#666666" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="64" x="502" y="266.457">7: generate</text></g><!--MD5=[d5188b19477023869bf52787aa089ca3]
+link apiV3 to configV3--><g id="link_apiV3_configV3"><path d="M146.82,440 C184.65,440 233.41,440 274.01,440 " fill="none" id="apiV3-to-configV3" style="stroke:#666666;stroke-width:1.0;"/><polygon fill="#666666" points="282.02,440,274.02,437,274.02,443,282.02,440" style="stroke:#666666;stroke-width:1.0;"/><text fill="#666666" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="99" x="165" y="433.457">8: parse swagger</text></g><!--MD5=[d56ccfa044fbef44851391eafc2d4ee8]
+link configV3 to configV3--><g id="link_configV3_configV3"><path d="M423.5,424.7 C443.3,425.37 458.5,430.47 458.5,440 C458.5,448.19 447.28,453.11 431.55,454.75 " fill="none" id="configV3-to-configV3" style="stroke:#666666;stroke-width:1.0;"/><polygon fill="#666666" points="423.5,455.3,431.6807,457.7651,431.2844,451.7782,423.5,455.3" style="stroke:#666666;stroke-width:1.0;"/><text fill="#666666" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="79" x="464.5" y="444.957">10: customize</text></g><!--MD5=[b4eaf1a658a24e7d2165c7ee299f3a0d]
+link configV3 to commandV3--><g id="link_configV3_commandV3"><path d="M423.73,440 C483.79,440 569.91,440 632.18,440 " fill="none" id="configV3-to-commandV3" style="stroke:#666666;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="#666666" points="640.42,440,632.42,437,632.42,443,640.42,440" style="stroke:#666666;stroke-width:1.0;"/><text fill="#666666" font-family="sans-serif" font-size="12" font-weight="bold" lengthAdjust="spacing" textLength="71" x="496.5" y="433.457">11: generate</text></g><!--MD5=[7485124bf8be8cd99ce902948919c82c]
+@startuml multi-api-versions
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+HIDE_STEREOTYPE()
+
+AddElementTag("swagger", $bgColor="#4764a8", $borderColor="#798ab0")
+AddElementTag("config", $bgColor="#2c858a", $borderColor="#7bb0b3",)
+AddElementTag("command", $bgColor="#4764a8", $borderColor="#798ab0",)
+
+AddRelTag("output", $lineStyle = DashedLine())
+AddElementTag("Boundary", $bgColor="#f0f0f0")
+
+System_Boundary(swagger, "REST API") {
+    Container(apiV1, "Network Vnet", "Swagger", "2019-10-01", $tags="swagger")
+    Container(apiV2, "Network Vnet", "Swagger", "2020-01-01", $tags="swagger")
+    Container(apiV3, "Network Vnet", "Swagger", "2021-05-01", $tags="swagger")
+}
+
+Lay_D(apiV1, apiV2)
+Lay_D(apiV2, apiV3)
+
+System_Boundary(command_configs, "Comamnd Model") {
+    Container(configV1, "az network vnet", "Command Model", "2019-10-01", $tags="config")
+    Container(configV2, "az network vnet", "Command Model", "2020-01-01", $tags="config")
+    Container(configV3, "az network vnet", "Command Model", "2021-05-01", $tags="config")
+}
+
+Lay_D(configV1, configV2)
+Lay_D(configV2, configV3)
+
+System_Boundary(azure_cli, "Command Code") {
+    Container(commandV1, "az network vnet", "Code", "2019-10-01", $tags="command")
+    Container(commandV2, "az network vnet", "Code", "2020-01-01", $tags="command")
+    Container(commandV3, "az network vnet", "Code", "2021-05-01", $tags="command")
+}
+
+Lay_D(commandV1, commandV2)
+Lay_D(commandV2, commandV3)
+
+Rel_R(apiV1, configV1, "parse swagger")
+Rel(configV1, configV1, "customize")
+Rel_R(configV1, commandV1, "generate", $tags="output")
+
+Rel_R(apiV2, configV2, "parse swagger")
+Rel_D(configV1, configV2, "inherit customization")
+Rel(configV2, configV2, "customize")
+Rel_R(configV2, commandV2, "generate", $tags="output")
+
+Rel_R(apiV3, configV3, "parse swagger")
+Rel_D(configV2, configV3, "inherit customization")
+Rel(configV3, configV3, "customize")
+Rel_R(configV3, commandV3, "generate", $tags="output")
+
+@enduml
+
+@startuml multi-api-versions
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+skinparam defaultTextAlignment center
+
+skinparam wrapWidth 200
+skinparam maxMessageSize 150
+
+skinparam LegendBorderColor transparent
+skinparam LegendBackgroundColor transparent
+skinparam LegendFontColor #FFFFFF
+
+skinparam shadowing<<legendArea>> false
+skinparam rectangle<<legendArea>> {
+    backgroundcolor #00000000
+    bordercolor #00000000
+}
+
+skinparam rectangle {
+    StereotypeFontSize 12
+    shadowing false
+}
+
+skinparam database {
+    StereotypeFontSize 12
+    shadowing false
+}
+
+skinparam queue {
+    StereotypeFontSize 12
+    shadowing false
+}
+
+skinparam arrow {
+    Color #666666
+    FontColor #666666
+    FontSize 12
+}
+
+skinparam actor {
+    StereotypeFontSize 12
+    shadowing false
+    style awesome
+}
+
+skinparam person {
+    StereotypeFontSize 12
+    shadowing false
+}
+
+skinparam package {
+    StereotypeFontSize 6
+    StereotypeFontColor transparent
+    FontStyle plain
+    BackgroundColor transparent
+}
+
+skinparam rectangle<<boundary>> {
+    Shadowing false
+    StereotypeFontSize 6
+    StereotypeFontColor transparent
+    FontColor #444444
+    BorderColor #444444
+    BackgroundColor transparent
+    BorderStyle dashed
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+skinparam rectangle<<person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #08427B
+    BorderColor #073B6F
+}
+skinparam database<<person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #08427B
+    BorderColor #073B6F
+}
+skinparam queue<<person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #08427B
+    BorderColor #073B6F
+}
+skinparam actor<<person>> {
+    StereotypeFontColor #08427B
+    FontColor #08427B
+    BackgroundColor #08427B
+    BorderColor #073B6F
+}
+skinparam person<<person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #08427B
+    BorderColor #073B6F
+}
+
+
+skinparam rectangle<<external_person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #686868
+    BorderColor #8A8A8A
+}
+skinparam database<<external_person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #686868
+    BorderColor #8A8A8A
+}
+skinparam queue<<external_person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #686868
+    BorderColor #8A8A8A
+}
+skinparam actor<<external_person>> {
+    StereotypeFontColor #686868
+    FontColor #686868
+    BackgroundColor #686868
+    BorderColor #8A8A8A
+}
+skinparam person<<external_person>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #686868
+    BorderColor #8A8A8A
+}
+
+
+skinparam rectangle<<system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #1168BD
+    BorderColor #3C7FC0
+}
+skinparam database<<system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #1168BD
+    BorderColor #3C7FC0
+}
+skinparam queue<<system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #1168BD
+    BorderColor #3C7FC0
+}
+skinparam actor<<system>> {
+    StereotypeFontColor #1168BD
+    FontColor #1168BD
+    BackgroundColor #1168BD
+    BorderColor #3C7FC0
+}
+skinparam person<<system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #1168BD
+    BorderColor #3C7FC0
+}
+
+
+skinparam rectangle<<external_system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #999999
+    BorderColor #8A8A8A
+}
+skinparam database<<external_system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #999999
+    BorderColor #8A8A8A
+}
+skinparam queue<<external_system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #999999
+    BorderColor #8A8A8A
+}
+skinparam actor<<external_system>> {
+    StereotypeFontColor #999999
+    FontColor #999999
+    BackgroundColor #999999
+    BorderColor #8A8A8A
+}
+skinparam person<<external_system>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #999999
+    BorderColor #8A8A8A
+}
+
+
+
+
+
+sprite $person [48x48/16] {
+000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000
+0000000000000000000049BCCA7200000000000000000000
+0000000000000000006EFFFFFFFFB3000000000000000000
+00000000000000001CFFFFFFFFFFFF700000000000000000
+0000000000000001EFFFFFFFFFFFFFF80000000000000000
+000000000000000CFFFFFFFFFFFFFFFF6000000000000000
+000000000000007FFFFFFFFFFFFFFFFFF100000000000000
+00000000000001FFFFFFFFFFFFFFFFFFF900000000000000
+00000000000006FFFFFFFFFFFFFFFFFFFF00000000000000
+0000000000000BFFFFFFFFFFFFFFFFFFFF40000000000000
+0000000000000EFFFFFFFFFFFFFFFFFFFF70000000000000
+0000000000000FFFFFFFFFFFFFFFFFFFFF80000000000000
+0000000000000FFFFFFFFFFFFFFFFFFFFF80000000000000
+0000000000000DFFFFFFFFFFFFFFFFFFFF60000000000000
+0000000000000AFFFFFFFFFFFFFFFFFFFF40000000000000
+00000000000006FFFFFFFFFFFFFFFFFFFE00000000000000
+00000000000000EFFFFFFFFFFFFFFFFFF800000000000000
+000000000000007FFFFFFFFFFFFFFFFFF100000000000000
+000000000000000BFFFFFFFFFFFFFFFF5000000000000000
+0000000000000001DFFFFFFFFFFFFFF70000000000000000
+00000000000000000BFFFFFFFFFFFF500000000000000000
+0000000000000000005DFFFFFFFFA1000000000000000000
+0000000000000000000037ABB96100000000000000000000
+000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000
+000000000000025788300000000005886410000000000000
+000000000007DFFFFFFD9643347BFFFFFFFB400000000000
+0000000004EFFFFFFFFFFFFFFFFFFFFFFFFFFB1000000000
+000000007FFFFFFFFFFFFFFFFFFFFFFFFFFFFFD200000000
+00000006FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE10000000
+0000003FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB0000000
+000000BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5000000
+000003FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD000000
+000009FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF200000
+00000DFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF600000
+00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF800000
+00001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA00000
+00001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB00000
+00001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB00000
+00001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB00000
+00001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA00000
+00000EFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF700000
+000006FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE100000
+0000008FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD3000000
+000000014555555555555555555555555555555300000000
+000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000
+}
+
+sprite $person2 [48x48/16] {
+0000000000000000000049BCCA7200000000000000000000
+0000000000000000006EFFFFFFFFB3000000000000000000
+00000000000000001CFFFFFFFFFFFF700000000000000000
+0000000000000001EFFFFFFFFFFFFFF80000000000000000
+000000000000000CFFFFFFFFFFFFFFFF6000000000000000
+000000000000007FFFFFFFFFFFFFFFFFF100000000000000
+00000000000001FFFFFFFFFFFFFFFFFFF900000000000000
+00000000000006FFFFFFFFFFFFFFFFFFFF00000000000000
+0000000000000BFFFFFFFFFFFFFFFFFFFF40000000000000
+0000000000000EFFFFFFFFFFFFFFFFFFFF70000000000000
+0000000000000FFFFFFFFFFFFFFFFFFFFF80000000000000
+0000000000000FFFFFFFFFFFFFFFFFFFFF80000000000000
+0000000000000DFFFFFFFFFFFFFFFFFFFF60000000000000
+0000000000000AFFFFFFFFFFFFFFFFFFFF40000000000000
+00000000000006FFFFFFFFFFFFFFFFFFFE00000000000000
+00000000000000EFFFFFFFFFFFFFFFFFF800000000000000
+000000000000007FFFFFFFFFFFFFFFFFF100000000000000
+000000000000000BFFFFFFFFFFFFFFFF5000000000000000
+0000000000000001DFFFFFFFFFFFFFF70000000000000000
+00000000000000000BFFFFFFFFFFFF500000000000000000
+0000000000000000005DFFFFFFFFA1000000000000000000
+0000000000000000000037ABB96100000000000000000000
+000000000002578888300000000005888864100000000000
+0000000007DFFFFFFFFD9643347BFFFFFFFFFB4000000000
+00000004EFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB10000000
+0000007FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD2000000
+000006FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE100000
+00003FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB00000
+0000BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF50000
+0003FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD0000
+0009FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF2000
+000DFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF6000
+000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8000
+001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB000
+001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB000
+001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB000
+001FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA000
+000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8000
+000DFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF6000
+0009FFFFFFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFFFFFF2000
+0003FFFFFFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFFFFFD0000
+0000BFFFFFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFFFFF50000
+00003FFFFFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFFFFB00000
+000006FFFFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFFFE100000
+0000007FFFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFFD2000000
+00000004EFFF8FFFFFFFFFFFFFFFFFFFFFF8FFFB10000000
+0000000007DF8FFFFFFFFFFFFFFFFFFFFFF8FB4000000000
+000000000002578888888888888888888864100000000000
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+skinparam rectangle<<container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #438DD5
+    BorderColor #3C7FC0
+}
+skinparam database<<container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #438DD5
+    BorderColor #3C7FC0
+}
+skinparam queue<<container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #438DD5
+    BorderColor #3C7FC0
+}
+skinparam actor<<container>> {
+    StereotypeFontColor #438DD5
+    FontColor #438DD5
+    BackgroundColor #438DD5
+    BorderColor #3C7FC0
+}
+skinparam person<<container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #438DD5
+    BorderColor #3C7FC0
+}
+
+
+skinparam rectangle<<external_container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #B3B3B3
+    BorderColor #A6A6A6
+}
+skinparam database<<external_container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #B3B3B3
+    BorderColor #A6A6A6
+}
+skinparam queue<<external_container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #B3B3B3
+    BorderColor #A6A6A6
+}
+skinparam actor<<external_container>> {
+    StereotypeFontColor #B3B3B3
+    FontColor #B3B3B3
+    BackgroundColor #B3B3B3
+    BorderColor #A6A6A6
+}
+skinparam person<<external_container>> {
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+    BackgroundColor #B3B3B3
+    BorderColor #A6A6A6
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+skinparam rectangle<<component>> {
+    StereotypeFontColor #000000
+    FontColor #000000
+    BackgroundColor #85BBF0
+    BorderColor #78A8D8
+}
+skinparam database<<component>> {
+    StereotypeFontColor #000000
+    FontColor #000000
+    BackgroundColor #85BBF0
+    BorderColor #78A8D8
+}
+skinparam queue<<component>> {
+    StereotypeFontColor #000000
+    FontColor #000000
+    BackgroundColor #85BBF0
+    BorderColor #78A8D8
+}
+skinparam actor<<component>> {
+    StereotypeFontColor #85BBF0
+    FontColor #85BBF0
+    BackgroundColor #85BBF0
+    BorderColor #78A8D8
+}
+skinparam person<<component>> {
+    StereotypeFontColor #000000
+    FontColor #000000
+    BackgroundColor #85BBF0
+    BorderColor #78A8D8
+}
+
+
+skinparam rectangle<<external_component>> {
+    StereotypeFontColor #000000
+    FontColor #000000
+    BackgroundColor #CCCCCC
+    BorderColor #BFBFBF
+}
+skinparam database<<external_component>> {
+    StereotypeFontColor #000000
+    FontColor #000000
+    BackgroundColor #CCCCCC
+    BorderColor #BFBFBF
+}
+skinparam queue<<external_component>> {
+    StereotypeFontColor #000000
+    FontColor #000000
+    BackgroundColor #CCCCCC
+    BorderColor #BFBFBF
+}
+skinparam actor<<external_component>> {
+    StereotypeFontColor #CCCCCC
+    FontColor #CCCCCC
+    BackgroundColor #CCCCCC
+    BorderColor #BFBFBF
+}
+skinparam person<<external_component>> {
+    StereotypeFontColor #000000
+    FontColor #000000
+    BackgroundColor #CCCCCC
+    BorderColor #BFBFBF
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+hide stereotype
+
+skinparam rectangle<<swagger>> {
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+skinparam database<<swagger>> {
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+skinparam queue<<swagger>> {
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+skinparam actor<<swagger>> {
+    StereotypeFontColor #4764a8
+    FontColor #4764a8
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+skinparam person<<swagger>> {
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+
+
+skinparam rectangle<<config>> {
+    BackgroundColor #2c858a
+    BorderColor #7bb0b3
+}
+skinparam database<<config>> {
+    BackgroundColor #2c858a
+    BorderColor #7bb0b3
+}
+skinparam queue<<config>> {
+    BackgroundColor #2c858a
+    BorderColor #7bb0b3
+}
+skinparam actor<<config>> {
+    StereotypeFontColor #2c858a
+    FontColor #2c858a
+    BackgroundColor #2c858a
+    BorderColor #7bb0b3
+}
+skinparam person<<config>> {
+    BackgroundColor #2c858a
+    BorderColor #7bb0b3
+}
+
+
+skinparam rectangle<<command>> {
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+skinparam database<<command>> {
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+skinparam queue<<command>> {
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+skinparam actor<<command>> {
+    StereotypeFontColor #4764a8
+    FontColor #4764a8
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+skinparam person<<command>> {
+    BackgroundColor #4764a8
+    BorderColor #798ab0
+}
+
+
+
+skinparam arrow<<output>> {
+    Color ;line.dashed
+}
+
+skinparam rectangle<<Boundary>> {
+    BackgroundColor #f0f0f0
+}
+skinparam database<<Boundary>> {
+    BackgroundColor #f0f0f0
+}
+skinparam queue<<Boundary>> {
+    BackgroundColor #f0f0f0
+}
+skinparam actor<<Boundary>> {
+    StereotypeFontColor #f0f0f0
+    FontColor #f0f0f0
+    BackgroundColor #f0f0f0
+}
+skinparam person<<Boundary>> {
+    BackgroundColor #f0f0f0
+}
+
+
+
+rectangle "==REST API\n<size:12>[System]</size>" <<boundary>> as swagger  {
+    rectangle "==Network Vnet\n//<size:12>[Swagger]</size>//\n\n2019-10-01" <<swagger>><<container>> as apiV1 
+    rectangle "==Network Vnet\n//<size:12>[Swagger]</size>//\n\n2020-01-01" <<swagger>><<container>> as apiV2 
+    rectangle "==Network Vnet\n//<size:12>[Swagger]</size>//\n\n2021-05-01" <<swagger>><<container>> as apiV3 
+}
+
+apiV1 -[hidden]D- apiV2
+apiV2 -[hidden]D- apiV3
+
+rectangle "==Comamnd Model\n<size:12>[System]</size>" <<boundary>> as command_configs  {
+    rectangle "==az network vnet\n//<size:12>[Command Model]</size>//\n\n2019-10-01" <<config>><<container>> as configV1 
+    rectangle "==az network vnet\n//<size:12>[Command Model]</size>//\n\n2020-01-01" <<config>><<container>> as configV2 
+    rectangle "==az network vnet\n//<size:12>[Command Model]</size>//\n\n2021-05-01" <<config>><<container>> as configV3 
+}
+
+configV1 -[hidden]D- configV2
+configV2 -[hidden]D- configV3
+
+rectangle "==Command Code\n<size:12>[System]</size>" <<boundary>> as azure_cli  {
+    rectangle "==az network vnet\n//<size:12>[Code]</size>//\n\n2019-10-01" <<command>><<container>> as commandV1 
+    rectangle "==az network vnet\n//<size:12>[Code]</size>//\n\n2020-01-01" <<command>><<container>> as commandV2 
+    rectangle "==az network vnet\n//<size:12>[Code]</size>//\n\n2021-05-01" <<command>><<container>> as commandV3 
+}
+
+commandV1 -[hidden]D- commandV2
+commandV2 -[hidden]D- commandV3
+
+apiV1 -RIGHT->> configV1 : **1: parse swagger**
+configV1 - ->> configV1 : **2: customize**
+configV1 -RIGHT->> commandV1 <<output>> : **3: generate**
+
+apiV2 -RIGHT->> configV2 : **4: parse swagger**
+configV1 -DOWN->> configV2 : **5: inherit customization**
+configV2 - ->> configV2 : **6: customize**
+configV2 -RIGHT->> commandV2 <<output>> : **7: generate**
+
+apiV3 -RIGHT->> configV3 : **8: parse swagger**
+configV2 -DOWN->> configV3 : **9: inherit customization**
+configV3 - ->> configV3 : **10: customize**
+configV3 -RIGHT->> commandV3 <<output>> : **11: generate**
+
+@enduml
+
+PlantUML version 1.2022.5(Sat Apr 30 18:55:52 CST 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: Cp1252
+Language: en
+Country: US
+--></g></svg>

@@ -35,7 +35,7 @@ Boundary(api, "API Specs") {
 Lay_D(swagger, other_specs)
 
 
-Boundary(aazdev, "AAZDev") {
+Boundary(aazdev, "AAZ Dev Tool") {
     Boundary(models, "Command Models") {
         SystemDb(aaz, "AAZ", "Repo", "", "Repo", $tags="AazRepo")
     }

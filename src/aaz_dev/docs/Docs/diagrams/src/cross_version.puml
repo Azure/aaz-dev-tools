@@ -1,19 +1,18 @@
-@startuml multi-api_1
+@startuml multi-api-versions
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
 HIDE_STEREOTYPE()
 
-AddElementTag("swagger", $bgColor="#2c858a", $borderColor="#7bb0b3")
-AddElementTag("config", $bgColor="#4b8235", $borderColor="#8bb37b",)
-AddElementTag("command", $bgColor="#2c858a", $borderColor="#7bb0b3",)
-
+AddElementTag("swagger", $bgColor="#4764a8", $borderColor="#798ab0")
+AddElementTag("config", $bgColor="#2c858a", $borderColor="#7bb0b3",)
+AddElementTag("command", $bgColor="#4764a8", $borderColor="#798ab0",)
 
 AddRelTag("output", $lineStyle = DashedLine())
-
+AddElementTag("Boundary", $bgColor="#f0f0f0")
 
 System_Boundary(swagger, "REST API") {
-    Container(apiV1, "Network Vnet Resources", "Swagger", "2019-10-01", $tags="swagger")
-    Container(apiV2, "Network Vnet Resources", "Swagger", "2020-01-01", $tags="swagger")
-    Container(apiV3, "Network Vnet Resources", "Swagger", "2021-05-01", $tags="swagger")
+    Container(apiV1, "Network Vnet", "Swagger", "2019-10-01", $tags="swagger")
+    Container(apiV2, "Network Vnet", "Swagger", "2020-01-01", $tags="swagger")
+    Container(apiV3, "Network Vnet", "Swagger", "2021-05-01", $tags="swagger")
 }
 
 Lay_D(apiV1, apiV2)
