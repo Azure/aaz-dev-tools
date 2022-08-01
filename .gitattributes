@@ -8,6 +8,7 @@
 *.snk -text
 *.mht -text
 *.pickle -text
+*.svg -text
 
 # Some Windows-specific files should always be CRLF
 *.bat eol=crlf

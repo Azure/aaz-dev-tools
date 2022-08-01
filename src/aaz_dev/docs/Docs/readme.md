@@ -179,7 +179,7 @@ Please jump to [Workspace Editor](/Docs/usage/workspace_editor_usage.md) for mor
 ## 5 AAZ Repo
 ---
 
-The name __AAZ__ comes from the abbreviation of Atomic Azure. This repo is to maintain Atomic Azure Cli command models. You can access this repo by [link](https://github.com/kairu-ms/aaz/tree/demo).
+The name __AAZ__ comes from the abbreviation of Atomic Azure. This repo is to maintain Atomic Azure Cli command models. You can access this repo by [link](https://github.com/Azure/aaz/tree/main).
 
 There a two folders in the root of AAZ:
 - Commands:
@@ -189,7 +189,7 @@ There a two folders in the root of AAZ:
 
 ### 5.1 Command Tree
 
-The data of command tree is in [Commands/tree.json](https://github.com/kairu-ms/aaz/blob/demo/Commands/tree.json). Json files are hard to read, so the data is also rendered as Markdown files in a tree hierarchy.
+The data of command tree is in [Commands/tree.json](https://github.com/Azure/aaz/blob/main/Commands/tree.json). Json files are hard to read, so the data is also rendered as Markdown files in a tree hierarchy.
 
 ![CommandTreeNode](/Docs/images/aaz_command_tree_folder.png)
 
