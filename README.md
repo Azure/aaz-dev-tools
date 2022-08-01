@@ -21,7 +21,7 @@ After clone you can add `upstream` for every repos in your local clone by using 
 ### 2 Setup python
 
 #### 2.1 Install python
-Please install python with version >= 3.7 in your local machine.
+Please install python with version >= 3.8 in your local machine.
 
 - For windows: You can download and run full installer from [Python Download](https://www.python.org/downloads/).
 - For linux: You can install python from Package Manager or build a stable relase from source code
