@@ -9,6 +9,10 @@ from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperat
 from .az_arg_group_generator import AzArgGroupGenerator, AzArgClsGenerator
 from .az_output_generator import AzOutputGenerator
 from utils import exceptions
+import logging
+
+
+logger = logging.getLogger('backend')
 
 
 class AzCommandCtx:
@@ -196,6 +200,10 @@ class AzCommandGenerator:
                 self.outputs.append(output_generator)
                 if output_generator.next_link:
                     self.paging = True
+        if self.lro_counts > 0 and self.paging:
+            self.paging = False
+            # TODO: support paging for long running command later
+            logger.warning(f"Disable paging for long running command: '{self.name}'")
 
         if len(self.outputs) > 1:
             # TODO: add support for output larger than 1
