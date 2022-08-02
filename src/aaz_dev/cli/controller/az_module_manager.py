@@ -3,11 +3,13 @@ import pkgutil
 import glob
 
 from cli.model.atomic import CLIAtomicProfile, CLIModule, CLIAtomicCommandGroup, CLIAtomicCommandGroupRegisterInfo, \
-    CLIAtomicCommand, CLIAtomicCommandRegisterInfo, CLISpecsResource, CLICommandGroupHelp, CLICommandHelp, CLICommandExample
+    CLIAtomicCommand, CLIAtomicCommandRegisterInfo, CLISpecsResource, CLICommandGroupHelp, CLICommandHelp, \
+    CLICommandExample
 from cli.templates import get_templates
 from command.controller.specs_manager import AAZSpecsManager
 from command.controller.cfg_reader import CfgReader
-from command.model.configuration import CMDHttpOperation, CMDCommand, CMDArgGroup, CMDObjectOutput, CMDHttpResponseJsonBody
+from command.model.configuration import CMDHttpOperation, CMDCommand, CMDArgGroup, CMDObjectOutput, \
+    CMDHttpResponseJsonBody, CMDObjectSchemaBase
 from cli.controller.az_profile_generator import AzProfileGenerator
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils import exceptions
@@ -360,8 +362,8 @@ class AzModuleManager:
         if command.register_info is not None:
             command.register_info.confirmation = cmd_cfg.confirmation
 
-    @staticmethod
-    def _complete_command_wait_info(command_group):
+    @classmethod
+    def _complete_command_wait_info(cls, command_group):
         assert command_group.commands
         wait_cmd_rids = {}
         for command in command_group.commands.values():
@@ -401,6 +403,10 @@ class AzModuleManager:
                 if 'get_op' in wait_cmd_rids[rid]:
                     continue
 
+                # verify operation response has provisioning state field
+                if not cls._has_provisioning_state(operation):
+                    continue
+
                 wait_cmd_rids[rid]['get_op'] = operation.__class__(operation.to_primitive())
                 wait_cmd_rids[rid]['args'] = {}
                 for resource in command.resources:
@@ -427,7 +433,8 @@ class AzModuleManager:
 
         for rid, value in [*wait_cmd_rids.items()]:
             if "get_op" not in value:
-                logger.error(f'Failed to support wait command for resource: Get operation does not exist: {rid}')
+                logger.error(f'Failed to support wait command for resource: '
+                             f'Get operation with provisioning state property does not exist: {rid}')
                 del wait_cmd_rids[rid]
 
         if not wait_cmd_rids:
@@ -472,6 +479,32 @@ class AzModuleManager:
             raise ValueError("Output ref is empty")
         output.client_flatten = False
         cfg.outputs = [output]
+
+    @staticmethod
+    def _has_provisioning_state(get_op):
+        for response in get_op.http.responses:
+            if response.is_error:
+                continue
+            if not isinstance(response.body, CMDHttpResponseJsonBody):
+                continue
+            if not isinstance(response.body.json.schema, CMDObjectSchemaBase):
+                continue
+            schema = response.body.json.schema
+            if schema.props:
+                for prop in schema.props:
+                    if prop.name.lower() in ("provisioning_state", "provisioningstate"):
+                        return True
+                    if prop.name.lower() == "properties" and \
+                            isinstance(prop, CMDObjectSchemaBase) and prop.props:
+                        for sub_prop in prop.props:
+                            if sub_prop.name.lower() in ("provisioning_state", "provisioningstate"):
+                                return True
+                            if sub_prop.name.lower() in ("additional_properties", "additionalproperties") and \
+                                    isinstance(sub_prop, CMDObjectSchemaBase) and sub_prop.props:
+                                for p in sub_prop.props:
+                                    if p.name.lower() in ("provisioning_state", "provisioningstate"):
+                                        return True
+        return False
 
 
 class AzMainManager(AzModuleManager):
