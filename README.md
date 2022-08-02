@@ -26,7 +26,7 @@ Please install python with version >= 3.8 in your local machine.
 - For windows: You can download and run full installer from [Python Download](https://www.python.org/downloads/).
 - For linux: You can install python from Package Manager or build a stable relase from source code
 
-Check the version of python, make use it's not less than 3.7.
+Check the version of python, make use it's not less than 3.8.
 - For windows:
     You can run:
     ```PowerShell
