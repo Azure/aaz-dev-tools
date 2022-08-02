@@ -464,6 +464,7 @@ class WorkspaceManager:
 
         for cfg_editor in cfg_editors:
             merged = False
+            rename_list = []
             for cmd_names, command in cfg_editor.iter_commands():
                 cur_cmd = self.find_command_tree_leaf(*cmd_names)
                 if cur_cmd is None:
@@ -477,7 +478,9 @@ class WorkspaceManager:
                         merged = True
                         break
                 new_name = self.generate_unique_name(*cmd_names[:-1], name=cmd_names[-1])
-                cfg_editor.rename_command(*cmd_names, new_cmd_names=[*cmd_names[:-1], new_name])
+                rename_list.append((cmd_names, [*cmd_names[:-1], new_name]))
+            for cmd_names, new_cmd_names in rename_list:
+                cfg_editor.rename_command(*cmd_names, new_cmd_names=new_cmd_names)
             if not merged:
                 self.add_cfg(cfg_editor)
 
