@@ -3,8 +3,16 @@
 Release History
 ===============
 
+0.9.5
++++++
+* Limit minimal python version to 3.8 (#98)(#99)(#101)
+* Fix issue when rename commands in cfg_editor (#100)
+* Remove python-Levenshtein reliance (#102)
+* Disable paging for long running commands (#103)
+* Add provisioning state field verification in wait command generation (#104)
+
 0.9.4
-++++
++++++
 * Update docs (#94)(#95)(#96)
 
 0.9.3
