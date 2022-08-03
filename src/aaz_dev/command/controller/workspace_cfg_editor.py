@@ -238,7 +238,8 @@ class WorkspaceCfgEditor(CfgReader):
             self._update_cls_arg(arg, **kwargs)
         if isinstance(arg, CMDArrayArg):
             self._update_array_arg(arg, **kwargs)
-        return arg
+
+        self.reformat()
 
     def _update_cmd_arg(self, arg, **kwargs):
         if 'options' in kwargs:
