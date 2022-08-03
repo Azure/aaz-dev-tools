@@ -253,6 +253,13 @@ def editor_workspace_command_argument(name, node_names, leaf_name, arg_var):
     return jsonify(result)
 
 
+# TODO: support to modify element of array or dict arguments
+# @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>/Element",
+#           methods=("GET", "PATCH"))
+# def editor_workspace_command_arg_element_of_array_or_dict(name, node_names, leaf_name, arg_var):
+#     pass
+
+
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>/Flatten",
           methods=("POST", ))
 def editor_workspace_command_argument_flatten(name, node_names, leaf_name, arg_var):

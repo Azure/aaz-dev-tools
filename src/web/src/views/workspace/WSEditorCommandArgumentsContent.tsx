@@ -499,9 +499,22 @@ function ArgumentReviewer(props: {
                 <Box sx={{ flexGrow: 1 }} />
                 {props.arg.required && <ArgRequiredTypography>[Required]</ArgRequiredTypography>}
             </Box>
-            {choices.length > 0 && <ArgChoicesTypography sx={{ ml: 6, mt: 0.5 }}>
-                {`Choices: ` + choices.join(', ')}
-            </ArgChoicesTypography>}
+            {(props.arg.default !== undefined || choices.length > 0) && <Box
+                sx={{
+                    ml: 5,
+                    mt: 0.5,
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                }}>
+                {choices.length > 0 && <ArgChoicesTypography sx={{ ml: 1 }}>
+                    {`Choices: ` + choices.join(', ')}
+                </ArgChoicesTypography>}
+                {props.arg.default !== undefined && <ArgChoicesTypography sx={{ ml: 1 }}>
+                    {`Default: ${props.arg.default.value}`}
+                </ArgChoicesTypography>
+                }
+            </Box>}
             {props.arg.help?.short && <ShortHelpTypography sx={{ ml: 6, mt: 1.5 }}> {props.arg.help?.short} </ShortHelpTypography>}
             {!(props.arg.help?.short) && <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>Please add argument short summary!</ShortHelpPlaceHolderTypography>}
             {props.arg.help?.lines && <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
@@ -530,6 +543,8 @@ function ArgumentDialog(props: {
     const [argSimilarTree, setArgSimilarTree] = useState<ArgSimilarTree | undefined>(undefined);
     const [argSimilarTreeExpandedIds, setArgSimilarTreeExpandedIds] = useState<string[]>([]);
     const [argSimilarTreeArgIdsUpdated, setArgSimilarTreeArgIdsUpdated] = useState<string[]>([]);
+    const [hasDefault, setHasDefault] = useState<boolean | undefined>(false);
+    const [defaultValue, setDefaultValue] = useState<any | undefined>(undefined);
 
     const handleClose = () => {
         setInvalidText(undefined);
@@ -580,6 +595,30 @@ function ArgumentDialog(props: {
             lines = lHelp.split('\n').filter(l => l.length > 0);
         }
 
+        let argDefault = undefined;
+        if (hasDefault === false) {
+            if (props.arg.default !== undefined) {
+                argDefault = null;
+            }
+        } else if (hasDefault === true) {
+            if (defaultValue === undefined) {
+                setInvalidText(`Field 'Default Value' is undefined.`)
+                return undefined;
+            } else {
+                try {
+                    argDefault = {
+                        value: convertArgDefaultText(defaultValue!, props.arg),
+                    }
+                } catch (err: any) {
+                    setInvalidText(`Field 'Default Value' is invalid: ${err.message}.`)
+                    return undefined;
+                }
+                if (props.arg.default !== undefined && props.arg.default.value === argDefault.value) {
+                    argDefault = undefined;
+                }
+            }
+        }
+
         return {
             options: names,
             singularOptions: sNames,
@@ -589,7 +628,8 @@ function ArgumentDialog(props: {
             help: {
                 short: sHelp,
                 lines: lines
-            }
+            },
+            default: argDefault,
         }
     }
 
@@ -717,6 +757,19 @@ function ArgumentDialog(props: {
         setUpdating(false);
         setArgSimilarTree(undefined);
         setArgSimilarTreeExpandedIds([]);
+
+        if (arg.type === "object" || arg.type.startsWith("dict<") || arg.type.startsWith("array<") || arg.type.startsWith("@")) {
+            // disable the default value modification
+            setHasDefault(undefined);
+            setDefaultValue(undefined);
+        } else if (props.arg.default !== undefined && props.arg.default !== null) {
+            setHasDefault(true);
+            setDefaultValue(props.arg.default.value.toString());
+        } else {
+            setHasDefault(false);
+            setDefaultValue(undefined);
+        }
+
     }, [props.arg]);
 
     return (
@@ -789,6 +842,40 @@ function ArgumentDialog(props: {
                             }}
                         />
                     </>}
+                    {hasDefault !== undefined && <>
+                        <InputLabel shrink sx={{ font: "inherit" }}>Default Value</InputLabel>
+                        <Box sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "flex-start",
+                            ml: 4,
+                        }}>
+                            <Switch
+                                checked={hasDefault}
+                                onChange={(event: any) => {
+                                    setHasDefault(!hasDefault);
+                                    setDefaultValue(undefined);
+                                }}
+                            />
+                            <TextField
+                                id="defaultValue"
+                                label="default Value"
+                                hiddenLabel
+                                type="text"
+                                hidden={!hasDefault}
+                                fullWidth
+                                size="small"
+                                value={defaultValue}
+                                onChange={(event: any) => {
+                                    setDefaultValue(event.target.value);
+                                }}
+                                margin="normal"
+                                required
+                            />
+                        </Box>
+                    </>}
+
                     <TextField
                         id="shortSummary"
                         label="Short Summary"
@@ -1154,7 +1241,7 @@ function ArgumentPropsReviewer(props: {
             groupArgs[groupName].push(arg)
         })
     }
-    
+
     const groups: ArgGroup[] = []
 
     for (const groupName in groupArgs) {
@@ -1192,7 +1279,7 @@ function ArgumentPropsReviewer(props: {
                 <ButtonBase onClick={() => {
                     props.onSelectSubArg(arg.var)
                 }}>
-                    {!arg.hide && <PropArgOptionTypography sx={{ flexShrink: 0 }}>{argOptionsString}</PropArgOptionTypography> }
+                    {!arg.hide && <PropArgOptionTypography sx={{ flexShrink: 0 }}>{argOptionsString}</PropArgOptionTypography>}
                     {arg.hide && <PropHiddenArgOptionTypography sx={{ flexShrink: 0 }}>{argOptionsString}</PropHiddenArgOptionTypography>}
                 </ButtonBase>
                 <Box sx={{ flexGrow: 1 }} />
@@ -1329,6 +1416,8 @@ type CMDArgEnum<T> = {
 
 interface CMDArgBase {
     type: string
+    nullable: boolean
+    blank?: CMDArgBlank<any>
 }
 
 interface CMDArg extends CMDArgBase {
@@ -1342,8 +1431,11 @@ interface CMDArg extends CMDArgBase {
     help?: CMDArgHelp
 
     default?: CMDArgDefault<any>
-    blank?: CMDArgBlank<any>
     idPart?: string
+}
+
+interface CMDArgBaseT<T> extends CMDArgBase {
+    blank?: CMDArgBlank<T>
 }
 
 interface CMDArgT<T> extends CMDArg {
@@ -1361,7 +1453,7 @@ interface CMDClsArg extends CMDClsArgBase, CMDArg {
 }
 
 // type: string
-interface CMDStringArgBase extends CMDArgBase {
+interface CMDStringArgBase extends CMDArgBaseT<string> {
     enum?: CMDArgEnum<string>
     // fmt?: CMDStringFormat
 }
@@ -1413,7 +1505,7 @@ interface CMDResourceLocationNameArgBase extends CMDStringArgBase { }
 interface CMDResourceLocationNameArg extends CMDResourceLocationNameArgBase, CMDStringArg { }
 
 
-interface CMDNumberArgBase extends CMDArgBase {
+interface CMDNumberArgBase extends CMDArgBaseT<number> {
     enum?: CMDArgEnum<number>
     // fmt?: CMDIntegerFormat
 }
@@ -1444,7 +1536,7 @@ interface CMDFloat64ArgBase extends CMDNumberArgBase { }
 interface CMDFloat64Arg extends CMDFloat64ArgBase, CMDNumberArg { }
 
 // type: boolean
-interface CMDBooleanArgBase extends CMDArgBase { }
+interface CMDBooleanArgBase extends CMDArgBaseT<boolean> { }
 interface CMDBooleanArg extends CMDBooleanArgBase, CMDArgT<boolean> { }
 
 // type: object
@@ -1490,9 +1582,30 @@ function decodeArgEnum<T>(response: any): CMDArgEnum<T> {
     return argEnum;
 }
 
+function decodeArgBlank<T>(response: any | undefined): CMDArgBlank<T> | undefined {
+    if (response === undefined || response === null) {
+        return undefined;
+    }
+
+    return {
+        value: response.value as (T | null),
+    }
+}
+
+function decodeArgDefault<T>(response: any | undefined): CMDArgDefault<T> | undefined {
+    if (response === undefined || response === null) {
+        return undefined;
+    }
+
+    return {
+        value: response.value as (T | null),
+    }
+}
+
 function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsArgDefinitionMap } {
     let argBase: any = {
-        type: response.type
+        type: response.type,
+        nullable: (response.nullable ?? false) as boolean,
     }
 
     let clsDefineMap: ClsArgDefinitionMap = {};
@@ -1516,6 +1629,12 @@ function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsA
                     enum: decodeArgEnum<string>(response.enum),
                 }
             }
+            if (response.blank) {
+                argBase = {
+                    ...argBase,
+                    blank: decodeArgBlank<string>(response.blank),
+                }
+            }
             break
         case "integer32":
         case "integer64":
@@ -1524,6 +1643,12 @@ function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsA
                 argBase = {
                     ...argBase,
                     enum: decodeArgEnum<number>(response.enum),
+                }
+            }
+            if (response.blank) {
+                argBase = {
+                    ...argBase,
+                    blank: decodeArgBlank<number>(response.blank),
                 }
             }
             break
@@ -1536,8 +1661,20 @@ function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsA
                     enum: decodeArgEnum<number>(response.enum),
                 }
             }
+            if (response.blank) {
+                argBase = {
+                    ...argBase,
+                    blank: decodeArgBlank<number>(response.blank),
+                }
+            }
             break
         case "boolean":
+            if (response.blank) {
+                argBase = {
+                    ...argBase,
+                    blank: decodeArgBlank<boolean>(response.blank),
+                }
+            }
             break
         case "object":
             if (response.args && Array.isArray(response.args) && response.args.length > 0) {
@@ -1637,8 +1774,6 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
         hide: (response.hide ?? false) as boolean,
         group: (response.group ?? "") as string,
         help: help,
-        default: response.default,
-        blank: response.blank,
         idPart: response.idPart,
     }
 
@@ -1655,16 +1790,40 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
         case "ResourceId":
         case "ResourceLocation":
         case "string":
+            if (response.default) {
+                arg = {
+                    ...arg,
+                    default: decodeArgDefault<string>(response.default),
+                }
+            }
             break
         case "integer32":
         case "integer64":
         case "integer":
+            if (response.default) {
+                arg = {
+                    ...arg,
+                    default: decodeArgDefault<number>(response.default),
+                }
+            }
             break
         case "float32":
         case "float64":
         case "float":
+            if (response.default) {
+                arg = {
+                    ...arg,
+                    default: decodeArgDefault<number>(response.default),
+                }
+            }
             break
         case "boolean":
+            if (response.default) {
+                arg = {
+                    ...arg,
+                    default: decodeArgDefault<boolean>(response.default),
+                }
+            }
             break
         case "object":
             break
@@ -1695,6 +1854,54 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
     return {
         arg: arg,
         clsDefineMap: clsDefineMap,
+    }
+}
+
+function convertArgDefaultText(defaultText: string, argBase: CMDArgBase): any {
+    switch (argBase.type) {
+        case "byte":
+        case "binary":
+        case "duration":
+        case "date":
+        case "dateTime":
+        case "uuid":
+        case "password":
+        case "SubscriptionId":
+        case "ResourceGroupName":
+        case "ResourceId":
+        case "ResourceLocation":
+        case "string":
+            if (defaultText.trim().length === 0) {
+                throw Error(`Not supported empty value: '${defaultText}'`);
+            }
+            return defaultText.trim();
+        case "integer32":
+        case "integer64":
+        case "integer":
+            if (Number.isNaN(parseInt(defaultText.trim()))) {
+                throw Error(`Not supported default value for integer type: '${defaultText}'`)
+            }
+            return parseInt(defaultText.trim());
+        case "float32":
+        case "float64":
+        case "float":
+            if (Number.isNaN(parseFloat(defaultText.trim()))) {
+                throw Error(`Not supported default value for float type: '${defaultText}'`)
+            }
+            return parseFloat(defaultText.trim());
+        case "boolean":
+            switch (defaultText.trim().toLowerCase()) {
+                case 'true':
+                case 'yes':
+                    return true;
+                case 'false':
+                case 'no':
+                    return false;
+                default:
+                    throw Error(`Not supported default value for boolean type: '${defaultText}'`)
+            }
+        default:
+            throw Error(`Not supported type: ${argBase.type}`)
     }
 }
 

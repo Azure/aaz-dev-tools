@@ -307,10 +307,20 @@ class CMDStringArgBase(CMDArgBase):
         super()._reformat_base(**kwargs)
         if self.enum:
             self.enum.reformat(**kwargs)
+        if self.blank:
+            if not isinstance(self.blank.value, str) and not (self.nullable and self.blank.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid blank value", details=f"'{self.blank.value}' is not a valid string arg value")
 
 
 class CMDStringArg(CMDStringArgBase, CMDArg):
-    pass
+
+    def _reformat(self, **kwargs):
+        super()._reformat(**kwargs)
+        if self.default:
+            if not isinstance(self.default.value, str) and not (self.nullable and self.default.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid default value", details=f"'{self.default.value}' is not a valid string arg value")
 
 
 # byte: base64 encoded characters
@@ -421,7 +431,6 @@ class CMDResourceLocationArgBase(CMDStringArgBase):
     TYPE_VALUE = "ResourceLocation"
 
     no_rg_default = CMDBooleanField()  # the default value will not be the location of resource group
-    # TODO: support global as default
 
     @classmethod
     def build_arg_base(cls, builder):
@@ -465,10 +474,20 @@ class CMDIntegerArgBase(CMDArgBase):
         super()._reformat_base(**kwargs)
         if self.enum:
             self.enum.reformat(**kwargs)
+        if self.blank:
+            if not isinstance(self.blank.value, int) and not (self.nullable and self.blank.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid blank value", details=f"'{self.blank.value}' is not a valid int arg value")
 
 
 class CMDIntegerArg(CMDIntegerArgBase, CMDArg):
-    pass
+
+    def _reformat(self, **kwargs):
+        super()._reformat(**kwargs)
+        if self.default:
+            if not isinstance(self.default.value, int) and not (self.nullable and self.default.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid default value", details=f"'{self.default.value}' is not a valid int arg value")
 
 
 # integer32
@@ -504,7 +523,13 @@ class CMDBooleanArgBase(CMDArgBase):
 
 
 class CMDBooleanArg(CMDBooleanArgBase, CMDArg):
-    pass
+
+    def _reformat(self, **kwargs):
+        super()._reformat(**kwargs)
+        if self.default:
+            if not isinstance(self.default.value, bool) and not (self.nullable and self.default.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid default value", details=f"'{self.default.value}' is not a valid boolean arg value")
 
 
 # float
@@ -530,10 +555,20 @@ class CMDFloatArgBase(CMDArgBase):
         super()._reformat_base(**kwargs)
         if self.enum:
             self.enum.reformat(**kwargs)
+        if self.blank:
+            if not isinstance(self.blank.value, float) and not (self.nullable and self.blank.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid blank value", details=f"'{self.blank.value}' is not a valid float arg value")
 
 
 class CMDFloatArg(CMDFloatArgBase, CMDArg):
-    pass
+
+    def _reformat(self, **kwargs):
+        super()._reformat(**kwargs)
+        if self.default:
+            if not isinstance(self.default.value, float) and not (self.nullable and self.default.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid default value", details=f"'{self.default.value}' is not a valid float arg value")
 
 
 # float32
@@ -645,6 +680,11 @@ class CMDObjectArgBase(CMDArgBase):
         if self.additional_props:
             self.additional_props.reformat(**kwargs)
 
+        if self.blank:
+            if not isinstance(self.blank.value, dict) and not (self.nullable and self.blank.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid blank value", details=f"'{self.blank.value}' is not a valid object arg value")
+
 
 class CMDObjectArg(CMDObjectArgBase, CMDArg):
 
@@ -653,6 +693,13 @@ class CMDObjectArg(CMDObjectArgBase, CMDArg):
         arg = super().build_arg(builder)
         assert isinstance(arg, CMDObjectArg)
         return arg
+
+    def _reformat(self, **kwargs):
+        super()._reformat(**kwargs)
+        if self.default:
+            if not isinstance(self.default.value, dict) and not (self.nullable and self.default.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid default value", details=f"'{self.default.value}' is not a valid object arg value")
 
 
 # array
@@ -693,6 +740,11 @@ class CMDArrayArgBase(CMDArgBase):
             }
             raise err
 
+        if self.blank:
+            if not isinstance(self.blank.value, list) and not (self.nullable and self.blank.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid blank value", details=f"'{self.blank.value}' is not a valid array arg value")
+
 
 class CMDArrayArg(CMDArrayArgBase, CMDArg):
 
@@ -713,3 +765,7 @@ class CMDArrayArg(CMDArrayArgBase, CMDArg):
         super()._reformat(**kwargs)
         if self.singular_options:
             self.singular_options = sorted(self.singular_options, key=lambda op: (len(op), op))
+        if self.default:
+            if not isinstance(self.default.value, list) and not (self.nullable and self.default.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid default value", details=f"'{self.default.value}' is not a valid array arg value")

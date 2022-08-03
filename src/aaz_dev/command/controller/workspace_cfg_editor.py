@@ -3,9 +3,9 @@ import logging
 import os
 
 from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDDiffLevelEnum, \
-    CMDHttpRequest, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDArg, CMDClsArg, \
+    CMDHttpRequest, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDArg, CMDBooleanArg, CMDClsArg, \
     CMDObjectArgBase, CMDArrayArgBase, CMDCondition, CMDConditionNotOperator, CMDConditionHasValueOperator, \
-    CMDConditionAndOperator, CMDCommandGroup, CMDArgumentHelp
+    CMDConditionAndOperator, CMDCommandGroup, CMDArgumentHelp, CMDArgDefault
 from utils import exceptions
 from utils.base64 import b64encode_str
 from utils.case import to_camel_case
@@ -232,11 +232,14 @@ class WorkspaceCfgEditor(CfgReader):
             return None
         if isinstance(arg, CMDArg):
             self._update_cmd_arg(arg, **kwargs)
+        if isinstance(arg, CMDBooleanArg):
+            self._update_boolean_arg(arg, **kwargs)
         if isinstance(arg, CMDClsArg):
             self._update_cls_arg(arg, **kwargs)
         if isinstance(arg, CMDArrayArg):
             self._update_array_arg(arg, **kwargs)
-        return arg
+
+        self.reformat()
 
     def _update_cmd_arg(self, arg, **kwargs):
         if 'options' in kwargs:
@@ -251,6 +254,15 @@ class WorkspaceCfgEditor(CfgReader):
             arg.group = kwargs['group'] or None
         if 'help' in kwargs:
             arg.help = CMDArgumentHelp(kwargs['help'])
+        if 'default' in kwargs:
+            if kwargs['default'] is None:
+                arg.default = None
+            else:
+                arg.default = CMDArgDefault(kwargs['default'])
+
+    def _update_boolean_arg(self, arg, **kwargs):
+        if 'reverse' in kwargs:
+            arg.reverse = kwargs['reverse'] or False
 
     def _update_cls_arg(self, arg, **kwargs):
         if 'singularOptions' in kwargs:
