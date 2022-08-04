@@ -219,10 +219,13 @@ class CMDArgBuilder:
         return False
 
     def get_default(self):
-        # if ref_arg has default value return it, else the default value depends on schema
         if self._ref_arg:
+            # ref_arg already has default value return it
             if self._ref_arg.default:
                 return CMDArgDefault(raw_data=self._ref_arg.default.to_native())
+        if self._is_update_action:
+            # ignore default for update actions
+            return None
         if hasattr(self.schema, 'default') and self.schema.default:
             return CMDArgDefault.build_default(self, self.schema.default)
         return None
