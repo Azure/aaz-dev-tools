@@ -3,6 +3,16 @@
 Release History
 ===============
 
+0.9.6
++++++
+* Support modify argument default value and reverse bool argument expression (#106)
+* Add default and blank value validation for argbase and arg(#106)
+* Add reformat to verify command model(#106)
+* Support default value modification ui(#106)
+* Ignore argument default for update actions (#107)
+* Add argument to specify workspace path (#108)
+* Fix bug to print string with newline (#110)
+
 0.9.5
 +++++
 * Limit minimal python version to 3.8 (#98)(#99)(#101)
