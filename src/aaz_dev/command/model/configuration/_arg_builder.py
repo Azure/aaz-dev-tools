@@ -298,7 +298,7 @@ class CMDArgBuilder:
 
         if hasattr(self.schema, 'description') and self.schema.description:
             h = CMDArgumentHelp()
-            h.short = self.schema.description
+            h.short = self.schema.description.replace('\n', ' ')
             return h
         return None
 
