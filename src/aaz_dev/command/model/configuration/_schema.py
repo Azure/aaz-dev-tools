@@ -822,20 +822,17 @@ class CMDObjectSchemaBase(CMDSchemaBase):
         if level >= CMDDiffLevelEnum.BreakingChange:
             if old.additional_props:
                 if not self.additional_props:
-                    additional_diff = f"Miss additional props"
-                else:
-                    additional_diff = self.additional_props.diff(old.additional_props, level)
-                if additional_diff:
-                    diff["additional_props"] = additional_diff
+                    diff["additional_props"] = f"Miss additional props"
 
         if level >= CMDDiffLevelEnum.Structure:
             if self.additional_props:
                 if not old.additional_props:
-                    additional_diff = f"New additional props"
-                else:
-                    additional_diff = self.additional_props.diff(old.additional_props, level)
-                if additional_diff:
-                    diff["additional_props"] = additional_diff
+                    diff["additional_props"] = f"New additional props"
+
+        if self.additional_props and old.additional_props:
+            additional_diff = self.additional_props.diff(old.additional_props, level)
+            if additional_diff:
+                diff["additional_props"] = additional_diff
 
         return diff
 
@@ -948,31 +945,28 @@ class CMDArraySchema(CMDArraySchemaBase, CMDSchema):
 
 def _diff_fmt(self_fmt, old_fmt, level):
     fmt_diff = None
-    if level >= CMDDiffLevelEnum.BreakingChange:
-        if self_fmt:
-            fmt_diff = self_fmt.diff(old_fmt, level)
 
     if level >= CMDDiffLevelEnum.Structure:
         if old_fmt:
             if not self_fmt:
                 fmt_diff = f"Miss property"
-            else:
-                fmt_diff = self_fmt.diff(old_fmt, level)
+
+    if self_fmt and old_fmt:
+        fmt_diff = self_fmt.diff(old_fmt, level)
+
     return fmt_diff
 
 
 def _diff_enum(self_enum, old_enum, level):
     enum_diff = None
-    if level >= CMDDiffLevelEnum.BreakingChange:
-        if self_enum:
-            enum_diff = self_enum.diff(old_enum, level)
 
     if level >= CMDDiffLevelEnum.Structure:
         if old_enum:
             if not self_enum:
                 enum_diff = f"Miss property"
-            else:
-                enum_diff = self_enum.diff(old_enum, level)
+
+    if self_enum and old_enum:
+        enum_diff = self_enum.diff(old_enum, level)
 
     return enum_diff
 
@@ -990,6 +984,7 @@ def _diff_props(self_props, old_props, level):
                 diff = prop.diff(old_prop, level)
                 if diff:
                     props_diff[old_prop.name] = diff
+
         for prop in props_dict.values():
             if prop.frozen:
                 continue
@@ -1002,11 +997,7 @@ def _diff_props(self_props, old_props, level):
             if prop.name not in old_props_dict:
                 if not prop.frozen:
                     props_diff[prop.name] = "New property"
-            else:
-                old_prop = old_props_dict.pop(prop.name)
-                diff = prop.diff(old_prop, level)
-                if diff:
-                    props_diff[prop.name] = diff
+
     return props_diff
 
 
@@ -1030,11 +1021,7 @@ def _diff_discriminators(self_discriminators, old_discriminators, level):
             if disc.value not in old_discs_dict:
                 if not disc.frozen:
                     discs_diff[disc.value] = "New discriminator value"
-            else:
-                old_disc = old_discs_dict.pop(disc.value)
-                diff = disc.diff(old_disc, level)
-                if diff:
-                    discs_diff[disc.value] = diff
+
     return discs_diff
 
 
