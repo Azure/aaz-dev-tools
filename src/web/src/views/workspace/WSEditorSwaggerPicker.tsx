@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { Typography, Box, AppBar, Toolbar, IconButton, Button, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText, FormControlLabel, Alert, Card, CardContent, AlertTitle } from '@mui/material';
+import { Typography, Box, AppBar, Toolbar, IconButton, Button, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText, FormControlLabel, Alert, Card, CardContent, AlertTitle, Paper, InputBase } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import EditorPageLayout from '../../components/EditorPageLayout';
 import { styled } from '@mui/material/styles';
+import SortIcon from '@mui/icons-material/Sort';
 
 
 interface WSEditorSwaggerPickerProps {
@@ -59,6 +60,12 @@ type ResourceVersion = {
 type Resource = {
     id: string
     versions: ResourceVersion[]
+    aazVersions: string[] | null
+}
+
+type AAZResource = {
+    id: string
+    versions: string[] | null
 }
 
 type VersionResourceIdMap = {
@@ -104,6 +111,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
             selectedModule: null,
             selectedResourceProvider: null,
             selectedVersion: null,
+            // filter
 
             updateOptions: UpdateOptions,
             updateOption: UpdateOptions[0],
@@ -212,54 +220,65 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
             });
     }
 
-    loadResources = (resourceProviderUrl: string | null) => {
+    loadResources = async (resourceProviderUrl: string | null) => {
         if (resourceProviderUrl != null) {
             this.setState({
                 invalidText: undefined,
                 loading: true,
             })
-            axios.get(`${resourceProviderUrl}/Resources`)
-                .then(res => {
-                    // const resourceIdVersionMap: ResourceIdVersionMap = {}
-                    const versionResourceIdMap: VersionResourceIdMap = {}
-                    const versionOptions: string[] = []
-                    const resourceMap: ResourceMap = {}
-                    res.data.forEach((resource: Resource) => {
-                        // resource.versions.sort((a, b) =>  a.version.localeCompare(b.version));
-                        resourceMap[resource.id] = resource;
+            try {
+                let res = await axios.get(`${resourceProviderUrl}/Resources`);
+                // const resourceIdVersionMap: ResourceIdVersionMap = {}
+                const versionResourceIdMap: VersionResourceIdMap = {}
+                const versionOptions: string[] = []
+                const resourceMap: ResourceMap = {}
+                const resourceIdList: string[] = []
+                res.data.forEach((resource: Resource) => {
+                    // resource.versions.sort((a, b) =>  a.version.localeCompare(b.version));
+                    resourceIdList.push(resource.id);
+                    resourceMap[resource.id] = resource;
+                    resourceMap[resource.id].aazVersions = null;
 
-                        const resourceVersions = resource.versions.map((v) => v.version)
-                        // resourceIdVersionMap[resource.id] = versions;
-                        resourceVersions.forEach((v) => {
-                            if (!(v in versionResourceIdMap)) {
-                                versionResourceIdMap[v] = [];
-                                versionOptions.push(v);
-                            }
-                            versionResourceIdMap[v].push(resource.id);
-                        })
+                    const resourceVersions = resource.versions.map((v) => v.version)
+                    // resourceIdVersionMap[resource.id] = versions;
+                    resourceVersions.forEach((v) => {
+                        if (!(v in versionResourceIdMap)) {
+                            versionResourceIdMap[v] = [];
+                            versionOptions.push(v);
+                        }
+                        versionResourceIdMap[v].push(resource.id);
                     })
-                    versionOptions.sort((a, b) => a.localeCompare(b)).reverse()
-                    let selectVersion = null;
-                    if (versionOptions.length > 0) {
-                        selectVersion = versionOptions[0];
-                    }
-                    this.setState({
-                        loading: false,
-                        versionResourceIdMap: versionResourceIdMap,
-                        resourceMap: resourceMap,
-                        versionOptions: versionOptions,
-                    })
-                    this.onVersionUpdate(selectVersion);
                 })
-                .catch((err) => {
-                    console.error(err.response);
-                    if (err.response?.data?.message) {
-                        const data = err.response!.data!;
-                        this.setState({
-                            invalidText: `ResponseError: ${data.message!}`,
-                        })
-                    }
-                });
+                versionOptions.sort((a, b) => a.localeCompare(b)).reverse()
+                let selectVersion = null;
+                if (versionOptions.length > 0) {
+                    selectVersion = versionOptions[0];
+                }
+
+                const filterBody = {
+                    resources: resourceIdList
+                };
+
+                res = await axios.post(`/AAZ/Specs/Resources/${this.props.plane}/Filter`, filterBody);
+                res.data.resources.forEach((aazResource: AAZResource) => {
+                    resourceMap[aazResource.id].aazVersions = aazResource.versions;
+                })
+                this.setState({
+                    loading: false,
+                    versionResourceIdMap: versionResourceIdMap,
+                    resourceMap: resourceMap,
+                    versionOptions: versionOptions,
+                })
+                this.onVersionUpdate(selectVersion);
+            } catch (err: any) {
+                console.error(err.response);
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    this.setState({
+                        invalidText: `ResponseError: ${data.message!}`,
+                    })
+                }
+            }
         } else {
             this.setState({
                 versionOptions: [],
@@ -394,7 +413,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     onSelectedAllClick = () => {
         this.setState(preState => {
             const selectedResources = new Set(preState.selectedResources);
-            if (selectedResources.size == preState.resourceOptions.length) {
+            if (selectedResources.size === preState.resourceOptions.length) {
                 selectedResources.clear()
             } else {
                 preState.resourceOptions.forEach((value) => {
@@ -482,63 +501,92 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                         </Button>
                     </Box>
                     <List
-                        dense
+                        // dense
                         sx={{ flexGrow: 1 }}
                         subheader={<ListSubheader>
                             <Box sx={{
                                 mt: 1,
+                                mb: 1,
                                 flexDirection: 'column',
                                 display: 'flex',
                                 alignItems: 'stretch',
                                 justifyContent: 'flex-start',
                             }} color='inherit'>
                                 <Typography component='h6'>Resource Url</Typography>
-                                {resourceOptions.length > 0 && <ListItemButton sx={{ paddingLeft: 0 }} dense onClick={this.onSelectedAllClick}>
-                                    <ListItemIcon>
-                                        <Checkbox
-                                            edge="start"
-                                            checked={selectedResources.size === resourceOptions.length}
-                                            indeterminate={selectedResources.size > 0 && selectedResources.size < resourceOptions.length}
-                                            tabIndex={-1}
-                                            disableRipple
-                                            inputProps={{ 'aria-labelledby': 'SelectAll' }}
+
+                                {resourceOptions.length > 0 && <Paper sx={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    mt: 1,
+                                }} variant="outlined" square>
+
+                                    <ListItemButton sx={{ maxWidth: 150 }} dense onClick={this.onSelectedAllClick}>
+                                        <ListItemIcon>
+                                            <Checkbox
+                                                edge="start"
+                                                checked={selectedResources.size === resourceOptions.length}
+                                                indeterminate={selectedResources.size > 0 && selectedResources.size < resourceOptions.length}
+                                                tabIndex={-1}
+                                                disableRipple
+                                                inputProps={{ 'aria-labelledby': 'SelectAll' }}
+                                            />
+                                        </ListItemIcon>
+                                        <ListItemText id="SelectAll"
+                                            primary={`All (${resourceOptions.length})`}
+                                            primaryTypographyProps={{
+                                                variant: "h6",
+                                            }}
                                         />
-                                    </ListItemIcon>
-                                    <ListItemText id="SelectAll"
-                                        primary={`All (${resourceOptions.length})`}
-                                        primaryTypographyProps={{
-                                            variant: "h6",
-                                        }}
+                                    </ListItemButton>
+                                    <SortIcon sx={{ ml: 2, mr: 2}}/>
+                                    <InputBase
+                                        sx={{flex: 1 }}
+                                        placeholder="Filter by keywords."
+                                        inputProps={{ 'aria-label': 'Filter by keywords.' }}
                                     />
-                                </ListItemButton>}
+                                </Paper>}
+                                {/* <TextField
+                                    id="resource-id-filter"
+                                    label="Search"
+                                    placeholder="Please input keywords separated by spaces"
+                                    fullWidth
+                                    margin="dense"
+                                    size="small"
+                                /> */}
+                                {/* {resourceOptions.length > 0 && } */}
                             </Box>
                         </ListSubheader>}
                     >
-                        {resourceOptions.map((option) => {
-                            const labelId = `resource-${option}`;
-                            return <ListItem
-                                key={option}
-                                disablePadding
-                            >
-                                <ListItemButton dense onClick={this.onResourceItemClick(option)}>
-                                    <ListItemIcon>
-                                        <Checkbox
-                                            edge="start"
-                                            checked={selectedResources.has(option) || existingResources.has(option)}
-                                            tabIndex={-1}
-                                            disableRipple
-                                            inputProps={{ 'aria-labelledby': labelId }}
+
+                        {resourceOptions.length > 0 && <Paper sx={{ ml: 2, mr: 2 }} variant="outlined" square>
+                            {resourceOptions.map((option) => {
+                                const labelId = `resource-${option}`;
+                                return <ListItem
+                                    key={option}
+                                    disablePadding
+                                >
+                                    <ListItemButton dense onClick={this.onResourceItemClick(option)}>
+                                        <ListItemIcon>
+                                            <Checkbox
+                                                edge="start"
+                                                checked={selectedResources.has(option) || existingResources.has(option)}
+                                                tabIndex={-1}
+                                                disableRipple
+                                                inputProps={{ 'aria-labelledby': labelId }}
+                                            />
+                                        </ListItemIcon>
+                                        <ListItemText id={labelId}
+                                            primary={option}
+                                            primaryTypographyProps={{
+                                                variant: "h6",
+                                            }}
                                         />
-                                    </ListItemIcon>
-                                    <ListItemText id={labelId}
-                                        primary={option}
-                                        primaryTypographyProps={{
-                                            variant: "h6",
-                                        }}
-                                    />
-                                </ListItemButton>
-                            </ListItem>
-                        })}
+                                    </ListItemButton>
+                                </ListItem>
+                            })}
+                        </Paper>}
+
                     </List>
                 </EditorPageLayout>
                 <Backdrop

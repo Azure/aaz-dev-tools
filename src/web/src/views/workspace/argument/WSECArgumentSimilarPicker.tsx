@@ -76,7 +76,7 @@ function decodeResponseArgSimilarCommand(responseCommand: ResponseArgSimilarComm
                     return `--${idx}`;
                 }
             }).join(' ')}`;
-        } else if (arg.indexes.length == 1) {
+        } else if (arg.indexes.length === 1) {
             let idx = arg.indexes[0];
             if (idx[1] === '.' || idx[1] === '[' || idx[1] === '{') {
                 arg.display = `-${idx}`;
