@@ -302,6 +302,11 @@ class CMDArgBuilder:
             return h
         return None
 
+    def get_group(self):
+        if self._ref_arg:
+            return self._ref_arg.group
+        return None
+
     def get_fmt(self):
         if isinstance(self.schema, CMDObjectSchemaDiscriminator):
             return None

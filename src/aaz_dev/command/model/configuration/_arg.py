@@ -221,6 +221,7 @@ class CMDArg(CMDArgBase):
         arg.var = builder.get_var()
         arg.options = builder.get_options()
         arg.help = builder.get_help()
+        arg.group = builder.get_group()
 
         arg.required = builder.get_required()
         arg.default = builder.get_default()
