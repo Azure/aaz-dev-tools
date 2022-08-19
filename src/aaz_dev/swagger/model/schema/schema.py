@@ -357,7 +357,7 @@ class Schema(Model, Linkable):
 
         if isinstance(model, CMDArraySchemaBase):
             if self.all_of is not None:
-                # inherent from allOf
+                # inherit from allOf
                 if len(self.all_of) > 1:
                     raise exceptions.InvalidSwaggerValueError(
                         msg=f"Multiple allOf is not supported for `{model.type}` type schema",
@@ -379,12 +379,12 @@ class Schema(Model, Linkable):
             # props
             prop_dict = {}
             if model.props is not None:
-                # inherent from $ref
+                # inherit from $ref
                 for prop in model.props:
                     prop_dict[prop.name] = prop
 
             if self.all_of:
-                # inherent from allOf
+                # inherit from allOf
                 for item in self.all_of:
                     disc_parent = item.get_disc_parent()
                     if disc_parent is not None and builder.find_traces(item.ref_instance.traces):
@@ -413,7 +413,7 @@ class Schema(Model, Linkable):
                                 break
                         if not is_children and len(self.all_of) == 1 and \
                                 model.props is None and model.additional_props is None:
-                            # inherent from allOf as reference only
+                            # inherit from allOf as reference only
                             model.discriminators = v.discriminators
 
                     if v.additional_props:
@@ -582,7 +582,7 @@ class Schema(Model, Linkable):
 
         else:
             if self.all_of is not None:
-                # inherent from allOf
+                # inherit from allOf
                 if len(self.all_of) > 1:
                     raise exceptions.InvalidSwaggerValueError(
                         msg=f"Multiple allOf is not supported for `{model.type}` type schema",

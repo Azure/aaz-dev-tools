@@ -50,10 +50,16 @@ class WorkspaceEditorTest(CommandTestCase):
         manager.add_new_resources_by_swagger(
             mod_names=mod_names,
             version='2021-12-01',
-            resource_ids=[
-                swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
-                swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
-                swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}'),
+            resources=[
+                {
+                    "id": swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
+                },
+                {
+                    "id": swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses'),
+                },
+                {
+                    "id": swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/addresses/{addressName}'),
+                }
             ]
         )
         manager.save()

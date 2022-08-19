@@ -4,8 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import EditorPageLayout from '../../components/EditorPageLayout';
 import { styled } from '@mui/material/styles';
-import SortIcon from '@mui/icons-material/Sort';
-import { version } from 'os';
+// import SortIcon from '@mui/icons-material/Sort';
 
 
 interface WSEditorSwaggerPickerProps {
@@ -91,7 +90,7 @@ const MiddlePadding2 = styled(Box)(({ theme }) => ({
     height: '8vh'
 }));
 
-const UpdateOptions = ["Generic(Get&Put) First", "Patch First"];
+const UpdateOptions = ["Generic(Get&Put) First", "Patch First", "No update command"];
 
 class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, WSEditorSwaggerPickerState> {
 
@@ -299,14 +298,15 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     }
 
     addSwagger = () => {
-        const { selectedResources, selectedVersion, selectedModule, moduleOptionsCommonPrefix, updateOption, resourceMap } = this.state;
-        const resources: { id: string, options?: { update_by: string } }[] = [];
+        const { selectedResources, selectedVersion, selectedModule, moduleOptionsCommonPrefix, updateOption, resourceMap, selectedResourceInherenceAAZVersionMap } = this.state;
+        const resources: { id: string, options: { update_by?: string, aaz_version: string | null } }[] = [];
         selectedResources.forEach((resourceId) => {
             const res: any = {
                 id: resourceId,
-                options: undefined,
+                options: {
+                    aaz_version: selectedResourceInherenceAAZVersionMap[resourceId],
+                },
             }
-
             if (updateOption === UpdateOptions[1]) {
                 // patch first
                 const resource = resourceMap[resourceId];
@@ -314,13 +314,14 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 if (operations) {
                     for (const opName in operations) {
                         if (operations[opName].toLowerCase() === "patch") {
-                            res.options = {
-                                update_by: "PatchOnly",
-                            }
+                            res.options.update_by = "PatchOnly"
                             break
                         }
                     }
                 }
+            } else if (updateOption === UpdateOptions[2]) {
+                // No update command generation
+                res.options.update_by = "None"
             }
             resources.push(res)
         });

@@ -389,6 +389,8 @@ def editor_workspace_tree_node_resources(name, node_names):
     if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command group not exist")
     node_names = node_names[1:]
+    if len(node_names) > 0:
+        raise exceptions.InvalidAPIUsage("Not support to add resources under a specific node.")
 
     manager = WorkspaceManager(name)
     manager.load()
@@ -411,7 +413,6 @@ def editor_workspace_tree_node_resources(name, node_names):
         mod_names=mod_names,
         version=version,
         resources=resources,
-        *node_names
     )
     manager.save()
     return "", 200
