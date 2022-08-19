@@ -1113,7 +1113,7 @@ function FlattenDialog(props: {
             value={arg.options}
             onChange={(event: any) => {
                 const options = subArgOptions.map(value => {
-                    if (value.var == arg.var) {
+                    if (value.var === arg.var) {
                         return {
                             ...value,
                             options: event.target.value,
@@ -1355,7 +1355,7 @@ function ArgumentPropsReviewer(props: {
             </Box>)
     }
 
-    if (groups.length == 0) {
+    if (groups.length === 0) {
         return (<></>)
     }
 

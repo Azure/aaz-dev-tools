@@ -77,6 +77,20 @@ class AAZSpecsManager:
     def get_resource_cfg_ref_file_path(self, plane, resource_id, version):
         return os.path.join(self.get_resource_cfg_folder(plane, resource_id), f"{version}.md")
 
+    def get_resource_versions(self, plane, resource_id):
+        path = self.get_resource_cfg_folder(plane, resource_id)
+        if not os.path.exists(path) or not os.path.isdir(path):
+            return None
+        versions = set()
+        for file_name in os.listdir(path):
+            if file_name.endswith('.xml'):
+                versions.add(file_name[:-4])
+            elif file_name.endswith('.json'):
+                versions.add(file_name[:-5])
+            elif file_name.endswith('.md'):
+                versions.add(file_name[:-3])
+        return sorted(versions, reverse=True)
+
     # Command Tree
     def find_command_group(self, *cg_names):
         node = self.tree.root

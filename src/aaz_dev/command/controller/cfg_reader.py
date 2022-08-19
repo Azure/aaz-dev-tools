@@ -23,7 +23,7 @@ class CfgReader:
             data = json.dumps({"$ref": main_resource.id}, ensure_ascii=False)
             yield resource.id, data
 
-    def iter_commands(self):
+    def iter_commands(self, filter=None):
         groups = []
         for group in self.cfg.command_groups:
             groups.append((group.name.split(" "), group))
@@ -33,23 +33,27 @@ class CfgReader:
             assert isinstance(command_group, CMDCommandGroup)
             if command_group.commands:
                 for command in command_group.commands:
-                    yield [*node_names, command.name], command
+                    cmd_names = [*node_names, command.name]
+                    if filter is None or filter(cmd_names, command):
+                        yield cmd_names, command
             if command_group.command_groups:
                 for group in command_group.command_groups:
                     groups.append(([*node_names, group.name], group))
             idx += 1
 
     def iter_commands_by_resource(self, resource_id, version=None):
-        for cmd_name, command in self.iter_commands():
+        def _filter_by_resource(cmd_name, command):
             for r in command.resources:
                 if r.id == resource_id and (not version or r.version == version):
-                    yield cmd_name, command
-                    break
+                    return True
+            return False
+        for result in self.iter_commands(filter=_filter_by_resource):
+            yield result
 
     def iter_commands_by_operations(self, *methods):
         # use 'update' as the methods of instance update operation
         methods = {m.lower() for m in methods}
-        for cmd_names, command in self.iter_commands():
+        def _filter_by_operation(cmd_names, command):
             ops_methods = set()
             has_extra_methods = False
             for operation in command.operations:
@@ -64,8 +68,10 @@ class CfgReader:
                         has_extra_methods = True
                         break
                     ops_methods.add(http.request.method.lower())
-            if not has_extra_methods and ops_methods == methods:
-                yield cmd_names, command
+            return not has_extra_methods and ops_methods == methods
+
+        for result in self.iter_commands(filter=_filter_by_operation):
+            yield result
 
     def find_command_group(self, *cg_names, parent=None):
         parent = parent or self.cfg

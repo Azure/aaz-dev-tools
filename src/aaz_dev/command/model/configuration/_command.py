@@ -55,6 +55,10 @@ class CMDCommand(Model):
         arguments = self._handle_duplicated_options(arguments)
         self.arg_groups = self._build_arg_groups(arguments)
 
+    def generate_outputs(self, ref_outputs=None):
+        # TODO:
+        pass
+
     def reformat(self, **kwargs):
         self.resources = sorted(self.resources, key=lambda r: r.id)
         try:

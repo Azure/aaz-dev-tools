@@ -236,6 +236,7 @@ class WorkspaceManager:
                 new_cmd = reusable_leaf
 
             else:
+                # reference help message from aaz specs
                 aaz_leaf = self.aaz_specs.find_command(*cmd_names)
                 if aaz_leaf:
                     new_cmd = CMDCommandTreeLeaf({
@@ -419,10 +420,9 @@ class WorkspaceManager:
             new_name = f"{name}-untitled{idx}"
         return new_name
 
-    def add_new_resources_by_swagger(self, mod_names, version, resources, *root_node_names):
-        root_node = self.find_command_tree_node(*root_node_names)
-        if not root_node:
-            raise exceptions.InvalidAPIUsage(f"Command Group not exist: '{' '.join(root_node_names)}'")
+    def add_new_resources_by_swagger(self, mod_names, version, resources):
+        root_node = self.find_command_tree_node()
+        assert root_node
 
         swagger_resources = []
         resource_options = []
@@ -432,14 +432,17 @@ class WorkspaceManager:
                 continue
             if self.check_resource_exist(r['id']):
                 raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {r['id']}")
+            # convert resource to swagger resource
             swagger_resource = self.swagger_specs.get_resource_in_version(
                 self.ws.plane, mod_names, r['id'], version)
             swagger_resources.append(swagger_resource)
             resource_options.append(r.get("options", {}))
             used_resource_ids.update(r['id'])
 
+        # load swagger resources
         self.swagger_command_generator.load_resources(swagger_resources)
 
+        # generate cfg editors by resource
         cfg_editors = []
         for resource, options in zip(swagger_resources, resource_options):
             try:
@@ -449,18 +452,22 @@ class WorkspaceManager:
                     message=str(err)
                 ) from err
             assert not command_group.command_groups, "The logic to support sub command groups is not supported"
-            cfg_editors.append(WorkspaceCfgEditor.new_cfg(
+            cfg_editor = WorkspaceCfgEditor.new_cfg(
                 plane=self.ws.plane,
                 resources=[resource.to_cmd()],
                 command_groups=[command_group]
-            ))
+            )
 
-        # TODO: apply the command name used in aaz specs
+            # inherit modification from cfg in aaz
+            aaz_version = options.get('aaz_version', None)
+            if aaz_version:
+                try:
+                    aaz_cfg = self.aaz_specs.load_resource_cfg_reader(self.ws.plane, resource.id, aaz_version)
+                except ValueError as err:
+                    raise exceptions.InvalidAPIUsage(message=str(err)) from err
+                cfg_editor.inherit_modification(aaz_cfg)
 
-        if len(root_node_names) > 0:
-            cg_names = self._calculate_cfgs_common_command_group(cfg_editors, *root_node_names)
-            for cfg_editor in cfg_editors:
-                cfg_editor.rename_command_group(*cg_names, new_cg_names=root_node_names)
+            cfg_editors.append(cfg_editor)
 
         for cfg_editor in cfg_editors:
             merged = False

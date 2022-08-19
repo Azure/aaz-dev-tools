@@ -5,7 +5,7 @@ import os
 from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDDiffLevelEnum, \
     CMDHttpRequest, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDArg, CMDBooleanArg, CMDClsArg, \
     CMDObjectArgBase, CMDArrayArgBase, CMDCondition, CMDConditionNotOperator, CMDConditionHasValueOperator, \
-    CMDConditionAndOperator, CMDCommandGroup, CMDArgumentHelp, CMDArgDefault
+    CMDConditionAndOperator, CMDCommandGroup, CMDArgumentHelp, CMDArgDefault, CMDInstanceUpdateOperation
 from utils import exceptions
 from utils.base64 import b64encode_str
 from utils.case import to_camel_case
@@ -605,3 +605,48 @@ class WorkspaceCfgEditor(CfgReader):
             new_operations.append(operation)
 
         return common_required_args, conditions, new_operations
+
+    def inherit_modification(self, ref_cfg: CfgReader):
+        command_rename_list = []
+        for cmd_names, command in self.iter_commands():
+            counterpart = None
+
+            # find counterpart
+            ops_methods = set()
+            for operation in command.operations:
+                if isinstance(operation, CMDInstanceUpdateOperation):
+                    ops_methods.add('update')
+                elif isinstance(operation, CMDHttpOperation):
+                    ops_methods.add(operation.http.request.method.lower())
+            for ref_cmd_names, ref_command in ref_cfg.iter_commands_by_operations(*ops_methods):
+                command_resources = {r.id for r in command.resources}
+                ref_command_resources = {r.id for r in ref_command.resources}
+                if not command_resources.issubset(ref_command_resources):
+                    # resources not match
+                    continue
+                if counterpart:
+                    raise exceptions.ResourceConflict(
+                        message=f"Failed to inherit modification for command: '{' '.join(cmd_names)}', multiple reference commands find: '{' '.join(counterpart[0])}' & '{' '.join(ref_cmd_names)}'"
+                    )
+                counterpart = (ref_cmd_names, ref_command)
+            if not counterpart:
+                continue
+
+            ref_cmd_names, ref_command = counterpart
+            command_rename_list.append((cmd_names, ref_cmd_names))
+            # inherit confirmation
+            if ref_command.confirmation:
+                command.confirmation = ref_command.confirmation
+
+            # inherit arguments modification
+            ref_args = []
+            for group in ref_command.arg_groups:
+                ref_args.extend(group.args)
+            command.generate_args(ref_args=ref_args)
+
+            # inherit outputs
+            command.generate_outputs(ref_outputs=ref_command.outputs)
+
+        # rename commands
+        for cmd_names, ref_cmd_names in command_rename_list:
+            self.rename_command(*cmd_names, new_cmd_names=ref_cmd_names)

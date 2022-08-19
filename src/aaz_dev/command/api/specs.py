@@ -71,3 +71,38 @@ def aaz_command_in_version(node_names, leaf_name, version_name):
         result['examples'] = version.examples.to_primitive()
 
     return jsonify(result)
+
+
+@bp.route("/Resources/<plane>/<base64:resource_id>", methods=("GET", ))
+def get_resource(plane, resource_id):
+    manager = AAZSpecsManager()
+    versions = manager.get_resource_versions(plane, resource_id)
+    if versions is None:
+        raise exceptions.ResourceNotFind("Resource not exist")
+    result = {
+        "id": resource_id,
+        "versions": versions
+    }
+    return jsonify(result)
+
+
+@bp.route("/Resources/<plane>/Filter", methods=("Post", ))
+def filter_resources(plane):
+    data = request.get_json()
+    if 'resources' not in data:
+        raise exceptions.InvalidAPIUsage("Invalid request body")
+    manager = AAZSpecsManager()
+
+    result = {
+        'resources': []
+    }
+    for resource_id in data['resources']:
+        versions = manager.get_resource_versions(plane, resource_id)
+        if versions is None:
+            continue
+        result['resources'].append({
+            "id": resource_id,
+            "versions": versions,
+        })
+
+    return jsonify(result)

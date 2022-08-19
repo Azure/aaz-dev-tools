@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { Typography, Box, AppBar, Toolbar, IconButton, Button, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText, FormControlLabel, Alert, Card, CardContent, AlertTitle } from '@mui/material';
+import { Typography, Box, AppBar, Toolbar, IconButton, Button, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText, FormControlLabel, Alert, Card, CardContent, AlertTitle, Paper, InputBase, Select, MenuItem, FormControl, InputLabel, FormHelperText } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import EditorPageLayout from '../../components/EditorPageLayout';
 import { styled } from '@mui/material/styles';
+// import SortIcon from '@mui/icons-material/Sort';
 
 
 interface WSEditorSwaggerPickerProps {
@@ -27,10 +28,12 @@ interface WSEditorSwaggerPickerState {
 
     versionResourceIdMap: VersionResourceIdMap,
     resourceMap: ResourceMap,
-    resourceOptions: string[],
+    resourceOptions: Resource[],
 
     existingResources: Set<string>,
     selectedResources: Set<string>,
+    selectedResourceInheritanceAAZVersionMap: ResourceInheritanceAAZVersionMap,
+    preferredAAZVersion: string | null,
 
     moduleOptionsCommonPrefix: string,
     resourceProviderOptionsCommonPrefix: string,
@@ -59,10 +62,20 @@ type ResourceVersion = {
 type Resource = {
     id: string
     versions: ResourceVersion[]
+    aazVersions: string[] | null
+}
+
+type AAZResource = {
+    id: string
+    versions: string[] | null
 }
 
 type VersionResourceIdMap = {
-    [version: string]: string[]
+    [version: string]: Resource[]
+}
+
+type ResourceInheritanceAAZVersionMap = {
+    [id: string]: string | null
 }
 
 type ResourceMap = {
@@ -77,7 +90,7 @@ const MiddlePadding2 = styled(Box)(({ theme }) => ({
     height: '8vh'
 }));
 
-const UpdateOptions = ["Generic(Get&Put) First", "Patch First"];
+const UpdateOptions = ["Generic(Get&Put) First", "Patch First", "No update command"];
 
 class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, WSEditorSwaggerPickerState> {
 
@@ -98,13 +111,14 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
             versionOptions: [],
             resourceProviderOptions: [],
             selectedResources: new Set(),
+            selectedResourceInheritanceAAZVersionMap: {},
+            preferredAAZVersion: null,
             resourceOptions: [],
             versionResourceIdMap: {},
             resourceMap: {},
             selectedModule: null,
             selectedResourceProvider: null,
             selectedVersion: null,
-
             updateOptions: UpdateOptions,
             updateOption: UpdateOptions[0],
         }
@@ -212,54 +226,69 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
             });
     }
 
-    loadResources = (resourceProviderUrl: string | null) => {
+    loadResources = async (resourceProviderUrl: string | null) => {
         if (resourceProviderUrl != null) {
             this.setState({
                 invalidText: undefined,
                 loading: true,
             })
-            axios.get(`${resourceProviderUrl}/Resources`)
-                .then(res => {
-                    // const resourceIdVersionMap: ResourceIdVersionMap = {}
-                    const versionResourceIdMap: VersionResourceIdMap = {}
-                    const versionOptions: string[] = []
-                    const resourceMap: ResourceMap = {}
-                    res.data.forEach((resource: Resource) => {
-                        // resource.versions.sort((a, b) =>  a.version.localeCompare(b.version));
-                        resourceMap[resource.id] = resource;
+            try {
+                let res = await axios.get(`${resourceProviderUrl}/Resources`);
+                // const resourceIdVersionMap: ResourceIdVersionMap = {}
+                const versionResourceIdMap: VersionResourceIdMap = {}
+                const versionOptions: string[] = []
+                // const aazVersionOptions: string[] = []
+                const resourceMap: ResourceMap = {}
+                const resourceIdList: string[] = []
+                res.data.forEach((resource: Resource) => {
+                    // resource.versions.sort((a, b) =>  a.version.localeCompare(b.version));
+                    resourceIdList.push(resource.id);
+                    resourceMap[resource.id] = resource;
+                    resourceMap[resource.id].aazVersions = null;
 
-                        const resourceVersions = resource.versions.map((v) => v.version)
-                        // resourceIdVersionMap[resource.id] = versions;
-                        resourceVersions.forEach((v) => {
-                            if (!(v in versionResourceIdMap)) {
-                                versionResourceIdMap[v] = [];
-                                versionOptions.push(v);
-                            }
-                            versionResourceIdMap[v].push(resource.id);
-                        })
+                    const resourceVersions = resource.versions.map((v) => v.version)
+                    // resourceIdVersionMap[resource.id] = versions;
+                    resourceVersions.forEach((v) => {
+                        if (!(v in versionResourceIdMap)) {
+                            versionResourceIdMap[v] = [];
+                            versionOptions.push(v);
+                        }
+                        versionResourceIdMap[v].push(resource);
                     })
-                    versionOptions.sort((a, b) => a.localeCompare(b)).reverse()
-                    let selectVersion = null;
-                    if (versionOptions.length > 0) {
-                        selectVersion = versionOptions[0];
-                    }
-                    this.setState({
-                        loading: false,
-                        versionResourceIdMap: versionResourceIdMap,
-                        resourceMap: resourceMap,
-                        versionOptions: versionOptions,
-                    })
-                    this.onVersionUpdate(selectVersion);
                 })
-                .catch((err) => {
-                    console.error(err.response);
-                    if (err.response?.data?.message) {
-                        const data = err.response!.data!;
-                        this.setState({
-                            invalidText: `ResponseError: ${data.message!}`,
-                        })
+                versionOptions.sort((a, b) => a.localeCompare(b)).reverse()
+                let selectVersion = null;
+                if (versionOptions.length > 0) {
+                    selectVersion = versionOptions[0];
+                }
+
+                const filterBody = {
+                    resources: resourceIdList
+                };
+
+                res = await axios.post(`/AAZ/Specs/Resources/${this.props.plane}/Filter`, filterBody);
+                res.data.resources.forEach((aazResource: AAZResource) => {
+                    if (aazResource.versions) {
+                        resourceMap[aazResource.id].aazVersions = aazResource.versions;
                     }
-                });
+
+                })
+                this.setState({
+                    loading: false,
+                    versionResourceIdMap: versionResourceIdMap,
+                    resourceMap: resourceMap,
+                    versionOptions: versionOptions,
+                })
+                this.onVersionUpdate(selectVersion);
+            } catch (err: any) {
+                console.error(err.response);
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    this.setState({
+                        invalidText: `ResponseError: ${data.message!}`,
+                    })
+                }
+            }
         } else {
             this.setState({
                 versionOptions: [],
@@ -269,14 +298,15 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     }
 
     addSwagger = () => {
-        const { selectedResources, selectedVersion, selectedModule, moduleOptionsCommonPrefix, updateOption, resourceMap } = this.state;
-        const resources: { id: string, options?: { update_by: string } }[] = [];
+        const { selectedResources, selectedVersion, selectedModule, moduleOptionsCommonPrefix, updateOption, resourceMap, selectedResourceInheritanceAAZVersionMap } = this.state;
+        const resources: { id: string, options: { update_by?: string, aaz_version: string | null } }[] = [];
         selectedResources.forEach((resourceId) => {
             const res: any = {
                 id: resourceId,
-                options: undefined,
+                options: {
+                    aaz_version: selectedResourceInheritanceAAZVersionMap[resourceId],
+                },
             }
-
             if (updateOption === UpdateOptions[1]) {
                 // patch first
                 const resource = resourceMap[resourceId];
@@ -284,13 +314,14 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 if (operations) {
                     for (const opName in operations) {
                         if (operations[opName].toLowerCase() === "patch") {
-                            res.options = {
-                                update_by: "PatchOnly",
-                            }
+                            res.options.update_by = "PatchOnly"
                             break
                         }
                     }
                 }
+            } else if (updateOption === UpdateOptions[2]) {
+                // No update command generation
+                res.options.update_by = "None"
             }
             resources.push(res)
         });
@@ -345,15 +376,22 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     onVersionUpdate = (version: string | null) => {
         this.setState(preState => {
             let selectedResources = preState.selectedResources;
-            let resourceOptions: string[] = [];
+            let resourceOptions: Resource[] = [];
+            let selectedResourceInheritanceAAZVersionMap = preState.selectedResourceInheritanceAAZVersionMap;
             if (version != null) {
                 selectedResources = new Set();
+                selectedResourceInheritanceAAZVersionMap = {};
                 resourceOptions = [...preState.versionResourceIdMap[version]]
-                    .sort((a, b) => a.localeCompare(b))
-                    .filter(value => !preState.existingResources.has(value));
-                resourceOptions.forEach((resourceId) => {
-                    if (preState.selectedResources.has(resourceId)) {
-                        selectedResources.add(resourceId);
+                    .sort((a, b) => a.id.localeCompare(b.id))
+                    .filter(r => !preState.existingResources.has(r.id));
+                resourceOptions.forEach((r) => {
+                    if (preState.selectedResources.has(r.id)) {
+                        selectedResources.add(r.id);
+                        if (r.aazVersions && r.aazVersions.findIndex(v => v === version) >= 0) {
+                            selectedResourceInheritanceAAZVersionMap[r.id] = version;
+                        } else {
+                            selectedResourceInheritanceAAZVersionMap[r.id] = preState.selectedResourceInheritanceAAZVersionMap[r.id];
+                        }
                     }
                 })
             }
@@ -361,7 +399,9 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 ...preState,
                 resourceOptions: resourceOptions,
                 selectedVersion: version,
+                preferredAAZVersion: version,
                 selectedResources: selectedResources,
+                selectedResourceInheritanceAAZVersionMap: selectedResourceInheritanceAAZVersionMap,
             }
         })
     }
@@ -377,15 +417,28 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         return () => {
             this.setState(preState => {
                 const selectedResources = new Set(preState.selectedResources);
+                let selectedResourceInheritanceAAZVersionMap = { ...preState.selectedResourceInheritanceAAZVersionMap };
                 if (selectedResources.has(resourceId)) {
                     selectedResources.delete(resourceId);
+                    delete selectedResourceInheritanceAAZVersionMap[resourceId];
                 } else if (!preState.existingResources.has(resourceId)) {
                     selectedResources.add(resourceId);
+                    const aazVersions = preState.resourceMap[resourceId].aazVersions;
+                    let inheritanceAAZVersion = null;
+                    if (aazVersions) {
+                        if (aazVersions.findIndex(v => v === preState.preferredAAZVersion) >= 0) {
+                            inheritanceAAZVersion = preState.preferredAAZVersion;
+                        } else {
+                            inheritanceAAZVersion = aazVersions[0];
+                        }
+                    }
+                    selectedResourceInheritanceAAZVersionMap[resourceId] = inheritanceAAZVersion;
                 }
 
                 return {
                     ...preState,
                     selectedResources: selectedResources,
+                    selectedResourceInheritanceAAZVersionMap: selectedResourceInheritanceAAZVersionMap,
                 }
             })
         }
@@ -394,22 +447,52 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     onSelectedAllClick = () => {
         this.setState(preState => {
             const selectedResources = new Set(preState.selectedResources);
-            if (selectedResources.size == preState.resourceOptions.length) {
+            let selectedResourceInheritanceAAZVersionMap = { ...preState.selectedResourceInheritanceAAZVersionMap };
+            if (selectedResources.size === preState.resourceOptions.length) {
                 selectedResources.clear()
+                selectedResourceInheritanceAAZVersionMap = {}
             } else {
-                preState.resourceOptions.forEach((value) => {
-                    selectedResources.add(value)
+                preState.resourceOptions.forEach((r) => {
+                    selectedResources.add(r.id)
+                    const aazVersions = preState.resourceMap[r.id].aazVersions;
+                    let inheritanceAAZVersion = null;
+                    if (aazVersions) {
+                        if (aazVersions.findIndex(v => v === preState.preferredAAZVersion) >= 0) {
+                            inheritanceAAZVersion = preState.preferredAAZVersion;
+                        } else {
+                            inheritanceAAZVersion = aazVersions[0];
+                        }
+                    }
+                    selectedResourceInheritanceAAZVersionMap[r.id] = inheritanceAAZVersion;
                 })
             }
             return {
                 ...preState,
                 selectedResources: selectedResources,
+                selectedResourceInheritanceAAZVersionMap: selectedResourceInheritanceAAZVersionMap,
+            }
+        })
+    }
+
+    onResourceInheritanceAAZVersionUpdate = (resourceId: string, aazVersion: string | null) => {
+        this.setState(preState => {
+            let selectedResourceInheritanceAAZVersionMap = { ...preState.selectedResourceInheritanceAAZVersionMap };
+            selectedResourceInheritanceAAZVersionMap[resourceId] = aazVersion;
+            let preferredAAZVersion = preState.preferredAAZVersion;
+            if (aazVersion !== null) {
+                preferredAAZVersion = aazVersion;
+            }
+
+            return {
+                ...preState,
+                selectedResourceInheritanceAAZVersionMap: selectedResourceInheritanceAAZVersionMap,
+                preferredAAZVersion: preferredAAZVersion,
             }
         })
     }
 
     render() {
-        const { selectedResources, existingResources, resourceOptions, selectedVersion, selectedModule } = this.state;
+        const { selectedResources, existingResources, resourceOptions, resourceMap, selectedVersion, selectedModule, selectedResourceInheritanceAAZVersionMap } = this.state;
 
         return (
             <React.Fragment>
@@ -482,63 +565,116 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                         </Button>
                     </Box>
                     <List
-                        dense
                         sx={{ flexGrow: 1 }}
                         subheader={<ListSubheader>
                             <Box sx={{
                                 mt: 1,
+                                mb: 1,
                                 flexDirection: 'column',
                                 display: 'flex',
                                 alignItems: 'stretch',
                                 justifyContent: 'flex-start',
                             }} color='inherit'>
                                 <Typography component='h6'>Resource Url</Typography>
-                                {resourceOptions.length > 0 && <ListItemButton sx={{ paddingLeft: 0 }} dense onClick={this.onSelectedAllClick}>
-                                    <ListItemIcon>
-                                        <Checkbox
-                                            edge="start"
-                                            checked={selectedResources.size === resourceOptions.length}
-                                            indeterminate={selectedResources.size > 0 && selectedResources.size < resourceOptions.length}
-                                            tabIndex={-1}
-                                            disableRipple
-                                            inputProps={{ 'aria-labelledby': 'SelectAll' }}
+
+                                <Paper sx={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    mt: 1,
+                                }} variant="outlined" square>
+
+                                    <ListItemButton sx={{ maxWidth: 150 }} dense onClick={this.onSelectedAllClick} disabled={resourceOptions.length === 0}>
+                                        <ListItemIcon>
+                                            <Checkbox
+                                                edge="start"
+                                                checked={selectedResources.size > 0 && selectedResources.size === resourceOptions.length}
+                                                indeterminate={selectedResources.size > 0 && selectedResources.size < resourceOptions.length}
+                                                tabIndex={-1}
+                                                disableRipple
+                                                inputProps={{ 'aria-labelledby': 'SelectAll' }}
+                                            />
+                                        </ListItemIcon>
+                                        <ListItemText id="SelectAll"
+                                            primary={`All (${resourceOptions.length})`}
+                                            primaryTypographyProps={{
+                                                variant: "h6",
+                                            }}
                                         />
-                                    </ListItemIcon>
-                                    <ListItemText id="SelectAll"
-                                        primary={`All (${resourceOptions.length})`}
-                                        primaryTypographyProps={{
-                                            variant: "h6",
-                                        }}
-                                    />
-                                </ListItemButton>}
+                                    </ListItemButton>
+                                    {/* <SortIcon sx={{ ml: 2, mr: 2 }} />
+                                    <InputBase
+                                        sx={{ flex: 1 }}
+                                        placeholder="Filter by keywords."
+                                        inputProps={{ 'aria-label': 'Filter by keywords.' }}
+                                    /> */}
+                                </Paper>
                             </Box>
                         </ListSubheader>}
                     >
-                        {resourceOptions.map((option) => {
-                            const labelId = `resource-${option}`;
-                            return <ListItem
-                                key={option}
-                                disablePadding
-                            >
-                                <ListItemButton dense onClick={this.onResourceItemClick(option)}>
-                                    <ListItemIcon>
-                                        <Checkbox
-                                            edge="start"
-                                            checked={selectedResources.has(option) || existingResources.has(option)}
-                                            tabIndex={-1}
-                                            disableRipple
-                                            inputProps={{ 'aria-labelledby': labelId }}
+
+                        {resourceOptions.length > 0 && <Paper sx={{ ml: 2, mr: 2 }} variant="outlined" square>
+                            {resourceOptions.filter((option) => {
+                                return option;
+                            }).map((option) => {
+                                const labelId = `resource-${option.id}`;
+                                const selected = selectedResources.has(option.id);
+                                const inheritanceOptions = resourceMap[option.id]?.aazVersions;
+                                let selectedInheritance = null;
+                                if (selectedResourceInheritanceAAZVersionMap !== null) {
+                                    selectedInheritance = selectedResourceInheritanceAAZVersionMap[option.id];
+                                }
+                                return <ListItem
+                                    key={option.id}
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                    }}
+                                    disablePadding
+                                >
+                                    <ListItemButton dense onClick={this.onResourceItemClick(option.id)}>
+                                        <ListItemIcon>
+                                            <Checkbox
+                                                edge="start"
+                                                checked={selected || existingResources.has(option.id)}
+                                                tabIndex={-1}
+                                                disableRipple
+                                                inputProps={{ 'aria-labelledby': labelId }}
+                                            />
+                                        </ListItemIcon>
+                                        <ListItemText id={labelId}
+                                            primary={option.id}
+                                            primaryTypographyProps={{
+                                                variant: "h6",
+                                            }}
                                         />
-                                    </ListItemIcon>
-                                    <ListItemText id={labelId}
-                                        primary={option}
-                                        primaryTypographyProps={{
-                                            variant: "h6",
-                                        }}
-                                    />
-                                </ListItemButton>
-                            </ListItem>
-                        })}
+                                    </ListItemButton>
+                                    {selected && <FormControl sx={{ m: 1, minWidth: 120 }}>
+                                        <InputLabel id={`${labelId}-inheritance-select-label`}>Inheritance</InputLabel>
+                                        <Select
+                                            id={`${labelId}-inheritance-select`}
+                                            value={selectedInheritance === null ? "_NULL_" : selectedInheritance}
+                                            onChange={(event) => {
+                                                console.log(event.target)
+                                                this.onResourceInheritanceAAZVersionUpdate(option.id, event.target.value === "_NULL_" ? null : event.target.value);
+                                            }}
+                                            size="small"
+                                        >
+                                            <MenuItem value="_NULL_" key={`${labelId}-inheritance-select-null`}>
+                                                None
+                                            </MenuItem>
+                                            {inheritanceOptions && inheritanceOptions.map((inheritanceOption) => {
+                                                return <MenuItem value={inheritanceOption} key={`${labelId}-inheritance-select-${inheritanceOption}`}>
+                                                    {inheritanceOption}
+                                                </MenuItem>
+                                            })}
+                                        </Select>
+                                        <FormHelperText>Inherit modification from exported command models in aaz</FormHelperText>
+                                    </FormControl>}
+                                </ListItem>
+                            })}
+                        </Paper>}
                     </List>
                 </EditorPageLayout>
                 <Backdrop
