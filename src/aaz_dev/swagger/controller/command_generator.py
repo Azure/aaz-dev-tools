@@ -128,6 +128,7 @@ class CommandGenerator:
             else:
                 command_group.name = group_name
             command.name = parts[-1]  # remove the command group name parts
+            self.optimize_command_description(command)
 
         return command_group
 
@@ -432,3 +433,25 @@ class CommandGenerator:
     def _merge_update_commands(patch_command, generic_command):
         # TODO: merge patch command and generic command into one
         return generic_command
+
+    @staticmethod
+    def optimize_command_description(command):
+        if command.description:
+            keywords = command.description.split(' ')
+            if command.name.lower() == "show":
+                keywords[0] = "Get"
+            elif command.name.lower() == "list":
+                keywords[0] = "List"
+            elif command.name.lower() == "delete":
+                keywords[0] = "Delete"
+            elif command.name.lower() == "create":
+                if len(keywords) > 1 and keywords[1].lower() == "or":
+                    keywords = ["Create", *keywords[3:]]
+                else:
+                    keywords[0] = "Create"
+            elif command.name.lower() == "update":
+                if len(keywords) > 1 and keywords[1].lower() == "or":
+                    keywords = ["Update", *keywords[3:]]
+                else:
+                    keywords[0] = "Update"
+            command.description = " ".join(keywords)
