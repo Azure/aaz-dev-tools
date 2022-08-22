@@ -217,7 +217,7 @@ class WorkspaceManager:
                     return True
         return False
 
-    def add_cfg(self, cfg_editor):
+    def add_cfg(self, cfg_editor, aaz_ref=None):
         cfg_editor.deleted = False
         for resource in cfg_editor.resources:
             self._cfg_editors[resource.id] = cfg_editor
@@ -234,30 +234,30 @@ class WorkspaceManager:
             reusable_leaf = self._reusable_leaves.pop(tuple(cmd_names), None)
             if reusable_leaf:
                 new_cmd = reusable_leaf
-
+            elif aaz_ref and (ref_v_name := aaz_ref.get(' '.join(cmd_names), None))and (aaz_leaf := self.aaz_specs.find_command(*cmd_names)):
+                # reference from aaz specs
+                ref_v = None
+                for v in aaz_leaf.versions:
+                    if v.name == ref_v_name:
+                        ref_v = v
+                        break
+                new_cmd = CMDCommandTreeLeaf({
+                    "names": [*cmd_names],
+                    "stage": ref_v.stage if ref_v else node.stage,
+                    "help": aaz_leaf.help.to_primitive(),
+                })
+                if ref_v and ref_v.examples:
+                    new_cmd.examples = []
+                    for example in ref_v.examples:
+                        new_cmd.examples.append(CMDCommandExample(example.to_primitive()))
             else:
-                # reference help message from aaz specs
-                aaz_leaf = self.aaz_specs.find_command(*cmd_names)
-                if aaz_leaf:
-                    new_cmd = CMDCommandTreeLeaf({
-                        "names": [*cmd_names],
-                        "stage": node.stage,
-                        "help": aaz_leaf.help.to_primitive(),
-                    })
-                    for v in (aaz_leaf.versions or []):
-                        if v.name == command.version:
-                            new_cmd.stage = v.stage
-                            if v.examples:
-                                new_cmd.examples = [CMDCommandExample(example.to_primitive()) for example in v.examples]
-                            break
-                else:
-                    new_cmd = CMDCommandTreeLeaf({
-                        "names": [*cmd_names],
-                        "stage": node.stage,
-                        "help": {
-                            "short": command.description or ""
-                        },
-                    })
+                new_cmd = CMDCommandTreeLeaf({
+                    "names": [*cmd_names],
+                    "stage": node.stage,
+                    "help": {
+                        "short": command.description or ""
+                    },
+                })
             new_cmd.version = command.version
             new_cmd.resources = [CMDResource(r.to_primitive()) for r in command.resources]
             node.commands[name] = new_cmd
@@ -444,6 +444,7 @@ class WorkspaceManager:
 
         # generate cfg editors by resource
         cfg_editors = []
+        aaz_ref = {}
         for resource, options in zip(swagger_resources, resource_options):
             try:
                 command_group = self.swagger_command_generator.create_draft_command_group(resource, **options)
@@ -466,6 +467,8 @@ class WorkspaceManager:
                 except ValueError as err:
                     raise exceptions.InvalidAPIUsage(message=str(err)) from err
                 cfg_editor.inherit_modification(aaz_cfg)
+                for cmd_names, _ in cfg_editor.iter_commands():
+                    aaz_ref[' '.join(cmd_names)] = aaz_version
 
             cfg_editors.append(cfg_editor)
 
@@ -481,7 +484,7 @@ class WorkspaceManager:
                     merged_cfg_editor = main_cfg_editor.merge(cfg_editor)
                     if merged_cfg_editor:
                         self.remove_cfg(main_cfg_editor)
-                        self.add_cfg(merged_cfg_editor)
+                        self.add_cfg(merged_cfg_editor, aaz_ref=aaz_ref)
                         merged = True
                         break
                 new_name = self.generate_unique_name(*cmd_names[:-1], name=cmd_names[-1])
@@ -489,7 +492,7 @@ class WorkspaceManager:
             for cmd_names, new_cmd_names in rename_list:
                 cfg_editor.rename_command(*cmd_names, new_cmd_names=new_cmd_names)
             if not merged:
-                self.add_cfg(cfg_editor)
+                self.add_cfg(cfg_editor, aaz_ref=aaz_ref)
 
     def add_new_command_by_aaz(self, *cmd_names, version):
         # TODO: add support to load from aaz
