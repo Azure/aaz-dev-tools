@@ -452,6 +452,21 @@ def editor_workspace_resources_merge(name):
     return "", 200
 
 
+@bp.route("/Workspaces/<name>/Resources/ReloadSwagger", methods=("POST",))
+def editor_workspace_resource_reload_swagger(name, node_names):
+    # update resource by reloading swagger
+    manager = WorkspaceManager(name)
+    manager.load()
+    data = request.get_json()
+    try:
+        resources = data['resources']
+    except KeyError:
+        raise exceptions.InvalidAPIUsage("Invalid request")
+    manager.reload_swagger_resources(resources=resources)
+    manager.save()
+    return "", 200
+
+
 @bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>", methods=("DELETE",))
 def editor_workspace_resource(name, resource_id, version):
     manager = WorkspaceManager(name)
@@ -469,15 +484,6 @@ def list_workspace_resource_related_commands(name, resource_id, version):
     commands = manager.list_commands_by_resource(resource_id, version)
     result = [command.to_primitive() for command in commands]
     return jsonify(result)
-
-
-@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Resources/ReloadSwagger", methods=("POST",))
-def editor_workspace_resource_reload_swagger(name, node_names):
-    # update resource by reloading swagger
-    data = request.get_json()
-    # data = (resource_id, swagger_version)
-    # TODO:
-    raise NotImplementedError()
 
 
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Try", methods=("POST",))

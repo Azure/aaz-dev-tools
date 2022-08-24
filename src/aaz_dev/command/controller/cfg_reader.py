@@ -2,6 +2,7 @@ import json
 
 from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDInstanceUpdateOperation, \
     CMDCommandGroup, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDObjectArgBase, CMDArrayArgBase
+from swagger.utils.tools import swagger_resource_path_to_resource_id
 
 
 class CfgReader:
@@ -13,6 +14,19 @@ class CfgReader:
     @property
     def resources(self):
         return self.cfg.resources
+
+    def get_used_http_methods(self, resource_id):
+        methods = set()
+        for _, command in self.iter_commands():
+            for operation in command.operations:
+                if not isinstance(operation, CMDHttpOperation):
+                    continue
+                http = operation.http
+                if swagger_resource_path_to_resource_id(http.path) != resource_id:
+                    continue
+                methods.add(http.request.method.lower())
+                # if isinstance(op, CMDHttpOperation)
+        return tuple(methods) or None
 
     def iter_cfg_files_data(self):
         main_resource = self.cfg.resources[0]
