@@ -3,6 +3,14 @@
 Release History
 ===============
 
+0.10.0
+++++++
+* Fix command schema duplicated diff calculation issue (#112)
+* Support workspace modification inheritance (#113)
+* Disable flatten for argument when the schema has cls definition (#114)
+* Optimize command description when generated from swagger (#114)
+* Support examples inherit (#114)
+
 0.9.6
 +++++
 * Support modify argument default value and reverse bool argument expression (#106)
