@@ -50,7 +50,7 @@ class MgmtPlaneModule(SwaggerModule):
             path = os.path.join(self.folder_path, name)
             if os.path.isdir(path):
                 name_parts = name.split('.')
-                if name_parts[0].lower() == 'microsoft':
+                if len(name_parts) >= 2:
                     readme_path = _search_readme_md_path(path, search_parent=True)
                     rp.append(ResourceProvider(name, path, readme_path, swagger_module=self))
                 elif name.lower() != 'common':
@@ -78,7 +78,7 @@ class DataPlaneModule(SwaggerModule):
                     rp = [ResourceProvider(self.name, self.folder_path, readme_path, swagger_module=self)]
                     break
                 name_parts = name.split('.')
-                if name_parts[0].lower() in ('microsoft', 'azure'):
+                if len(name_parts) >= 2:
                     readme_path = _search_readme_md_path(path, search_parent=True)
                     rp.append(ResourceProvider(name, path, readme_path, swagger_module=self))
                 elif name.lower() != 'common':
