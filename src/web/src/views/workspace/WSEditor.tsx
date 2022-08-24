@@ -235,8 +235,6 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         }
     }
 
-
-
     showSwaggerResourcePicker = () => {
         this.setState({ showSwaggerResourcePicker: true })
     }
@@ -301,6 +299,10 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         });
     }
 
+    handleReload = () => {
+
+    }
+
     render() {
         const { showSwaggerResourcePicker, showExportDialog, plane, name, commandTree, selected, workspaceUrl, expanded } = this.state;
         const expandedIds: string[] = []
@@ -328,6 +330,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                                 onSelected={this.handleCommandTreeSelect}
                                 onToggle={this.handleCommandTreeToggle}
                                 onAdd={this.showSwaggerResourcePicker}
+                                onReload={this.handleReload}
                                 selected={selected!.id}
                                 expanded={expandedIds}
                             />

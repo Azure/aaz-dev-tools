@@ -55,7 +55,6 @@ class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
 
                         <Box sx={{ flexGrow: 1 }} />
                         <Box sx={{ flexShrink: 0 }} >
-                       
                             <Tooltip title='Export Command Models'>
                                 <Button
                                     variant="outlined"
@@ -65,7 +64,6 @@ class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
                                     Export
                                 </Button>
                             </Tooltip>
-
                         </Box>
                     </Toolbar>
                 </AppBar>
