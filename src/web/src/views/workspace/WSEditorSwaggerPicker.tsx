@@ -584,7 +584,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                                     mt: 1,
                                 }} variant="outlined" square>
 
-                                    <ListItemButton sx={{ maxWidth: 150 }} dense onClick={this.onSelectedAllClick} disabled={resourceOptions.length === 0}>
+                                    <ListItemButton sx={{ maxWidth: 180 }} dense onClick={this.onSelectedAllClick} disabled={resourceOptions.length === 0}>
                                         <ListItemIcon>
                                             <Checkbox
                                                 edge="start"

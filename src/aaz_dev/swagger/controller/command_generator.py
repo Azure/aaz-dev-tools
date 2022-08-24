@@ -33,7 +33,10 @@ class CommandGenerator:
             self.loader.load_file(resource.file_path)
         self.loader.link_swaggers()
 
-    def create_draft_command_group(self, resource, **kwargs):
+    def create_draft_command_group(self, resource,
+                                   update_by=None,
+                                   methods=('get', 'delete', 'put', 'post', 'head', 'patch'),
+                                   **kwargs):
         swagger = self.loader.get_loaded(resource.file_path)
         assert swagger is not None
         path_item = swagger.paths.get(resource.path, None)
@@ -44,28 +47,28 @@ class CommandGenerator:
         command_group.commands = []
 
         assert isinstance(path_item, PathItem)
-        if path_item.get is not None:
+        if path_item.get is not None and 'get' in methods:
             cmd_builder = CMDBuilder(path=resource.path, method='get', mutability=MutabilityEnum.Read)
             show_or_list_command = self.generate_command(path_item, resource, cmd_builder)
             command_group.commands.append(show_or_list_command)
 
-        if path_item.delete is not None:
+        if path_item.delete is not None and 'delete' in methods:
             cmd_builder = CMDBuilder(path=resource.path, method='delete', mutability=MutabilityEnum.Create)
             delete_command = self.generate_command(path_item, resource, cmd_builder)
             delete_command.confirmation = DEFAULT_CONFIRMATION_PROMPT   # add confirmation for delete command by default
             command_group.commands.append(delete_command)
 
-        if path_item.put is not None:
+        if path_item.put is not None and 'put' in methods:
             cmd_builder = CMDBuilder(path=resource.path, method='put', mutability=MutabilityEnum.Create)
             create_command = self.generate_command(path_item, resource, cmd_builder)
             command_group.commands.append(create_command)
 
-        if path_item.post is not None:
+        if path_item.post is not None and 'post' in methods:
             cmd_builder = CMDBuilder(path=resource.path, method='post', mutability=MutabilityEnum.Create)
             action_command = self.generate_command(path_item, resource, cmd_builder)
             command_group.commands.append(action_command)
 
-        if path_item.head is not None:
+        if path_item.head is not None and 'head' in methods:
             cmd_builder = CMDBuilder(path=resource.path, method='head', mutability=MutabilityEnum.Read)
             head_command = self.generate_command(path_item, resource, cmd_builder)
             command_group.commands.append(head_command)
@@ -75,10 +78,10 @@ class CommandGenerator:
         if update_by is None:
             update_by_patch_command = None
             update_by_generic_command = None
-            if path_item.patch is not None:
+            if path_item.patch is not None and 'patch' in methods:
                 cmd_builder = CMDBuilder(path=resource.path, method='patch', mutability=MutabilityEnum.Update)
                 update_by_patch_command = self.generate_command(path_item, resource, cmd_builder)
-            if path_item.get is not None and path_item.put is not None:
+            if path_item.get is not None and path_item.put is not None and 'get' in methods and 'put' in methods:
                 cmd_builder = CMDBuilder(path=resource.path)
                 update_by_generic_command = self.generate_generic_update_command(path_item, resource, cmd_builder)
             # generic update command first, patch update command after that
@@ -90,6 +93,8 @@ class CommandGenerator:
             if update_by == 'GenericOnly':
                 if path_item.get is None or path_item.put is None:
                     raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: resource needs to have 'get' and 'put' operations: '{resource}'")
+                if 'get' not in methods or 'put' not in methods:
+                    raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: '{resource}': 'get' or 'put' not in methods: '{methods}'")
                 cmd_builder = CMDBuilder(path=resource.path)
                 generic_update_command = self.generate_generic_update_command(path_item, resource, cmd_builder)
                 if generic_update_command is None:
@@ -100,6 +105,8 @@ class CommandGenerator:
             elif update_by == 'PatchOnly':
                 if path_item.patch is None:
                     raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: resource needs to have 'patch' operation: '{resource}'")
+                if 'patch' not in methods:
+                    raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: '{resource}': 'patch' not in methods: '{methods}'")
                 cmd_builder = CMDBuilder(path=resource.path, method='patch', mutability=MutabilityEnum.Update)
                 patch_update_command = self.generate_command(path_item, resource, cmd_builder)
                 command_group.commands.append(patch_update_command)
@@ -107,6 +114,8 @@ class CommandGenerator:
             #     # TODO: add support for generic and patch merge
             #     if path_item.get is None or path_item.put is None or path_item.patch is None:
             #         raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: resource needs to have 'get' and 'put' and 'patch' operation: '{resource}'")
+            #     if 'get' not in methods or 'put' not in methods or 'patch' not in methods:
+            #         raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: '{resource}': 'get' or 'put' or 'patch' not in methods: '{methods}'")
             #     cmd_builder = CMDBuilder(path=resource.path)
             #     generic_update_command = self.generate_generic_update_command(path_item, resource, cmd_builder)
             #     if generic_update_command is None:
@@ -295,7 +304,8 @@ class CommandGenerator:
 
         # add resource provider name as command group name
         for rp_part in rp_name.split('.'):
-            if rp_part.lower() == "microsoft":
+            if rp_part.lower() in ("microsoft", "azure"):
+                # ignore microsoft and azure keywards
                 continue
             names.append(camel_case_to_snake_case(rp_part, '-'))
 

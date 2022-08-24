@@ -278,7 +278,8 @@ class WorkspaceManager:
     def load_cfg_editor_by_resource(self, resource_id, version, reload=False):
         if not reload and resource_id in self._cfg_editors:
             # load from modified dict
-            return self._cfg_editors[resource_id]
+            cfg_editor = self._cfg_editors[resource_id]
+            return None if cfg_editor.deleted else cfg_editor
         try:
             cfg_editor = WorkspaceCfgEditor.load_resource(self.folder, resource_id, version)
             for resource in cfg_editor.resources:
@@ -472,6 +473,10 @@ class WorkspaceManager:
 
             cfg_editors.append(cfg_editor)
 
+        # add cfg_editors
+        self._add_cfg_editors(cfg_editors, aaz_ref=aaz_ref)
+
+    def _add_cfg_editors(self, cfg_editors, aaz_ref=None):
         for cfg_editor in cfg_editors:
             merged = False
             rename_list = []
@@ -493,6 +498,71 @@ class WorkspaceManager:
                 cfg_editor.rename_command(*cmd_names, new_cmd_names=new_cmd_names)
             if not merged:
                 self.add_cfg(cfg_editor, aaz_ref=aaz_ref)
+
+    def reload_swagger_resources(self, resources):
+        reload_resource_map = {r['id']:{"version": r['version']} for r in resources}
+        for leaf in self.iter_command_tree_leaves():
+            ignore_resources = set()
+            reload_versions = set()
+            for r in leaf.resources:
+                if r.id not in reload_resource_map:
+                    ignore_resources.add(r.id)
+                    continue
+                reload_resource = reload_resource_map[r.id]
+                version = reload_resource['version']
+                reload_versions.add(version)
+                if 'swagger_resource' not in reload_resource:
+                    reload_resource['swagger_resource'] = self.swagger_specs.get_resource_in_version(
+                        self.ws.plane, r.mod_names, r.id, version)
+                if 'cfg_editor' not in reload_resource:
+                    reload_resource['cfg_editor'] = self.load_cfg_editor_by_command(leaf)
+            if ignore_resources and len(ignore_resources) != len(leaf.resources):
+                # not support partial resources reload
+                raise exceptions.InvalidAPIUsage(f"Not support partial resources reload in one command: please select the following resources as well: {list(ignore_resources)}")
+            if len(reload_versions) > 1:
+                # not support multiple resource version for the same command
+                raise exceptions.InvalidAPIUsage(f"Please select the same resource version for command: '{' '.join(leaf.names)}'")
+
+        swagger_resources = []
+        for resource_id, reload_resource in reload_resource_map.items():
+            swagger_resoruce = reload_resource.get('swagger_resource', None)
+            if not swagger_resoruce:
+                raise exceptions.ResourceNotFind(f"Command not exist for '{resource_id}'")
+            swagger_resources.append(swagger_resoruce)
+
+        self.swagger_command_generator.load_resources(swagger_resources)
+
+        new_cfg_editors = []
+        for resource_id, reload_resource in reload_resource_map.items():
+            options = {}
+            cfg_editor = reload_resource['cfg_editor']
+            swagger_resource = reload_resource['swagger_resource']
+            methods = cfg_editor.get_used_http_methods(resource_id)
+            if methods:
+                options['methods'] = methods
+            try:
+                command_group = self.swagger_command_generator.create_draft_command_group(
+                    swagger_resource, **options)
+            except InvalidSwaggerValueError as err:
+                raise exceptions.InvalidAPIUsage(
+                    message=str(err)
+                ) from err
+            assert not command_group.command_groups, "The logic to support sub command groups is not supported"
+            new_cfg_editor = WorkspaceCfgEditor.new_cfg(
+                plane=self.ws.plane,
+                resources=[swagger_resource.to_cmd()],
+                command_groups=[command_group]
+            )
+            new_cfg_editor.inherit_modification(cfg_editor)
+            new_cfg_editors.append(new_cfg_editor)
+
+        # remove old cfg editor
+        for resource_id, reload_resource in reload_resource_map.items():
+            cfg_editor = reload_resource['cfg_editor']
+            self.remove_cfg(cfg_editor)
+
+        # add cfg_editors
+        self._add_cfg_editors(new_cfg_editors)
 
     def add_new_command_by_aaz(self, *cmd_names, version):
         # TODO: add support to load from aaz
