@@ -516,43 +516,45 @@ class WorkspaceManager:
                         self.ws.plane, r.mod_names, r.id, version)
                 if 'cfg_editor' not in reload_resource:
                     reload_resource['cfg_editor'] = self.load_cfg_editor_by_command(leaf)
-            if len(ignore_resources) != len(leaf.resources):
+            if ignore_resources and len(ignore_resources) != len(leaf.resources):
                 # not support partial resources reload
-                raise exceptions.InvalidAPIUsage(f"Not support partial resources reload in one command: please select the following resources as well: {ignore_resources}")
+                raise exceptions.InvalidAPIUsage(f"Not support partial resources reload in one command: please select the following resources as well: {list(ignore_resources)}")
             if len(reload_versions) > 1:
                 # not support multiple resource version for the same command
                 raise exceptions.InvalidAPIUsage(f"Please select the same resource version for command: '{' '.join(leaf.names)}'")
 
         swagger_resources = []
         for resource_id, reload_resource in reload_resource_map.items():
-            swagger_resoruce = reload_resource.get('swagger_resoruce', None)
+            swagger_resoruce = reload_resource.get('swagger_resource', None)
             if not swagger_resoruce:
                 raise exceptions.ResourceNotFind(f"Command not exist for '{resource_id}'")
             swagger_resources.append(swagger_resoruce)
 
         self.swagger_command_generator.load_resources(swagger_resources)
 
-        cfg_editors = []
+        new_cfg_editors = []
         for resource_id, reload_resource in reload_resource_map.items():
             options = {}
-            methods = reload_resource['cfg_editor'].get_used_http_methods(resource_id)
+            cfg_editor = reload_resource['cfg_editor']
+            swagger_resource = reload_resource['swagger_resource']
+            methods = cfg_editor.get_used_http_methods(resource_id)
             if methods:
                 options['methods'] = methods
             try:
                 command_group = self.swagger_command_generator.create_draft_command_group(
-                    reload_resource['swagger_resource'], **options)
+                    swagger_resource, **options)
             except InvalidSwaggerValueError as err:
                 raise exceptions.InvalidAPIUsage(
                     message=str(err)
                 ) from err
             assert not command_group.command_groups, "The logic to support sub command groups is not supported"
-            cfg_editors = WorkspaceCfgEditor.new_cfg(
+            new_cfg_editor = WorkspaceCfgEditor.new_cfg(
                 plane=self.ws.plane,
-                resources=[resource.to_cmd()],
+                resources=[swagger_resource.to_cmd()],
                 command_groups=[command_group]
             )
-            cfg_editor.inherit_modification(reload_resource['cfg_editor'])
-            cfg_editors.append(cfg_editor)
+            new_cfg_editor.inherit_modification(cfg_editor)
+            new_cfg_editors.append(new_cfg_editor)
 
         # remove old cfg editor
         for resource_id, reload_resource in reload_resource_map.items():
@@ -560,7 +562,7 @@ class WorkspaceManager:
             self.remove_cfg(cfg_editor)
 
         # add cfg_editors
-        self._add_cfg_editors(cfg_editors)
+        self._add_cfg_editors(new_cfg_editors)
 
     def add_new_command_by_aaz(self, *cmd_names, version):
         # TODO: add support to load from aaz

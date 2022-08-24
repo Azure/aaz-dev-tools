@@ -56,7 +56,7 @@ class SwaggerSpecsManager:
             raise exceptions.InvalidAPIUsage(f"invalid plane name '{plane}'")
 
         if not module:
-            raise exceptions.ResourceNotFind(f"Module not find '{mod_names}'")
+            raise exceptions.ResourceNotFind(f"Module not find '{'/'.join(mod_names)}'")
         return module
 
     def get_resource_providers(self, plane, mod_names):

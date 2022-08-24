@@ -1032,5 +1032,5 @@ const DecodeResponseCommand = (command: ResponseCommand): Command => {
 export default WSEditorCommandContent;
 
 export { DecodeResponseCommand };
-export type { Command, ResponseCommand, ResponseCommands };
+export type { Command, Resource, ResponseCommand, ResponseCommands };
 

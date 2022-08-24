@@ -453,7 +453,7 @@ def editor_workspace_resources_merge(name):
 
 
 @bp.route("/Workspaces/<name>/Resources/ReloadSwagger", methods=("POST",))
-def editor_workspace_resource_reload_swagger(name, node_names):
+def editor_workspace_resource_reload_swagger(name):
     # update resource by reloading swagger
     manager = WorkspaceManager(name)
     manager.load()
