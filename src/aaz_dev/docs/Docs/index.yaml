@@ -2,4 +2,5 @@ nav:
   - 'Introduction': readme.md
   - 'Workspace Editor': usage/workspace_editor_usage.md
   - 'CLI Generator': usage/cli_generator_usage.md
+  - 'Cmd Test': usage/command_usage_testing.md
   - 'FAQ': faq.md
