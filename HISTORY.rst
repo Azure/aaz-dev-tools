@@ -3,6 +3,11 @@
 Release History
 ===============
 
+0.10.1
+++++++
+* Support to parse swagger resource providers without `microsoft` keywords (#116)
+* Support swagger modification reload in workspace (#117)
+
 0.10.0
 ++++++
 * Fix command schema duplicated diff calculation issue (#112)
