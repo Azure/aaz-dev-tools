@@ -30,6 +30,7 @@ interface WSEditorState {
     plane: string,
 
     selected: Command | CommandGroup | null,
+    reloadTimestamp: number | null,
     expanded: Set<string>,
 
     commandMap: CommandMap,
@@ -61,6 +62,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             workspaceUrl: `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}`,
             plane: "",
             selected: null,
+            reloadTimestamp: null,
             expanded: new Set<string>(),
             commandMap: {},
             commandGroupMap: {},
@@ -83,6 +85,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
 
         try {
             const res = await axios.get(workspaceUrl);
+            const reloadTimestamp = Date.now();
             const commandMap: CommandMap = {};
             const commandGroupMap: CommandGroupMap = {};
 
@@ -205,6 +208,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                     plane: res.data.plane,
                     commandTree: commandTree,
                     selected: selected,
+                    reloadTimestamp: reloadTimestamp,
                     commandMap: commandMap,
                     commandGroupMap: commandGroupMap,
                     expanded: newExpanded,
@@ -315,7 +319,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 
     render() {
-        const { showSwaggerResourcePicker, showSwaggerReloadDialog, showExportDialog, plane, name, commandTree, selected, workspaceUrl, expanded } = this.state;
+        const { showSwaggerResourcePicker, showSwaggerReloadDialog, showExportDialog, plane, name, commandTree, selected, reloadTimestamp, workspaceUrl, expanded } = this.state;
         const expandedIds: string[] = []
         expanded.forEach((expandId) => {
             expandedIds.push(expandId);
@@ -356,12 +360,14 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                         {selected != null && selected.id.startsWith('group:') &&
                             <WSEditorCommandGroupContent
                                 workspaceUrl={workspaceUrl} commandGroup={(selected as CommandGroup)}
+                                reloadTimestamp={reloadTimestamp!}
                                 onUpdateCommandGroup={this.handleCommandGroupUpdate}
                             />
                         }
                         {selected != null && selected.id.startsWith('command:') &&
                             <WSEditorCommandContent
                                 workspaceUrl={workspaceUrl} command={(selected as Command)}
+                                reloadTimestamp={reloadTimestamp!}
                                 onUpdateCommand={this.handleCommandUpdate}
                             />
                         }

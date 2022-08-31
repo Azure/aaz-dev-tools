@@ -54,6 +54,7 @@ interface ResponseCommands {
 interface WSEditorCommandContentProps {
     workspaceUrl: string
     command: Command
+    reloadTimestamp: number
     onUpdateCommand: (command: Command | null) => void
 }
 
@@ -158,7 +159,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
     }
 
     render() {
-        const { workspaceUrl, command } = this.props;
+        const { workspaceUrl, command, reloadTimestamp } = this.props;
         const name = commandPrefix + this.props.command.names.join(' ');
         const shortHelp = this.props.command.help?.short;
         const longHelp = this.props.command.help?.lines?.join('\n');
@@ -345,7 +346,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             mt: 1,
                             p: 2
                         }}>
-                        <WSEditorCommandArgumentsContent commandUrl={commandUrl} />
+                        <WSEditorCommandArgumentsContent commandUrl={commandUrl} reloadTimestamp={reloadTimestamp} />
                     </Card>
 
                     <Card
