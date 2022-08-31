@@ -12,6 +12,7 @@ import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from '
 
 function WSEditorCommandArgumentsContent(props: {
     commandUrl: string,
+    reloadTimestamp: number,
 }) {
 
     const [args, setArgs] = useState<CMDArg[]>([]);
@@ -31,7 +32,7 @@ function WSEditorCommandArgumentsContent(props: {
 
     useEffect(() => {
         refreshData();
-    }, [props.commandUrl]);
+    }, [props.commandUrl, props.reloadTimestamp]);
 
     const handleArgumentDialogClose = (updated: boolean) => {
         setDisplayArgumentDialog(false);
