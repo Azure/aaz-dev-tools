@@ -14,7 +14,7 @@ from swagger.utils import exceptions
 from .external_documentation import ExternalDocumentation
 from .fields import DataTypeFormatEnum, RegularExpressionField, XmsClientNameField, XmsExternalField, \
     XmsDiscriminatorValueField, XmsClientFlattenField, XmsMutabilityField, XmsClientDefaultField, XNullableField, \
-    XmsAzureResourceField
+    XmsAzureResourceField, MutabilityEnum
 from .fields import XmsSecretField, XAccessibilityField, XAzSearchDeprecatedField, XSfClientLibField, \
     XApimCodeNillableField, XCommentField, XAbstractField, XADLNameField, XCadlNameField
 from .reference import ReferenceField, Linkable
@@ -436,9 +436,11 @@ class Schema(Model, Linkable):
                         # because required property will not be included in a cls definition,
                         # so it's fine to update it in parent level when prop_dict[name] is a cls definition.
                         prop_dict[name].required = True
-                        # when a property is required, it's frozen status must be consisted with the defined schema.
-                        # This can help to for empty object schema.
-                        prop_dict[name].frozen = builder.frozen
+                        if MutabilityEnum.Create == builder.mutability:
+                            # for create opreation
+                            # when a property is required, it's frozen status must be consisted with the defined schema.
+                            # This can help to for empty object schema.
+                            prop_dict[name].frozen = builder.frozen
 
             # discriminators
             if self.disc_children:
@@ -542,9 +544,11 @@ class Schema(Model, Linkable):
                         assert isinstance(v, CMDSchemaBase)
                         model.additional_props = CMDObjectSchemaAdditionalProperties()
                         model.additional_props.item = v
-                        # item is required, it's frozen status must be consisted with the defined schema.
-                        # This can help to for empty object.
-                        model.additional_props.item.frozen = builder.frozen
+                        if MutabilityEnum.Create == builder.mutability:
+                            # for create operation
+                            # item is required, it's frozen status must be consisted with the defined schema.
+                            # This can help to for empty object.
+                            model.additional_props.item.frozen = builder.frozen
                 # Note: not support additional_properties without schema define
                 # elif self.additional_properties is True:
                 #     model.additional_props = CMDObjectSchemaAdditionalProperties()
