@@ -3,6 +3,12 @@
 Release History
 ===============
 
+0.10.2
+++++++
+* Add cmd unit test docs (#119)
+* Limit empty object for create mutability only (#120)
+* Fix argument content refresh issue in worksapce editor (#121)
+
 0.10.1
 ++++++
 * Support to parse swagger resource providers without `microsoft` keywords (#116)
