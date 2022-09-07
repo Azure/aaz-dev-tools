@@ -9,12 +9,13 @@ interface WSEditorToolBarProps {
     workspaceName: string
     onHomePage: () => void
     onGenerate: () => void
+    onDelete: () => void
 }
 
 class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
 
     render() {
-        const { workspaceName, onHomePage, onGenerate } = this.props;
+        const { workspaceName, onHomePage, onGenerate, onDelete } = this.props;
         return (
             <React.Fragment>
                 <AppBar sx={{
@@ -52,6 +53,17 @@ class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
                         >
                             {workspaceName}
                         </Typography>
+                        <Box sx={{ marginLeft: '20px' }} >
+                            <Tooltip title='Delete Workspace'>
+                                <Button
+                                    variant="outlined"
+                                    color='inherit'
+                                    onClick={onDelete}
+                                >
+                                    Delete
+                                </Button>
+                            </Tooltip>
+                        </Box>
 
                         <Box sx={{ flexGrow: 1 }} />
                         <Box sx={{ flexShrink: 0 }} >

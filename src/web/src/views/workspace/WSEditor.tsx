@@ -40,6 +40,7 @@ interface WSEditorState {
     showSwaggerResourcePicker: boolean,
     showSwaggerReloadDialog: boolean,
     showExportDialog: boolean,
+    showDeleteDialog: boolean,
 }
 
 const swaggerResourcePickerTransition = React.forwardRef(function swaggerResourcePickerTransition(
@@ -70,6 +71,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             showSwaggerResourcePicker: false,
             showSwaggerReloadDialog: false,
             showExportDialog: false,
+            showDeleteDialog: false,
         }
     }
 
@@ -283,6 +285,19 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         })
     }
 
+    handleDelete = () => {
+        this.setState({
+            showDeleteDialog: true
+        })
+    }
+
+    handleDeleteClose = (exported: boolean) => {
+        this.setState({
+            showDeleteDialog: false
+        })
+    }
+
+
     handleCommandTreeSelect = (nodeId: string) => {
         if (nodeId.startsWith('command:')) {
             this.setState(preState => {
@@ -319,14 +334,14 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 
     render() {
-        const { showSwaggerResourcePicker, showSwaggerReloadDialog, showExportDialog, plane, name, commandTree, selected, reloadTimestamp, workspaceUrl, expanded } = this.state;
+        const { showSwaggerResourcePicker, showSwaggerReloadDialog, showExportDialog, showDeleteDialog, plane, name, commandTree, selected, reloadTimestamp, workspaceUrl, expanded } = this.state;
         const expandedIds: string[] = []
         expanded.forEach((expandId) => {
             expandedIds.push(expandId);
         })
         return (
             <React.Fragment>
-                <WSEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onGenerate={this.handleGenerate}>
+                <WSEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onGenerate={this.handleGenerate} onDelete={this.handleDelete}>
                 </WSEditorToolBar>
 
                 <Box sx={{ display: 'flex' }}>
@@ -383,6 +398,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                     <WSEditorSwaggerPicker plane={plane} workspaceName={name} onClose={this.handleSwaggerResourcePickerClose} />
                 </Dialog>
                 {showExportDialog && <WSEditorExportDialog workspaceUrl={workspaceUrl} open={showExportDialog} onClose={this.handleGenerationClose} />}
+                {showDeleteDialog && <WSEditorDeleteDialog workspaceName={name} open={showDeleteDialog} onClose={this.handleDeleteClose} onGoHome={this.handleBackToHomepage }/>}
                 {showSwaggerReloadDialog && <WSEditorSwaggerReloadDialog workspaceUrl={workspaceUrl} open={showSwaggerReloadDialog} onClose={this.handleSwaggerReloadDialogClose} />}
             </React.Fragment>
         )
@@ -439,6 +455,65 @@ function WSEditorExportDialog(props: {
                 {!updating && <React.Fragment>
                     <Button onClick={handleClose}>Cancel</Button>
                     <Button onClick={handleExport}>Confirm</Button>
+                </React.Fragment>}
+            </DialogActions>
+        </Dialog>
+    )
+}
+
+function WSEditorDeleteDialog(props: {
+    workspaceName: string,
+    open: boolean,
+    onClose: (exported: boolean) => void
+    onGoHome: (exported: boolean) => void
+}) {
+    const [updating, setUpdating] = React.useState<boolean>(false);
+    const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
+
+    const handleClose = () => {
+        props.onClose(false);
+    }
+
+    const handleDelete = () => {
+        setUpdating(true);
+        const nodeUrl = `/AAZ/Editor/Workspaces/` + props.workspaceName;
+        axios.delete(nodeUrl)
+            .then((res) => {
+                setUpdating(false);
+                props.onGoHome(true);
+            })            
+            .catch(err => {
+                console.error(err.response.data);
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    setInvalidText(
+                        `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
+                    );
+                }
+                setUpdating(false);
+                props.onClose(false);
+        })
+
+    }
+
+    return (
+        <Dialog
+            disableEscapeKeyDown
+            open={props.open}
+        >
+            <DialogTitle>Confirm to delete workspace?</DialogTitle>
+            <DialogContent>
+                {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+            </DialogContent>
+            <DialogActions>
+                {updating &&
+                    <Box sx={{ width: '100%' }}>
+                        <LinearProgress color='info' />
+                    </Box>
+                }
+                {!updating && <React.Fragment>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleDelete}>Confirm</Button>
                 </React.Fragment>}
             </DialogActions>
         </Dialog>
