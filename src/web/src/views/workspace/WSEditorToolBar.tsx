@@ -1,21 +1,31 @@
-import { AppBar, Button, IconButton, styled, Toolbar, Typography, Tooltip } from '@mui/material';
+import { AppBar, Button, IconButton, styled, Toolbar, Typography, Tooltip, TypographyProps } from '@mui/material';
 import { Box } from '@mui/system';
 import HomeIcon from '@mui/icons-material/Home';
+import EditIcon from '@mui/icons-material/Edit';
+import { grey } from '@mui/material/colors'
 
 import * as React from 'react';
 
+
+const ArgEditTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: "#ffffff",
+    fontFamily: "'Work Sans', sans-serif",
+    fontSize: 14,
+    fontWeight: 400,
+}));
 
 interface WSEditorToolBarProps {
     workspaceName: string
     onHomePage: () => void
     onGenerate: () => void
     onDelete: () => void
+    onModify: () => void
 }
 
 class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
 
     render() {
-        const { workspaceName, onHomePage, onGenerate, onDelete } = this.props;
+        const { workspaceName, onHomePage, onGenerate, onDelete, onModify } = this.props;
         return (
             <React.Fragment>
                 <AppBar sx={{
@@ -53,6 +63,12 @@ class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
                         >
                             {workspaceName}
                         </Typography>
+                        <Button sx={{ flexShrink: 0, ml: 3 }}
+                            startIcon={<EditIcon sx={{ color: grey[100] }} fontSize='small' />}
+                            onClick={onModify}
+                        >
+                            <ArgEditTypography>Edit</ArgEditTypography>
+                        </Button>
                         <Box sx={{ marginLeft: '20px' }} >
                             <Tooltip title='Delete Workspace'>
                                 <Button
