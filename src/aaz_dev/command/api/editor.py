@@ -60,6 +60,24 @@ def editor_workspace(name):
     })
     return jsonify(result)
 
+@bp.route("/Workspaces/<name>/Rename", methods=("POST",))
+def rename_workspace(name):
+    manager = WorkspaceManager(name)
+    if request.method == "POST":
+        data = request.get_json()
+        if 'name' not in data or not data['name']:
+            raise exceptions.InvalidAPIUsage("Invalid request")
+        new_name = data['name'].strip()
+        manager.rename(new_name)
+        result = manager.ws.to_primitive()
+        result.update({
+            'url': url_for('editor.editor_workspace', name=manager.name),
+            'folder': manager.folder,
+            'updated': os.path.getmtime(manager.path)
+        })
+    else:
+        raise NotImplementedError()
+    return jsonify(result)
 
 @bp.route("/Workspaces/<name>/Generate", methods=("POST",))
 def editor_workspace_generate(name):

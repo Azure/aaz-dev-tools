@@ -81,6 +81,18 @@ class WorkspaceManager:
 
         self._cfg_editors = {}
 
+    def rename(self, new_name):
+        new_folder = os.path.join(Config.AAZ_DEV_WORKSPACE_FOLDER, new_name)
+        if os.path.exists(new_folder):
+            raise ValueError(f"Invalid new workspace folder: folder path exists: {new_folder}")
+        os.rename(self.folder, new_folder)
+        self.name = new_name
+        self.folder = new_folder
+        self.path = os.path.join(self.folder, 'ws.json')
+        self.load()
+        self.ws.name = new_name
+        self.save()
+
     def delete(self):
         if os.path.exists(self.path):
             # make sure ws.json exist in folder

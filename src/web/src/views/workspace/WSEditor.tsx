@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, List, ListSubheader, Typography, Paper, ListItemButton, ListItemIcon, Checkbox, ListItemText, ListItem } from '@mui/material';
+import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, List, ListSubheader, Paper, ListItemButton, ListItemIcon, Checkbox, ListItemText, ListItem, TextField } from '@mui/material';
 import { useParams } from 'react-router';
 import axios from 'axios';
 import { TransitionProps } from '@mui/material/transitions';
@@ -40,6 +40,8 @@ interface WSEditorState {
     showSwaggerResourcePicker: boolean,
     showSwaggerReloadDialog: boolean,
     showExportDialog: boolean,
+    showDeleteDialog: boolean,
+    showModifyDialog: boolean,
 }
 
 const swaggerResourcePickerTransition = React.forwardRef(function swaggerResourcePickerTransition(
@@ -70,6 +72,8 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             showSwaggerResourcePicker: false,
             showSwaggerReloadDialog: false,
             showExportDialog: false,
+            showDeleteDialog: false,
+            showModifyDialog: false,
         }
     }
 
@@ -283,6 +287,42 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         })
     }
 
+    handleDelete = () => {
+        this.setState({
+            showDeleteDialog: true
+        })
+    }
+
+    handleDeleteClose = (deleted: boolean) => {
+        this.setState({
+            showDeleteDialog: false
+        })
+        if(deleted) {
+            this.handleBackToHomepage();
+        }
+    }
+
+    handleModify = () => {
+        this.setState({
+            showModifyDialog: true
+        })
+    }
+
+    handleModifyClose = (newWSName: string | null) => {
+        this.setState({
+            showModifyDialog: false
+        })
+        if (!newWSName) {
+            return;
+        }
+        setTimeout(() => {
+            const target_url = `/?#/workspace/` + newWSName;
+            window.location.href = target_url;
+            window.location.reload();
+        })
+    }
+
+
     handleCommandTreeSelect = (nodeId: string) => {
         if (nodeId.startsWith('command:')) {
             this.setState(preState => {
@@ -319,14 +359,14 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 
     render() {
-        const { showSwaggerResourcePicker, showSwaggerReloadDialog, showExportDialog, plane, name, commandTree, selected, reloadTimestamp, workspaceUrl, expanded } = this.state;
+        const { showSwaggerResourcePicker, showSwaggerReloadDialog, showExportDialog, showDeleteDialog, showModifyDialog, plane, name, commandTree, selected, reloadTimestamp, workspaceUrl, expanded } = this.state;
         const expandedIds: string[] = []
         expanded.forEach((expandId) => {
             expandedIds.push(expandId);
         })
         return (
             <React.Fragment>
-                <WSEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onGenerate={this.handleGenerate}>
+                <WSEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onGenerate={this.handleGenerate} onDelete={this.handleDelete} onModify={this.handleModify} >
                 </WSEditorToolBar>
 
                 <Box sx={{ display: 'flex' }}>
@@ -382,6 +422,8 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 >
                     <WSEditorSwaggerPicker plane={plane} workspaceName={name} onClose={this.handleSwaggerResourcePickerClose} />
                 </Dialog>
+                {showModifyDialog && <WSRenameDialog workspaceUrl={workspaceUrl} workspaceName={name} open={showModifyDialog} onClose={this.handleModifyClose} />}
+                {showDeleteDialog && <WSEditorDeleteDialog workspaceName={name} open={showDeleteDialog} onClose={this.handleDeleteClose} />}
                 {showExportDialog && <WSEditorExportDialog workspaceUrl={workspaceUrl} open={showExportDialog} onClose={this.handleGenerationClose} />}
                 {showSwaggerReloadDialog && <WSEditorSwaggerReloadDialog workspaceUrl={workspaceUrl} open={showSwaggerReloadDialog} onClose={this.handleSwaggerReloadDialogClose} />}
             </React.Fragment>
@@ -439,6 +481,63 @@ function WSEditorExportDialog(props: {
                 {!updating && <React.Fragment>
                     <Button onClick={handleClose}>Cancel</Button>
                     <Button onClick={handleExport}>Confirm</Button>
+                </React.Fragment>}
+            </DialogActions>
+        </Dialog>
+    )
+}
+
+function WSEditorDeleteDialog(props: {
+    workspaceName: string,
+    open: boolean,
+    onClose: (deleted: boolean) => void
+}) {
+    const [updating, setUpdating] = React.useState<boolean>(false);
+    const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
+
+    const handleClose = () => {
+        props.onClose(false);
+    }
+
+    const handleDelete = () => {
+        setUpdating(true);
+        const nodeUrl = `/AAZ/Editor/Workspaces/` + props.workspaceName;
+        axios.delete(nodeUrl)
+            .then((res) => {
+                setUpdating(false);
+                props.onClose(true);
+            })            
+            .catch(err => {
+                console.error(err.response.data);
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    setInvalidText(
+                        `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
+                    );
+                }
+                setUpdating(false);
+        })
+
+    }
+
+    return (
+        <Dialog
+            disableEscapeKeyDown
+            open={props.open}
+        >
+            <DialogTitle>Confirm to delete workspace?</DialogTitle>
+            <DialogContent>
+                {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+            </DialogContent>
+            <DialogActions>
+                {updating &&
+                    <Box sx={{ width: '100%' }}>
+                        <LinearProgress color='info' />
+                    </Box>
+                }
+                {!updating && <React.Fragment>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleDelete}>Confirm</Button>
                 </React.Fragment>}
             </DialogActions>
         </Dialog>
@@ -674,6 +773,125 @@ class WSEditorSwaggerReloadDialog extends React.Component<WSEditorSwaggerReloadD
 
 }
 
+interface WSRenameDialogProps {
+    workspaceUrl: string,
+    workspaceName: string,
+    open: boolean,
+    onClose: (newWSName: string | null) => void
+}
+
+interface WSRenameDialogState {
+    newWSName: string,
+    invalidText?: string,
+    updating: boolean
+}
+
+class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialogState> {
+
+    constructor(props: WSRenameDialogProps) {
+        super(props);
+        this.state = {
+            newWSName: this.props.workspaceName,
+            updating: false
+        }
+    }
+
+    handleModify = (event: any) => {
+        let { newWSName } = this.state;
+        let { workspaceUrl, workspaceName } = this.props;
+
+        let nName = newWSName.trim();
+        if (nName.length < 1){
+            this.setState({
+                invalidText: `Field 'Name' is required.`
+            })
+            return;
+        }
+
+        this.setState({
+            invalidText: undefined
+        });
+        this.setState({
+            updating: true,
+        })
+
+        if (workspaceName === nName) {
+            this.setState({
+                updating: false,
+            })
+            this.props.onClose(null);
+        } else {
+            axios.post(`${workspaceUrl}/Rename`, {
+                name: nName
+            }).then(res => {
+                this.setState({
+                    updating: false,
+                })
+                this.props.onClose(res.data.name);
+            }).catch(err => {
+                this.setState({
+                    updating: false,
+                })
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    this.setState({
+                        invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
+                    })
+                }
+                
+            })
+        }
+        
+    }
+
+    handleClose = () => {
+        this.setState({
+            invalidText: undefined
+        });
+        this.props.onClose(null);
+    }
+
+    render() {
+        const { invalidText, updating } = this.state;
+        return (
+            <Dialog
+                disableEscapeKeyDown
+                open={this.props.open}
+                sx={{ '& .MuiDialog-paper': { width: '80%' } }}
+            >
+                <DialogTitle>Rename Workspace</DialogTitle>
+                <DialogContent dividers={true}>
+                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                    <TextField
+                        id="name"
+                        label="Name"
+                        type="text"
+                        fullWidth
+                        variant='standard'
+                        value={this.state.newWSName}
+                        onChange={(event: any) => {
+                            this.setState({
+                                newWSName: event.target.value,
+                            })
+                        }}
+                        margin="normal" required
+                    />
+                </DialogContent>
+                <DialogActions>
+                    {updating &&
+                        <Box sx={{ width: '100%' }}>
+                            <LinearProgress color='info' />
+                        </Box>
+                    }
+                    {!updating && <React.Fragment>
+                        <Button onClick={this.handleClose}>Cancel</Button>
+                        <Button onClick={this.handleModify}>Save</Button>
+                    </React.Fragment>}
+                </DialogActions>
+            </Dialog>
+        )
+    }
+}
 
 const WSEditorWrapper = (props: any) => {
     const params = useParams()
