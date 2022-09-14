@@ -18,7 +18,16 @@ class WorkspaceCfgEditor(CfgReader):
 
     @staticmethod
     def get_cfg_folder(ws_folder, resource_id):
-        return os.path.join(ws_folder, "Resources", b64encode_str(resource_id))
+        path = os.path.join(ws_folder, "Resources")
+        name = b64encode_str(resource_id)
+        while len(name):
+            if len(name) > 255:
+                path = os.path.join(path, name[:254]+'+')
+                name = name[254:]
+            else:
+                path = os.path.join(path, name)
+                name = ""
+        return path
 
     @classmethod
     def get_cfg_path(cls, ws_folder, resource_id):

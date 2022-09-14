@@ -67,7 +67,16 @@ class AAZSpecsManager:
         return os.path.join(self.resources_folder, plane)
 
     def get_resource_cfg_folder(self, plane, resource_id):
-        return os.path.join(self.get_resource_plane_folder(plane), b64encode_str(resource_id))
+        path = self.get_resource_plane_folder(plane)
+        name = b64encode_str(resource_id)
+        while len(name):
+            if len(name) > 255:
+                path = os.path.join(path, name[:254] + '+')
+                name = name[254:]
+            else:
+                path = os.path.join(path, name)
+                name = ""
+        return path
 
     def get_resource_cfg_file_paths(self, plane, resource_id, version):
         """Return Json and XML path"""
