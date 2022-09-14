@@ -3,6 +3,11 @@
 Release History
 ===============
 
+0.10.3
+++++++
+* Support workspace rename and delete (#123)
+* Fix resource folder name 255 length limitation (#124)
+
 0.10.2
 ++++++
 * Add cmd unit test docs (#119)
