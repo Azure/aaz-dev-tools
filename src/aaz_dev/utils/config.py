@@ -4,7 +4,7 @@ from packaging import version
 
 class Config:
 
-    MIN_CLI_CORE_VERSION = version.parse("2.39.0")
+    MIN_CLI_CORE_VERSION = version.parse("2.40.0")
 
     AAZ_PATH = os.environ.get("AAZ_PATH", None)
     SWAGGER_PATH = os.environ.get("AAZ_SWAGGER_PATH", None)
