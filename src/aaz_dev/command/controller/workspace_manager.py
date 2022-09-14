@@ -89,6 +89,9 @@ class WorkspaceManager:
         self.name = new_name
         self.folder = new_folder
         self.path = os.path.join(self.folder, 'ws.json')
+        self.load()
+        self.ws.name = new_name
+        self.save()
 
     def delete(self):
         if os.path.exists(self.path):

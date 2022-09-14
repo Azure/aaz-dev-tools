@@ -2,6 +2,7 @@ import { AppBar, Button, IconButton, styled, Toolbar, Typography, Tooltip, Typog
 import { Box } from '@mui/system';
 import HomeIcon from '@mui/icons-material/Home';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { grey } from '@mui/material/colors'
 
 import * as React from 'react';
@@ -69,17 +70,12 @@ class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
                         >
                             <ArgEditTypography>Edit</ArgEditTypography>
                         </Button>
-                        <Box sx={{ marginLeft: '20px' }} >
-                            <Tooltip title='Delete Workspace'>
-                                <Button
-                                    variant="outlined"
-                                    color='inherit'
-                                    onClick={onDelete}
-                                >
-                                    Delete
-                                </Button>
-                            </Tooltip>
-                        </Box>
+                        <Button sx={{ flexShrink: 0, ml: 1 }}
+                            startIcon={<DeleteIcon sx={{ color: grey[100] }} fontSize='small' />}
+                            onClick={onDelete}
+                        >
+                            <ArgEditTypography>Delete</ArgEditTypography>
+                        </Button>
 
                         <Box sx={{ flexGrow: 1 }} />
                         <Box sx={{ flexShrink: 0 }} >

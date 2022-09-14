@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, List, ListSubheader, Typography, Paper, ListItemButton, ListItemIcon, Checkbox, ListItemText, ListItem, TextField } from '@mui/material';
+import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, List, ListSubheader, Paper, ListItemButton, ListItemIcon, Checkbox, ListItemText, ListItem, TextField } from '@mui/material';
 import { useParams } from 'react-router';
 import axios from 'axios';
 import { TransitionProps } from '@mui/material/transitions';
@@ -293,10 +293,13 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         })
     }
 
-    handleDeleteClose = (exported: boolean) => {
+    handleDeleteClose = (deleted: boolean) => {
         this.setState({
             showDeleteDialog: false
         })
+        if(deleted) {
+            this.handleBackToHomepage();
+        }
     }
 
     handleModify = () => {
@@ -305,9 +308,17 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         })
     }
 
-    handleModifyClose = () => {
+    handleModifyClose = (newWSName: string) => {
         this.setState({
             showModifyDialog: false
+        })
+        if (newWSName === "") {
+            return;
+        }
+        setTimeout(() => {
+            const target_url = `/?#/workspace/` + newWSName;
+            window.location.href = target_url;
+            window.location.reload();
         })
     }
 
@@ -412,7 +423,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                     <WSEditorSwaggerPicker plane={plane} workspaceName={name} onClose={this.handleSwaggerResourcePickerClose} />
                 </Dialog>
                 {showModifyDialog && <WSRenameDialog workspaceUrl={workspaceUrl} workspaceName={name} open={showModifyDialog} onClose={this.handleModifyClose} />}
-                {showDeleteDialog && <WSEditorDeleteDialog workspaceName={name} open={showDeleteDialog} onClose={this.handleDeleteClose} onGoHome={this.handleBackToHomepage} />}
+                {showDeleteDialog && <WSEditorDeleteDialog workspaceName={name} open={showDeleteDialog} onClose={this.handleDeleteClose} />}
                 {showExportDialog && <WSEditorExportDialog workspaceUrl={workspaceUrl} open={showExportDialog} onClose={this.handleGenerationClose} />}
                 {showSwaggerReloadDialog && <WSEditorSwaggerReloadDialog workspaceUrl={workspaceUrl} open={showSwaggerReloadDialog} onClose={this.handleSwaggerReloadDialogClose} />}
             </React.Fragment>
@@ -479,8 +490,7 @@ function WSEditorExportDialog(props: {
 function WSEditorDeleteDialog(props: {
     workspaceName: string,
     open: boolean,
-    onClose: (exported: boolean) => void
-    onGoHome: (exported: boolean) => void
+    onClose: (deleted: boolean) => void
 }) {
     const [updating, setUpdating] = React.useState<boolean>(false);
     const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
@@ -495,7 +505,7 @@ function WSEditorDeleteDialog(props: {
         axios.delete(nodeUrl)
             .then((res) => {
                 setUpdating(false);
-                props.onGoHome(true);
+                props.onClose(true);
             })            
             .catch(err => {
                 console.error(err.response.data);
@@ -768,11 +778,11 @@ interface WSRenameDialogProps {
     workspaceUrl: string,
     workspaceName: string,
     open: boolean,
-    onClose: (exported: boolean) => void
+    onClose: (newWSName: string) => void
 }
 
 interface WSRenameDialogState {
-    new_name: string,
+    newWSName: string,
     invalidText?: string,
     updating: boolean
 }
@@ -782,16 +792,17 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
     constructor(props: WSRenameDialogProps) {
         super(props);
         this.state = {
-            new_name: this.props.workspaceName,
+            newWSName: this.props.workspaceName,
             updating: false
         }
     }
 
     handleModify = (event: any) => {
-        let { new_name } = this.state;
+        let { newWSName } = this.state;
         let { workspaceUrl, workspaceName } = this.props;
 
-        if (new_name.length < 1){
+        let nName = newWSName.trim();
+        if (nName.length < 1){
             this.setState({
                 invalidText: `Field 'Name' is required.`
             })
@@ -806,32 +817,23 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
             updating: true,
         })
 
-        if (workspaceName === new_name) {
+        if (workspaceName === nName) {
             this.setState({
                 updating: false,
             })
-            this.props.onClose(false);
+            this.props.onClose("");
         } else {
             axios.post(`${nodeUrl}/Rename`, {
-                name: new_name
+                name: nName
             }).then(res => {
                 console.log(res);
                 this.setState({
                     updating: false,
                 })
-                this.props.onClose(true);
-                setTimeout(() => {
-                    const target_url = `/?#/workspace/` + res.data.name;
-                    window.location.href = target_url;
-                    window.location.reload();
-                })
-           
+                this.props.onClose(res.data.name);
             }).catch(err => {
                 console.error(err.response.data);
-                if (err.response?.data?.message) {
-                    const data = err.response!.data!;
-                }
-                this.props.onClose(false);
+                this.props.onClose("");
             })
         }
         
@@ -841,11 +843,11 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
         this.setState({
             invalidText: undefined
         });
-        this.props.onClose(false);
+        this.props.onClose("");
     }
 
     render() {
-        const { new_name, invalidText, updating } = this.state;
+        const { invalidText, updating } = this.state;
         return (
             <Dialog
                 disableEscapeKeyDown
@@ -861,11 +863,10 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
                         type="text"
                         fullWidth
                         variant='standard'
-                        value={this.state.new_name}
+                        value={this.state.newWSName}
                         onChange={(event: any) => {
-                            console.log("4");
                             this.setState({
-                                new_name: event.target.value,
+                                newWSName: event.target.value,
                             })
                         }}
                         margin="normal" required
