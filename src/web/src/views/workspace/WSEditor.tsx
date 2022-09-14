@@ -308,11 +308,11 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         })
     }
 
-    handleModifyClose = (newWSName: string) => {
+    handleModifyClose = (newWSName: string | null) => {
         this.setState({
             showModifyDialog: false
         })
-        if (newWSName === "") {
+        if (!newWSName) {
             return;
         }
         setTimeout(() => {
@@ -516,7 +516,6 @@ function WSEditorDeleteDialog(props: {
                     );
                 }
                 setUpdating(false);
-                props.onClose(false);
         })
 
     }
@@ -778,7 +777,7 @@ interface WSRenameDialogProps {
     workspaceUrl: string,
     workspaceName: string,
     open: boolean,
-    onClose: (newWSName: string) => void
+    onClose: (newWSName: string | null) => void
 }
 
 interface WSRenameDialogState {
@@ -812,7 +811,6 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
         this.setState({
             invalidText: undefined
         });
-        const nodeUrl = `${workspaceUrl}`;
         this.setState({
             updating: true,
         })
@@ -821,19 +819,26 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
             this.setState({
                 updating: false,
             })
-            this.props.onClose("");
+            this.props.onClose(null);
         } else {
-            axios.post(`${nodeUrl}/Rename`, {
+            axios.post(`${workspaceUrl}/Rename`, {
                 name: nName
             }).then(res => {
-                console.log(res);
                 this.setState({
                     updating: false,
                 })
                 this.props.onClose(res.data.name);
             }).catch(err => {
-                console.error(err.response.data);
-                this.props.onClose("");
+                this.setState({
+                    updating: false,
+                })
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    this.setState({
+                        invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
+                    })
+                }
+                
             })
         }
         
@@ -843,7 +848,7 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
         this.setState({
             invalidText: undefined
         });
-        this.props.onClose("");
+        this.props.onClose(null);
     }
 
     render() {
