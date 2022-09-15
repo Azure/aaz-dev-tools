@@ -1,4 +1,4 @@
-from cli.model.atomic._fields import CLIResourceIdField, CLIVersionField
+from cli.model.common._fields import CLIResourceIdField, CLIVersionField
 from schematics.models import Model
 from utils.fields import PlaneField
 

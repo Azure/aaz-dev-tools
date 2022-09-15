@@ -1,13 +1,14 @@
-from cli.model.atomic._command import CLIAtomicCommand
-from cli.model.atomic._fields import CLICommandNameField
-from cli.model.atomic._help import CLICommandGroupHelp
+from cli.model.common._fields import CLICommandNameField
 from schematics.models import Model
 from schematics.types import ModelType, ListType, DictType
 from utils.stage import AAZStageField
 
+from ._command import CLIAtomicCommand
+from ._help import CLICommandGroupHelp
+
 
 class CLIAtomicCommandGroupRegisterInfo(Model):
-    stage = AAZStageField(required=True)    # the stage of command group used in code
+    stage = AAZStageField(required=True)  # the stage of command group used in code
     # TODO: add support for deprecate_info
 
 

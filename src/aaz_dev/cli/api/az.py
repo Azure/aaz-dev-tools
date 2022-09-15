@@ -15,34 +15,6 @@ def az_profiles():
     return jsonify(Config.CLI_PROFILES)
 
 
-@bp.route("/AAZ/Specs/CommandTree/Nodes/<names_path:node_names>/Transfer", methods=("POST", ))
-def az_utils_nodes(node_names):
-    if node_names[0] != AAZSpecsManager.COMMAND_TREE_ROOT_NAME:
-        raise exceptions.ResourceNotFind("Command group not exist")
-    if len(node_names) < 2:
-        raise exceptions.ResourceNotFind(f"CommandGroup '{' '.join(node_names)}' not find.")
-    node_names = node_names[1:]
-    manager = AzModuleManager()
-    command_group = manager.build_command_group_from_aaz(*node_names)
-    if command_group is None:
-        raise exceptions.ResourceNotFind(f"CommandGroup '{' '.join(node_names)}' not find.")
-    result = command_group.to_primitive()
-    return jsonify(result)
-
-
-@bp.route("/AAZ/Specs/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Versions/<base64:version_name>/Transfer", methods=("POST", ))
-def az_utils_leaves(node_names, leaf_name, version_name):
-    if node_names[0] != AAZSpecsManager.COMMAND_TREE_ROOT_NAME:
-        raise exceptions.ResourceNotFind("Command group not exist")
-    node_names = node_names[1:]
-    manager = AzModuleManager()
-    command = manager.build_command_from_aaz(*node_names, leaf_name, version_name=version_name)
-    if command is None:
-        raise exceptions.ResourceNotFind(f"Command '{' '.join([*node_names, leaf_name])}' not find.")
-    result = command.to_primitive()
-    return jsonify(result)
-
-
 @bp.route("/Main/Modules", methods=("GET", "POST"))
 def az_main_modules():
     manager = AzMainManager()
