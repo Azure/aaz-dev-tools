@@ -482,7 +482,7 @@ class AzExtensionManager(AzModuleManager):
                 metadata["azext.minCliCoreVersion"] = str(Config.MIN_CLI_CORE_VERSION)
         else:
             metadata = {
-                "azext.isExperimental": True,
+                "azext.isPreview": True,
                 "azext.minCliCoreVersion": str(Config.MIN_CLI_CORE_VERSION),
             }
         return metadata_path, metadata
