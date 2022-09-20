@@ -7,6 +7,7 @@ import pkgutil
 import re
 
 from cli.controller.az_profile_generator import AzProfileGenerator
+from cli.controller.az_atomic_profile_builder import AzAtomicProfileBuilder
 from cli.model.view import CLIModule, CLIViewProfile, CLIViewCommandGroup, CLIViewCommand
 from cli.templates import get_templates
 from utils import exceptions

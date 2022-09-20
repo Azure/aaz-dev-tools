@@ -164,7 +164,7 @@ function HomePage() {
                                             <StepContentTypography>
                                                 {"please use "}
                                                 <Link
-                                                    href="/?#/Generation"
+                                                    href="/?#/CLI"
                                                     align="center"
                                                     underline="always"
                                                 >CLI</Link>

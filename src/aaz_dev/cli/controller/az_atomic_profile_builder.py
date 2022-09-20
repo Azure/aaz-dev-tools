@@ -31,6 +31,7 @@ class AzAtomicProfileBuilder:
                 cmd_group = self._build_command_group(view_cmd_group)
                 cmd_groups[name] = cmd_group
             profile.command_groups = cmd_groups
+        return profile
 
     def _build_command_group(self, view_command_group):
         command_group = self._build_command_group_from_aaz(*view_command_group.names)
@@ -102,8 +103,8 @@ class AzAtomicProfileBuilder:
         if not version:
             return None
         cfg_reader = self._aaz_spec_manager.load_resource_cfg_reader_by_command_with_version(aaz_cmd, version=version)
-        cmd_cfg = cfg_reader.find_command(*command.names)
-        assert cmd_cfg is not None, f"command configuration miss: '{' '.join(command.names)}'"
+        cmd_cfg = cfg_reader.find_command(*names)
+        assert cmd_cfg is not None, f"command configuration miss: '{' '.join(names)}'"
 
         command = CLIAtomicCommand()
         command.names = [*names]

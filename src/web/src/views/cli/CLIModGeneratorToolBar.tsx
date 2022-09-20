@@ -10,13 +10,13 @@ import {
 import { Box } from "@mui/system";
 import HomeIcon from "@mui/icons-material/Home";
 
-interface GenerationModuleEditorToolBarProps {
+interface CLIModGeneratorToolBarProps {
   moduleName: string;
   onHomePage: () => void;
   onGenerate: () => void;
 }
 
-class GenerationModuleEditorToolBar extends React.Component<GenerationModuleEditorToolBarProps> {
+class CLIModGeneratorToolBar extends React.Component<CLIModGeneratorToolBarProps> {
   render() {
     const { moduleName, onHomePage, onGenerate } = this.props;
     return (
@@ -68,4 +68,4 @@ class GenerationModuleEditorToolBar extends React.Component<GenerationModuleEdit
   }
 }
 
-export default GenerationModuleEditorToolBar;
+export default CLIModGeneratorToolBar;

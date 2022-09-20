@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request, url_for
 from utils.config import Config
 from utils import exceptions
 from cli.controller.az_module_manager import AzModuleManager, AzMainManager, AzExtensionManager
-from cli.model.atomic import CLIModule
+from cli.model.view import CLIModule
 from command.controller.specs_manager import AAZSpecsManager
 
 

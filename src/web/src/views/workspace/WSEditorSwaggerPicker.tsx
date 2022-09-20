@@ -656,7 +656,6 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                                             id={`${labelId}-inheritance-select`}
                                             value={selectedInheritance === null ? "_NULL_" : selectedInheritance}
                                             onChange={(event) => {
-                                                console.log(event.target)
                                                 this.onResourceInheritanceAAZVersionUpdate(option.id, event.target.value === "_NULL_" ? null : event.target.value);
                                             }}
                                             size="small"
@@ -665,9 +664,9 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                                                 None
                                             </MenuItem>
                                             {inheritanceOptions && inheritanceOptions.map((inheritanceOption) => {
-                                                return <MenuItem value={inheritanceOption} key={`${labelId}-inheritance-select-${inheritanceOption}`}>
+                                                return (<MenuItem value={inheritanceOption} key={`${labelId}-inheritance-select-${inheritanceOption}`}>
                                                     {inheritanceOption}
-                                                </MenuItem>
+                                                </MenuItem>);
                                             })}
                                         </Select>
                                         <FormHelperText>Inherit modification from exported command models in aaz</FormHelperText>

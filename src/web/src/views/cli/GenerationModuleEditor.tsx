@@ -16,7 +16,7 @@ import GenerationCommandTree from "./GenerationCommandTree";
 import axios from "axios";
 import { NodeModel } from "@minoru/react-dnd-treeview";
 import { CheckData } from "../../components/TreeView/types";
-import GenerationModuleEditorToolBar from "./GenerationModuleEditorToolBar";
+import CLIModGeneratorToolBar from "./CLIModGeneratorToolBar";
 import { Alert } from "reactstrap";
 
 type Version = {
@@ -424,7 +424,7 @@ class GenerationModuleEditor extends React.Component<
     const { moduleName, showGenerateDialog } = this.state;
     return (
       <React.Fragment>
-        <GenerationModuleEditorToolBar
+        <CLIModGeneratorToolBar
           moduleName={moduleName}
           onHomePage={this.handleBackToHomepage}
           onGenerate={this.handleGenerate}
