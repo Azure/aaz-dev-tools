@@ -150,7 +150,7 @@ class CLIModuleGenerator extends React.Component<CLIModuleGeneratorProps, CLIMod
                         component="main"
                         sx={{
                             flexGrow: 1,
-                            p: 1,
+                            p: 2,
                         }}
                     >
                         <Toolbar sx={{ flexShrink: 0 }} />

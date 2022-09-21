@@ -1,5 +1,3 @@
-import * as React from "react";
-
 interface CLIModView {
     name: string,
     profiles: CLIModViewProfiles,
@@ -34,4 +32,4 @@ interface CLIModViewCommand {
     version: string,
 }
 
-export type {CLIModView, CLIModViewProfile, CLIModViewProfiles, CLIModViewCommandGroup, CLIModViewCommandGroups, CLIModViewCommand, CLIModViewCommands}
+export type { CLIModView, CLIModViewProfile, CLIModViewProfiles, CLIModViewCommandGroup, CLIModViewCommandGroups, CLIModViewCommand, CLIModViewCommands }

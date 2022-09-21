@@ -6,7 +6,7 @@ import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import FolderIcon from "@mui/icons-material/Folder";
 import DescriptionIcon from "@mui/icons-material/Description";
-import { Box, Checkbox, FormControl, Typography, Select, MenuItem } from "@mui/material";
+import { Box, Checkbox, FormControl, Typography, Select, MenuItem, styled, TypographyProps } from "@mui/material";
 import { CLIModViewCommand, CLIModViewCommandGroup, CLIModViewCommandGroups, CLIModViewCommands, CLIModViewProfile } from "./CLIModuleCommon";
 
 
@@ -16,10 +16,39 @@ interface CLIModGeneratorProfileCommandTreeProps {
 }
 
 interface CLIModGeneratorProfileCommandTreeSate {
-
+    defaultExpanded: string[],
 }
 
+const CommandGroupTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: theme.palette.primary.main,
+    fontFamily: "'Work Sans', sans-serif",
+    fontSize: 15,
+    fontWeight: 600,
+}))
+
+const CommandTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: theme.palette.primary.main,
+    fontFamily: "'Work Sans', sans-serif",
+    fontSize: 17,
+    fontWeight: 400,
+}))
+
+const SelectionTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: theme.palette.grey[700],
+    fontFamily: "'Work Sans', sans-serif",
+    fontSize: 15,
+    fontWeight: 400,
+}))
+
+
 class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorProfileCommandTreeProps, CLIModGeneratorProfileCommandTreeSate> {
+
+    constructor(props: CLIModGeneratorProfileCommandTreeProps) {
+        super(props);
+        this.state = {
+            defaultExpanded: GetDefaultExpanded(this.props.profileCommandTree)
+        }
+    }
 
     onSelectCommandGroup = (commandGroupId: string, selected: boolean) => {
         let newTree = updateProfileCommandTree(this.props.profileCommandTree, commandGroupId, selected);
@@ -42,15 +71,16 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
     }
 
     render() {
+        const {defaultExpanded} = this.state
         const renderCommand = (command: ProfileCTCommand) => {
             const leafName = command.names[command.names.length - 1];
             const selected = command.selectedVersion !== undefined;
             return (
-                <TreeItem key={command.id} nodeId={command.id} color='inherit' label={<Box sx={{
+                <TreeItem sx={{marginLeft: 2}}  key={command.id} nodeId={command.id} color='inherit' label={<Box sx={{
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "flex-start"
+                    justifyContent: "flex-start",
                 }}>
                     <Checkbox
                         disableRipple
@@ -61,8 +91,8 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
                             event.preventDefault();
                         }}
                     />
-                    <DescriptionIcon />
-                    <Typography>{leafName}</Typography>
+                    {/* <DescriptionIcon /> */}
+                    <CommandTypography sx={{marginLeft: 1}}>{leafName}</CommandTypography>
                     {command.selectedVersion !== undefined && <FormControl variant="standard" sx={{
                         m: 1,
                         minWidth: 120,
@@ -74,6 +104,7 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
                         <Select
                             sx={{
                                 minWidth: 150,
+                                marginLeft: 1,
                             }}
                             id={`${command.id}-version-select`}
                             value={command.selectedVersion}
@@ -84,14 +115,14 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
                         >
                             {command.versions.map((version) => {
                                 return (<MenuItem value={version.name} key={`${command.id}-version-select-${version.name}`}>
-                                    {version.name}
+                                    <SelectionTypography>{version.name}</SelectionTypography>
                                 </MenuItem>);
                             })}
                         </Select>
 
                         <Select
                             sx={{
-                                minWidth: 150,
+                                marginLeft: 1,
                             }}
                             id={`${command.id}-register-select`}
                             value={command.registered ? 1 : 0}
@@ -101,10 +132,11 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
                             size="small"
                         >
                             <MenuItem value={1} key={`${command.id}-register-select-registered`}>
-                                Registered Command
+                            <SelectionTypography>Registered</SelectionTypography>
                             </MenuItem>
                             <MenuItem value={0} key={`${command.id}-register-select-unregistered`}>
-                                Unregistered Command
+                            <SelectionTypography>Unregistered</SelectionTypography>
+                                
                             </MenuItem>
                         </Select>
 
@@ -123,11 +155,11 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
             const nodeName = commandGroup.names[commandGroup.names.length - 1];
             const selected = commandGroup.selectedCommands > 0 && commandGroup.totalCommands === commandGroup.selectedCommands;
             return (
-                <TreeItem key={commandGroup.id} nodeId={commandGroup.id} color='inherit' label={<Box sx={{
+                <TreeItem  sx={{marginLeft: 2, marginTop: 0.5}} key={commandGroup.id} nodeId={commandGroup.id} color='inherit' label={<Box sx={{
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "flex-start"
+                    justifyContent: "flex-start",
                 }}>
                     <Checkbox
                         disableRipple
@@ -140,10 +172,9 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
                         }}
                     />
                     <FolderIcon />
-                    <Typography>{nodeName}</Typography>
+                    <CommandGroupTypography sx={{marginLeft: 1}}>{nodeName}</CommandGroupTypography>
                 </Box>}
                     onClick={(event) => {
-
                         event.stopPropagation();
                         event.preventDefault();
                     }}
@@ -157,6 +188,7 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
         return (<React.Fragment>
             <TreeView
                 disableSelection={true}
+                defaultExpanded={defaultExpanded}
                 defaultCollapseIcon={<ArrowDropDownIcon />}
                 defaultExpandIcon={<ArrowRightIcon />}>
                 {this.props.profileCommandTree.commandGroups.map((commandGroup) => renderCommandGroup(commandGroup))}
@@ -232,13 +264,28 @@ function decodeProfileCTCommandGroup(response: any): ProfileCTCommandGroup {
     }
 }
 
-function BuildProfileCommandTree(profileName: string, response: any,): ProfileCommandTree {
+function BuildProfileCommandTree(profileName: string, response: any): ProfileCommandTree {
     let commandGroups: ProfileCTCommandGroup[] = response.commandGroups !== undefined ? Object.keys(response.commandGroups).map((name: string) => decodeProfileCTCommandGroup(response.commandGroups[name])) : [];
-
     return {
         name: profileName,
         commandGroups: commandGroups,
     }
+}
+
+function getDefaultExpandedOfCommandGroup(commandGroup: ProfileCTCommandGroup): string[] {
+    let expandedIds = commandGroup.commandGroups?.flatMap(value => [value.id, ...getDefaultExpandedOfCommandGroup(value)]) ?? [];
+    return expandedIds;
+}
+
+
+function GetDefaultExpanded(tree: ProfileCommandTree): string[] {
+    return tree.commandGroups.flatMap(value => {
+        let ids = getDefaultExpandedOfCommandGroup(value);
+        if (value.selectedCommands > 0) {
+            ids.push(value.id);
+        }
+        return ids;
+    });
 }
 
 function updateCommand(command: ProfileCTCommand, commandId: string, selected: boolean, version: string | undefined, registered: boolean | undefined): ProfileCTCommand {
@@ -259,6 +306,7 @@ function updateCommand(command: ProfileCTCommand, commandId: string, selected: b
         return {
             ...command,
             selectedVersion: undefined,
+            registered: undefined,
         }
     }
 }
@@ -409,7 +457,7 @@ function ExportModViewCommandGroup(commandGroup: ProfileCTCommandGroup): CLIModV
     let commands: CLIModViewCommands | undefined = undefined;
     if (commandGroup.commands !== undefined) {
         commands = {}
-        
+
         commandGroup.commands!.forEach(value => {
             let view = ExportModViewCommand(value);
             if (view !== undefined) {
