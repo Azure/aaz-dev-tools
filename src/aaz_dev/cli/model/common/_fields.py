@@ -1,5 +1,5 @@
-from schematics.types import StringType, ModelType
 from command.model.configuration import CMDCommand
+from schematics.types import StringType, ModelType
 from utils.config import Config
 
 

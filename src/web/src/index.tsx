@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { HashRouter, Routes, Route } from "react-router-dom";
-import 'bootstrap/dist/css/bootstrap.css';
 import './index.css';
 import App from './App';
 import HomePage from './views/home/HomePage';
@@ -9,11 +8,11 @@ import WorkspacePage from './views/workspace/WorkspacePage';
 import WorkspaceInstruction from './views/workspace/WorkspaceInstruction';
 import { WSEditor } from './views/workspace/WSEditor';
 import CommandsPage from './views/commands/CommandsPage';
-import GenerationPage from './views/generation/GenerationPage';
-import GenerationInstruction from './views/generation/GenerationInstruction';
-import { GenerationModuleEditor } from './views/generation/GenerationModuleEditor';
+import CLIPage from './views/cli/CLIPage';
+import CLIInstruction from './views/cli/CLIInstruction';
 import DocumentsPage from './views/documentation/DocumentsPage';
 import { DocumentsDisplay } from './views/documentation/DocumentsDisplay';
+import { CLIModuleGenerator } from './views/cli/CLIModuleGenerator';
 // import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
@@ -30,11 +29,11 @@ ReactDOM.render(
           </Route>
           <Route path="Commands" element={<CommandsPage />}>
           </Route>
-          <Route path="Generation" element={<GenerationPage />}>
-            <Route index element={<GenerationInstruction />} />
-            <Route path="Instruction" element={<GenerationInstruction />} >
+          <Route path="CLI" element={<CLIPage />}>
+            <Route index element={<CLIInstruction />} />
+            <Route path="Instruction" element={<CLIInstruction />} >
             </Route>
-            <Route path=":repoName/:moduleName" element={<GenerationModuleEditor />} />
+            <Route path=":repoName/:moduleName" element={<CLIModuleGenerator />} />
           </Route>
           <Route path="Documents" element={<DocumentsPage />}>
             <Route index element={<DocumentsDisplay/>} />

@@ -111,7 +111,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
             value: value
         });
         if (value.url) {
-            window.location.href = `/?#/Generation/${this.props.repo}/${value.name}`
+            window.location.href = `/?#/CLI/${this.props.repo}/${value.name}`
         }
     }
 

@@ -1,6 +1,7 @@
-from cli.model.atomic._example import CLICommandExample
 from schematics.models import Model
 from schematics.types import StringType, ListType, ModelType
+
+from ._example import CLICommandExample
 
 
 class CLICommandGroupHelp(Model):

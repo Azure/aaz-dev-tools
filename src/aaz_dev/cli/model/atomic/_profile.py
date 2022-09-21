@@ -1,7 +1,8 @@
-from cli.model.atomic._command_group import CLIAtomicCommandGroup
-from cli.model.atomic._fields import CLIProfileNameField
+from cli.model.common._fields import CLIProfileNameField
 from schematics.models import Model
 from schematics.types import ModelType, DictType
+
+from ._command_group import CLIAtomicCommandGroup
 
 
 class CLIAtomicProfile(Model):

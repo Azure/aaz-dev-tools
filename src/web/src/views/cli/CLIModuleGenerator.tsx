@@ -1,0 +1,248 @@
+import * as React from "react";
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Drawer,
+    LinearProgress,
+    Toolbar,
+} from "@mui/material";
+import { useParams } from "react-router";
+import axios from "axios";
+import CLIModGeneratorToolBar from "./CLIModGeneratorToolBar";
+import { Alert } from "reactstrap";
+import CLIModGeneratorProfileCommandTree, { BuildProfileCommandTree, ExportModViewProfile, ProfileCommandTree, UpdateProfileCommandTreeByModView } from "./CLIModGeneratorProfileCommandTree";
+import CLIModGeneratorProfileTabs from "./CLIModGeneratorProfileTabs";
+import { CLIModView, CLIModViewProfiles } from "./CLIModuleCommon";
+
+
+
+interface CLIModuleGeneratorProps {
+    params: {
+        repoName: string;
+        moduleName: string;
+    };
+}
+
+interface CLIModuleGeneratorState {
+    profiles: string[];
+    commandTrees: ProfileCommandTree[];
+    selectedProfileIdx?: number;
+    selectedCommandTree?: ProfileCommandTree;
+    showGenerateDialog: boolean;
+}
+
+
+class CLIModuleGenerator extends React.Component<CLIModuleGeneratorProps, CLIModuleGeneratorState> {
+
+    constructor(props: CLIModuleGeneratorProps) {
+        super(props);
+        this.state = {
+            profiles: [],
+            commandTrees: [],
+            selectedProfileIdx: undefined,
+            selectedCommandTree: undefined,
+            showGenerateDialog: false,
+        }
+    }
+
+    componentDidMount() {
+        this.loadModule();
+    }
+
+    loadModule = async () => {
+        try {
+            let res = await axios.get(`/CLI/Az/Profiles`);
+            let profiles: string[] = res.data;
+
+            res = await axios.get(`/AAZ/Specs/CommandTree/Nodes/aaz`);
+            let commandTrees: ProfileCommandTree[] = profiles.map((profileName) => BuildProfileCommandTree(profileName, res.data));
+
+            res = await axios.get(`/CLI/Az/${this.props.params.repoName}/Modules/${this.props.params.moduleName}`);
+            let modView: CLIModView = res.data
+            
+            Object.keys(modView.profiles).forEach((profile) => {
+                let idx = profiles.findIndex(v => v === profile);
+                if (idx === -1) {
+                    throw new Error(`Invalid profile ${profile}`);
+                }
+                commandTrees[idx] = UpdateProfileCommandTreeByModView(commandTrees[idx], modView.profiles[profile]);
+            })
+            
+
+            let selectedProfileIdx = profiles.length > 0 ? 0 : undefined;
+            let selectedCommandTree = selectedProfileIdx !== undefined ? commandTrees[selectedProfileIdx] : undefined;
+            this.setState({
+                profiles: profiles,
+                commandTrees: commandTrees,
+                selectedProfileIdx: selectedProfileIdx,
+                selectedCommandTree: selectedCommandTree
+            })
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    
+
+    handleBackToHomepage = () => {
+        window.location.href = `/?#/cli`
+    }
+
+    handleGenerate = () => {
+        this.setState({
+            showGenerateDialog: true
+        })
+    }
+
+    handleGenerationClose = (generated: boolean) => {
+        this.setState({
+            showGenerateDialog: false
+        })
+    }
+
+    onProfileChange = (selectedIdx: number) => {
+        this.setState(preState => {
+            return {
+                ...preState,
+                selectedProfileIdx: selectedIdx,
+                selectedCommandTree: preState.commandTrees[selectedIdx],
+            }
+        })
+    }
+
+    onSelectedProfileTreeUpdate = (newTree: ProfileCommandTree) => {
+        this.setState(preState => {
+            return {
+                ...preState,
+                selectedCommandTree: newTree,
+                commandTrees: preState.commandTrees.map((value, idx) => {return idx === preState.selectedProfileIdx ? newTree : value}),
+            }
+        })
+    }
+
+    render() {
+        const { showGenerateDialog, selectedProfileIdx, selectedCommandTree, profiles, commandTrees } = this.state;
+        return (
+            <React.Fragment>
+                <CLIModGeneratorToolBar
+                    moduleName={this.props.params.moduleName}
+                    onHomePage={this.handleBackToHomepage}
+                    onGenerate={this.handleGenerate}
+                />
+                <Box sx={{ display: "flex" }}>
+                    <Drawer
+                        variant="permanent"
+                        sx={{
+                            width: 300,
+                            flexShrink: 0,
+                            [`& .MuiDrawer-paper`]: { width: 300, boxSizing: "border-box" },
+                        }}
+                    >
+                        <Toolbar />
+                        {selectedProfileIdx !== undefined && <CLIModGeneratorProfileTabs
+                            value={selectedProfileIdx} profiles={profiles} onChange={this.onProfileChange} />}
+                    </Drawer>
+                    <Box
+                        component="main"
+                        sx={{
+                            flexGrow: 1,
+                            p: 2,
+                        }}
+                    >
+                        <Toolbar sx={{ flexShrink: 0 }} />
+                        {selectedCommandTree !== undefined && <CLIModGeneratorProfileCommandTree
+                            profileCommandTree={selectedCommandTree} onChange={this.onSelectedProfileTreeUpdate}/>}
+                    </Box>
+                </Box>
+                {showGenerateDialog && <GenerateDialog
+                    repoName={this.props.params.repoName}
+                    moduleName={this.props.params.moduleName}
+                    profileCommandTrees={commandTrees}
+                    open={showGenerateDialog}
+                    onClose={this.handleGenerationClose}
+                />}
+            </React.Fragment>
+        );
+    }
+
+}
+
+function GenerateDialog(props: {
+    repoName: string;
+    moduleName: string;
+    profileCommandTrees: ProfileCommandTree[];
+    open: boolean;
+    onClose: (generated: boolean) => void;
+}) {
+    const [updating, setUpdating] = React.useState<boolean>(false);
+    const [invalidText, setInvalidText] = React.useState<string | undefined>(
+        undefined
+    );
+
+    const handleClose = () => {
+        props.onClose(false);
+    };
+
+    const handleGenerate = () => {
+        const profiles: CLIModViewProfiles = {};
+        props.profileCommandTrees.forEach(tree => {
+            profiles[tree.name] = ExportModViewProfile(tree);
+        })
+        const data = {
+            name: props.moduleName,
+            profiles: profiles,
+        }
+
+        setUpdating(true);
+        axios
+            .put(
+                `/CLI/Az/${props.repoName}/Modules/${props.moduleName}`,
+                data
+            )
+            .then(() => {
+                setUpdating(false);
+                props.onClose(true);
+            })
+            .catch((err) => {
+                console.error(err.response);
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    setInvalidText(
+                        `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
+                    );
+                }
+                setUpdating(false);
+            });
+    };
+
+    return (
+        <Dialog disableEscapeKeyDown open={props.open}>
+            <DialogTitle>Generate CLI commands to {props.moduleName}</DialogTitle>
+            <DialogContent>
+                {invalidText && <Alert variant="filled" severity="error"> {invalidText} </Alert>}
+            </DialogContent>
+            <DialogActions>
+                {updating &&
+                    <Box sx={{ width: "100%" }}>
+                        <LinearProgress color="info" />
+                    </Box>
+                }
+                {!updating && <React.Fragment>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleGenerate}>Confirm</Button>
+                </React.Fragment>}
+            </DialogActions>
+        </Dialog>
+    );
+}
+
+const CLIModuleGeneratorWrapper = (props: any) => {
+    const params = useParams();
+    return <CLIModuleGenerator params={params} {...props} />
+}
+
+export { CLIModuleGeneratorWrapper as CLIModuleGenerator };
