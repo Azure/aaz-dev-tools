@@ -3,6 +3,12 @@
 Release History
 ===============
 
+0.11.0
+++++++
+* Support export unregistered command code (#126)
+* Refactor CLI Generators (#126)
+* Support lifecycle callbacks in generated AAZCommand code (#127)
+
 0.10.3
 ++++++
 * Support workspace rename and delete (#123)
