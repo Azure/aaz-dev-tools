@@ -20,6 +20,22 @@ class AzOperationGenerator:
         return self._operation.when
 
 
+class AzLifeCycleCallbackGenerator(AzOperationGenerator):
+
+    def __init__(self, name):
+        super().__init__(name, None, None)
+
+    @property
+    def when(self):
+        return None
+
+class AzLifeCycleInstanceUpdateCallbackGenerator(AzLifeCycleCallbackGenerator):
+
+    def __init__(self, name, variant_key):
+        super().__init__(name)
+        self.variant_key = variant_key
+
+
 class AzHttpOperationGenerator(AzOperationGenerator):
 
     def __init__(self, name, cmd_ctx, operation):
@@ -212,7 +228,15 @@ class AzHttpOperationGenerator(AzOperationGenerator):
         return parameters
 
 
-class AzJsonUpdateOperationGenerator(AzOperationGenerator):
+class AzUpdateOperationGenerator(AzOperationGenerator):
+
+    def __init__(self, name, cmd_ctx, operation, variant_key, arg_key):
+        super().__init__(name, cmd_ctx, operation)
+        self.variant_key = variant_key
+        self.arg_key = arg_key
+
+
+class AzJsonUpdateOperationGenerator(AzUpdateOperationGenerator):
 
     UPDATER_NAME = "_update_instance"
 
@@ -221,15 +245,14 @@ class AzJsonUpdateOperationGenerator(AzOperationGenerator):
     BUILDER_NAME = "_builder"
 
     def __init__(self, name, cmd_ctx, operation):
-        super().__init__(name, cmd_ctx, operation)
+        super().__init__(name, cmd_ctx, operation,
+                         variant_key=cmd_ctx.get_variant(operation.instance_update.instance),
+                         arg_key="self.ctx.args")
         assert isinstance(self._operation, CMDInstanceUpdateOperation)
         assert isinstance(self._operation.instance_update, CMDJsonInstanceUpdateAction)
-        self.variant_key = self._cmd_ctx.get_variant(self._operation.instance_update.instance)
         self._json = self._operation.instance_update.json
 
         assert self._json.ref is None
-
-        self.arg_key = "self.ctx.args"
         assert isinstance(self._json.schema, CMDSchema)
         if self._json.schema.arg:
             self.arg_key, hide = self._cmd_ctx.get_argument(self._json.schema.arg)
@@ -271,12 +294,12 @@ class AzJsonUpdateOperationGenerator(AzOperationGenerator):
             yield scopes
 
 
-class AzGenericUpdateOperationGenerator(AzOperationGenerator):
+class AzGenericUpdateOperationGenerator(AzUpdateOperationGenerator):
 
     def __init__(self, cmd_ctx, variant_key):
-        super().__init__("InstanceUpdateByGeneric", cmd_ctx, None)
-        self.variant_key = variant_key
-        self.arg_key = "self.ctx.generic_update_args"
+        super().__init__("InstanceUpdateByGeneric", cmd_ctx, None,
+                         variant_key=variant_key,
+                         arg_key="self.ctx.generic_update_args")
 
     @property
     def when(self):

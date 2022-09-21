@@ -191,12 +191,15 @@ class {{ leaf.cls_name }}(
     {%- endfor %}
 
     def _execute_operations(self):
-
+        self.pre_operations()
         {%- for var, name, condition in leaf.conditions %}
         {{ name }} = {{ leaf.render_condition(condition) }}
         {%- endfor %}
 
         {%- for op in leaf.operations %}
+        {%- if op.name in ("pre_instance_update", "post_instance_update")  %}
+        self.{{ op.name }}({{ op.variant_key }})
+        {%- else %}
 
         {%- if op.when is not none and op.when|length %}
         if {{ leaf.render_operation_when(op.when) }}:
@@ -207,7 +210,27 @@ class {{ leaf.cls_name }}(
 
         {%- if op.is_long_running %}yield {% endif %}self.{{ op.name }}(ctx=self.ctx)()
 
+        {%- endif %}
+
         {%- endfor %}
+        self.post_operations()
+
+    # @register_callback
+    def pre_operations(self):
+        pass
+
+    # @register_callback
+    def post_operations(self):
+        pass
+
+    {%- for op in leaf.operations %}
+    {%- if op.name in ("pre_instance_update", "post_instance_update")  %}
+
+    # @register_callback
+    def {{ op.name }}(self, instance):
+        pass
+    {%- endif %}
+    {%- endfor %}
 
     {%- if leaf.has_outputs() %}
 

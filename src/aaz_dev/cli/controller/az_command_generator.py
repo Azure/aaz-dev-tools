@@ -5,7 +5,8 @@ from command.model.configuration import CMDCommand, CMDHttpOperation, CMDConditi
 from utils.case import to_camel_case, to_snack_case
 from utils.plane import PlaneEnum
 from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator, \
-    AzGenericUpdateOperationGenerator, AzRequestClsGenerator, AzResponseClsGenerator
+    AzGenericUpdateOperationGenerator, AzRequestClsGenerator, AzResponseClsGenerator, AzUpdateOperationGenerator, \
+    AzLifeCycleInstanceUpdateCallbackGenerator
 from .az_arg_group_generator import AzArgGroupGenerator, AzArgClsGenerator
 from .az_output_generator import AzOutputGenerator
 from utils import exceptions
@@ -181,6 +182,21 @@ class AzCommandGenerator:
                 else:
                     self.generic_update_op = AzGenericUpdateOperationGenerator(self.cmd_ctx, variant_key)
                     self.operations = [*self.operations[:max_idx+1], self.generic_update_op, *self.operations[max_idx+1:]]
+
+        # Add instance update callbacks
+        first_instance_update_idx = None
+        last_instance_update_idx = None
+        for idx, op in enumerate(self.operations):
+            if isinstance(op, AzUpdateOperationGenerator):
+                if first_instance_update_idx is None:
+                    first_instance_update_idx = idx
+                last_instance_update_idx = idx
+        if last_instance_update_idx is not None and len(self.operations) > last_instance_update_idx + 1:
+            post_op_generator = AzLifeCycleInstanceUpdateCallbackGenerator('post_instance_update', self.operations[last_instance_update_idx].variant_key)
+            self.operations = [*self.operations[:last_instance_update_idx+1], post_op_generator, *self.operations[last_instance_update_idx+1:]]
+        if first_instance_update_idx is not None and first_instance_update_idx > 0:
+            pre_op_generator = AzLifeCycleInstanceUpdateCallbackGenerator('pre_instance_update', self.operations[first_instance_update_idx].variant_key)
+            self.operations = [*self.operations[:first_instance_update_idx], pre_op_generator, *self.operations[first_instance_update_idx:]]
 
         self.plane = None
         for resource in self.cmd.resources:
