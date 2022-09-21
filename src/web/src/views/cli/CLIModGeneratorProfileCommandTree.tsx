@@ -6,7 +6,7 @@ import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import FolderIcon from "@mui/icons-material/Folder";
 import DescriptionIcon from "@mui/icons-material/Description";
-import { Box, Checkbox, FormControl, Typography, Select, MenuItem, styled, TypographyProps } from "@mui/material";
+import { Box, Checkbox, FormControl, Typography, Select, MenuItem, styled, TypographyProps, FormHelperText, InputLabel } from "@mui/material";
 import { CLIModViewCommand, CLIModViewCommandGroup, CLIModViewCommandGroups, CLIModViewCommands, CLIModViewProfile } from "./CLIModuleCommon";
 
 
@@ -22,14 +22,14 @@ interface CLIModGeneratorProfileCommandTreeSate {
 const CommandGroupTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     color: theme.palette.primary.main,
     fontFamily: "'Work Sans', sans-serif",
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: 600,
 }))
 
 const CommandTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     color: theme.palette.primary.main,
     fontFamily: "'Work Sans', sans-serif",
-    fontSize: 17,
+    fontSize: 20,
     fontWeight: 400,
 }))
 
@@ -38,6 +38,13 @@ const SelectionTypography = styled(Typography)<TypographyProps>(({ theme }) => (
     fontFamily: "'Work Sans', sans-serif",
     fontSize: 15,
     fontWeight: 400,
+}))
+
+const RegisteredTypography = styled(SelectionTypography)<TypographyProps>(({ theme }) => ({
+}))
+
+const UnregisteredTypography = styled(SelectionTypography)<TypographyProps>(({ theme }) => ({
+    color: '#d9c136',
 }))
 
 
@@ -71,12 +78,14 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
     }
 
     render() {
-        const {defaultExpanded} = this.state
+        const { defaultExpanded } = this.state
         const renderCommand = (command: ProfileCTCommand) => {
             const leafName = command.names[command.names.length - 1];
             const selected = command.selectedVersion !== undefined;
             return (
-                <TreeItem sx={{marginLeft: 2}}  key={command.id} nodeId={command.id} color='inherit' label={<Box sx={{
+                <TreeItem sx={{ marginLeft: 2 }} key={command.id} nodeId={command.id} color='inherit' label={<Box sx={{
+                    marginTop: 1,
+                    marginBottom: 1,
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
@@ -92,55 +101,56 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
                         }}
                     />
                     {/* <DescriptionIcon /> */}
-                    <CommandTypography sx={{marginLeft: 1}}>{leafName}</CommandTypography>
-                    {command.selectedVersion !== undefined && <FormControl variant="standard" sx={{
-                        m: 1,
-                        minWidth: 120,
+                    <CommandTypography sx={{ marginLeft: 1, minWidth: 100 }}>{leafName}</CommandTypography>
+                    {command.selectedVersion !== undefined && <Box sx={{
+                        marginLeft: 1,
                         display: "flex",
                         flexDirection: "row",
                         alignItems: "center",
                         justifyContent: "flex-start"
                     }}>
-                        <Select
-                            sx={{
-                                minWidth: 150,
-                                marginLeft: 1,
-                            }}
-                            id={`${command.id}-version-select`}
-                            value={command.selectedVersion}
-                            onChange={(event) => {
-                                this.onSelectCommandVersion(command.id, event.target.value);
-                            }}
-                            size="small"
-                        >
-                            {command.versions.map((version) => {
-                                return (<MenuItem value={version.name} key={`${command.id}-version-select-${version.name}`}>
-                                    <SelectionTypography>{version.name}</SelectionTypography>
-                                </MenuItem>);
-                            })}
-                        </Select>
-
-                        <Select
-                            sx={{
-                                marginLeft: 1,
-                            }}
-                            id={`${command.id}-register-select`}
-                            value={command.registered ? 1 : 0}
-                            onChange={(event) => {
-                                this.onSelectCommandRegistered(command.id, event.target.value === 1);
-                            }}
-                            size="small"
-                        >
-                            <MenuItem value={1} key={`${command.id}-register-select-registered`}>
-                            <SelectionTypography>Registered</SelectionTypography>
-                            </MenuItem>
-                            <MenuItem value={0} key={`${command.id}-register-select-unregistered`}>
-                            <SelectionTypography>Unregistered</SelectionTypography>
-                                
-                            </MenuItem>
-                        </Select>
-
-                    </FormControl>}
+                        <FormControl sx={{
+                            minWidth: 150,
+                            marginLeft: 1,
+                        }} size="small" variant="standard">
+                            <InputLabel>Version</InputLabel>
+                            <Select
+                                id={`${command.id}-version-select`}
+                                value={command.selectedVersion}
+                                onChange={(event) => {
+                                    this.onSelectCommandVersion(command.id, event.target.value);
+                                }}
+                                size="small"
+                            >
+                                {command.versions.map((version) => {
+                                    return (<MenuItem value={version.name} key={`${command.id}-version-select-${version.name}`}>
+                                        <SelectionTypography>{version.name}</SelectionTypography>
+                                    </MenuItem>);
+                                })}
+                            </Select>
+                        </FormControl>
+                        <FormControl sx={{
+                            minWidth: 150,
+                            marginLeft: 1,
+                        }} size="small" variant="standard">
+                            <InputLabel>Command table</InputLabel>
+                            <Select
+                                id={`${command.id}-register-select`}
+                                value={command.registered ? 1 : 0}
+                                onChange={(event) => {
+                                    this.onSelectCommandRegistered(command.id, event.target.value === 1);
+                                }}
+                                size="small"
+                            >
+                                <MenuItem value={1} key={`${command.id}-register-select-registered`}>
+                                    <RegisteredTypography>Registered</RegisteredTypography>
+                                </MenuItem>
+                                <MenuItem value={0} key={`${command.id}-register-select-unregistered`}>
+                                    <UnregisteredTypography>Unregistered</UnregisteredTypography>
+                                </MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Box>}
 
                 </Box>}
                     onClick={(event) => {
@@ -155,7 +165,7 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
             const nodeName = commandGroup.names[commandGroup.names.length - 1];
             const selected = commandGroup.selectedCommands > 0 && commandGroup.totalCommands === commandGroup.selectedCommands;
             return (
-                <TreeItem  sx={{marginLeft: 2, marginTop: 0.5}} key={commandGroup.id} nodeId={commandGroup.id} color='inherit' label={<Box sx={{
+                <TreeItem sx={{ marginLeft: 2, marginTop: 0.5 }} key={commandGroup.id} nodeId={commandGroup.id} color='inherit' label={<Box sx={{
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
@@ -172,7 +182,7 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
                         }}
                     />
                     <FolderIcon />
-                    <CommandGroupTypography sx={{marginLeft: 1}}>{nodeName}</CommandGroupTypography>
+                    <CommandGroupTypography sx={{ marginLeft: 1 }}>{nodeName}</CommandGroupTypography>
                 </Box>}
                     onClick={(event) => {
                         event.stopPropagation();
