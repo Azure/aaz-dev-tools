@@ -85,7 +85,7 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                     assert len(result) == 1
                     arg = result[0]
 
-                    if resource_name == placeholder:
+                    if resource_name == placeholder and not builder._ref_arg:
                         arg.options = list({*arg.options, "name", "n"})
 
                 arg.required = True
