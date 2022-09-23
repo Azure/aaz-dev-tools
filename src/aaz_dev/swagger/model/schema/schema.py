@@ -544,11 +544,9 @@ class Schema(Model, Linkable):
                         assert isinstance(v, CMDSchemaBase)
                         model.additional_props = CMDObjectSchemaAdditionalProperties()
                         model.additional_props.item = v
-                        if MutabilityEnum.Create == builder.mutability:
-                            # for create operation
-                            # item is required, it's frozen status must be consisted with the defined schema.
-                            # This can help to for empty object.
-                            model.additional_props.item.frozen = builder.frozen
+                        # item is required, it's frozen status must be consisted with the defined schema.
+                        # This can help to for empty object.
+                        model.additional_props.item.frozen = builder.frozen
                 # Note: not support additional_properties without schema define
                 # elif self.additional_properties is True:
                 #     model.additional_props = CMDObjectSchemaAdditionalProperties()
