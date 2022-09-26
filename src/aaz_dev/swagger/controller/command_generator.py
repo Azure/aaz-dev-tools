@@ -74,7 +74,6 @@ class CommandGenerator:
             command_group.commands.append(head_command)
 
         # update command
-        update_by = kwargs.get('update_by', None)
         if update_by is None:
             update_by_patch_command = None
             update_by_generic_command = None
