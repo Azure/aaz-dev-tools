@@ -5,7 +5,6 @@ import TreeItem from '@mui/lab/TreeItem';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import FolderIcon from "@mui/icons-material/Folder";
-import DescriptionIcon from "@mui/icons-material/Description";
 import { Box, Checkbox, FormControl, Typography, Select, MenuItem, styled, TypographyProps, FormHelperText, InputLabel } from "@mui/material";
 import { CLIModViewCommand, CLIModViewCommandGroup, CLIModViewCommandGroups, CLIModViewCommands, CLIModViewProfile } from "./CLIModuleCommon";
 
@@ -370,7 +369,7 @@ function updateCommandGroupByModView(commandGroup: ProfileCTCommandGroup, view: 
     if (commandGroup.id !== view.names.join('/')) {
         throw new Error("Invalid command group names: " + view.names.join(' '))
     }
-    let commands: ProfileCTCommand[] | undefined = undefined;
+    let commands = commandGroup.commands;
     if (view.commands !== undefined) {
         let keys = new Set(Object.keys(view.commands!));
         commands = commandGroup.commands?.map((value) => {
@@ -390,7 +389,7 @@ function updateCommandGroupByModView(commandGroup: ProfileCTCommandGroup, view: 
         }
     }
 
-    let commandGroups: ProfileCTCommandGroup[] | undefined = undefined;
+    let commandGroups = commandGroup.commandGroups;
     if (view.commandGroups !== undefined) {
         let keys = new Set(Object.keys(view.commandGroups!));
         commandGroups = commandGroup.commandGroups?.map((value) => {
@@ -421,7 +420,7 @@ function updateCommandGroupByModView(commandGroup: ProfileCTCommandGroup, view: 
 }
 
 function UpdateProfileCommandTreeByModView(tree: ProfileCommandTree, view: CLIModViewProfile): ProfileCommandTree {
-    let commandGroups: ProfileCTCommandGroup[] = [];
+    let commandGroups = tree.commandGroups;
     if (view.commandGroups !== undefined) {
         let keys = new Set(Object.keys(view.commandGroups));
         commandGroups = tree.commandGroups.map((value) => {
