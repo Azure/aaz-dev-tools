@@ -63,15 +63,14 @@ class CLIModuleGenerator extends React.Component<CLIModuleGeneratorProps, CLIMod
 
             res = await axios.get(`/CLI/Az/${this.props.params.repoName}/Modules/${this.props.params.moduleName}`);
             let modView: CLIModView = res.data
-            
+
             Object.keys(modView.profiles).forEach((profile) => {
                 let idx = profiles.findIndex(v => v === profile);
                 if (idx === -1) {
                     throw new Error(`Invalid profile ${profile}`);
                 }
                 commandTrees[idx] = UpdateProfileCommandTreeByModView(commandTrees[idx], modView.profiles[profile]);
-            })
-            
+            })            
 
             let selectedProfileIdx = profiles.length > 0 ? 0 : undefined;
             let selectedCommandTree = selectedProfileIdx !== undefined ? commandTrees[selectedProfileIdx] : undefined;
@@ -85,8 +84,6 @@ class CLIModuleGenerator extends React.Component<CLIModuleGeneratorProps, CLIMod
             console.error(err);
         }
     }
-
-    
 
     handleBackToHomepage = () => {
         window.location.href = `/?#/cli`
