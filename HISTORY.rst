@@ -3,6 +3,12 @@
 Release History
 ===============
 
+0.11.1
+++++++
+* Fix patch only not work in workspace editors (#132)
+* Fix UI bugs in CLI generators (#132)
+* Fix swagger frozen issue in additional properties (#130)
+
 0.11.0
 ++++++
 * Support export unregistered command code (#126)
