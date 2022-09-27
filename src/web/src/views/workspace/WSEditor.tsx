@@ -494,6 +494,7 @@ function WSEditorDeleteDialog(props: {
 }) {
     const [updating, setUpdating] = React.useState<boolean>(false);
     const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
+    const [confirmName, setConfirmName] = React.useState<string | undefined>(undefined);
 
     const handleClose = () => {
         props.onClose(false);
@@ -525,10 +526,23 @@ function WSEditorDeleteDialog(props: {
             disableEscapeKeyDown
             open={props.open}
         >
-            <DialogTitle>Confirm to delete workspace?</DialogTitle>
-            <DialogContent>
-                {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
-            </DialogContent>
+            <DialogTitle>Delete '{props.workspaceName}' workspace?</DialogTitle>
+            <DialogContent dividers={true}>
+                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                    <TextField
+                        id="name"
+                        label="Workspace Name"
+                        helperText="Please type workspace name to confirm."
+                        type="text"
+                        fullWidth
+                        variant='standard'
+                        value={confirmName}
+                        onChange={(event: any) => {
+                            setConfirmName(event.target.value)
+                        }}
+                        margin="normal" required
+                    />
+                </DialogContent>
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
@@ -537,7 +551,7 @@ function WSEditorDeleteDialog(props: {
                 }
                 {!updating && <React.Fragment>
                     <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleDelete}>Confirm</Button>
+                    <Button onClick={handleDelete} disabled={props.workspaceName !== confirmName}>Confirm</Button>
                 </React.Fragment>}
             </DialogActions>
         </Dialog>

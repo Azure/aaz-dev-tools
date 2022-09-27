@@ -68,13 +68,13 @@ class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
                             startIcon={<EditIcon sx={{ color: grey[100] }} fontSize='small' />}
                             onClick={onModify}
                         >
-                            <ArgEditTypography>Edit</ArgEditTypography>
+                            <ArgEditTypography>EDIT</ArgEditTypography>
                         </Button>
                         <Button sx={{ flexShrink: 0, ml: 1 }}
                             startIcon={<DeleteIcon sx={{ color: grey[100] }} fontSize='small' />}
                             onClick={onDelete}
                         >
-                            <ArgEditTypography>Delete</ArgEditTypography>
+                            <ArgEditTypography>DELETE</ArgEditTypography>
                         </Button>
 
                         <Box sx={{ flexGrow: 1 }} />
