@@ -3,6 +3,12 @@
 Release History
 ===============
 
+0.11.2
+++++++
+* Fix cls argument base inherent (#136)
+* Fix reload swagger error if no arg change previously (#135)
+* Add delete confirmation for workspace delete (#134)
+
 0.11.1
 ++++++
 * Fix patch only not work in workspace editors (#132)
