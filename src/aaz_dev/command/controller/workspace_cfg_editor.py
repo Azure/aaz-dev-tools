@@ -649,8 +649,9 @@ class WorkspaceCfgEditor(CfgReader):
 
             # inherit arguments modification
             ref_args = []
-            for group in ref_command.arg_groups:
-                ref_args.extend(group.args)
+            if ref_command.arg_groups:
+                for group in ref_command.arg_groups:
+                    ref_args.extend(group.args)
             command.generate_args(ref_args=ref_args)
 
             # inherit outputs
