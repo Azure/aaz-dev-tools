@@ -4,7 +4,7 @@ import re
 from utils.case import to_camel_case
 
 from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgDefault, CMDBooleanArgBase, \
-    CMDArgBlank, CMDObjectArgAdditionalProperties, CMDResourceLocationArgBase
+    CMDArgBlank, CMDObjectArgAdditionalProperties, CMDResourceLocationArgBase, CMDClsArgBase
 from ._format import CMDFormat
 from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
     CMDArraySchemaBase, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema, CMDBooleanSchemaBase, \
@@ -149,7 +149,14 @@ class CMDArgBuilder:
         assert isinstance(self.schema, (CMDObjectSchemaBase, CMDObjectSchemaDiscriminator))
         sub_args = []
         discriminator_mapping = {}
-        sub_ref_args = self._ref_arg.args if self._ref_arg else self._sub_ref_args
+        if self._ref_arg:
+            if isinstance(self._ref_arg, CMDClsArgBase):
+                # TODO: find cls arg implementation
+                sub_ref_args = self._sub_ref_args
+            else:
+                sub_ref_args = self._ref_arg.args
+        else:
+            sub_ref_args = self._sub_ref_args
 
         if self.schema.discriminators:
             # update self._flatten_discriminators, if any discriminator need flatten, then all discriminator needs to flatten
