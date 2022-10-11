@@ -215,18 +215,18 @@ class {{ leaf.cls_name }}(
         {%- endfor %}
         self.post_operations()
 
-    # @register_callback
+    @register_callback
     def pre_operations(self):
         pass
 
-    # @register_callback
+    @register_callback
     def post_operations(self):
         pass
 
     {%- for op in leaf.operations %}
     {%- if op.name in ("pre_instance_update", "post_instance_update")  %}
 
-    # @register_callback
+    @register_callback
     def {{ op.name }}(self, instance):
         pass
     {%- endif %}
