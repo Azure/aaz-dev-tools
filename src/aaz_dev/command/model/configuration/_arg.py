@@ -594,6 +594,10 @@ class CMDFloat64Arg(CMDFloat64ArgBase, CMDFloatArg):
 class CMDObjectArgAdditionalProperties(Model):
     # properties as nodes
     item = CMDArgBaseField()
+    any_type = CMDBooleanField(
+        serialized_name="anyType",
+        deserialize_from="anyType",
+    )  # when item is not defined and support any type for additional properties
 
     class Options:
         serialize_when_none = False
@@ -602,10 +606,16 @@ class CMDObjectArgAdditionalProperties(Model):
     def build_arg_base(cls, builder):
         arg = cls()
         arg.item = builder.get_sub_item()
+        arg.any_type = builder.get_any_type()
         return arg
 
     def reformat(self, **kwargs):
         if self.item:
+            if self.any_type:
+                raise exceptions.VerificationError(
+                    "InvalidAdditionalPropertiesDefinition",
+                    details="Additional property defined 'item' and 'any_type'."
+                )
             try:
                 self.item.reformat(**kwargs)
             except exceptions.VerificationError as err:

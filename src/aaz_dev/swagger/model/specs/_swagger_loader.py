@@ -27,10 +27,34 @@ class SwaggerLoader:
         if 'example' in file_path.lower():
             loaded = body
         else:
+            self.patch_swagger(body)
             loaded = Swagger(body)
             self.loaded_swaggers[file_path] = loaded
         self._cache_loaded(loaded, file_path)
         return loaded
+
+    @staticmethod
+    def patch_swagger(body):
+        """Current will patch `additionalProperties: {}` expression"""
+        def _patch_list(lst):
+            for item in lst:
+                if isinstance(item, dict):
+                    _patch_dict(item)
+
+        def _patch_dict(dct):
+            for key in [*dct.keys()]:
+                if key == "additionalProperties" and dct[key] == {}:
+                    # replace `additionalProperties: {}` by `additionalProperties: true`
+                    dct[key] = True
+                _patch(dct[key])
+
+        def _patch(data):
+            if isinstance(data, dict):
+                _patch_dict(data)
+            elif isinstance(data, list):
+                _patch_list(data)
+
+        _patch(body)
 
     def link_swaggers(self):
         while self._linked_idx < len(self.loaded_swaggers):

@@ -197,6 +197,12 @@ class CMDArgBuilder:
         else:
             return None
 
+    def get_any_type(self):
+        if hasattr(self.schema, "any_type") and self.schema.any_type and self.get_sub_item() is None:
+            return True
+        else:
+            return False
+
     def get_additional_props(self):
         if hasattr(self.schema, "additional_props") and self.schema.additional_props:
             sub_ref_arg = self._ref_arg.additional_props if self._ref_arg else None

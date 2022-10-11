@@ -547,9 +547,11 @@ class Schema(Model, Linkable):
                         # item is required, it's frozen status must be consisted with the defined schema.
                         # This can help to for empty object.
                         model.additional_props.item.frozen = builder.frozen
-                # Note: not support additional_properties without schema define
-                # elif self.additional_properties is True:
-                #     model.additional_props = CMDObjectSchemaAdditionalProperties()
+                elif isinstance(self.additional_properties, bool) and self.additional_properties is True:
+                    # Free-Form Objects
+                    # additionalProperties: true
+                    model.additional_props = CMDObjectSchemaAdditionalProperties()
+                    model.additional_props.any_type = True
 
             if model.additional_props:
                 if builder.read_only:
