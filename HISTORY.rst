@@ -3,6 +3,11 @@
 Release History
 ===============
 
+0.12.0
+++++++
+* Disable Read only inherent in swagger translators (#139)
+* Enable register_callback decorator (#129)
+
 0.11.2
 ++++++
 * Fix cls argument base inherent (#136)
