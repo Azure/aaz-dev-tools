@@ -32,13 +32,13 @@ import re
 
 class CMDBuilder:
 
-    def __init__(self, path, method=None, mutability=None, in_base=False, read_only=False, frozen=False, parent_ids=None, cls_definitions=None):
+    def __init__(self, path, method=None, mutability=None, in_base=False, frozen=False, parent_ids=None, cls_definitions=None):
         self.path = path
         self.method = method
         self.mutability = mutability
         self.in_base = in_base
-        self.read_only = read_only
         self.frozen = frozen
+        self.read_only = False
         self.id = None    # used to find loop
         self.parent_ids = parent_ids or []
         self.cls_definitions = {} if cls_definitions is None else cls_definitions
@@ -49,7 +49,6 @@ class CMDBuilder:
             method=kwargs.pop('method', self.method),
             mutability=kwargs.pop('mutability', self.mutability),
             in_base=kwargs.pop('in_base', self.in_base),
-            read_only=kwargs.pop('read_only', self.read_only),
             frozen=kwargs.pop('frozen', self.frozen),
             parent_ids=[*self.parent_ids, self.id],
             cls_definitions=kwargs.pop('cls_definitions', self.cls_definitions),
@@ -64,7 +63,7 @@ class CMDBuilder:
                 if self.mutability not in schema.x_ms_mutability:
                     sub_builder.frozen = True
         if hasattr(schema, 'traces'):
-            sub_builder.id = (schema.traces, sub_builder.mutability, sub_builder.read_only, sub_builder.frozen)
+            sub_builder.id = (schema.traces, sub_builder.mutability, sub_builder.frozen)
             if sub_builder.id in sub_builder.parent_ids:
                 if len(schema.traces) == 3:
                     # make sure the trace is reference definition, the trace should be [file_path, 'definitions', name]
@@ -80,7 +79,7 @@ class CMDBuilder:
         for parent_id in self.parent_ids:
             if parent_id is None:
                 continue
-            parent_traces, mutability, read_only, frozen = parent_id
+            parent_traces, mutability, frozen = parent_id
             if parent_traces == traces:
                 return True
         return False
