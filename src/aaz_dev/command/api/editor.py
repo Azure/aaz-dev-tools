@@ -186,6 +186,8 @@ def editor_workspace_command(name, node_names, leaf_name):
             leaf = manager.update_command_tree_leaf_stage(*leaf.names, stage=data['stage'])
         if 'examples' in data:
             leaf = manager.update_command_tree_leaf_examples(*leaf.names, examples=data['examples'])
+        if 'confirmation' in data and leaf.confirmation != data['confirmation']:
+            leaf = manager.update_command_tree_leaf_confirmation(*leaf.names, confirmation=data['confirmation'])
         cfg_editor = manager.load_cfg_editor_by_command(leaf)
         command = cfg_editor.find_command(*leaf.names)
         result = command.to_primitive()
@@ -201,6 +203,8 @@ def editor_workspace_command(name, node_names, leaf_name):
     })
     if leaf.examples:
         result['examples'] = [e.to_primitive() for e in leaf.examples]
+    if leaf.confirmation:
+        result['confirmation'] = leaf.confirmation
 
     return jsonify(result)
 

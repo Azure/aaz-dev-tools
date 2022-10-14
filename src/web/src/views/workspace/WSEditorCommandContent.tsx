@@ -33,6 +33,7 @@ interface Command {
     version: string
     examples?: Example[]
     resources: Resource[]
+    confirmation?: string
 }
 
 interface ResponseCommand {
@@ -45,6 +46,7 @@ interface ResponseCommand {
     version: string,
     examples?: Example[],
     resources: Resource[],
+    confirmation?: string
 }
 
 interface ResponseCommands {
@@ -166,6 +168,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         const lines: string[] = this.props.command.help?.lines ?? [];
         const stage = this.props.command.stage;
         const version = this.props.command.version;
+        const confirmation = this.props.command.confirmation;
         const examples: Example[] = this.props.command.examples ?? [];
         const commandUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + command.names.slice(0, -1).join('/') + '/Leaves/' + command.names[command.names.length - 1];
         const { displayCommandDialog, displayExampleDialog, displayCommandDeleteDialog, exampleIdx } = this.state;
@@ -513,6 +516,8 @@ interface CommandDialogState {
     shortHelp: string,
     longHelp: string,
     invalidText?: string,
+    confirmation: string,
+    showConfirm: boolean,
     updating: boolean
 }
 
@@ -526,17 +531,20 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
             shortHelp: this.props.command.help?.short ?? "",
             longHelp: this.props.command.help?.lines?.join('\n') ?? "",
             stage: this.props.command.stage,
+            confirmation: this.props.command.confirmation ?? "",
+            showConfirm: this.props.command.names[this.props.command.names.length - 1]?.toLowerCase() === "delete",
             updating: false
         }
     }
 
     handleModify = (event: any) => {
-        let { name, stage, shortHelp, longHelp } = this.state
+        let { name, stage, shortHelp, longHelp, confirmation } = this.state
         let { workspaceUrl, command } = this.props
 
         name = name.trim();
         shortHelp = shortHelp.trim();
         longHelp = longHelp.trim();
+        confirmation = confirmation.trim();
 
         const names = name.split(' ').filter(n => n.length > 0);
 
@@ -585,6 +593,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                 lines: lines,
             },
             stage: stage,
+            confirmation: confirmation,
         }).then(res => {
             const name = names.join(' ');
             if (name === command.names.join(' ')) {
@@ -627,7 +636,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
     }
 
     render() {
-        const { name, shortHelp, longHelp, invalidText, updating, stage } = this.state;
+        const { name, shortHelp, longHelp, invalidText, updating, stage, confirmation, showConfirm } = this.state;
         return (
             <Dialog
                 disableEscapeKeyDown
@@ -699,6 +708,22 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                         }}
                         margin="normal"
                     />
+                    {showConfirm && <TextField
+                        id="confirmation"
+                        label="Delete confirmation"
+                        helperText="Modify or clear delete confirmation message as needed."
+                        type="text"
+                        fullWidth
+                        multiline
+                        variant='standard'
+                        value={confirmation}
+                        onChange={(event: any) => {
+                            this.setState({
+                                confirmation: event.target.value,
+                            })
+                        }}
+                        margin="normal"
+                    />}
                 </DialogContent>
                 <DialogActions>
                     {updating &&
@@ -1028,6 +1053,7 @@ const DecodeResponseCommand = (command: ResponseCommand): Command => {
         examples: command.examples,
         resources: command.resources,
         version: command.version,
+        confirmation: command.confirmation,
     }
 }
 export default WSEditorCommandContent;

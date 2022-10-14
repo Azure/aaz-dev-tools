@@ -144,9 +144,14 @@ class CommandGenerator:
     def generate_command_version(resource):
         return resource.version
 
+    @staticmethod
+    def generate_command_confirmation(resource):
+        return resource.confirmation
+
     def generate_command(self, path_item, resource, cmd_builder):
         command = CMDCommand()
         command.version = self.generate_command_version(resource)
+        command.confirmation = self.generate_command_confirmation(resource)
         command.resources = [
             resource.to_cmd()
         ]
