@@ -98,7 +98,8 @@ class AzArgClsGenerator:
                         continue
                     self.props.append(parse_arg_name(a))
             elif arg.additional_props:
-                self.props.append("Element")
+                if arg.additional_props.item is not None:
+                    self.props.append("Element")
         elif isinstance(arg, CMDArrayArgBase):
             self.props.append("Element")
 
@@ -128,14 +129,17 @@ def _iter_scopes_by_arg_base(arg, name, scope_define, cmd_ctx):
                 if not cls_builder_name and isinstance(a, (CMDObjectArgBase, CMDArrayArgBase)):
                     search_args[a_name] = a
         elif arg.additional_props:
-            # AAZDictArg
-            assert arg.additional_props.item is not None
-            a = arg.additional_props.item
-            a_name = "Element"
-            a_type, a_kwargs, cls_builder_name = render_arg_base(a, cmd_ctx)
-            rendered_args.append((a_name, a_type, a_kwargs, cls_builder_name))
-            if not cls_builder_name and isinstance(a, (CMDObjectArgBase, CMDArrayArgBase)):
-                search_args[a_name] = a
+            if arg.additional_props.item is not None:
+                # AAZDictArg
+                a = arg.additional_props.item
+                a_name = "Element"
+                a_type, a_kwargs, cls_builder_name = render_arg_base(a, cmd_ctx)
+                rendered_args.append((a_name, a_type, a_kwargs, cls_builder_name))
+                if not cls_builder_name and isinstance(a, (CMDObjectArgBase, CMDArrayArgBase)):
+                    search_args[a_name] = a
+            else:
+                # AAZFreeFormDictArg
+                assert arg.additional_props.any_type is True
     elif isinstance(arg, CMDArrayArgBase):
         # AAZListArg
         assert arg.item is not None
@@ -392,11 +396,17 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
 
     elif isinstance(arg, CMDObjectArgBase):
         if arg.additional_props:
-            arg_type = "AAZDictArg"
+            if arg.additional_props.any_type is True:
+                arg_type = "AAZFreeFormDictArg"
+                arg_fmt_cls = "AAZFreeFormDictArgFormat"
+            else:
+                assert arg.additional_props.item is not None
+                arg_type = "AAZDictArg"
+                arg_fmt_cls = "AAZDictArgFormat"
             if arg.fmt is not None:
                 assert isinstance(arg.fmt, CMDObjectFormat)
                 arg_kwargs['fmt'] = fmt = {
-                    "cls": "AAZDictArgFormat",
+                    "cls": arg_fmt_cls,
                     "kwargs": {}
                 }
                 if arg.fmt.max_properties is not None:

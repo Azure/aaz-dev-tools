@@ -430,6 +430,8 @@ class {{ leaf.cls_name }}(
                 {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
                 {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
             {%- endif %}
+            {%- elif prop_name == '{}' and prop_type is none -%}
+            {{ scope }}.set_anytype_elements({%- if arg_key is not none %}{{ arg_key|constant_convert }}{% endif %})
             {%- else -%}
             {{ scope }}.set_elements({{ prop_type }}
                 {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
@@ -566,6 +568,8 @@ class {{ leaf.cls_name }}(
                 {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
                 {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
             {%- endif %}
+            {%- elif prop_name == '{}' and prop_type is none -%}
+            {{ scope }}.set_anytype_elements({%- if arg_key is not none %}{{ arg_key|constant_convert }}{% endif %})
             {%- else -%}
             {{ scope }}.set_elements({{ prop_type }}
                 {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
@@ -626,6 +630,8 @@ def {{ update_cls.builder_name }}({{ update_cls.BUILDER_NAME }}):
         {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
         {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
     {%- endif %}
+    {%- elif prop_name == '{}' and prop_type is none -%}
+    {{ scope }}.set_anytype_elements({%- if arg_key is not none %}{{ arg_key|constant_convert }}{% endif %})
     {%- else -%}
     {{ scope }}.set_elements({{ prop_type }}
         {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}

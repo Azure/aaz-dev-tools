@@ -2,9 +2,8 @@ from flask import Blueprint, jsonify, request, url_for
 
 from utils.config import Config
 from utils import exceptions
-from cli.controller.az_module_manager import AzModuleManager, AzMainManager, AzExtensionManager
+from cli.controller.az_module_manager import AzMainManager, AzExtensionManager
 from cli.model.view import CLIModule
-from command.controller.specs_manager import AAZSpecsManager
 
 
 bp = Blueprint('az', __name__, url_prefix='/CLI/Az')
