@@ -162,9 +162,6 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                     let id: string = preSelected.id;
                     if (id in commandMap) {
                         selected = commandMap[id];
-                        if ('confirmation' in preSelected){
-                            selected.confirmation = preSelected.confirmation;
-                        }
                     } else {
                         id = 'group:' + id.slice(8);
                         let parts = id.split('/');
@@ -327,21 +324,13 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
 
     handleCommandTreeSelect = (nodeId: string) => {
         if (nodeId.startsWith('command:')) {
-            let selected = this.state.commandMap[nodeId];
-            let workspaceUrl = this.state.workspaceUrl;
-            const leafUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + selected.names.slice(0, -1).join('/') + '/Leaves/' + selected.names[selected.names.length - 1];
-            axios.get(leafUrl).then(res => {
-                const cmd = DecodeResponseCommand(res.data);
-                this.setState(preState => {
-                    let selected = preState.commandMap[nodeId];
-                    selected.confirmation = cmd.confirmation;
-                    return {
-                        ...preState,
-                        selected: selected,
-                    }
-                })
+            this.setState(preState => {
+                const selected = preState.commandMap[nodeId];
+                return {
+                    ...preState,
+                    selected: selected,
+                }
             })
-            
         } else if (nodeId.startsWith('group:')) {
             this.setState(preState => {
                 const selected = preState.commandGroupMap[nodeId];

@@ -356,16 +356,6 @@ class WorkspaceManager:
         leaf.stage = stage
         return leaf
 
-    def update_command_tree_leaf_confirmation(self, *leaf_names, confirmation):
-        leaf = self.find_command_tree_leaf(*leaf_names)
-        if not leaf:
-            raise exceptions.ResourceNotFind(f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
-
-        if leaf.confirmation == confirmation:
-            return
-        leaf.confirmation = confirmation
-        return leaf
-
     def update_command_tree_leaf_examples(self, *leaf_names, examples):
         leaf = self.find_command_tree_leaf(*leaf_names)
         if not leaf:

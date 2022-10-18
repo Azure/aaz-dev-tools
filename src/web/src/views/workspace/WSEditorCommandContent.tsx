@@ -114,6 +114,24 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         }
     }
 
+    updateCommandInfo = () => {
+        let { workspaceUrl, command } = this.props
+        const leafUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + command.names.slice(0, -1).join('/') + '/Leaves/' + command.names[command.names.length - 1];
+        axios.get(leafUrl)
+        .then(res => {
+            const cmd = DecodeResponseCommand(res.data);
+            command.confirmation = cmd.confirmation;
+        }).catch(err => console.error(err));
+    }
+
+    componentDidMount() {
+        this.updateCommandInfo();
+    }
+
+    componentDidUpdate() {
+        this.updateCommandInfo();
+    }
+
     onCommandDialogDisplay = () => {
         this.setState({
             displayCommandDialog: true,
