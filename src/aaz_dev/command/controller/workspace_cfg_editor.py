@@ -320,13 +320,36 @@ class WorkspaceCfgEditor(CfgReader):
             raise exceptions.InvalidAPIUsage(f"Cannot flatten argument with additional properties")
 
         parent.args.remove(arg)
+
+        used_options = set()
+        if isinstance(parent, CMDArgGroup):
+            for group in command.arg_groups:
+                for a in group.args:
+                    used_options.update(a.options)
+        else:
+            for a in parent.args:
+                used_options.update(a.options)
+
         for sub_arg in arg.args:
             if sub_args_options and sub_arg.var in sub_args_options:
                 sub_arg.options = sub_args_options[sub_arg.var]
+            # verify duplicated option
+            for option in sub_arg.options:
+                if option in used_options:
+                    raise exceptions.VerificationError(
+                        message=f"Argument option '{option}' duplicated.",
+                        details={
+                            "type": "Argument",
+                            "options": sub_arg.options,
+                            "var": sub_arg.var,
+                        }
+                    )
+                used_options.add(option)
+
             sub_arg.group = to_camel_case(arg.options[0])
             parent.args.append(sub_arg)
 
-        # regenerate args and its relation ship with schema
+        # regenerate args and its relationship with schema
         command.generate_args()
         self.reformat()
 
