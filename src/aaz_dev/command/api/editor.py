@@ -186,10 +186,8 @@ def editor_workspace_command(name, node_names, leaf_name):
             leaf = manager.update_command_tree_leaf_stage(*leaf.names, stage=data['stage'])
         if 'examples' in data:
             leaf = manager.update_command_tree_leaf_examples(*leaf.names, examples=data['examples'])
-
         cfg_editor = manager.load_cfg_editor_by_command(leaf)
         if 'confirmation' in data:
-            print("leave patch confirmation: " + data['confirmation'])
             cfg_editor.update_command_confirmation(*leaf.names, confirmation=data['confirmation'])
         command = cfg_editor.find_command(*leaf.names)
         result = command.to_primitive()
