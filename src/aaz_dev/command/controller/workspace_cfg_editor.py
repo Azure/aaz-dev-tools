@@ -656,7 +656,7 @@ class WorkspaceCfgEditor(CfgReader):
             ref_cmd_names, ref_command = counterpart
             command_rename_list.append((cmd_names, ref_cmd_names))
             # inherit confirmation
-            if ref_command.confirmation:
+            if ref_command.confirmation is not None:
                 command.confirmation = ref_command.confirmation
 
             # inherit arguments modification
