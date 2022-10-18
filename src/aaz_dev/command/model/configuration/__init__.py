@@ -33,7 +33,7 @@ from ._content import CMDRequestJson, CMDResponseJson
 from ._example import CMDCommandExample
 from ._fields import CMDBooleanField, CMDStageField, CMDVariantField, CMDClassField, \
     CMDPrimitiveField, CMDRegularExpressionField, CMDVersionField, CMDResourceIdField, CMDCommandNameField, \
-    CMDCommandGroupNameField, CMDURLPathField
+    CMDCommandGroupNameField, CMDURLPathField, CMDConfirmation
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, \
     CMDResourceIdFormat
 from ._help import CMDHelp, CMDArgumentHelp

@@ -235,6 +235,18 @@ class WorkspaceCfgEditor(CfgReader):
         main_editor.reformat()
         return main_editor
 
+
+    def update_command_confirmation(self, *cmd_names, confirmation):
+        if len(cmd_names) < 2:
+            raise exceptions.InvalidAPIUsage(f"Invalid command name, it's empty")
+
+        command = self.find_command(*cmd_names)
+        if command is None:
+            raise exceptions.ResourceNotFind(f"Cannot find definition for command '{' '.join(cmd_names)}'")
+        if confirmation != command.confirmation:
+            command.confirmation = confirmation
+        self.reformat()
+
     def update_arg_by_var(self, *cmd_names, arg_var, **kwargs):
         arg, _ = self.find_arg_by_var(*cmd_names, arg_var=arg_var)
         if not arg:
@@ -644,7 +656,7 @@ class WorkspaceCfgEditor(CfgReader):
             ref_cmd_names, ref_command = counterpart
             command_rename_list.append((cmd_names, ref_cmd_names))
             # inherit confirmation
-            if ref_command.confirmation:
+            if ref_command.confirmation is not None:
                 command.confirmation = ref_command.confirmation
 
             # inherit arguments modification

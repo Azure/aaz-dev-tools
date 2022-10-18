@@ -322,7 +322,6 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         })
     }
 
-
     handleCommandTreeSelect = (nodeId: string) => {
         if (nodeId.startsWith('command:')) {
             this.setState(preState => {

@@ -5,7 +5,7 @@ from schematics.types import ModelType, ListType, PolyModelType, StringType
 
 from ._arg_group import CMDArgGroup
 from ._condition import CMDCondition
-from ._fields import CMDDescriptionField, CMDVersionField, CMDCommandNameField, CMDBooleanField
+from ._fields import CMDDescriptionField, CMDVersionField, CMDCommandNameField, CMDBooleanField, CMDConfirmation
 from ._operation import CMDOperation
 from ._output import CMDOutput
 from ._resource import CMDResource
@@ -33,7 +33,7 @@ class CMDCommand(Model):
     operations = ListType(PolyModelType(CMDOperation, allow_subclasses=True), min_size=1)
     outputs = ListType(PolyModelType(CMDOutput, allow_subclasses=True), min_size=1)  # support to add outputs in different formats, such table
 
-    confirmation = StringType(min_length=1)  # support to prompt for confirmation
+    confirmation = CMDConfirmation()  # support to prompt for confirmation - optional
 
     class Options:
         serialize_when_none = False
