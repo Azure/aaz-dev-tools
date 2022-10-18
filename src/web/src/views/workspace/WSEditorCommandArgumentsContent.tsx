@@ -113,7 +113,8 @@ function ArgumentNavigation(props: {
                 flattenArgVar: (selectedArgBase as CMDObjectArg).var,
             }
         } else if (selectedArgBase.type.startsWith("dict<")) {
-            const itemProps = getArgProps((selectedArgBase as CMDDictArgBase).item);
+            let item = (selectedArgBase as CMDDictArgBase).item
+            const itemProps = item ? getArgProps(item) : undefined;
             if (!itemProps) {
                 return undefined;
             }
@@ -1549,8 +1550,8 @@ interface CMDObjectArgBase extends CMDArgBase {
 interface CMDObjectArg extends CMDObjectArgBase, CMDArg { }
 // type: dict
 interface CMDDictArgBase extends CMDArgBase {
-    // fmt?: CMDDictFormat
-    item: CMDArgBase
+    item?: CMDArgBase
+    anyType: boolean
 }
 interface CMDDictArg extends CMDDictArgBase, CMDArg { }
 
@@ -1693,7 +1694,6 @@ function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsA
                 }
             } else if (response.additionalProps && response.additionalProps.item) {
                 // Convert additionalProps to dict argBaseType
-                // TODO: split it on service side
                 const itemArgBaseParse = decodeArgBase(response.additionalProps.item);
                 clsDefineMap = {
                     ...clsDefineMap,
@@ -1703,7 +1703,15 @@ function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsA
                 argBase = {
                     ...argBase,
                     type: argBaseType,
-                    item: itemArgBaseParse.argBase
+                    item: itemArgBaseParse.argBase,
+                    anyType: false
+                }
+            } else if (response.additionalProps && response.additionalProps.anyType) {
+                const argBaseType = `dict<string, Any>`
+                argBase = {
+                    ...argBase,
+                    type: argBaseType,
+                    anyType: true
                 }
             }
 

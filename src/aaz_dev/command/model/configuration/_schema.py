@@ -30,6 +30,7 @@ from ._fields import CMDVariantField, StringType, CMDClassField, CMDBooleanField
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, \
     CMDResourceIdFormat
 from ._utils import CMDDiffLevelEnum
+from utils import exceptions
 
 
 class CMDSchemaEnumItem(Model):
@@ -735,6 +736,10 @@ class CMDObjectSchemaAdditionalProperties(Model):
 
     # properties as nodes
     item = CMDSchemaBaseField()
+    any_type = CMDBooleanField(
+        serialized_name="anyType",
+        deserialize_from="anyType"
+    )
 
     def diff(self, old, level):
         if self.frozen and old.frozen:
@@ -744,6 +749,13 @@ class CMDObjectSchemaAdditionalProperties(Model):
         if level >= CMDDiffLevelEnum.BreakingChange:
             if self.read_only and not old.read_only:
                 diff["read_only"] = f"it's read_only now."
+            if not self.any_type and old.any_type:
+                diff["any_type"] = f"it's not any_type now"
+
+        if level >= CMDDiffLevelEnum.Structure:
+            if self.any_type:
+                if not old.any_type:
+                    diff["any_type"] = f"Now support any_type"
 
         item_diff = _diff_item(self.item, old.item, level)
         if item_diff:
@@ -753,6 +765,11 @@ class CMDObjectSchemaAdditionalProperties(Model):
 
     def reformat(self, **kwargs):
         if self.item:
+            if self.any_type:
+                raise exceptions.VerificationError(
+                    "InvalidAdditionalPropertiesDefinition",
+                    details="Additional property defined 'item' and 'any_type'."
+                )
             self.item.reformat(**kwargs)
 
 

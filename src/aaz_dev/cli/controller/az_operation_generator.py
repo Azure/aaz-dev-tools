@@ -484,7 +484,10 @@ class AzResponseClsGenerator:
                     s_name = to_snack_case(s.name)
                     self.props.append(s_name)
             elif schema.additional_props:
-                self.props.append("Element")
+                if schema.additional_props.item is not None:
+                    self.props.append("Element")
+                else:
+                    assert schema.additional_props.any_type is True
             else:
                 raise NotImplementedError()
         elif isinstance(schema, CMDArraySchemaBase):
@@ -560,20 +563,30 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
                         search_schemas[s_name] = (s, s_arg_key)
 
         elif schema.additional_props:
-            assert schema.additional_props.item is not None  # make sure additional props schema defined its element schema
-            s = schema.additional_props.item
-            s_name = '{}'
-            s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, cmd_ctx.update_clses)
-            s_arg_key = arg_key + '{}'
-            r_key = '.'  # if element exist, always fill it
+            if schema.additional_props.any_type is True:
+                s_name = '{}'
+                r_key = '.'  # if element exist, always fill it
 
-            is_const = False
-            const_value = None
-            rendered_schemas.append(
-                (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
-            )
-            if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-                search_schemas[s_name] = (s, s_arg_key)
+                is_const = False
+                const_value = None
+                rendered_schemas.append(
+                    (s_name, None, is_const, const_value, r_key, None, None)
+                )
+            else:
+                assert schema.additional_props.item is not None
+                s = schema.additional_props.item
+                s_name = '{}'
+                s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, cmd_ctx.update_clses)
+                s_arg_key = arg_key + '{}'
+                r_key = '.'  # if element exist, always fill it
+
+                is_const = False
+                const_value = None
+                rendered_schemas.append(
+                    (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
+                )
+                if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                    search_schemas[s_name] = (s, s_arg_key)
 
     elif isinstance(schema, CMDObjectSchemaDiscriminator):
         if schema.discriminators:
@@ -696,8 +709,8 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, cmd_ctx):
                 if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
                     search_schemas[s_name] = s
         elif schema.additional_props:
-            # AAZDictType
             if schema.additional_props.item is not None:
+                # AAZDictType
                 s = schema.additional_props.item
                 s_name = "Element"
                 s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, cmd_ctx.response_clses)
@@ -705,9 +718,7 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, cmd_ctx):
                 if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
                     search_schemas[s_name] = s
             else:
-                # TODO: handler additional props with no item schema
-                pass
-
+                assert schema.additional_props.any_type is True
         else:
             raise NotImplementedError()
 
@@ -812,7 +823,11 @@ def render_schema_base(schema, cls_map, schema_kwargs=None):
             if schema.additional_props:
                 raise NotImplementedError()
         elif schema.additional_props:
-            schema_type = "AAZDictType"
+            if schema.additional_props.any_type is True:
+                schema_type = "AAZFreeFormDictType"
+            else:
+                assert schema.additional_props.item is not None
+                schema_type = "AAZDictType"
         else:
             # empty object
             schema_type = "AAZObjectType"
