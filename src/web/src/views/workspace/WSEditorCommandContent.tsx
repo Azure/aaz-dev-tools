@@ -517,7 +517,6 @@ interface CommandDialogState {
     longHelp: string,
     invalidText?: string,
     confirmation: string,
-    showConfirm: boolean,
     updating: boolean
 }
 
@@ -532,7 +531,6 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
             longHelp: this.props.command.help?.lines?.join('\n') ?? "",
             stage: this.props.command.stage,
             confirmation: this.props.command.confirmation ?? "",
-            showConfirm: this.props.command.names[this.props.command.names.length - 1]?.toLowerCase() === "delete",
             updating: false
         }
     }
@@ -636,7 +634,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
     }
 
     render() {
-        const { name, shortHelp, longHelp, invalidText, updating, stage, confirmation, showConfirm } = this.state;
+        const { name, shortHelp, longHelp, invalidText, updating, stage, confirmation } = this.state;
         return (
             <Dialog
                 disableEscapeKeyDown
@@ -708,10 +706,10 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                         }}
                         margin="normal"
                     />
-                    {showConfirm && <TextField
+                    <TextField
                         id="confirmation"
-                        label="Delete confirmation"
-                        helperText="Modify or clear delete confirmation message as needed."
+                        label="Command confirmation"
+                        helperText="Modify or clear confirmation message as needed."
                         type="text"
                         fullWidth
                         multiline
@@ -723,7 +721,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                             })
                         }}
                         margin="normal"
-                    />}
+                    />
                 </DialogContent>
                 <DialogActions>
                     {updating &&
