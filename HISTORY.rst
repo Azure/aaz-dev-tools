@@ -3,6 +3,13 @@
 Release History
 ===============
 
+0.13.0
+++++++
+* Support free from dict for `"additionalProperties":True` swagger definition (#138)
+* Support command confirmation prompt modification (#141)
+* Fix duplicated option names detect when flatten argument (#142)
+* Fix reload swagger aug group name overwrite (#143)
+
 0.12.0
 ++++++
 * Disable Read only inherent in swagger translators (#139)
