@@ -272,7 +272,7 @@ class WorkspaceCfgEditor(CfgReader):
                 raise exceptions.ResourceConflict("Cannot hide required argument")
             arg.hide = kwargs['hide']
         if 'group' in kwargs:
-            arg.group = kwargs['group'] or None
+            arg.group = kwargs['group']
         if 'help' in kwargs:
             arg.help = CMDArgumentHelp(kwargs['help'])
         if 'default' in kwargs:

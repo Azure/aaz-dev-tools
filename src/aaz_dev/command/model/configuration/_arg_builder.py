@@ -134,7 +134,7 @@ class CMDArgBuilder:
                 self.schema.arg = None
                 if arg.args:
                     for sub_arg in arg.args:
-                        if not sub_arg.group:
+                        if sub_arg.group is None:
                             sub_arg.group = to_camel_case(self.schema.name)
                         if not arg.required:
                             sub_arg.required = False
