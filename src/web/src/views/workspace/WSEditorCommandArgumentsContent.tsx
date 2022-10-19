@@ -625,7 +625,7 @@ function ArgumentDialog(props: {
             options: names,
             singularOptions: sNames,
             stage: stage,
-            group: gName.length > 0 ? gName : null,
+            group: gName,
             hide: hide,
             help: {
                 short: sHelp,
