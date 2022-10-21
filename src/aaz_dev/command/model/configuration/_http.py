@@ -160,6 +160,10 @@ class CMDHttpRequest(Model):
         if self.body:
             self.body.reformat(**kwargs)
 
+    def register_cls(self, **kwargs):
+        if self.body:
+            self.body.register_cls(**kwargs)
+
 
 class CMDHttpResponseHeaderItem(Model):
     # properties as tags
@@ -285,6 +289,10 @@ class CMDHttpResponse(Model):
         if self.body:
             self.body.reformat(**kwargs)
 
+    def register_cls(self, **kwargs):
+        if self.body:
+            self.body.register_cls(**kwargs)
+
 
 class CMDHttpAction(Model):
     # properties as tags
@@ -305,3 +313,12 @@ class CMDHttpAction(Model):
                 if response.is_error:
                     continue
                 response.reformat(**kwargs)
+
+    def register_cls(self, **kwargs):
+        if self.request:
+            self.request.register_cls(**kwargs)
+        if self.responses:
+            for response in self.responses:
+                if response.is_error:
+                    continue
+                response.register_cls(**kwargs)

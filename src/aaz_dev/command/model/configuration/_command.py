@@ -4,9 +4,11 @@ from schematics.models import Model
 from schematics.types import ModelType, ListType, PolyModelType, StringType
 
 from ._arg_group import CMDArgGroup
+from ._arg import CMDClsArgBase
 from ._condition import CMDCondition
 from ._fields import CMDDescriptionField, CMDVersionField, CMDCommandNameField, CMDBooleanField, CMDConfirmation
 from ._operation import CMDOperation
+from ._schema import CMDClsSchemaBase
 from ._output import CMDOutput
 from ._resource import CMDResource
 from ._utils import CMDArgBuildPrefix, CMDDiffLevelEnum
@@ -99,7 +101,7 @@ class CMDCommand(Model):
                 for key, value in schema_cls_map.items():
                     if value is None:
                         raise exceptions.VerificationError(
-                            message=f"Schema Class '{key}' not defined.",
+                            message=f"ReformatError: Schema Class '{key}' not defined.",
                             details=None
                         )
         except exceptions.VerificationError as err:
@@ -110,6 +112,40 @@ class CMDCommand(Model):
                 "details": err.payload['details']
             }
             raise err
+
+    def link(self):
+        if self.arg_groups:
+            arg_cls_register_map = {}
+            for arg_group in self.arg_groups:
+                arg_group.register_cls(arg_cls_register_map)
+
+            for key, value in arg_cls_register_map.items():
+                implement = value["implement"]
+                refers = value["refers"]
+                if implement is None:
+                    raise exceptions.VerificationError(
+                        message=f"LinkError: Argument Class '{key}' not defined.",
+                        details=None
+                    )
+                for refer in refers:
+                    assert isinstance(refer, CMDClsArgBase)
+                    refer.implement = implement
+
+        if self.operations:
+            schema_cls_register_map = {}
+            for operation in self.operations:
+                operation.register_cls(schema_cls_register_map)
+            for key, value in schema_cls_register_map.items():
+                implement = value["implement"]
+                refers = value["refers"]
+                if implement is None:
+                    raise exceptions.VerificationError(
+                        message=f"LinkError: Schema Class '{key}' not defined.",
+                        details=None
+                    )
+                for refer in refers:
+                    assert isinstance(refer, CMDClsSchemaBase)
+                    refer.implement = implement
 
     def _handle_duplicated_options(self, arguments):
         # check argument with duplicated option names

@@ -28,6 +28,9 @@ class CMDHttpRequestBody(Model):
     def reformat(self, **kwargs):
         return NotImplementedError()
 
+    def register_cls(self, **kwargs):
+        raise NotImplementedError()
+
 
 class CMDHttpRequestJsonBody(CMDHttpRequestBody):
     POLYMORPHIC_KEY = "json"
@@ -44,3 +47,6 @@ class CMDHttpRequestJsonBody(CMDHttpRequestBody):
 
     def reformat(self, **kwargs):
         self.json.reformat(**kwargs)
+
+    def register_cls(self, **kwargs):
+        self.json.register_cls(**kwargs)

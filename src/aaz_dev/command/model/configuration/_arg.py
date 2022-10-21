@@ -248,6 +248,10 @@ class CMDClsArgBase(CMDArgBase):
     def _get_type(self):
         return self._type
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.implement = None
+
     @classmethod
     def _claim_polymorphic(cls, data):
         if isinstance(data, dict):
