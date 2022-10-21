@@ -577,20 +577,6 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                                 justifyContent: 'flex-start',
                             }} color='inherit'>
                                 <Typography component='h6'>Resource Url</Typography>
-                                <TextField
-                                    autoFocus
-                                    margin="normal"
-                                    id="filterText"
-                                    value={filterText}
-                                    onChange={(event: any) => {
-                                        this.setState({
-                                            filterText: event.target.value,
-                                            })
-                                    }}
-                                    label="Resource Filter"
-                                    type="text"
-                                    variant='outlined'
-                                />
 
                                 <Paper sx={{
                                     display: 'flex',
@@ -617,12 +603,17 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                                             }}
                                         />
                                     </ListItemButton>
-                                    {/* <SortIcon sx={{ ml: 2, mr: 2 }} />
                                     <InputBase
                                         sx={{ flex: 1 }}
-                                        placeholder="Filter by keywords."
-                                        inputProps={{ 'aria-label': 'Filter by keywords.' }}
-                                    /> */}
+                                        placeholder="Filter by keywords"
+                                        inputProps={{ 'aria-label': 'Filter by keywords' }}
+                                        value={filterText}
+                                        onChange={(event: any) => {
+                                            this.setState({
+                                                filterText: event.target.value,
+                                                })
+                                        }}
+                                    />
                                 </Paper>
                             </Box>
                         </ListSubheader>}
@@ -633,7 +624,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                                 if (filterText.trim().length > 0) {
                                     return option.id.indexOf(filterText.trim()) > -1;
                                 }else{
-                                    return option;
+                                    return true;
                                 }
                             }).map((option) => {
                                 const labelId = `resource-${option.id}`;
