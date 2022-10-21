@@ -45,6 +45,7 @@ interface WSEditorSwaggerPickerState {
     updateOptions: string[],
     updateOption: string,
     invalidText?: string,
+    filterText: string,
 }
 
 type ResourceVersionOperations = {
@@ -121,6 +122,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
             selectedVersion: null,
             updateOptions: UpdateOptions,
             updateOption: UpdateOptions[0],
+            filterText: "",
         }
     }
 
@@ -492,8 +494,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     }
 
     render() {
-        const { selectedResources, existingResources, resourceOptions, resourceMap, selectedVersion, selectedModule, selectedResourceInheritanceAAZVersionMap } = this.state;
-
+        const { selectedResources, existingResources, resourceOptions, resourceMap, selectedVersion, selectedModule, selectedResourceInheritanceAAZVersionMap, filterText } = this.state;
         return (
             <React.Fragment>
                 <AppBar sx={{ position: "fixed" }}>
@@ -576,6 +577,20 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                                 justifyContent: 'flex-start',
                             }} color='inherit'>
                                 <Typography component='h6'>Resource Url</Typography>
+                                <TextField
+                                    autoFocus
+                                    margin="normal"
+                                    id="filterText"
+                                    value={filterText}
+                                    onChange={(event: any) => {
+                                        this.setState({
+                                            filterText: event.target.value,
+                                            })
+                                    }}
+                                    label="Resource Filter"
+                                    type="text"
+                                    variant='outlined'
+                                />
 
                                 <Paper sx={{
                                     display: 'flex',
@@ -615,7 +630,11 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
 
                         {resourceOptions.length > 0 && <Paper sx={{ ml: 2, mr: 2 }} variant="outlined" square>
                             {resourceOptions.filter((option) => {
-                                return option;
+                                if (filterText.trim().length > 0) {
+                                    return option.id.indexOf(filterText.trim()) > -1;
+                                }else{
+                                    return option;
+                                }
                             }).map((option) => {
                                 const labelId = `resource-${option.id}`;
                                 const selected = selectedResources.has(option.id);
