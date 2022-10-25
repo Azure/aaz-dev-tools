@@ -337,13 +337,28 @@ def editor_workspace_command_argument_unflatten(name, node_names, leaf_name, arg
     return jsonify(result)
 
 
-# @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>/UnwrapClass",
-#           methods=("POST", ))
-# def editor_workspace_command_argument_unwrap_class(name, node_names, leaf_name, arg_var):
-#     if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
-#         raise exceptions.ResourceNotFind("Command not exist")
-#     node_names = node_names[1:]
-#     # TODO: support it later
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>/UnwrapClass",
+          methods=("POST", ))
+def editor_workspace_command_argument_unwrap_class(name, node_names, leaf_name, arg_var):
+    if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
+        raise exceptions.ResourceNotFind("Command not exist")
+    node_names = node_names[1:]
+
+    manager = WorkspaceManager(name)
+    manager.load()
+    leaf = manager.find_command_tree_leaf(*node_names, leaf_name)
+    if not leaf:
+        raise exceptions.ResourceNotFind("Command not exist")
+    cfg_editor = manager.load_cfg_editor_by_command(leaf)
+
+    # unwrap argument variant
+    arg, _ = cfg_editor.find_arg_by_var(*node_names, leaf_name, arg_var=arg_var)
+    if not arg:
+        raise exceptions.ResourceNotFind("Argument not exit")
+    cfg_editor.unwrap_cls_arg(*node_names, leaf_name, arg_var=arg_var)
+    manager.save()
+    return '', 200
+
 
 
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>/FindSimilar",

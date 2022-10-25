@@ -40,3 +40,11 @@ class CMDCommandGroup(Model):
                 self.command_groups = sub_group.command_groups
                 self.commands = sub_group.commands
                 del sub_group
+
+    def link(self):
+        if self.commands:
+            for command in self.commands:
+                command.link()
+        if self.command_groups:
+            for group in self.command_groups:
+                group.link()

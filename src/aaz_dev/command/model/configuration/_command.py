@@ -117,7 +117,7 @@ class CMDCommand(Model):
         if self.arg_groups:
             arg_cls_register_map = {}
             for arg_group in self.arg_groups:
-                arg_group.register_cls(arg_cls_register_map)
+                arg_group.register_cls(cls_register_map=arg_cls_register_map)
 
             for key, value in arg_cls_register_map.items():
                 implement = value["implement"]
@@ -134,7 +134,7 @@ class CMDCommand(Model):
         if self.operations:
             schema_cls_register_map = {}
             for operation in self.operations:
-                operation.register_cls(schema_cls_register_map)
+                operation.register_cls(cls_register_map=schema_cls_register_map)
             for key, value in schema_cls_register_map.items():
                 implement = value["implement"]
                 refers = value["refers"]

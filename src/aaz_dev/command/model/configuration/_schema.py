@@ -368,6 +368,15 @@ class CMDClsSchemaBase(CMDSchemaBase):
         cls_schema.default = schema_base.default
         return cls_schema
 
+    def get_unwrapped(self, **kwargs):
+        if self.implement is None:
+            return
+        assert isinstance(self.implement, CMDSchemaBase)
+        data = self.implement.to_native()
+        data.update(kwargs)
+        unwrapped = self.implement.__class__(data)
+        return unwrapped
+
 
 class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
     ARG_TYPE = CMDClsArg
@@ -399,6 +408,19 @@ class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
         if isinstance(schema, CMDObjectSchema):
             cls_schema.client_flatten = schema.client_flatten
         return cls_schema
+
+    def get_unwrapped(self, **kwargs):
+        uninherent = {
+            "name": self.name,
+            "arg": self.arg,
+            "required": self.required,
+            "description": self.description,
+            "skip_url_encoding": self.skip_url_encoding,
+        }
+        if isinstance(unwrapped, CMDObjectSchema):
+            uninherent["client_flatten"] = self.client_flatten
+        uninherent.update(kwargs)
+        return super().get_unwrapped(**uninherent)
 
 
 # string

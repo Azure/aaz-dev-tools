@@ -151,8 +151,10 @@ class CMDArgBuilder:
         discriminator_mapping = {}
         if self._ref_arg:
             if isinstance(self._ref_arg, CMDClsArgBase):
-                # TODO: find cls arg implementation
-                sub_ref_args = self._sub_ref_args
+                # use the linked instance
+                unwrapped_ref_arg = self._ref_arg.get_unwrapped()
+                assert unwrapped_ref_arg is not None
+                sub_ref_args = unwrapped_ref_arg.args
             else:
                 sub_ref_args = self._ref_arg.args
         else:
