@@ -417,7 +417,7 @@ class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
             "description": self.description,
             "skip_url_encoding": self.skip_url_encoding,
         }
-        if isinstance(unwrapped, CMDObjectSchema):
+        if isinstance(self.implement, CMDObjectSchema):
             uninherent["client_flatten"] = self.client_flatten
         uninherent.update(kwargs)
         return super().get_unwrapped(**uninherent)

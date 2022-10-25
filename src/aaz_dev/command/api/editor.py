@@ -360,7 +360,6 @@ def editor_workspace_command_argument_unwrap_class(name, node_names, leaf_name, 
     return '', 200
 
 
-
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>/FindSimilar",
           methods=("POST",))
 def editor_workspace_command_argument_find_similar(name, node_names, leaf_name, arg_var):

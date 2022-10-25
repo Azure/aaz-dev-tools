@@ -523,21 +523,21 @@ class CfgReader:
 
     @classmethod
     def _iter_schema_in_request(cls, request, schema_filter):
-        if request.path:
+        if request.path and request.path.params:
             for param in request.path.params:
                 match, ret = schema_filter(request.path, param)
                 if match:
                     yield match
                 if ret:
                     return
-        if request.query:
+        if request.query and request.query.params:
             for param in request.query.params:
                 match, ret = schema_filter(request.query, param)
                 if match:
                     yield match
                 if ret:
                     return
-        if request.header:
+        if request.header and request.header.params:
             for param in request.header.params:
                 match, ret = schema_filter(request.header, param)
                 if match:
@@ -546,7 +546,7 @@ class CfgReader:
                     return
 
         if isinstance(request.body, CMDHttpRequestJsonBody):
-            for match in cls._iter_schema_in_json(op.http.request.body.json):
+            for match in cls._iter_schema_in_json(request.body.json, schema_filter):
                 yield match
 
     @classmethod
