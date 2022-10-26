@@ -3,6 +3,11 @@
 Release History
 ===============
 
+0.14.0
+++++++
+* Support class type arguments `unwrap` and `flatten` (#145)
+* Support resource url filter in swagger picker (#146)
+
 0.13.0
 ++++++
 * Support free from dict for `"additionalProperties":True` swagger definition (#138)
