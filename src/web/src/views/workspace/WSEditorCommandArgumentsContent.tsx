@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { CardTitleTypography, ExperimentalTypography, LongHelpTypography, PreviewTypography, ShortHelpPlaceHolderTypography, ShortHelpTypography, SmallExperimentalTypography, SmallPreviewTypography, StableTypography, SubtitleTypography } from './WSEditorTheme';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import EditIcon from '@mui/icons-material/Edit';
+import ImportExportIcon from '@mui/icons-material/ImportExport';
 import CallSplitSharpIcon from '@mui/icons-material/CallSplitSharp';
 import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from './argument/WSECArgumentSimilarPicker';
 // import CallMergeSharpIcon from '@mui/icons-material/CallMergeSharp';
@@ -305,6 +306,7 @@ function ArgumentNavigation(props: {
                 title={argProps.title}
                 args={argProps.props}
                 depth={argIdxStack.length}
+                selectedArg={selectedArg!}
                 onFlatten={canFlatten ? () => {
                     props.onFlatten(selectedArg!)
                 } : undefined}
@@ -521,11 +523,19 @@ function ArgumentReviewer(props: {
                 display: "flex",
                 flexDirection: "row",
                 justifyContent: "flex-start",
+                alignItems: "stretch",
                 ml: 6,
             }}>
-                <ArgTypeTypography>{`/${props.arg.type}/`}</ArgTypeTypography>
+                <Box sx={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "flex-start",
+                    alignItems: "center"
+                }}>
+                    <ArgTypeTypography>{`/${props.arg.type}/`}</ArgTypeTypography>
+                </Box>
                 {props.arg.type.startsWith("@") && <Button sx={{ flexShrink: 0, ml: 1 }}
-                    startIcon={<EditIcon color="info" fontSize='small' />}
+                    startIcon={<ImportExportIcon color="info" fontSize='small' />}
                     onClick={() => { props.onUnwrap() }}
                 >
                     <ArgEditTypography>Unwrap</ArgEditTypography>
@@ -1199,9 +1209,8 @@ function FlattenDialog(props: {
                 }
                 {!updating && !argSimilarTree && <>
                     <Button onClick={handleClose}>Cancel</Button>
-                    {/* cls argument should flatten similar. Customer should unwrap cls argument before to modify it*/}
-                    {!props.arg.var.startsWith("@") && <Button onClick={handleFlatten}>Flatten</Button>}
-                    {/* TODO: support unwrap and flatten */}
+                    {!props.arg.type.startsWith('@') && <Button onClick={handleFlatten}>Flatten</Button>}
+                    {props.arg.type.startsWith('@') && <Button onClick={handleFlatten}>Unwrap & Flatten</Button>}
                     <Button onClick={handleDisplaySimilar}>Flatten Similar</Button>
                 </>}
                 {!updating && argSimilarTree && <>
@@ -1213,7 +1222,6 @@ function FlattenDialog(props: {
     )
 }
 
-
 function UnwrapClsDialog(props: {
     commandUrl: string,
     arg: CMDArg,
@@ -1223,19 +1231,19 @@ function UnwrapClsDialog(props: {
     const [updating, setUpdating] = useState<boolean>(false);
     const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
 
-    useEffect(() => {
-        let { arg } = props;
-        // const subArgOptions = arg.args.map(value => {
-        //     return {
-        //         var: value.var,
-        //         options: value.options.join(" "),
-        //     };
-        // });
+    // useEffect(() => {
+    //     let { arg } = props;
+    //     // const subArgOptions = arg.args.map(value => {
+    //     //     return {
+    //     //         var: value.var,
+    //     //         options: value.options.join(" "),
+    //     //     };
+    //     // });
 
-        // setSubArgOptions(subArgOptions);
-        // setArgSimilarTree(undefined);
-        // setArgSimilarTreeExpandedIds([]);
-    }, [props.arg]);
+    //     // setSubArgOptions(subArgOptions);
+    //     // setArgSimilarTree(undefined);
+    //     // setArgSimilarTreeExpandedIds([]);
+    // }, [props.arg]);
 
     const handleClose = () => {
         setInvalidText(undefined);
@@ -1268,11 +1276,10 @@ function UnwrapClsDialog(props: {
             open={props.open}
             sx={{ '& .MuiDialog-paper': { width: '80%' } }}
         >
-            <DialogTitle>Unwrap Class Type</DialogTitle>
+            <DialogTitle>Unwrap Class Type </DialogTitle>
             <DialogContent dividers={true}>
                 {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
-
-                {/* {subArgOptions.map(buildSubArgText)} */}
+                <ArgTypeTypography>{props.arg.type.slice(1)}</ArgTypeTypography>
             </DialogContent>
             <DialogActions>
                 {updating &&
@@ -1344,6 +1351,7 @@ function ArgumentPropsReviewer(props: {
     title: string,
     args: CMDArg[],
     onFlatten?: () => void,
+    selectedArg?: CMDArg,
     // onUnflatten?: () => void,
     depth: number,
     onSelectSubArg: (subArgVar: string) => void,
@@ -1488,7 +1496,8 @@ function ArgumentPropsReviewer(props: {
                 startIcon={<CallSplitSharpIcon color="info" fontSize='small' />}
                 onClick={props.onFlatten}
             >
-                <ArgEditTypography>Flatten</ArgEditTypography>
+                {!props.selectedArg?.type.startsWith("@") && <ArgEditTypography>Flatten</ArgEditTypography> }
+                {props.selectedArg?.type.startsWith("@") && <ArgEditTypography>Unwrap & Flatten</ArgEditTypography> }
             </Button>}
 
             {/* {props.onUnflatten !== undefined && <Button sx={{ flexShrink: 0, ml: 3 }}
