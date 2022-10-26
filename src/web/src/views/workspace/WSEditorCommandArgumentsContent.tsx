@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { CardTitleTypography, ExperimentalTypography, LongHelpTypography, PreviewTypography, ShortHelpPlaceHolderTypography, ShortHelpTypography, SmallExperimentalTypography, SmallPreviewTypography, StableTypography, SubtitleTypography } from './WSEditorTheme';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import EditIcon from '@mui/icons-material/Edit';
+import ImportExportIcon from '@mui/icons-material/ImportExport';
 import CallSplitSharpIcon from '@mui/icons-material/CallSplitSharp';
 import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from './argument/WSECArgumentSimilarPicker';
 // import CallMergeSharpIcon from '@mui/icons-material/CallMergeSharp';
@@ -19,6 +20,7 @@ function WSEditorCommandArgumentsContent(props: {
     const [displayArgumentDialog, setDisplayArgumentDialog] = useState<boolean>(false);
     const [editArg, setEditArg] = useState<CMDArg | undefined>(undefined);
     const [displayFlattenDialog, setDisplayFlattenDialog] = useState<boolean>(false);
+    const [displayUnwrapClsDialog, setDisplayUnwrapClsDialog] = useState<boolean>(false);
     const [clsArgDefineMap, setClsArgDefineMap] = useState<ClsArgDefinitionMap>({});
 
     const refreshData = () => {
@@ -36,6 +38,8 @@ function WSEditorCommandArgumentsContent(props: {
 
     const handleArgumentDialogClose = (updated: boolean) => {
         setDisplayArgumentDialog(false);
+        setDisplayFlattenDialog(false);
+        setDisplayUnwrapClsDialog(false);
         setEditArg(undefined);
         if (updated) {
             refreshData();
@@ -60,6 +64,19 @@ function WSEditorCommandArgumentsContent(props: {
         setDisplayFlattenDialog(true)
     }
 
+    const handleUnwrapClsDialogClose = (unwrapped: boolean) => {
+        setDisplayUnwrapClsDialog(false)
+        setEditArg(undefined);
+        if (unwrapped) {
+            refreshData();
+        }
+    }
+
+    const handleUnwrapClsArgument = (arg: CMDArg) => {
+        setEditArg(arg)
+        setDisplayUnwrapClsDialog(true)
+    }
+
     return (
         <React.Fragment>
             <CardContent sx={{
@@ -78,11 +95,12 @@ function WSEditorCommandArgumentsContent(props: {
                         [ ARGUMENT ]
                     </CardTitleTypography>
                 </Box>
-                <ArgumentNavigation commandUrl={props.commandUrl} args={args} clsArgDefineMap={clsArgDefineMap} onEdit={handleEditArgument} onFlatten={handleArgumentFlatten} />
+                <ArgumentNavigation commandUrl={props.commandUrl} args={args} clsArgDefineMap={clsArgDefineMap} onEdit={handleEditArgument} onFlatten={handleArgumentFlatten} onUnwrap={handleUnwrapClsArgument} />
             </CardContent>
 
             {displayArgumentDialog && <ArgumentDialog commandUrl={props.commandUrl} arg={editArg!} clsArgDefineMap={clsArgDefineMap} open={displayArgumentDialog} onClose={handleArgumentDialogClose} />}
-            {displayFlattenDialog && <FlattenDialog commandUrl={props.commandUrl} arg={editArg! as CMDObjectArg} clsArgDefineMap={clsArgDefineMap} open={displayFlattenDialog} onClose={handleFlattenDialogClose} />}
+            {displayFlattenDialog && <FlattenDialog commandUrl={props.commandUrl} arg={editArg!} clsArgDefineMap={clsArgDefineMap} open={displayFlattenDialog} onClose={handleFlattenDialogClose} />}
+            {displayUnwrapClsDialog && <UnwrapClsDialog commandUrl={props.commandUrl} arg={editArg!} open={displayUnwrapClsDialog} onClose={handleUnwrapClsDialogClose} />}
         </React.Fragment>
     )
 }
@@ -99,12 +117,18 @@ function ArgumentNavigation(props: {
     clsArgDefineMap: ClsArgDefinitionMap,
     onEdit: (arg: CMDArg) => void,
     onFlatten: (arg: CMDArg) => void,
+    onUnwrap: (arg: CMDArg) => void,
 }) {
     const [argIdxStack, setArgIdxStack] = useState<ArgIdx[]>([]);
 
     const getArgProps = (selectedArgBase: CMDArgBase): { title: string, props: CMDArg[], flattenArgVar: string | undefined } | undefined => {
         if (selectedArgBase.type.startsWith('@')) {
-            return getArgProps(props.clsArgDefineMap[(selectedArgBase as CMDClsArgBase).clsName]);
+            let clsArgDefine = props.clsArgDefineMap[(selectedArgBase as CMDClsArgBase).clsName];
+            let clsArgProps = getArgProps(clsArgDefine);
+            if (clsArgProps !== undefined && clsArgDefine.type === "object") {
+                clsArgProps!.flattenArgVar = (selectedArgBase as CMDClsArg).var
+            }
+            return clsArgProps;
         }
         if (selectedArgBase.type === "object") {
             return {
@@ -250,6 +274,7 @@ function ArgumentNavigation(props: {
                     arg={selectedArg}
                     depth={argIdxStack.length}
                     onEdit={() => { props.onEdit(selectedArg) }}
+                    onUnwrap={() => { props.onUnwrap(selectedArg) }}
                 />
             </React.Fragment>
         )
@@ -281,6 +306,7 @@ function ArgumentNavigation(props: {
                 title={argProps.title}
                 args={argProps.props}
                 depth={argIdxStack.length}
+                selectedArg={selectedArg!}
                 onFlatten={canFlatten ? () => {
                     props.onFlatten(selectedArg!)
                 } : undefined}
@@ -439,6 +465,7 @@ function ArgumentReviewer(props: {
     arg: CMDArg,
     depth: number,
     onEdit: () => void,
+    onUnwrap: () => void,
 }) {
     const [choices, setChoices] = useState<string[]>([]);
 
@@ -489,15 +516,30 @@ function ArgumentReviewer(props: {
                 >
                     <ArgEditTypography>Edit</ArgEditTypography>
                 </Button>
+
             </Box>
 
             <Box sx={{
                 display: "flex",
                 flexDirection: "row",
                 justifyContent: "flex-start",
+                alignItems: "stretch",
                 ml: 6,
             }}>
-                <ArgTypeTypography>{`/${props.arg.type}/`}</ArgTypeTypography>
+                <Box sx={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "flex-start",
+                    alignItems: "center"
+                }}>
+                    <ArgTypeTypography>{`/${props.arg.type}/`}</ArgTypeTypography>
+                </Box>
+                {props.arg.type.startsWith("@") && <Button sx={{ flexShrink: 0, ml: 1 }}
+                    startIcon={<ImportExportIcon color="info" fontSize='small' />}
+                    onClick={() => { props.onUnwrap() }}
+                >
+                    <ArgEditTypography>Unwrap</ArgEditTypography>
+                </Button>}
                 <Box sx={{ flexGrow: 1 }} />
                 {props.arg.required && <ArgRequiredTypography>[Required]</ArgRequiredTypography>}
             </Box>
@@ -939,7 +981,7 @@ function ArgumentDialog(props: {
 
 function FlattenDialog(props: {
     commandUrl: string,
-    arg: CMDObjectArg,
+    arg: CMDArg,
     clsArgDefineMap: ClsArgDefinitionMap,
     open: boolean,
     onClose: (flattened: boolean) => void,
@@ -952,8 +994,15 @@ function FlattenDialog(props: {
     const [argSimilarTreeArgIdsUpdated, setArgSimilarTreeArgIdsUpdated] = useState<string[]>([]);
 
     useEffect(() => {
-        let { arg } = props;
-        const subArgOptions = arg.args.map(value => {
+        let { arg, clsArgDefineMap } = props;
+        let subArgs;
+        if (arg.type.startsWith('@')) {
+            let clsName = (arg as CMDClsArg).clsName;
+            subArgs = (clsArgDefineMap[clsName] as CMDObjectArgBase).args
+        } else {
+            subArgs = (arg as CMDObjectArg).args
+        }
+        const subArgOptions = subArgs.map(value => {
             return {
                 var: value.var,
                 options: value.options.join(" "),
@@ -1160,9 +1209,8 @@ function FlattenDialog(props: {
                 }
                 {!updating && !argSimilarTree && <>
                     <Button onClick={handleClose}>Cancel</Button>
-                    {/* cls argument should flatten similar. Customer should unwrap cls argument before to modify it*/}
-                    {!props.arg.var.startsWith("@") && <Button onClick={handleFlatten}>Flatten</Button>}
-                    {/* TODO: support unwrap and flatten */}
+                    {!props.arg.type.startsWith('@') && <Button onClick={handleFlatten}>Flatten</Button>}
+                    {props.arg.type.startsWith('@') && <Button onClick={handleFlatten}>Unwrap & Flatten</Button>}
                     <Button onClick={handleDisplaySimilar}>Flatten Similar</Button>
                 </>}
                 {!updating && argSimilarTree && <>
@@ -1174,6 +1222,80 @@ function FlattenDialog(props: {
     )
 }
 
+function UnwrapClsDialog(props: {
+    commandUrl: string,
+    arg: CMDArg,
+    open: boolean,
+    onClose: (unwrapped: boolean) => void,
+}) {
+    const [updating, setUpdating] = useState<boolean>(false);
+    const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
+
+    // useEffect(() => {
+    //     let { arg } = props;
+    //     // const subArgOptions = arg.args.map(value => {
+    //     //     return {
+    //     //         var: value.var,
+    //     //         options: value.options.join(" "),
+    //     //     };
+    //     // });
+
+    //     // setSubArgOptions(subArgOptions);
+    //     // setArgSimilarTree(undefined);
+    //     // setArgSimilarTreeExpandedIds([]);
+    // }, [props.arg]);
+
+    const handleClose = () => {
+        setInvalidText(undefined);
+        props.onClose(false);
+    }
+
+    const handleUnwrap = () => {
+        setUpdating(true);
+
+        const flattenUrl = `${props.commandUrl}/Arguments/${props.arg.var}/UnwrapClass`
+
+        axios.post(flattenUrl).then(res => {
+            setUpdating(false);
+            props.onClose(true);
+        }).catch(err => {
+            console.error(err.response);
+            if (err.response?.data?.message) {
+                const data = err.response!.data!;
+                setInvalidText(
+                    `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
+                );
+            }
+            setUpdating(false);
+        });
+    }
+
+    return (
+        <Dialog
+            disableEscapeKeyDown
+            open={props.open}
+            sx={{ '& .MuiDialog-paper': { width: '80%' } }}
+        >
+            <DialogTitle>Unwrap Class Type </DialogTitle>
+            <DialogContent dividers={true}>
+                {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                <ArgTypeTypography>{props.arg.type.slice(1)}</ArgTypeTypography>
+            </DialogContent>
+            <DialogActions>
+                {updating &&
+                    <Box sx={{ width: '100%' }}>
+                        <LinearProgress color='info' />
+                    </Box>
+                }
+                {!updating && <>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleUnwrap}>Unwrap Class</Button>
+                </>}
+            </DialogActions>
+        </Dialog>
+    )
+
+}
 
 const PropArgTypeTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     color: theme.palette.primary.main,
@@ -1229,6 +1351,7 @@ function ArgumentPropsReviewer(props: {
     title: string,
     args: CMDArg[],
     onFlatten?: () => void,
+    selectedArg?: CMDArg,
     // onUnflatten?: () => void,
     depth: number,
     onSelectSubArg: (subArgVar: string) => void,
@@ -1373,7 +1496,8 @@ function ArgumentPropsReviewer(props: {
                 startIcon={<CallSplitSharpIcon color="info" fontSize='small' />}
                 onClick={props.onFlatten}
             >
-                <ArgEditTypography>Flatten</ArgEditTypography>
+                {!props.selectedArg?.type.startsWith("@") && <ArgEditTypography>Flatten</ArgEditTypography> }
+                {props.selectedArg?.type.startsWith("@") && <ArgEditTypography>Unwrap & Flatten</ArgEditTypography> }
             </Button>}
 
             {/* {props.onUnflatten !== undefined && <Button sx={{ flexShrink: 0, ml: 3 }}

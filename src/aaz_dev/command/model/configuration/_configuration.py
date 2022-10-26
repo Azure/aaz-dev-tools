@@ -28,3 +28,8 @@ class CMDConfiguration(Model):
             [group for group in self.command_groups if group.commands or group.command_groups],
             key=lambda g: g.name
         )
+
+    def link(self):
+        """Link cls reference with definition"""
+        for group in self.command_groups:
+            group.link()

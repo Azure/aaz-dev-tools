@@ -342,6 +342,10 @@ class CMDClsSchemaBase(CMDSchemaBase):
     def _get_type(self):
         return self._type
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.implement = None
+
     @classmethod
     def _claim_polymorphic(cls, data):
         if isinstance(data, dict):
@@ -363,6 +367,15 @@ class CMDClsSchemaBase(CMDSchemaBase):
         cls_schema.const = schema_base.const
         cls_schema.default = schema_base.default
         return cls_schema
+
+    def get_unwrapped(self, **kwargs):
+        if self.implement is None:
+            return
+        assert isinstance(self.implement, CMDSchemaBase)
+        data = self.implement.to_native()
+        data.update(kwargs)
+        unwrapped = self.implement.__class__(data)
+        return unwrapped
 
 
 class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
@@ -395,6 +408,19 @@ class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
         if isinstance(schema, CMDObjectSchema):
             cls_schema.client_flatten = schema.client_flatten
         return cls_schema
+
+    def get_unwrapped(self, **kwargs):
+        uninherent = {
+            "name": self.name,
+            "arg": self.arg,
+            "required": self.required,
+            "description": self.description,
+            "skip_url_encoding": self.skip_url_encoding,
+        }
+        if isinstance(self.implement, CMDObjectSchema):
+            uninherent["client_flatten"] = self.client_flatten
+        uninherent.update(kwargs)
+        return super().get_unwrapped(**uninherent)
 
 
 # string

@@ -248,6 +248,10 @@ class CMDClsArgBase(CMDArgBase):
     def _get_type(self):
         return self._type
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.implement = None
+
     @classmethod
     def _claim_polymorphic(cls, data):
         if isinstance(data, dict):
@@ -263,6 +267,15 @@ class CMDClsArgBase(CMDArgBase):
         arg = super().build_arg_base(builder)
         arg._type = builder.get_type()
         return arg
+
+    def get_unwrapped(self, **kwargs):
+        if self.implement is None:
+            return None
+        assert isinstance(self.implement, CMDArgBase)
+        data = self.implement.to_native()
+        data.update(kwargs)
+        unwrapped = self.implement.__class__(data)
+        return unwrapped
 
 
 class CMDClsArg(CMDClsArgBase, CMDArg):
@@ -284,6 +297,20 @@ class CMDClsArg(CMDClsArgBase, CMDArg):
         if self.singular_options:
             self.singular_options = sorted(self.singular_options, key=lambda op: (len(op), op))
 
+    def get_unwrapped(self, **kwargs):
+        uninherent = {
+            "var": self.var,
+            "options": [*self.options],
+            "required": self.required,
+            "stage": self.stage,
+            "hide": self.hide,
+            "group": self.group,
+            "id_part": self.id_part,
+            "help": self.help.to_native() if self.help else None,
+            "default": self.default.to_native() if self.default else None,
+        }
+        uninherent.update(kwargs)
+        return super().get_unwrapped(**uninherent)
 
 # string
 class CMDStringArgBase(CMDArgBase):
@@ -641,7 +668,16 @@ class CMDObjectArgBase(CMDArgBase):
         deserialize_from="additionalProps",
     )
 
-    # cls definition will not include properties in CMDArg only
+    # cls definition will not include properties in CMDArg only, such as following properties:
+    # var
+    # options
+    # required
+    # stage
+    # hide
+    # group
+    # id_part
+    # help
+    # default
     cls = CMDClassField()
 
     @classmethod
@@ -725,7 +761,16 @@ class CMDArrayArgBase(CMDArgBase):
 
     item = CMDArgBaseField(required=True)
 
-    # cls definition will not include properties in CMDArg only
+    # cls definition will not include properties in CMDArg only, such as following properties:
+    # var
+    # options
+    # required
+    # stage
+    # hide
+    # group
+    # id_part
+    # help
+    # default
     cls = CMDClassField()
 
     def _get_type(self):

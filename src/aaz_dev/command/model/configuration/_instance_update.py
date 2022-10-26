@@ -32,6 +32,9 @@ class CMDInstanceUpdateAction(Model):
     def reformat(self, **kwargs):
         raise NotImplementedError()
 
+    def register_cls(self, **kwargs):
+        return NotImplementedError()
+
 
 # json instance update
 class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
@@ -45,3 +48,6 @@ class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
 
     def reformat(self, **kwargs):
         self.json.reformat(**kwargs)
+
+    def register_cls(self, **kwargs):
+        self.json.register_cls(**kwargs)

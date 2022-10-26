@@ -54,6 +54,9 @@ class CMDRequestJson(Model):
             _iter_over_schema(self.schema, schema_cls_map)
 
             self.schema.reformat(**kwargs)
+    
+    def register_cls(self, cls_register_map, **kwargs):
+        _iter_over_schema_for_cls_register(self.schema, cls_register_map)
 
 
 class CMDResponseJson(Model):
@@ -86,7 +89,9 @@ class CMDResponseJson(Model):
                 schema_cls_map[self.schema.cls] = self.schema
         _iter_over_schema(self.schema, schema_cls_map)
         self.schema.reformat(**kwargs)
-
+    
+    def register_cls(self, cls_register_map, **kwargs):
+        _iter_over_schema_for_cls_register(self.schema, cls_register_map)
 
 def _iter_over_schema(schema, schema_cls_map):
     if schema.frozen:
@@ -132,3 +137,41 @@ def _iter_over_schema(schema, schema_cls_map):
         if cls_name not in schema_cls_map:
             # set this cls name as None, in order to check where this cls_name miss cls definition
             schema_cls_map[cls_name] = None
+
+def _iter_over_schema_for_cls_register(schema, cls_register_map):
+    if schema is None or schema.frozen:
+        return
+
+    if isinstance(schema, CMDClsSchemaBase):
+        cls_name = schema.type[1:]
+        if cls_name not in cls_register_map:
+            cls_register_map[cls_name] = {
+                "implement": None,
+                "refers": []
+            }
+        cls_register_map[cls_name]['refers'].append(schema)
+        return 
+
+    if getattr(schema, 'cls', None):
+        cls_name = schema.cls
+        if cls_name not in cls_register_map:
+            cls_register_map[cls_name] = {
+                "implement": None,
+                "refers": []
+            }
+        cls_register_map[cls_name]['implement'] = schema
+
+    if isinstance(schema, (CMDObjectSchemaBase, CMDObjectSchemaDiscriminator)):
+        if schema.props:
+            for prop in schema.props:
+                _iter_over_schema_for_cls_register(prop, cls_register_map)
+        
+        if schema.discriminators:
+            for disc in schema.discriminators:
+                _iter_over_schema_for_cls_register(disc, cls_register_map)
+        
+        if isinstance(schema, CMDObjectSchemaBase) and schema.additional_props and schema.additional_props.item:
+            _iter_over_schema_for_cls_register(schema.additional_props.item, cls_register_map)
+    
+    elif isinstance(schema, CMDArraySchemaBase):
+        _iter_over_schema_for_cls_register(schema.item, cls_register_map)

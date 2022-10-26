@@ -3,9 +3,10 @@ import logging
 import os
 
 from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDDiffLevelEnum, \
-    CMDHttpRequest, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDArg, CMDBooleanArg, CMDClsArg, \
+    CMDHttpRequest, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDArg, CMDBooleanArg, CMDClsArg, CMDClsArgBase, \
     CMDObjectArgBase, CMDArrayArgBase, CMDCondition, CMDConditionNotOperator, CMDConditionHasValueOperator, \
-    CMDConditionAndOperator, CMDCommandGroup, CMDArgumentHelp, CMDArgDefault, CMDInstanceUpdateOperation
+    CMDConditionAndOperator, CMDCommandGroup, CMDArgumentHelp, CMDArgDefault, CMDInstanceUpdateOperation, \
+    CMDClsSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDObjectSchemaAdditionalProperties, CMDSchema, CMDSchemaBase
 from utils import exceptions
 from utils.base64 import b64encode_str
 from utils.case import to_camel_case
@@ -293,9 +294,88 @@ class WorkspaceCfgEditor(CfgReader):
         if 'singularOptions' in kwargs:
             arg.singular_options = kwargs['singularOptions'] or None
 
-    def unwrap_cls(self):
-        # TODO: unwrap cls definition
-        pass
+    def unwrap_cls_arg(self, *cmd_names, arg_var):
+        command = self.find_command(*cmd_names)
+        parent, arg, _ = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
+        if not arg:
+            raise exceptions.InvalidAPIUsage(
+                f"Argument not exist: {arg.var}")
+        assert parent is not None
+
+        if isinstance(arg, CMDObjectArgBase):
+            if not arg.cls:
+                raise exceptions.InvalidAPIUsage(
+                    f"{arg.var} is not a class argument"
+                )
+        elif not isinstance(arg, CMDClsArgBase):
+            raise exceptions.InvalidAPIUsage(
+                f"{arg.var} is not a class argument"
+            )
+
+        # find linked schema
+        linked_schema_parent = None
+        linked_schema = None
+        for parent_schema, schema in self.iter_schema_in_command_by_arg_var(command, arg_var=arg.var):
+            if linked_schema is not None:
+                raise exceptions.InvalidAPIUsage(
+                    f"Cannot unwrap argument: {arg.var} is used by mutiple schemas."
+                )
+            linked_schema_parent = parent_schema
+            linked_schema = schema
+
+        if linked_schema is None:
+            raise exceptions.InvalidAPIUsage(
+                f"Cannot unwrap argument: {arg.var} is not used by any schema."
+            )
+
+        if isinstance(linked_schema, CMDClsSchemaBase):
+            new_schema = linked_schema.get_unwrapped()
+            assert new_schema.cls == linked_schema.type[1:]
+            new_schema.cls = None  # set the cls to None
+            self._replace_schema(linked_schema_parent, linked_schema, new_schema)
+        elif isinstance(linked_schema, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+            assert linked_schema.cls is not None
+            # unwrap one clsSchema to instance
+            for ref_parent, ref_schema in self.iter_schema_cls_reference(command, linked_schema.cls):
+                assert isinstance(ref_schema, CMDClsSchemaBase)
+                new_ref_schema = ref_schema.get_unwrapped()
+                assert new_ref_schema.cls == linked_schema.cls
+                self._replace_schema(ref_parent, ref_schema, new_ref_schema)
+                break
+            # unregister current linked schema cls
+            linked_schema.cls = None
+        else:
+            raise exceptions.InvalidAPIUsage(
+                f"Not supported schema type: {type(linked_schema)}"
+            )
+
+        # regenerate args and its relationship with schema
+        command.generate_args()
+        self.reformat()
+
+    def _replace_schema(self, parent, schema, new_schema):
+        if isinstance(parent, CMDObjectSchemaBase):
+            if isinstance(schema, CMDSchema):
+                assert isinstance(new_schema, CMDSchema)
+                schema_idx = None
+                for idx in range(len(parent.props)):
+                    if parent.props[idx].name == schema.name:
+                        schema_idx = idx
+                        break
+                assert schema_idx is not None
+                parent.props[schema_idx] = new_schema
+            else:
+                assert isinstance(schema, CMDSchemaBase)
+                assert not isinstance(new_schema, CMDSchema) and isinstance(new_schema, CMDSchemaBase)
+                assert parent.additional_props.item == schema
+                parent.additional_props.item = new_schema
+        elif isinstance(parent, CMDArraySchemaBase):
+            assert isinstance(schema, CMDSchemaBase)
+            assert not isinstance(new_schema, CMDSchema) and isinstance(new_schema, CMDSchemaBase)
+            assert parent.item == schema
+            parent.item = new_schema
+        else:
+            raise NotImplementedError()
 
     def flatten_arg(self, *cmd_names, arg_var, sub_args_options=None):
         command = self.find_command(*cmd_names)
@@ -304,20 +384,26 @@ class WorkspaceCfgEditor(CfgReader):
             raise exceptions.InvalidAPIUsage(
                 f"Argument not exist: {arg.var}")
         assert parent is not None
-        if isinstance(arg, CMDClsArg):
-            # argument should unwrap cls first
-            raise exceptions.InvalidAPIUsage(
-                f"Cannot flatten class argument, please unwrap it first."
-            )
-        if not isinstance(arg, CMDObjectArg):
+
+        need_unwrap = False
+        if isinstance(arg, CMDClsArg) and isinstance(arg.implement, CMDObjectArg):
+            if arg.implement.additional_props:
+                raise exceptions.InvalidAPIUsage(f"Cannot flatten argument with additional properties")
+            need_unwrap = True
+        elif isinstance(arg, CMDObjectArg):
+            if arg.additional_props:
+                raise exceptions.InvalidAPIUsage(f"Cannot flatten argument with additional properties")
+            if arg.cls:
+                need_unwrap = True
+        else:
             raise exceptions.InvalidAPIUsage(f"Cannot flatten argument in type: '{type(arg)}'")
-        if arg.cls:
-            # argument should unwrap cls first
-            raise exceptions.InvalidAPIUsage(
-                f"Cannot flatten class argument, please unwrap it first."
-            )
-        if arg.additional_props:
-            raise exceptions.InvalidAPIUsage(f"Cannot flatten argument with additional properties")
+
+        if need_unwrap:
+            # unwrap cls argument first
+            self.unwrap_cls_arg(*cmd_names, arg_var=arg_var)
+            command = self.find_command(*cmd_names)
+            parent, arg, _ = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
+            assert arg and parent
 
         parent.args.remove(arg)
 
