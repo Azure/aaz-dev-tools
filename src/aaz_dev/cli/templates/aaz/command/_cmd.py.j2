@@ -22,7 +22,7 @@ from azure.cli.core.aaz import *
     is_experimental=True,
     {%- endif %}
 
-    {%- if leaf.register_info.confirmation is not none %}
+    {%- if leaf.register_info.confirmation %}
     confirmation={{ leaf.register_info.confirmation|constant_convert }},
     {%- endif %}
 )
