@@ -476,10 +476,10 @@ class WorkspaceManager:
             aaz_version = options.get('aaz_version', None)
             if aaz_version:
                 try:
-                    aaz_cfg = self.aaz_specs.load_resource_cfg_reader(self.ws.plane, resource.id, aaz_version)
+                    aaz_cfg_reader = self.aaz_specs.load_resource_cfg_reader(self.ws.plane, resource.id, aaz_version)
                 except ValueError as err:
                     raise exceptions.InvalidAPIUsage(message=str(err)) from err
-                cfg_editor.inherit_modification(aaz_cfg)
+                cfg_editor.inherit_modification(aaz_cfg_reader)
                 for cmd_names, _ in cfg_editor.iter_commands():
                     aaz_ref[' '.join(cmd_names)] = aaz_version
 

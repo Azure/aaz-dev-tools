@@ -144,7 +144,9 @@ class AAZSpecsManager:
     def load_resource_cfg_reader(self, plane, resource_id, version):
         key = (plane, resource_id, version)
         if key in self._modified_resource_cfgs:
-            return self._modified_resource_cfgs[key]
+            # cfg already modified
+            cfg = self._modified_resource_cfgs[key]
+            return CfgReader(cfg) if cfg else None
 
         json_path, xml_path = self.get_resource_cfg_file_paths(plane, resource_id, version)
         if not os.path.exists(json_path) and not os.path.exists(xml_path):
@@ -249,6 +251,10 @@ class AAZSpecsManager:
             parent.command_groups = None
 
         self._modified_command_groups.add(cg_names)
+
+        if not parent.command_groups and not parent.commands:
+            # delete empty parent command group
+            self.delete_command_group(*cg_names[:-1])
         return True
 
     def create_command(self, *cmd_names):
@@ -286,6 +292,10 @@ class AAZSpecsManager:
             parent.commands = None
 
         self._modified_commands.add(cmd_names)
+
+        if not parent.command_groups and not parent.commands:
+            # delete empty parent command group
+            self.delete_command_group(*cmd_names[:-1])
         return True
 
     def delete_command_version(self, *cmd_names, version):
@@ -299,12 +309,16 @@ class AAZSpecsManager:
             if v.name == version:
                 match_idx = idx
                 break
-        if not match_idx:
+        if match_idx is None:
             return False
 
         command.versions = command.versions[:match_idx] + command.versions[match_idx+1:]
 
         self._modified_commands.add(cmd_names)
+
+        if not command.versions:
+            # delete empty command
+            self.delete_command(*cmd_names)
         return True
 
     def update_command_version(self, *cmd_names, plane, cfg_cmd):
@@ -356,8 +370,8 @@ class AAZSpecsManager:
         # remove previous cfg
         for resource in cfg_reader.resources:
             pre_cfg_reader = self.load_resource_cfg_reader(cfg.plane, resource_id=resource.id, version=resource.version)
-            if pre_cfg_reader:
-                self._remove_cfg(cfg)
+            if pre_cfg_reader and pre_cfg_reader.cfg != cfg:
+                self._remove_cfg(pre_cfg_reader.cfg)
 
         # add new command version
         for cmd_names, cmd in cfg_reader.iter_commands():
