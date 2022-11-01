@@ -6,7 +6,7 @@ from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDD
     CMDHttpRequest, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDArg, CMDBooleanArg, CMDClsArg, CMDClsArgBase, \
     CMDObjectArgBase, CMDArrayArgBase, CMDCondition, CMDConditionNotOperator, CMDConditionHasValueOperator, \
     CMDConditionAndOperator, CMDCommandGroup, CMDArgumentHelp, CMDArgDefault, CMDInstanceUpdateOperation, \
-    CMDClsSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDObjectSchemaAdditionalProperties, CMDSchema, CMDSchemaBase
+    CMDClsSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDObjectSchemaDiscriminator, CMDSchema, CMDSchemaBase
 from utils import exceptions
 from utils.base64 import b64encode_str
 from utils.case import to_camel_case
@@ -236,7 +236,6 @@ class WorkspaceCfgEditor(CfgReader):
         main_editor.reformat()
         return main_editor
 
-
     def update_command_confirmation(self, *cmd_names, confirmation):
         if len(cmd_names) < 2:
             raise exceptions.InvalidAPIUsage(f"Invalid command name, it's empty")
@@ -353,8 +352,9 @@ class WorkspaceCfgEditor(CfgReader):
         command.generate_args()
         self.reformat()
 
-    def _replace_schema(self, parent, schema, new_schema):
-        if isinstance(parent, CMDObjectSchemaBase):
+    @staticmethod
+    def replace_schema(parent, schema, new_schema):
+        if isinstance(parent, (CMDObjectSchemaBase, CMDObjectSchemaDiscriminator)):
             if isinstance(schema, CMDSchema):
                 assert isinstance(new_schema, CMDSchema)
                 schema_idx = None
@@ -365,7 +365,7 @@ class WorkspaceCfgEditor(CfgReader):
                 assert schema_idx is not None
                 parent.props[schema_idx] = new_schema
             else:
-                assert isinstance(schema, CMDSchemaBase)
+                assert isinstance(parent, CMDObjectSchemaBase) and isinstance(schema, CMDSchemaBase)
                 assert not isinstance(new_schema, CMDSchema) and isinstance(new_schema, CMDSchemaBase)
                 assert parent.additional_props.item == schema
                 parent.additional_props.item = new_schema
