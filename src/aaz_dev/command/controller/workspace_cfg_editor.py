@@ -331,7 +331,7 @@ class WorkspaceCfgEditor(CfgReader):
             new_schema = linked_schema.get_unwrapped()
             assert new_schema.cls == linked_schema.type[1:]
             new_schema.cls = None  # set the cls to None
-            self._replace_schema(linked_schema_parent, linked_schema, new_schema)
+            self.replace_schema(linked_schema_parent, linked_schema, new_schema)
         elif isinstance(linked_schema, (CMDObjectSchemaBase, CMDArraySchemaBase)):
             assert linked_schema.cls is not None
             # unwrap one clsSchema to instance
@@ -339,7 +339,7 @@ class WorkspaceCfgEditor(CfgReader):
                 assert isinstance(ref_schema, CMDClsSchemaBase)
                 new_ref_schema = ref_schema.get_unwrapped()
                 assert new_ref_schema.cls == linked_schema.cls
-                self._replace_schema(ref_parent, ref_schema, new_ref_schema)
+                self.replace_schema(ref_parent, ref_schema, new_ref_schema)
                 break
             # unregister current linked schema cls
             linked_schema.cls = None
