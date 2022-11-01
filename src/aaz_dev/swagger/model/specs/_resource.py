@@ -120,7 +120,15 @@ class Resource:
         dir_parts = [part for part in dir_parts if part]
         if len(dir_parts) < 2:
             raise exceptions.InvalidSwaggerValueError(f"Cannot parse file version", file_path)
-        readiness, version = dir_parts[:2]
+        version = None
+        for idx in range(len(dir_parts)):
+            readiness = dir_parts[idx]
+            if readiness.lower() in ('stable', 'preview') and idx + 1 < len(dir_parts):
+                version = dir_parts[idx+1]
+                break
+        if not version:
+            raise exceptions.InvalidSwaggerValueError(
+                "Cannot parse version and readiness in file path", file_path)
         file_path_version = ResourceVersion(version)
         if file_path_version.readiness == ResourceVersion.Readiness.Stable and readiness.lower() != 'stable':
             if readiness not in ('preview',):
