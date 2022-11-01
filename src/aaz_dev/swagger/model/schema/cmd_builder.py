@@ -258,7 +258,10 @@ class CMDBuilder:
                 if 'model' in self.cls_definitions[name]:
                     # need to combine with the model frozen, especially for _create model with all ready_only properties
                     model.frozen = self.frozen or self.cls_definitions[name]['model'].frozen
+                    # link implement
+                    model.implement = self.cls_definitions[name]['model']
                 else:
+                    # valid reference loop
                     model.frozen = self.frozen
                 model._type = f"@{name}"
             else:
@@ -551,10 +554,34 @@ class CMDBuilder:
 
         return success_responses, redirect_responses, error_responses
 
-    def apply_cls_definitions(self):
+    def apply_cls_definitions(self, *cmd_ops):
         for name, definition in self.cls_definitions.items():
             if definition['count'] > 1:
                 definition['model'].cls = name
+        schema_cls_register_map = {}
+        for cmd_op in cmd_ops:
+            cmd_op.register_cls(cls_register_map=schema_cls_register_map)
+
+        for name, cls_register in schema_cls_register_map.items():
+            if cls_register.get('implement', None):
+                continue
+            from command.controller.workspace_cfg_editor import WorkspaceCfgEditor
+            new_schema = None
+
+            for parent, schema in WorkspaceCfgEditor.iter_schema_cls_reference_in_operations(cmd_ops, name):
+                if schema.frozen:
+                    continue
+
+                if new_schema is not None:
+                    schema.implement = new_schema
+                    new_schema.cls = name
+                    continue
+
+                new_schema = schema.get_unwrapped()
+                new_schema.cls = None
+                assert new_schema is not None
+                WorkspaceCfgEditor.replace_schema(parent, schema, new_schema)
+                self.cls_definitions[name]['model'] = new_schema
 
     def get_pageable(self, path_item, op):
         pageable = getattr(path_item, self.method).x_ms_pageable

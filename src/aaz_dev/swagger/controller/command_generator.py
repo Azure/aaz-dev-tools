@@ -152,6 +152,7 @@ class CommandGenerator:
         ]
 
         op = cmd_builder(path_item)
+        cmd_builder.apply_cls_definitions(op)
 
         assert isinstance(op, CMDHttpOperation)
         if not self._set_api_version_parameter(op.http.request, api_version=resource.version):
@@ -184,8 +185,11 @@ class CommandGenerator:
         ]
         assert path_item.get is not None
         assert path_item.put is not None
+
         get_op = cmd_builder(path_item, method='get', mutability=MutabilityEnum.Read)
         put_op = cmd_builder(path_item, method='put', mutability=MutabilityEnum.Update)
+        cmd_builder.apply_cls_definitions(get_op, put_op)
+
         if put_op.http.request.body is None:
             return None
 
