@@ -1,9 +1,9 @@
 import json
 
 from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDInstanceUpdateOperation, \
-    CMDCommandGroup, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDObjectArgBase, CMDArrayArgBase, CMDRequestJson, \
+    CMDCommandGroup, CMDArgGroup, CMDObjectArgBase, CMDArrayArgBase, CMDRequestJson, \
     CMDResponseJson, CMDObjectSchemaBase, CMDArraySchemaBase, CMDSchema, CMDHttpRequestJsonBody, \
-    CMDJsonInstanceUpdateAction
+    CMDJsonInstanceUpdateAction, CMDHttpResponseJsonBody, CMDObjectSchemaDiscriminator
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 
 
@@ -501,6 +501,11 @@ class CfgReader:
 
     @classmethod
     def iter_schema_cls_reference(cls, command, cls_name):
+        for match in cls.iter_schema_cls_reference_in_operation(command.operations, cls_name):
+            yield match
+
+    @classmethod
+    def iter_schema_cls_reference_in_operations(cls, operations, cls_name):
         assert isinstance(cls_name, str) and not cls_name.startswith('@')
 
         cls_type_name = f"@{cls_name}"
@@ -511,10 +516,15 @@ class CfgReader:
                 return (_parent, _schema), False
             return None, False
 
-        for op in command.operations:
-            if isinstance(op, CMDHttpOperation) and op.http.request:
-                for match in cls._iter_schema_in_request(op.http.request, schema_filter=schema_filter):
-                    yield match
+        for op in operations:
+            if isinstance(op, CMDHttpOperation):
+                if op.http.request:
+                    for match in cls._iter_schema_in_request(op.http.request, schema_filter=schema_filter):
+                        yield match
+                if op.http.responses:
+                    for response in op.http.responses:
+                        for match in cls._iter_schema_in_response(response, schema_filter=schema_filter):
+                            yield match
 
             if isinstance(op, CMDInstanceUpdateOperation):
                 if isinstance(op.instance_update, CMDJsonInstanceUpdateAction):
@@ -550,11 +560,17 @@ class CfgReader:
                 yield match
 
     @classmethod
+    def _iter_schema_in_response(cls, response, schema_filter):
+        if isinstance(response.body, CMDHttpResponseJsonBody):
+            for match in cls._iter_schema_in_json(response.body.json, schema_filter):
+                yield match
+
+    @classmethod
     def _iter_schema_in_json(cls, json, schema_filter):
         assert isinstance(json, (CMDRequestJson, CMDResponseJson))
         match, ret = schema_filter(json, json.schema)
         if match:
-            yield  match
+            yield match
         if ret:
             return
 
@@ -587,6 +603,29 @@ class CfgReader:
 
                 for match in cls._iter_sub_schema(item, schema_filter):
                     yield match
+
+            if parent.discriminators:
+                for disc in parent.discriminators:
+                    for match in cls._iter_sub_schema(disc, schema_filter):
+                        yield match
+
+        elif isinstance(parent, CMDObjectSchemaDiscriminator):
+            if parent.props:
+                for prop in parent.props:
+                    match, ret = schema_filter(parent, prop)
+                    if match:
+                        yield match
+                    if ret:
+                        return
+
+                    # if isinstance(prop, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                    for match in cls._iter_sub_schema(prop, schema_filter):
+                        yield match
+
+            if parent.discriminators:
+                for disc in parent.discriminators:
+                    for match in cls._iter_sub_schema(disc, schema_filter):
+                        yield match
 
         elif isinstance(parent, CMDArraySchemaBase):
             item = parent.item

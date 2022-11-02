@@ -787,6 +787,11 @@ class CMDArrayArgBase(CMDArgBase):
 
     def _reformat_base(self, **kwargs):
         super()._reformat_base(**kwargs)
+        if self.item is None:
+            raise exceptions.VerificationError(
+                "Invalid array type",
+                details="Array item is not defined "
+            )
         try:
             self.item.reformat(**kwargs)
         except exceptions.VerificationError as err:

@@ -58,7 +58,6 @@ class PathItem(Model, Linkable):
             return None
         assert isinstance(op, Operation)
         cmd_op = builder(op, parent_parameters=self.parameters)
-        builder.apply_cls_definitions()
         return cmd_op
 
 
