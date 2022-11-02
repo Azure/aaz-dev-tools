@@ -3,6 +3,13 @@
 Release History
 ===============
 
+0.15.0
+++++++
+* Fix workspace export to aaz issue. (#148)
+* Ignore empty confirmation string in generated code. (#149)
+* Fix version and readiness parse issue in swagger file path (#150)
+* Fix class inheritance overwritten issue (#151)
+
 0.14.0
 ++++++
 * Support class type arguments `unwrap` and `flatten` (#145)
