@@ -11,6 +11,7 @@ from command.templates import get_templates
 from utils import exceptions
 from .cfg_reader import CfgReader
 from .cfg_validator import CfgValidator
+from collections import deque
 
 
 class AAZSpecsManager:
@@ -184,7 +185,7 @@ class AAZSpecsManager:
             raise ValueError(f"Invalid file path: {json_path}")
 
         with open(json_path, 'r') as f:
-            print(json_path)
+            #print(json_path)
             data = json.load(f)
         cfg = CMDConfiguration(data)
 
@@ -516,6 +517,38 @@ class AAZSpecsManager:
         self._modified_command_groups = set()
         self._modified_commands = set()
         self._modified_resource_cfgs = {}
+
+    def get_command_tree(self):
+        cmd_nodes_list = []
+        for group in self.iter_command_groups():
+            if group == self.tree.root:
+                continue
+            for cmd in self.iter_commands(*group.names):
+                cmd_nodes_list.append([self.COMMAND_TREE_ROOT_NAME] + cmd.names)
+        return cmd_nodes_list
+
+    def get_module_command_tree(self, *cmd_names):
+        node = self.tree.root
+        idx = 0
+        while idx < len(cmd_names):
+            name = cmd_names[idx]
+            if not node.command_groups or name not in node.command_groups:
+                break
+            node = node.command_groups[name]
+            idx += 1
+        group_nodes = deque()
+        group_nodes.append(node)
+        cmd_nodes_list = []
+        while len(group_nodes) > 0:
+            group_node = group_nodes.popleft()
+            if group_node.command_groups is not None:
+                for group in group_node.command_groups:
+                    group_nodes.append(group_node.command_groups[group])
+            if group_node.commands is not None:
+                for command in group_node.commands:
+                    cmd_node = group_node.commands[command]
+                    cmd_nodes_list.append([self.COMMAND_TREE_ROOT_NAME] + cmd_node.names)
+        return cmd_nodes_list
 
     @staticmethod
     def render_command_readme(command):
