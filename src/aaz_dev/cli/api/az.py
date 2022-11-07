@@ -143,9 +143,11 @@ def portal_generate_module(module_name):
         leaf_name = node_path[-1]
         leaf = aaz_spec_manager.find_command(*node_names, leaf_name)
         if not leaf or not leaf.versions:
-            raise exceptions.ResourceNotFind("Command group: " + " ".join(leaf.names) + " not exist")
+            print("Command group: " + " ".join(leaf.names) + " not exist")
+            continue
         if not leaf.versions:
-            raise exceptions.ResourceNotFind("Command group: " + " ".join(leaf.names) + " version not exist")
+            print("Command group: " + " ".join(leaf.names) + " version not exist")
+            continue
         registered_version = az_main_manager.find_cmd_registered_version(cli_module['profiles']['latest'], *node_path[1:])
         if not registered_version:
             registered_version = az_ext_manager.find_cmd_registered_version(cli_module['profiles']['latest'], *node_path[1:])
@@ -158,7 +160,8 @@ def portal_generate_module(module_name):
                 target_version = v
                 break
         if not target_version:
-            raise exceptions.ResourceNotFind("Command: " + " ".join(leaf.names) + " version not exist")
+            print("Command: " + " ".join(leaf.names) + " version not exist")
+            continue
 
         cfg_reader = aaz_spec_manager.load_resource_cfg_reader_by_command_with_version(leaf, version=target_version)
         cmd_cfg = cfg_reader.find_command(*leaf.names)

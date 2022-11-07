@@ -118,10 +118,11 @@ class PortalCliGenerator:
 
     def generate_default_example(self, cmd_info, leaf, var_option_list):
         parameters = []
-        for (para_var, para_options, is_required, is_in_path) in var_option_list:
+        for (para_var, raw_options, is_required, is_in_path) in var_option_list:
             if not is_required:
                 continue
-            pick_option = para_options[0]
+            pick_options = list(filter(lambda opt: len(opt) > 1, raw_options))
+            pick_option = pick_options[0]
             parameters.append({
                 'name': ("-" if len(pick_option) == 1 else "--") + pick_option,
                 'value': "[" + para_var.strip("$") + "]"
@@ -146,14 +147,18 @@ class PortalCliGenerator:
             for arg in arg_group.args:
                 assert arg.options is not None
                 if len(arg.options) == 0: continue
+                is_required = arg.required
                 var_name = arg.var.replace("$Path", "$path")
                 if arg.required and var_name.find("subscriptionId") == -1:
                     # for user input cmd example, ignore subscriptionId
                     var_required.add(var_name)
                 if arg.required and var_name == "$path.subscriptionId":
                     subId_required = True
+                if cmd_info['path'].find("{resourceGroupName}") != -1 and var_name == "$path.resourceGroupName":
+                    var_required.add(var_name)
+                    is_required = True
                 var_option_list.append((var_name, arg.options,
-                                        arg.required,
+                                        is_required,
                                         var_name.find('$path') != -1))
 
         if target_version.examples is None or len(target_version.examples) == 0:
