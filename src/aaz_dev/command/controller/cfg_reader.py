@@ -501,7 +501,7 @@ class CfgReader:
 
     @classmethod
     def iter_schema_cls_reference(cls, command, cls_name):
-        for match in cls.iter_schema_cls_reference_in_operation(command.operations, cls_name):
+        for match in cls.iter_schema_cls_reference_in_operations(command.operations, cls_name):
             yield match
 
     @classmethod
