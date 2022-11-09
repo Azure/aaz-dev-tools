@@ -9,6 +9,7 @@ class CMDResource(Model):
     # properties as tags
     id = CMDResourceIdField(required=True)
     version = CMDVersionField(required=True)
+    subResource = StringType()  # sub resource index, used for sub commands generation.
 
     swagger = StringType(required=True)  # swagger resource provider, <plane>/<path:mod_names>/ResourceProviders/<rp_name>/Paths/<base64Encoded Path>/V/<base64Encoded version>
 

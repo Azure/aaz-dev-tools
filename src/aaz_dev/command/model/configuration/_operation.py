@@ -4,6 +4,7 @@ from schematics.types import PolyModelType, ModelType, ListType, StringType
 from ._fields import CMDVariantField, CMDDescriptionField
 from ._http import CMDHttpAction
 from ._instance_update import CMDInstanceUpdateAction
+from ._instance_create import CMDInstanceCreateAction
 
 
 class CMDOperation(Model):
@@ -84,6 +85,27 @@ class CMDHttpOperation(CMDOperation):
         self.http.register_cls(**kwargs)
 
 
+class CMDInstanceCreateOperation(CMDOperation):
+    POLYMORPHIC_KEY = "instanceCreate"
+
+    instance_create = PolyModelType(
+        CMDInstanceCreateAction,
+        allow_subclasses=True,
+        required=True,
+        serialized_name="instanceCreate",
+        deserialize_from="instanceCreate"
+    )
+
+    def generate_args(self, ref_args):
+        return self.instance_create.generate_args(ref_args=ref_args)
+
+    def reformat(self, **kwargs):
+        self.instance_create.reformat(**kwargs)
+
+    def register_cls(self, **kwargs):
+        self.instance_create.register_cls(**kwargs)
+
+
 class CMDInstanceUpdateOperation(CMDOperation):
     POLYMORPHIC_KEY = "instanceUpdate"
 
@@ -104,3 +126,12 @@ class CMDInstanceUpdateOperation(CMDOperation):
 
     def register_cls(self, **kwargs):
         self.instance_update.register_cls(**kwargs)
+
+
+class CMDInstanceDeleteOperation(CMDOperation):
+    POLYMORPHIC_KEY = "instanceDelete"
+
+    instance_delete = PolyModelType(
+
+    )
+

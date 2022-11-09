@@ -10,7 +10,7 @@ from ._fields import CMDVariantField
 from ._instance import CMDInstance
 
 
-class CMDInstanceUpdateAction(Model):
+class CMDInstanceCreateAction(Model):
     POLYMORPHIC_KEY = None
 
     # properties as tags
@@ -23,7 +23,7 @@ class CMDInstanceUpdateAction(Model):
 
         if isinstance(data, dict):
             return cls.POLYMORPHIC_KEY in data
-        elif isinstance(data, CMDInstanceUpdateAction):
+        elif isinstance(data, CMDInstanceCreateAction):
             return hasattr(data, cls.POLYMORPHIC_KEY)
         return False
 
@@ -37,15 +37,15 @@ class CMDInstanceUpdateAction(Model):
         return NotImplementedError()
 
 
-# json instance update
-class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
+# json instance create
+class CMDJsonInstanceCreateAction(CMDInstanceCreateAction):
     POLYMORPHIC_KEY = "json"
 
     # properties as nodes
     json = ModelType(CMDRequestJson, required=True)
 
     def generate_args(self, ref_args):
-        return self.json.generate_args(ref_args=ref_args, is_update_action=True)
+        return self.json.generate_args(ref_args=ref_args, is_update_action=False)
 
     def reformat(self, **kwargs):
         self.json.reformat(**kwargs)
