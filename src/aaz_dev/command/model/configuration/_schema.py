@@ -940,6 +940,9 @@ class CMDArraySchemaBase(CMDSchemaBase):
     )
     item = CMDSchemaBaseField()
 
+    # used to indentify item in array
+    identifiers = ListType(StringType(), serialized_name='identifiers', deserialize_from='identifiers')
+
     # properties as tags
     # define a schema which can be used by others # TODO: convert to arg
     # cls definition will not include properties in CMDSchema only, such as following properties:
@@ -964,11 +967,22 @@ class CMDArraySchemaBase(CMDSchemaBase):
         if item_diff:
             diff["item"] = item_diff
 
+        if level >= CMDDiffLevelEnum.Structure:
+            if old.identifiers:
+                if not self.identifiers:
+                    diff["identifiers"] = f"Miss Identifiers"
+                elif set(old.identifiers) != set(self.identifiers):
+                    diff["identifiers"] = f"Identifier different"
+            elif self.identifiers:
+                diff["identifiers"] = f"New identifiers"
+
         return diff
 
     def _reformat_base(self, **kwargs):
         super()._reformat_base(**kwargs)
         self.item.reformat(**kwargs)
+        if self.identifiers:
+            self.identifiers = sorted(self.identifiers, key=lambda identifier: (len(identifier), identifier))
 
 
 class CMDArraySchema(CMDArraySchemaBase, CMDSchema):

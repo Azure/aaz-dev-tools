@@ -10,13 +10,13 @@ from schematics.types.serializable import serializable
 from ._fields import CMDVariantField, CMDBooleanField
 
 
-class CMDInstance(Model):
-
-    ref = CMDVariantField(required=True)
-    identifiers = ListType(ModelType(InstanceIdentifier))
-
-
 class CMDInstanceIdentifier(Model):
 
     key = StringType(required=True, min_length=1)
     arg = CMDVariantField(required=True)
+
+
+class CMDInstance(Model):
+
+    ref = CMDVariantField(required=True)
+    identifiers = ListType(ModelType(CMDInstanceIdentifier))

@@ -8,7 +8,7 @@ from command.model.configuration import CMDSchemaDefault, \
     CMDStringSchema, CMDResourceIdSchema, CMDResourceIdFormat, \
     CMDResourceLocationSchema, \
     CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, \
-    CMDArraySchemaBase, CMDObjectSchema, CMDIdentityObjectSchema, CMDIdentityObjectSchemaBase
+    CMDArraySchemaBase, CMDObjectSchema, CMDIdentityObjectSchema, CMDIdentityObjectSchemaBase, CMDClsSchemaBase
 from command.model.configuration import CMDSchemaEnum, CMDSchemaEnumItem, CMDSchema, CMDSchemaBase
 from swagger.utils import exceptions
 from .external_documentation import ExternalDocumentation
@@ -242,7 +242,7 @@ class Schema(Model, Linkable):
 
     x_nullable = XNullableField()  # when true, specifies that null is a valid value for the associated schema
 
-    x_ms_identifiers = ListType(BaseType(), serialized_name="x-ms-identifiers", deserialize_from="x-ms-identifiers")  # TODO: used to indentify element in array
+    x_ms_identifiers = ListType(StringType(), serialized_name="x-ms-identifiers", deserialize_from="x-ms-identifiers")
 
     # specific properties, will not support
     _x_accessibility = XAccessibilityField()  # only used in ContainerRegistry Data plane
@@ -374,6 +374,25 @@ class Schema(Model, Linkable):
                 # freeze because array item is frozen
                 if not model.frozen and model.item.frozen:
                     model.frozen = True
+
+            if self.x_ms_identifiers:
+                model.identifiers = []
+                item_instance = mode.item
+                if isinstance(item_instance, CMDClsSchemaBase):
+                    item_instance = item_instance.implement
+                if not isinstance(item_instance, CMDObjectSchemaBase):
+                    raise exceptions.InvalidSwaggerValueError(
+                        msg=f"x-ms-identifiers should be used in 'array of object'",
+                        key=self.traces, value=None
+                    )
+                item_prop_names = {p.name for p in item_instance.props}
+                for identifier in self.x_ms_identifiers:
+                    if identifier not in item_prop_names:
+                        raise exceptions.InvalidSwaggerValueError(
+                            msg=f"identifier property '{identifier}' not exist",
+                            key=self.traces, value=None
+                        )
+                    model.identifiers.append(identifier)
 
         elif isinstance(model, CMDObjectSchemaBase):
             # props

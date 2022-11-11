@@ -5,7 +5,7 @@ from ._fields import CMDVariantField, CMDDescriptionField
 from ._http import CMDHttpAction
 from ._instance_update import CMDInstanceUpdateAction
 from ._instance_create import CMDInstanceCreateAction
-
+from ._instance_delete import CMDInstanceDeleteAction
 
 class CMDOperation(Model):
     POLYMORPHIC_KEY = None
@@ -132,6 +132,18 @@ class CMDInstanceDeleteOperation(CMDOperation):
     POLYMORPHIC_KEY = "instanceDelete"
 
     instance_delete = PolyModelType(
-
+        CMDInstanceDeleteAction,
+        allow_subclasses=True,
+        required=True,
+        serialized_name="instanceDelete",
+        deserialize_from="instanceDelete"
     )
 
+    def generate_args(self, ref_args):
+        return self.instance_delete.generate_args(ref_args=ref_args)
+
+    def reformat(self, **kwargs):
+        self.instance_delete.reformat(**kwargs)
+
+    def register_cls(self, **kwargs):
+        self.instance_delete.register_cls(**kwargs)
