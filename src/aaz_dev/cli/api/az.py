@@ -160,7 +160,7 @@ def portal_generate_module(module_name):
                 target_version = v
                 break
         if not target_version:
-            print("Command: " + " ".join(leaf.names) + " version not exist")
+            print("Command: " + " ".join(leaf.names) + " registered version " + registered_version + " not exist")
             continue
 
         cfg_reader = aaz_spec_manager.load_resource_cfg_reader_by_command_with_version(leaf, version=target_version)

@@ -113,7 +113,7 @@ class PortalCliGenerator:
                     # parameter set ignore 1 character option
                     option_list += filter(lambda opt: len(opt) > 1, arg.options)
         parameters_list = [ "[--" + param_name + "]" for param_name in option_list]
-        help_info['parameterSets'] = {'parameters': parameters_list}
+        help_info['parameterSets'] = [{'parameters': parameters_list}]
         cmd_info['help'] = help_info
 
     def generate_default_example(self, cmd_info, leaf, var_option_list):
