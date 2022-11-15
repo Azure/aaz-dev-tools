@@ -552,6 +552,10 @@ class WorkspaceManager:
             methods = cfg_editor.get_used_http_methods(resource_id)
             if methods:
                 options['methods'] = methods
+            update_cmd_info = cfg_editor.get_update_cmd(resource_id)
+            if update_cmd_info:
+                _, _, update_by = update_cmd_info
+                options['update_by'] = update_by
             try:
                 command_group = self.swagger_command_generator.create_draft_command_group(
                     swagger_resource, **options)

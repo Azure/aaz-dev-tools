@@ -20,7 +20,7 @@ class CfgReader:
 
     def get_used_http_methods(self, resource_id):
         methods = set()
-        for _, command in self.iter_commands():
+        for _, command in self.iter_commands_by_resource(resource_id):
             for operation in command.operations:
                 if not isinstance(operation, CMDHttpOperation):
                     continue
@@ -30,6 +30,20 @@ class CfgReader:
                 methods.add(http.request.method.lower())
                 # if isinstance(op, CMDHttpOperation)
         return tuple(methods) or None
+
+    def get_update_cmd(self, resource_id):
+        for cmd_names, command in self.iter_commands_by_resource(resource_id):
+            for operation in command.operations:
+                if isinstance(operation, CMDInstanceUpdateOperation):
+                    return cmd_names, command, "GenericOnly"
+                if not isinstance(operation, CMDHttpOperation):
+                    continue
+                http = operation.http
+                if swagger_resource_path_to_resource_id(http.path) != resource_id:
+                    continue
+                if http.request.method.lower() == "patch":
+                    return cmd_names, command, "PatchOnly"
+        return None
 
     def iter_cfg_files_data(self):
         main_resource = self.cfg.resources[0]
