@@ -81,6 +81,15 @@ class CfgReader:
         for result in self.iter_commands(filter=_filter_by_resource):
             yield result
 
+    def iter_commands_by_sub_resource(self, resource_id, sub_resource, version=None):
+        def _filter_by_sub_resource(cmd_name, command):
+            for r in command.resources:
+                if r.id == resource_id and r.sub_resource == sub_resource and (not version or r.version == version):
+                    return True
+            return False
+        for result in self.iter_commands(filter=_filter_by_sub_resource):
+            yield result
+
     def iter_commands_by_operations(self, *methods):
         # use 'update' as the methods of instance update operation
         methods = {m.lower() for m in methods}

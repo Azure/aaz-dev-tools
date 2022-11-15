@@ -654,6 +654,35 @@ class WorkspaceManager:
             return True
         return False
 
+    def add_commands_by_sub_resource(self, resource_id, version, sub_resource, generic_update_cmd_names, identifiers):
+        cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
+        if not cfg_editor:
+            raise exceptions.InvalidAPIUsage(f"Resource not exist: resource_id={resource_id} version={version}")
+
+        # # iter over root commands of resource
+        # for cmd_names, cmd in cfg_editor.iter_commands_by_sub_resource(resource_id=resource_id, version=version, sub_resource=None):
+        #     pass
+
+    def remove_sub_resource(self, resource_id, version, sub_resource):
+        # TODO:
+        cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
+        if not cfg_editor:
+            return False
+
+        pass
+
+
+    def list_commands_by_sub_resource(self, resource_id, version, sub_resource):
+        commands = []
+        cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
+        if cfg_editor:
+            for cmd_names, _ in cfg_editor.iter_commands_by_sub_resource(resource_id, sub_resource, version):
+                leaf = self.find_command_tree_leaf(*cmd_names)
+                if leaf:
+                    commands.append(leaf)
+        return commands
+
+
     @staticmethod
     def _pop_command_tree_node(parent, name):
         if not parent.command_groups or name not in parent.command_groups:

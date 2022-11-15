@@ -944,7 +944,7 @@ class CMDArraySchemaBase(CMDSchemaBase):
     identifiers = ListType(StringType(), serialized_name='identifiers', deserialize_from='identifiers')
 
     # properties as tags
-    # define a schema which can be used by others # TODO: convert to arg
+    # define a schema which can be used by others
     # cls definition will not include properties in CMDSchema only, such as following properties:
     #  - name
     #  - arg
