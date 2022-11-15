@@ -1,7 +1,9 @@
 import * as React from "react";
 import {
+    Backdrop,
     Box,
     Button,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -9,11 +11,11 @@ import {
     Drawer,
     LinearProgress,
     Toolbar,
+    Alert,
 } from "@mui/material";
 import { useParams } from "react-router";
 import axios from "axios";
 import CLIModGeneratorToolBar from "./CLIModGeneratorToolBar";
-import { Alert } from "reactstrap";
 import CLIModGeneratorProfileCommandTree, { BuildProfileCommandTree, ExportModViewProfile, ProfileCommandTree, UpdateProfileCommandTreeByModView } from "./CLIModGeneratorProfileCommandTree";
 import CLIModGeneratorProfileTabs from "./CLIModGeneratorProfileTabs";
 import { CLIModView, CLIModViewProfiles } from "./CLIModuleCommon";
@@ -28,6 +30,8 @@ interface CLIModuleGeneratorProps {
 }
 
 interface CLIModuleGeneratorState {
+    loading: boolean;
+    invalidText?: string,
     profiles: string[];
     commandTrees: ProfileCommandTree[];
     selectedProfileIdx?: number;
@@ -41,6 +45,8 @@ class CLIModuleGenerator extends React.Component<CLIModuleGeneratorProps, CLIMod
     constructor(props: CLIModuleGeneratorProps) {
         super(props);
         this.state = {
+            loading: false,
+            invalidText: undefined,
             profiles: [],
             commandTrees: [],
             selectedProfileIdx: undefined,
@@ -55,6 +61,9 @@ class CLIModuleGenerator extends React.Component<CLIModuleGeneratorProps, CLIMod
 
     loadModule = async () => {
         try {
+            this.setState({
+                loading: true,
+            });
             let res = await axios.get(`/CLI/Az/Profiles`);
             let profiles: string[] = res.data;
 
@@ -75,13 +84,24 @@ class CLIModuleGenerator extends React.Component<CLIModuleGeneratorProps, CLIMod
             let selectedProfileIdx = profiles.length > 0 ? 0 : undefined;
             let selectedCommandTree = selectedProfileIdx !== undefined ? commandTrees[selectedProfileIdx] : undefined;
             this.setState({
+                loading: false,
                 profiles: profiles,
                 commandTrees: commandTrees,
                 selectedProfileIdx: selectedProfileIdx,
                 selectedCommandTree: selectedCommandTree
             })
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
+            if (err.response?.data?.message) {
+                const data = err.response!.data!;
+                this.setState({
+                    invalidText: `ResponseError: ${data.message!}`,
+                })
+            } else {
+                this.setState({
+                    invalidText: `Error: ${err}`,
+                })
+            }
         }
     }
 
@@ -162,6 +182,32 @@ class CLIModuleGenerator extends React.Component<CLIModuleGeneratorProps, CLIMod
                     open={showGenerateDialog}
                     onClose={this.handleGenerationClose}
                 />}
+                <Backdrop
+                    sx={{ color: '#fff', zIndex: (theme: any) => theme.zIndex.drawer + 1 }}
+                    open={this.state.loading}
+                >
+                    {this.state.invalidText !== undefined &&
+                        <Alert sx={{
+                            maxWidth: "80%",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "stretch",
+                            justifyContent: "flex-start",
+                        }}
+                            variant="filled"
+                            severity='error'
+                            onClose={() => {
+                                this.setState({
+                                    invalidText: undefined,
+                                    loading: false,
+                                })
+                            }}
+                        >
+                            {this.state.invalidText}
+                        </Alert>
+                    }
+                    {this.state.invalidText === undefined && <CircularProgress color='inherit' />}
+                </Backdrop>
             </React.Fragment>
         );
     }

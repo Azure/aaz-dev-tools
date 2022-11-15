@@ -72,8 +72,7 @@ class AzModuleManager:
         """Patch the __init__.py file of module"""
         file = os.path.join(os.path.dirname(self.get_aaz_path(mod_name)), '__init__.py')
         if not os.path.exists(file) or not os.path.isfile(file):
-            logger.error(f"Patch Module failed: Cannot find file: {file}")
-            return
+            raise exceptions.InvalidAPIUsage(f"Patch Module failed: Cannot find file: {file}")
 
         with open(file, 'r') as f:
             lines = f.read().split('\n')
@@ -106,8 +105,7 @@ class AzModuleManager:
                 if line.startswith(f"{space}{space}from ") or line.startswith(f"{space}{space}import "):
                     insert_after = idx
         if start_line is None:
-            logger.error(f"Patch Module failed: Cannot find load_command_table function in file: {file}")
-            return
+            raise exceptions.InvalidAPIUsage(f"Patch Module failed: Cannot find load_command_table function in file: {file}")
 
         insert_lines = [
             f"{space}{space}from azure.cli.core.aaz import load_aaz_command_table",
@@ -193,9 +191,6 @@ class AzModuleManager:
 
         command_group = CLIViewCommandGroup()
         command_group.names = [*names]
-        if not command_group:
-            logger.error(f"CommandGroup miss in aaz repo: '{' '.join(names)}'")
-            return None
 
         command_group.command_groups = self._load_view_command_groups(*names, path=path)
         command_group.commands = self._load_view_commands(*names, path=path)
@@ -239,8 +234,7 @@ class AzModuleManager:
             return None
 
         if not aaz_info_lines:
-            logger.error(f"Command info miss in code: '{' '.join(names)}'")
-            return None
+            raise exceptions.InvalidAPIUsage(f"Command info miss in code: '{' '.join(names)}'")
 
         try:
             data = ast.literal_eval(aaz_info_lines)
@@ -250,15 +244,11 @@ class AzModuleManager:
                 return None
             version_name = data['version']
         except Exception as err:
-            logger.error(f"Command info invalid in code: '{' '.join(names)}': {err}: {aaz_info_lines}")
-            return None
+            raise exceptions.InvalidAPIUsage(f"Command info invalid in code: '{' '.join(names)}': {err}: {aaz_info_lines}")
 
         command = CLIViewCommand()
         command.names = [*names]
         command.version = version_name
-        if not command:
-            logger.error(f"Command miss in aaz repo: '{' '.join(names)}'")
-            return None
 
         if register_info_lines:
             command.registered = True
