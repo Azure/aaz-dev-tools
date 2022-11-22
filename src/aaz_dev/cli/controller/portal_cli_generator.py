@@ -1,15 +1,17 @@
-from command.model.configuration import CMDCommand, CMDCommandExample
+from command.model.configuration import CMDCommand, CMDHttpOperation
 from command.model.specs import CMDSpecsCommand, CMDSpecsCommandVersion
 from utils import exceptions
 from utils.config import Config
-import os, json, re
+import os, json, re, logging
+
+logger = logging.getLogger('backend')
 
 
 class PortalCliGenerator:
     COMMAND_ROOT_NAME = "az"
     DOC_ROOT_NAME = "https://docs.microsoft.com/cli/azure"
 
-    # az change-analysis list --star-ttime bbb --endtime aaa -resource-group aaa
+    # az change-analysis list --star-ttime bbb --endtime aaa -g aaa
     PARA_REG_PATTERN = re.compile(r" --?([a-zA-Z0-9\-]+) ?")
 
     # /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}...
@@ -40,22 +42,18 @@ class PortalCliGenerator:
         rp_name = resource.rp_name
         swagger_path = resource.swagger_path
         cmd_portal_info['rp_name'] = rp_name
-        swagger_provider_ind = swagger_path.rfind(rp_name)
-        provider_ind = 0
-        while swagger_provider_ind == -1 and provider_ind < len(self.PROVIDERS_LIST):
-            swagger_provider_ind = swagger_path.rfind(self.PROVIDERS_LIST[provider_ind])
-            provider_ind += 1
+        swagger_provider_ind = swagger_path.lower().rfind(rp_name.lower())
         if swagger_provider_ind == -1:
-            print("please check cmd " + " ".join(leaf.names) + " resource id: " + swagger_path)
+            logger.warning("please check cmd " + " ".join(leaf.names) + " resource id: " + swagger_path)
             return
-        resource_paths = re.finditer(self.RESOURCE_PATH_PATTERN, swagger_path[swagger_provider_ind:])
         folder_end_ind = swagger_path[swagger_provider_ind:].rfind("{", )
+        resource_paths = re.finditer(self.RESOURCE_PATH_PATTERN, swagger_path[swagger_provider_ind:folder_end_ind])
         resource_type = ""
         for resource_match in resource_paths:
             resource_folder = resource_match.group(1)
             if len(resource_type) == 0:
                 resource_type += resource_folder
-            elif resource_match.span(1)[0] < folder_end_ind:
+            else:
                 resource_type += "/" + resource_folder
         cmd_portal_info['resourceType'] = resource_type
 
@@ -97,10 +95,10 @@ class PortalCliGenerator:
         cmd_info['path'] = resource.swagger_path
 
     def fill_cmd_confirmation(self, cmd_info, cmd_cfg):
-        if cmd_cfg.confirmation is None:
-            cmd_info['confirmation'] = False
-        else:
+        if cmd_cfg.confirmation:
             cmd_info['confirmation'] = True
+        else:
+            cmd_info['confirmation'] = False
 
     def fill_cmd_help(self, cmd_info, cmd_cfg, leaf):
         help_info = {}
@@ -125,7 +123,7 @@ class PortalCliGenerator:
             pick_option = pick_options[0]
             parameters.append({
                 'name': ("-" if len(pick_option) == 1 else "--") + pick_option,
-                'value': "[" + para_var.strip("$") + "]"
+                'value': "[" + para_var.replace("$Path", "path") + "]"
             })
         if len(parameters) > 0:
             cmd_info['examples'] = [{
@@ -142,26 +140,26 @@ class PortalCliGenerator:
     def fill_cmd_examples(self, cmd_info, cmd_cfg, leaf, target_version):
         var_option_list = []
         var_required = set()
-        subId_required = False
+        sub_id_required = False
         for arg_group in cmd_cfg.arg_groups:
             for arg in arg_group.args:
                 assert arg.options is not None
                 if len(arg.options) == 0: continue
                 is_required = arg.required
-                var_name = arg.var.replace("$Path", "$path")
+                var_name = arg.var
                 if arg.required and var_name.find("subscriptionId") == -1:
                     # for user input cmd example, ignore subscriptionId
                     var_required.add(var_name)
-                if arg.required and var_name == "$path.subscriptionId":
-                    subId_required = True
-                if cmd_info['path'].find("{resourceGroupName}") != -1 and var_name == "$path.resourceGroupName":
+                if arg.required and var_name == "$Path.subscriptionId":
+                    sub_id_required = True
+                if cmd_info['path'].find("/resourceGroups/{") != -1 and var_name == "$Path.resourceGroupName":
                     var_required.add(var_name)
                     is_required = True
                 var_option_list.append((var_name, arg.options,
                                         is_required,
-                                        var_name.find('$path') != -1))
+                                        var_name.find('$Path') != -1))
 
-        if target_version.examples is None or len(target_version.examples) == 0:
+        if not target_version.examples:
             self.generate_default_example(cmd_info, leaf, var_option_list)
             return
         find_example = False
@@ -186,7 +184,7 @@ class PortalCliGenerator:
                         param_verify = False
                         break
                     pick_options = list(filter(lambda opt: len(opt) > 1, raw_options))
-                    para_list.append((var, pick_options))
+                    para_list.append((var, pick_options[0]))
                     cmd_para.add(var)
 
                 # 2. check if all required parameters is in example command str
@@ -195,15 +193,15 @@ class PortalCliGenerator:
                     param_verify = False
                 if not param_verify: continue
                 parameters = []
-                subId_added = False
-                for (var, pick_options) in para_list:
-                    if var == "$path.subscriptionId":
-                        subId_added = True
+                sub_id_added = False
+                for (var, pick_option) in para_list:
+                    if var == "$Path.subscriptionId":
+                        sub_id_added = True
                     parameters.append({
-                        'name': ("-" if len(pick_options[0]) == 1 else "--") + pick_options[0],
-                        'value': "[" + var.strip("$") + "]"
+                        'name': "--" + pick_option,
+                        'value': "[" + var.replace("$Path", "path") + "]"
                     })
-                if not subId_added and subId_required:
+                if not sub_id_added and sub_id_required:
                     parameters.append({
                         'name': "--subscription",
                         'value': "[path.subscriptionId]"
@@ -217,32 +215,32 @@ class PortalCliGenerator:
         if not find_example:
             self.generate_default_example(cmd_info, leaf, var_option_list)
 
-    def check_cmd_examples(self, cmd_cfg):
+    def __check_cmd_examples(self, cmd_cfg):
         parameter_verified = True
         for arg_group in cmd_cfg.arg_groups:
             for arg in arg_group.args:
                 assert arg.options is not None
                 if len(arg.options) == 0: continue
-                var_name = arg.var.replace("$Path", "$path")
-                if arg.required and var_name.find('$path') == -1:
+                var_name = arg.var
+                if arg.required and var_name.find('$Path') == -1:
                     parameter_verified = False
                     break
         if cmd_cfg.operations:
             for opt in cmd_cfg.operations:
-                if "http" in opt and opt.http is not None \
+                if isinstance(opt, CMDHttpOperation) \
                         and opt.http.request is not None \
                         and opt.http.request.body is not None:
                     parameter_verified = False
                     break
         return parameter_verified
 
-    def get_cmd_info(self, cmd_info, cmd_cfg, leaf, target_version):
+    def generate_cmd_info(self, cmd_info, cmd_cfg, leaf, target_version):
         self.fill_cmd_name(cmd_info, leaf)
         self.fill_cmd_desc(cmd_info, leaf)
         self.fill_cmd_path(cmd_info, cmd_cfg)
         self.fill_cmd_confirmation(cmd_info, cmd_cfg)
         self.fill_cmd_help(cmd_info, cmd_cfg, leaf)
-        if self.check_cmd_examples(cmd_cfg):
+        if self.__check_cmd_examples(cmd_cfg):
             self.fill_cmd_examples(cmd_info, cmd_cfg, leaf, target_version)
 
     def generator_command_portal(self, cmd_cfg, leaf, target_version):
@@ -251,14 +249,14 @@ class PortalCliGenerator:
                 not isinstance(target_version, CMDSpecsCommandVersion):
             return None
         if cmd_cfg.arg_groups is None:
-            print("{0} cmd has no arg_group".format(" ".join(leaf.names)))
+            logger.info("{0} cmd has no arg_group".format(" ".join(leaf.names)))
             return None
         cmd_portal_info = {}
         self.fill_resource_type(cmd_portal_info, cmd_cfg, leaf)
         self.fill_api_version(cmd_portal_info, target_version)
         self.generate_base_learn_more(cmd_portal_info, leaf)
         cmd_info = {}
-        self.get_cmd_info(cmd_info, cmd_cfg, leaf, target_version)
+        self.generate_cmd_info(cmd_info, cmd_cfg, leaf, target_version)
         cmd_portal_info['commands'] = [cmd_info]
         return cmd_portal_info
 
@@ -268,16 +266,16 @@ class PortalCliGenerator:
                 not isinstance(target_version, CMDSpecsCommandVersion):
             return None
         if cmd_cfg.arg_groups is None:
-            print("{0} cmd has no arg_group".format(" ".join(leaf.names)))
+            logger.info("{0} cmd has no arg_group".format(" ".join(leaf.names)))
             return None
-        if not self.check_cmd_examples(cmd_cfg):
-            print("{0} cmd do not has examples".format(" ".join(leaf.names)))
+        if not self.__check_cmd_examples(cmd_cfg):
+            logger.info("{0} cmd do not has examples".format(" ".join(leaf.names)))
             return None
         cmd_portal_info = {}
         self.fill_resource_type(cmd_portal_info, cmd_cfg, leaf)
         self.fill_api_version(cmd_portal_info, target_version)
         self.generate_base_learn_more(cmd_portal_info, leaf)
-        self.get_cmd_info(cmd_portal_info, cmd_cfg, leaf, target_version)
+        self.generate_cmd_info(cmd_portal_info, cmd_cfg, leaf, target_version)
         return cmd_portal_info
 
     def get_portal_file_path(self):
@@ -292,32 +290,26 @@ class PortalCliGenerator:
         for rp_name, resource_infos in portal_dict.items():
             for resource_type, resource_info in resource_infos.items():
                 resource_paths = [rp_name] + resource_type.split("/")
-                resource_file_folder = data_model_folder + "/" + "/".join(resource_paths[:-1])
-                if not os.path.exists(resource_file_folder):
-                    os.makedirs(resource_file_folder)
                 resource_file_path = data_model_folder + "/" + "/".join(resource_paths[:-1]) + "/" + \
                                      resource_paths[-1] + ".json"
+                resource_file_folder = os.path.dirname(resource_file_path)
+                if not os.path.exists(resource_file_folder):
+                    os.makedirs(resource_file_folder)
+
                 with open(resource_file_path, "w") as f_out:
                     f_out.write(json.dumps(resource_info, indent=4))
 
     def generate_cmds_portal(self, cmd_portal_list):
         portal_dict = {}
-        cmd_example_cal = [0, 0]
-        cmd_fail_info = [0, 0]
-        cmd_dedup_info = [0, 0]
         cmd_dedup = set()
         for cmd_portal_info in cmd_portal_list:
-            cmd_fail_info[0] += 1
-            cmd_dedup_info[0] += 1
             if 'rp_name' not in cmd_portal_info or 'resourceType' not in cmd_portal_info or \
                 'apiVersion' not in cmd_portal_info or 'name' not in cmd_portal_info:
-                cmd_fail_info[1] += 1
                 continue
 
             cmd_name = cmd_portal_info['name']
             if cmd_name in cmd_dedup:
-                print("{0} cmd has repeated from versions {1}".format(cmd_name, cmd_portal_info['apiVersion']))
-                cmd_dedup_info[1] += 1
+                logger.info("{0} cmd has repeated from versions {1}".format(cmd_name, cmd_portal_info['apiVersion']))
                 continue
             cmd_dedup.add(cmd_name)
             rp_name = cmd_portal_info['rp_name']
@@ -325,8 +317,6 @@ class PortalCliGenerator:
             api_version = cmd_portal_info['apiVersion']
             learn_more = cmd_portal_info['learnMore']
 
-            cmd_example_cal[0] += 1
-            cmd_example_cal[1] += 1 if 'examples' in cmd_portal_info else 0
             del cmd_portal_info['rp_name'], cmd_portal_info['resourceType']
             del cmd_portal_info['apiVersion'], cmd_portal_info['learnMore']
             if rp_name not in portal_dict:
@@ -351,9 +341,6 @@ class PortalCliGenerator:
             rescoure_info = rescoure_infos[rescoure_type]
             rescoure_info['commands'].append(cmd_portal_info)
 
-        print("{0} / {1} cmds has examples".format(cmd_example_cal[1], cmd_example_cal[0]))
-        print("{0} / {1} cmds lost infos".format(cmd_fail_info[1], cmd_fail_info[0]))
-        print("{0} / {1} cmds has repeated versions".format(cmd_dedup_info[1], cmd_dedup_info[0]))
         self.generate_portal_file(portal_dict)
 
 

@@ -18,15 +18,6 @@ bp = Blueprint('portal', __name__, url_prefix='/AAZ/Portal')
     help="The local path of aaz repo."
 )
 @click.option(
-    "--swagger-path", '-s',
-    type=click.Path(file_okay=False, dir_okay=True, readable=True, resolve_path=True),
-    default=Config.SWAGGER_PATH,
-    required=not Config.SWAGGER_PATH,
-    callback=Config.validate_and_setup_swagger_path,
-    expose_value=False,
-    help="The local path of azure-rest-api-specs repo. Official repo is https://github.com/Azure/azure-rest-api-specs"
-)
-@click.option(
     "--cli-path", '-c',
     type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
     default=Config.CLI_PATH,
@@ -61,8 +52,7 @@ def generate_module_command_portal(module):
         cli_module = az_ext_manager.load_module(module)
         print("Input module: {0} in cli extension".format(module))
     else:
-        print("Invalid input module: {0}, please check".format(module))
-        return
+        raise ValueError("Invalid input module: {0}, please check".format(module))
     aaz_spec_manager = AAZSpecsManager()
     root = aaz_spec_manager.find_command_group()
     if not root:

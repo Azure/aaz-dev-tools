@@ -113,16 +113,12 @@ def az_extension_module(module_name):
         raise NotImplementedError()
     return jsonify(result)
 
-@bp.route("/Portal/Modules/<Name:module_name>", methods=("GET",))
-def portal_generate_module(module_name):
+@bp.route("/Main/Modules/<Name:module_name>/ExportPortalConfig", methods=("POST",))
+def portal_generate_main_module(module_name):
     az_main_manager = AzMainManager()
-    az_ext_manager = AzExtensionManager()
     if az_main_manager.has_module(module_name):
         cli_module = az_main_manager.load_module(module_name)
         print("Input module: {0} in cli".format(module_name))
-    elif az_ext_manager.has_module(module_name):
-        cli_module = az_ext_manager.load_module(module_name)
-        print("Input module: {0} in cli extension".format(module_name))
     else:
         print("Invalid input module: {0}, please check".format(module_name))
         return
@@ -150,7 +146,58 @@ def portal_generate_module(module_name):
             continue
         registered_version = az_main_manager.find_cmd_registered_version(cli_module['profiles']['latest'], *node_path[1:])
         if not registered_version:
-            registered_version = az_ext_manager.find_cmd_registered_version(cli_module['profiles']['latest'], *node_path[1:])
+            print("Cannot find {0} registered version".format(" ".join(node_path[1:])))
+            continue
+        target_version = None
+        for v in (leaf.versions or []):
+            if v.name == registered_version:
+                target_version = v
+                break
+        if not target_version:
+            print("Command: " + " ".join(leaf.names) + " registered version " + registered_version + " not exist")
+            continue
+
+        cfg_reader = aaz_spec_manager.load_resource_cfg_reader_by_command_with_version(leaf, version=target_version)
+        cmd_cfg = cfg_reader.find_command(*leaf.names)
+        cmd_portal_info = portal_cli_generator.generate_command_portal_raw(cmd_cfg, leaf, target_version)
+        if cmd_portal_info:
+            cmd_portal_list.append(cmd_portal_info)
+
+    portal_cli_generator.generate_cmds_portal(cmd_portal_list)
+    return "done"
+
+@bp.route("/Main/Modules/<Name:module_name>/ExportPortalConfig", methods=("POST",))
+def portal_generate_main_module(module_name):
+    az_ext_manager = AzExtensionManager()
+    if az_ext_manager.has_module(module_name):
+        cli_module = az_ext_manager.load_module(module_name)
+        print("Input module: {0} in cli extension".format(module_name))
+    else:
+        print("Invalid input module: {0}, please check".format(module_name))
+        return
+
+    aaz_spec_manager = AAZSpecsManager()
+    root = aaz_spec_manager.find_command_group()
+    if not root:
+        raise exceptions.ResourceNotFind("Command group not exist")
+    cmd_nodes_list = aaz_spec_manager.get_module_command_tree(module_name)
+    portal_cli_generator = PortalCliGenerator()
+    cmd_portal_list = []
+    for node_path in cmd_nodes_list:
+        # node_path = ['aaz', 'change-analysis', 'list']
+        cmd_module = node_path[1]
+        if cmd_module != module_name:
+            continue
+        node_names = node_path[1:-1]
+        leaf_name = node_path[-1]
+        leaf = aaz_spec_manager.find_command(*node_names, leaf_name)
+        if not leaf or not leaf.versions:
+            print("Command group: " + " ".join(leaf.names) + " not exist")
+            continue
+        if not leaf.versions:
+            print("Command group: " + " ".join(leaf.names) + " version not exist")
+            continue
+        registered_version = az_ext_manager.find_cmd_registered_version(cli_module['profiles']['latest'], *node_path[1:])
         if not registered_version:
             print("Cannot find {0} registered version".format(" ".join(node_path[1:])))
             continue
