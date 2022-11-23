@@ -166,8 +166,8 @@ def portal_generate_main_module(module_name):
     portal_cli_generator.generate_cmds_portal(cmd_portal_list)
     return "done"
 
-@bp.route("/Main/Modules/<Name:module_name>/ExportPortalConfig", methods=("POST",))
-def portal_generate_main_module(module_name):
+@bp.route("/Extension/Modules/<Name:module_name>/ExportPortalConfig", methods=("POST",))
+def portal_generate_extension_module(module_name):
     az_ext_manager = AzExtensionManager()
     if az_ext_manager.has_module(module_name):
         cli_module = az_ext_manager.load_module(module_name)

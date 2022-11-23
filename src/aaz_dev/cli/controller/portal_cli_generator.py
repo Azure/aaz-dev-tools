@@ -21,7 +21,7 @@ class PortalCliGenerator:
     # /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}...
     # /providers/Microsoft.OperationalInsights/workspaces/{workspaceName}...
     # /providers/Microsoft.SecurityInsights/incidents/{incidentId}
-    PROVIDERS_LIST = ['Microsoft', 'Nginx']
+
     def __init__(self):
         pass
 
