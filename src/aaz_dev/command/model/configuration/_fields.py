@@ -46,7 +46,7 @@ class CMDVariantField(StringType):
 
     def __init__(self, *args, **kwargs):
         super(CMDVariantField, self).__init__(
-            regex=r'[$@][a-zA-Z0-9_\[\]\.]+',
+            regex=r'[$@][a-zA-Z0-9_\[\]\{\}\.]+',
             *args,
             **kwargs
         )

@@ -634,6 +634,7 @@ class WorkspaceManager:
         return True
 
     def list_commands_by_resource(self, resource_id, version):
+        # will include all commands
         commands = []
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if cfg_editor:
@@ -654,14 +655,32 @@ class WorkspaceManager:
             return True
         return False
 
-    def add_commands_by_sub_resource(self, resource_id, version, sub_resource, generic_update_cmd_names, identifiers):
+    def add_commands_by_sub_resource(self, resource_id, version, sub_resource, generic_update_cmd_names, cg_names):
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if not cfg_editor:
             raise exceptions.InvalidAPIUsage(f"Resource not exist: resource_id={resource_id} version={version}")
 
-        # # iter over root commands of resource
-        # for cmd_names, cmd in cfg_editor.iter_commands_by_sub_resource(resource_id=resource_id, version=version, sub_resource=None):
-        #     pass
+        update_cmd_info = cfg_editor.get_update_cmd(resource_id)
+        if not update_cmd_info:
+            raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id} version={version}")
+
+        update_cmd_name, update_cmd, update_by = update_cmd_info
+        if update_by != "GenericOnly":
+            raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id} version={version}")
+
+        # get instance reference
+
+    # Array:
+    #   list
+    # Object base
+    #   add
+    #   update
+    #   remove
+    # Object:
+    #   show
+    #   create (add)
+    #   update
+    #   delete (remove)
 
     def remove_sub_resource(self, resource_id, version, sub_resource):
         # TODO:
@@ -676,7 +695,7 @@ class WorkspaceManager:
         commands = []
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if cfg_editor:
-            for cmd_names, _ in cfg_editor.iter_commands_by_sub_resource(resource_id, sub_resource, version):
+            for cmd_names, _ in cfg_editor.iter_commands_by_resource(resource_id, sub_resource, version):
                 leaf = self.find_command_tree_leaf(*cmd_names)
                 if leaf:
                     commands.append(leaf)

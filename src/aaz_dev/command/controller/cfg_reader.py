@@ -18,9 +18,9 @@ class CfgReader:
     def resources(self):
         return self.cfg.resources
 
-    def get_used_http_methods(self, resource_id):
+    def get_used_http_methods(self, resource_id, sub_resource=None):
         methods = set()
-        for _, command in self.iter_commands_by_resource(resource_id):
+        for _, command in self.iter_commands_by_resource(resource_id, sub_resource=sub_resource):
             for operation in command.operations:
                 if not isinstance(operation, CMDHttpOperation):
                     continue
@@ -31,8 +31,8 @@ class CfgReader:
                 # if isinstance(op, CMDHttpOperation)
         return tuple(methods) or None
 
-    def get_update_cmd(self, resource_id):
-        for cmd_names, command in self.iter_commands_by_resource(resource_id):
+    def get_update_cmd(self, resource_id, sub_resource=None):
+        for cmd_names, command in self.iter_commands_by_resource(resource_id, sub_resource=sub_resource):
             for operation in command.operations:
                 if isinstance(operation, CMDInstanceUpdateOperation):
                     return cmd_names, command, "GenericOnly"
@@ -72,22 +72,15 @@ class CfgReader:
                     groups.append(([*node_names, group.name], group))
             idx += 1
 
-    def iter_commands_by_resource(self, resource_id, version=None):
+    def iter_commands_by_resource(self, resource_id, sub_resource=None, version=None):
+        """ If sub resource is None, will not iter sub commands.
+        """
         def _filter_by_resource(cmd_name, command):
-            for r in command.resources:
-                if r.id == resource_id and (not version or r.version == version):
-                    return True
-            return False
-        for result in self.iter_commands(filter=_filter_by_resource):
-            yield result
-
-    def iter_commands_by_sub_resource(self, resource_id, sub_resource, version=None):
-        def _filter_by_sub_resource(cmd_name, command):
             for r in command.resources:
                 if r.id == resource_id and r.sub_resource == sub_resource and (not version or r.version == version):
                     return True
             return False
-        for result in self.iter_commands(filter=_filter_by_sub_resource):
+        for result in self.iter_commands(filter=_filter_by_resource):
             yield result
 
     def iter_commands_by_operations(self, *methods):
