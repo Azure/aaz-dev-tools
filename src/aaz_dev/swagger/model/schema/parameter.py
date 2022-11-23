@@ -135,7 +135,7 @@ class PathParameter(Items, ParameterBase):
         builder.setup_description(model, self)
 
         if self.x_ms_skip_url_encoding:
-            model.skip_url_encoding = False
+            model.skip_url_encoding = True
 
         return model
 
