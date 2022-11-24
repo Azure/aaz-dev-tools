@@ -7,6 +7,7 @@ from ._instance_update import CMDInstanceUpdateAction
 from ._instance_create import CMDInstanceCreateAction
 from ._instance_delete import CMDInstanceDeleteAction
 
+
 class CMDOperation(Model):
     POLYMORPHIC_KEY = None
 

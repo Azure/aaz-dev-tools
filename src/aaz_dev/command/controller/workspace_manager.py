@@ -660,15 +660,9 @@ class WorkspaceManager:
         if not cfg_editor:
             raise exceptions.InvalidAPIUsage(f"Resource not exist: resource_id={resource_id} version={version}")
 
-        update_cmd_info = cfg_editor.get_update_cmd(resource_id)
-        if not update_cmd_info:
-            raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id} version={version}")
-
-        update_cmd_name, update_cmd, update_by = update_cmd_info
-        if update_by != "GenericOnly":
-            raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id} version={version}")
-
         # get instance reference
+        cfg_editor.build_sub_resource_commands(resource_id, sub_resource)
+
 
     # Array:
     #   list

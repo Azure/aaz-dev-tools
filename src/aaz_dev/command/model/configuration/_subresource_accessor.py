@@ -10,17 +10,17 @@ from schematics.types.serializable import serializable
 from ._fields import CMDVariantField, CMDBooleanField
 
 
-class CMDInstanceIdentifier(Model):
-
-    key = StringType(required=True, min_length=1)
-    arg = CMDVariantField()
-    discriminator_value = StringType(
-        serialized_name="discriminatorValue",
-        deserialize_from="discriminatorValue",
-    )
-
-
-class CMDInstance(Model):
-
-    ref = CMDVariantField(required=True)
-    identifiers = ListType(ModelType(CMDInstanceIdentifier))
+# class CMDInstanceIdentifier(Model):
+#
+#     key = StringType(required=True, min_length=1)
+#     arg = CMDVariantField()
+#     discriminator_value = StringType(
+#         serialized_name="discriminatorValue",
+#         deserialize_from="discriminatorValue",
+#     )
+#
+#
+# class CMDInstance(Model):
+#
+#     ref = CMDVariantField(required=True)
+#     identifiers = ListType(ModelType(CMDInstanceIdentifier))

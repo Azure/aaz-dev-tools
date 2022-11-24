@@ -44,6 +44,8 @@ from ._http import CMDHttpRequestArgs, CMDHttpRequestPath, CMDHttpRequestQuery, 
 from ._http_request_body import CMDHttpRequestBody, CMDHttpRequestJsonBody
 from ._http_response_body import CMDHttpResponseBody, CMDHttpResponseJsonBody
 from ._instance import CMDInstance, CMDInstanceIdentifier
+from ._instance_create import CMDInstanceCreateAction, CMDJsonInstanceCreateAction
+from ._instance_delete import CMDInstanceDeleteAction, CMDJsonInstanceDeleteAction
 from ._instance_update import CMDInstanceUpdateAction, CMDJsonInstanceUpdateAction
 from ._operation import CMDOperation, CMDHttpOperation, CMDInstanceUpdateOperation, CMDHttpOperationLongRunning
 from ._output import CMDOutput, CMDObjectOutput, CMDArrayOutput, CMDStringOutput

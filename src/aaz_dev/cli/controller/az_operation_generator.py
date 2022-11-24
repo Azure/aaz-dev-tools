@@ -246,7 +246,7 @@ class AzJsonUpdateOperationGenerator(AzUpdateOperationGenerator):
 
     def __init__(self, name, cmd_ctx, operation):
         super().__init__(name, cmd_ctx, operation,
-                         variant_key=cmd_ctx.get_variant(operation.instance_update.instance),
+                         variant_key=cmd_ctx.get_variant(operation.instance_update.ref),
                          arg_key="self.ctx.args")
         assert isinstance(self._operation, CMDInstanceUpdateOperation)
         assert isinstance(self._operation.instance_update, CMDJsonInstanceUpdateAction)

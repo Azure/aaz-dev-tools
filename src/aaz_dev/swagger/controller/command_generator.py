@@ -399,7 +399,7 @@ class CommandGenerator:
     def _generate_instance_update_operation(put_op):
         json_update_op = CMDInstanceUpdateOperation()
         json_update_op.instance_update = CMDJsonInstanceUpdateAction()
-        json_update_op.instance_update.instance = BuildInVariants.Instance
+        json_update_op.instance_update.ref = BuildInVariants.Instance
         json_update_op.instance_update.json = CMDRequestJson()
         json_update_op.instance_update.json.schema = put_op.http.request.body.json.schema
 

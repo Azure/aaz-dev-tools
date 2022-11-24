@@ -1,9 +1,8 @@
 from schematics.models import Model
-from schematics.types import StringType, PolyModelType, ModelType
+from schematics.types import StringType
 from schematics.types.serializable import serializable
 
 from ._fields import CMDVariantField, CMDBooleanField
-from ._instance import CMDInstance
 
 
 class CMDOutput(Model):
@@ -39,10 +38,8 @@ class CMDOutput(Model):
 class CMDObjectOutput(CMDOutput):
     TYPE_VALUE = 'object'
 
-    instance = PolyModelType(
-        [CMDVariantField(), ModelType(CMDInstance)], required=True,
-        deserialize_from=['ref', 'instance']
-    )
+    ref = CMDVariantField(required=True)
+
     client_flatten = CMDBooleanField(
         serialized_name='clientFlatten',
         deserialize_from='clientFlatten',
@@ -52,10 +49,8 @@ class CMDObjectOutput(CMDOutput):
 class CMDArrayOutput(CMDOutput):
     TYPE_VALUE = 'array'
 
-    instance = PolyModelType(
-        [CMDVariantField(), ModelType(CMDInstance)], required=True,
-        deserialize_from=['ref', 'instance']
-    )
+    ref = CMDVariantField(required=True)
+
     client_flatten = CMDBooleanField(
         serialized_name='clientFlatten',
         deserialize_from='clientFlatten',

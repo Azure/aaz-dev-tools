@@ -6,7 +6,8 @@ from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDD
     CMDHttpRequest, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDArg, CMDBooleanArg, CMDClsArg, CMDClsArgBase, \
     CMDObjectArgBase, CMDArrayArgBase, CMDCondition, CMDConditionNotOperator, CMDConditionHasValueOperator, \
     CMDConditionAndOperator, CMDCommandGroup, CMDArgumentHelp, CMDArgDefault, CMDInstanceUpdateOperation, \
-    CMDClsSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDObjectSchemaDiscriminator, CMDSchema, CMDSchemaBase
+    CMDClsSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDObjectSchemaDiscriminator, CMDSchema, CMDSchemaBase, \
+    CMDHttpResponseJsonBody
 from utils import exceptions
 from utils.base64 import b64encode_str
 from utils.case import to_camel_case
@@ -781,3 +782,44 @@ class WorkspaceCfgEditor(CfgReader):
         # rename commands
         for cmd_names, ref_cmd_names in command_rename_list:
             self.rename_command(*cmd_names, new_cmd_names=ref_cmd_names)
+
+    def build_sub_resource_commands(self, resource_id, sub_resource):
+        update_cmd_info = self.get_update_cmd(resource_id)
+        if not update_cmd_info:
+            raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id}")
+
+        update_cmd_name, update_cmd, update_by = update_cmd_info
+        if update_by != "GenericOnly":
+            raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id}")
+
+        get_op = None
+        update_op = None
+        for operation in update_cmd.operations:
+            if isinstance(operation, CMDInstanceUpdateOperation):
+                update_op = operation
+            if isinstance(operation, CMDHttpOperation) and operation.http.request and operation.http.responses \
+                    and operation.http.request.method == "get":
+                get_op = operation
+
+        assert get_op is not None
+        assert update_op is not None
+
+        response_schema = None
+        for response in get_op.http.responses:
+            if response.is_error:
+                continue
+            if not isinstance(response.body, CMDHttpResponseJsonBody):
+                continue
+            if response.body.json.var == update_op.instance_update.ref:
+                response_schema = response
+                break
+
+        assert response_schema is not None
+
+
+
+
+
+
+    # def _build_instance_for_sub_resource(self, get_op):
+    #     pass

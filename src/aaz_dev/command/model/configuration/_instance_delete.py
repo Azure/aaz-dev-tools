@@ -3,18 +3,15 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 from schematics.models import Model
-from schematics.types import ModelType, PolyModelType
 
-from ._content import CMDRequestJson
 from ._fields import CMDVariantField
-from ._instance import CMDInstance
 
 
 class CMDInstanceDeleteAction(Model):
     POLYMORPHIC_KEY = None
 
     # properties as tags
-    instance = PolyModelType([CMDVariantField(), ModelType(CMDInstance)], required=True)
+    ref = CMDVariantField(required=True, deserialize_from=["ref", "instance"])
 
     @classmethod
     def _claim_polymorphic(cls, data):
