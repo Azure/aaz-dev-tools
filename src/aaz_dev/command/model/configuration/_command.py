@@ -33,10 +33,11 @@ class CMDCommand(Model):
         deserialize_from='argGroups',
     )
     conditions = ListType(ModelType(CMDCondition))
-    subresource_selectors = ListType(
-        PolyModelType(CMDSubresourceSelector, allow_subclasses=True),
-        serialized_name="subresourceSelectors",
-        deserialize_from="subresourceSelectors"
+    subresource_selector = PolyModelType(
+        CMDSubresourceSelector,
+        allow_subclasses=True,
+        serialized_name="subresourceSelector",
+        deserialize_from="subresourceSelector"
     )
     operations = ListType(PolyModelType(CMDOperation, allow_subclasses=True), min_size=1)
     outputs = ListType(PolyModelType(CMDOutput, allow_subclasses=True), min_size=1)  # support to add outputs in different formats, such table
