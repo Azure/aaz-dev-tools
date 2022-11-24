@@ -18,9 +18,9 @@ class CfgReader:
     def resources(self):
         return self.cfg.resources
 
-    def get_used_http_methods(self, resource_id, sub_resource=None):
+    def get_used_http_methods(self, resource_id, subresource=None):
         methods = set()
-        for _, command in self.iter_commands_by_resource(resource_id, sub_resource=sub_resource):
+        for _, command in self.iter_commands_by_resource(resource_id, subresource=subresource):
             for operation in command.operations:
                 if not isinstance(operation, CMDHttpOperation):
                     continue
@@ -31,8 +31,8 @@ class CfgReader:
                 # if isinstance(op, CMDHttpOperation)
         return tuple(methods) or None
 
-    def get_update_cmd(self, resource_id, sub_resource=None):
-        for cmd_names, command in self.iter_commands_by_resource(resource_id, sub_resource=sub_resource):
+    def get_update_cmd(self, resource_id, subresource=None):
+        for cmd_names, command in self.iter_commands_by_resource(resource_id, subresource=subresource):
             for operation in command.operations:
                 if isinstance(operation, CMDInstanceUpdateOperation):
                     return cmd_names, command, "GenericOnly"
@@ -72,12 +72,12 @@ class CfgReader:
                     groups.append(([*node_names, group.name], group))
             idx += 1
 
-    def iter_commands_by_resource(self, resource_id, sub_resource=None, version=None):
+    def iter_commands_by_resource(self, resource_id, subresource=None, version=None):
         """ If sub resource is None, will not iter sub commands.
         """
         def _filter_by_resource(cmd_name, command):
             for r in command.resources:
-                if r.id == resource_id and r.sub_resource == sub_resource and (not version or r.version == version):
+                if r.id == resource_id and r.subresource == subresource and (not version or r.version == version):
                     return True
             return False
         for result in self.iter_commands(filter=_filter_by_resource):
@@ -453,9 +453,9 @@ class CfgReader:
 
             if parent.additional_props and parent.additional_props.item:
                 item = parent.additional_props.item
-                item_var = arg_var + "{}"
+                item_var = arg_var + '{}'
 
-                match, ret = arg_filter(parent, item, ["{}"], item_var)
+                match, ret = arg_filter(parent, item, ['{}'], item_var)
                 if match:
                     yield match
                 if ret:
@@ -470,7 +470,7 @@ class CfgReader:
             item = parent.item
             item_var = arg_var + '[]'
 
-            match, ret = arg_filter(parent, item, ["[]"], item_var)
+            match, ret = arg_filter(parent, item, ['[]'], item_var)
             if match:
                 yield match
             if ret:
@@ -486,6 +486,7 @@ class CfgReader:
         if isinstance(arg_idx, list):
             return arg_idx
         assert isinstance(arg_idx, str)
+        # arg_idx will not contain '{Key}' or '[Index]'
         arg_idx = arg_idx.replace('{}', '.{}').replace('[]', '.[]').split('.')
         return [idx for idx in arg_idx if idx]
 
@@ -494,6 +495,7 @@ class CfgReader:
         if isinstance(arg_idx, str):
             return arg_idx
         assert isinstance(arg_idx, list)
+        # arg_idx will not contain '{Key}' or '[Index]'
         return '.'.join(arg_idx).replace('.{}', '{}').replace('.[]', '[]')
 
     @classmethod

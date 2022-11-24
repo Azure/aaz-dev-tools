@@ -505,7 +505,7 @@ def editor_workspace_resource_reload_swagger(name):
 
 @bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>", methods=("DELETE",))
 def editor_workspace_resource(name, resource_id, version):
-    # remove commands of the resource, including commands of sub resources
+    # remove commands of the resource, including commands of subresources
     manager = WorkspaceManager(name)
     manager.load()
     if not manager.remove_resource(resource_id, version):
@@ -524,31 +524,35 @@ def list_workspace_resource_related_commands(name, resource_id, version):
     return jsonify(result)
 
 
-@bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>/Sub/<base64:sub_resource>", methods=("DELETE","POST"))
-def editor_workspace_sub_resource(name, resource_id, version, sub_resource):
+@bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>/Subresources", methods=("POST",))
+def editor_workspace_subresources(name, resource_id, version):
+    # add subresource command
     manager = WorkspaceManager(name)
     manager.load()
-    # if not manager.remove_resource(resource_id, version):
-    #     return "", 204
-    # manager.save()
-    # return "", 200
-    if request.method == "POST":
-        # Generate commands of sub resource
-
-        return "", 200
-    elif request.method == "DELETE":
-        # Remove commands in sub resource
-        if not manager.remove_sub_resource(resource_id, version, sub_resource):
-            return "", 204
-        manager.save()
-        return "", 200
-    else:
-        raise NotImplementedError()
+    data = request.get_json()
+    try:
+        arg_var = data['arg']
+    except KeyError:
+        raise exceptions.InvalidAPIUsage("Invalid request")
+    manager.add_subresource_by_arg_var(resource_id, version, arg_var)
+    manager.save()
+    return "", 200
 
 
-@bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>/Sub/<base64:sub_resource>/Commands", methods=("GET",))
-def list_workspace_sub_resource_related_commands(name, resource_id, version, sub_resource):
-    # remove commands of of sub resource
+@bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>/Subresources/<base64:subresource>", methods=("DELETE",))
+def editor_workspace_subresource(name, resource_id, version, subresource):
+    # Remove commands of subresource
+    manager = WorkspaceManager(name)
+    manager.load()
+    if not manager.remove_subresource(resource_id, version, subresource):
+        return "", 204
+    manager.save()
+    return "", 200
+
+
+@bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>/Subresources/<base64:subresource>/Commands", methods=("GET",))
+def list_workspace_subresource_related_commands(name, resource_id, version, subresource):
+    # remove commands of of subresource
     # manager = WorkspaceManager(name)
     # manager.load()
     # if not manager.remove_resource(resource_id, version):

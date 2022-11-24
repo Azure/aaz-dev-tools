@@ -655,18 +655,21 @@ class WorkspaceManager:
             return True
         return False
 
-    def add_commands_by_sub_resource(self, resource_id, version, sub_resource, generic_update_cmd_names, cg_names):
+    def add_subresource_by_arg_var(self, resource_id, version, arg_var):
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if not cfg_editor:
             raise exceptions.InvalidAPIUsage(f"Resource not exist: resource_id={resource_id} version={version}")
 
-        # get instance reference
-        cfg_editor.build_sub_resource_commands(resource_id, sub_resource)
+        # # get instance reference
+        # cfg_editor.build_subresource_commands(resource_id, subresource)
+        if arg_var.endswith(']'):
+            pass
+        elif arg_var.endswith('}'):
+            pass
 
 
     # Array:
     #   list
-    # Object base
     #   add
     #   update
     #   remove
@@ -676,7 +679,7 @@ class WorkspaceManager:
     #   update
     #   delete (remove)
 
-    def remove_sub_resource(self, resource_id, version, sub_resource):
+    def remove_subresource(self, resource_id, version, subresource):
         # TODO:
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if not cfg_editor:
@@ -685,11 +688,11 @@ class WorkspaceManager:
         pass
 
 
-    def list_commands_by_sub_resource(self, resource_id, version, sub_resource):
+    def list_commands_by_subresource(self, resource_id, version, subresource):
         commands = []
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if cfg_editor:
-            for cmd_names, _ in cfg_editor.iter_commands_by_resource(resource_id, sub_resource, version):
+            for cmd_names, _ in cfg_editor.iter_commands_by_resource(resource_id, subresource, version):
                 leaf = self.find_command_tree_leaf(*cmd_names)
                 if leaf:
                     commands.append(leaf)

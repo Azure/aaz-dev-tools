@@ -646,7 +646,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
     elif isinstance(schema, CMDArraySchemaBase):
         assert schema.item is not None  # make sure array schema defined its element schema
         s = schema.item
-        s_name = "[]"
+        s_name = '[]'
         s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, cmd_ctx.update_clses)
         s_arg_key = arg_key + '[]'
         r_key = '.'  # if element exist, always fill it
@@ -669,10 +669,10 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
     scope_define = scope_define or ""
     for s_name, (s, s_arg_key) in search_schemas.items():
         if s_name == '[]':
-            s_scope_define = scope_define + "[]"
+            s_scope_define = scope_define + '[]'
             s_name = '_elements'
         elif s_name == '{}':
-            s_scope_define = scope_define + "{}"
+            s_scope_define = scope_define + '{}'
             s_name = '_elements'
         else:
             s_scope_define = f"{scope_define}.{s_name}"

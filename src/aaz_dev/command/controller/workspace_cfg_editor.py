@@ -783,7 +783,7 @@ class WorkspaceCfgEditor(CfgReader):
         for cmd_names, ref_cmd_names in command_rename_list:
             self.rename_command(*cmd_names, new_cmd_names=ref_cmd_names)
 
-    def build_sub_resource_commands(self, resource_id, sub_resource):
+    def build_subresource_commands(self, resource_id, subresource):
         update_cmd_info = self.get_update_cmd(resource_id)
         if not update_cmd_info:
             raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id}")
@@ -821,5 +821,5 @@ class WorkspaceCfgEditor(CfgReader):
 
 
 
-    # def _build_instance_for_sub_resource(self, get_op):
+    # def _build_instance_for_subresource(self, get_op):
     #     pass
