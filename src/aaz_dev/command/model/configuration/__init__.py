@@ -43,7 +43,6 @@ from ._http import CMDHttpRequestArgs, CMDHttpRequestPath, CMDHttpRequestQuery, 
     CMDHttpAction
 from ._http_request_body import CMDHttpRequestBody, CMDHttpRequestJsonBody
 from ._http_response_body import CMDHttpResponseBody, CMDHttpResponseJsonBody
-from ._instance import CMDInstance, CMDInstanceIdentifier
 from ._instance_create import CMDInstanceCreateAction, CMDJsonInstanceCreateAction
 from ._instance_delete import CMDInstanceDeleteAction, CMDJsonInstanceDeleteAction
 from ._instance_update import CMDInstanceUpdateAction, CMDJsonInstanceUpdateAction
@@ -73,5 +72,6 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, CMDObjectSchemaBase, CMDObjectSchema, \
     CMDIdentityObjectSchemaBase, CMDIdentityObjectSchema, \
     CMDArraySchemaBase, CMDArraySchema
+
 from ._utils import CMDDiffLevelEnum, DEFAULT_CONFIRMATION_PROMPT
 from ._xml import XMLSerializer

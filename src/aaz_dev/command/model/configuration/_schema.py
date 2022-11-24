@@ -941,7 +941,7 @@ class CMDArraySchemaBase(CMDSchemaBase):
     item = CMDSchemaBaseField()
 
     # used to indentify item in array
-    identifiers = ListType(StringType(), serialized_name='identifiers', deserialize_from='identifiers')
+    identifiers = ListType(StringType())
 
     # properties as tags
     # define a schema which can be used by others

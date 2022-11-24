@@ -12,6 +12,7 @@ from ._schema import CMDClsSchemaBase
 from ._output import CMDOutput
 from ._resource import CMDResource
 from ._utils import CMDArgBuildPrefix, CMDDiffLevelEnum
+from ._subresource_selector import CMDSubresourceSelector
 from utils import exceptions
 
 logger = logging.getLogger('backend')
@@ -32,6 +33,11 @@ class CMDCommand(Model):
         deserialize_from='argGroups',
     )
     conditions = ListType(ModelType(CMDCondition))
+    subresource_selectors = ListType(
+        PolyModelType(CMDSubresourceSelector, allow_subclasses=True),
+        serialized_name="subresourceSelectors",
+        deserialize_from="subresourceSelectors"
+    )
     operations = ListType(PolyModelType(CMDOperation, allow_subclasses=True), min_size=1)
     outputs = ListType(PolyModelType(CMDOutput, allow_subclasses=True), min_size=1)  # support to add outputs in different formats, such table
 
