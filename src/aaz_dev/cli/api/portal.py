@@ -82,6 +82,8 @@ def generate_module_command_portal(module):
         if not registered_version:
             print("Cannot find {0} registered version".format(" ".join(node_path[1:])))
             continue
+        print("Generating portal config of [ az {0} ] with registered version {1}".format(" ".join(node_path[1:]),
+                                                                                          registered_version))
         target_version = None
         for v in (leaf.versions or []):
             if v.name == registered_version:

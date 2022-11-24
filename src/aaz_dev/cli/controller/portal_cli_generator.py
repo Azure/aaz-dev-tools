@@ -1,8 +1,10 @@
 from command.model.configuration import CMDCommand, CMDHttpOperation
 from command.model.specs import CMDSpecsCommand, CMDSpecsCommandVersion
-from utils import exceptions
+from utils import exceptions, portal_file_schema
 from utils.config import Config
 import os, json, re, logging
+import jsonschema
+
 
 logger = logging.getLogger('backend')
 
@@ -285,6 +287,14 @@ class PortalCliGenerator:
         data_model_folder = os.path.join(cli_folder, "data-model-for-portal")
         return data_model_folder
 
+    def valid_portal_json_format(self, portal_data):
+        try:
+            jsonschema.validate(instance=portal_data, schema=portal_file_schema.PORTAL_FILE_SCHEMA)
+        except jsonschema.exceptions.ValidationError as err:
+            #print(err)
+            return False
+        return True
+
     def generate_portal_file(self, portal_dict):
         data_model_folder = self.get_portal_file_path()
         for rp_name, resource_infos in portal_dict.items():
@@ -295,7 +305,9 @@ class PortalCliGenerator:
                 resource_file_folder = os.path.dirname(resource_file_path)
                 if not os.path.exists(resource_file_folder):
                     os.makedirs(resource_file_folder)
-
+                if not self.valid_portal_json_format(resource_info):
+                    logger.info("json format error")
+                    continue
                 with open(resource_file_path, "w") as f_out:
                     f_out.write(json.dumps(resource_info, indent=4))
 
@@ -342,5 +354,35 @@ class PortalCliGenerator:
             rescoure_info['commands'].append(cmd_portal_info)
 
         self.generate_portal_file(portal_dict)
+
+if __name__ == '__main__':
+    generator = PortalCliGenerator()
+    resource_info = {
+        "resourceType": "virtualMachines",
+        "apiVersion": "2021-11-01",
+        "learnMore": {
+            "url": "https://docs.microsoft.com/cli/azure/vm"
+        },
+    }
+    schema = {
+        "type": "object",
+        "properties": {
+            "resourceType": {"type": "string"},
+            "apiVersion": {"type": "string"},
+            "learnMore": {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string"}
+                }
+            }
+        }
+    }
+    print(jsonschema.validate(instance=resource_info, schema=schema))
+    try:
+        jsonschema.validate(instance=resource_info, schema=schema)
+    except jsonschema.exceptions.ValidationError as err:
+        print(err)
+
+    print("verification done")
 
 
