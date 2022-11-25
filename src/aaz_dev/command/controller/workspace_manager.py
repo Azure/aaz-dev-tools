@@ -660,13 +660,18 @@ class WorkspaceManager:
         if not cfg_editor:
             raise exceptions.InvalidAPIUsage(f"Resource not exist: resource_id={resource_id} version={version}")
 
-        # # get instance reference
-        # cfg_editor.build_subresource_commands(resource_id, subresource)
-        if arg_var.endswith(']'):
-            pass
-        elif arg_var.endswith('}'):
-            pass
+        # # # get instance reference
+        # # cfg_editor.build_subresource_commands(resource_id, subresource)
+        # if arg_var.endswith(']'):
+        #     pass
+        # elif arg_var.endswith('}'):
+        #     pass
 
+    def _convert_arg_var_to_subresource_index(self, arg_var):
+        pass
+
+    def _build_subresource_selector(self, subresource):
+        pass
 
     # Array:
     #   list
@@ -687,7 +692,6 @@ class WorkspaceManager:
 
         pass
 
-
     def list_commands_by_subresource(self, resource_id, version, subresource):
         commands = []
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
@@ -697,7 +701,6 @@ class WorkspaceManager:
                 if leaf:
                     commands.append(leaf)
         return commands
-
 
     @staticmethod
     def _pop_command_tree_node(parent, name):

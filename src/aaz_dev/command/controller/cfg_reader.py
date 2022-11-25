@@ -3,8 +3,22 @@ import json
 from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDInstanceUpdateOperation, \
     CMDCommandGroup, CMDArgGroup, CMDObjectArgBase, CMDArrayArgBase, CMDRequestJson, \
     CMDResponseJson, CMDObjectSchemaBase, CMDArraySchemaBase, CMDSchema, CMDHttpRequestJsonBody, \
-    CMDJsonInstanceUpdateAction, CMDHttpResponseJsonBody, CMDObjectSchemaDiscriminator
+    CMDJsonInstanceUpdateAction, CMDHttpResponseJsonBody, CMDObjectSchemaDiscriminator, CMDInstanceCreateOperation, CMDJsonInstanceCreateAction
 from swagger.utils.tools import swagger_resource_path_to_resource_id
+
+
+class _SchemaIdxEnum:
+    Http = "_http"
+    Instance = "_instance"
+    Request = "_request"
+    Response = "_response"
+    Create = "_create"
+    Update = "_update"
+    Path = "_path"
+    Query = "_query"
+    Header = "_header"
+    Body = "_body"
+    Json = "_json"
 
 
 class CfgReader:
@@ -150,6 +164,7 @@ class CfgReader:
 
     # command specific
 
+    # arg operations
     def find_arg(self, *cmd_names, idx):
         command = self.find_command(*cmd_names)
         if not command:
@@ -292,7 +307,7 @@ class CfgReader:
             assert len(matches) == 1
 
             parent, arg, arg_idx = matches[0]
-            if arg_idx:
+            if arg:
                 arg_idx = cls.arg_idx_to_str(arg_idx)
             return parent, arg, arg_idx
         return None, None, None
@@ -368,7 +383,7 @@ class CfgReader:
             assert len(matches) == 1
 
             parent, arg, arg_idx = matches[0]
-            if arg_idx:
+            if arg:
                 arg_idx = self.arg_idx_to_str(arg_idx)
             return parent, arg, arg_idx
         return None, None, None
@@ -391,7 +406,7 @@ class CfgReader:
 
         for arg_group in command.arg_groups:
             for parent, arg, arg_idx in self._iter_args_in_group(arg_group, arg_filter=arg_filter):
-                if arg_idx:
+                if arg:
                     arg_idx = self.arg_idx_to_str(arg_idx)
                 yield parent, arg, arg_idx
 
@@ -413,7 +428,7 @@ class CfgReader:
         for arg_group in command.arg_groups:
             for parent, arg, arg_idx in self._iter_args_in_group(
                     arg_group, arg_filter=arg_filter):
-                if arg_idx:
+                if arg:
                     arg_idx = self.arg_idx_to_str(arg_idx)
                 yield parent, arg, arg_idx
 
@@ -498,24 +513,189 @@ class CfgReader:
         # arg_idx will not contain '{Key}' or '[Index]'
         return '.'.join(arg_idx).replace('.{}', '{}').replace('.[]', '[]')
 
+    # schema operations
+    def find_schema(self, *cmd_names, idx):
+        command = self.find_command(*cmd_names)
+        if not command:
+            return None
+        return self.find_schema_in_command(command, idx)
+
+    @classmethod
+    def find_schema_in_command(cls, command, idx):
+        assert isinstance(idx, list), f"invalid schema_idx type: {type(idx)}"
+        current_idx, next_idx = idx[:2]
+        remain_idx = idx[2:]
+        for op in command.operations:
+            if isinstance(op, CMDHttpOperation) and current_idx == _SchemaIdxEnum.Http:
+                if op.http.request and next_idx == _SchemaIdxEnum.Request:
+                    schema = cls.find_schema_in_request(op.http.request, remain_idx)
+                    if schema:
+                        return schema
+                if op.http.responses and next_idx.startswith(_SchemaIdxEnum.Response):
+                    for response in op.http.responses:
+                        if response.is_error:
+                            continue
+                        if '_'.join([_SchemaIdxEnum.Response, *response.status_codes]) == next_idx:
+                            schema = cls.find_schema_in_response(response, remain_idx)
+                            if schema:
+                                return schema
+
+            elif isinstance(op, CMDInstanceCreateOperation) and current_idx == _SchemaIdxEnum.Instance and next_idx == _SchemaIdxEnum.Create:
+                if isinstance(op.instance_create, CMDJsonInstanceCreateAction) and remain_idx[0] == _SchemaIdxEnum.Json:
+                    schema = cls.find_schema_in_json(op.instance_create.json, remain_idx[1:])
+                    if schema:
+                        return schema
+
+            elif isinstance(op, CMDInstanceUpdateOperation) and current_idx == _SchemaIdxEnum.Instance and next_idx == _SchemaIdxEnum.Update:
+                if isinstance(op.instance_update, CMDJsonInstanceUpdateAction) and remain_idx[0] == _SchemaIdxEnum.Json:
+                    schema = cls.find_schema_in_json(op.instance_update.json, remain_idx[1:])
+                    if schema:
+                        return schema
+
+        return None
+
+    def find_schema_parent(self, *cmd_names, idx):
+        command = self.find_command(*cmd_names)
+        if not command:
+            return None, None
+        return self.find_schema_parent_in_command(command, idx)
+
+    @classmethod
+    def find_schema_parent_in_command(cls, command, idx):
+        assert isinstance(idx, list), f"invalid schema_idx type: {type(idx)}"
+        parent_idx = idx[:-1]
+        parent_schema = cls.find_schema_in_command(command, idx=parent_idx)
+        if parent_schema is not None:
+            return parent_idx, parent_schema
+        return None, None
+
+    @classmethod
+    def find_schema_in_request(cls, request, idx):
+        current_idx = idx[0]
+        remain_idx = idx[1:]
+        if request.path and current_idx == _SchemaIdxEnum.Path:
+            if remain_idx and request.path.params:
+                for param in request.path.params:
+                    if param.name == remain_idx[0]:
+                        return param
+
+        if request.query and current_idx == _SchemaIdxEnum.Query:
+            if remain_idx and request.query.params:
+                for param in request.query.params:
+                    if param.name == remain_idx[0]:
+                        return param
+
+        if request.header and current_idx == _SchemaIdxEnum.Header:
+            if remain_idx and request.header.params:
+                for param in request.header.params:
+                    if param.name == remain_idx[0]:
+                        return param
+
+        if isinstance(request.body, CMDHttpResponseJsonBody) and current_idx == _SchemaIdxEnum.Body:
+            return cls.find_schema_in_json(request.body.json, remain_idx)
+        return None
+
+    @classmethod
+    def find_schema_in_response(cls, response, idx):
+        if isinstance(response.body, CMDHttpResponseJsonBody):
+            current_idx = idx[0]
+            remain_idx = idx[1:]
+            if current_idx == _SchemaIdxEnum.Json:
+                return cls.find_schema_in_json(response.body.json, remain_idx)
+        return None
+
+    @classmethod
+    def find_schema_in_json(cls, js, idx):
+        assert isinstance(js, (CMDRequestJson, CMDResponseJson))
+        if not idx:
+            return js.schema
+        if idx:
+            return cls.find_sub_schema(js.schema, idx)
+        return None
+
+    @classmethod
+    def find_sub_schema(cls, schema, idx):
+        assert isinstance(idx, list) and len(idx) > 0
+
+        if isinstance(schema, CMDObjectSchemaBase):
+            current_idx = idx[0]
+            remain_idx = idx[1:]
+            if current_idx == '{}':
+                if schema.additional_props and schema.additional_props.item:
+                    item = schema.additional_props.item
+                    if not remain_idx:
+                        return item
+                    return cls.find_sub_schema(item, remain_idx)
+            elif schema.props:
+                for prop in schema.props:
+                    if current_idx == prop.name:
+                        if not remain_idx:
+                            return prop
+                        return cls.find_sub_schema(prop, remain_idx)
+
+            elif schema.discriminators:
+                for disc in schema.discriminators:
+                    if current_idx == disc.value:
+                        if not remain_idx:
+                            return disc
+                        return cls.find_sub_schema(disc, remain_idx)
+
+        elif isinstance(schema, CMDObjectSchemaDiscriminator):
+            current_idx = idx[0]
+            remain_idx = idx[1:]
+            if schema.props:
+                for prop in schema.props:
+                    if current_idx == prop.name:
+                        if not remain_idx:
+                            return prop
+                        return cls.find_sub_schema(prop, remain_idx)
+
+            elif schema.discriminators:
+                for disc in schema.discriminators:
+                    if current_idx == disc.value:
+                        if not remain_idx:
+                            return disc
+                        return cls.find_sub_schema(disc, remain_idx)
+
+        elif isinstance(schema, CMDArraySchemaBase):
+            current_idx = idx[0]
+            remain_idx = idx[1:]
+            if current_idx == '[]':
+                item = schema.item
+                if not remain_idx:
+                    return item
+                return cls.find_sub_arg(item, remain_idx)
+
+        return None
+
     @classmethod
     def iter_schema_in_command_by_arg_var(cls, command, arg_var):
-
-        def schema_filter(_parent, _schema):
+        def schema_filter(_parent, _schema, _schema_idx):
             if isinstance(_schema, CMDSchema) and _schema.arg == arg_var:
                 # find match
-                return (_parent, _schema), False
+                return (_parent, _schema, _schema_idx), False
             return None, False
 
         for op in command.operations:
             if isinstance(op, CMDHttpOperation) and op.http.request:
-                for match in cls._iter_schema_in_request(op.http.request, schema_filter=schema_filter):
-                    yield match
+                for parent, schema, schema_idx in cls._iter_schema_in_request(op.http.request, schema_filter=schema_filter):
+                    if schema:
+                        schema_idx = [_SchemaIdxEnum.Http, _SchemaIdxEnum.Request, *schema_idx]
+                    yield parent, schema, schema_idx
 
             if isinstance(op, CMDInstanceUpdateOperation):
                 if isinstance(op.instance_update, CMDJsonInstanceUpdateAction):
-                    for match in cls._iter_schema_in_json(op.instance_update.json, schema_filter=schema_filter):
-                        yield match
+                    for parent, schema, schema_idx in cls._iter_schema_in_json(op.instance_update.json, schema_filter=schema_filter):
+                        if schema:
+                            schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Update, *schema_idx]
+                        yield parent, schema, schema_idx
+
+            if isinstance(op, CMDInstanceCreateOperation):
+                if isinstance(op.instance_create, CMDJsonInstanceCreateAction):
+                    for parent, schema, schema_idx in cls._iter_schema_in_json(op.instance_create.json, schema_filter=schema_filter):
+                        if schema:
+                            schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Create, *schema_idx]
+                        yield parent, schema, schema_idx
 
     @classmethod
     def iter_schema_cls_reference(cls, command, cls_name):
@@ -528,130 +708,166 @@ class CfgReader:
 
         cls_type_name = f"@{cls_name}"
 
-        def schema_filter(_parent, _schema):
+        def schema_filter(_parent, _schema, _schema_idx):
             if _schema.type == cls_type_name:
                 # find match
-                return (_parent, _schema), False
+                return (_parent, _schema, _schema_idx), False
             return None, False
 
         for op in operations:
             if isinstance(op, CMDHttpOperation):
                 if op.http.request:
-                    for match in cls._iter_schema_in_request(op.http.request, schema_filter=schema_filter):
-                        yield match
+                    for parent, schema, schema_idx in cls._iter_schema_in_request(op.http.request, schema_filter=schema_filter):
+                        if schema:
+                            schema_idx = [_SchemaIdxEnum.Http, _SchemaIdxEnum.Request, *schema_idx]
+                        yield parent, schema, schema_idx
                 if op.http.responses:
                     for response in op.http.responses:
-                        for match in cls._iter_schema_in_response(response, schema_filter=schema_filter):
-                            yield match
+                        if response.is_error:
+                            continue
+                        for parent, schema, schema_idx in cls._iter_schema_in_response(response, schema_filter=schema_filter):
+                            if schema:
+                                schema_idx = [_SchemaIdxEnum.Http, '_'.join([_SchemaIdxEnum.Response, *response.status_codes]), *schema_idx]
+                            yield parent, schema, schema_idx
 
             if isinstance(op, CMDInstanceUpdateOperation):
                 if isinstance(op.instance_update, CMDJsonInstanceUpdateAction):
-                    for match in cls._iter_schema_in_json(op.instance_update.json, schema_filter=schema_filter):
-                        yield match
+                    for parent, schema, schema_idx in cls._iter_schema_in_json(op.instance_update.json, schema_filter=schema_filter):
+                        if schema:
+                            schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Update, *schema_idx]
+                        yield parent, schema, schema_idx
 
+            if isinstance(op, CMDInstanceCreateOperation):
+                if isinstance(op.instance_create, CMDJsonInstanceCreateAction):
+                    for parent, schema, schema_idx in cls._iter_schema_in_json(op.instance_create.json, schema_filter=schema_filter):
+                        if schema:
+                            schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Create, *schema_idx]
+                        yield parent, schema, schema_idx
+
+    # TODO: build schema_idx in command link call
     @classmethod
     def _iter_schema_in_request(cls, request, schema_filter):
         if request.path and request.path.params:
             for param in request.path.params:
-                match, ret = schema_filter(request.path, param)
+                match, ret = schema_filter(request.path, param, [_SchemaIdxEnum.Path, param.name])
                 if match:
                     yield match
                 if ret:
                     return
+
         if request.query and request.query.params:
             for param in request.query.params:
-                match, ret = schema_filter(request.query, param)
+                match, ret = schema_filter(request.query, param, [_SchemaIdxEnum.Query, param.name])
                 if match:
                     yield match
                 if ret:
                     return
+
         if request.header and request.header.params:
             for param in request.header.params:
-                match, ret = schema_filter(request.header, param)
+                match, ret = schema_filter(request.header, param, [_SchemaIdxEnum.Header, param.name])
                 if match:
                     yield match
                 if ret:
                     return
 
         if isinstance(request.body, CMDHttpRequestJsonBody):
-            for match in cls._iter_schema_in_json(request.body.json, schema_filter):
-                yield match
+            for parent, schema, schema_idx in cls._iter_schema_in_json(request.body.json, schema_filter):
+                if schema:
+                    schema_idx = [_SchemaIdxEnum.Body, *schema_idx]
+                yield parent, schema, schema_idx
 
     @classmethod
     def _iter_schema_in_response(cls, response, schema_filter):
         if isinstance(response.body, CMDHttpResponseJsonBody):
-            for match in cls._iter_schema_in_json(response.body.json, schema_filter):
-                yield match
+            for parent, schema, schema_idx in cls._iter_schema_in_json(response.body.json, schema_filter):
+                if schema:
+                    schema_idx = [_SchemaIdxEnum.Body, *schema_idx]
+                yield parent, schema, schema_idx
 
     @classmethod
-    def _iter_schema_in_json(cls, json, schema_filter):
-        assert isinstance(json, (CMDRequestJson, CMDResponseJson))
-        match, ret = schema_filter(json, json.schema)
+    def _iter_schema_in_json(cls, js, schema_filter):
+        assert isinstance(js, (CMDRequestJson, CMDResponseJson))
+        match, ret = schema_filter(js, js.schema, [_SchemaIdxEnum.Json])
         if match:
             yield match
         if ret:
             return
 
-        # if isinstance(json.schema, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-        for match in cls._iter_sub_schema(json.schema, schema_filter):
-            yield match
+        # if isinstance(js.schema, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+        for parent, schema, schema_idx in cls._iter_sub_schema(js.schema, schema_filter):
+            if schema:
+                schema_idx = [_SchemaIdxEnum.Json, *schema_idx]
+            yield parent, schema, schema_idx
 
     @classmethod
     def _iter_sub_schema(cls, parent, schema_filter):
         if isinstance(parent, CMDObjectSchemaBase):
             if parent.props:
                 for prop in parent.props:
-                    match, ret = schema_filter(parent, prop)
+                    match, ret = schema_filter(parent, prop, [prop.name])
                     if match:
                         yield match
                     if ret:
                         return
 
                     # if isinstance(prop, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-                    for match in cls._iter_sub_schema(prop, schema_filter):
-                        yield match
+                    for sub_parent, sub_schema, sub_schema_idx in cls._iter_sub_schema(prop, schema_filter):
+                        if sub_schema:
+                            sub_schema_idx = [prop.name, *sub_schema_idx]
+                        yield sub_parent, sub_schema, sub_schema_idx
 
             if parent.additional_props and parent.additional_props.item:
                 item = parent.additional_props.item
-                match, ret = schema_filter(parent, item)
+                match, ret = schema_filter(parent, item, ['{}'])
                 if match:
                     yield match
                 if ret:
                     return
 
-                for match in cls._iter_sub_schema(item, schema_filter):
-                    yield match
+                for sub_parent, sub_schema, sub_schema_idx in cls._iter_sub_schema(item, schema_filter):
+                    if sub_schema:
+                        sub_schema_idx = ['{}', *sub_schema_idx]
+                    yield sub_parent, sub_schema, sub_schema_idx
 
             if parent.discriminators:
                 for disc in parent.discriminators:
-                    for match in cls._iter_sub_schema(disc, schema_filter):
-                        yield match
+                    for sub_parent, sub_schema, sub_schema_idx in cls._iter_sub_schema(disc, schema_filter):
+                        if sub_schema:
+                            sub_schema_idx = [disc.value, *sub_schema_idx]
+                        yield sub_parent, sub_schema, sub_schema_idx
 
         elif isinstance(parent, CMDObjectSchemaDiscriminator):
             if parent.props:
                 for prop in parent.props:
-                    match, ret = schema_filter(parent, prop)
+                    match, ret = schema_filter(parent, prop, [prop.name])
                     if match:
                         yield match
                     if ret:
                         return
 
                     # if isinstance(prop, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-                    for match in cls._iter_sub_schema(prop, schema_filter):
-                        yield match
+                    for sub_parent, sub_schema, sub_schema_idx in cls._iter_sub_schema(prop, schema_filter):
+                        if sub_schema:
+                            sub_schema_idx = [prop.name, *sub_schema_idx]
+                        yield sub_parent, sub_schema, sub_schema_idx
 
             if parent.discriminators:
                 for disc in parent.discriminators:
-                    for match in cls._iter_sub_schema(disc, schema_filter):
-                        yield match
+                    for sub_parent, sub_schema, sub_schema_idx in cls._iter_sub_schema(disc, schema_filter):
+                        if sub_schema:
+                            sub_schema_idx = [disc.value, *sub_schema_idx]
+                        yield sub_parent, sub_schema, sub_schema_idx
 
         elif isinstance(parent, CMDArraySchemaBase):
             item = parent.item
-            match, ret = schema_filter(parent, item)
+            match, ret = schema_filter(parent, item, ['[]'])
             if match:
                 yield match
             if ret:
                 return
 
-            for match in cls._iter_sub_schema(item, schema_filter):
-                yield match
+            for sub_parent, sub_schema, sub_schema_idx in cls._iter_sub_schema(item, schema_filter):
+                if sub_schema:
+                    sub_schema_idx = ['[]', *sub_schema_idx]
+                yield sub_parent, sub_schema, sub_schema_idx

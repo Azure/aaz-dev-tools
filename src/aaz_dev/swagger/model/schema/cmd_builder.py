@@ -568,7 +568,7 @@ class CMDBuilder:
             from command.controller.workspace_cfg_editor import WorkspaceCfgEditor
             new_schema = None
 
-            for parent, schema in WorkspaceCfgEditor.iter_schema_cls_reference_in_operations(cmd_ops, name):
+            for parent, schema, _ in WorkspaceCfgEditor.iter_schema_cls_reference_in_operations(cmd_ops, name):
                 if schema.frozen:
                     continue
 

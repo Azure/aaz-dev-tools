@@ -315,7 +315,7 @@ class WorkspaceCfgEditor(CfgReader):
         # find linked schema
         linked_schema_parent = None
         linked_schema = None
-        for parent_schema, schema in self.iter_schema_in_command_by_arg_var(command, arg_var=arg.var):
+        for parent_schema, schema, _ in self.iter_schema_in_command_by_arg_var(command, arg_var=arg.var):
             if linked_schema is not None:
                 raise exceptions.InvalidAPIUsage(
                     f"Cannot unwrap argument: {arg.var} is used by mutiple schemas."
@@ -336,7 +336,7 @@ class WorkspaceCfgEditor(CfgReader):
         elif isinstance(linked_schema, (CMDObjectSchemaBase, CMDArraySchemaBase)):
             assert linked_schema.cls is not None
             # unwrap one clsSchema to instance
-            for ref_parent, ref_schema in self.iter_schema_cls_reference(command, linked_schema.cls):
+            for ref_parent, ref_schema, _ in self.iter_schema_cls_reference(command, linked_schema.cls):
                 assert isinstance(ref_schema, CMDClsSchemaBase)
                 new_ref_schema = ref_schema.get_unwrapped()
                 assert new_ref_schema.cls == linked_schema.cls
