@@ -2,12 +2,7 @@ import json
 import logging
 import os
 
-from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDDiffLevelEnum, \
-    CMDHttpRequest, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDArg, CMDBooleanArg, CMDClsArg, CMDClsArgBase, \
-    CMDObjectArgBase, CMDArrayArgBase, CMDCondition, CMDConditionNotOperator, CMDConditionHasValueOperator, \
-    CMDConditionAndOperator, CMDCommandGroup, CMDArgumentHelp, CMDArgDefault, CMDInstanceUpdateOperation, \
-    CMDClsSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDObjectSchemaDiscriminator, CMDSchema, CMDSchemaBase, \
-    CMDHttpResponseJsonBody
+from command.model.configuration import *
 from utils import exceptions
 from utils.base64 import b64encode_str
 from utils.case import to_camel_case
@@ -783,7 +778,7 @@ class WorkspaceCfgEditor(CfgReader):
         for cmd_names, ref_cmd_names in command_rename_list:
             self.rename_command(*cmd_names, new_cmd_names=ref_cmd_names)
 
-    def build_subresource_commands(self, resource_id, subresource):
+    def build_subresource_commands_by_arg_var(self, resource_id, arg_var):
         update_cmd_info = self.get_update_cmd(resource_id)
         if not update_cmd_info:
             raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id}")
@@ -791,6 +786,9 @@ class WorkspaceCfgEditor(CfgReader):
         update_cmd_name, update_cmd, update_by = update_cmd_info
         if update_by != "GenericOnly":
             raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id}")
+
+        if arg_var.startswith('@'):
+            raise exceptions.InvalidAPIUsage(f"Not support class arg={arg_var}, please unwrap it first.")
 
         get_op = None
         update_op = None
@@ -804,22 +802,195 @@ class WorkspaceCfgEditor(CfgReader):
         assert get_op is not None
         assert update_op is not None
 
-        response_schema = None
+        # find schema_idx
+        parent_schema = None
+        schema = None
+        schema_idx = None
+        for parent_s, s, s_idx in self.iter_schema_in_operation_by_arg_var(update_op, arg_var):
+            assert schema is None
+            parent_schema, schema, schema_idx = parent_s, s, s_idx
+        if not schema:
+            raise exceptions.InvalidAPIUsage(f"Cannot find schema for arg_var={arg_var}")
+
+        subresource_idx = self.schema_idx_to_subresource_idx(schema_idx)
+        assert subresource_idx
+
+        # find response body
+        response_json = None
         for response in get_op.http.responses:
             if response.is_error:
                 continue
             if not isinstance(response.body, CMDHttpResponseJsonBody):
                 continue
             if response.body.json.var == update_op.instance_update.ref:
-                response_schema = response
+                response_json = response.body.json
                 break
+        assert response_json is not None
 
-        assert response_schema is not None
+        update_json = update_op.instance_update.json
 
+        subresource_selector = self._build_subresource_selector(response_json, update_json, subresource_idx)
 
+    def _build_subresource_selector(self, response_json, update_json, subresource_idx):
+        assert isinstance(response_json, CMDResponseJson)
+        assert isinstance(update_json, CMDRequestJson)
 
+        idx = self.subresource_idx_to_list(subresource_idx)
+        selector = CMDJsonSubresourceSelector()
 
+        if isinstance(update_json.schema, CMDObjectSchema):
+            assert isinstance(response_json.schema, CMDObjectSchemaBase)
+            index = CMDObjectIndex()
+            index.name = update_json.schema.name
+            # disable prune for the outer layer index
+            selector.json = self._build_object_index_base(update_json.schema, idx, index=index, prune=False)
+        elif isinstance(update_json.schema, CMDArraySchema):
+            assert isinstance(response_json.schema, CMDArraySchemaBase)
+            index = CMDArrayIndex()
+            index.name = update_json.schema.name
+            selector.json = self._build_array_index_base(update_json.schema, idx, index=index)
+        else:
+            raise NotImplementedError(f"Not support schema {type(update_json.schema)}")
 
+        return selector
 
-    # def _build_instance_for_subresource(self, get_op):
-    #     pass
+    def _build_object_index_base(self, schema, idx, index=None, prune=False):
+        assert isinstance(schema, CMDObjectSchemaBase)
+        if not index:
+            index = CMDObjectIndexBase()
+
+        if not idx:
+            return index
+
+        current_idx = idx[0]
+        remain_idx = idx[1:]
+
+        if schema.props:
+            for prop in schema.props:
+                if prop.name == current_idx:
+                    if prune:
+                        assert isinstance(index, CMDSelectorIndex)
+                        # ignore the current index, return the sub index with name prefix
+                        if isinstance(prop, CMDObjectSchema):
+                            return self._build_object_index(prop, remain_idx, name_prefix=index.name)
+                        elif isinstance(prop, CMDArraySchema):
+                            return self._build_array_index(prop, remain_idx, name_prefix=index.name)
+                        else:
+                            raise NotImplementedError()
+                    else:
+                        if isinstance(prop, CMDObjectSchema):
+                            index.prop = self._build_object_index(prop, remain_idx)
+                            break
+                        elif isinstance(prop, CMDArraySchema):
+                            index.prop = self._build_array_index(prop, remain_idx)
+                            break
+                        else:
+                            raise NotImplementedError()
+
+        if schema.discriminators:
+            for disc in schema.discriminators:
+                if disc.value == current_idx:
+                    index.discriminator = self._build_object_index_discriminator(disc, remain_idx)
+                    break
+
+        if schema.additional_props and current_idx == "{}":
+            index.additional_props = self._build_object_index_additional_prop(schema.additional_props, remain_idx)
+
+        return index
+
+    def _build_array_index_base(self, schema, idx, index=None):
+        assert isinstance(schema, CMDArraySchemaBase)
+        if not index:
+            index = CMDArrayIndexBase()
+
+        identifiers = []
+        if schema.identifiers:
+            item = schema.item
+            assert isinstance(item, CMDObjectSchemaBase)
+            for prop in item.props:
+                if prop.name in schema.identifiers:
+                    identifier = prop.__class__(raw_data=prop.to_native())
+                    identifier.name = '[].' + identifier.name
+                    identifiers.append(identifier)
+        if not identifiers:
+            # use index as identifier
+            identifier = CMDIntegerSchema()
+            identifier.name = '[Index]'
+            identifiers.append(identifier)
+        index.identifiers = identifiers
+
+        if not idx:
+            return index
+
+        current_idx = idx[0]
+        remain_idx = idx[1:]
+        assert current_idx == '[]'
+
+        item = schema.item
+        if isinstance(item, CMDObjectSchemaBase):
+            index.item = self._build_object_index_base(item, remain_idx)
+        elif isinstance(item, CMDArraySchemaBase):
+            index.item = self._build_array_index_base(item, remain_idx)
+        else:
+            raise NotImplementedError()
+
+        return index
+
+    def _build_object_index(self, schema, idx, name_prefix=None):
+        assert isinstance(schema, CMDObjectSchema)
+        index = CMDObjectIndex()
+        index.name = schema.name if not name_prefix else f"{name_prefix}.{schema.name}"
+        return self._build_object_index_base(schema, idx, index, prune=True)
+
+    def _build_array_index(self, schema, idx, name_prefix=None):
+        assert isinstance(schema, CMDArraySchema)
+        index = CMDArrayIndex()
+        index.name = schema.name if not name_prefix else f"{name_prefix}.{schema.name}"
+        return self._build_array_index_base(schema, idx, index)
+
+    def _build_object_index_discriminator(self, schema, idx):
+        assert isinstance(schema, CMDObjectSchemaDiscriminator)
+        index = CMDObjectIndexDiscriminator()
+        index.property = schema.property
+        index.value = schema.value
+
+        if not idx:
+            return index
+
+        current_idx = idx[0]
+        remain_idx = idx[1:]
+        if schema.props:
+            for prop in schema.props:
+                if prop.name == current_idx:
+                    if isinstance(prop, CMDObjectSchema):
+                        index.prop = self._build_object_index(prop, remain_idx)
+                        break
+                    elif isinstance(prop, CMDArraySchema):
+                        index.prop = self._build_array_index(prop, remain_idx)
+                        break
+                    else:
+                        raise NotImplementedError()
+
+        if schema.discriminators:
+            for disc in schema.discriminators:
+                if disc.value == current_idx:
+                    index.discriminator = self._build_object_index_discriminator(disc, remain_idx)
+                    break
+
+        return index
+
+    def _build_object_index_additional_prop(self, schema, idx):
+        assert isinstance(schema, CMDObjectSchemaAdditionalProperties)
+        index = CMDObjectIndexAdditionalProperties()
+        identifier = CMDStringSchema()
+        identifier.name = "{Key}"
+        index.identifiers = [identifier]
+
+        if isinstance(schema.item, CMDObjectSchemaBase):
+            index.item = self._build_object_index_base(schema.item, idx)
+        elif isinstance(schema.item, CMDArraySchemaBase):
+            index.item = self._build_array_index_base(schema.item, idx)
+        else:
+            raise NotImplementedError()
+
+        return index

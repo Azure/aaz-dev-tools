@@ -73,6 +73,8 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, CMDObjectSchemaBase, CMDObjectSchema, \
     CMDIdentityObjectSchemaBase, CMDIdentityObjectSchema, \
     CMDArraySchemaBase, CMDArraySchema
-
+from ._selector_index import CMDSelectorIndexBase, CMDSelectorIndex, CMDObjectIndexDiscriminator, \
+    CMDObjectIndexAdditionalProperties, CMDObjectIndexBase, CMDObjectIndex, CMDArrayIndexBase, CMDArrayIndex
+from ._subresource_selector import CMDSubresourceSelector, CMDJsonSubresourceSelector
 from ._utils import CMDDiffLevelEnum, DEFAULT_CONFIRMATION_PROMPT
 from ._xml import XMLSerializer

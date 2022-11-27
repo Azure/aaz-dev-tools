@@ -523,34 +523,43 @@ class CfgReader:
     @classmethod
     def find_schema_in_command(cls, command, idx):
         assert isinstance(idx, list), f"invalid schema_idx type: {type(idx)}"
+        for op in command.operations:
+            schema = cls.find_schema_in_operation(op, idx)
+            if schema:
+                return schema
+        return None
+
+    @classmethod
+    def find_schema_in_operation(cls, operation, idx):
+        assert isinstance(idx, list), f"invalid schema_idx type: {type(idx)}"
         current_idx, next_idx = idx[:2]
         remain_idx = idx[2:]
-        for op in command.operations:
-            if isinstance(op, CMDHttpOperation) and current_idx == _SchemaIdxEnum.Http:
-                if op.http.request and next_idx == _SchemaIdxEnum.Request:
-                    schema = cls.find_schema_in_request(op.http.request, remain_idx)
-                    if schema:
-                        return schema
-                if op.http.responses and next_idx.startswith(_SchemaIdxEnum.Response):
-                    for response in op.http.responses:
-                        if response.is_error:
-                            continue
-                        if '_'.join([_SchemaIdxEnum.Response, *response.status_codes]) == next_idx:
-                            schema = cls.find_schema_in_response(response, remain_idx)
-                            if schema:
-                                return schema
 
-            elif isinstance(op, CMDInstanceCreateOperation) and current_idx == _SchemaIdxEnum.Instance and next_idx == _SchemaIdxEnum.Create:
-                if isinstance(op.instance_create, CMDJsonInstanceCreateAction) and remain_idx[0] == _SchemaIdxEnum.Json:
-                    schema = cls.find_schema_in_json(op.instance_create.json, remain_idx[1:])
-                    if schema:
-                        return schema
+        if isinstance(operation, CMDHttpOperation) and current_idx == _SchemaIdxEnum.Http:
+            if operation.http.request and next_idx == _SchemaIdxEnum.Request:
+                schema = cls.find_schema_in_request(operation.http.request, remain_idx)
+                if schema:
+                    return schema
+            if operation.http.responses and next_idx.startswith(_SchemaIdxEnum.Response):
+                for response in operation.http.responses:
+                    if response.is_error:
+                        continue
+                    if '_'.join([_SchemaIdxEnum.Response, *response.status_codes]) == next_idx:
+                        schema = cls.find_schema_in_response(response, remain_idx)
+                        if schema:
+                            return schema
 
-            elif isinstance(op, CMDInstanceUpdateOperation) and current_idx == _SchemaIdxEnum.Instance and next_idx == _SchemaIdxEnum.Update:
-                if isinstance(op.instance_update, CMDJsonInstanceUpdateAction) and remain_idx[0] == _SchemaIdxEnum.Json:
-                    schema = cls.find_schema_in_json(op.instance_update.json, remain_idx[1:])
-                    if schema:
-                        return schema
+        elif isinstance(operation, CMDInstanceCreateOperation) and current_idx == _SchemaIdxEnum.Instance and next_idx == _SchemaIdxEnum.Create:
+            if isinstance(operation.instance_create, CMDJsonInstanceCreateAction) and remain_idx[0] == _SchemaIdxEnum.Json:
+                schema = cls.find_schema_in_json(operation.instance_create.json, remain_idx[1:])
+                if schema:
+                    return schema
+
+        elif isinstance(operation, CMDInstanceUpdateOperation) and current_idx == _SchemaIdxEnum.Instance and next_idx == _SchemaIdxEnum.Update:
+            if isinstance(operation.instance_update, CMDJsonInstanceUpdateAction) and remain_idx[0] == _SchemaIdxEnum.Json:
+                schema = cls.find_schema_in_json(operation.instance_update.json, remain_idx[1:])
+                if schema:
+                    return schema
 
         return None
 
@@ -670,32 +679,40 @@ class CfgReader:
 
     @classmethod
     def iter_schema_in_command_by_arg_var(cls, command, arg_var):
+        for operation in command.operations:
+            for match in cls.iter_schema_in_operation_by_arg_var(operation, arg_var):
+                yield match
+
+    @classmethod
+    def iter_schema_in_operation_by_arg_var(cls, operation, arg_var):
         def schema_filter(_parent, _schema, _schema_idx):
             if isinstance(_schema, CMDSchema) and _schema.arg == arg_var:
                 # find match
                 return (_parent, _schema, _schema_idx), False
             return None, False
 
-        for op in command.operations:
-            if isinstance(op, CMDHttpOperation) and op.http.request:
-                for parent, schema, schema_idx in cls._iter_schema_in_request(op.http.request, schema_filter=schema_filter):
+        if isinstance(operation, CMDHttpOperation) and operation.http.request:
+            for parent, schema, schema_idx in cls._iter_schema_in_request(
+                    operation.http.request, schema_filter=schema_filter):
+                if schema:
+                    schema_idx = [_SchemaIdxEnum.Http, _SchemaIdxEnum.Request, *schema_idx]
+                yield parent, schema, schema_idx
+
+        if isinstance(operation, CMDInstanceUpdateOperation):
+            if isinstance(operation.instance_update, CMDJsonInstanceUpdateAction):
+                for parent, schema, schema_idx in cls._iter_schema_in_json(
+                        operation.instance_update.json, schema_filter=schema_filter):
                     if schema:
-                        schema_idx = [_SchemaIdxEnum.Http, _SchemaIdxEnum.Request, *schema_idx]
+                        schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Update, *schema_idx]
                     yield parent, schema, schema_idx
 
-            if isinstance(op, CMDInstanceUpdateOperation):
-                if isinstance(op.instance_update, CMDJsonInstanceUpdateAction):
-                    for parent, schema, schema_idx in cls._iter_schema_in_json(op.instance_update.json, schema_filter=schema_filter):
-                        if schema:
-                            schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Update, *schema_idx]
-                        yield parent, schema, schema_idx
-
-            if isinstance(op, CMDInstanceCreateOperation):
-                if isinstance(op.instance_create, CMDJsonInstanceCreateAction):
-                    for parent, schema, schema_idx in cls._iter_schema_in_json(op.instance_create.json, schema_filter=schema_filter):
-                        if schema:
-                            schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Create, *schema_idx]
-                        yield parent, schema, schema_idx
+        if isinstance(operation, CMDInstanceCreateOperation):
+            if isinstance(operation.instance_create, CMDJsonInstanceCreateAction):
+                for parent, schema, schema_idx in cls._iter_schema_in_json(
+                        operation.instance_create.json, schema_filter=schema_filter):
+                    if schema:
+                        schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Create, *schema_idx]
+                    yield parent, schema, schema_idx
 
     @classmethod
     def iter_schema_cls_reference(cls, command, cls_name):
@@ -871,3 +888,25 @@ class CfgReader:
                 if sub_schema:
                     sub_schema_idx = ['[]', *sub_schema_idx]
                 yield sub_parent, sub_schema, sub_schema_idx
+
+    @classmethod
+    def schema_idx_to_subresource_idx(cls, schema_idx):
+        for i, idx in enumerate(schema_idx):
+            if idx == _SchemaIdxEnum.Json:
+                return cls.subresource_idx_to_str(schema_idx[i+1:])
+        return None
+
+    @staticmethod
+    def subresource_idx_to_list(subresource_idx):
+        if isinstance(subresource_idx, list):
+            return subresource_idx
+        assert isinstance(subresource_idx, str)
+        subresource_idx = subresource_idx.replace('{}', '.{}').replace('[]', '.[]').split('.')
+        return [idx for idx in subresource_idx if idx]
+
+    @staticmethod
+    def subresource_idx_to_str(subresource_idx):
+        if isinstance(subresource_idx, str):
+            return subresource_idx
+        assert isinstance(subresource_idx, list)
+        return '.'.join(subresource_idx).replace('.{}', '{}').replace('.[]', '[]')

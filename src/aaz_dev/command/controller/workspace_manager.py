@@ -660,12 +660,8 @@ class WorkspaceManager:
         if not cfg_editor:
             raise exceptions.InvalidAPIUsage(f"Resource not exist: resource_id={resource_id} version={version}")
 
-        # # # get instance reference
-        # # cfg_editor.build_subresource_commands(resource_id, subresource)
-        # if arg_var.endswith(']'):
-        #     pass
-        # elif arg_var.endswith('}'):
-        #     pass
+        cfg_editor.build_subresource_commands_by_arg_var(resource_id, arg_var)
+        # TODO: update command tree
 
     def _convert_arg_var_to_subresource_index(self, arg_var):
         pass

@@ -93,6 +93,7 @@ class CMDResponseJson(Model):
     def register_cls(self, cls_register_map, **kwargs):
         _iter_over_schema_for_cls_register(self.schema, cls_register_map)
 
+
 def _iter_over_schema(schema, schema_cls_map):
     if schema.frozen:
         return
