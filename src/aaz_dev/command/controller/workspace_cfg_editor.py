@@ -224,6 +224,9 @@ class WorkspaceCfgEditor(CfgReader):
                     resource.__class__(resource.to_primitive())
                 )
 
+            # relink main_command
+            main_command.link()
+
         for resource in plus_cfg_editor.resources:
             main_editor.cfg.resources.append(
                 resource.__class__(resource.to_primitive())

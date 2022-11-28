@@ -49,7 +49,7 @@ class CMDRequestJson(Model):
                     schema_cls_map[self.schema.cls] = self.schema
                 else:
                     # replace by CMDClsSchema
-                    self.schema = CMDClsSchema.build_from_schema(self.schema)
+                    self.schema = CMDClsSchema.build_from_schema(self.schema, schema_cls_map[self.schema.cls])
 
             _iter_over_schema(self.schema, schema_cls_map)
 
@@ -84,7 +84,7 @@ class CMDResponseJson(Model):
     def reformat(self, schema_cls_map, **kwargs):
         if getattr(self.schema, 'cls', None):
             if self.schema.cls in schema_cls_map:
-                self.schema = CMDClsSchemaBase.build_from_schema_base(self.schema)
+                self.schema = CMDClsSchemaBase.build_from_schema_base(self.schema, schema_cls_map[self.schema.cls])
             else:
                 schema_cls_map[self.schema.cls] = self.schema
         _iter_over_schema(self.schema, schema_cls_map)
@@ -106,7 +106,7 @@ def _iter_over_schema(schema, schema_cls_map):
                         schema_cls_map[s.cls] = s
                     else:
                         # replace by CMDClsSchema
-                        schema.props[idx] = CMDClsSchema.build_from_schema(s)
+                        schema.props[idx] = CMDClsSchema.build_from_schema(s, schema_cls_map[s.cls])
             for prop in schema.props:
                 _iter_over_schema(prop, schema_cls_map)
 
@@ -121,7 +121,7 @@ def _iter_over_schema(schema, schema_cls_map):
                     schema_cls_map[s.cls] = s
                 else:
                     # replace by CMDClsBaseSchema
-                    schema.additional_props.item = CMDClsSchemaBase.build_from_schema_base(s)
+                    schema.additional_props.item = CMDClsSchemaBase.build_from_schema_base(s, schema_cls_map[s.cls])
             _iter_over_schema(schema.additional_props.item, schema_cls_map)
 
     elif isinstance(schema, CMDArraySchemaBase):
@@ -131,13 +131,14 @@ def _iter_over_schema(schema, schema_cls_map):
                 schema_cls_map[s.cls] = s
             else:
                 # replace by CMDClsBaseSchema
-                schema.item = CMDClsSchemaBase.build_from_schema_base(s)
+                schema.item = CMDClsSchemaBase.build_from_schema_base(s, schema_cls_map[s.cls])
         _iter_over_schema(schema.item, schema_cls_map)
     elif isinstance(schema, CMDClsSchemaBase):
         cls_name = schema.type[1:]
         if cls_name not in schema_cls_map:
             # set this cls name as None, in order to check where this cls_name miss cls definition
             schema_cls_map[cls_name] = None
+
 
 def _iter_over_schema_for_cls_register(schema, cls_register_map):
     if schema is None or schema.frozen:

@@ -361,7 +361,7 @@ class CMDClsSchemaBase(CMDSchemaBase):
         return False
 
     @classmethod
-    def build_from_schema_base(cls, schema_base):
+    def build_from_schema_base(cls, schema_base, implement):
         assert isinstance(schema_base, (CMDObjectSchemaBase, CMDArraySchemaBase))
         assert getattr(schema_base, 'cls', None)
         cls_schema = cls()
@@ -370,6 +370,7 @@ class CMDClsSchemaBase(CMDSchemaBase):
         cls_schema.frozen = schema_base.frozen
         cls_schema.const = schema_base.const
         cls_schema.default = schema_base.default
+        cls_schema.implement = implement
         return cls_schema
 
     def get_unwrapped(self, **kwargs):
@@ -401,9 +402,9 @@ class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
         return diff
 
     @classmethod
-    def build_from_schema(cls, schema):
+    def build_from_schema(cls, schema, implement):
         assert isinstance(schema, (CMDObjectSchema, CMDArraySchema))
-        cls_schema = cls.build_from_schema_base(schema)
+        cls_schema = cls.build_from_schema_base(schema, implement)
         cls_schema.name = schema.name
         cls_schema.arg = schema.arg
         cls_schema.required = schema.required

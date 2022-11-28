@@ -26,6 +26,9 @@ class CfgReader:
     def __init__(self, cfg):
         assert isinstance(cfg, CMDConfiguration)
         self.cfg = cfg
+        self.link()
+
+    def link(self):
         self.cfg.link()
 
     @property
