@@ -12,9 +12,10 @@ from ._selector_index import CMDSelectorIndex
 
 class CMDSubresourceSelector(Model):
     POLYMORPHIC_KEY = None
+    DEFAULT_VARIANT = "$Subresource"
 
     # properties as tags
-    var = CMDVariantField(required=True)
+    var = CMDVariantField(required=True, default=DEFAULT_VARIANT)
     ref = CMDVariantField(required=True)
 
     class Options:

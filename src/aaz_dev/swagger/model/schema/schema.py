@@ -377,21 +377,7 @@ class Schema(Model, Linkable):
 
             if self.x_ms_identifiers:
                 model.identifiers = []
-                item_instance = mode.item
-                if isinstance(item_instance, CMDClsSchemaBase):
-                    item_instance = item_instance.implement
-                if not isinstance(item_instance, CMDObjectSchemaBase):
-                    raise exceptions.InvalidSwaggerValueError(
-                        msg=f"x-ms-identifiers should be used in 'array of object'",
-                        key=self.traces, value=None
-                    )
-                item_prop_names = {p.name for p in item_instance.props}
                 for identifier in self.x_ms_identifiers:
-                    if identifier not in item_prop_names:
-                        raise exceptions.InvalidSwaggerValueError(
-                            msg=f"identifier property '{identifier}' not exist",
-                            key=self.traces, value=None
-                        )
                     model.identifiers.append(identifier)
 
         elif isinstance(model, CMDObjectSchemaBase):

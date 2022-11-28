@@ -7,12 +7,15 @@ from ._arg_group import CMDArgGroup
 from ._arg import CMDClsArgBase
 from ._condition import CMDCondition
 from ._fields import CMDDescriptionField, CMDVersionField, CMDCommandNameField, CMDBooleanField, CMDConfirmation
-from ._operation import CMDOperation
-from ._schema import CMDClsSchemaBase
-from ._output import CMDOutput
+from ._operation import CMDOperation, CMDHttpOperation
+from ._http_response_body import CMDHttpResponseJsonBody
+from ._schema import CMDClsSchemaBase, CMDArraySchemaBase, CMDStringSchemaBase, CMDObjectSchemaBase
+from ._output import CMDOutput, CMDArrayOutput, CMDObjectOutput, CMDStringOutput
 from ._resource import CMDResource
 from ._utils import CMDArgBuildPrefix, CMDDiffLevelEnum
-from ._subresource_selector import CMDSubresourceSelector
+from ._subresource_selector import CMDSubresourceSelector, CMDJsonSubresourceSelector
+from ._instance_delete import CMDInstanceDeleteAction
+from ._selector_index import CMDArrayIndexBase, CMDObjectIndexBase, CMDObjectIndexDiscriminator, CMDObjectIndexAdditionalProperties
 from utils import exceptions
 
 logger = logging.getLogger('backend')
@@ -64,9 +67,118 @@ class CMDCommand(Model):
         arguments = self._handle_duplicated_options(arguments)
         self.arg_groups = self._build_arg_groups(arguments)
 
-    def generate_outputs(self, ref_outputs=None):
-        # TODO:
-        pass
+    def generate_outputs(self, ref_outputs=None, pageable=None):
+        if not ref_outputs:
+            if self.outputs:
+                ref_outputs = [*self.outputs]
+
+        client_flatten = ref_outputs[0].client_flatten if ref_outputs else True
+
+        output = None
+        if self.subresource_selector:
+            delete_op = False
+            for op in self.operations:
+                if isinstance(op, CMDInstanceDeleteAction):
+                    delete_op = True
+            # instance delete action does not need output
+            if not delete_op:
+                output = self._build_output_type_by_subresource_selector(self.subresource_selector)
+                output.ref = self.subresource_selector.var
+                output.client_flatten = client_flatten
+        else:
+            for op in self.operations:
+                if isinstance(op, CMDHttpOperation):
+                    op_output = self.build_output_by_operation(op, pageable, client_flatten)
+                    if op_output:
+                        output = op_output
+
+            if output and ref_outputs:
+                assert len(ref_outputs) == 1, "Only support one reference output"
+                ref_output = ref_outputs[0]
+                if ref_output.ref.startswith(output.ref + '.') and isinstance(ref_output, CMDArrayOutput):
+                    # inherit pageable
+                    output = CMDArrayOutput()
+                    output.ref = ref_output.ref
+                    output.next_link = ref_output.next_link
+                    output.client_flatten = client_flatten
+
+        self.outputs = [output] if output else None
+
+    @classmethod
+    def build_output_by_operation(cls, op, pageable=None, client_flatten=True):
+        assert isinstance(op, CMDHttpOperation)
+        output = None
+        for resp in op.http.responses:
+            if resp.is_error:
+                continue
+            if resp.body is None:
+                continue
+            if isinstance(resp.body, CMDHttpResponseJsonBody):
+                body_json = resp.body.json
+                if pageable and pageable.item_name:
+                    output = CMDArrayOutput()
+                    output.ref = f"{body_json.var}.{pageable.item_name}"
+                    if pageable.next_link_name:
+                        output.next_link = f"{body_json.var}.{pageable.next_link_name}"
+                else:
+                    output = cls._build_output_type_schema(body_json.schema)
+                    output.ref = body_json.var
+                output.client_flatten = client_flatten
+            else:
+                raise NotImplementedError()
+        return output
+
+    @staticmethod
+    def _build_output_type_schema(schema):
+        if isinstance(schema, CMDClsSchemaBase):
+            schema = schema.implement
+            assert schema is not None
+
+        if isinstance(schema, CMDArraySchemaBase):
+            output = CMDArrayOutput()
+        elif isinstance(schema, CMDObjectSchemaBase):
+            output = CMDObjectOutput()
+        elif isinstance(schema, CMDStringSchemaBase):
+            output = CMDStringOutput()
+        else:
+            raise exceptions.InvalidAPIUsage(
+                f"Invalid output schema, not support: {schema.type}"
+            )
+        return output
+
+    @staticmethod
+    def _build_output_type_by_subresource_selector(subresource_selector):
+        if isinstance(subresource_selector, CMDJsonSubresourceSelector):
+            index = subresource_selector.json
+            pref_index = None
+            while index:
+                pref_index = index
+                index = None
+                if isinstance(pref_index, CMDObjectIndexBase):
+                    if pref_index.prop:
+                        index = pref_index.prop
+                    elif pref_index.discriminator:
+                        index = pref_index.discriminator
+                    elif pref_index.additional_props:
+                        if pref_index.additional_props.item:
+                            index = pref_index.additional_props.item
+                elif isinstance(pref_index, CMDObjectIndexDiscriminator):
+                    if pref_index.prop:
+                        index = pref_index.prop
+                    elif pref_index.discriminator:
+                        index = pref_index.discriminator
+                elif isinstance(pref_index, CMDArrayIndexBase):
+                    if pref_index.item:
+                        index = pref_index.item
+                else:
+                    raise NotImplementedError()
+            if isinstance(pref_index, (CMDObjectIndexBase, CMDObjectIndexDiscriminator)):
+                output = CMDObjectOutput()
+            elif isinstance(pref_index, CMDArrayIndexBase):
+                output = CMDArrayOutput()
+        else:
+            raise NotImplementedError()
+        return output
 
     def reformat(self, **kwargs):
         self.resources = sorted(self.resources, key=lambda r: r.id)

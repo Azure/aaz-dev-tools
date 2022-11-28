@@ -829,7 +829,48 @@ class WorkspaceCfgEditor(CfgReader):
 
         update_json = update_op.instance_update.json
 
-        subresource_selector = self._build_subresource_selector(response_json, update_json, subresource_idx)
+        if isinstance(schema, CMDArraySchema):
+            # list command
+            # create command
+            # update command
+            # delete command
+            # show command
+            pass
+        elif isinstance(schema, CMDObjectSchema):
+            # create command
+            # update command
+            # delete command
+            # show command
+            pass
+        else:
+            raise NotImplementedError()
+
+        def _build_list_or_show_command(_subresource_idx):
+            _sub_command = CMDCommand()
+            _sub_command.version = update_cmd.version
+            _resource = [_r for _r in update_cmd.resources if _r.id.lower() == resource_id.lower()][0]
+            _resource = CMDResource(raw_data=_resource.to_native())
+            _resource.subresource = self.subresource_idx_to_str(_subresource_idx)
+            _sub_command.resources = [_resource]
+
+            _sub_command.subresource_selector = self._build_subresource_selector(response_json, update_json, _subresource_idx)
+            _sub_command.operations = [CMDOperation(raw_data=get_op.to_native())]
+            # TODO:
+            _sub_command.generate_args()
+            _sub_command.generate_outputs()
+            # _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
+            return _sub_command
+
+    # def _build_subresource_create_command(self):
+    #     pass
+    #
+    # def _build_subresource_update_command(self):
+    #     pass
+    #
+    # def _build_subresource_delete_command(self):
+    #     pass
+    #     # subresource_selector = self._build_subresource_selector(response_json, update_json, subresource_idx)
+    #     # return subresource_selector
 
     def _build_subresource_selector(self, response_json, update_json, subresource_idx):
         assert isinstance(response_json, CMDResponseJson)

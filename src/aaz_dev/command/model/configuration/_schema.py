@@ -200,6 +200,8 @@ class CMDSchemaBase(Model):
         pass
 
     def reformat(self, **kwargs):
+        if self.frozen:
+            return
         self._reformat_base(**kwargs)
 
 
@@ -308,6 +310,8 @@ class CMDSchema(CMDSchemaBase):
         pass
 
     def reformat(self, **kwargs):
+        if self.frozen:
+            return
         self._reformat_base(**kwargs)
         self._reformat(**kwargs)
 
@@ -739,6 +743,8 @@ class CMDObjectSchemaDiscriminator(Model):
         return diff
 
     def reformat(self, **kwargs):
+        if self.frozen:
+            return
         if self.props:
             for prop in self.props:
                 prop.reformat(**kwargs)
@@ -790,6 +796,8 @@ class CMDObjectSchemaAdditionalProperties(Model):
         return diff
 
     def reformat(self, **kwargs):
+        if self.frozen:
+            return
         if self.item:
             if self.any_type:
                 raise exceptions.VerificationError(
@@ -982,7 +990,21 @@ class CMDArraySchemaBase(CMDSchemaBase):
         super()._reformat_base(**kwargs)
         self.item.reformat(**kwargs)
         if self.identifiers:
-            self.identifiers = sorted(self.identifiers, key=lambda identifier: (len(identifier), identifier))
+            identifiers = sorted(self.identifiers, key=lambda i: (len(i), i))
+            item_instance = self.item
+            if isinstance(item_instance, CMDClsSchemaBase):
+                item_instance = item_instance.implement
+            if not isinstance(item_instance, CMDObjectSchemaBase):
+                raise exceptions.InvalidAPIUsage(
+                    f"Identifiers should be used in 'array of object'"
+                )
+            item_prop_names = {p.name for p in item_instance.props}
+            for identifier in identifiers:
+                if identifier not in item_prop_names:
+                    raise exceptions.InvalidAPIUsage(
+                        f"identifier property '{identifier}' not exist"
+                    )
+            self.identifiers = identifiers
 
 
 class CMDArraySchema(CMDArraySchemaBase, CMDSchema):

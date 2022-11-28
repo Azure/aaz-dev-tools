@@ -1,4 +1,5 @@
 from command.controller.workspace_manager import WorkspaceManager
+from command.controller.cfg_reader import _SchemaIdxEnum
 from command.tests.common import CommandTestCase, workspace_name
 from utils.plane import PlaneEnum
 import os
@@ -80,3 +81,71 @@ class WorkspaceEditorTest(CommandTestCase):
         assert manager.load_cfg_editor_by_command(address_cg.commands['show'])
         assert manager.load_cfg_editor_by_command(address_cg.commands['delete'])
         assert manager.load_cfg_editor_by_command(address_cg.commands['update'])
+
+    @workspace_name("test_workspace_editor_subresource")
+    def test_workspace_editor_subresource(self, ws_name):
+
+        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt)
+        manager.save()
+
+        mod_names = "cdn"
+        version = '2021-06-01'
+        resource_id = swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}')
+
+        manager.add_new_resources_by_swagger(
+            mod_names=mod_names,
+            version=version,
+            resources=[
+                {
+                    "id": resource_id
+                },
+                {
+                    "id": swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints'),
+                }
+            ]
+        )
+        manager.save()
+
+        manager = WorkspaceManager(ws_name)
+        manager.load()
+
+        cfg = manager.load_cfg_editor_by_resource(resource_id, version)
+        create_cmd = cfg.find_command("cdn", "profile", "endpoint", "create")
+        update_cmd = cfg.find_command("cdn", "profile", "endpoint", "update")
+
+        arg_var = '$endpoint.properties.originGroups'
+
+        count = 0
+        for parent_schema, schema, schema_idx in cfg.iter_schema_in_command_by_arg_var(create_cmd, arg_var):
+            count += 1
+            self.assertEqual(schema.name, "originGroups")
+            self.assertEqual(schema_idx[-3:], [_SchemaIdxEnum.Json, 'properties', 'originGroups'])
+            self.assertEqual(schema.identifiers, ['name'])
+        self.assertEqual(count, 1)
+        for parent_schema, schema, schema_idx in cfg.iter_schema_in_command_by_arg_var(update_cmd, arg_var):
+            count += 1
+            self.assertEqual(schema.name, "originGroups")
+            self.assertEqual(schema_idx[-3:], [_SchemaIdxEnum.Json, 'properties', 'originGroups'])
+            self.assertEqual(schema.identifiers, ['name'])
+        self.assertEqual(count, 2)
+
+        # subresource_selector = cfg.build_subresource_commands_by_arg_var(resource_id, arg_var)
+
+        arg_var = '$endpoint.properties.originGroups[].properties.origins'
+
+        count = 0
+        for parent_schema, schema, schema_idx in cfg.iter_schema_in_command_by_arg_var(create_cmd, arg_var):
+            count += 1
+            self.assertEqual(schema.name, "origins")
+            self.assertEqual(schema_idx[-6:], [_SchemaIdxEnum.Json, 'properties', 'originGroups', '[]', 'properties', 'origins'])
+        self.assertEqual(count, 1)
+        for parent_schema, schema, schema_idx in cfg.iter_schema_in_command_by_arg_var(update_cmd, arg_var):
+            count += 1
+            self.assertEqual(schema.name, "origins")
+            self.assertEqual(schema_idx[-6:], [_SchemaIdxEnum.Json, 'properties', 'originGroups', '[]', 'properties', 'origins'])
+        self.assertEqual(count, 2)
+
+        # subresource_selector = cfg.build_subresource_commands_by_arg_var(resource_id, arg_var)
+
+        # print(subresource_selector)
