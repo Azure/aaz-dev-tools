@@ -794,15 +794,19 @@ class WorkspaceCfgEditor(CfgReader):
             raise exceptions.InvalidAPIUsage(f"Not support class arg={arg_var}, please unwrap it first.")
 
         get_op = None
+        put_op = None
         update_op = None
         for operation in update_cmd.operations:
             if isinstance(operation, CMDInstanceUpdateOperation):
                 update_op = operation
-            if isinstance(operation, CMDHttpOperation) and operation.http.request and operation.http.responses \
-                    and operation.http.request.method == "get":
-                get_op = operation
+            if isinstance(operation, CMDHttpOperation) and operation.http.request and operation.http.responses:
+                if operation.http.request.method == "get":
+                    get_op = operation
+                if operation.http.request.method == "put":
+                    put_op = operation
 
         assert get_op is not None
+        assert put_op is not None
         assert update_op is not None
 
         # find schema_idx
@@ -832,6 +836,112 @@ class WorkspaceCfgEditor(CfgReader):
 
         update_json = update_op.instance_update.json
 
+        def _build_sub_command_base(_subresource_idx):
+            _sub_command = CMDCommand()
+            _sub_command.version = update_cmd.version
+            _resource = [_r for _r in update_cmd.resources if _r.id.lower() == resource_id.lower()][0]
+            _resource = CMDResource(raw_data=_resource.to_native())
+            _resource.subresource = self.subresource_idx_to_str(_subresource_idx)
+            _sub_command.resources = [_resource]
+            _sub_command.subresource_selector = self._build_subresource_selector(
+                response_json, update_json, _subresource_idx)
+            return _sub_command
+
+        def _build_list_or_show_command(_subresource_idx):
+            _sub_command = _build_sub_command_base(_subresource_idx)
+            _sub_command.operations = [get_op.__class__(raw_data=get_op.to_native())]
+            # TODO:
+            _sub_command.generate_args()
+            _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
+            _sub_command.link()
+            return _sub_command
+
+        def _build_subresource_create_command(_subresource_idx):
+            _sub_command = _build_sub_command_base(_subresource_idx)
+            _instance_op = CMDInstanceCreateOperation()
+
+            _instance_op.instance_create = CMDJsonInstanceCreateAction()
+            _instance_op.instance_create.ref = _sub_command.subresource_selector.var
+            _instance_op.instance_create.json = CMDRequestJson()
+
+            # fork json schema
+            assert update_cmd.schema_cls_register_map is not None
+            _instance_op_schema = self.fork_schema_in_json(
+                update_json, _subresource_idx, update_cmd.schema_cls_register_map)
+            if not isinstance(_instance_op_schema, CMDSchema):
+                # convert schema base to schema
+                if isinstance(_instance_op_schema, CMDObjectSchemaBase):
+                    _instance_op_schema = CMDObjectSchema(raw_data=_instance_op_schema.to_native())
+                elif isinstance(_instance_op_schema, CMDArraySchemaBase):
+                    _instance_op_schema = CMDArraySchema(raw_data=_instance_op_schema.to_native())
+                else:
+                    raise NotImplementedError()
+            _instance_op_schema.name = self.subresource_idx_to_str(_subresource_idx)
+            _instance_op_schema.required = True
+            _instance_op.instance_create.json.schema = _instance_op_schema
+
+            _sub_command.operations = [
+                get_op.__class__(raw_data=get_op.to_native()),
+                _instance_op,
+                put_op.__class__(raw_data=put_op.to_native()),
+            ]
+            _sub_command.generate_args()
+            _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
+            _sub_command.link()
+            return _sub_command
+
+        def _build_subresource_update_command(_subresource_idx):
+            _sub_command = _build_sub_command_base(_subresource_idx)
+            _instance_op = CMDInstanceUpdateOperation()
+
+            _instance_op.instance_update = CMDJsonInstanceUpdateAction()
+            _instance_op.instance_update.ref = _sub_command.subresource_selector.var
+            _instance_op.instance_update.json = CMDRequestJson()
+
+            # fork json schema
+            assert update_cmd.schema_cls_register_map is not None
+            _instance_op_schema = self.fork_schema_in_json(
+                update_json, _subresource_idx, update_cmd.schema_cls_register_map)
+            if not isinstance(_instance_op_schema, CMDSchema):
+                # convert schema base to schema
+                if isinstance(_instance_op_schema, CMDObjectSchemaBase):
+                    _instance_op_schema = CMDObjectSchema(raw_data=_instance_op_schema.to_native())
+                elif isinstance(_instance_op_schema, CMDArraySchemaBase):
+                    _instance_op_schema = CMDArraySchema(raw_data=_instance_op_schema.to_native())
+                else:
+                    raise NotImplementedError()
+            _instance_op_schema.name = self.subresource_idx_to_str(_subresource_idx)
+            _instance_op_schema.required = True
+            _instance_op.instance_update.json.schema = _instance_op_schema
+
+            _sub_command.operations = [
+                get_op.__class__(raw_data=get_op.to_native()),
+                _instance_op,
+                put_op.__class__(raw_data=put_op.to_native()),
+            ]
+            _sub_command.generate_args()
+            _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
+            _sub_command.link()
+            return _sub_command
+
+        def _build_subresource_delete_command(_subresource_idx):
+            _sub_command = _build_sub_command_base(_subresource_idx)
+            _instance_op = CMDInstanceDeleteOperation()
+            _instance_op.instance_delete = CMDJsonInstanceDeleteAction(
+                raw_data={
+                    "ref": _sub_command.subresource_selector.var,
+                }
+            )
+            _sub_command.operations = [
+                get_op.__class__(raw_data=get_op.to_native()),
+                _instance_op,
+                put_op.__class__(raw_data=put_op.to_native()),
+            ]
+            _sub_command.generate_args()
+            _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
+            _sub_command.link()
+            return _sub_command
+
         if isinstance(schema, CMDArraySchema):
             # list command
             # create command
@@ -847,33 +957,6 @@ class WorkspaceCfgEditor(CfgReader):
             pass
         else:
             raise NotImplementedError()
-
-        def _build_list_or_show_command(_subresource_idx):
-            _sub_command = CMDCommand()
-            _sub_command.version = update_cmd.version
-            _resource = [_r for _r in update_cmd.resources if _r.id.lower() == resource_id.lower()][0]
-            _resource = CMDResource(raw_data=_resource.to_native())
-            _resource.subresource = self.subresource_idx_to_str(_subresource_idx)
-            _sub_command.resources = [_resource]
-
-            _sub_command.subresource_selector = self._build_subresource_selector(response_json, update_json, _subresource_idx)
-            _sub_command.operations = [CMDOperation(raw_data=get_op.to_native())]
-            # TODO:
-            _sub_command.generate_args()
-            _sub_command.generate_outputs()
-            # _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
-            return _sub_command
-
-    # def _build_subresource_create_command(self):
-    #     pass
-    #
-    # def _build_subresource_update_command(self):
-    #     pass
-    #
-    # def _build_subresource_delete_command(self):
-    #     pass
-    #     # subresource_selector = self._build_subresource_selector(response_json, update_json, subresource_idx)
-    #     # return subresource_selector
 
     def _build_subresource_selector(self, response_json, update_json, subresource_idx):
         assert isinstance(response_json, CMDResponseJson)
@@ -1038,3 +1121,53 @@ class WorkspaceCfgEditor(CfgReader):
             raise NotImplementedError()
 
         return index
+
+    @classmethod
+    def fork_schema_in_json(cls, js, idx, reference_cls_map):
+        from command.model.configuration._content import _iter_over_schema_for_cls_register
+        schema = cls.find_schema_in_json(js, idx)
+        if not schema:
+            return None
+
+        if isinstance(schema, CMDClsSchemaBase):
+            assert schema.implement is not None
+            schema = schema.get_unwrapped()
+
+        schema = schema.__class__(raw_data=schema.to_native())
+        assert not isinstance(schema, CMDClsSchemaBase)
+
+        # make sure cls implement contained in schema
+        cls_register_map = {}
+        _iter_over_schema_for_cls_register(schema, cls_register_map)
+        miss_implement_cls_names = set()
+        for k, v in cls_register_map.items():
+            if not v['implement']:
+                miss_implement_cls_names.add(k)
+
+        pre_miss_implement_cls_names = set()
+        while len(miss_implement_cls_names) > 0 and pre_miss_implement_cls_names != miss_implement_cls_names:
+            for cls_name in miss_implement_cls_names:
+                # unwrap the miss implement clsSchema to instance
+                for ref_parent, ref_schema, _ in cls.iter_schema_cls_reference_in_schema(schema, cls_name):
+                    assert isinstance(ref_schema, CMDClsSchemaBase)
+                    assert cls_register_map[cls_name]['implement'] is None
+                    ref_schema.implement = reference_cls_map[cls_name]['implement']
+                    assert ref_schema.implement is not None
+                    new_ref_schema = ref_schema.get_unwrapped()
+                    assert new_ref_schema.cls == cls_name
+                    cls.replace_schema(ref_parent, ref_schema, new_ref_schema)
+                    break
+
+            # recalculate miss implement cls
+            pre_miss_implement_cls_names = miss_implement_cls_names
+            cls_register_map = {}
+            _iter_over_schema_for_cls_register(schema, cls_register_map)
+            miss_implement_cls_names = set()
+            for k, v in cls_register_map.items():
+                if not v['implement']:
+                    miss_implement_cls_names.add(k)
+
+        if len(miss_implement_cls_names) > 0:
+            raise exceptions.InvalidAPIUsage(f"Always miss class implements for {miss_implement_cls_names}")
+
+        return schema

@@ -1,17 +1,14 @@
 import logging
 
 import inflect
-from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, CMDSchemaDefault, \
-    CMDHttpResponseJsonBody, CMDObjectOutput, CMDArrayOutput, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, \
-    CMDRequestJson, CMDClsSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDStringSchemaBase, CMDStringOutput, \
-    DEFAULT_CONFIRMATION_PROMPT
+from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, \
+    CMDSchemaDefault, CMDHttpResponseJsonBody, CMDArrayOutput, CMDJsonInstanceUpdateAction, \
+    CMDInstanceUpdateOperation, CMDRequestJson, DEFAULT_CONFIRMATION_PROMPT
 from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
-from swagger.model.schema.x_ms_pageable import XmsPageable
 from swagger.model.specs import SwaggerLoader
 from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case, get_url_path_valid_parts
-from swagger.utils.exceptions import InvalidSwaggerValueError
 from utils import exceptions
 
 logger = logging.getLogger('backend')

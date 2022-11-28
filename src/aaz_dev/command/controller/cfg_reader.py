@@ -103,6 +103,7 @@ class CfgReader:
     def iter_commands_by_operations(self, *methods):
         # use 'update' as the methods of instance update operation
         methods = {m.lower() for m in methods}
+
         def _filter_by_operation(cmd_names, command):
             ops_methods = set()
             has_extra_methods = False
@@ -763,6 +764,21 @@ class CfgReader:
                         if schema:
                             schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Create, *schema_idx]
                         yield parent, schema, schema_idx
+
+    @classmethod
+    def iter_schema_cls_reference_in_schema(cls, schema, cls_name):
+        assert isinstance(cls_name, str) and not cls_name.startswith('@')
+
+        cls_type_name = f"@{cls_name}"
+
+        def schema_filter(_parent, _schema, _schema_idx):
+            if _schema.type == cls_type_name:
+                # find match
+                return (_parent, _schema, _schema_idx), False
+            return None, False
+
+        for match in cls._iter_sub_schema(schema, schema_filter):
+            yield match
 
     # TODO: build schema_idx in command link call
     @classmethod

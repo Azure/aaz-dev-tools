@@ -50,6 +50,11 @@ class CMDCommand(Model):
     class Options:
         serialize_when_none = False
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.arg_cls_register_map = None
+        self.schema_cls_register_map = None
+
     def generate_args(self, ref_args=None):
         if not ref_args:
             ref_args = []
@@ -233,6 +238,9 @@ class CMDCommand(Model):
             raise err
 
     def link(self):
+        self.arg_cls_register_map = {}
+        self.schema_cls_register_map = {}
+
         if self.arg_groups:
             arg_cls_register_map = {}
             for arg_group in self.arg_groups:
@@ -250,6 +258,8 @@ class CMDCommand(Model):
                     assert isinstance(refer, CMDClsArgBase)
                     refer.implement = implement
 
+            self.arg_cls_register_map = arg_cls_register_map
+
         if self.operations:
             schema_cls_register_map = {}
             for operation in self.operations:
@@ -265,6 +275,8 @@ class CMDCommand(Model):
                 for refer in refers:
                     assert isinstance(refer, CMDClsSchemaBase)
                     refer.implement = implement
+
+            self.schema_cls_register_map = schema_cls_register_map
 
     def _handle_duplicated_options(self, arguments):
         # check argument with duplicated option names
