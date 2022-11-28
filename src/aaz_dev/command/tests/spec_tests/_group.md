@@ -8,11 +8,11 @@ Long help end of line
 
 ## Subgroups
 
-- [item](/Commands/edge-order/order/item/readme.md)
-: Manager order item of edge.
-
 - [address](/Commands/edge-order/order/address/readme.md)
 : Manager order address of edge.
+
+- [item](/Commands/edge-order/order/item/readme.md)
+: Manager order item of edge.
 
 ## Commands
 
