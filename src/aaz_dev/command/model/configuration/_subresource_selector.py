@@ -104,7 +104,7 @@ class CMDJsonSubresourceSelector(CMDSubresourceSelector):
     json = ModelType(CMDSelectorIndex, required=True)
 
     def generate_args(self, ref_args):
-        pass
+        return self.json.generate_args(ref_args, "$")
 
     def reformat(self, **kwargs):
-        pass
+        self.json.reformat(**kwargs)

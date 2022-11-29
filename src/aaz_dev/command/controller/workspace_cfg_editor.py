@@ -781,7 +781,12 @@ class WorkspaceCfgEditor(CfgReader):
         for cmd_names, ref_cmd_names in command_rename_list:
             self.rename_command(*cmd_names, new_cmd_names=ref_cmd_names)
 
-    def build_subresource_commands_by_arg_var(self, resource_id, arg_var):
+    def build_subresource_commands_by_arg_var(self, resource_id, arg_var, cg_name, ref_options=None):
+        if isinstance(cg_name, str):
+            cg_name = [w for w in cg_name.split(' ') if w]
+
+        assert isinstance(cg_name, list)
+
         update_cmd_info = self.get_update_cmd(resource_id)
         if not update_cmd_info:
             raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id}")
@@ -792,6 +797,12 @@ class WorkspaceCfgEditor(CfgReader):
 
         if arg_var.startswith('@'):
             raise exceptions.InvalidAPIUsage(f"Not support class arg={arg_var}, please unwrap it first.")
+
+        # find arg
+        arg, arg_idx = self.find_arg_in_command_by_var(update_cmd, arg_var)
+
+        if not arg or not arg_idx:
+            raise exceptions.InvalidAPIUsage(f"Argument '{arg_var}' not exist in command '{' '.join(update_cmd_name)}'")
 
         get_op = None
         put_op = None
@@ -847,16 +858,15 @@ class WorkspaceCfgEditor(CfgReader):
                 response_json, update_json, _subresource_idx)
             return _sub_command
 
-        def _build_list_or_show_command(_subresource_idx):
+        def _build_subresource_list_or_show_command(_subresource_idx, _ref_args):
             _sub_command = _build_sub_command_base(_subresource_idx)
             _sub_command.operations = [get_op.__class__(raw_data=get_op.to_native())]
-            # TODO:
-            _sub_command.generate_args()
+            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_options)
             _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
             _sub_command.link()
             return _sub_command
 
-        def _build_subresource_create_command(_subresource_idx):
+        def _build_subresource_create_command(_subresource_idx, _ref_args):
             _sub_command = _build_sub_command_base(_subresource_idx)
             _instance_op = CMDInstanceCreateOperation()
 
@@ -885,12 +895,12 @@ class WorkspaceCfgEditor(CfgReader):
                 _instance_op,
                 put_op.__class__(raw_data=put_op.to_native()),
             ]
-            _sub_command.generate_args()
+            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_options)
             _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
             _sub_command.link()
             return _sub_command
 
-        def _build_subresource_update_command(_subresource_idx):
+        def _build_subresource_update_command(_subresource_idx, _ref_args):
             _sub_command = _build_sub_command_base(_subresource_idx)
             _instance_op = CMDInstanceUpdateOperation()
 
@@ -919,12 +929,12 @@ class WorkspaceCfgEditor(CfgReader):
                 _instance_op,
                 put_op.__class__(raw_data=put_op.to_native()),
             ]
-            _sub_command.generate_args()
+            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_options)
             _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
             _sub_command.link()
             return _sub_command
 
-        def _build_subresource_delete_command(_subresource_idx):
+        def _build_subresource_delete_command(_subresource_idx, _ref_args):
             _sub_command = _build_sub_command_base(_subresource_idx)
             _instance_op = CMDInstanceDeleteOperation()
             _instance_op.instance_delete = CMDJsonInstanceDeleteAction(
@@ -937,24 +947,99 @@ class WorkspaceCfgEditor(CfgReader):
                 _instance_op,
                 put_op.__class__(raw_data=put_op.to_native()),
             ]
-            _sub_command.generate_args()
+            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_options)
             _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
             _sub_command.link()
             return _sub_command
 
+        # build ref_args
+        ref_args = []
+        update_arg_prefix = f"${update_json.schema.name}"
+        if update_cmd.arg_groups:
+            for g in update_cmd.arg_groups:
+                for a in g.args:
+                    if a.var.startswith(update_arg_prefix):
+                        # ignore arguments linked with body
+                        continue
+                    ref_args.append(a)
+
         if isinstance(schema, CMDArraySchema):
+            assert isinstance(arg, CMDArrayArg)
             # list command
+            list_command = _build_subresource_list_or_show_command(subresource_idx, ref_args)
+
+            # generate item command
+            item_subresource_idx = [*subresource_idx, '[]']
+
+            item_arg = arg.item
+            if not isinstance(item_arg, CMDObjectArgBase):
+                raise NotImplementedError()
+
+            if item_arg.additional_props:
+                raise NotImplementedError()
+
+            ref_args.extend(item_arg.args)
+
             # create command
+            create_command = _build_subresource_create_command(item_subresource_idx, ref_args)
             # update command
+            update_command = _build_subresource_update_command(item_subresource_idx, ref_args)
             # delete command
+            delete_command = _build_subresource_delete_command(item_subresource_idx, ref_args)
             # show command
-            pass
+            show_command = _build_subresource_list_or_show_command(item_subresource_idx, ref_args)
+
+            list_command.name = ' '.join([*cg_name, 'list'])
+            create_command.name = ' '.join([*cg_name, 'create'])
+            update_command.name = ' '.join([*cg_name, 'update'])
+            delete_command.name = ' '.join([*cg_name, 'delete'])
+            show_command.name = ' '.join([*cg_name, 'show'])
+
         elif isinstance(schema, CMDObjectSchema):
-            # create command
-            # update command
-            # delete command
-            # show command
-            pass
+            assert isinstance(arg, CMDObjectArg)
+            if schema.props and schema.additional_props:
+                raise NotImplementedError()
+
+            if schema.props:
+                ref_args.extend(arg.args)
+
+                # create command
+                create_command = _build_subresource_create_command(subresource_idx, ref_args)
+                # update command
+                update_command = _build_subresource_update_command(subresource_idx, ref_args)
+                # delete command
+                delete_command = _build_subresource_delete_command(subresource_idx, ref_args)
+                # show command
+                show_command = _build_subresource_list_or_show_command(subresource_idx, ref_args)
+
+            elif schema.additional_props and schema.additional_props.item:
+                item_subresource_idx = [*subresource_idx, '{}']
+
+                item_arg = arg.additional_props.item
+                if not isinstance(item_arg, CMDObjectSchemaBase):
+                    raise NotImplementedError()
+
+                if item_arg.additional_props:
+                    raise NotImplementedError()
+
+                ref_args.extend(item_arg.args)
+
+                # create command
+                create_command = _build_subresource_create_command(item_subresource_idx, ref_args)
+                # update command
+                update_command = _build_subresource_update_command(item_subresource_idx, ref_args)
+                # delete command
+                delete_command = _build_subresource_delete_command(item_subresource_idx, ref_args)
+                # show command
+                show_command = _build_subresource_list_or_show_command(item_subresource_idx, ref_args)
+
+            else:
+                raise NotImplementedError()
+
+            create_command.name = ' '.join([*cg_name, 'create'])
+            update_command.name = ' '.join([*cg_name, 'update'])
+            delete_command.name = ' '.join([*cg_name, 'delete'])
+            show_command.name = ' '.join([*cg_name, 'show'])
         else:
             raise NotImplementedError()
 
@@ -1030,22 +1115,6 @@ class WorkspaceCfgEditor(CfgReader):
         if not index:
             index = CMDArrayIndexBase()
 
-        identifiers = []
-        if schema.identifiers:
-            item = schema.item
-            assert isinstance(item, CMDObjectSchemaBase)
-            for prop in item.props:
-                if prop.name in schema.identifiers:
-                    identifier = prop.__class__(raw_data=prop.to_native())
-                    identifier.name = '[].' + identifier.name
-                    identifiers.append(identifier)
-        if not identifiers:
-            # use index as identifier
-            identifier = CMDIntegerSchema()
-            identifier.name = '[Index]'
-            identifiers.append(identifier)
-        index.identifiers = identifiers
-
         if not idx:
             return index
 
@@ -1054,6 +1123,26 @@ class WorkspaceCfgEditor(CfgReader):
         assert current_idx == '[]'
 
         item = schema.item
+
+        identifiers = []
+        if schema.identifiers:
+            assert isinstance(item, CMDObjectSchemaBase)
+            for prop in item.props:
+                if prop.name in schema.identifiers:
+                    identifier = prop.__class__(raw_data=prop.to_native())
+                    identifier.name = '[].' + prop.name
+                    identifier.required = True
+                    identifier.read_only = False
+                    identifier.frozen = False
+                    identifiers.append(identifier)
+        if not identifiers:
+            # use index as identifier
+            identifier = CMDIntegerSchema()
+            identifier.name = '[Index]'
+            identifiers.append(identifier)
+            identifier.required = True
+        index.identifiers = identifiers
+
         if isinstance(item, CMDObjectSchemaBase):
             index.item = self._build_object_index_base(item, remain_idx)
         elif isinstance(item, CMDArraySchemaBase):
@@ -1086,6 +1175,7 @@ class WorkspaceCfgEditor(CfgReader):
 
         current_idx = idx[0]
         remain_idx = idx[1:]
+
         if schema.props:
             for prop in schema.props:
                 if prop.name == current_idx:
@@ -1109,8 +1199,10 @@ class WorkspaceCfgEditor(CfgReader):
     def _build_object_index_additional_prop(self, schema, idx):
         assert isinstance(schema, CMDObjectSchemaAdditionalProperties)
         index = CMDObjectIndexAdditionalProperties()
+
         identifier = CMDStringSchema()
         identifier.name = "{Key}"
+        identifier.required = True
         index.identifiers = [identifier]
 
         if isinstance(schema.item, CMDObjectSchemaBase):

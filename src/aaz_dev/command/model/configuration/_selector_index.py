@@ -8,6 +8,7 @@ from schematics.types import StringType, ListType, ModelType, PolyModelType
 from schematics.types.serializable import serializable
 
 from ._schema import CMDSchemaField
+from ._arg_builder import CMDArgBuilder
 
 
 class CMDSelectorIndexBase(Model):
@@ -19,6 +20,12 @@ class CMDSelectorIndexBase(Model):
     @serializable
     def type(self):
         return self._get_type()
+
+    def generate_args(self, ref_args, var_prefix):
+        raise NotImplementedError()
+
+    def reformat(self, **kwargs):
+        raise NotImplementedError()
 
     def _get_type(self):
         assert self.TYPE_VALUE is not None
@@ -119,6 +126,26 @@ class CMDObjectIndexDiscriminator(Model):
     class Options:
         serialize_when_none = False
 
+    def generate_args(self, ref_args, var_prefix):
+        if var_prefix.endswith("$"):
+            var_prefix += f'{self.value}'
+        else:
+            var_prefix += f'.{self.value}'
+
+        args = []
+        if self.prop:
+            args.extend(self.prop.generate_args(ref_args, var_prefix))
+        if self.discriminator:
+            args.extend(self.discriminator.generate_args(ref_args, var_prefix))
+
+        return args
+
+    def reformat(self, **kwargs):
+        if self.prop:
+            self.prop.reformat(**kwargs)
+        if self.discriminator:
+            self.discriminator.reformat(**kwargs)
+
 
 class CMDObjectIndexAdditionalProperties(Model):
     item = CMDSelectorIndexBaseField(required=True)
@@ -126,6 +153,27 @@ class CMDObjectIndexAdditionalProperties(Model):
 
     class Options:
         serialize_when_none = False
+
+    def generate_args(self, ref_args, var_prefix):
+        args = []
+        if self.identifiers:
+            for identifier in self.identifiers:
+                builder = CMDArgBuilder.new_builder(schema=identifier, ref_args=ref_args, var_prefix=var_prefix)
+                identifier_args = builder.get_args()
+                assert len(identifier_args) == 1
+                args.append(identifier_args[0])
+
+        var_prefix += '{}'
+        args.extend(self.item.generate_args(ref_args, var_prefix))
+        return args
+
+    def reformat(self, **kwargs):
+        if self.item:
+            self.item.reformat(**kwargs)
+        if self.identifiers:
+            for identifier in self.identifiers:
+                identifier.reformat(**kwargs)
+            self.identifiers = sorted(self.identifiers, key=lambda i: i.name)
 
 
 class CMDObjectIndexBase(CMDSelectorIndexBase):
@@ -139,9 +187,37 @@ class CMDObjectIndexBase(CMDSelectorIndexBase):
         deserialize_from="additionalProps",
     )
 
+    def _generate_args_base(self, ref_args, var_prefix):
+        args = []
+        if self.prop:
+            args.extend(self.prop.generate_args(ref_args, var_prefix))
+        if self.discriminator:
+            args.extend(self.discriminator.generate_args(ref_args, var_prefix))
+        if self.additional_props:
+            args.extend(self.additional_props.generate_args(ref_args, var_prefix))
+        return args
+
+    def generate_args(self, ref_args, var_prefix):
+        return self._generate_args_base(ref_args, var_prefix)
+
+    def reformat(self, **kwargs):
+        if self.prop:
+            self.prop.reformat(**kwargs)
+        if self.discriminator:
+            self.discriminator.reformat(**kwargs)
+        if self.additional_props:
+            self.additional_props.reformat(**kwargs)
+
 
 class CMDObjectIndex(CMDObjectIndexBase, CMDSelectorIndex):
-    pass
+
+    def generate_args(self, ref_args, var_prefix):
+        if var_prefix.endswith("$"):
+            var_prefix += f'{self.name}'
+        else:
+            var_prefix += f'.{self.name}'
+
+        return self._generate_args_base(ref_args, var_prefix)
 
 # array
 
@@ -152,6 +228,39 @@ class CMDArrayIndexBase(CMDSelectorIndexBase):
     item = CMDSelectorIndexBaseField()
     identifiers = ListType(CMDSchemaField())
 
+    def _generate_args_base(self, ref_args, var_prefix):
+        args = []
+        if self.identifiers:
+            for identifier in self.identifiers:
+                builder = CMDArgBuilder.new_builder(schema=identifier, ref_args=ref_args, var_prefix=var_prefix)
+                identifier_args = builder.get_args()
+                assert len(identifier_args) == 1
+                args.append(identifier_args[0])
+
+        var_prefix += "[]"
+        if self.item:
+            args.extend(self.item.generate_args(ref_args, var_prefix))
+
+        return args
+
+    def generate_args(self, ref_args, var_prefix):
+        return self._generate_args_base(ref_args, var_prefix)
+
+    def reformat(self, **kwargs):
+        if self.item:
+            self.item.reformat(**kwargs)
+        if self.identifiers:
+            for identifier in self.identifiers:
+                identifier.reformat(**kwargs)
+            self.identifiers = sorted(self.identifiers, key=lambda i: i.name)
+
 
 class CMDArrayIndex(CMDArrayIndexBase, CMDSelectorIndex):
-    pass
+
+    def generate_args(self, ref_args, var_prefix):
+        if var_prefix.endswith("$"):
+            var_prefix += f'{self.name}'
+        else:
+            var_prefix += f'.{self.name}'
+
+        return self._generate_args_base(ref_args, var_prefix)

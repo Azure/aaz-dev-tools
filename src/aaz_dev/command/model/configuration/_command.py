@@ -55,7 +55,7 @@ class CMDCommand(Model):
         self.arg_cls_register_map = None
         self.schema_cls_register_map = None
 
-    def generate_args(self, ref_args=None):
+    def generate_args(self, ref_args=None, ref_options=None):
         if not ref_args:
             ref_args = []
             if self.arg_groups:
@@ -64,9 +64,22 @@ class CMDCommand(Model):
             ref_args = ref_args or None
 
         arguments = {}
-        for op in self.operations:
-            for arg in op.generate_args(ref_args=ref_args):
+        has_subresource = False
+        if self.subresource_selector:
+            has_subresource = True
+            for arg in self.subresource_selector.generate_args(ref_args=ref_args):
                 if arg.var not in arguments:
+                    if ref_options and arg.var in ref_options:
+                        # replace generated options by ref_options
+                        arg.options = [*ref_options[arg.var]]
+                    arguments[arg.var] = arg
+
+        for op in self.operations:
+            for arg in op.generate_args(ref_args=ref_args, has_subresource=has_subresource):
+                if arg.var not in arguments:
+                    if ref_options and arg.var in ref_options:
+                        # replace generated options by ref_options
+                        arg.options = [*ref_options[arg.var]]
                     arguments[arg.var] = arg
 
         arguments = self._handle_duplicated_options(arguments)
@@ -131,58 +144,6 @@ class CMDCommand(Model):
                 output.client_flatten = client_flatten
             else:
                 raise NotImplementedError()
-        return output
-
-    @staticmethod
-    def _build_output_type_schema(schema):
-        if isinstance(schema, CMDClsSchemaBase):
-            schema = schema.implement
-            assert schema is not None
-
-        if isinstance(schema, CMDArraySchemaBase):
-            output = CMDArrayOutput()
-        elif isinstance(schema, CMDObjectSchemaBase):
-            output = CMDObjectOutput()
-        elif isinstance(schema, CMDStringSchemaBase):
-            output = CMDStringOutput()
-        else:
-            raise exceptions.InvalidAPIUsage(
-                f"Invalid output schema, not support: {schema.type}"
-            )
-        return output
-
-    @staticmethod
-    def _build_output_type_by_subresource_selector(subresource_selector):
-        if isinstance(subresource_selector, CMDJsonSubresourceSelector):
-            index = subresource_selector.json
-            pref_index = None
-            while index:
-                pref_index = index
-                index = None
-                if isinstance(pref_index, CMDObjectIndexBase):
-                    if pref_index.prop:
-                        index = pref_index.prop
-                    elif pref_index.discriminator:
-                        index = pref_index.discriminator
-                    elif pref_index.additional_props:
-                        if pref_index.additional_props.item:
-                            index = pref_index.additional_props.item
-                elif isinstance(pref_index, CMDObjectIndexDiscriminator):
-                    if pref_index.prop:
-                        index = pref_index.prop
-                    elif pref_index.discriminator:
-                        index = pref_index.discriminator
-                elif isinstance(pref_index, CMDArrayIndexBase):
-                    if pref_index.item:
-                        index = pref_index.item
-                else:
-                    raise NotImplementedError()
-            if isinstance(pref_index, (CMDObjectIndexBase, CMDObjectIndexDiscriminator)):
-                output = CMDObjectOutput()
-            elif isinstance(pref_index, CMDArrayIndexBase):
-                output = CMDArrayOutput()
-        else:
-            raise NotImplementedError()
         return output
 
     def reformat(self, **kwargs):
@@ -329,22 +290,27 @@ class CMDCommand(Model):
             groups.append(group)
         return groups or None
 
-    @staticmethod
-    def _can_replace_argument(arg, old_arg):
+    def _can_replace_argument(self, arg, old_arg):
         arg_prefix = arg.var.split('.')[0]
         old_prefix = old_arg.var.split('.')[0]
+
         if old_prefix in (CMDArgBuildPrefix.Query, CMDArgBuildPrefix.Header, CMDArgBuildPrefix.Path):
             # replace argument should only be in body
             return False
+
         if arg_prefix in (CMDArgBuildPrefix.Query, CMDArgBuildPrefix.Header):
             # only support path argument to replace
             return False
 
         elif arg_prefix == CMDArgBuildPrefix.Path:
             # path argument
+            if self.subresource_selector is not None:
+                return False
+
             arg_schema_required = arg.ref_schema.required
             arg_schema_name = arg.ref_schema.name
             try:
+                # temporary assign required and name for diff
                 arg.ref_schema.required = old_arg.ref_schema.required
                 if old_arg.ref_schema.name == "name" and "name" in arg.options:
                     arg.ref_schema.name = "name"
@@ -361,3 +327,55 @@ class CMDCommand(Model):
             if diff:
                 return False
             return True
+
+    @staticmethod
+    def _build_output_type_schema(schema):
+        if isinstance(schema, CMDClsSchemaBase):
+            schema = schema.implement
+            assert schema is not None
+
+        if isinstance(schema, CMDArraySchemaBase):
+            output = CMDArrayOutput()
+        elif isinstance(schema, CMDObjectSchemaBase):
+            output = CMDObjectOutput()
+        elif isinstance(schema, CMDStringSchemaBase):
+            output = CMDStringOutput()
+        else:
+            raise exceptions.InvalidAPIUsage(
+                f"Invalid output schema, not support: {schema.type}"
+            )
+        return output
+
+    @staticmethod
+    def _build_output_type_by_subresource_selector(subresource_selector):
+        if isinstance(subresource_selector, CMDJsonSubresourceSelector):
+            index = subresource_selector.json
+            pref_index = None
+            while index:
+                pref_index = index
+                index = None
+                if isinstance(pref_index, CMDObjectIndexBase):
+                    if pref_index.prop:
+                        index = pref_index.prop
+                    elif pref_index.discriminator:
+                        index = pref_index.discriminator
+                    elif pref_index.additional_props:
+                        if pref_index.additional_props.item:
+                            index = pref_index.additional_props.item
+                elif isinstance(pref_index, CMDObjectIndexDiscriminator):
+                    if pref_index.prop:
+                        index = pref_index.prop
+                    elif pref_index.discriminator:
+                        index = pref_index.discriminator
+                elif isinstance(pref_index, CMDArrayIndexBase):
+                    if pref_index.item:
+                        index = pref_index.item
+                else:
+                    raise NotImplementedError()
+            if isinstance(pref_index, (CMDObjectIndexBase, CMDObjectIndexDiscriminator)):
+                output = CMDObjectOutput()
+            elif isinstance(pref_index, CMDArrayIndexBase):
+                output = CMDArrayOutput()
+        else:
+            raise NotImplementedError()
+        return output
