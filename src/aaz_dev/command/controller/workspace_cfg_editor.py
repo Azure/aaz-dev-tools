@@ -113,14 +113,16 @@ class WorkspaceCfgEditor(CfgReader):
         self.reformat()
 
     def rename_command(self, *cmd_names, new_cmd_names):
+        command = self._remove_command(*cmd_names)
+        command.name = new_cmd_names[-1]
+        self._add_command(*new_cmd_names, command=command)
+        self.reformat()
+
+    def _remove_command(self, *cmd_names):
         if len(cmd_names) < 2:
             raise exceptions.InvalidAPIUsage(f"Invalid command name, it's empty")
-        if len(new_cmd_names) < 2:
-            raise exceptions.InvalidAPIUsage(f"Invalid new command name, it's empty")
 
         cmd_names = [*cmd_names]
-        new_cmd_names = [*new_cmd_names]
-
         command = self.find_command(*cmd_names)
         if command is None:
             raise exceptions.ResourceNotFind(f"Cannot find definition for command '{' '.join(cmd_names)}'")
@@ -131,10 +133,17 @@ class WorkspaceCfgEditor(CfgReader):
         idx = command_group.commands.index(command)
         command_group.commands.pop(idx)
 
-        if self.find_command(*new_cmd_names):
-            raise exceptions.InvalidAPIUsage(f"Command '{' '.join(new_cmd_names)}' already exist")
+        return command
 
-        command_group, tail_names, parent, remain_names = self.find_command_group(*new_cmd_names[:-1])
+    def _add_command(self, *cmd_names, command):
+        if len(cmd_names) < 2:
+            raise exceptions.InvalidAPIUsage(f"Invalid new command name, it's empty")
+        cmd_names = [*cmd_names]
+
+        if self.find_command(*cmd_names):
+            raise exceptions.InvalidAPIUsage(f"Command '{' '.join(cmd_names)}' already exist")
+
+        command_group, tail_names, parent, remain_names = self.find_command_group(*cmd_names[:-1])
         if not command_group:
             cg_names = remain_names
             while not command_group and len(cg_names) > 1:
@@ -172,10 +181,7 @@ class WorkspaceCfgEditor(CfgReader):
         if command_group.commands is None:
             command_group.commands = []
 
-        command.name = new_cmd_names[-1]
         command_group.commands.append(command)
-
-        self.reformat()
 
     def merge(self, plus_cfg_editor):
         if not self._can_merge(plus_cfg_editor):
@@ -781,11 +787,11 @@ class WorkspaceCfgEditor(CfgReader):
         for cmd_names, ref_cmd_names in command_rename_list:
             self.rename_command(*cmd_names, new_cmd_names=ref_cmd_names)
 
-    def build_subresource_commands_by_arg_var(self, resource_id, arg_var, cg_name, ref_options=None):
-        if isinstance(cg_name, str):
-            cg_name = [w for w in cg_name.split(' ') if w]
+    def build_subresource_commands_by_arg_var(self, resource_id, arg_var, cg_names, ref_options=None):
+        if isinstance(cg_names, str):
+            cg_names = [w for w in cg_names.split(' ') if w]
 
-        assert isinstance(cg_name, list)
+        assert isinstance(cg_names, list)
 
         update_cmd_info = self.get_update_cmd(resource_id)
         if not update_cmd_info:
@@ -989,11 +995,17 @@ class WorkspaceCfgEditor(CfgReader):
             # show command
             show_command = _build_subresource_list_or_show_command(item_subresource_idx, ref_args)
 
-            list_command.name = ' '.join([*cg_name, 'list'])
-            create_command.name = ' '.join([*cg_name, 'create'])
-            update_command.name = ' '.join([*cg_name, 'update'])
-            delete_command.name = ' '.join([*cg_name, 'delete'])
-            show_command.name = ' '.join([*cg_name, 'show'])
+            list_command.name = 'list'
+            create_command.name = 'create'
+            update_command.name = 'update'
+            delete_command.name = 'delete'
+            show_command.name = 'show'
+
+            self._add_command(*cg_names, list_command.name, command=list_command)
+            self._add_command(*cg_names, create_command.name, command=create_command)
+            self._add_command(*cg_names, update_command.name, command=update_command)
+            self._add_command(*cg_names, delete_command.name, command=delete_command)
+            self._add_command(*cg_names, show_command.name, command=show_command)
 
         elif isinstance(schema, CMDObjectSchema):
             assert isinstance(arg, CMDObjectArg)
@@ -1036,10 +1048,15 @@ class WorkspaceCfgEditor(CfgReader):
             else:
                 raise NotImplementedError()
 
-            create_command.name = ' '.join([*cg_name, 'create'])
-            update_command.name = ' '.join([*cg_name, 'update'])
-            delete_command.name = ' '.join([*cg_name, 'delete'])
-            show_command.name = ' '.join([*cg_name, 'show'])
+            create_command.name = 'create'
+            update_command.name = 'update'
+            delete_command.name = 'delete'
+            show_command.name = 'show'
+
+            self._add_command(*cg_names, create_command.name, command=create_command)
+            self._add_command(*cg_names, update_command.name, command=update_command)
+            self._add_command(*cg_names, delete_command.name, command=delete_command)
+            self._add_command(*cg_names, show_command.name, command=show_command)
         else:
             raise NotImplementedError()
 
