@@ -677,7 +677,7 @@ class CfgReader:
                 item = schema.item
                 if not remain_idx:
                     return item
-                return cls.find_sub_arg(item, remain_idx)
+                return cls.find_sub_schema(item, remain_idx)
 
         return None
 
@@ -912,7 +912,7 @@ class CfgReader:
     def schema_idx_to_subresource_idx(cls, schema_idx):
         for i, idx in enumerate(schema_idx):
             if idx == _SchemaIdxEnum.Json:
-                return cls.subresource_idx_to_str(schema_idx[i+1:])
+                return [*schema_idx[i+1:]]
         return None
 
     @staticmethod

@@ -130,7 +130,7 @@ class WorkspaceEditorTest(CommandTestCase):
             self.assertEqual(schema.identifiers, ['name'])
         self.assertEqual(count, 2)
 
-        # subresource_selector = cfg.build_subresource_commands_by_arg_var(resource_id, arg_var)
+        cfg.build_subresource_commands_by_arg_var(resource_id, arg_var, cg_names=["cdn", "profile", "endpoint", 'origin-group'])
 
         arg_var = '$endpoint.properties.originGroups[].properties.origins'
 
@@ -146,6 +146,5 @@ class WorkspaceEditorTest(CommandTestCase):
             self.assertEqual(schema_idx[-6:], [_SchemaIdxEnum.Json, 'properties', 'originGroups', '[]', 'properties', 'origins'])
         self.assertEqual(count, 2)
 
-        # subresource_selector = cfg.build_subresource_commands_by_arg_var(resource_id, arg_var)
+        cfg.build_subresource_commands_by_arg_var(resource_id, arg_var, cg_names=["cdn", "profile", "endpoint", 'origin-group', 'origin'])
 
-        # print(subresource_selector)

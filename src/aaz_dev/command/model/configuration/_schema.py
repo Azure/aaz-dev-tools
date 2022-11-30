@@ -377,9 +377,15 @@ class CMDClsSchemaBase(CMDSchemaBase):
         if self.implement is None:
             return
         assert isinstance(self.implement, CMDSchemaBase)
-        data = self.implement.to_native()
+        if isinstance(self.implement, CMDObjectSchemaBase):
+            cls = CMDObjectSchema if isinstance(self, CMDClsSchema) else CMDObjectSchemaBase
+        elif isinstance(self.implement, CMDArraySchemaBase):
+            cls = CMDArraySchema if isinstance(self, CMDClsSchema) else CMDArraySchemaBase
+        else:
+            raise NotImplementedError()
+        data = {k: v for k, v in self.implement.to_native().items() if k in cls._schema.valid_input_keys}
         data.update(kwargs)
-        unwrapped = self.implement.__class__(data)
+        unwrapped = cls(data)
         return unwrapped
 
 

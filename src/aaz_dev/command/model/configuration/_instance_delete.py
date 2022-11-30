@@ -42,8 +42,7 @@ class CMDJsonInstanceDeleteAction(CMDInstanceDeleteAction):
     # json = ModelType(CMDRequestJson, required=True)
 
     def generate_args(self, ref_args):
-        pass
-        # return self.json.generate_args(ref_args=ref_args, is_update_action=False)
+        return []
 
     def reformat(self, **kwargs):
         pass
