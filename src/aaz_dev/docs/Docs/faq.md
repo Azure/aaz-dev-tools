@@ -18,3 +18,11 @@ Please enable the `core.longpaths` module by the following command in terminal w
 ```bash
 git config --system core.longpaths true
 ```
+
+## 4. Why the tests for my generated cmds reports "The swagger file does not define '202' response code" error?
+---
+According to [azure rpc protocol](https://github.com/Azure/azure-resource-manager-rpc/blob/master/v1.0/async-api-reference.md#202-accepted-and-location-headers), if the operation is `x-ms-long-running-operation`, 202 response status should be defined in swagger file. Therefore, either change the operation not `x-ms-long-running-operation`, or add 202 response in swagger for this operation.
+
+## 5. Why my codegen V2 generated cmds' help message not inherited from my "summary" message from its swagger file?
+---
+Codegen v2 uses "description" of swagger definition for cmd's 'help' message, not 'summary'
