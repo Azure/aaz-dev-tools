@@ -89,7 +89,7 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                         arg.options = list({*arg.options, "name", "n"})
 
                 arg.required = True
-                arg.id_part = id_part
+                arg.id_part = id_part  # id_part should not be generated for create command or commands for subresource
                 args.append(arg)
 
         return args

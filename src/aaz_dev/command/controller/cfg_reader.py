@@ -916,7 +916,7 @@ class CfgReader:
         return None
 
     @staticmethod
-    def subresource_idx_to_list(subresource_idx):
+    def idx_to_list(subresource_idx):
         if isinstance(subresource_idx, list):
             return subresource_idx
         assert isinstance(subresource_idx, str)
@@ -924,7 +924,7 @@ class CfgReader:
         return [idx for idx in subresource_idx if idx]
 
     @staticmethod
-    def subresource_idx_to_str(subresource_idx):
+    def idx_to_str(subresource_idx):
         if isinstance(subresource_idx, str):
             return subresource_idx
         assert isinstance(subresource_idx, list)

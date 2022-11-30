@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 import os
@@ -300,11 +301,11 @@ class WorkspaceCfgEditor(CfgReader):
 
     def unwrap_cls_arg(self, *cmd_names, arg_var):
         command = self.find_command(*cmd_names)
-        parent, arg, _ = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
+        parent_arg, arg, _ = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
         if not arg:
             raise exceptions.InvalidAPIUsage(
                 f"Argument not exist: {arg.var}")
-        assert parent is not None
+        assert parent_arg is not None
 
         if isinstance(arg, CMDObjectArgBase):
             if not arg.cls:
@@ -316,16 +317,34 @@ class WorkspaceCfgEditor(CfgReader):
                 f"{arg.var} is not a class argument"
             )
 
-        # find linked schema
         linked_schema_parent = None
         linked_schema = None
-        for parent_schema, schema, _ in self.iter_schema_in_command_by_arg_var(command, arg_var=arg.var):
-            if linked_schema is not None:
-                raise exceptions.InvalidAPIUsage(
-                    f"Cannot unwrap argument: {arg.var} is used by mutiple schemas."
-                )
-            linked_schema_parent = parent_schema
-            linked_schema = schema
+        # find linked schema
+        if isinstance(arg, CMDArg):
+            for parent_schema, schema, _ in self.iter_schema_in_command_by_arg_var(command, arg_var=arg.var):
+                if linked_schema is not None:
+                    raise exceptions.InvalidAPIUsage(
+                        f"Cannot unwrap argument: {arg.var} is used by mutiple schemas."
+                    )
+                linked_schema_parent = parent_schema
+                linked_schema = schema
+        elif isinstance(arg, CMDArgBase):
+            if not isinstance(parent_arg, CMDArg):
+                raise NotImplementedError()
+            for _, parent_schema, _ in self.iter_schema_in_command_by_arg_var(command, arg_var=parent_arg.var):
+                if linked_schema is not None:
+                    raise exceptions.InvalidAPIUsage(
+                        f"Cannot unwrap argument: {arg.var} is used by mutiple schemas."
+                    )
+                linked_schema_parent = parent_schema
+                if arg_var.endswith('[]'):
+                    assert isinstance(parent_schema, CMDArraySchemaBase)
+                    linked_schema = parent_schema.item
+                elif arg_var.endswith('{}'):
+                    assert isinstance(parent_schema, CMDObjectSchemaBase) and parent_schema.additional_props
+                    linked_schema = parent_schema.additional_props.item
+                else:
+                    raise NotImplementedError()
 
         if linked_schema is None:
             raise exceptions.InvalidAPIUsage(
@@ -810,6 +829,10 @@ class WorkspaceCfgEditor(CfgReader):
         if not arg or not arg_idx:
             raise exceptions.InvalidAPIUsage(f"Argument '{arg_var}' not exist in command '{' '.join(update_cmd_name)}'")
 
+        # if isinstance(arg, CMDArrayArgBase) and isinstance(arg.item, CMDClsArgBase):
+        #     raise exceptions.InvalidAPIUsage(f"Not support array<class> arg={arg_var}, please unwrap it first.")
+        # if isinstance(arg, CMD)
+
         get_op = None
         put_op = None
         update_op = None
@@ -858,7 +881,7 @@ class WorkspaceCfgEditor(CfgReader):
             _sub_command.version = update_cmd.version
             _resource = [_r for _r in update_cmd.resources if _r.id.lower() == resource_id.lower()][0]
             _resource = CMDResource(raw_data=_resource.to_native())
-            _resource.subresource = self.subresource_idx_to_str(_subresource_idx)
+            _resource.subresource = self.idx_to_str(_subresource_idx)
             _sub_command.resources = [_resource]
             _sub_command.subresource_selector = self._build_subresource_selector(
                 response_json, update_json, _subresource_idx)
@@ -893,7 +916,8 @@ class WorkspaceCfgEditor(CfgReader):
                     _instance_op_schema = CMDArraySchema(raw_data=_instance_op_schema.to_native())
                 else:
                     raise NotImplementedError()
-            _instance_op_schema.name = self.subresource_idx_to_str(_subresource_idx)
+            # _subresource_idx does not contains update_json.schema.name
+            _instance_op_schema.name = self.idx_to_str([update_json.schema.name, *_subresource_idx])
             _instance_op_schema.required = True
             _instance_op.instance_create.json.schema = _instance_op_schema
 
@@ -927,7 +951,8 @@ class WorkspaceCfgEditor(CfgReader):
                     _instance_op_schema = CMDArraySchema(raw_data=_instance_op_schema.to_native())
                 else:
                     raise NotImplementedError()
-            _instance_op_schema.name = self.subresource_idx_to_str(_subresource_idx)
+            # _subresource_idx does not contains update_json.schema.name
+            _instance_op_schema.name = self.idx_to_str([update_json.schema.name, *_subresource_idx])
             _instance_op_schema.required = True
             _instance_op.instance_update.json.schema = _instance_op_schema
 
@@ -968,6 +993,10 @@ class WorkspaceCfgEditor(CfgReader):
                     if a.var.startswith(update_arg_prefix):
                         # ignore arguments linked with body
                         continue
+                    if 'name' in a.options and isinstance(a, CMDStringArgBase):
+                        # remove auto add 'name', 'n' options
+                        a = a.__class__(raw_data=a.to_native())
+                        a.options = sorted(a.options, key=lambda o: (len(o), o))[-1:]  # use the longest argument
                     ref_args.append(a)
 
         if isinstance(schema, CMDArraySchema):
@@ -980,7 +1009,8 @@ class WorkspaceCfgEditor(CfgReader):
 
             item_arg = arg.item
             if isinstance(item_arg, CMDClsArgBase):
-                item_arg = item_arg.implement
+                raise exceptions.InvalidAPIUsage(f"Not support array<class> arg={arg_var}, please unwrap it first.")
+
             if not isinstance(item_arg, CMDObjectArgBase):
                 raise NotImplementedError()
 
@@ -1032,7 +1062,8 @@ class WorkspaceCfgEditor(CfgReader):
 
                 item_arg = arg.additional_props.item
                 if isinstance(item_arg, CMDClsArgBase):
-                    item_arg = item_arg.implement
+                    raise exceptions.InvalidAPIUsage(f"Not support dict<class> arg={arg_var}, please unwrap it first.")
+
                 if not isinstance(item_arg, CMDObjectSchemaBase):
                     raise NotImplementedError()
 
@@ -1069,8 +1100,9 @@ class WorkspaceCfgEditor(CfgReader):
         assert isinstance(response_json, CMDResponseJson)
         assert isinstance(update_json, CMDRequestJson)
 
-        idx = self.subresource_idx_to_list(subresource_idx)
+        idx = self.idx_to_list(subresource_idx)
         selector = CMDJsonSubresourceSelector()
+        selector.ref = response_json.var
 
         if isinstance(update_json.schema, CMDObjectSchema):
             assert isinstance(response_json.schema, CMDObjectSchemaBase)

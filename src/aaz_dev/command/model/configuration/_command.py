@@ -7,14 +7,13 @@ from ._arg_group import CMDArgGroup
 from ._arg import CMDClsArgBase
 from ._condition import CMDCondition
 from ._fields import CMDDescriptionField, CMDVersionField, CMDCommandNameField, CMDBooleanField, CMDConfirmation
-from ._operation import CMDOperation, CMDHttpOperation
+from ._operation import CMDOperation, CMDHttpOperation, CMDInstanceDeleteOperation
 from ._http_response_body import CMDHttpResponseJsonBody
 from ._schema import CMDClsSchemaBase, CMDArraySchemaBase, CMDStringSchemaBase, CMDObjectSchemaBase
 from ._output import CMDOutput, CMDArrayOutput, CMDObjectOutput, CMDStringOutput
 from ._resource import CMDResource
 from ._utils import CMDArgBuildPrefix, CMDDiffLevelEnum
 from ._subresource_selector import CMDSubresourceSelector, CMDJsonSubresourceSelector
-from ._instance_delete import CMDInstanceDeleteAction
 from ._selector_index import CMDArrayIndexBase, CMDObjectIndexBase, CMDObjectIndexDiscriminator, CMDObjectIndexAdditionalProperties
 from utils import exceptions
 
@@ -96,7 +95,7 @@ class CMDCommand(Model):
         if self.subresource_selector:
             delete_op = False
             for op in self.operations:
-                if isinstance(op, CMDInstanceDeleteAction):
+                if isinstance(op, CMDInstanceDeleteOperation):
                     delete_op = True
             # instance delete action does not need output
             if not delete_op:
