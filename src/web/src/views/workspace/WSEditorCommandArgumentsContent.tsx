@@ -8,7 +8,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import ImportExportIcon from '@mui/icons-material/ImportExport';
 import CallSplitSharpIcon from '@mui/icons-material/CallSplitSharp';
 import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from './argument/WSECArgumentSimilarPicker';
-// import CallMergeSharpIcon from '@mui/icons-material/CallMergeSharp';
 
 
 function WSEditorCommandArgumentsContent(props: {
@@ -492,6 +491,21 @@ function ArgumentReviewer(props: {
         setChoices(newChoices);
     }, [props.arg]);
 
+    const getUnwrapKeywords = () => {
+        if (props.arg.type.startsWith("@")) {
+            return "Unwrap"
+        } else if (props.arg.type.startsWith("array")) {
+            if ((props.arg as CMDArrayArg).item?.type.startsWith("@")) {
+                return "Unwrap Element"
+            }
+        } else if (props.arg.type.startsWith("dict")) {
+            if ((props.arg as CMDDictArg).item?.type.startsWith("@")) {
+                return "Unwrap Element"
+            }
+        }
+        return null;
+    }
+
 
     return (<React.Fragment>
         <Box
@@ -534,11 +548,11 @@ function ArgumentReviewer(props: {
                 }}>
                     <ArgTypeTypography>{`/${props.arg.type}/`}</ArgTypeTypography>
                 </Box>
-                {props.arg.type.startsWith("@") && <Button sx={{ flexShrink: 0, ml: 1 }}
+                {getUnwrapKeywords() !== null && <Button sx={{ flexShrink: 0, ml: 1 }}
                     startIcon={<ImportExportIcon color="info" fontSize='small' />}
                     onClick={() => { props.onUnwrap() }}
                 >
-                    <ArgEditTypography>Unwrap</ArgEditTypography>
+                    <ArgEditTypography>{getUnwrapKeywords()!}</ArgEditTypography>
                 </Button>}
                 <Box sx={{ flexGrow: 1 }} />
                 {props.arg.required && <ArgRequiredTypography>[Required]</ArgRequiredTypography>}
@@ -1231,20 +1245,6 @@ function UnwrapClsDialog(props: {
     const [updating, setUpdating] = useState<boolean>(false);
     const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
 
-    // useEffect(() => {
-    //     let { arg } = props;
-    //     // const subArgOptions = arg.args.map(value => {
-    //     //     return {
-    //     //         var: value.var,
-    //     //         options: value.options.join(" "),
-    //     //     };
-    //     // });
-
-    //     // setSubArgOptions(subArgOptions);
-    //     // setArgSimilarTree(undefined);
-    //     // setArgSimilarTreeExpandedIds([]);
-    // }, [props.arg]);
-
     const handleClose = () => {
         setInvalidText(undefined);
         props.onClose(false);
@@ -1253,7 +1253,18 @@ function UnwrapClsDialog(props: {
     const handleUnwrap = () => {
         setUpdating(true);
 
-        const flattenUrl = `${props.commandUrl}/Arguments/${props.arg.var}/UnwrapClass`
+        let argVar = props.arg.var;
+        if (props.arg.type.startsWith("array")) {
+            if ((props.arg as CMDArrayArg).item?.type.startsWith("@")) {
+                argVar += "[]";
+            }
+        } else if (props.arg.type.startsWith("dict")) {
+            if ((props.arg as CMDDictArg).item?.type.startsWith("@")) {
+                argVar += "{}"
+            }
+        }
+
+        const flattenUrl = `${props.commandUrl}/Arguments/${argVar}/UnwrapClass`
 
         axios.post(flattenUrl).then(res => {
             setUpdating(false);
@@ -1279,7 +1290,7 @@ function UnwrapClsDialog(props: {
             <DialogTitle>Unwrap Class Type </DialogTitle>
             <DialogContent dividers={true}>
                 {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
-                <ArgTypeTypography>{props.arg.type.slice(1)}</ArgTypeTypography>
+                <ArgTypeTypography>{props.arg.type}</ArgTypeTypography>
             </DialogContent>
             <DialogActions>
                 {updating &&
