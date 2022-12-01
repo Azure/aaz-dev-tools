@@ -360,6 +360,7 @@ if __name__ == '__main__':
     resource_info = {
         "resourceType": "virtualMachines",
         "apiVersion": "2021-11-01",
+        "confirmation": True,
         "learnMore": {
             "url": "https://docs.microsoft.com/cli/azure/vm"
         },
@@ -369,6 +370,7 @@ if __name__ == '__main__':
         "properties": {
             "resourceType": {"type": "string"},
             "apiVersion": {"type": "string"},
+            "confirmation": {"type": "boolean"},
             "learnMore": {
                 "type": "object",
                 "properties": {
