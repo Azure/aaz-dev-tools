@@ -655,38 +655,26 @@ class WorkspaceManager:
             return True
         return False
 
-    def add_subresource_by_arg_var(self, resource_id, version, arg_var):
+    def add_subresource_by_arg_var(self, resource_id, version, arg_var, cg_names, ref_args_options):
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if not cfg_editor:
             raise exceptions.InvalidAPIUsage(f"Resource not exist: resource_id={resource_id} version={version}")
 
-        cfg_editor.build_subresource_commands_by_arg_var(resource_id, arg_var)
-        # TODO: update command tree
-
-    def _convert_arg_var_to_subresource_index(self, arg_var):
-        pass
-
-    def _build_subresource_selector(self, subresource):
-        pass
-
-    # Array:
-    #   list
-    #   add
-    #   update
-    #   remove
-    # Object:
-    #   show
-    #   create (add)
-    #   update
-    #   delete (remove)
+        self.remove_cfg(cfg_editor)
+        cfg_editor.build_subresource_commands_by_arg_var(resource_id, arg_var, cg_names, ref_args_options)
+        self.add_cfg(cfg_editor)
 
     def remove_subresource(self, resource_id, version, subresource):
-        # TODO:
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if not cfg_editor:
             return False
+        if not subresource:
+            raise exceptions.InvalidAPIUsage(f"Invalid subresource: '{subresource}'")
 
-        pass
+        self.remove_cfg(cfg_editor)
+        removed_commands = cfg_editor.remove_subresource_commands(resource_id, version, subresource)
+        self.add_cfg(cfg_editor)
+        return len(removed_commands) > 0
 
     def list_commands_by_subresource(self, resource_id, version, subresource):
         commands = []

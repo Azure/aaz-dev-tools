@@ -532,9 +532,11 @@ def editor_workspace_subresources(name, resource_id, version):
     data = request.get_json()
     try:
         arg_var = data['arg']
+        cg_names = [nm for nm in data['commandGroupName'].split(' ') if nm]
+        ref_args_options = data.get('refArgsOptions', None)
     except KeyError:
         raise exceptions.InvalidAPIUsage("Invalid request")
-    manager.add_subresource_by_arg_var(resource_id, version, arg_var)
+    manager.add_subresource_by_arg_var(resource_id, version, arg_var, cg_names, ref_args_options)
     manager.save()
     return "", 200
 
@@ -552,14 +554,12 @@ def editor_workspace_subresource(name, resource_id, version, subresource):
 
 @bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>/Subresources/<base64:subresource>/Commands", methods=("GET",))
 def list_workspace_subresource_related_commands(name, resource_id, version, subresource):
-    # remove commands of of subresource
-    # manager = WorkspaceManager(name)
-    # manager.load()
-    # if not manager.remove_resource(resource_id, version):
-    #     return "", 204
-    # manager.save()
-    # return "", 200
-    pass
+    # list commands of subresource
+    manager = WorkspaceManager(name)
+    manager.load()
+    commands = manager.list_commands_by_subresource(resource_id, version, subresource)
+    result = [command.to_primitive() for command in commands]
+    return jsonify(result)
 
 
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Try", methods=("POST",))

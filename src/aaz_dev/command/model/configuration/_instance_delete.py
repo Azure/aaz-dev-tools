@@ -3,7 +3,9 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 from schematics.models import Model
+from schematics.types import ModelType
 
+from ._content import CMDRequestJson
 from ._fields import CMDVariantField
 
 
@@ -39,15 +41,13 @@ class CMDJsonInstanceDeleteAction(CMDInstanceDeleteAction):
     POLYMORPHIC_KEY = "json"
 
     # # properties as nodes
-    # json = ModelType(CMDRequestJson, required=True)
+    json = ModelType(CMDRequestJson, required=True)
 
     def generate_args(self, ref_args):
-        return []
+        return self.json.generate_args(ref_args)
 
     def reformat(self, **kwargs):
-        pass
-        # self.json.reformat(**kwargs)
+        self.json.reformat(**kwargs)
 
     def register_cls(self, **kwargs):
-        pass
-        # self.json.register_cls(**kwargs)
+        self.json.register_cls(**kwargs)

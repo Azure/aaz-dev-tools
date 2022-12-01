@@ -4,10 +4,9 @@
 # --------------------------------------------------------------------------------------------
 
 from schematics.models import Model
-from schematics.types import ModelType
 
 from ._fields import CMDVariantField
-from ._selector_index import CMDSelectorIndex
+from ._selector_index import CMDSelectorIndexField
 
 
 class CMDSubresourceSelector(Model):
@@ -101,7 +100,7 @@ class CMDJsonSubresourceSelector(CMDSubresourceSelector):
     POLYMORPHIC_KEY = "json"
 
     # properties as nodes
-    json = ModelType(CMDSelectorIndex, required=True)
+    json = CMDSelectorIndexField(required=True)
 
     def generate_args(self, ref_args):
         return self.json.generate_args(ref_args, "$")

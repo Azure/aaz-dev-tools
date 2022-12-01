@@ -806,7 +806,28 @@ class WorkspaceCfgEditor(CfgReader):
         for cmd_names, ref_cmd_names in command_rename_list:
             self.rename_command(*cmd_names, new_cmd_names=ref_cmd_names)
 
-    def build_subresource_commands_by_arg_var(self, resource_id, arg_var, cg_names, ref_options=None):
+    def remove_subresource_commands(self, resource_id, version, subresource):
+        commands = []
+
+        cmd_names_list = [cmd_names for cmd_names, _ in self.iter_commands_by_resource(resource_id, subresource, version)]
+        if not cmd_names_list:
+            return commands
+
+        for cmd_names in cmd_names_list:
+            commands.append(self._remove_command(*cmd_names))
+
+        self.reformat()
+        return commands
+
+    def build_subresource_commands_by_arg_var(self, resource_id, arg_var, cg_names, ref_args_options=None):
+        """
+
+        :param resource_id:
+        :param arg_var:
+        :param cg_names: command group name for subresource commands
+        :param ref_args_options: reference argument options
+        :return:
+        """
         if isinstance(cg_names, str):
             cg_names = [w for w in cg_names.split(' ') if w]
 
@@ -828,10 +849,6 @@ class WorkspaceCfgEditor(CfgReader):
 
         if not arg or not arg_idx:
             raise exceptions.InvalidAPIUsage(f"Argument '{arg_var}' not exist in command '{' '.join(update_cmd_name)}'")
-
-        # if isinstance(arg, CMDArrayArgBase) and isinstance(arg.item, CMDClsArgBase):
-        #     raise exceptions.InvalidAPIUsage(f"Not support array<class> arg={arg_var}, please unwrap it first.")
-        # if isinstance(arg, CMD)
 
         get_op = None
         put_op = None
@@ -890,7 +907,7 @@ class WorkspaceCfgEditor(CfgReader):
         def _build_subresource_list_or_show_command(_subresource_idx, _ref_args):
             _sub_command = _build_sub_command_base(_subresource_idx)
             _sub_command.operations = [get_op.__class__(raw_data=get_op.to_native())]
-            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_options)
+            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_args_options)
             _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
             _sub_command.link()
             return _sub_command
@@ -926,7 +943,7 @@ class WorkspaceCfgEditor(CfgReader):
                 _instance_op,
                 put_op.__class__(raw_data=put_op.to_native()),
             ]
-            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_options)
+            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_args_options)
             _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
             _sub_command.link()
             return _sub_command
@@ -961,7 +978,7 @@ class WorkspaceCfgEditor(CfgReader):
                 _instance_op,
                 put_op.__class__(raw_data=put_op.to_native()),
             ]
-            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_options)
+            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_args_options)
             _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
             _sub_command.link()
             return _sub_command
@@ -969,17 +986,15 @@ class WorkspaceCfgEditor(CfgReader):
         def _build_subresource_delete_command(_subresource_idx, _ref_args):
             _sub_command = _build_sub_command_base(_subresource_idx)
             _instance_op = CMDInstanceDeleteOperation()
-            _instance_op.instance_delete = CMDJsonInstanceDeleteAction(
-                raw_data={
-                    "ref": _sub_command.subresource_selector.var,
-                }
-            )
+            _instance_op.instance_delete = CMDJsonInstanceDeleteAction()
+            _instance_op.instance_delete.ref = _sub_command.subresource_selector.var
+            _instance_op.instance_delete.json = CMDRequestJson()
             _sub_command.operations = [
                 get_op.__class__(raw_data=get_op.to_native()),
                 _instance_op,
                 put_op.__class__(raw_data=put_op.to_native()),
             ]
-            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_options)
+            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_args_options)
             _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
             _sub_command.link()
             return _sub_command
@@ -1095,6 +1110,8 @@ class WorkspaceCfgEditor(CfgReader):
             self._add_command(*cg_names, show_command.name, command=show_command)
         else:
             raise NotImplementedError()
+
+        self.reformat()
 
     def _build_subresource_selector(self, response_json, update_json, subresource_idx):
         assert isinstance(response_json, CMDResponseJson)
