@@ -80,10 +80,10 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         this.loadWorkspace();
     }
 
-    loadWorkspace = async (preSelected?: CommandGroup | Command | null) => {
+    loadWorkspace = async (preSelectedId?: string | null) => {
         const { workspaceUrl } = this.state
-        if (preSelected === undefined) {
-            preSelected = this.state.selected;
+        if (preSelectedId === undefined) {
+            preSelectedId = this.state.selected?.id;
         }
 
         try {
@@ -156,9 +156,9 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
 
             let selected: Command | CommandGroup | null = null;
 
-            if (preSelected != null) {
-                if (preSelected.id.startsWith('command:')) {
-                    let id: string = preSelected.id;
+            if (preSelectedId != null) {
+                if (preSelectedId.startsWith('command:')) {
+                    let id: string = preSelectedId;
                     if (id in commandMap) {
                         selected = commandMap[id];
                     } else {
@@ -172,8 +172,8 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                             selected = commandGroupMap[id];
                         }
                     }
-                } else if (preSelected.id.startsWith('group:')) {
-                    let id_1: string = preSelected.id;
+                } else if (preSelectedId.startsWith('group:')) {
+                    let id_1: string = preSelectedId;
                     let parts_1 = id_1.split('/');
                     while (parts_1.length > 1 && !(id_1 in commandGroupMap)) {
                         parts_1 = parts_1.slice(0, -1);
@@ -342,11 +342,11 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 
     handleCommandGroupUpdate = (commandGroup: CommandGroup | null) => {
-        this.loadWorkspace(commandGroup);
+        this.loadWorkspace(commandGroup?.id);
     }
 
     handleCommandUpdate = (command: Command | null) => {
-        this.loadWorkspace(command);
+        this.loadWorkspace(command?.id);
     }
 
     handleCommandTreeToggle = (nodeIds: string[]) => {
@@ -404,7 +404,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                         }
                         {selected != null && selected.id.startsWith('command:') &&
                             <WSEditorCommandContent
-                                workspaceUrl={workspaceUrl} command={(selected as Command)}
+                                workspaceUrl={workspaceUrl} previewCommand={(selected as Command)}
                                 reloadTimestamp={reloadTimestamp!}
                                 onUpdateCommand={this.handleCommandUpdate}
                             />

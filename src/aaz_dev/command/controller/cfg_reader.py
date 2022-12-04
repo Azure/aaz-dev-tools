@@ -86,7 +86,7 @@ class CfgReader:
                         yield cmd_names, command
             if command_group.command_groups:
                 for group in command_group.command_groups:
-                    groups.append(([*node_names, group.name], group))
+                    groups.append(([*node_names, *group.name.split(" ")], group))
             idx += 1
 
     def iter_commands_by_resource(self, resource_id, subresource=None, version=None):

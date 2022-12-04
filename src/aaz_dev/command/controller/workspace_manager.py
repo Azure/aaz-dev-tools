@@ -192,6 +192,9 @@ class WorkspaceManager:
         idx = 0
         while idx < len(node_names):
             name = node_names[idx]
+            if node.commands and name in node.commands:
+                raise exceptions.InvalidAPIUsage(
+                    f"Failed to create command group, '{' '.join(node_names[:idx+1])}' is command")
             if not node.command_groups or name not in node.command_groups:
                 if not node.command_groups:
                     node.command_groups = {}
@@ -656,6 +659,7 @@ class WorkspaceManager:
         return False
 
     def add_subresource_by_arg_var(self, resource_id, version, arg_var, cg_names, ref_args_options):
+
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if not cfg_editor:
             raise exceptions.InvalidAPIUsage(f"Resource not exist: resource_id={resource_id} version={version}")

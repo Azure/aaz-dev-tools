@@ -7,73 +7,83 @@ import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import EditIcon from '@mui/icons-material/Edit';
 import ImportExportIcon from '@mui/icons-material/ImportExport';
 import CallSplitSharpIcon from '@mui/icons-material/CallSplitSharp';
+import AddIcon from '@mui/icons-material/Add';
 import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from './argument/WSECArgumentSimilarPicker';
+import pluralize from 'pluralize';
 
 
 function WSEditorCommandArgumentsContent(props: {
     commandUrl: string,
-    reloadTimestamp: number,
+    args: CMDArg[],
+    clsArgDefineMap: ClsArgDefinitionMap,
+    onReloadArgs: () => Promise<void>,
+    onAddSubCommand: (argVar: string, argStackNames: string[]) => void,
 }) {
 
-    const [args, setArgs] = useState<CMDArg[]>([]);
     const [displayArgumentDialog, setDisplayArgumentDialog] = useState<boolean>(false);
     const [editArg, setEditArg] = useState<CMDArg | undefined>(undefined);
+    const [editArgIdxStack, setEditArgIdxStack] = useState<ArgIdx[] | undefined>(undefined);
     const [displayFlattenDialog, setDisplayFlattenDialog] = useState<boolean>(false);
     const [displayUnwrapClsDialog, setDisplayUnwrapClsDialog] = useState<boolean>(false);
-    const [clsArgDefineMap, setClsArgDefineMap] = useState<ClsArgDefinitionMap>({});
 
-    const refreshData = () => {
-        axios.get(props.commandUrl)
-            .then(res => {
-                const { args, clsDefineMap } = decodeResponse(res.data);
-                setArgs(args);
-                setClsArgDefineMap(clsDefineMap);
-            }).catch(err => console.error(err));
-    }
-
-    useEffect(() => {
-        refreshData();
-    }, [props.commandUrl, props.reloadTimestamp]);
-
-    const handleArgumentDialogClose = (updated: boolean) => {
-        setDisplayArgumentDialog(false);
-        setDisplayFlattenDialog(false);
-        setDisplayUnwrapClsDialog(false);
-        setEditArg(undefined);
+    const handleArgumentDialogClose = async (updated: boolean) => {
         if (updated) {
-            refreshData();
+            props.onReloadArgs();
         }
+        setDisplayArgumentDialog(false);
+        setEditArg(undefined);
+        setEditArgIdxStack(undefined);
     }
 
-    const handleEditArgument = (arg: CMDArg) => {
+    const handleEditArgument = (arg: CMDArg, argIdxStack: ArgIdx[]) => {
         setEditArg(arg)
+        setEditArgIdxStack(argIdxStack)
         setDisplayArgumentDialog(true)
     }
 
-    const handleFlattenDialogClose = (flattened: boolean) => {
-        setDisplayFlattenDialog(false)
-        setEditArg(undefined);
+    const handleFlattenDialogClose = async (flattened: boolean) => {
         if (flattened) {
-            refreshData();
+            props.onReloadArgs()
         }
+        setDisplayFlattenDialog(false);
+        setEditArg(undefined);
+        setEditArgIdxStack(undefined);
     }
 
-    const handleArgumentFlatten = (arg: CMDArg) => {
+    const handleArgumentFlatten = (arg: CMDArg, argIdxStack: ArgIdx[]) => {
         setEditArg(arg)
+        setEditArgIdxStack(argIdxStack)
         setDisplayFlattenDialog(true)
     }
 
-    const handleUnwrapClsDialogClose = (unwrapped: boolean) => {
-        setDisplayUnwrapClsDialog(false)
-        setEditArg(undefined);
+    const handleUnwrapClsDialogClose = async (unwrapped: boolean) => {        
         if (unwrapped) {
-            refreshData();
+            props.onReloadArgs();
         }
+        setDisplayUnwrapClsDialog(false);
+        setEditArg(undefined);
+        setEditArgIdxStack(undefined);
     }
 
-    const handleUnwrapClsArgument = (arg: CMDArg) => {
+    const handleUnwrapClsArgument = (arg: CMDArg, argIdxStack: ArgIdx[]) => {
         setEditArg(arg)
+        setEditArgIdxStack(argIdxStack)
         setDisplayUnwrapClsDialog(true)
+    }
+
+    const handleAddSubcommand = (arg: CMDArg, argIdxStack: ArgIdx[]) => {
+        let argStackNames = argIdxStack.map(argIdx => {
+            let name = argIdx.displayKey;
+            while (name.startsWith('-')) {
+                name = name.slice(1)
+            }
+            if (name.endsWith('[]') || name.endsWith('{}')) {
+                name = name.slice(0, name.length-2)
+                name = pluralize.singular(name)
+            }
+            return name
+        });
+        props.onAddSubCommand(arg.var, argStackNames);
     }
 
     return (
@@ -94,11 +104,11 @@ function WSEditorCommandArgumentsContent(props: {
                         [ ARGUMENT ]
                     </CardTitleTypography>
                 </Box>
-                <ArgumentNavigation commandUrl={props.commandUrl} args={args} clsArgDefineMap={clsArgDefineMap} onEdit={handleEditArgument} onFlatten={handleArgumentFlatten} onUnwrap={handleUnwrapClsArgument} />
+                <ArgumentNavigation commandUrl={props.commandUrl} args={props.args} clsArgDefineMap={props.clsArgDefineMap} onEdit={handleEditArgument} onFlatten={handleArgumentFlatten} onUnwrap={handleUnwrapClsArgument} onAddSubcommand={handleAddSubcommand} />
             </CardContent>
 
-            {displayArgumentDialog && <ArgumentDialog commandUrl={props.commandUrl} arg={editArg!} clsArgDefineMap={clsArgDefineMap} open={displayArgumentDialog} onClose={handleArgumentDialogClose} />}
-            {displayFlattenDialog && <FlattenDialog commandUrl={props.commandUrl} arg={editArg!} clsArgDefineMap={clsArgDefineMap} open={displayFlattenDialog} onClose={handleFlattenDialogClose} />}
+            {displayArgumentDialog && <ArgumentDialog commandUrl={props.commandUrl} arg={editArg!} clsArgDefineMap={props.clsArgDefineMap} open={displayArgumentDialog} onClose={handleArgumentDialogClose} />}
+            {displayFlattenDialog && <FlattenDialog commandUrl={props.commandUrl} arg={editArg!} clsArgDefineMap={props.clsArgDefineMap} open={displayFlattenDialog} onClose={handleFlattenDialogClose} />}
             {displayUnwrapClsDialog && <UnwrapClsDialog commandUrl={props.commandUrl} arg={editArg!} open={displayUnwrapClsDialog} onClose={handleUnwrapClsDialogClose} />}
         </React.Fragment>
     )
@@ -114,9 +124,10 @@ function ArgumentNavigation(props: {
     commandUrl: string,
     args: CMDArg[],
     clsArgDefineMap: ClsArgDefinitionMap,
-    onEdit: (arg: CMDArg) => void,
-    onFlatten: (arg: CMDArg) => void,
-    onUnwrap: (arg: CMDArg) => void,
+    onEdit: (arg: CMDArg, argIdxStack: ArgIdx[]) => void,
+    onFlatten: (arg: CMDArg, argIdxStack: ArgIdx[]) => void,
+    onUnwrap: (arg: CMDArg, argIdxStack: ArgIdx[]) => void,
+    onAddSubcommand: (arg: CMDArg, argIdxStack: ArgIdx[]) => void,
 }) {
     const [argIdxStack, setArgIdxStack] = useState<ArgIdx[]>([]);
 
@@ -272,8 +283,8 @@ function ArgumentNavigation(props: {
                 <ArgumentReviewer
                     arg={selectedArg}
                     depth={argIdxStack.length}
-                    onEdit={() => { props.onEdit(selectedArg) }}
-                    onUnwrap={() => { props.onUnwrap(selectedArg) }}
+                    onEdit={() => { props.onEdit(selectedArg, argIdxStack) }}
+                    onUnwrap={() => { props.onUnwrap(selectedArg, argIdxStack) }}
                 />
             </React.Fragment>
         )
@@ -288,6 +299,7 @@ function ArgumentNavigation(props: {
                 title={"Argument Groups"}
                 args={props.args}
                 onFlatten={undefined}
+                onAddSubcommand={undefined}
                 depth={argIdxStack.length}
                 onSelectSubArg={handleSelectSubArg}
             />)
@@ -307,8 +319,9 @@ function ArgumentNavigation(props: {
                 depth={argIdxStack.length}
                 selectedArg={selectedArg!}
                 onFlatten={canFlatten ? () => {
-                    props.onFlatten(selectedArg!)
+                    props.onFlatten(selectedArg!, argIdxStack)
                 } : undefined}
+                onAddSubcommand={() => { props.onAddSubcommand(selectedArg!, argIdxStack) }}
                 onSelectSubArg={handleSelectSubArg}
             />)
         }
@@ -506,7 +519,6 @@ function ArgumentReviewer(props: {
         return null;
     }
 
-
     return (<React.Fragment>
         <Box
             sx={{
@@ -530,7 +542,6 @@ function ArgumentReviewer(props: {
                 >
                     <ArgEditTypography>Edit</ArgEditTypography>
                 </Button>
-
             </Box>
 
             <Box sx={{
@@ -587,7 +598,7 @@ function ArgumentDialog(props: {
     arg: CMDArg,
     clsArgDefineMap: ClsArgDefinitionMap,
     open: boolean,
-    onClose: (updated: boolean) => void,
+    onClose: (updated: boolean) => Promise<void>,
 }) {
     const [updating, setUpdating] = useState<boolean>(false);
     const [stage, setStage] = useState<string>("");
@@ -691,8 +702,7 @@ function ArgumentDialog(props: {
         }
     }
 
-    const handleModify = (event: any) => {
-
+    const handleModify = async (event: any) => {
         const data = verifyModification();
         if (data === undefined) {
             return;
@@ -702,13 +712,14 @@ function ArgumentDialog(props: {
 
         const argumentUrl = `${props.commandUrl}/Arguments/${props.arg.var}`
 
-        axios.patch(argumentUrl, {
-            ...data,
-        }).then(res => {
+        try {
+            let res = await axios.patch(argumentUrl, {
+                ...data,
+            });
             let newArg = decodeArg(res.data).arg;
             setUpdating(false);
-            props.onClose(true);
-        }).catch(err => {
+            await props.onClose(true);
+        } catch (err: any) {
             console.error(err.response);
             if (err.response?.data?.message) {
                 const data = err.response!.data!;
@@ -717,7 +728,7 @@ function ArgumentDialog(props: {
                 );
             }
             setUpdating(false);
-        });
+        }
     }
 
     const handleDisplaySimilar = () => {
@@ -787,11 +798,12 @@ function ArgumentDialog(props: {
             }
         }
 
-        setUpdating(false);
         if (invalidText.length > 0) {
             setInvalidText(invalidText);
+            setUpdating(false);
         } else {
-            props.onClose(true);
+            setUpdating(false);
+            await props.onClose(true);
         }
     }
 
@@ -998,7 +1010,7 @@ function FlattenDialog(props: {
     arg: CMDArg,
     clsArgDefineMap: ClsArgDefinitionMap,
     open: boolean,
-    onClose: (flattened: boolean) => void,
+    onClose: (flattened: boolean) => Promise<void>,
 }) {
     const [updating, setUpdating] = useState<boolean>(false);
     const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
@@ -1064,7 +1076,7 @@ function FlattenDialog(props: {
         }
     }
 
-    const handleFlatten = () => {
+    const handleFlatten = async () => {
         const data = verifyFlatten();
         if (data === undefined) {
             return;
@@ -1074,12 +1086,13 @@ function FlattenDialog(props: {
 
         const flattenUrl = `${props.commandUrl}/Arguments/${props.arg.var}/Flatten`
 
-        axios.post(flattenUrl, {
-            ...data
-        }).then(res => {
+        try {
+            await axios.post(flattenUrl, {
+                ...data
+            });
             setUpdating(false);
-            props.onClose(true);
-        }).catch(err => {
+            await props.onClose(true);
+        } catch (err: any) {
             console.error(err.response);
             if (err.response?.data?.message) {
                 const data = err.response!.data!;
@@ -1088,7 +1101,7 @@ function FlattenDialog(props: {
                 );
             }
             setUpdating(false);
-        });
+        }
     }
 
     const handleDisplaySimilar = () => {
@@ -1158,11 +1171,12 @@ function FlattenDialog(props: {
             }
         }
 
-        setUpdating(false);
         if (invalidText.length > 0) {
             setInvalidText(invalidText);
+            setUpdating(false);
         } else {
-            props.onClose(true);
+            setUpdating(false);
+            await props.onClose(true);
         }
     }
 
@@ -1240,7 +1254,7 @@ function UnwrapClsDialog(props: {
     commandUrl: string,
     arg: CMDArg,
     open: boolean,
-    onClose: (unwrapped: boolean) => void,
+    onClose: (unwrapped: boolean) => Promise<void>,
 }) {
     const [updating, setUpdating] = useState<boolean>(false);
     const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
@@ -1250,7 +1264,7 @@ function UnwrapClsDialog(props: {
         props.onClose(false);
     }
 
-    const handleUnwrap = () => {
+    const handleUnwrap = async () => {
         setUpdating(true);
 
         let argVar = props.arg.var;
@@ -1266,10 +1280,11 @@ function UnwrapClsDialog(props: {
 
         const flattenUrl = `${props.commandUrl}/Arguments/${argVar}/UnwrapClass`
 
-        axios.post(flattenUrl).then(res => {
+        try {
+            await axios.post(flattenUrl);
             setUpdating(false);
-            props.onClose(true);
-        }).catch(err => {
+            await props.onClose(true);
+        } catch (err: any) {
             console.error(err.response);
             if (err.response?.data?.message) {
                 const data = err.response!.data!;
@@ -1278,7 +1293,7 @@ function UnwrapClsDialog(props: {
                 );
             }
             setUpdating(false);
-        });
+        }
     }
 
     return (
@@ -1307,6 +1322,7 @@ function UnwrapClsDialog(props: {
     )
 
 }
+
 
 const PropArgTypeTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     color: theme.palette.primary.main,
@@ -1362,8 +1378,8 @@ function ArgumentPropsReviewer(props: {
     title: string,
     args: CMDArg[],
     onFlatten?: () => void,
+    onAddSubcommand?: () => void,
     selectedArg?: CMDArg,
-    // onUnflatten?: () => void,
     depth: number,
     onSelectSubArg: (subArgVar: string) => void,
 }) {
@@ -1395,6 +1411,13 @@ function ArgumentPropsReviewer(props: {
         })
     }
     groups.sort((a, b) => a.name.localeCompare(b.name));
+
+    const checkCanAddSubcommand = () => {
+        if (props.selectedArg && props.args.length > 0) {
+            return true;
+        }
+        return false;
+    }
 
     const buildArg = (arg: CMDArg, idx: number) => {
         const argOptionsString = spliceArgOptionsString(arg, props.depth);
@@ -1507,16 +1530,23 @@ function ArgumentPropsReviewer(props: {
                 startIcon={<CallSplitSharpIcon color="info" fontSize='small' />}
                 onClick={props.onFlatten}
             >
-                {!props.selectedArg?.type.startsWith("@") && <ArgEditTypography>Flatten</ArgEditTypography> }
-                {props.selectedArg?.type.startsWith("@") && <ArgEditTypography>Unwrap & Flatten</ArgEditTypography> }
+                <ArgEditTypography>Flatten</ArgEditTypography>
             </Button>}
 
             {/* {props.onUnflatten !== undefined && <Button sx={{ flexShrink: 0, ml: 3 }}
-                    startIcon={<CallMergeSharpIcon color="info" fontSize='small' />}
-                    onClick={props.onUnflatten}
-                >
-                    <ArgEditTypography>Unflatten</ArgEditTypography>
+                startIcon={<CallMergeSharpIcon color="info" fontSize='small' />}
+                onClick={props.onUnflatten}
+            >
+                <ArgEditTypography>Unflatten</ArgEditTypography>
             </Button>} */}
+
+            {props.onAddSubcommand !== undefined && checkCanAddSubcommand() && <Button sx={{ flexShrink: 0, ml: 3 }}
+                startIcon={<AddIcon color="info" fontSize='small' />}
+                onClick={props.onAddSubcommand}
+            >
+                <ArgEditTypography>Subcommands</ArgEditTypography>
+            </Button>}
+
         </Box>
         {groups.map(buildArgGroup)}
     </React.Fragment>)
@@ -2049,10 +2079,10 @@ function convertArgDefaultText(defaultText: string, argBase: CMDArgBase): any {
     }
 }
 
-function decodeResponse(responseCommand: any): { args: CMDArg[], clsDefineMap: ClsArgDefinitionMap } {
+const DecodeArgs = (argGroups: any[]): { args: CMDArg[], clsArgDefineMap: ClsArgDefinitionMap} => {
     let clsDefineMap: ClsArgDefinitionMap = {};
     const args: CMDArg[] = [];
-    responseCommand.argGroups.forEach((argGroup: any) => {
+    argGroups.forEach((argGroup: any) => {
         args.push(...argGroup.args.map((resArg: any) => {
             const argDecode = decodeArg(resArg);
             clsDefineMap = {
@@ -2064,8 +2094,10 @@ function decodeResponse(responseCommand: any): { args: CMDArg[], clsDefineMap: C
     })
     return {
         args: args,
-        clsDefineMap: clsDefineMap,
+        clsArgDefineMap: clsDefineMap,
     }
 }
 
 export default WSEditorCommandArgumentsContent;
+export {DecodeArgs}
+export type {CMDArg, ClsArgDefinitionMap};
