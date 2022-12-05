@@ -42,30 +42,22 @@ class AzModuleManager:
             return False
         return True
 
-    def iter_module_cmd_registered(self, node, *names):
-        idx = 0
-
-        while idx < len(names):
-            name = names[idx]
-            if not node.command_groups or name not in node.command_groups:
-                break
-            node = node.command_groups[name]
-            idx += 1
+    def find_module_cmd_registered(self, node):
         group_nodes = deque()
         group_nodes.append(node)
-        res = []
+        registered_cmds = []
 
         while len(group_nodes) > 0:
             group_node = group_nodes.popleft()
-            if group_node.command_groups is not None:
+            if 'command_groups' in group_node and group_node.command_groups is not None:
                 for group in group_node.command_groups:
                     group_nodes.append(group_node.command_groups[group])
-            if group_node.commands is not None:
+            if 'commands' in group_node and group_node.commands is not None:
                 for command in group_node.commands:
                     cmd_node = group_node.commands[command]
                     if cmd_node.registered:
-                        res.append(cmd_node.names + [cmd_node.version])
-        return res
+                        registered_cmds.append(cmd_node.names + [cmd_node.version])
+        return registered_cmds
 
     def find_cmd_registered_version(self, node, *names):
         idx = 0

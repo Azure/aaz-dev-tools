@@ -48,7 +48,7 @@ class PortalCliGenerator:
         if swagger_provider_ind == -1:
             logger.warning("please check cmd " + " ".join(leaf.names) + " resource id: " + swagger_path)
             return
-        folder_end_ind = swagger_path[swagger_provider_ind:].rfind("{", )
+        folder_end_ind = swagger_path.rfind("{", swagger_provider_ind)
         resource_paths = re.finditer(self.RESOURCE_PATH_PATTERN, swagger_path[swagger_provider_ind:folder_end_ind])
         resource_type = ""
         for resource_match in resource_paths:
