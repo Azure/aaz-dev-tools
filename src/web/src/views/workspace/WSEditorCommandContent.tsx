@@ -500,17 +500,38 @@ function CommandDeleteDialog(props: {
     const [updating, setUpdating] = React.useState<boolean>(false);
     const [relatedCommands, setRelatedCommands] = React.useState<string[]>([]);
 
-    React.useEffect(() => {
-        setRelatedCommands([]);
-        const urls = props.command.resources.map(resource => {
+    const getUrls = () => {
+        let urls: string[] = [];
+
+        props.command.resources.forEach(resource => {
             const resourceId = btoa(resource.id)
             const version = btoa(resource.version)
-            return `${props.workspaceUrl}/Resources/${resourceId}/V/${version}`
+            if (resource.subresource !== undefined) {
+                let subresource = btoa(resource.subresource)
+                // TODO: delete list command together with crud
+                // if (resource.subresource.endsWith('[]') || resource.subresource.endsWith('{}')) {
+                //     let subresource2 = btoa(resource.subresource.slice(0, -2))
+                //     urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource2}`)
+                // } else {
+                //     let subresource2 = btoa(resource.subresource + '[]');
+                //     urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource2}`)
+                //     subresource2 = btoa(resource.subresource + '{}');
+                //     urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource2}`)
+                // }
+                urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource}`)
+            } else {
+                urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}`)
+            }
         })
+        return urls;
+    }
+
+    React.useEffect(() => {
+        setRelatedCommands([]);
+        const urls = getUrls();
         const promisesAll = urls.map(url => {
             return axios.get(`${url}/Commands`)
         })
-
         Promise.all(promisesAll)
             .then(responses => {
                 const commands = new Set<string>();
@@ -537,15 +558,10 @@ function CommandDeleteDialog(props: {
     }
     const handleDelete = () => {
         setUpdating(true);
-        const urls = props.command.resources.map(resource => {
-            const resourceId = btoa(resource.id)
-            const version = btoa(resource.version)
-            return `${props.workspaceUrl}/Resources/${resourceId}/V/${version}`
-        })
+        const urls = getUrls();
         const promisesAll = urls.map(url => {
             return axios.delete(url)
         })
-
         Promise.all(promisesAll)
             .then(res => {
                 setUpdating(false);
