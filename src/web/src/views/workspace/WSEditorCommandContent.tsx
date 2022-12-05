@@ -137,10 +137,12 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         try {
             let res = await axios.get(leafUrl);
             let command = DecodeResponseCommand(res.data);
-            this.setState({
-                loading: false,
-                command: command
-            })
+            if (command.id === this.props.previewCommand.id) {
+                this.setState({
+                    loading: false,
+                    command: command
+                })
+            }
         } catch (err: any) {
             this.setState({ loading: false })
             console.error(err)
