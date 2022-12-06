@@ -72,6 +72,9 @@ class {{ leaf.cls_name }}(
 
     def _handler(self, command_args):
         super()._handler(command_args)
+        {%- for selector in leaf.selectors %}
+        self.{{selector.cls_name}}(ctx=self.ctx, name={{selector.name|constant_convert}})
+        {%- endfor %}
         {%- if leaf.lro_counts > 0 %}
         return self.build_lro_poller(self._execute_operations, {% if leaf.has_outputs() %}self._output{% else %}None{% endif %})
         {%- elif leaf.paging %}
@@ -198,7 +201,11 @@ class {{ leaf.cls_name }}(
 
         {%- for op in leaf.operations %}
         {%- if op.name in ("pre_instance_update", "post_instance_update")  %}
+        {%- if op.is_selector_variant %}
+        self.{{ op.name }}({{ op.variant_key }}.required())
+        {%- else %}
         self.{{ op.name }}({{ op.variant_key }})
+        {%- endif %}
         {%- else %}
 
         {%- if op.when is not none and op.when|length %}
@@ -251,6 +258,67 @@ class {{ leaf.cls_name }}(
         return result
         {%- endif %}
     {%- endif %}
+
+    {%- for selector in leaf.selectors %}
+
+    class {{selector.cls_name}}(AAZJsonSelector):
+
+        def get(self):
+            {%- for scope, scope_define, filter_builder, filters, is_end in selector.iter_scopes() %}
+
+            {%- if is_end %}
+            return {{ scope_define }}
+
+            {%- else %}
+            {{ scope }} = {{ scope_define }}
+
+            {%- if filter_builder is not none %}
+            filters = {{ filter_builder }}
+            {%- for key, value, is_constant in filters %}
+            filters = filter(
+                {%- if is_constant %}
+                lambda e: e{{key}} == {{ value|constant_convert }},
+                {%- else %}
+                lambda e: e{{key}} == {{ value }},
+                {%- endif %}
+                filters
+            )
+            {%- endfor %}
+            {%- endif %}
+
+            {%- endif %}
+
+            {%- endfor -%}
+
+        def set(self, value):
+            {%- for scope, scope_define, filter_builder, filters, is_end in selector.iter_scopes() %}
+
+            {%- if is_end %}
+            {{ scope_define }} = value
+            return
+
+            {%- else %}
+            {{ scope }} = {{ scope_define }}
+
+            {%- if filter_builder is not none %}
+            filters = {{ filter_builder }}
+            {%- for key, value, is_constant in filters %}
+            filters = filter(
+                {%- if is_constant %}
+                lambda e: e{{key}} == {{ value|constant_convert }},
+                {%- else %}
+                lambda e: e{{key}} == {{ value }},
+                {%- endif %}
+                filters
+            )
+            {%- endfor %}
+            {%- endif %}
+
+            {%- endif %}
+
+            {%- endfor -%}
+
+    {%- endfor %}
 
     {%- for op in leaf.http_operations %}
 
@@ -406,7 +474,7 @@ class {{ leaf.cls_name }}(
 
             {%- if op.content.ref is none %}
             {%- if op.content.cls_builder_name is not none %}
-            {{ op.content.cls_builder_name }}({{ op.content.BUILDER_NAME }})
+            {{ leaf.helper_cls_name }}.{{ op.content.cls_builder_name }}({{ op.content.BUILDER_NAME }})
             {%- endif %}
 
             {%- for scope, scope_define, props, discriminators in op.content.iter_scopes() %}
@@ -419,7 +487,7 @@ class {{ leaf.cls_name }}(
 
             {%- for prop_name, prop_type, is_const, const_value, arg_key, prop_type_kwargs, cls_builder_name in props %}
             {% if scope_define is not none %}{{ "    " }}{% endif %}
-            {%- if cls_builder_name is not none %}{{ cls_builder_name }}({% endif %}
+            {%- if cls_builder_name is not none %}{{ leaf.helper_cls_name }}.{{ cls_builder_name }}({% endif %}
             {%- if prop_name != '[]' and prop_name != '{}' -%}
             {%- if is_const -%}
             {{ scope }}.set_const({{ prop_name|constant_convert }}, {{ const_value|constant_convert }}, {{ prop_type }}
@@ -499,7 +567,7 @@ class {{ leaf.cls_name }}(
             )
             {%- endif %}
             {%- if response.schema.cls_builder_name is not none %}
-            {{ response.schema.cls_builder_name }}(cls.{{ response.schema.name }})
+            {{ leaf.helper_cls_name }}.{{ response.schema.cls_builder_name }}(cls.{{ response.schema.name }})
             {%- endif %}
 
             {%- for scope, scope_define, props in response.schema.iter_scopes() %}
@@ -516,7 +584,7 @@ class {{ leaf.cls_name }}(
             )
             {%- endif %}
             {%- if cls_builder_name is not none %}
-            {{ cls_builder_name }}({{ scope }}.{{ prop_name }})
+            {{ leaf.helper_cls_name }}.{{ cls_builder_name }}({{ scope }}.{{ prop_name }})
             {%- endif %}
             {%- endfor %}
 
@@ -529,22 +597,44 @@ class {{ leaf.cls_name }}(
 
     {%- endfor %}
 
-    {%- for op in leaf.json_update_operations %}
+    {%- for op in leaf.json_instance_operations %}
+    {%- if op.__class__.__name__ == "AzJsonUpdateOperationGenerator" or op.__class__.__name__ == "AzJsonCreateOperationGenerator"%}
 
+    {%- if op.__class__.__name__ == "AzJsonUpdateOperationGenerator" %}
     class {{ op.name }}(AAZJsonInstanceUpdateOperation):
 
         def __call__(self, *args, **kwargs):
-            self.{{ op.UPDATER_NAME }}({{ op.variant_key }})
+            {%- if op.is_selector_variant %}
+            self.{{ op.HANDLER_NAME }}({{ op.variant_key }}.required())
+            {%- else %}
+            self.{{ op.HANDLER_NAME }}({{ op.variant_key }})
+            {%- endif %}
 
-        def {{ op.UPDATER_NAME }}(self, instance):
+        def {{ op.HANDLER_NAME }}(self, instance):
             {{ op.VALUE_NAME }}, {{ op.BUILDER_NAME }} = self.new_content_builder(
                 {{ op.arg_key }},
                 value=instance,
                 typ={{ op.typ }}
             )
+    {%- elif op.__class__.__name__ == "AzJsonCreateOperationGenerator" %}
+    class {{ op.name }}(AAZJsonInstanceCreateOperation):
+
+        def __call__(self, *args, **kwargs):
+            {%- if op.is_selector_variant %}
+            {{ op.variant_key }}.set(self.{{ op.HANDLER_NAME }}())
+            {%- else %}
+            {{ op.variant_key }} = self.{{ op.HANDLER_NAME }}()
+            {%- endif %}
+
+        def {{ op.HANDLER_NAME }}(self):
+            {{ op.VALUE_NAME }}, {{ op.BUILDER_NAME }} = self.new_content_builder(
+                {{ op.arg_key }},
+                typ={{ op.typ }}
+            )
+    {%- endif %}
 
             {%- if op.cls_builder_name is not none %}
-            {{ op.cls_builder_name }}({{ op.BUILDER_NAME }})
+            {{ leaf.helper_cls_name }}.{{ op.cls_builder_name }}({{ op.BUILDER_NAME }})
             {%- endif %}
 
             {%- for scope, scope_define, props, discriminators in op.iter_scopes() %}
@@ -557,7 +647,7 @@ class {{ leaf.cls_name }}(
 
             {%- for prop_name, prop_type, is_const, const_value, arg_key, prop_type_kwargs, cls_builder_name in props %}
             {% if scope_define is not none %}{{ "    " }}{% endif %}
-            {%- if cls_builder_name is not none %}{{ cls_builder_name }}({% endif %}
+            {%- if cls_builder_name is not none %}{{ leaf.helper_cls_name }}.{{ cls_builder_name }}({% endif %}
             {%- if prop_name != '[]' and prop_name != '{}' -%}
             {%- if is_const -%}
             {{ scope }}.set_const({{ prop_name|constant_convert }}, {{ const_value|constant_convert }}, {{ prop_type }}
@@ -586,139 +676,149 @@ class {{ leaf.cls_name }}(
             {%- endfor %}
 
             return {{ op.VALUE_NAME }}
+    {%- elif op.__class__.__name__ == "AzJsonDeleteOperationGenerator" %}
 
-    {%- endfor %}
+    class {{ op.name }}(AAZJsonInstanceDeleteOperation):
 
-    {%- if leaf.generic_update_op is not none %}
+        def __call__(self, *args, **kwargs):
+            {%- if op.is_selector_variant %}
+            {{ op.variant_key }}.set(self.{{ op.HANDLER_NAME }}())
+            {%- else %}
+            {{ op.variant_key }} = self.{{ op.HANDLER_NAME }}()
+            {%- endif %}
 
-    class {{ leaf.generic_update_op.name }}(AAZGenericInstanceUpdateOperation):
+    {%- elif op.__class__.__name__ == "AzGenericUpdateOperationGenerator" %}
+
+    class {{ op.name }}(AAZGenericInstanceUpdateOperation):
 
         def __call__(self, *args, **kwargs):
             self._update_instance_by_generic(
-                {{ leaf.generic_update_op.variant_key }},
-                {{ leaf.generic_update_op.arg_key }}
+                {{ op.variant_key }},
+                {{ op.arg_key }}
             )
 
     {%- endif %}
-
-
-{%- for update_cls in leaf.get_update_clses() %}
-{{ "" }}
-{{ "" }}
-def {{ update_cls.builder_name }}({{ update_cls.BUILDER_NAME }}):
-    if {{ update_cls.BUILDER_NAME }} is None:
-        return
-
-    {%- for scope, scope_define, props, discriminators in update_cls.iter_scopes() %}
-
-    {%- if scope_define is not none %}
-
-    {{ scope }} = {{ update_cls.BUILDER_NAME }}.get({{ scope_define|constant_convert }})
-    if {{ scope }} is not None:
-    {%- endif %}
-
-    {%- for prop_name, prop_type, is_const, const_value, arg_key, prop_type_kwargs, cls_builder_name in props %}
-    {% if scope_define is not none %}{{ "    " }}{% endif %}
-    {%- if cls_builder_name is not none %}{{ cls_builder_name }}({% endif %}
-    {%- if prop_name != '[]' and prop_name != '{}' -%}
-    {%- if is_const -%}
-    {{ scope }}.set_const({{ prop_name|constant_convert }}, {{ const_value|constant_convert }}, {{ prop_type }}
-        {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
-        {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
-    {%- else -%}
-    {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}
-        {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
-        {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
-    {%- endif %}
-    {%- elif prop_name == '{}' and prop_type is none -%}
-    {{ scope }}.set_anytype_elements({%- if arg_key is not none %}{{ arg_key|constant_convert }}{% endif %})
-    {%- else -%}
-    {{ scope }}.set_elements({{ prop_type }}
-        {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
-        {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
-    {%- endif %}
-    {%- if cls_builder_name is not none %}){% endif %}
-    {%- endfor %}
-
-    {%- for disc_name, disc_value in discriminators %}
-    {% if scope_define is not none %}{{ "    " }}{% endif -%}
-    {{ scope }}.discriminate_by({{ disc_name|constant_convert }}, {{ disc_value|constant_convert }})
-    {%- endfor %}
-
     {%- endfor %}
 
 
-{%- endfor %}
+class {{ leaf.helper_cls_name }}:
+    """Helper class for {{ leaf.cls_name }}"""
 
-{%- for resp_cls in leaf.get_response_clses() %}
-{{ "" }}
-{{ "" }}
-{{ resp_cls.schema_name }} = None
-{{ "" }}
-{{ "" }}
-def {{ resp_cls.builder_name }}(_schema):
-    global {{ resp_cls.schema_name }}
-    if {{ resp_cls.schema_name }} is not None:
+    {%- for update_cls in leaf.get_update_clses() %}
+
+    @classmethod
+    def {{ update_cls.builder_name }}(cls, {{ update_cls.BUILDER_NAME }}):
+        if {{ update_cls.BUILDER_NAME }} is None:
+            return
+
+        {%- for scope, scope_define, props, discriminators in update_cls.iter_scopes() %}
+
+        {%- if scope_define is not none %}
+
+        {{ scope }} = {{ update_cls.BUILDER_NAME }}.get({{ scope_define|constant_convert }})
+        if {{ scope }} is not None:
+        {%- endif %}
+
+        {%- for prop_name, prop_type, is_const, const_value, arg_key, prop_type_kwargs, cls_builder_name in props %}
+        {% if scope_define is not none %}{{ "    " }}{% endif %}
+        {%- if cls_builder_name is not none %}cls.{{ cls_builder_name }}({% endif %}
+        {%- if prop_name != '[]' and prop_name != '{}' -%}
+        {%- if is_const -%}
+        {{ scope }}.set_const({{ prop_name|constant_convert }}, {{ const_value|constant_convert }}, {{ prop_type }}
+            {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+            {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+        {%- else -%}
+        {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}
+            {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+            {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+        {%- endif %}
+        {%- elif prop_name == '{}' and prop_type is none -%}
+        {{ scope }}.set_anytype_elements({%- if arg_key is not none %}{{ arg_key|constant_convert }}{% endif %})
+        {%- else -%}
+        {{ scope }}.set_elements({{ prop_type }}
+            {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+            {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+        {%- endif %}
+        {%- if cls_builder_name is not none %}){% endif %}
+        {%- endfor %}
+
+        {%- for disc_name, disc_value in discriminators %}
+        {% if scope_define is not none %}{{ "    " }}{% endif -%}
+        {{ scope }}.discriminate_by({{ disc_name|constant_convert }}, {{ disc_value|constant_convert }})
+        {%- endfor %}
+
+        {%- endfor %}
+
+
+    {%- endfor %}
+
+    {%- for resp_cls in leaf.get_response_clses() %}
+
+    {{ resp_cls.schema_name }} = None
+
+    @classmethod
+    def {{ resp_cls.builder_name }}(cls, _schema):
+        if cls.{{ resp_cls.schema_name }} is not None:
+            {%- for prop_name in resp_cls.props %}
+            _schema.{{ prop_name }} = cls.{{ resp_cls.schema_name }}.{{ prop_name }}
+            {%- endfor %}
+            {%- for disc_key, disc_value in resp_cls.discriminators %}
+            _schema.discriminate_by(
+                {{ disc_key|constant_convert }},
+                {{ disc_value|constant_convert }},
+                cls.{{ resp_cls.schema_name }}.discriminate_by(
+                    {{ disc_key|constant_convert }},
+                    {{ disc_value|constant_convert }},
+                )
+            )
+            {%- endfor %}
+            return
+
+        cls.{{ resp_cls.schema_name }} = {{ resp_cls.schema_name }} = {{ resp_cls.typ }}(
+        {%- if not resp_cls.typ_kwargs|length %})
+        {%- else %}
+            {%- for key, value in resp_cls.typ_kwargs.items() %}
+            {{ key }}={{ value|constant_convert }}
+            {%- endfor %}
+        )
+        {%- endif %}
+
+        {%- for scope, scope_define, props in resp_cls.iter_scopes() %}
+
+        {{ scope }} = {{ scope_define }}
+
+        {%- for prop_name, prop_type, prop_kwargs, cls_builder_name in props %}
+        {{ scope }}.{{ prop_name }} = {{ prop_type }}(
+        {%- if not prop_kwargs|length %})
+        {%- else %}
+            {%- for key, value in prop_kwargs.items() %}
+            {{ key }}={{ value|constant_convert }},
+            {%- endfor %}
+        )
+        {%- endif %}
+        {%- if cls_builder_name is not none %}
+        cls.{{ cls_builder_name }}({{ scope }}.{{ prop_name }})
+        {%- endif %}
+        {%- endfor %}
+
+        {%- endfor %}
+        {{- "\n" }}
         {%- for prop_name in resp_cls.props %}
-        _schema.{{ prop_name }} = {{ resp_cls.schema_name }}.{{ prop_name }}
+        _schema.{{ prop_name }} = cls.{{ resp_cls.schema_name }}.{{ prop_name }}
         {%- endfor %}
         {%- for disc_key, disc_value in resp_cls.discriminators %}
         _schema.discriminate_by(
-            {{ disc_key|constant_convert }},
-            {{ disc_value|constant_convert }},
-            {{ resp_cls.schema_name }}.discriminate_by(
                 {{ disc_key|constant_convert }},
                 {{ disc_value|constant_convert }},
+                cls.{{ resp_cls.schema_name }}.discriminate_by(
+                    {{ disc_key|constant_convert }},
+                    {{ disc_value|constant_convert }},
+                )
             )
-        )
         {%- endfor %}
-        return
 
-    {{ resp_cls.schema_name }} = {{ resp_cls.typ }}(
-    {%- if not resp_cls.typ_kwargs|length %})
-    {%- else %}
-        {%- for key, value in resp_cls.typ_kwargs.items() %}
-        {{ key }}={{ value|constant_convert }}
-        {%- endfor %}
-    )
-    {%- endif %}
-
-    {%- for scope, scope_define, props in resp_cls.iter_scopes() %}
-
-    {{ scope }} = {{ scope_define }}
-
-    {%- for prop_name, prop_type, prop_kwargs, cls_builder_name in props %}
-    {{ scope }}.{{ prop_name }} = {{ prop_type }}(
-    {%- if not prop_kwargs|length %})
-    {%- else %}
-        {%- for key, value in prop_kwargs.items() %}
-        {{ key }}={{ value|constant_convert }},
-        {%- endfor %}
-    )
-    {%- endif %}
-    {%- if cls_builder_name is not none %}
-    {{ cls_builder_name }}({{ scope }}.{{ prop_name }})
-    {%- endif %}
-    {%- endfor %}
 
     {%- endfor %}
-    {{- "\n" }}
-    {%- for prop_name in resp_cls.props %}
-    _schema.{{ prop_name }} = {{ resp_cls.schema_name }}.{{ prop_name }}
-    {%- endfor %}
-    {%- for disc_key, disc_value in resp_cls.discriminators %}
-    _schema.discriminate_by(
-            {{ disc_key|constant_convert }},
-            {{ disc_value|constant_convert }},
-            {{ resp_cls.schema_name }}.discriminate_by(
-                {{ disc_key|constant_convert }},
-                {{ disc_value|constant_convert }},
-            )
-        )
-    {%- endfor %}
-
-
-{%- endfor %}
 
 
 __all__ = [{{ leaf.cls_name|constant_convert }}]
