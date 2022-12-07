@@ -13,6 +13,9 @@ class CMDResource(Model):
 
     swagger = StringType(required=True)  # swagger resource provider, <plane>/<path:mod_names>/ResourceProviders/<rp_name>/Paths/<base64Encoded Path>/V/<base64Encoded version>
 
+    class Options:
+        serialize_when_none = False
+
     @property
     def plane(self):
         return self.swagger.split('/')[0]

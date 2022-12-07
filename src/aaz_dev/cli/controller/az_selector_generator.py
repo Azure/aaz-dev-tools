@@ -63,12 +63,12 @@ def _iter_selector_scopes_by_index_base(index, scope_name, scope_define, previou
                     assert identifier.arg
                     arg_keys, hide = cmd_ctx.get_argument(identifier.arg)
                     assert not hide
-                    if identifier.name == '[Key]':
+                    if identifier.name == '{Key}':
                         filter_key = "[0]"
                         filter_value = arg_keys
                         filter_is_constant = False
                     else:
-                        assert identifier.name.startswith('[]')
+                        assert identifier.name.startswith('{}')
                         filter_key = f"[1]{identifier.name[2:]}"
                         filter_value = arg_keys
                         filter_is_constant = False
@@ -89,11 +89,11 @@ def _iter_selector_scopes_by_index_base(index, scope_name, scope_define, previou
                     for identifier in previous_identifiers:
                         assert isinstance(identifier, CMDSchema)
                         assert identifier.arg
-                        if identifier.name == "[Index]":
+                        if identifier.name == "[Index]" or identifier.name.startswith('[]'):
                             assert scope_define == f"{scope_name}[next(filters)[0]]"
                             scope_define = f"{scope_name}[next(filters, [len({scope_name})])[0]]"
                             break
-                        elif identifier.name == "[Key]":
+                        elif identifier.name == "{Key}":
                             assert scope_define == f"{scope_name}[next(filters)[0]]"
                             arg_keys, hide = cmd_ctx.get_argument(identifier.arg)
                             assert not hide
@@ -106,11 +106,11 @@ def _iter_selector_scopes_by_index_base(index, scope_name, scope_define, previou
                 for identifier in previous_identifiers:
                     assert isinstance(identifier, CMDSchema)
                     assert identifier.arg
-                    if identifier.name == "[Index]":
+                    if identifier.name == "[Index]" or identifier.name.startswith('[]'):
                         assert scope_define == f"{scope_name}[next(filters)[0]]"
                         scope_define = f"{scope_name}[next(filters, [len({scope_name})])[0]]"
                         break
-                    elif identifier.name == "[Key]":
+                    elif identifier.name == "{Key}":
                         assert scope_define == f"{scope_name}[next(filters)[0]]"
                         arg_keys, hide = cmd_ctx.get_argument(identifier.arg)
                         assert not hide
@@ -173,11 +173,11 @@ def _iter_selector_scopes_by_index_base(index, scope_name, scope_define, previou
                 for identifier in previous_identifiers:
                     assert isinstance(identifier, CMDSchema)
                     assert identifier.arg
-                    if identifier.name == "[Index]":
+                    if identifier.name == "[Index]" or identifier.name.startswith('[]'):
                         assert scope_define == f"{scope_name}[next(filters)[0]]"
                         scope_define = f"{scope_name}[next(filters, [len({scope_name})])[0]]"
                         break
-                    elif identifier.name == "[Key]":
+                    elif identifier.name == "{Key}":
                         assert scope_define == f"{scope_name}[next(filters)[0]]"
                         arg_keys, hide = cmd_ctx.get_argument(identifier.arg)
                         assert not hide

@@ -242,7 +242,7 @@ class AzInstanceOperationGenerator(AzOperationGenerator):
 
 class AzJsonCreateOperationGenerator(AzInstanceOperationGenerator):
 
-    CREATOR_NAME = "_create_instance"
+    HANDLER_NAME = "_create_instance"
 
     VALUE_NAME = "_instance_value"
 
@@ -305,10 +305,10 @@ class AzJsonCreateOperationGenerator(AzInstanceOperationGenerator):
 
 class AzJsonDeleteOperationGenerator(AzInstanceOperationGenerator):
 
-    CREATOR_NAME = "_delete_instance"
+    HANDLER_NAME = "_delete_instance"
 
     def __init__(self, name, cmd_ctx, operation):
-        variant_key, is_selector_variant = cmd_ctx.get_variant(operation.instance_create.ref)
+        variant_key, is_selector_variant = cmd_ctx.get_variant(operation.instance_delete.ref)
 
         super().__init__(name, cmd_ctx, operation,
                          arg_key="self.ctx.args",
@@ -316,7 +316,7 @@ class AzJsonDeleteOperationGenerator(AzInstanceOperationGenerator):
                          is_selector_variant=is_selector_variant)
         assert isinstance(self._operation, CMDInstanceDeleteOperation)
         assert isinstance(self._operation.instance_delete, CMDJsonInstanceDeleteAction)
-        self._json = self._operation.instance_create.json
+        self._json = self._operation.instance_delete.json
 
         assert self._json.ref is None
         assert self._json.schema is None

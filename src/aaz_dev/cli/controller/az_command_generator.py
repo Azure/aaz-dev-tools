@@ -89,7 +89,8 @@ class AzCommandCtx:
         if name_only:
             return variant
 
-        is_selector = variant in self._selector_variants
+        is_selector = variant in self._selectors
+
         if is_selector:
             return f'self.ctx.selectors.{variant}', is_selector
         else:
@@ -106,7 +107,7 @@ class AzCommandCtx:
         self.response_clses[cls_name] = AzResponseClsGenerator(self, cls_name, schema)
 
     def set_selector(self, selector):
-        self._selectors[selector.var] = selector
+        self._selectors[self.get_variant(selector.var, name_only=True)] = selector
 
     def render_arg_resource_id_template(self, template):
         # TODO: fill blank placeholders as much as possible
