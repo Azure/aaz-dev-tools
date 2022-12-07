@@ -407,7 +407,10 @@ class AzHttpRequestContentGenerator:
         self._cmd_ctx = cmd_ctx
         assert isinstance(body.json, CMDRequestJson)
         self._json = body.json
-        self.ref = self._cmd_ctx.get_variant(self._json.ref) if self._json.ref else None
+        self.ref = None
+        if self._json.ref:
+            self.ref, is_selector = self._cmd_ctx.get_variant(self._json.ref)
+            assert not is_selector
         self.arg_key = "self.ctx.args"
         if self.ref is None:
             assert isinstance(self._json.schema, CMDSchema)

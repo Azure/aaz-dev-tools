@@ -11,7 +11,7 @@
 
 ### [{{ version.name }}]({{ version.resources|first|resource_cfg_path }}) {{ version.stage|stage_label }}
 {% for resource in version.resources %}
-<!-- {{ resource.plane }} {{ resource.id }} {{ resource.version }} -->
+<!-- {{ resource.plane }} {{ resource.id }} {{ resource.version }}{% if resource.subresource is not none %} {{ resource.subresource }}{% endif %} -->
 {%- endfor %}
 {%- if version.examples is not none and version.examples|length %}
 

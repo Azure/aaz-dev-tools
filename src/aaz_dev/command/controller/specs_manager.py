@@ -344,6 +344,7 @@ class AAZSpecsManager:
             resource.plane = plane
             resource.id = r.id
             resource.version = r.version
+            resource.subresource = r.subresource
             version.resources.append(resource)
 
         self._modified_commands.add(cmd_names)
