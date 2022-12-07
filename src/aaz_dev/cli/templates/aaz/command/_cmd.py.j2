@@ -263,7 +263,7 @@ class {{ leaf.cls_name }}(
 
     class {{selector.cls_name}}(AAZJsonSelector):
 
-        def get(self):
+        def _get(self):
             {%- for scope, scope_define, filter_builder, filters, is_end in selector.iter_scopes() %}
 
             {%- if is_end %}
@@ -290,7 +290,7 @@ class {{ leaf.cls_name }}(
 
             {%- endfor -%}
 
-        def set(self, value):
+        def _set(self, value):
             {%- for scope, scope_define, filter_builder, filters, is_end in selector.iter_scopes() %}
 
             {%- if is_end %}
