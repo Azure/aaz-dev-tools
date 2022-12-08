@@ -17,7 +17,7 @@ function WSEditorCommandArgumentsContent(props: {
     args: CMDArg[],
     clsArgDefineMap: ClsArgDefinitionMap,
     onReloadArgs: () => Promise<void>,
-    onAddSubCommand: (argVar: string, argStackNames: string[]) => void,
+    onAddSubCommand: (argVar: string, subArgOptions: { var: string, options: string }[], argStackNames: string[]) => void,
 }) {
 
     const [displayArgumentDialog, setDisplayArgumentDialog] = useState<boolean>(false);
@@ -72,6 +72,7 @@ function WSEditorCommandArgumentsContent(props: {
     }
 
     const handleAddSubcommand = (arg: CMDArg, argIdxStack: ArgIdx[]) => {
+        const argVar = arg.var;
         let argStackNames = argIdxStack.map(argIdx => {
             let name = argIdx.displayKey;
             while (name.startsWith('-')) {
@@ -83,7 +84,34 @@ function WSEditorCommandArgumentsContent(props: {
             }
             return name
         });
-        props.onAddSubCommand(arg.var, argStackNames);
+        let a: CMDArgBase | undefined = arg;
+        if (a.type.startsWith('@')) {
+            let clsName = (a as CMDClsArg).clsName;
+            a = props.clsArgDefineMap[clsName];
+        }
+        if (a.type.startsWith("dict<")) {
+            a = (a as CMDDictArgBase).item;
+        } else if (a.type.startsWith("array<")) {
+            a = (a as CMDArrayArgBase).item;
+        }
+        let subArgOptions: { var: string, options: string }[] = []
+        if (a !== undefined) {
+            let subArgs;
+            if (a.type.startsWith('@')) {
+                let clsName = (a as CMDClsArg).clsName;
+                subArgs = (props.clsArgDefineMap[clsName] as CMDObjectArgBase).args
+            } else {
+                subArgs = (a as CMDObjectArg).args
+            }
+            subArgOptions = subArgs.map(value => {
+                return {
+                    var: value.var,
+                    options: value.options.join(" "),
+                };
+            });
+        }
+
+        props.onAddSubCommand(argVar, subArgOptions, argStackNames);
     }
 
     return (
