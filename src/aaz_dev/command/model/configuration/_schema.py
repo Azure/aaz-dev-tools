@@ -200,6 +200,8 @@ class CMDSchemaBase(Model):
         pass
 
     def reformat(self, **kwargs):
+        if self.frozen:
+            return
         self._reformat_base(**kwargs)
 
 
@@ -308,6 +310,8 @@ class CMDSchema(CMDSchemaBase):
         pass
 
     def reformat(self, **kwargs):
+        if self.frozen:
+            return
         self._reformat_base(**kwargs)
         self._reformat(**kwargs)
 
@@ -357,7 +361,7 @@ class CMDClsSchemaBase(CMDSchemaBase):
         return False
 
     @classmethod
-    def build_from_schema_base(cls, schema_base):
+    def build_from_schema_base(cls, schema_base, implement):
         assert isinstance(schema_base, (CMDObjectSchemaBase, CMDArraySchemaBase))
         assert getattr(schema_base, 'cls', None)
         cls_schema = cls()
@@ -366,15 +370,22 @@ class CMDClsSchemaBase(CMDSchemaBase):
         cls_schema.frozen = schema_base.frozen
         cls_schema.const = schema_base.const
         cls_schema.default = schema_base.default
+        cls_schema.implement = implement
         return cls_schema
 
     def get_unwrapped(self, **kwargs):
         if self.implement is None:
             return
         assert isinstance(self.implement, CMDSchemaBase)
-        data = self.implement.to_native()
+        if isinstance(self.implement, CMDObjectSchemaBase):
+            cls = CMDObjectSchema if isinstance(self, CMDClsSchema) else CMDObjectSchemaBase
+        elif isinstance(self.implement, CMDArraySchemaBase):
+            cls = CMDArraySchema if isinstance(self, CMDClsSchema) else CMDArraySchemaBase
+        else:
+            raise NotImplementedError()
+        data = {k: v for k, v in self.implement.to_native().items() if k in cls._schema.valid_input_keys}
         data.update(kwargs)
-        unwrapped = self.implement.__class__(data)
+        unwrapped = cls(data)
         return unwrapped
 
 
@@ -397,9 +408,9 @@ class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
         return diff
 
     @classmethod
-    def build_from_schema(cls, schema):
+    def build_from_schema(cls, schema, implement):
         assert isinstance(schema, (CMDObjectSchema, CMDArraySchema))
-        cls_schema = cls.build_from_schema_base(schema)
+        cls_schema = cls.build_from_schema_base(schema, implement)
         cls_schema.name = schema.name
         cls_schema.arg = schema.arg
         cls_schema.required = schema.required
@@ -739,6 +750,8 @@ class CMDObjectSchemaDiscriminator(Model):
         return diff
 
     def reformat(self, **kwargs):
+        if self.frozen:
+            return
         if self.props:
             for prop in self.props:
                 prop.reformat(**kwargs)
@@ -790,6 +803,8 @@ class CMDObjectSchemaAdditionalProperties(Model):
         return diff
 
     def reformat(self, **kwargs):
+        if self.frozen:
+            return
         if self.item:
             if self.any_type:
                 raise exceptions.VerificationError(
@@ -940,8 +955,11 @@ class CMDArraySchemaBase(CMDSchemaBase):
     )
     item = CMDSchemaBaseField()
 
+    # used to indentify item in array
+    identifiers = ListType(StringType())
+
     # properties as tags
-    # define a schema which can be used by others # TODO: convert to arg
+    # define a schema which can be used by others
     # cls definition will not include properties in CMDSchema only, such as following properties:
     #  - name
     #  - arg
@@ -964,11 +982,36 @@ class CMDArraySchemaBase(CMDSchemaBase):
         if item_diff:
             diff["item"] = item_diff
 
+        if level >= CMDDiffLevelEnum.Structure:
+            if old.identifiers:
+                if not self.identifiers:
+                    diff["identifiers"] = f"Miss Identifiers"
+                elif set(old.identifiers) != set(self.identifiers):
+                    diff["identifiers"] = f"Identifier different"
+            elif self.identifiers:
+                diff["identifiers"] = f"New identifiers"
+
         return diff
 
     def _reformat_base(self, **kwargs):
         super()._reformat_base(**kwargs)
         self.item.reformat(**kwargs)
+        if self.identifiers:
+            identifiers = sorted(self.identifiers, key=lambda i: (len(i), i))
+            item_instance = self.item
+            if isinstance(item_instance, CMDClsSchemaBase):
+                item_instance = item_instance.implement
+            if not isinstance(item_instance, CMDObjectSchemaBase):
+                raise exceptions.InvalidAPIUsage(
+                    f"Identifiers should be used in 'array of object'"
+                )
+            item_prop_names = {p.name for p in item_instance.props}
+            for identifier in identifiers:
+                if identifier not in item_prop_names:
+                    raise exceptions.InvalidAPIUsage(
+                        f"identifier property '{identifier}' not exist"
+                    )
+            self.identifiers = identifiers
 
 
 class CMDArraySchema(CMDArraySchemaBase, CMDSchema):

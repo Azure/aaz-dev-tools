@@ -93,7 +93,7 @@ class Resource:
         # Handle plural and singular cases
         words = []
         for part in self.id.split('?')[0].split('/'):
-            if part == "{}" and len(words):
+            if part == '{}' and len(words):
                 singular = self._inflect_engine.singular_noun(words[-1])
                 if singular:
                     words[-1] = singular

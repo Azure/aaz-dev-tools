@@ -237,6 +237,7 @@ def render_arg(arg, cmd_ctx, arg_group=None):
         arg_kwargs["is_experimental"] = True
 
     if arg.id_part:
+        # Todo: del id_part for create command or command has sub_resource
         arg_kwargs["id_part"] = arg.id_part
 
     if arg.default:

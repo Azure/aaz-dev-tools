@@ -9,8 +9,12 @@ class CMDResource(Model):
     # properties as tags
     id = CMDResourceIdField(required=True)
     version = CMDVersionField(required=True)
+    subresource = StringType()  # subresource index, used for sub commands generation.
 
     swagger = StringType(required=True)  # swagger resource provider, <plane>/<path:mod_names>/ResourceProviders/<rp_name>/Paths/<base64Encoded Path>/V/<base64Encoded version>
+
+    class Options:
+        serialize_when_none = False
 
     @property
     def plane(self):

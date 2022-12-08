@@ -43,8 +43,11 @@ from ._http import CMDHttpRequestArgs, CMDHttpRequestPath, CMDHttpRequestQuery, 
     CMDHttpAction
 from ._http_request_body import CMDHttpRequestBody, CMDHttpRequestJsonBody
 from ._http_response_body import CMDHttpResponseBody, CMDHttpResponseJsonBody
+from ._instance_create import CMDInstanceCreateAction, CMDJsonInstanceCreateAction
+from ._instance_delete import CMDInstanceDeleteAction, CMDJsonInstanceDeleteAction
 from ._instance_update import CMDInstanceUpdateAction, CMDJsonInstanceUpdateAction
-from ._operation import CMDOperation, CMDHttpOperation, CMDInstanceUpdateOperation, CMDHttpOperationLongRunning
+from ._operation import CMDOperation, CMDHttpOperation, CMDInstanceUpdateOperation, CMDInstanceCreateOperation, \
+    CMDInstanceDeleteOperation, CMDHttpOperationLongRunning
 from ._output import CMDOutput, CMDObjectOutput, CMDArrayOutput, CMDStringOutput
 from ._resource import CMDResource
 from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
@@ -70,5 +73,8 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, CMDObjectSchemaBase, CMDObjectSchema, \
     CMDIdentityObjectSchemaBase, CMDIdentityObjectSchema, \
     CMDArraySchemaBase, CMDArraySchema
+from ._selector_index import CMDSelectorIndexBase, CMDSelectorIndex, CMDObjectIndexDiscriminator, \
+    CMDObjectIndexAdditionalProperties, CMDObjectIndexBase, CMDObjectIndex, CMDArrayIndexBase, CMDArrayIndex
+from ._subresource_selector import CMDSubresourceSelector, CMDJsonSubresourceSelector
 from ._utils import CMDDiffLevelEnum, DEFAULT_CONFIRMATION_PROMPT
 from ._xml import XMLSerializer

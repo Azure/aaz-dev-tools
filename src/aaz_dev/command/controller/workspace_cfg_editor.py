@@ -1,12 +1,9 @@
+import copy
 import json
 import logging
 import os
 
-from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDDiffLevelEnum, \
-    CMDHttpRequest, CMDArgGroup, CMDObjectArg, CMDArrayArg, CMDArg, CMDBooleanArg, CMDClsArg, CMDClsArgBase, \
-    CMDObjectArgBase, CMDArrayArgBase, CMDCondition, CMDConditionNotOperator, CMDConditionHasValueOperator, \
-    CMDConditionAndOperator, CMDCommandGroup, CMDArgumentHelp, CMDArgDefault, CMDInstanceUpdateOperation, \
-    CMDClsSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDObjectSchemaDiscriminator, CMDSchema, CMDSchemaBase
+from command.model.configuration import *
 from utils import exceptions
 from utils.base64 import b64encode_str
 from utils.case import to_camel_case
@@ -117,14 +114,16 @@ class WorkspaceCfgEditor(CfgReader):
         self.reformat()
 
     def rename_command(self, *cmd_names, new_cmd_names):
+        command = self._remove_command(*cmd_names)
+        command.name = new_cmd_names[-1]
+        self._add_command(*new_cmd_names, command=command)
+        self.reformat()
+
+    def _remove_command(self, *cmd_names):
         if len(cmd_names) < 2:
             raise exceptions.InvalidAPIUsage(f"Invalid command name, it's empty")
-        if len(new_cmd_names) < 2:
-            raise exceptions.InvalidAPIUsage(f"Invalid new command name, it's empty")
 
         cmd_names = [*cmd_names]
-        new_cmd_names = [*new_cmd_names]
-
         command = self.find_command(*cmd_names)
         if command is None:
             raise exceptions.ResourceNotFind(f"Cannot find definition for command '{' '.join(cmd_names)}'")
@@ -135,10 +134,17 @@ class WorkspaceCfgEditor(CfgReader):
         idx = command_group.commands.index(command)
         command_group.commands.pop(idx)
 
-        if self.find_command(*new_cmd_names):
-            raise exceptions.InvalidAPIUsage(f"Command '{' '.join(new_cmd_names)}' already exist")
+        return command
 
-        command_group, tail_names, parent, remain_names = self.find_command_group(*new_cmd_names[:-1])
+    def _add_command(self, *cmd_names, command):
+        if len(cmd_names) < 2:
+            raise exceptions.InvalidAPIUsage(f"Invalid new command name, it's empty")
+        cmd_names = [*cmd_names]
+
+        if self.find_command(*cmd_names):
+            raise exceptions.InvalidAPIUsage(f"Command '{' '.join(cmd_names)}' already exist")
+
+        command_group, tail_names, parent, remain_names = self.find_command_group(*cmd_names[:-1])
         if not command_group:
             cg_names = remain_names
             while not command_group and len(cg_names) > 1:
@@ -176,10 +182,7 @@ class WorkspaceCfgEditor(CfgReader):
         if command_group.commands is None:
             command_group.commands = []
 
-        command.name = new_cmd_names[-1]
         command_group.commands.append(command)
-
-        self.reformat()
 
     def merge(self, plus_cfg_editor):
         if not self._can_merge(plus_cfg_editor):
@@ -227,6 +230,9 @@ class WorkspaceCfgEditor(CfgReader):
                 main_command.resources.append(
                     resource.__class__(resource.to_primitive())
                 )
+
+            # relink main_command
+            main_command.link()
 
         for resource in plus_cfg_editor.resources:
             main_editor.cfg.resources.append(
@@ -295,11 +301,11 @@ class WorkspaceCfgEditor(CfgReader):
 
     def unwrap_cls_arg(self, *cmd_names, arg_var):
         command = self.find_command(*cmd_names)
-        parent, arg, _ = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
+        parent_arg, arg, _ = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
         if not arg:
             raise exceptions.InvalidAPIUsage(
                 f"Argument not exist: {arg.var}")
-        assert parent is not None
+        assert parent_arg is not None
 
         if isinstance(arg, CMDObjectArgBase):
             if not arg.cls:
@@ -311,16 +317,34 @@ class WorkspaceCfgEditor(CfgReader):
                 f"{arg.var} is not a class argument"
             )
 
-        # find linked schema
         linked_schema_parent = None
         linked_schema = None
-        for parent_schema, schema in self.iter_schema_in_command_by_arg_var(command, arg_var=arg.var):
-            if linked_schema is not None:
-                raise exceptions.InvalidAPIUsage(
-                    f"Cannot unwrap argument: {arg.var} is used by mutiple schemas."
-                )
-            linked_schema_parent = parent_schema
-            linked_schema = schema
+        # find linked schema
+        if isinstance(arg, CMDArg):
+            for parent_schema, schema, _ in self.iter_schema_in_command_by_arg_var(command, arg_var=arg.var):
+                if linked_schema is not None:
+                    raise exceptions.InvalidAPIUsage(
+                        f"Cannot unwrap argument: {arg.var} is used by mutiple schemas."
+                    )
+                linked_schema_parent = parent_schema
+                linked_schema = schema
+        elif isinstance(arg, CMDArgBase):
+            if not isinstance(parent_arg, CMDArg):
+                raise NotImplementedError()
+            for _, parent_schema, _ in self.iter_schema_in_command_by_arg_var(command, arg_var=parent_arg.var):
+                if linked_schema is not None:
+                    raise exceptions.InvalidAPIUsage(
+                        f"Cannot unwrap argument: {arg.var} is used by mutiple schemas."
+                    )
+                linked_schema_parent = parent_schema
+                if arg_var.endswith('[]'):
+                    assert isinstance(parent_schema, CMDArraySchemaBase)
+                    linked_schema = parent_schema.item
+                elif arg_var.endswith('{}'):
+                    assert isinstance(parent_schema, CMDObjectSchemaBase) and parent_schema.additional_props
+                    linked_schema = parent_schema.additional_props.item
+                else:
+                    raise NotImplementedError()
 
         if linked_schema is None:
             raise exceptions.InvalidAPIUsage(
@@ -335,7 +359,7 @@ class WorkspaceCfgEditor(CfgReader):
         elif isinstance(linked_schema, (CMDObjectSchemaBase, CMDArraySchemaBase)):
             assert linked_schema.cls is not None
             # unwrap one clsSchema to instance
-            for ref_parent, ref_schema in self.iter_schema_cls_reference(command, linked_schema.cls):
+            for ref_parent, ref_schema, _ in self.iter_schema_cls_reference(command, linked_schema.cls):
                 assert isinstance(ref_schema, CMDClsSchemaBase)
                 new_ref_schema = ref_schema.get_unwrapped()
                 assert new_ref_schema.cls == linked_schema.cls
@@ -781,3 +805,548 @@ class WorkspaceCfgEditor(CfgReader):
         # rename commands
         for cmd_names, ref_cmd_names in command_rename_list:
             self.rename_command(*cmd_names, new_cmd_names=ref_cmd_names)
+
+    def remove_subresource_commands(self, resource_id, version, subresource):
+        commands = []
+
+        cmd_names_list = [cmd_names for cmd_names, _ in self.iter_commands_by_resource(resource_id, subresource, version)]
+        if not cmd_names_list:
+            return commands
+
+        for cmd_names in cmd_names_list:
+            commands.append(self._remove_command(*cmd_names))
+
+        self.reformat()
+        return commands
+
+    def build_subresource_commands_by_arg_var(self, resource_id, arg_var, cg_names, ref_args_options=None):
+        """
+
+        :param resource_id:
+        :param arg_var:
+        :param cg_names: command group name for subresource commands
+        :param ref_args_options: reference argument options
+        :return:
+        """
+        if isinstance(cg_names, str):
+            cg_names = [w for w in cg_names.split(' ') if w]
+
+        assert isinstance(cg_names, list)
+
+        update_cmd_info = self.get_update_cmd(resource_id)
+        if not update_cmd_info:
+            raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id}")
+
+        update_cmd_name, update_cmd, update_by = update_cmd_info
+        if update_by != "GenericOnly":
+            raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id}")
+
+        if arg_var.startswith('@'):
+            raise exceptions.InvalidAPIUsage(f"Not support class arg={arg_var}, please unwrap it first.")
+
+        # find arg
+        arg, arg_idx = self.find_arg_in_command_by_var(update_cmd, arg_var)
+
+        if not arg or not arg_idx:
+            raise exceptions.InvalidAPIUsage(f"Argument '{arg_var}' not exist in command '{' '.join(update_cmd_name)}'")
+
+        get_op = None
+        put_op = None
+        update_op = None
+        for operation in update_cmd.operations:
+            if isinstance(operation, CMDInstanceUpdateOperation):
+                update_op = operation
+            if isinstance(operation, CMDHttpOperation) and operation.http.request and operation.http.responses:
+                if operation.http.request.method == "get":
+                    get_op = operation
+                if operation.http.request.method == "put":
+                    put_op = operation
+
+        assert get_op is not None
+        assert put_op is not None
+        assert update_op is not None
+
+        # find schema_idx
+        parent_schema = None
+        schema = None
+        schema_idx = None
+        for parent_s, s, s_idx in self.iter_schema_in_operation_by_arg_var(update_op, arg_var):
+            assert schema is None
+            parent_schema, schema, schema_idx = parent_s, s, s_idx
+        if not schema:
+            raise exceptions.InvalidAPIUsage(f"Cannot find schema for arg_var={arg_var}")
+
+        subresource_idx = self.schema_idx_to_subresource_idx(schema_idx)
+        assert subresource_idx
+
+        # find response body
+        response_json = None
+        for response in get_op.http.responses:
+            if response.is_error:
+                continue
+            if not isinstance(response.body, CMDHttpResponseJsonBody):
+                continue
+            if response.body.json.var == update_op.instance_update.ref:
+                response_json = response.body.json
+                break
+        assert response_json is not None
+
+        update_json = update_op.instance_update.json
+
+        def _build_sub_command_base(_subresource_idx):
+            _sub_command = CMDCommand()
+            _sub_command.version = update_cmd.version
+            _resource = [_r for _r in update_cmd.resources if _r.id.lower() == resource_id.lower()][0]
+            _resource = CMDResource(raw_data=_resource.to_native())
+            _resource.subresource = self.idx_to_str(_subresource_idx)
+            _sub_command.resources = [_resource]
+            _sub_command.subresource_selector = self._build_subresource_selector(
+                response_json, update_json, _subresource_idx)
+            return _sub_command
+
+        def _build_subresource_list_or_show_command(_subresource_idx, _ref_args):
+            _sub_command = _build_sub_command_base(_subresource_idx)
+            _sub_command.operations = [get_op.__class__(raw_data=get_op.to_native())]
+            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_args_options)
+            _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
+            _sub_command.link()
+            return _sub_command
+
+        def _build_subresource_create_command(_subresource_idx, _ref_args):
+            _sub_command = _build_sub_command_base(_subresource_idx)
+            _instance_op = CMDInstanceCreateOperation()
+
+            _instance_op.instance_create = CMDJsonInstanceCreateAction()
+            _instance_op.instance_create.ref = _sub_command.subresource_selector.var
+            _instance_op.instance_create.json = CMDRequestJson()
+
+            # fork json schema
+            assert update_cmd.schema_cls_register_map is not None
+            _instance_op_schema = self.fork_schema_in_json(
+                update_json, _subresource_idx, update_cmd.schema_cls_register_map)
+            assert not isinstance(_instance_op_schema, CMDClsSchemaBase)
+            if not isinstance(_instance_op_schema, CMDSchema):
+                # convert schema base to schema
+                if isinstance(_instance_op_schema, CMDObjectSchemaBase):
+                    _instance_op_schema = CMDObjectSchema(raw_data=_instance_op_schema.to_native())
+                elif isinstance(_instance_op_schema, CMDArraySchemaBase):
+                    _instance_op_schema = CMDArraySchema(raw_data=_instance_op_schema.to_native())
+                else:
+                    raise NotImplementedError()
+            # _subresource_idx does not contains update_json.schema.name
+            _instance_op_schema.name = self.idx_to_str([update_json.schema.name, *_subresource_idx])
+            _instance_op_schema.required = True
+            _instance_op.instance_create.json.schema = _instance_op_schema
+
+            _sub_command.operations = [
+                get_op.__class__(raw_data=get_op.to_native()),
+                _instance_op,
+                put_op.__class__(raw_data=put_op.to_native()),
+            ]
+            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_args_options)
+            _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
+            _sub_command.link()
+            return _sub_command
+
+        def _build_subresource_update_command(_subresource_idx, _ref_args):
+            _sub_command = _build_sub_command_base(_subresource_idx)
+            _instance_op = CMDInstanceUpdateOperation()
+
+            _instance_op.instance_update = CMDJsonInstanceUpdateAction()
+            _instance_op.instance_update.ref = _sub_command.subresource_selector.var
+            _instance_op.instance_update.json = CMDRequestJson()
+
+            # fork json schema
+            assert update_cmd.schema_cls_register_map is not None
+            _instance_op_schema = self.fork_schema_in_json(
+                update_json, _subresource_idx, update_cmd.schema_cls_register_map)
+            if not isinstance(_instance_op_schema, CMDSchema):
+                # convert schema base to schema
+                if isinstance(_instance_op_schema, CMDObjectSchemaBase):
+                    _instance_op_schema = CMDObjectSchema(raw_data=_instance_op_schema.to_native())
+                elif isinstance(_instance_op_schema, CMDArraySchemaBase):
+                    _instance_op_schema = CMDArraySchema(raw_data=_instance_op_schema.to_native())
+                else:
+                    raise NotImplementedError()
+            # _subresource_idx does not contains update_json.schema.name
+            _instance_op_schema.name = self.idx_to_str([update_json.schema.name, *_subresource_idx])
+            _instance_op_schema.required = True
+            _instance_op.instance_update.json.schema = _instance_op_schema
+
+            _sub_command.operations = [
+                get_op.__class__(raw_data=get_op.to_native()),
+                _instance_op,
+                put_op.__class__(raw_data=put_op.to_native()),
+            ]
+            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_args_options)
+            _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
+            _sub_command.link()
+            return _sub_command
+
+        def _build_subresource_delete_command(_subresource_idx, _ref_args):
+            _sub_command = _build_sub_command_base(_subresource_idx)
+            _instance_op = CMDInstanceDeleteOperation()
+            _instance_op.instance_delete = CMDJsonInstanceDeleteAction()
+            _instance_op.instance_delete.ref = _sub_command.subresource_selector.var
+            _instance_op.instance_delete.json = CMDRequestJson()
+            _sub_command.operations = [
+                get_op.__class__(raw_data=get_op.to_native()),
+                _instance_op,
+                put_op.__class__(raw_data=put_op.to_native()),
+            ]
+            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_args_options)
+            _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
+            _sub_command.link()
+            return _sub_command
+
+        # build ref_args
+        ref_args = []
+        update_arg_prefix = f"${update_json.schema.name}"
+        if update_cmd.arg_groups:
+            for g in update_cmd.arg_groups:
+                for a in g.args:
+                    if a.var.startswith(update_arg_prefix):
+                        # ignore arguments linked with body
+                        continue
+                    if 'name' in a.options and isinstance(a, CMDStringArgBase):
+                        # remove auto add 'name', 'n' options
+                        a = a.__class__(raw_data=a.to_native())
+                        a.options = sorted(a.options, key=lambda o: (len(o), o))[-1:]  # use the longest argument
+                    ref_args.append(a)
+
+        if isinstance(schema, CMDArraySchema):
+            assert isinstance(arg, CMDArrayArg)
+            # list command
+            list_command = _build_subresource_list_or_show_command(subresource_idx, ref_args)
+
+            # generate item command
+            item_subresource_idx = [*subresource_idx, '[]']
+
+            item_arg = arg.item
+            if isinstance(item_arg, CMDClsArgBase):
+                raise exceptions.InvalidAPIUsage(f"Not support array<class> arg={arg_var}, please unwrap it first.")
+
+            if not isinstance(item_arg, CMDObjectArgBase):
+                raise NotImplementedError()
+
+            if item_arg.additional_props:
+                raise NotImplementedError()
+
+            ref_args.extend(item_arg.args)
+
+            # create command
+            create_command = _build_subresource_create_command(item_subresource_idx, ref_args)
+            # update command
+            update_command = _build_subresource_update_command(item_subresource_idx, ref_args)
+            # delete command
+            delete_command = _build_subresource_delete_command(item_subresource_idx, ref_args)
+            # show command
+            show_command = _build_subresource_list_or_show_command(item_subresource_idx, ref_args)
+
+            list_command.name = 'list'
+            create_command.name = 'create'
+            update_command.name = 'update'
+            delete_command.name = 'delete'
+            show_command.name = 'show'
+
+            self._add_command(*cg_names, list_command.name, command=list_command)
+            self._add_command(*cg_names, create_command.name, command=create_command)
+            self._add_command(*cg_names, update_command.name, command=update_command)
+            self._add_command(*cg_names, delete_command.name, command=delete_command)
+            self._add_command(*cg_names, show_command.name, command=show_command)
+
+        elif isinstance(schema, CMDObjectSchema):
+            assert isinstance(arg, CMDObjectArg)
+            if schema.props and schema.additional_props:
+                raise NotImplementedError()
+
+            if schema.props:
+                ref_args.extend(arg.args)
+
+                # create command
+                create_command = _build_subresource_create_command(subresource_idx, ref_args)
+                # update command
+                update_command = _build_subresource_update_command(subresource_idx, ref_args)
+                # delete command
+                delete_command = _build_subresource_delete_command(subresource_idx, ref_args)
+                # show command
+                show_command = _build_subresource_list_or_show_command(subresource_idx, ref_args)
+
+            elif schema.additional_props and schema.additional_props.item:
+                item_subresource_idx = [*subresource_idx, '{}']
+
+                item_arg = arg.additional_props.item
+                if isinstance(item_arg, CMDClsArgBase):
+                    raise exceptions.InvalidAPIUsage(f"Not support dict<class> arg={arg_var}, please unwrap it first.")
+
+                if not isinstance(item_arg, CMDObjectSchemaBase):
+                    raise NotImplementedError()
+
+                if item_arg.additional_props:
+                    raise NotImplementedError()
+
+                ref_args.extend(item_arg.args)
+
+                # create command
+                create_command = _build_subresource_create_command(item_subresource_idx, ref_args)
+                # update command
+                update_command = _build_subresource_update_command(item_subresource_idx, ref_args)
+                # delete command
+                delete_command = _build_subresource_delete_command(item_subresource_idx, ref_args)
+                # show command
+                show_command = _build_subresource_list_or_show_command(item_subresource_idx, ref_args)
+
+            else:
+                raise NotImplementedError()
+
+            create_command.name = 'create'
+            update_command.name = 'update'
+            delete_command.name = 'delete'
+            show_command.name = 'show'
+
+            self._add_command(*cg_names, create_command.name, command=create_command)
+            self._add_command(*cg_names, update_command.name, command=update_command)
+            self._add_command(*cg_names, delete_command.name, command=delete_command)
+            self._add_command(*cg_names, show_command.name, command=show_command)
+        else:
+            raise NotImplementedError()
+
+        self.reformat()
+
+    def _build_subresource_selector(self, response_json, update_json, subresource_idx):
+        assert isinstance(response_json, CMDResponseJson)
+        assert isinstance(update_json, CMDRequestJson)
+
+        idx = self.idx_to_list(subresource_idx)
+        selector = CMDJsonSubresourceSelector()
+        selector.ref = response_json.var
+
+        if isinstance(update_json.schema, CMDObjectSchema):
+            assert isinstance(response_json.schema, CMDObjectSchemaBase)
+            index = CMDObjectIndex()
+            index.name = update_json.schema.name
+            # disable prune for the outer layer index
+            selector.json = self._build_object_index_base(update_json.schema, idx, index=index, prune=False)
+        elif isinstance(update_json.schema, CMDArraySchema):
+            assert isinstance(response_json.schema, CMDArraySchemaBase)
+            index = CMDArrayIndex()
+            index.name = update_json.schema.name
+            selector.json = self._build_array_index_base(update_json.schema, idx, index=index)
+        else:
+            raise NotImplementedError(f"Not support schema {type(update_json.schema)}")
+
+        return selector
+
+    def _build_object_index_base(self, schema, idx, index=None, prune=False):
+        assert isinstance(schema, CMDObjectSchemaBase)
+
+        if not index:
+            index = CMDObjectIndexBase()
+
+        if not idx:
+            return index
+
+        current_idx = idx[0]
+        remain_idx = idx[1:]
+
+        if schema.props:
+            for prop in schema.props:
+                if prop.name == current_idx:
+                    if prune:
+                        assert isinstance(index, CMDSelectorIndex)
+                        name = f"{index.name}.{prop.name}"
+                        if isinstance(prop, CMDClsSchema):
+                            prop = prop.implement
+                        # ignore the current index, return the sub index with index.name prefix
+                        if isinstance(prop, CMDObjectSchema):
+                            return self._build_object_index(prop, remain_idx, name=name)
+                        elif isinstance(prop, CMDArraySchema):
+                            return self._build_array_index(prop, remain_idx, name=name)
+                        else:
+                            raise NotImplementedError()
+                    else:
+                        name = prop.name
+                        if isinstance(prop, CMDClsSchema):
+                            prop = prop.implement
+                        if isinstance(prop, CMDObjectSchema):
+                            index.prop = self._build_object_index(prop, remain_idx, name=name)
+                            break
+                        elif isinstance(prop, CMDArraySchema):
+                            index.prop = self._build_array_index(prop, remain_idx, name=name)
+                            break
+                        else:
+                            raise NotImplementedError()
+
+        if schema.discriminators:
+            for disc in schema.discriminators:
+                if disc.value == current_idx:
+                    index.discriminator = self._build_object_index_discriminator(disc, remain_idx)
+                    break
+
+        if schema.additional_props and current_idx == "{}":
+            index.additional_props = self._build_object_index_additional_prop(schema.additional_props, remain_idx)
+
+        return index
+
+    def _build_array_index_base(self, schema, idx, index=None):
+        assert isinstance(schema, CMDArraySchemaBase)
+
+        if not index:
+            index = CMDArrayIndexBase()
+
+        if not idx:
+            return index
+
+        current_idx = idx[0]
+        remain_idx = idx[1:]
+        assert current_idx == '[]'
+
+        item = schema.item
+        if isinstance(item, CMDClsSchemaBase):
+            item = item.implement
+
+        identifiers = []
+        if schema.identifiers:
+            assert isinstance(item, CMDObjectSchemaBase)
+            for prop in item.props:
+                if prop.name in schema.identifiers:
+                    identifier = prop.__class__(raw_data=prop.to_native())
+                    identifier.name = '[].' + prop.name
+                    identifier.required = True
+                    identifier.read_only = False
+                    identifier.frozen = False
+                    identifiers.append(identifier)
+        if not identifiers:
+            # use index as identifier
+            identifier = CMDIntegerSchema()
+            identifier.name = '[Index]'
+            identifiers.append(identifier)
+            identifier.required = True
+        index.identifiers = identifiers
+
+        if isinstance(item, CMDObjectSchemaBase):
+            index.item = self._build_object_index_base(item, remain_idx)
+        elif isinstance(item, CMDArraySchemaBase):
+            index.item = self._build_array_index_base(item, remain_idx)
+        else:
+            raise NotImplementedError()
+
+        return index
+
+    def _build_object_index(self, schema, idx, name):
+        index = CMDObjectIndex()
+        index.name = name
+        return self._build_object_index_base(schema, idx, index, prune=True)
+
+    def _build_array_index(self, schema, idx, name):
+        index = CMDArrayIndex()
+        index.name = name
+        return self._build_array_index_base(schema, idx, index)
+
+    def _build_object_index_discriminator(self, schema, idx):
+        assert isinstance(schema, CMDObjectSchemaDiscriminator)
+
+        index = CMDObjectIndexDiscriminator()
+        index.property = schema.property
+        index.value = schema.value
+
+        if not idx:
+            return index
+
+        current_idx = idx[0]
+        remain_idx = idx[1:]
+
+        if schema.props:
+            for prop in schema.props:
+                if prop.name == current_idx:
+                    name = prop.name
+                    if isinstance(prop, CMDClsSchema):
+                        prop = prop.implement
+
+                    if isinstance(prop, CMDObjectSchema):
+                        index.prop = self._build_object_index(prop, remain_idx, name)
+                        break
+                    elif isinstance(prop, CMDArraySchema):
+                        index.prop = self._build_array_index(prop, remain_idx, name)
+                        break
+                    else:
+                        raise NotImplementedError()
+
+        if schema.discriminators:
+            for disc in schema.discriminators:
+                if disc.value == current_idx:
+                    index.discriminator = self._build_object_index_discriminator(disc, remain_idx)
+                    break
+
+        return index
+
+    def _build_object_index_additional_prop(self, schema, idx):
+        assert isinstance(schema, CMDObjectSchemaAdditionalProperties)
+        index = CMDObjectIndexAdditionalProperties()
+
+        identifier = CMDStringSchema()
+        identifier.name = "{Key}"
+        identifier.required = True
+        index.identifiers = [identifier]
+
+        item = schema.item
+        if isinstance(item, CMDClsSchemaBase):
+            item = item.implement
+        if isinstance(item, CMDObjectSchemaBase):
+            index.item = self._build_object_index_base(item, idx)
+        elif isinstance(item, CMDArraySchemaBase):
+            index.item = self._build_array_index_base(item, idx)
+        else:
+            raise NotImplementedError()
+
+        return index
+
+    @classmethod
+    def fork_schema_in_json(cls, js, idx, reference_cls_map):
+        from command.model.configuration._content import _iter_over_schema_for_cls_register
+        schema = cls.find_schema_in_json(js, idx)
+        if not schema:
+            return None
+
+        if isinstance(schema, CMDClsSchemaBase):
+            assert schema.implement is not None
+            schema = schema.get_unwrapped()
+        else:
+            schema = schema.__class__(raw_data=schema.to_native())
+        assert not isinstance(schema, CMDClsSchemaBase)
+
+        # make sure cls implement contained in schema
+        cls_register_map = {}
+        _iter_over_schema_for_cls_register(schema, cls_register_map)
+        miss_implement_cls_names = set()
+        for k, v in cls_register_map.items():
+            if not v['implement']:
+                miss_implement_cls_names.add(k)
+
+        pre_miss_implement_cls_names = set()
+        while len(miss_implement_cls_names) > 0 and pre_miss_implement_cls_names != miss_implement_cls_names:
+            for cls_name in miss_implement_cls_names:
+                # unwrap the miss implement clsSchema to instance
+                for ref_parent, ref_schema, _ in cls.iter_schema_cls_reference_in_schema(schema, cls_name):
+                    assert isinstance(ref_schema, CMDClsSchemaBase)
+                    assert cls_register_map[cls_name]['implement'] is None
+                    ref_schema.implement = reference_cls_map[cls_name]['implement']
+                    assert ref_schema.implement is not None
+                    new_ref_schema = ref_schema.get_unwrapped()
+                    assert new_ref_schema.cls == cls_name
+                    cls.replace_schema(ref_parent, ref_schema, new_ref_schema)
+                    break
+
+            # recalculate miss implement cls
+            pre_miss_implement_cls_names = miss_implement_cls_names
+            cls_register_map = {}
+            _iter_over_schema_for_cls_register(schema, cls_register_map)
+            miss_implement_cls_names = set()
+            for k, v in cls_register_map.items():
+                if not v['implement']:
+                    miss_implement_cls_names.add(k)
+
+        if len(miss_implement_cls_names) > 0:
+            raise exceptions.InvalidAPIUsage(f"Always miss class implements for {miss_implement_cls_names}")
+
+        return schema

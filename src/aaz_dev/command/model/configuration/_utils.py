@@ -1,6 +1,3 @@
-from schematics.models import Model
-
-
 class CMDDiffLevelEnum:
 
     BreakingChange = 1  # diff breaking change part

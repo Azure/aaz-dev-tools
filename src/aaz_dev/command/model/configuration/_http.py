@@ -37,13 +37,13 @@ class CMDHttpRequestArgs(Model):
 
 class CMDHttpRequestPath(CMDHttpRequestArgs):
 
-    def generate_args(self, path, ref_args):
+    def generate_args(self, path, ref_args, has_subresource):
         if is_valid_resource_id(path):
             id_parts = parse_resource_id(path)
         else:
             id_parts = {}
         resource_name = id_parts.pop("resource_name", None)
-        if resource_name and not path.endswith(resource_name):
+        if resource_name and (not path.endswith(resource_name) or has_subresource):
             resource_name = None
         args = []
         if self.params:
@@ -89,7 +89,7 @@ class CMDHttpRequestPath(CMDHttpRequestArgs):
                         arg.options = list({*arg.options, "name", "n"})
 
                 arg.required = True
-                arg.id_part = id_part
+                arg.id_part = id_part  # id_part should not be generated for create command or commands for subresource
                 args.append(arg)
 
         return args
@@ -138,10 +138,10 @@ class CMDHttpRequest(Model):
     class Options:
         serialize_when_none = False
 
-    def generate_args(self, path, ref_args):
+    def generate_args(self, path, ref_args, has_subresource):
         args = []
         if self.path:
-            args.extend(self.path.generate_args(path, ref_args))
+            args.extend(self.path.generate_args(path, ref_args, has_subresource))
         if self.query:
             args.extend(self.query.generate_args(ref_args))
         if self.header:
@@ -302,8 +302,8 @@ class CMDHttpAction(Model):
     request = ModelType(CMDHttpRequest)
     responses = ListType(ModelType(CMDHttpResponse))
 
-    def generate_args(self, ref_args):
-        return self.request.generate_args(path=self.path, ref_args=ref_args)
+    def generate_args(self, ref_args, has_subresource):
+        return self.request.generate_args(path=self.path, ref_args=ref_args, has_subresource=has_subresource)
 
     def reformat(self, **kwargs):
         if self.request:

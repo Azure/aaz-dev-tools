@@ -272,9 +272,15 @@ class CMDClsArgBase(CMDArgBase):
         if self.implement is None:
             return None
         assert isinstance(self.implement, CMDArgBase)
-        data = self.implement.to_native()
+        if isinstance(self.implement, CMDObjectArgBase):
+            cls = CMDObjectArg if isinstance(self, CMDClsArg) else CMDObjectArgBase
+        elif isinstance(self.implement, CMDArrayArgBase):
+            cls = CMDArrayArg if isinstance(self, CMDClsArg) else CMDArrayArgBase
+        else:
+            raise NotImplementedError()
+        data = {k: v for k, v in self.implement.to_native().items() if k in cls._schema.valid_input_keys}
         data.update(kwargs)
-        unwrapped = self.implement.__class__(data)
+        unwrapped = cls(data)
         return unwrapped
 
 

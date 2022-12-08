@@ -1,6 +1,6 @@
 import re
 
-# import inflect
+import inflect
 from utils.case import to_camel_case
 
 from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgDefault, CMDBooleanArgBase, \
@@ -12,7 +12,7 @@ from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaB
 
 
 class CMDArgBuilder:
-    # _inflect_engine = inflect.engine()
+    _inflect_engine = inflect.engine()
 
     @classmethod
     def new_builder(cls, schema, parent=None, var_prefix=None, ref_args=None, ref_arg=None, is_update_action=False):
@@ -26,7 +26,7 @@ class CMDArgBuilder:
 
         if parent is None or parent._arg_var is None:
             if isinstance(schema, CMDSchema):
-                if not arg_var.endswith("$"):
+                if not arg_var.endswith("$") and not schema.name.startswith('[') and not schema.name.startswith('{'):
                     arg_var += '.'
                 arg_var += f'{schema.name}'.replace('$', '')  # some schema name may contain $
             else:
@@ -290,7 +290,22 @@ class CMDArgBuilder:
         if isinstance(self.schema, CMDObjectSchemaDiscriminator):
             opt_name = self._build_option_name(self.schema.value)
         elif isinstance(self.schema, CMDSchema):
-            opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
+            name = self.schema.name.replace('$', '')
+            if name == "[Index]" or name == "{Key}":
+                assert self._arg_var.endswith(name)
+                prefix = self._arg_var[:-len(name)].split('.')[-1]
+                prefix = self._inflect_engine.singular_noun(prefix)
+                if name == "[Index]":
+                    name = f'{prefix}-index'
+                elif name == "{Key}":
+                    name = f'{prefix}-key'
+            elif name.startswith('[].') or name.startswith('{}.'):
+                assert self._arg_var.endswith(name)
+                prefix = self._arg_var[:-len(name)].split('.')[-1]
+                prefix = self._inflect_engine.singular_noun(prefix)
+                name = prefix + name[2:]
+            name = name.replace('.', '-')
+            opt_name = self._build_option_name(name)  # some schema name may contain $
         else:
             raise NotImplementedError()
         return [opt_name, ]

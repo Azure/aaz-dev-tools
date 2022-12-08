@@ -39,6 +39,7 @@ class CMDObjectOutput(CMDOutput):
     TYPE_VALUE = 'object'
 
     ref = CMDVariantField(required=True)
+
     client_flatten = CMDBooleanField(
         serialized_name='clientFlatten',
         deserialize_from='clientFlatten',
@@ -49,6 +50,7 @@ class CMDArrayOutput(CMDOutput):
     TYPE_VALUE = 'array'
 
     ref = CMDVariantField(required=True)
+
     client_flatten = CMDBooleanField(
         serialized_name='clientFlatten',
         deserialize_from='clientFlatten',

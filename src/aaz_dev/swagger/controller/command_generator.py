@@ -1,17 +1,14 @@
 import logging
 
 import inflect
-from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, CMDSchemaDefault, \
-    CMDHttpResponseJsonBody, CMDObjectOutput, CMDArrayOutput, CMDJsonInstanceUpdateAction, CMDInstanceUpdateOperation, \
-    CMDRequestJson, CMDClsSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDStringSchemaBase, CMDStringOutput, \
-    DEFAULT_CONFIRMATION_PROMPT
+from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, \
+    CMDSchemaDefault, CMDHttpResponseJsonBody, CMDArrayOutput, CMDJsonInstanceUpdateAction, \
+    CMDInstanceUpdateOperation, CMDRequestJson, DEFAULT_CONFIRMATION_PROMPT
 from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
-from swagger.model.schema.x_ms_pageable import XmsPageable
 from swagger.model.specs import SwaggerLoader
 from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case, get_url_path_valid_parts
-from swagger.utils.exceptions import InvalidSwaggerValueError
 from utils import exceptions
 
 logger = logging.getLogger('backend')
@@ -151,7 +148,7 @@ class CommandGenerator:
             resource.to_cmd()
         ]
 
-        op = cmd_builder(path_item)
+        op = self._generate_operation(cmd_builder, path_item)
         cmd_builder.apply_cls_definitions(op)
 
         assert isinstance(op, CMDHttpOperation)
@@ -159,21 +156,14 @@ class CommandGenerator:
             logger.warning(
                 f"Cannot Find api version parameter: {cmd_builder.path}, '{cmd_builder.method}' : {path_item.traces}")
 
-        output = self._generate_output(
-            cmd_builder,
-            op,
-            pageable=cmd_builder.get_pageable(path_item, op),
-        )
-        if output is not None:
-            command.outputs = []
-            command.outputs.append(output)
-
-        command.name = self._generate_command_name(path_item, resource, cmd_builder.method, output)
-
         command.description = op.description
         command.operations = [op]
 
         command.generate_args()
+        command.generate_outputs(pageable=cmd_builder.get_pageable(path_item, op))
+
+        output = command.outputs[0] if command.outputs else None
+        command.name = self._generate_command_name(path_item, resource, cmd_builder.method, output)
 
         return command
 
@@ -186,8 +176,9 @@ class CommandGenerator:
         assert path_item.get is not None
         assert path_item.put is not None
 
-        get_op = cmd_builder(path_item, method='get', mutability=MutabilityEnum.Read)
-        put_op = cmd_builder(path_item, method='put', mutability=MutabilityEnum.Update)
+        get_op = self._generate_operation(cmd_builder, path_item, method='get', mutability=MutabilityEnum.Read)
+        put_op = self._generate_operation(cmd_builder, path_item, method='put', mutability=MutabilityEnum.Update)
+
         cmd_builder.apply_cls_definitions(get_op, put_op)
 
         if put_op.http.request.body is None:
@@ -198,20 +189,15 @@ class CommandGenerator:
         if not self._set_api_version_parameter(put_op.http.request, api_version=resource.version):
             logger.warning(f"Cannot Find api version parameter: {resource.path}, 'put' : {path_item.traces}")
 
-        output = self._generate_output(cmd_builder, get_op)
-        if output is None:
+        if not command.build_output_by_operation(get_op):
             return None
 
-        output = self._generate_output(cmd_builder, put_op)
-        if output is None:
+        if not command.build_output_by_operation(put_op):
             return None
 
         self._filter_generic_update_parameters(get_op, put_op)
 
-        command.outputs = []
-        command.outputs.append(output)
         command.description = put_op.description
-
         json_update_op = self._generate_instance_update_operation(put_op)
         command.operations = [
             get_op,
@@ -220,11 +206,29 @@ class CommandGenerator:
         ]
 
         command.generate_args()
+        command.generate_outputs()
+
+        assert command.outputs
 
         group_name = self.generate_command_group_name_by_resource(
             resource_path=resource.path, rp_name=resource.resource_provider.name)
         command.name = f"{group_name} update"
         return command
+
+    @staticmethod
+    def _generate_operation(cmd_builder, path_item, **kwargs):
+        op = cmd_builder(path_item, **kwargs)
+
+        assert isinstance(op, CMDHttpOperation)
+        for resp in op.http.responses:
+            if resp.is_error:
+                continue
+            if resp.body is None:
+                continue
+            if isinstance(resp.body, CMDHttpResponseJsonBody):
+                resp.body.json.var = BuildInVariants.Instance
+
+        return op
 
     @staticmethod
     def _set_api_version_parameter(request, api_version):
@@ -247,57 +251,6 @@ class CommandGenerator:
                     find_api_version = True
                     break
         return find_api_version
-
-    def _generate_output(self, cmd_builder, op, pageable: XmsPageable = None):
-        assert isinstance(op, CMDHttpOperation)
-
-        output = None
-        for resp in op.http.responses:
-            if resp.is_error:
-                continue
-            if resp.body is None:
-                continue
-            if isinstance(resp.body, CMDHttpResponseJsonBody):
-                body_json = resp.body.json
-                body_json.var = BuildInVariants.Instance
-                if pageable and pageable.item_name:
-                    output = CMDArrayOutput()
-                    output.ref = f"{body_json.var}.{pageable.item_name}"
-                    if pageable.next_link_name:
-                        output.next_link = f"{body_json.var}.{pageable.next_link_name}"
-                elif isinstance(resp.body.json.schema, CMDArraySchemaBase):
-                    output = CMDArrayOutput()
-                    output.ref = body_json.var
-                elif isinstance(resp.body.json.schema, CMDStringSchemaBase):
-                    output = CMDStringOutput()
-                    output.ref = body_json.var
-                elif isinstance(resp.body.json.schema, CMDObjectSchemaBase):
-                    output = CMDObjectOutput()
-                    output.ref = body_json.var
-                elif isinstance(resp.body.json.schema, CMDClsSchemaBase):
-                    model = cmd_builder.get_cls_definition_model(resp.body.json.schema)
-                    if isinstance(model, CMDArraySchemaBase):
-                        output = CMDArrayOutput()
-                        output.ref = body_json.var
-                    elif isinstance(model, CMDObjectSchemaBase):
-                        output = CMDObjectOutput()
-                        output.ref = body_json.var
-                    else:
-                        raise InvalidSwaggerValueError(
-                            "Invalid output schema:",
-                            key=[cmd_builder.path, cmd_builder.method],
-                            value=type(model)
-                        )
-                else:
-                    raise InvalidSwaggerValueError(
-                        "Invalid output schema:",
-                        key=[cmd_builder.path, cmd_builder.method],
-                        value=type(resp.body.json.schema)
-                    )
-                output.client_flatten = True
-            else:
-                raise NotImplementedError()
-        return output
 
     @classmethod
     def generate_command_group_name_by_resource(cls, resource_path, rp_name):
@@ -399,7 +352,7 @@ class CommandGenerator:
     def _generate_instance_update_operation(put_op):
         json_update_op = CMDInstanceUpdateOperation()
         json_update_op.instance_update = CMDJsonInstanceUpdateAction()
-        json_update_op.instance_update.instance = BuildInVariants.Instance
+        json_update_op.instance_update.ref = BuildInVariants.Instance
         json_update_op.instance_update.json = CMDRequestJson()
         json_update_op.instance_update.json.schema = put_op.http.request.body.json.schema
 

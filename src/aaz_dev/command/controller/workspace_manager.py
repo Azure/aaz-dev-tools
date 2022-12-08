@@ -192,6 +192,9 @@ class WorkspaceManager:
         idx = 0
         while idx < len(node_names):
             name = node_names[idx]
+            if node.commands and name in node.commands:
+                raise exceptions.InvalidAPIUsage(
+                    f"Failed to create command group, '{' '.join(node_names[:idx+1])}' is command")
             if not node.command_groups or name not in node.command_groups:
                 if not node.command_groups:
                     node.command_groups = {}
@@ -634,6 +637,7 @@ class WorkspaceManager:
         return True
 
     def list_commands_by_resource(self, resource_id, version):
+        # will include all commands
         commands = []
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if cfg_editor:
@@ -653,6 +657,38 @@ class WorkspaceManager:
             self.add_cfg(merged_cfg_editor)
             return True
         return False
+
+    def add_subresource_by_arg_var(self, resource_id, version, arg_var, cg_names, ref_args_options):
+
+        cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
+        if not cfg_editor:
+            raise exceptions.InvalidAPIUsage(f"Resource not exist: resource_id={resource_id} version={version}")
+
+        self.remove_cfg(cfg_editor)
+        cfg_editor.build_subresource_commands_by_arg_var(resource_id, arg_var, cg_names, ref_args_options)
+        self.add_cfg(cfg_editor)
+
+    def remove_subresource(self, resource_id, version, subresource):
+        cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
+        if not cfg_editor:
+            return False
+        if not subresource:
+            raise exceptions.InvalidAPIUsage(f"Invalid subresource: '{subresource}'")
+
+        self.remove_cfg(cfg_editor)
+        removed_commands = cfg_editor.remove_subresource_commands(resource_id, version, subresource)
+        self.add_cfg(cfg_editor)
+        return len(removed_commands) > 0
+
+    def list_commands_by_subresource(self, resource_id, version, subresource):
+        commands = []
+        cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
+        if cfg_editor:
+            for cmd_names, _ in cfg_editor.iter_commands_by_resource(resource_id, subresource, version):
+                leaf = self.find_command_tree_leaf(*cmd_names)
+                if leaf:
+                    commands.append(leaf)
+        return commands
 
     @staticmethod
     def _pop_command_tree_node(parent, name):
