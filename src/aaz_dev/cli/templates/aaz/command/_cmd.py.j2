@@ -264,12 +264,18 @@ class {{ leaf.cls_name }}(
     class {{selector.cls_name}}(AAZJsonSelector):
 
         def _get(self):
-            {%- for scope, scope_define, filter_builder, filters, is_end in selector.iter_scopes() %}
+            {%- for scope, scope_define, idx_lines, filter_builder, filters, is_end in selector.iter_scopes_for_get() %}
 
             {%- if is_end %}
+            {%- for line in idx_lines %}
+            {{line}}
+            {%- endfor %}
             return {{ scope_define }}
 
             {%- else %}
+            {%- for line in idx_lines %}
+            {{line}}
+            {%- endfor %}
             {{ scope }} = {{ scope_define }}
 
             {%- if filter_builder is not none %}
@@ -291,13 +297,19 @@ class {{ leaf.cls_name }}(
             {%- endfor %}
 
         def _set(self, value):
-            {%- for scope, scope_define, filter_builder, filters, is_end in selector.iter_scopes() %}
+            {%- for scope, scope_define, idx_lines, filter_builder, filters, is_end in selector.iter_scopes_for_set() %}
 
             {%- if is_end %}
+            {%- for line in idx_lines %}
+            {{line}}
+            {%- endfor %}
             {{ scope_define }} = value
             return
 
             {%- else %}
+            {%- for line in idx_lines %}
+            {{line}}
+            {%- endfor %}
             {{ scope }} = {{ scope_define }}
 
             {%- if filter_builder is not none %}

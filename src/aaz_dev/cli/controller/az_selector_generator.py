@@ -21,36 +21,66 @@ class AzJsonSelectorGenerator:
     def cls_name(self):
         return f'{to_camel_case(self.name)}Selector'
 
-    def iter_scopes(self):
+    def iter_scopes_for_get(self):
+        for scope in self._iter_scopes():
+            yield scope
+
+    def iter_scopes_for_set(self):
+        for scope in self._iter_scopes(is_set=True):
+            yield scope
+
+    def _iter_scopes(self, is_set=False):
         scope_name = 'result'
         scope_define = self.variant_key
-        # yield scope, scope_define, None, None, False
-        for scope in _iter_selector_scopes_by_index_base(self._json, scope_name, scope_define, None, self._cmd_ctx):
+        for scope in _iter_selector_scopes_by_index_base(self._json, scope_name, scope_define, [], None, self._cmd_ctx, is_set):
             yield scope
 
 
-def _iter_selector_scopes_by_index(index, scope_name, scope_define, cmd_ctx):
+def _iter_selector_scopes_by_index(index, scope_name, scope_define, idx_lines, cmd_ctx, is_set):
     assert isinstance(index, (CMDObjectIndex, CMDArrayIndex))
     if scope_define is not None:
-        yield scope_name, scope_define, None, None, False
+        yield scope_name, scope_define, idx_lines, None, None, False
     scope_define = f"{scope_name}.{index.name}"
-    for scope in _iter_selector_scopes_by_index_base(index, scope_name, scope_define, None, cmd_ctx):
+    for scope in _iter_selector_scopes_by_index_base(index, scope_name, scope_define, [], None, cmd_ctx, is_set):
         yield scope
 
 
-def _iter_selector_scopes_by_index_base(index, scope_name, scope_define, previous_identifiers, cmd_ctx):
+def _iter_selector_scopes_by_index_base(index, scope_name, scope_define, idx_lines, previous_identifiers, cmd_ctx, is_set):
+
+    def _handle_idx_lines_for_end():
+        if previous_identifiers and is_set:
+            for identifier in previous_identifiers:
+                assert isinstance(identifier, CMDSchema)
+                assert identifier.arg
+                if identifier.name == "[Index]" or identifier.name.startswith('[]'):
+                    assert idx_lines == ["idx = next(filters)[0]"]
+                    assert scope_define == f"{scope_name}[idx]"
+                    idx_lines[0] = f"idx = next(filters, [len({scope_name})])[0]"
+                    if identifier.name == "[Index]":
+                        arg_keys, hide = cmd_ctx.get_argument(identifier.arg)
+                        assert not hide
+                        idx_lines.append(f"{arg_keys} = idx")
+                    return
+                elif identifier.name == "{Key}":
+                    assert idx_lines == ["idx = next(filters)[0]"]
+                    assert scope_define == f"{scope_name}[idx]"
+                    arg_keys, hide = cmd_ctx.get_argument(identifier.arg)
+                    assert not hide
+                    idx_lines[0] = f"idx = next(filters, [{arg_keys}.to_serialized_data()])[0]"
+                    return
+
     if isinstance(index, CMDObjectIndexBase):
         is_end = False
         if index.prop:
             assert isinstance(index.prop, CMDSelectorIndex)
-            yield scope_name, scope_define, None, None, is_end
-            for scope in _iter_selector_scopes_by_index(index.prop, scope_name, None, cmd_ctx):
+            yield scope_name, scope_define, idx_lines, None, None, is_end
+            for scope in _iter_selector_scopes_by_index(index.prop, scope_name, None, [], cmd_ctx, is_set):
                 yield scope
         elif index.discriminator:
-            yield scope_name, scope_define, None, None, is_end
+            yield scope_name, scope_define, idx_lines, None, None, is_end
             next_scope_define = f"[{scope_name}]"
             for scope in _iter_selector_scopes_by_index_base(
-                    index.discriminator, scope_name, next_scope_define, None, cmd_ctx):
+                    index.discriminator, scope_name, next_scope_define, [], None, cmd_ctx, is_set):
                 yield scope
         elif index.additional_props:
             assert isinstance(index.additional_props, CMDObjectIndexAdditionalProperties)
@@ -74,49 +104,25 @@ def _iter_selector_scopes_by_index_base(index, scope_name, scope_define, previou
                         filter_is_constant = False
                     filters.append((filter_key, filter_value, filter_is_constant))
 
-                yield scope_name, scope_define, filter_builder, filters, is_end
-
-                next_scope_define = f"{scope_name}[next(filters)[0]]"
+                yield scope_name, scope_define, idx_lines, filter_builder, filters, is_end
+                next_idx_lines = [
+                    "idx = next(filters)[0]"
+                ]
+                next_scope_define = f"{scope_name}[idx]"
                 for scope in _iter_selector_scopes_by_index_base(
-                        index.additional_props.item, scope_name, next_scope_define,
-                        index.additional_props.identifiers, cmd_ctx):
+                        index.additional_props.item, scope_name, next_scope_define, next_idx_lines,
+                        index.additional_props.identifiers, cmd_ctx, is_set):
                     yield scope
 
             else:
                 assert not index.additional_props.identifiers
                 is_end = True
-                if previous_identifiers:
-                    for identifier in previous_identifiers:
-                        assert isinstance(identifier, CMDSchema)
-                        assert identifier.arg
-                        if identifier.name == "[Index]" or identifier.name.startswith('[]'):
-                            assert scope_define == f"{scope_name}[next(filters)[0]]"
-                            scope_define = f"{scope_name}[next(filters, [len({scope_name})])[0]]"
-                            break
-                        elif identifier.name == "{Key}":
-                            assert scope_define == f"{scope_name}[next(filters)[0]]"
-                            arg_keys, hide = cmd_ctx.get_argument(identifier.arg)
-                            assert not hide
-                            scope_define = f"{scope_name}[next(filters, [{arg_keys}.to_serialized_data()])[0]]"
-                            break
-                yield scope_name, scope_define, None, None, is_end
+                _handle_idx_lines_for_end()
+                yield scope_name, scope_define, idx_lines, None, None, is_end
         else:
             is_end = True
-            if previous_identifiers:
-                for identifier in previous_identifiers:
-                    assert isinstance(identifier, CMDSchema)
-                    assert identifier.arg
-                    if identifier.name == "[Index]" or identifier.name.startswith('[]'):
-                        assert scope_define == f"{scope_name}[next(filters)[0]]"
-                        scope_define = f"{scope_name}[next(filters, [len({scope_name})])[0]]"
-                        break
-                    elif identifier.name == "{Key}":
-                        assert scope_define == f"{scope_name}[next(filters)[0]]"
-                        arg_keys, hide = cmd_ctx.get_argument(identifier.arg)
-                        assert not hide
-                        scope_define = f"{scope_name}[next(filters, [{arg_keys}.to_serialized_data()])[0]]"
-                        break
-            yield scope_name, scope_define, None, None, is_end
+            _handle_idx_lines_for_end()
+            yield scope_name, scope_define, idx_lines, None, None, is_end
     elif isinstance(index, CMDObjectIndexDiscriminator):
         is_end = False
         assert scope_define == f"[{scope_name}]"
@@ -126,15 +132,18 @@ def _iter_selector_scopes_by_index_base(index, scope_name, scope_define, previou
         filter_is_constant = True
         filters = [(filter_key, filter_value, filter_is_constant)]
         if index.prop:
-            yield scope_name, scope_define, filter_builder, filters, is_end
-            next_scope_define = f"{scope_name}[next(filters)[0]]"
-            for scope in _iter_selector_scopes_by_index(index.prop, scope_name, next_scope_define, cmd_ctx):
+            yield scope_name, scope_define, idx_lines, filter_builder, filters, is_end
+            next_idx_lines = [
+                "idx = next(filters)[0]"
+            ]
+            next_scope_define = f"{scope_name}[idx]"
+            for scope in _iter_selector_scopes_by_index(index.prop, scope_name, next_scope_define, next_idx_lines, cmd_ctx, is_set):
                 yield scope
         elif index.discriminator:
-            yield scope_name, scope_define, filter_builder, filters, is_end
+            yield scope_name, scope_define, idx_lines, filter_builder, filters, is_end
             next_scope_define = f"[{scope_name}]"
             for scope in _iter_selector_scopes_by_index_base(
-                    index.discriminator, scope_name, next_scope_define, None, cmd_ctx):
+                    index.discriminator, scope_name, next_scope_define, [], None, cmd_ctx, is_set):
                 yield scope
         else:
             # Not support to end in a discriminator
@@ -161,26 +170,16 @@ def _iter_selector_scopes_by_index_base(index, scope_name, scope_define, previou
                     filter_is_constant = False
                 filters.append((filter_key, filter_value, filter_is_constant))
 
-            yield scope_name, scope_define, filter_builder, filters, is_end
+            yield scope_name, scope_define, idx_lines, filter_builder, filters, is_end
 
-            next_scope_define = f"{scope_name}[next(filters)[0]]"
-            for scope in _iter_selector_scopes_by_index_base(index.item, scope_name, next_scope_define, index.identifiers, cmd_ctx):
+            next_idx_lines = [
+                "idx = next(filters)[0]"
+            ]
+            next_scope_define = f"{scope_name}[idx]"
+            for scope in _iter_selector_scopes_by_index_base(index.item, scope_name, next_scope_define, next_idx_lines, index.identifiers, cmd_ctx, is_set):
                 yield scope
         else:
             assert not index.identifiers
             is_end = True
-            if previous_identifiers:
-                for identifier in previous_identifiers:
-                    assert isinstance(identifier, CMDSchema)
-                    assert identifier.arg
-                    if identifier.name == "[Index]" or identifier.name.startswith('[]'):
-                        assert scope_define == f"{scope_name}[next(filters)[0]]"
-                        scope_define = f"{scope_name}[next(filters, [len({scope_name})])[0]]"
-                        break
-                    elif identifier.name == "{Key}":
-                        assert scope_define == f"{scope_name}[next(filters)[0]]"
-                        arg_keys, hide = cmd_ctx.get_argument(identifier.arg)
-                        assert not hide
-                        scope_define = f"{scope_name}[next(filters, [{arg_keys}.to_serialized_data()])[0]]"
-                        break
-            yield scope_name, scope_define, None, None, is_end
+            _handle_idx_lines_for_end()
+            yield scope_name, scope_define, idx_lines, None, None, is_end
