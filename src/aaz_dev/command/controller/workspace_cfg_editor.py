@@ -893,7 +893,7 @@ class WorkspaceCfgEditor(CfgReader):
 
         update_json = update_op.instance_update.json
 
-        def _build_sub_command_base(_subresource_idx):
+        def _build_sub_command_base(_subresource_idx, **kwargs):
             _sub_command = CMDCommand()
             _sub_command.version = update_cmd.version
             _resource = [_r for _r in update_cmd.resources if _r.id.lower() == resource_id.lower()][0]
@@ -901,7 +901,7 @@ class WorkspaceCfgEditor(CfgReader):
             _resource.subresource = self.idx_to_str(_subresource_idx)
             _sub_command.resources = [_resource]
             _sub_command.subresource_selector = self._build_subresource_selector(
-                response_json, update_json, _subresource_idx)
+                response_json, update_json, _subresource_idx, **kwargs)
             return _sub_command
 
         def _build_subresource_list_or_show_command(_subresource_idx, _ref_args):
@@ -913,7 +913,7 @@ class WorkspaceCfgEditor(CfgReader):
             return _sub_command
 
         def _build_subresource_create_command(_subresource_idx, _ref_args):
-            _sub_command = _build_sub_command_base(_subresource_idx)
+            _sub_command = _build_sub_command_base(_subresource_idx, optional_end_index_indentifier=True)
             _instance_op = CMDInstanceCreateOperation()
 
             _instance_op.instance_create = CMDJsonInstanceCreateAction()
@@ -1113,7 +1113,7 @@ class WorkspaceCfgEditor(CfgReader):
 
         self.reformat()
 
-    def _build_subresource_selector(self, response_json, update_json, subresource_idx):
+    def _build_subresource_selector(self, response_json, update_json, subresource_idx, **kwargs):
         assert isinstance(response_json, CMDResponseJson)
         assert isinstance(update_json, CMDRequestJson)
 
@@ -1126,18 +1126,18 @@ class WorkspaceCfgEditor(CfgReader):
             index = CMDObjectIndex()
             index.name = update_json.schema.name
             # disable prune for the outer layer index
-            selector.json = self._build_object_index_base(update_json.schema, idx, index=index, prune=False)
+            selector.json = self._build_object_index_base(update_json.schema, idx, index=index, prune=False, **kwargs)
         elif isinstance(update_json.schema, CMDArraySchema):
             assert isinstance(response_json.schema, CMDArraySchemaBase)
             index = CMDArrayIndex()
             index.name = update_json.schema.name
-            selector.json = self._build_array_index_base(update_json.schema, idx, index=index)
+            selector.json = self._build_array_index_base(update_json.schema, idx, index=index, **kwargs)
         else:
             raise NotImplementedError(f"Not support schema {type(update_json.schema)}")
 
         return selector
 
-    def _build_object_index_base(self, schema, idx, index=None, prune=False):
+    def _build_object_index_base(self, schema, idx, index=None, prune=False, **kwargs):
         assert isinstance(schema, CMDObjectSchemaBase)
 
         if not index:
@@ -1159,9 +1159,9 @@ class WorkspaceCfgEditor(CfgReader):
                             prop = prop.implement
                         # ignore the current index, return the sub index with index.name prefix
                         if isinstance(prop, CMDObjectSchema):
-                            return self._build_object_index(prop, remain_idx, name=name)
+                            return self._build_object_index(prop, remain_idx, name=name, **kwargs)
                         elif isinstance(prop, CMDArraySchema):
-                            return self._build_array_index(prop, remain_idx, name=name)
+                            return self._build_array_index(prop, remain_idx, name=name, **kwargs)
                         else:
                             raise NotImplementedError()
                     else:
@@ -1169,10 +1169,10 @@ class WorkspaceCfgEditor(CfgReader):
                         if isinstance(prop, CMDClsSchema):
                             prop = prop.implement
                         if isinstance(prop, CMDObjectSchema):
-                            index.prop = self._build_object_index(prop, remain_idx, name=name)
+                            index.prop = self._build_object_index(prop, remain_idx, name=name, **kwargs)
                             break
                         elif isinstance(prop, CMDArraySchema):
-                            index.prop = self._build_array_index(prop, remain_idx, name=name)
+                            index.prop = self._build_array_index(prop, remain_idx, name=name, **kwargs)
                             break
                         else:
                             raise NotImplementedError()
@@ -1180,15 +1180,15 @@ class WorkspaceCfgEditor(CfgReader):
         if schema.discriminators:
             for disc in schema.discriminators:
                 if disc.value == current_idx:
-                    index.discriminator = self._build_object_index_discriminator(disc, remain_idx)
+                    index.discriminator = self._build_object_index_discriminator(disc, remain_idx, **kwargs)
                     break
 
         if schema.additional_props and current_idx == "{}":
-            index.additional_props = self._build_object_index_additional_prop(schema.additional_props, remain_idx)
+            index.additional_props = self._build_object_index_additional_prop(schema.additional_props, remain_idx, **kwargs)
 
         return index
 
-    def _build_array_index_base(self, schema, idx, index=None):
+    def _build_array_index_base(self, schema, idx, index=None, **kwargs):
         assert isinstance(schema, CMDArraySchemaBase)
 
         if not index:
@@ -1221,29 +1221,29 @@ class WorkspaceCfgEditor(CfgReader):
             identifier = CMDIntegerSchema()
             identifier.name = '[Index]'
             identifiers.append(identifier)
-            identifier.required = True
+            identifier.required = len(remain_idx) > 0 or not kwargs.get('optional_end_index_indentifier', False)
         index.identifiers = identifiers
 
         if isinstance(item, CMDObjectSchemaBase):
-            index.item = self._build_object_index_base(item, remain_idx)
+            index.item = self._build_object_index_base(item, remain_idx, **kwargs)
         elif isinstance(item, CMDArraySchemaBase):
-            index.item = self._build_array_index_base(item, remain_idx)
+            index.item = self._build_array_index_base(item, remain_idx, **kwargs)
         else:
             raise NotImplementedError()
 
         return index
 
-    def _build_object_index(self, schema, idx, name):
+    def _build_object_index(self, schema, idx, name, **kwargs):
         index = CMDObjectIndex()
         index.name = name
-        return self._build_object_index_base(schema, idx, index, prune=True)
+        return self._build_object_index_base(schema, idx, index, prune=True, **kwargs)
 
-    def _build_array_index(self, schema, idx, name):
+    def _build_array_index(self, schema, idx, name, **kwargs):
         index = CMDArrayIndex()
         index.name = name
-        return self._build_array_index_base(schema, idx, index)
+        return self._build_array_index_base(schema, idx, index, **kwargs)
 
-    def _build_object_index_discriminator(self, schema, idx):
+    def _build_object_index_discriminator(self, schema, idx, **kwargs):
         assert isinstance(schema, CMDObjectSchemaDiscriminator)
 
         index = CMDObjectIndexDiscriminator()
@@ -1264,10 +1264,10 @@ class WorkspaceCfgEditor(CfgReader):
                         prop = prop.implement
 
                     if isinstance(prop, CMDObjectSchema):
-                        index.prop = self._build_object_index(prop, remain_idx, name)
+                        index.prop = self._build_object_index(prop, remain_idx, name, **kwargs)
                         break
                     elif isinstance(prop, CMDArraySchema):
-                        index.prop = self._build_array_index(prop, remain_idx, name)
+                        index.prop = self._build_array_index(prop, remain_idx, name, **kwargs)
                         break
                     else:
                         raise NotImplementedError()
@@ -1275,12 +1275,12 @@ class WorkspaceCfgEditor(CfgReader):
         if schema.discriminators:
             for disc in schema.discriminators:
                 if disc.value == current_idx:
-                    index.discriminator = self._build_object_index_discriminator(disc, remain_idx)
+                    index.discriminator = self._build_object_index_discriminator(disc, remain_idx, **kwargs)
                     break
 
         return index
 
-    def _build_object_index_additional_prop(self, schema, idx):
+    def _build_object_index_additional_prop(self, schema, idx, **kwargs):
         assert isinstance(schema, CMDObjectSchemaAdditionalProperties)
         index = CMDObjectIndexAdditionalProperties()
 
@@ -1293,9 +1293,9 @@ class WorkspaceCfgEditor(CfgReader):
         if isinstance(item, CMDClsSchemaBase):
             item = item.implement
         if isinstance(item, CMDObjectSchemaBase):
-            index.item = self._build_object_index_base(item, idx)
+            index.item = self._build_object_index_base(item, idx, **kwargs)
         elif isinstance(item, CMDArraySchemaBase):
-            index.item = self._build_array_index_base(item, idx)
+            index.item = self._build_array_index_base(item, idx, **kwargs)
         else:
             raise NotImplementedError()
 
