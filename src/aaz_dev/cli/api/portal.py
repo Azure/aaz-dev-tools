@@ -1,8 +1,10 @@
 
 from flask import Blueprint
-import click
+import click, logging
 from utils.config import Config
 from cli.controller.portal_cli_generator import PortalCliGenerator
+
+logging.basicConfig(level="INFO")
 
 bp = Blueprint('portal', __name__, url_prefix='/AAZ/Portal')
 
@@ -54,11 +56,11 @@ def generate_module_command_portal(module):
         if az_main_manager.has_module(mod):
             cli_module = az_main_manager.load_module(mod)
             registered_cmds = az_main_manager.find_module_cmd_registered(cli_module['profiles']['latest'])
-            print("Input module: {0} in cli".format(mod))
+            logging.info("Input module: {0} in cli".format(mod))
         elif az_ext_manager.has_module(mod):
             cli_module = az_ext_manager.load_module(mod)
             registered_cmds = az_main_manager.find_module_cmd_registered(cli_module['profiles']['latest'])
-            print("Input module: {0} in cli extension".format(mod))
+            logging.info("Input module: {0} in cli extension".format(mod))
         else:
             raise ValueError("Invalid input module: {0}, please check".format(mod))
         cmd_portal_list = []
@@ -69,10 +71,10 @@ def generate_module_command_portal(module):
             registered_version = cmd_name_version[-1]
             leaf = aaz_spec_manager.find_command(*node_names, leaf_name)
             if not leaf or not leaf.versions:
-                print("Command group: " + " ".join(node_names) + " not exist")
+                logging.warning("Command group: " + " ".join(node_names) + " not exist")
                 continue
             if not leaf.versions:
-                print("Command group: " + " ".join(node_names) + " version not exist")
+                logging.warning("Command group: " + " ".join(node_names) + " version not exist")
                 continue
             target_version = None
             for v in (leaf.versions or []):
@@ -80,9 +82,9 @@ def generate_module_command_portal(module):
                     target_version = v
                     break
             if not target_version:
-                print("Command: " + " ".join(node_names) + " version not exist")
+                logging.warning("Command: " + " ".join(node_names) + " version not exist")
                 continue
-            print("Generating portal config of [ az {0} ] with registered version {1}".format(" ".join(cmd_name_version[:-1]),
+            logging.info("Generating portal config of [ az {0} ] with registered version {1}".format(" ".join(cmd_name_version[:-1]),
                                                                                               registered_version))
             cfg_reader = aaz_spec_manager.load_resource_cfg_reader_by_command_with_version(leaf, version=target_version)
             cmd_cfg = cfg_reader.find_command(*leaf.names)
@@ -90,4 +92,4 @@ def generate_module_command_portal(module):
             if cmd_portal_info:
                 cmd_portal_list.append(cmd_portal_info)
         portal_cli_generator.generate_cmds_portal(cmd_portal_list)
-    print("done")
+    logging.info("done")

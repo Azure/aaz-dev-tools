@@ -5,10 +5,6 @@ from utils.config import Config
 import os, json, re, logging
 import jsonschema
 
-
-logger = logging.getLogger('backend')
-
-
 class PortalCliGenerator:
     COMMAND_ROOT_NAME = "az"
     DOC_ROOT_NAME = "https://docs.microsoft.com/cli/azure"
@@ -46,7 +42,7 @@ class PortalCliGenerator:
         cmd_portal_info['rp_name'] = rp_name
         swagger_provider_ind = swagger_path.lower().rfind(rp_name.lower())
         if swagger_provider_ind == -1:
-            logger.warning("please check cmd " + " ".join(leaf.names) + " resource id: " + swagger_path)
+            logging.warning("please check cmd " + " ".join(leaf.names) + " resource id: " + swagger_path)
             return
         folder_end_ind = swagger_path.rfind("{", swagger_provider_ind)
         resource_paths = re.finditer(self.RESOURCE_PATH_PATTERN, swagger_path[swagger_provider_ind:folder_end_ind])
@@ -251,7 +247,7 @@ class PortalCliGenerator:
                 not isinstance(target_version, CMDSpecsCommandVersion):
             return None
         if cmd_cfg.arg_groups is None:
-            logger.info("{0} cmd has no arg_group".format(" ".join(leaf.names)))
+            logging.info("{0} cmd has no arg_group".format(" ".join(leaf.names)))
             return None
         cmd_portal_info = {}
         self.fill_resource_type(cmd_portal_info, cmd_cfg, leaf)
@@ -268,10 +264,10 @@ class PortalCliGenerator:
                 not isinstance(target_version, CMDSpecsCommandVersion):
             return None
         if cmd_cfg.arg_groups is None:
-            logger.info("{0} cmd has no arg_group".format(" ".join(leaf.names)))
+            logging.info("{0} cmd has no arg_group".format(" ".join(leaf.names)))
             return None
         if not self.__check_cmd_examples(cmd_cfg):
-            logger.info("{0} cmd do not has examples".format(" ".join(leaf.names)))
+            logging.info("{0} cmd do not has examples".format(" ".join(leaf.names)))
             return None
         cmd_portal_info = {}
         self.fill_resource_type(cmd_portal_info, cmd_cfg, leaf)
@@ -306,7 +302,7 @@ class PortalCliGenerator:
                 if not os.path.exists(resource_file_folder):
                     os.makedirs(resource_file_folder)
                 if not self.valid_portal_json_format(resource_info):
-                    logger.info("json format error")
+                    logging.info("json format error")
                     continue
                 with open(resource_file_path, "w") as f_out:
                     f_out.write(json.dumps(resource_info, indent=4))
@@ -321,7 +317,7 @@ class PortalCliGenerator:
 
             cmd_name = cmd_portal_info['name']
             if cmd_name in cmd_dedup:
-                logger.info("{0} cmd has repeated from versions {1}".format(cmd_name, cmd_portal_info['apiVersion']))
+                logging.info("{0} cmd has repeated from versions {1}".format(cmd_name, cmd_portal_info['apiVersion']))
                 continue
             cmd_dedup.add(cmd_name)
             rp_name = cmd_portal_info['rp_name']
