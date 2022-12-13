@@ -12,7 +12,7 @@ from ._schema import CMDSchemaField
 from ._arg_builder import CMDArgBuilder
 from ._arg import CMDResourceGroupNameArg, CMDSubscriptionIdArg, CMDResourceLocationArg
 from ._utils import CMDDiffLevelEnum
-from msrestazure.tools import parse_resource_id, is_valid_resource_id
+from msrestazure.tools import parse_resource_id, resource_id
 from ._utils import CMDArgBuildPrefix
 
 
@@ -38,9 +38,11 @@ class CMDHttpRequestArgs(Model):
 class CMDHttpRequestPath(CMDHttpRequestArgs):
 
     def generate_args(self, path, ref_args, has_subresource):
-        if is_valid_resource_id(path):
+        try:
             id_parts = parse_resource_id(path)
-        else:
+            resource_id(**id_parts)
+        except KeyError:
+            # not a valid resource id
             id_parts = {}
         resource_name = id_parts.pop("resource_name", None)
         if resource_name and (not path.endswith(resource_name) or has_subresource):
