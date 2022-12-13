@@ -30,6 +30,7 @@ class AzCommandCtx:
         self.arg_clses = {}
         self.update_clses = {}
         self.response_clses = {}
+        self.support_id_part = True
 
     def set_argument_cls(self, arg):
         cls_name = arg.cls
@@ -124,6 +125,10 @@ class AzCommandGenerator:
         self.is_wait = is_wait
         self.cmd_ctx = AzCommandCtx()
 
+        if cmd.names[-1] == "create":
+            # disable id part for create command
+            self.cmd_ctx.support_id_part = False
+
         assert isinstance(self.cmd.cfg, CMDCommand)
         self.conditions = []
         if self.cmd.cfg.conditions:
@@ -139,6 +144,9 @@ class AzCommandGenerator:
 
         self.selectors = []
         if self.cmd.cfg.subresource_selector:
+            # disable id part for subresource command
+            self.cmd_ctx.support_id_part = False
+
             if isinstance(self.cmd.cfg.subresource_selector, CMDJsonSubresourceSelector):
                 selector = AzJsonSelectorGenerator(self.cmd_ctx, self.cmd.cfg.subresource_selector)
                 self.selectors.append(selector)
