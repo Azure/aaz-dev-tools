@@ -1,8 +1,8 @@
 from command.model.configuration import CMDStringArgBase, CMDByteArgBase, CMDBinaryArgBase, CMDDurationArgBase, \
     CMDDateArgBase, CMDDateTimeArgBase, CMDUuidArgBase, CMDPasswordArgBase, \
     CMDSubscriptionIdArgBase, CMDResourceGroupNameArgBase, CMDResourceIdArgBase, CMDResourceLocationArgBase, \
-    CMDIntegerArgBase, CMDInteger32ArgBase, CMDInteger64ArgBase, CMDBooleanArgBase, CMDFloatArgBase, \
-    CMDFloat32ArgBase, CMDFloat64ArgBase, CMDObjectArgBase, CMDArrayArgBase, CMDClsArgBase, CMDSubscriptionIdArg, CMDArg
+    CMDIntegerArgBase, CMDBooleanArgBase, CMDFloatArgBase, CMDObjectArgBase, CMDArrayArgBase, CMDClsArgBase, \
+    CMDSubscriptionIdArg, CMDArg
 from command.model.configuration import CMDArgGroup, CMDArgumentHelp
 from command.model.configuration import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, \
     CMDArrayFormat
@@ -236,8 +236,7 @@ def render_arg(arg, cmd_ctx, arg_group=None):
     elif arg.stage == AAZStageEnum.Experimental:
         arg_kwargs["is_experimental"] = True
 
-    if arg.id_part:
-        # Todo: del id_part for create command or command has sub_resource
+    if arg.id_part and cmd_ctx.support_id_part:
         arg_kwargs["id_part"] = arg.id_part
 
     if arg.default:
