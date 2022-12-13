@@ -547,6 +547,19 @@ function ArgumentReviewer(props: {
         return null;
     }
 
+    const getDefaultValueToString = () => {
+        if (props.arg.type === "object" || props.arg.type.startsWith("dict<") || props.arg.type.startsWith("array<") || props.arg.type.startsWith("@")) {
+            if (props.arg.default !== undefined && props.arg.default !== null) {
+                return JSON.stringify(props.arg.default.value);
+            }
+        } else {
+            if (props.arg.default !== undefined && props.arg.default !== null) {
+                return props.arg.default.value.toString();
+            }
+        }
+        return ""
+    }
+
     return (<React.Fragment>
         <Box
             sx={{
@@ -608,7 +621,7 @@ function ArgumentReviewer(props: {
                     {`Choices: ` + choices.join(', ')}
                 </ArgChoicesTypography>}
                 {props.arg.default !== undefined && <ArgChoicesTypography sx={{ ml: 1 }}>
-                    {`Default: ${props.arg.default.value}`}
+                    {`Default: ${getDefaultValueToString()}`}
                 </ArgChoicesTypography>
                 }
             </Box>}
@@ -642,6 +655,7 @@ function ArgumentDialog(props: {
     const [argSimilarTreeArgIdsUpdated, setArgSimilarTreeArgIdsUpdated] = useState<string[]>([]);
     const [hasDefault, setHasDefault] = useState<boolean | undefined>(false);
     const [defaultValue, setDefaultValue] = useState<any | undefined>(undefined);
+    const [defaultValueInJson, setDefaultValueInJson] = useState<boolean>(false);
 
     const handleClose = () => {
         setInvalidText(undefined);
@@ -703,8 +717,12 @@ function ArgumentDialog(props: {
                 return undefined;
             } else {
                 try {
+                    let argType = props.arg.type;
+                    if (argType.startsWith("@")) {
+                        argType = props.clsArgDefineMap[(props.arg as CMDClsArg).clsName].type
+                    }
                     argDefault = {
-                        value: convertArgDefaultText(defaultValue!, props.arg),
+                        value: convertArgDefaultText(defaultValue!, argType),
                     }
                 } catch (err: any) {
                     setInvalidText(`Field 'Default Value' is invalid: ${err.message}.`)
@@ -857,17 +875,25 @@ function ArgumentDialog(props: {
         setArgSimilarTreeExpandedIds([]);
 
         if (arg.type === "object" || arg.type.startsWith("dict<") || arg.type.startsWith("array<") || arg.type.startsWith("@")) {
-            // disable the default value modification
-            setHasDefault(undefined);
-            setDefaultValue(undefined);
-        } else if (props.arg.default !== undefined && props.arg.default !== null) {
-            setHasDefault(true);
-            setDefaultValue(props.arg.default.value.toString());
+            setDefaultValueInJson(true);
+            console.log(props.arg.default)
+            if (props.arg.default !== undefined && props.arg.default !== null) {
+                setHasDefault(true);
+                setDefaultValue(JSON.stringify(props.arg.default.value));
+            } else {
+                setHasDefault(false);
+                setDefaultValue(undefined);
+            }
         } else {
-            setHasDefault(false);
-            setDefaultValue(undefined);
+            setDefaultValueInJson(false);
+            if (props.arg.default !== undefined && props.arg.default !== null) {
+                setHasDefault(true);
+                setDefaultValue(props.arg.default.value.toString());
+            } else {
+                setHasDefault(false);
+                setDefaultValue(undefined);
+            }
         }
-
     }, [props.arg]);
 
     return (
@@ -964,11 +990,13 @@ function ArgumentDialog(props: {
                                 hidden={!hasDefault}
                                 fullWidth
                                 size="small"
-                                value={defaultValue}
+                                value={defaultValue !== undefined ? defaultValue : ""}
                                 onChange={(event: any) => {
                                     setDefaultValue(event.target.value);
                                 }}
+                                placeholder={defaultValueInJson ? "Default Value in json format" : "Default Value"}
                                 margin="normal"
+                                aria-controls=''
                                 required
                             />
                         </Box>
@@ -2028,10 +2056,22 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
             }
             break
         case "object":
+            if (response.default) {
+                arg = {
+                    ...arg,
+                    default: decodeArgDefault<object>(response.default),
+                }
+            }
             break
         default:
             if (argBase.type.startsWith("dict<")) {
                 // dict type
+                if (response.default) {
+                    arg = {
+                        ...arg,
+                        default: decodeArgDefault<object>(response.default),
+                    }
+                }
             } else if (argBase.type.startsWith("array<")) {
                 // array type
                 if (response.singularOptions) {
@@ -2040,11 +2080,23 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
                         singularOptions: response.singularOptions as string[],
                     }
                 }
+                if (response.default) {
+                    arg = {
+                        ...arg,
+                        default: decodeArgDefault<Array<any>>(response.default),
+                    }
+                }
             } else if (argBase.type.startsWith("@")) {
                 if (response.singularOptions) {
                     arg = {
                         ...arg,
                         singularOptions: response.singularOptions as string[],
+                    }
+                }
+                if (response.default) {
+                    arg = {
+                        ...arg,
+                        default: decodeArgDefault<any>(response.default),
                     }
                 }
             } else {
@@ -2059,8 +2111,8 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
     }
 }
 
-function convertArgDefaultText(defaultText: string, argBase: CMDArgBase): any {
-    switch (argBase.type) {
+function convertArgDefaultText(defaultText: string, argType: string): any {
+    switch (argType) {
         case "byte":
         case "binary":
         case "duration":
@@ -2102,8 +2154,21 @@ function convertArgDefaultText(defaultText: string, argBase: CMDArgBase): any {
                 default:
                     throw Error(`Not supported default value for boolean type: '${defaultText}'`)
             }
+        case "object":
+            const de = JSON.parse(defaultText.trim());
+            // TODO: verify object
+            return de
         default:
-            throw Error(`Not supported type: ${argBase.type}`)
+            if (argType.startsWith("array")) {
+                const de = JSON.parse(defaultText.trim());
+                // TODO: verify array
+                return de
+            } else if (argType.startsWith("dict")) {
+                const de = JSON.parse(defaultText.trim());
+                // TODO: verify dict
+                return de
+            }
+            throw Error(`Not supported type: ${argType}`)
     }
 }
 
