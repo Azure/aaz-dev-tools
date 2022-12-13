@@ -587,7 +587,7 @@ class {{ leaf.cls_name }}(
             {{ scope }} = {{ scope_define }}
 
             {%- for prop_name, prop_type, prop_kwargs, cls_builder_name in props %}
-            {{ scope }}.{{ prop_name }} = {{ prop_type }}(
+            {{ scope }}{{ prop_name|get_prop }} = {{ prop_type }}(
             {%- if not prop_kwargs|length %})
             {%- else %}
                 {%- for key, value in prop_kwargs.items() %}
@@ -596,7 +596,7 @@ class {{ leaf.cls_name }}(
             )
             {%- endif %}
             {%- if cls_builder_name is not none %}
-            {{ leaf.helper_cls_name }}.{{ cls_builder_name }}({{ scope }}.{{ prop_name }})
+            {{ leaf.helper_cls_name }}.{{ cls_builder_name }}({{ scope }}{{ prop_name|get_prop }})
             {%- endif %}
             {%- endfor %}
 
@@ -774,7 +774,7 @@ class {{ leaf.helper_cls_name }}:
     def {{ resp_cls.builder_name }}(cls, _schema):
         if cls.{{ resp_cls.schema_name }} is not None:
             {%- for prop_name in resp_cls.props %}
-            _schema.{{ prop_name }} = cls.{{ resp_cls.schema_name }}.{{ prop_name }}
+            _schema{{ prop_name|get_prop }} = cls.{{ resp_cls.schema_name }}{{ prop_name|get_prop }}
             {%- endfor %}
             {%- for disc_key, disc_value in resp_cls.discriminators %}
             _schema.discriminate_by(
@@ -802,7 +802,7 @@ class {{ leaf.helper_cls_name }}:
         {{ scope }} = {{ scope_define }}
 
         {%- for prop_name, prop_type, prop_kwargs, cls_builder_name in props %}
-        {{ scope }}.{{ prop_name }} = {{ prop_type }}(
+        {{ scope }}{{ prop_name|get_prop }} = {{ prop_type }}(
         {%- if not prop_kwargs|length %})
         {%- else %}
             {%- for key, value in prop_kwargs.items() %}
@@ -811,14 +811,14 @@ class {{ leaf.helper_cls_name }}:
         )
         {%- endif %}
         {%- if cls_builder_name is not none %}
-        cls.{{ cls_builder_name }}({{ scope }}.{{ prop_name }})
+        cls.{{ cls_builder_name }}({{ scope }}{{ prop_name|get_prop }})
         {%- endif %}
         {%- endfor %}
 
         {%- endfor %}
         {{- "\n" }}
         {%- for prop_name in resp_cls.props %}
-        _schema.{{ prop_name }} = cls.{{ resp_cls.schema_name }}.{{ prop_name }}
+        _schema{{ prop_name|get_prop }} = cls.{{ resp_cls.schema_name }}{{ prop_name|get_prop }}
         {%- endfor %}
         {%- for disc_key, disc_value in resp_cls.discriminators %}
         _schema.discriminate_by(
