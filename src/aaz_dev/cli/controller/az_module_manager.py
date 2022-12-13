@@ -59,23 +59,6 @@ class AzModuleManager:
                         registered_cmds.append(cmd_node.names + [cmd_node.version])
         return registered_cmds
 
-    def find_cmd_registered_version(self, node, *names):
-        idx = 0
-        while idx < len(names[:-1]):
-            name = names[idx]
-            if not node.command_groups or name not in node.command_groups:
-                break
-            node = node.command_groups[name]
-            idx += 1
-        if not node.commands:
-            return None
-        for command in node.commands:
-            if command != names[-1]:
-                continue
-            if node.commands[command].registered:
-                return node.commands[command].version
-        return None
-
     def load_module(self, mod_name):
         module = CLIModule()
         module.name = mod_name
