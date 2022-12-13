@@ -1,7 +1,7 @@
 from jinja2.filters import pass_environment
 from utils.stage import AAZStageEnum
 from utils.case import to_camel_case, to_snack_case
-import json
+import re
 
 
 @pass_environment
@@ -48,6 +48,15 @@ def constant_convert(env, data):
         raise NotImplementedError()
 
 
+@pass_environment
+def get_prop(env, data):
+    assert isinstance(data, str)
+    if re.match('^[0-9].*$', data):
+        return f'[{constant_convert(env, data)}]'
+    else:
+        return f'.{data}'
+
+
 custom_filters = {
     "camel_case": camel_case,
     "snake_case": snake_case,
@@ -55,4 +64,5 @@ custom_filters = {
     "is_preview": is_preview,
     "is_stable": is_stable,
     "constant_convert": constant_convert,
+    "get_prop": get_prop
 }
