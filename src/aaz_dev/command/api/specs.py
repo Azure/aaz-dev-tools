@@ -1,11 +1,10 @@
 from flask import Blueprint, jsonify, request, url_for
 from utils import exceptions
 from command.controller.specs_manager import AAZSpecsManager
-from cli.controller.portal_cli_generator import PortalCliGenerator
-import json
 
 
 bp = Blueprint('specs', __name__, url_prefix='/AAZ/Specs')
+
 
 # modules
 @bp.route("/CommandTree/Nodes/<names_path:node_names>", methods=("GET",))

@@ -527,29 +527,6 @@ class AAZSpecsManager:
                 cmd_nodes_list.append([self.COMMAND_TREE_ROOT_NAME] + cmd.names)
         return cmd_nodes_list
 
-    def get_module_command_tree(self, *cmd_names):
-        node = self.tree.root
-        idx = 0
-        while idx < len(cmd_names):
-            name = cmd_names[idx]
-            if not node.command_groups or name not in node.command_groups:
-                break
-            node = node.command_groups[name]
-            idx += 1
-        group_nodes = deque()
-        group_nodes.append(node)
-        cmd_nodes_list = []
-        while len(group_nodes) > 0:
-            group_node = group_nodes.popleft()
-            if group_node.command_groups is not None:
-                for group in group_node.command_groups:
-                    group_nodes.append(group_node.command_groups[group])
-            if group_node.commands is not None:
-                for command in group_node.commands:
-                    cmd_node = group_node.commands[command]
-                    cmd_nodes_list.append([self.COMMAND_TREE_ROOT_NAME] + cmd_node.names)
-        return cmd_nodes_list
-
     @staticmethod
     def render_command_readme(command):
         assert isinstance(command, CMDSpecsCommand)

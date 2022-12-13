@@ -307,7 +307,7 @@ class PortalCliGenerator:
                 with open(resource_file_path, "w") as f_out:
                     f_out.write(json.dumps(resource_info, indent=4))
 
-    def generate_cmds_portal(self, cmd_portal_list):
+    def generate_cmds_portal_file(self, cmd_portal_list):
         portal_dict = {}
         cmd_dedup = set()
         for cmd_portal_info in cmd_portal_list:
@@ -350,6 +350,37 @@ class PortalCliGenerator:
             rescoure_info['commands'].append(cmd_portal_info)
 
         self.generate_portal_file(portal_dict)
+
+    def generate_cmds_portal_info(self, aaz_spec_manager, registered_cmds):
+        cmd_portal_list = []
+        for cmd_name_version in registered_cmds:
+            # cmd_name_version = ['monitor', 'diagnostic-setting', 'list', '2021-05-01-preview']
+            node_names = cmd_name_version[:-2]
+            leaf_name = cmd_name_version[-2]
+            registered_version = cmd_name_version[-1]
+            leaf = aaz_spec_manager.find_command(*node_names, leaf_name)
+            if not leaf or not leaf.versions:
+                logging.warning("Command group: " + " ".join(node_names) + " not exist")
+                continue
+            if not leaf.versions:
+                logging.warning("Command group: " + " ".join(node_names) + " version not exist")
+                continue
+            target_version = None
+            for v in (leaf.versions or []):
+                if v.name == registered_version:
+                    target_version = v
+                    break
+            if not target_version:
+                logging.warning("Command: " + " ".join(node_names) + " version not exist")
+                continue
+            logging.info("Generating portal config of [ az {0} ] with registered version {1}".format(" ".join(cmd_name_version[:-1]),
+                                                                                              registered_version))
+            cfg_reader = aaz_spec_manager.load_resource_cfg_reader_by_command_with_version(leaf, version=target_version)
+            cmd_cfg = cfg_reader.find_command(*leaf.names)
+            cmd_portal_info = self.generate_command_portal_raw(cmd_cfg, leaf, target_version)
+            if cmd_portal_info:
+                cmd_portal_list.append(cmd_portal_info)
+        return cmd_portal_list
 
 if __name__ == '__main__':
     generator = PortalCliGenerator()
