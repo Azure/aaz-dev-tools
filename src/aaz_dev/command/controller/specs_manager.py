@@ -518,15 +518,6 @@ class AAZSpecsManager:
         self._modified_commands = set()
         self._modified_resource_cfgs = {}
 
-    def get_command_tree(self):
-        cmd_nodes_list = []
-        for group in self.iter_command_groups():
-            if group == self.tree.root:
-                continue
-            for cmd in self.iter_commands(*group.names):
-                cmd_nodes_list.append([self.COMMAND_TREE_ROOT_NAME] + cmd.names)
-        return cmd_nodes_list
-
     @staticmethod
     def render_command_readme(command):
         assert isinstance(command, CMDSpecsCommand)

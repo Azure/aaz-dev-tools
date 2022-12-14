@@ -37,32 +37,3 @@ class AAZSpecPortalGenTest(TestCase):
         with open(file_path, "w") as f_out:
             f_out.write(json.dumps(cmd_portal_info, indent=4))
 
-    def test_aaz_portal_generate(self):
-        manager = AAZSpecsManager()
-        root = manager.find_command_group()
-        if not root:
-            raise exceptions.ResourceNotFind("Command group not exist")
-        cmd_nodes_list = manager.get_command_tree()
-        portal_cli_generator = PortalCliGenerator()
-        cmd_portal_list = []
-        for node_path in cmd_nodes_list[:20]:
-            # node_path = ['aaz', 'change-analysis', 'list']
-            node_names = node_path[1:-1]
-            leaf_name = node_path[-1]
-            leaf = manager.find_command(*node_names, leaf_name)
-            if not leaf or not leaf.versions:
-                raise exceptions.ResourceNotFind("Command group: " + " ".join(leaf.names) + " not exist")
-            if not leaf.versions:
-                raise exceptions.ResourceNotFind("Command group: " + " ".join(leaf.names) + " version not exist")
-            target_version = leaf.versions[0]
-            if not target_version:
-                raise exceptions.ResourceNotFind("Command: " + " ".join(leaf.names) + " version not exist")
-
-            cfg_reader = manager.load_resource_cfg_reader_by_command_with_version(leaf, version=target_version)
-            cmd_cfg = cfg_reader.find_command(*leaf.names)
-            cmd_portal_info = portal_cli_generator.generate_command_portal_raw(cmd_cfg, leaf, target_version)
-            if cmd_portal_info:
-                cmd_portal_list.append(cmd_portal_info)
-
-        portal_cli_generator.generate_cmds_portal(cmd_portal_list)
-
