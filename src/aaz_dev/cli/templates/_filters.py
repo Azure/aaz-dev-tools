@@ -48,10 +48,17 @@ def constant_convert(env, data):
         raise NotImplementedError()
 
 
+_PYTHON_BUILD_IN_KEYWORDS = (
+    'False', 'await', 'else', 'import', 'pass', 'None', 'break', 'except', 'in', 'raise', 'True', 'class', 'finally',
+    'is', 'return', 'and', 'continue', 'for', 'lambda', 'try', 'as', 'def', 'from', 'nonlocal', 'while', 'assert',
+    'del', 'global', 'not', 'with', 'async', 'elif', 'if', 'or', 'yield'
+)
+
+
 @pass_environment
 def get_prop(env, data):
     assert isinstance(data, str)
-    if re.match('^[0-9].*$', data):
+    if re.match('^[0-9].*$', data) or data in _PYTHON_BUILD_IN_KEYWORDS:
         return f'[{constant_convert(env, data)}]'
     else:
         return f'.{data}'
