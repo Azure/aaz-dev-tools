@@ -12,6 +12,7 @@ from cli.model.view import CLIModule, CLIViewProfile, CLIViewCommandGroup, CLIVi
 from cli.templates import get_templates
 from utils import exceptions
 from utils.config import Config
+from collections import deque
 
 logger = logging.getLogger('backend')
 
@@ -33,6 +34,30 @@ class AzModuleManager:
 
     def get_aaz_path(self, mod_name):
         raise NotImplementedError()
+
+    def has_module(self, mod_name):
+        mod_folder = self.get_mod_path(mod_name)
+        if not os.path.exists(mod_folder):
+            #print(f"Invalid module folder: cannot find modules in: '{mod_folder}'")
+            return False
+        return True
+
+    def find_module_cmd_registered(self, node):
+        group_nodes = deque()
+        group_nodes.append(node)
+        registered_cmds = []
+
+        while len(group_nodes) > 0:
+            group_node = group_nodes.popleft()
+            if 'command_groups' in group_node and group_node.command_groups is not None:
+                for group in group_node.command_groups:
+                    group_nodes.append(group_node.command_groups[group])
+            if 'commands' in group_node and group_node.commands is not None:
+                for command in group_node.commands:
+                    cmd_node = group_node.commands[command]
+                    if cmd_node.registered:
+                        registered_cmds.append(cmd_node.names + [cmd_node.version])
+        return registered_cmds
 
     def load_module(self, mod_name):
         module = CLIModule()

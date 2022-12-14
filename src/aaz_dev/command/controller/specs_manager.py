@@ -11,6 +11,7 @@ from command.templates import get_templates
 from utils import exceptions
 from .cfg_reader import CfgReader
 from .cfg_validator import CfgValidator
+from collections import deque
 
 
 class AAZSpecsManager:
@@ -184,7 +185,7 @@ class AAZSpecsManager:
             raise ValueError(f"Invalid file path: {json_path}")
 
         with open(json_path, 'r') as f:
-            print(json_path)
+            #print(json_path)
             data = json.load(f)
         cfg = CMDConfiguration(data)
 

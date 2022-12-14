@@ -3,7 +3,12 @@ from flask import Blueprint, jsonify, request, url_for
 from utils.config import Config
 from utils import exceptions
 from cli.controller.az_module_manager import AzMainManager, AzExtensionManager
+from cli.controller.portal_cli_generator import PortalCliGenerator
 from cli.model.view import CLIModule
+from command.controller.specs_manager import AAZSpecsManager
+import logging
+
+logging.basicConfig(level="INFO")
 
 
 bp = Blueprint('az', __name__, url_prefix='/CLI/Az')
@@ -110,3 +115,43 @@ def az_extension_module(module_name):
     else:
         raise NotImplementedError()
     return jsonify(result)
+
+@bp.route("/Main/Modules/<Name:module_name>/ExportPortalConfig", methods=("POST",))
+def portal_generate_main_module(module_name):
+    az_main_manager = AzMainManager()
+    if az_main_manager.has_module(module_name):
+        cli_module = az_main_manager.load_module(module_name)
+        registered_cmds = az_main_manager.find_module_cmd_registered(cli_module['profiles']['latest'])
+        logging.info("Input module: {0} in cli".format(module_name))
+    else:
+        exceptions.ResourceNotFind("Invalid input module: {0}, please check".format(module_name))
+        return
+
+    aaz_spec_manager = AAZSpecsManager()
+    root = aaz_spec_manager.find_command_group()
+    if not root:
+        raise exceptions.ResourceNotFind("Command group not exist")
+    portal_cli_generator = PortalCliGenerator()
+    cmd_portal_list = portal_cli_generator.generate_cmds_portal_info(aaz_spec_manager, registered_cmds)
+    portal_cli_generator.generate_cmds_portal(cmd_portal_list)
+    return "Done"
+
+@bp.route("/Extension/Modules/<Name:module_name>/ExportPortalConfig", methods=("POST",))
+def portal_generate_extension_module(module_name):
+    az_ext_manager = AzExtensionManager()
+    if az_ext_manager.has_module(module_name):
+        cli_module = az_ext_manager.load_module(module_name)
+        registered_cmds = az_ext_manager.find_module_cmd_registered(cli_module['profiles']['latest'])
+        logging.info("Input module: {0} in cli extension".format(module_name))
+    else:
+        exceptions.ResourceNotFind("Invalid input module: {0}, please check".format(module_name))
+        return
+
+    aaz_spec_manager = AAZSpecsManager()
+    root = aaz_spec_manager.find_command_group()
+    if not root:
+        raise exceptions.ResourceNotFind("Command group not exist")
+    portal_cli_generator = PortalCliGenerator()
+    cmd_portal_list = portal_cli_generator.generate_cmds_portal_info(aaz_spec_manager, registered_cmds)
+    portal_cli_generator.generate_cmds_portal(cmd_portal_list)
+    return "Done"
