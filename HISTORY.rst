@@ -3,6 +3,20 @@
 Release History
 ===============
 
+0.16.0
+++++++
+* Support build-in keywords in property name generation (#167)
+* Add portal CLI generator (#153)
+* Support to generate property name starts with digit (#166)
+* Support to modify default for array, dict and object arguments (#165)
+* Fix `id_part` setup (#164)
+* Disable `id_part` for create command and subcommand (#163)
+* Support array index auto generate (#162)
+* Support to modify argument options for subcommand (#161)
+* Support subcommand generation (#154)
+* Add FAQs for Swagger definition (#160)
+* Fix `x-ms-skip-url-encoding` unparsed in Swagger (#159)
+
 0.15.1
 ++++++
 * Fix `workspace` bug on class argument unwrap (#155)
