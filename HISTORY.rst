@@ -2,6 +2,10 @@
 
 Release History
 ===============
+0.16.1
+++++++
+* Ignore argument id-parts when generate code for list commands (#169)
+* Optimize swagger `Error response` invalid hints (#170)
 
 0.16.0
 ++++++
