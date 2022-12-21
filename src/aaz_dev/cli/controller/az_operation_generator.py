@@ -64,8 +64,18 @@ class AzHttpOperationGenerator(AzOperationGenerator):
                 self.success_responses.append(AzHttpResponseGenerator(self._cmd_ctx, response))
             else:
                 if not isinstance(response.body, CMDHttpResponseJsonBody):
-                    raise exceptions.InvalidAPIUsage(
-                        f"Invalid error response body: Only support json, current is '{type(response.body)}'")
+                    if not response.body:
+                        raise exceptions.InvalidAPIUsage(
+                            f"Invalid `Error` response schema in operation `{self._operation.operation_id}`: "
+                            f"Missing `schema` property in response "
+                            f"`{response.status_codes or 'default'}`."
+                        )
+                    else:
+                        raise exceptions.InvalidAPIUsage(
+                            f"Invalid `Error` response schema in operation `{self._operation.operation_id}`: "
+                            f"Only support json schema, current is '{type(response.body)}' in response "
+                            f"`{response.status_codes or 'default'}`"
+                        )
                 schema = response.body.json.schema
                 if not isinstance(schema, CMDClsSchemaBase):
                     raise NotImplementedError()
@@ -73,9 +83,20 @@ class AzHttpOperationGenerator(AzOperationGenerator):
                 if not error_format:
                     error_format = name
                 if error_format != name:
-                    raise exceptions.InvalidAPIUsage(f"Multiple error formats in one operation: {name}, {error_format}")
-        if not AAZErrorFormatEnum.validate(error_format):
-            raise exceptions.InvalidAPIUsage(f"Invalid error format: {error_format}")
+                    raise exceptions.InvalidAPIUsage(
+                        f"Invalid `Error` response schema in operation `{self._operation.operation_id}`: "
+                        f"Multiple schema formats are founded: {name}, {error_format}"
+                    )
+        if not error_format:
+            raise exceptions.InvalidAPIUsage(
+                f"Missing `Error` response schema in operation `{self._operation.operation_id}`: "
+                f"Please define the `default` response in swagger for error."
+            )
+        elif not AAZErrorFormatEnum.validate(error_format):
+            raise exceptions.InvalidAPIUsage(
+                f"Invalid `Error` response schema in operation `{self._operation.operation_id}`: "
+                f"Invalid error format `{error_format}`. Support `ODataV4Format` and `MgmtErrorFormat` only"
+            )
 
         if self.is_long_running:
             callback_name = None
