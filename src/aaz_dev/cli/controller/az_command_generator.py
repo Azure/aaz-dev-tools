@@ -125,8 +125,8 @@ class AzCommandGenerator:
         self.is_wait = is_wait
         self.cmd_ctx = AzCommandCtx()
 
-        if cmd.names[-1] == "create":
-            # disable id part for create command
+        if cmd.names[-1] in ("create", "list"):
+            # disable id part for create and list command
             self.cmd_ctx.support_id_part = False
 
         assert isinstance(self.cmd.cfg, CMDCommand)
@@ -273,6 +273,10 @@ class AzCommandGenerator:
         if len(self.outputs) > 1:
             # TODO: add support for output larger than 1
             raise NotImplementedError()
+
+        if self.paging:
+            # disable id part for paging commands
+            self.cmd_ctx.support_id_part = False
 
     @property
     def name(self):
