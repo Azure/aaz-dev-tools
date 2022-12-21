@@ -3,13 +3,14 @@ import logging
 import inflect
 from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, \
     CMDSchemaDefault, CMDHttpResponseJsonBody, CMDArrayOutput, CMDJsonInstanceUpdateAction, \
-    CMDInstanceUpdateOperation, CMDRequestJson, DEFAULT_CONFIRMATION_PROMPT
+    CMDInstanceUpdateOperation, CMDRequestJson, DEFAULT_CONFIRMATION_PROMPT, CMDClsSchemaBase
 from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
 from swagger.model.specs import SwaggerLoader
 from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case, get_url_path_valid_parts
 from utils import exceptions
+from utils.error_format import AAZErrorFormatEnum
 
 logger = logging.getLogger('backend')
 
@@ -220,13 +221,50 @@ class CommandGenerator:
         op = cmd_builder(path_item, **kwargs)
 
         assert isinstance(op, CMDHttpOperation)
+        error_format = None
         for resp in op.http.responses:
             if resp.is_error:
-                continue
-            if resp.body is None:
-                continue
-            if isinstance(resp.body, CMDHttpResponseJsonBody):
-                resp.body.json.var = BuildInVariants.Instance
+                if not isinstance(resp.body, CMDHttpResponseJsonBody):
+                    if not resp.body:
+
+                        raise exceptions.InvalidAPIUsage(
+                            f"Invalid `Error` response schema in operation `{op.operation_id}`: "
+                            f"Missing `schema` property in response "
+                            f"`{resp.status_codes or 'default'}`."
+                        )
+                    else:
+                        raise exceptions.InvalidAPIUsage(
+                            f"Invalid `Error` response schema in operation `{op.operation_id}`: "
+                            f"Only support json schema, current is '{type(resp.body)}' in response "
+                            f"`{resp.status_codes or 'default'}`"
+                        )
+                schema = resp.body.json.schema
+                if not isinstance(schema, CMDClsSchemaBase):
+                    raise NotImplementedError()
+                name = schema.type[1:]
+                if not error_format:
+                    error_format = name
+                if error_format != name:
+                    raise exceptions.InvalidAPIUsage(
+                        f"Invalid `Error` response schema in operation `{op.operation_id}`: "
+                        f"Multiple schema formats are founded: {name}, {error_format}"
+                    )
+            else:
+                if resp.body is None:
+                    continue
+                if isinstance(resp.body, CMDHttpResponseJsonBody):
+                    resp.body.json.var = BuildInVariants.Instance
+
+        if not error_format:
+            raise exceptions.InvalidAPIUsage(
+                f"Missing `Error` response schema in operation `{op.operation_id}`: "
+                f"Please define the `default` response in swagger for error."
+            )
+        elif not AAZErrorFormatEnum.validate(error_format):
+            raise exceptions.InvalidAPIUsage(
+                f"Invalid `Error` response schema in operation `{op.operation_id}`: "
+                f"Invalid error format `{error_format}`. Support `ODataV4Format` and `MgmtErrorFormat` only"
+            )
 
         return op
 
