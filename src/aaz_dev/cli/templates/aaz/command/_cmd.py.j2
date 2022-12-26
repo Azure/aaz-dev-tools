@@ -707,7 +707,11 @@ class {{ leaf.cls_name }}(
 
         def __call__(self, *args, **kwargs):
             self._update_instance_by_generic(
+                {%- if op.is_selector_variant %}
+                {{ op.variant_key }}.required(),
+                {%- else %}
                 {{ op.variant_key }},
+                {%- endif %}
                 {{ op.arg_key }}
             )
 
