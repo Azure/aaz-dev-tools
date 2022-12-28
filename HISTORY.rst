@@ -2,6 +2,11 @@
 
 Release History
 ===============
+
+0.16.2
+++++++
+* Fix subresource selector in generic update operation (#172)
+
 0.16.1
 ++++++
 * Ignore argument id-parts when generate code for list commands (#169)
