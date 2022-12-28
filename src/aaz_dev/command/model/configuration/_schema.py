@@ -32,6 +32,10 @@ from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjec
 from ._utils import CMDDiffLevelEnum
 from utils import exceptions
 
+import logging
+
+
+logger = logging.getLogger('backend')
 
 class CMDSchemaEnumItem(Model):
     arg = CMDVariantField()  # value will be used when specific argument is provided
@@ -1006,12 +1010,18 @@ class CMDArraySchemaBase(CMDSchemaBase):
                     f"Identifiers should be used in 'array of object'"
                 )
             item_prop_names = {p.name for p in item_instance.props}
+            new_identifiers = []
             for identifier in identifiers:
                 if identifier not in item_prop_names:
+                    if '/' in identifier:
+                        # not support identifier with '/' right now
+                        logger.info(f"identifier '{identifier}' is not supported yet")
+                        continue
                     raise exceptions.InvalidAPIUsage(
                         f"identifier property '{identifier}' not exist"
                     )
-            self.identifiers = identifiers
+                new_identifiers.append(identifier)
+            self.identifiers = new_identifiers or None
 
 
 class CMDArraySchema(CMDArraySchemaBase, CMDSchema):
