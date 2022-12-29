@@ -39,8 +39,8 @@ class WorkspaceManager:
         return workspaces
 
     @classmethod
-    def new(cls, name, plane):
-        manager = cls(name)
+    def new(cls, name, plane, **kwargs):
+        manager = cls(name, **kwargs)
         if os.path.exists(manager.path):
             raise exceptions.ResourceConflict(f"Workspace conflict: Workspace json file path exists: {manager.path}")
         manager.ws = CMDEditorWorkspace({
@@ -53,7 +53,7 @@ class WorkspaceManager:
         })
         return manager
 
-    def __init__(self, name):
+    def __init__(self, name, aaz_manager=None, swagger_manager=None):
         self.name = name
         if not Config.AAZ_DEV_WORKSPACE_FOLDER or os.path.exists(Config.AAZ_DEV_WORKSPACE_FOLDER) and not os.path.isdir(Config.AAZ_DEV_WORKSPACE_FOLDER):
             raise ValueError(
@@ -67,8 +67,8 @@ class WorkspaceManager:
         self._cfg_editors = {}
         self._reusable_leaves = {}
 
-        self.aaz_specs = AAZSpecsManager()
-        self.swagger_specs = SwaggerSpecsManager()
+        self.aaz_specs = aaz_manager or AAZSpecsManager()
+        self.swagger_specs = swagger_manager or SwaggerSpecsManager()
         self.swagger_command_generator = CommandGenerator()
 
     def load(self):

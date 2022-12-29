@@ -158,11 +158,9 @@ class SwaggerSpecsManager:
         return module
 
     def get_module_manager(self, plane, mod_names, without_catch=False) -> SwaggerSpecsModuleManager:
-        # always try to get module to verify its existence
-        module = self.get_module(plane, mod_names)
-
         key = (plane, tuple(mod_names))
         if without_catch or key not in self._module_managers_cache:
+            module = self.get_module(plane, mod_names)
             self._module_managers_cache[key] = SwaggerSpecsModuleManager(plane, module)
 
         return self._module_managers_cache[key]
