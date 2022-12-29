@@ -449,8 +449,9 @@ class WorkspaceManager:
             if self.check_resource_exist(r['id']):
                 raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {r['id']}")
             # convert resource to swagger resource
-            swagger_resource = self.swagger_specs.get_resource_in_version(
-                self.ws.plane, mod_names, r['id'], version)
+            swagger_resource = self.swagger_specs.get_module_manager(
+                plane=self.ws.plane, mod_names=mod_names
+            ).get_resource_in_version(r['id'], version)
             swagger_resources.append(swagger_resource)
             resource_options.append(r.get("options", {}))
             used_resource_ids.update(r['id'])
@@ -527,8 +528,10 @@ class WorkspaceManager:
                 version = reload_resource['version']
                 reload_versions.add(version)
                 if 'swagger_resource' not in reload_resource:
-                    reload_resource['swagger_resource'] = self.swagger_specs.get_resource_in_version(
-                        self.ws.plane, r.mod_names, r.id, version)
+                    reload_resource['swagger_resource'] = self.swagger_specs.get_module_manager(
+                        self.ws.plane, r.mod_names
+                    ).get_resource_in_version(r.id, version)
+
                 if 'cfg_editor' not in reload_resource:
                     reload_resource['cfg_editor'] = self.load_cfg_editor_by_command(leaf)
             if ignore_resources and len(ignore_resources) != len(leaf.resources):
