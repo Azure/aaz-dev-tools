@@ -47,6 +47,20 @@ def is_port_in_use(host, port):
     help="The local path of azure-rest-api-specs repo. Official repo is https://github.com/Azure/azure-rest-api-specs"
 )
 @click.option(
+    "--module", '-m',
+    default=Config.DEFAULT_SWAGGER_MODULE,
+    callback=Config.validate_and_setup_default_swagger_module,
+    expose_value=False,
+    help="The default swagger module."
+)
+@click.option(
+    "--resource-provider", "--rp",
+    default=Config.DEFAULT_RESOURCE_PROVIDER,
+    callback=Config.validate_and_setup_default_resource_provider,
+    expose_value=False,
+    help="The default swagger resource provider."
+)
+@click.option(
     "--cli-path", '-c',
     type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
     default=Config.CLI_PATH,

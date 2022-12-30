@@ -126,9 +126,36 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         }
     }
 
-    componentDidMount() {
-        this.loadWorkspaceResources().then(() => {
-            this.loadSwaggerModules(this.props.plane);
+    componentDidMount() {    
+        this.loadWorkspaceResources().then(async () => {
+            await this.loadSwaggerModules(this.props.plane);
+            try {
+                let res = await axios.get(`/AAZ/Editor/Workspaces/${this.props.workspaceName}/SwaggerDefault`);
+                // default module name
+                if (res.data.modNames === null || res.data.modNames.length == 0) {
+                    return;
+                }
+                let moduleValueUrl = `/Swagger/Specs/${this.props.plane}/` + res.data.modNames.join('/');
+                if (this.state.moduleOptions.findIndex(v => v === moduleValueUrl) == -1 ) {
+                    return
+                }
+                let rpUrl = null;
+                if (res.data.rpName !== null && res.data.rpName.length > 0) {
+                    rpUrl = `${moduleValueUrl}/ResourceProviders/${res.data.rpName}`
+                }
+                this.setState({
+                    selectedModule: moduleValueUrl
+                });
+                await this.loadResourceProviders(moduleValueUrl, rpUrl);
+            } catch (err: any) {
+                console.error(err.response);
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    this.setState({
+                        invalidText: `ResponseError: ${data.message!}`,
+                    })
+                }
+            }
         })
     }
 
@@ -140,20 +167,44 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         this.addSwagger()
     }
 
-    loadSwaggerModules = (plane: string) => {
-        axios.get(`/Swagger/Specs/${plane}`)
-            .then((res) => {
+    loadSwaggerModules = async (plane: string) => {
+        try {
+            let res = await axios.get(`/Swagger/Specs/${plane}`);
+            const options: string[] = res.data.map((v: any) => (v.url));
+            this.setState(preState => {
+                return {
+                    ...preState,
+                    moduleOptions: options,
+                    moduleOptionsCommonPrefix: `/Swagger/Specs/${plane}/`,
+                    preModuleName: null,
+                }
+            });
+        } catch (err: any) {
+            console.error(err.response);
+            if (err.response?.data?.message) {
+                const data = err.response!.data!;
+                this.setState({
+                    invalidText: `ResponseError: ${data.message!}`,
+                })
+            }
+        }
+    }
+
+    loadResourceProviders = async (moduleUrl: string | null, preferredRP: string | null) => {
+        if (moduleUrl != null) {
+            try {
+                let res = await axios.get(`${moduleUrl}/ResourceProviders`);
                 const options: string[] = res.data.map((v: any) => (v.url));
-                this.setState(preState => {
-                    return {
-                        ...preState,
-                        moduleOptions: options,
-                        moduleOptionsCommonPrefix: `/Swagger/Specs/${plane}/`,
-                        preModuleName: null,
-                    }
+                let selectedResourceProvider = options.length === 1 ? options[0] : null;
+                if (preferredRP !== null && options.findIndex(v => v === preferredRP) >= 0) {
+                    selectedResourceProvider = preferredRP
+                }
+                this.setState({
+                    resourceProviderOptions: options,
+                    resourceProviderOptionsCommonPrefix: `${moduleUrl}/ResourceProviders/`
                 });
-            })
-            .catch((err) => {
+                await this.onResourceProviderUpdate(selectedResourceProvider);
+            } catch (err: any) {
                 console.error(err.response);
                 if (err.response?.data?.message) {
                     const data = err.response!.data!;
@@ -161,30 +212,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                         invalidText: `ResponseError: ${data.message!}`,
                     })
                 }
-            });
-    }
-
-    loadResourceProviders = (moduleUrl: string | null) => {
-        if (moduleUrl != null) {
-            axios.get(`${moduleUrl}/ResourceProviders`)
-                .then((res) => {
-                    const options: string[] = res.data.map((v: any) => (v.url));
-                    const selectedResourceProvider = options.length === 1 ? options[0] : null;
-                    this.setState({
-                        resourceProviderOptions: options,
-                        resourceProviderOptionsCommonPrefix: `${moduleUrl}/ResourceProviders/`
-                    });
-                    this.onResourceProviderUpdate(selectedResourceProvider);
-                })
-                .catch((err) => {
-                    console.error(err.response);
-                    if (err.response?.data?.message) {
-                        const data = err.response!.data!;
-                        this.setState({
-                            invalidText: `ResponseError: ${data.message!}`,
-                        })
-                    }
-                });
+            }
         } else {
             this.setState({
                 resourceProviderOptions: [],
@@ -193,39 +221,27 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         }
     }
 
-    loadWorkspaceResources = () => {
-        return axios.get(`/AAZ/Editor/Workspaces/${this.props.workspaceName}/CommandTree/Nodes/aaz/Resources`)
-            .then(res => {
-                const existingResources = new Set<string>();
-                // let preModuleName: string | null = null;
-                // let preResourceProvider: string | null = null;
-                // let preVersion: string | null = null;
-
-                if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-                    // const pieces = res.data[0].swagger.slice().replace(`/ResourceProviders/`, ' ').split(' ')
-                    // preModuleName = `/Swagger/Specs/${pieces[0]}`;
-                    // preResourceProvider = pieces[1].split('/')[0]
-                    // preVersion = res.data[0].version
-                    res.data.forEach(resource => {
-                        existingResources.add(resource.id);
-                    });
-                }
-                this.setState({
-                    // preModuleName: preModuleName,
-                    // preResourceProvider: preResourceProvider,
-                    // preVersion: preVersion,
-                    existingResources: existingResources,
-                })
+    loadWorkspaceResources = async () => {
+        try {
+            let res = await axios.get(`/AAZ/Editor/Workspaces/${this.props.workspaceName}/CommandTree/Nodes/aaz/Resources`);
+            const existingResources = new Set<string>();
+            if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+                res.data.forEach(resource => {
+                    existingResources.add(resource.id);
+                });
+            }
+            this.setState({
+                existingResources: existingResources,
             })
-            .catch((err) => {
-                console.error(err.response);
-                if (err.response?.data?.message) {
-                    const data = err.response!.data!;
-                    this.setState({
-                        invalidText: `ResponseError: ${data.message!}`,
-                    })
-                }
-            });
+        } catch (err: any) {
+            console.error(err.response);
+            if (err.response?.data?.message) {
+                const data = err.response!.data!;
+                this.setState({
+                    invalidText: `ResponseError: ${data.message!}`,
+                })
+            }
+        }
     }
 
     loadResources = async (resourceProviderUrl: string | null) => {
@@ -357,22 +373,31 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
             });
     }
 
-    onModuleSelectorUpdate = (moduleValueUrl: string | null) => {
+    onModuleSelectorUpdate = async (moduleValueUrl: string | null) => {
         if (this.state.selectedModule !== moduleValueUrl) {
-            this.loadResourceProviders(moduleValueUrl);
+            this.setState({
+                selectedModule: moduleValueUrl
+            });
+            await this.loadResourceProviders(moduleValueUrl, null);
+        } else {
+            this.setState({
+                selectedModule: moduleValueUrl
+            });
         }
-        this.setState({
-            selectedModule: moduleValueUrl
-        });
+       
     }
 
-    onResourceProviderUpdate = (resourceProviderUrl: string | null) => {
+    onResourceProviderUpdate = async (resourceProviderUrl: string | null) => {
         if (this.state.selectedResourceProvider !== resourceProviderUrl) {
-            this.loadResources(resourceProviderUrl);
+            this.setState({
+                selectedResourceProvider: resourceProviderUrl
+            })
+            await  this.loadResources(resourceProviderUrl);
+        } else {
+            this.setState({
+                selectedResourceProvider: resourceProviderUrl
+            })
         }
-        this.setState({
-            selectedResourceProvider: resourceProviderUrl
-        })
     }
 
     onVersionUpdate = (version: string | null) => {

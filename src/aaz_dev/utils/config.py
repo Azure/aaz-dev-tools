@@ -1,5 +1,6 @@
 import os
 from packaging import version
+from .plane import PlaneEnum
 
 
 class Config:
@@ -8,6 +9,11 @@ class Config:
 
     AAZ_PATH = os.environ.get("AAZ_PATH", None)
     SWAGGER_PATH = os.environ.get("AAZ_SWAGGER_PATH", None)
+
+    DEFAULT_PLANE = PlaneEnum.Mgmt
+    DEFAULT_SWAGGER_MODULE = os.environ.get("AAZ_SWAGGER_MODULE", None)  # use '/' to join sub modules
+    DEFAULT_RESOURCE_PROVIDER = os.environ.get("AAZ_SWAGGER_RESOURCE_PROVIDER", None)
+
     CLI_PATH = os.environ.get("AAZ_CLI_PATH", None)
     CLI_EXTENSION_PATH = os.environ.get("AAZ_CLI_EXTENSION_PATH", None)
 
@@ -59,6 +65,16 @@ class Config:
         if not os.path.exists(cls.SWAGGER_PATH):
             raise ValueError(f"Path '{cls.SWAGGER_PATH}' does not exist.")
         return cls.SWAGGER_PATH
+
+    @classmethod
+    def validate_and_setup_default_swagger_module(cls, ctx, param, value):
+        cls.DEFAULT_SWAGGER_MODULE = value
+        return cls.DEFAULT_SWAGGER_MODULE
+
+    @classmethod
+    def validate_and_setup_default_resource_provider(cls, ctx, param, value):
+        cls.DEFAULT_RESOURCE_PROVIDER = value
+        return cls.DEFAULT_RESOURCE_PROVIDER
 
     @classmethod
     def validate_and_setup_cli_path(cls, ctx, param, value):
