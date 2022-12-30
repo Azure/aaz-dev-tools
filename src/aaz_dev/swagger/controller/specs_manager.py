@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from swagger.model.specs import SwaggerSpecs, ResourceProvider, SwaggerModule
+from swagger.model.specs import SwaggerSpecs, SingleModuleSwaggerSpecs, ResourceProvider, SwaggerModule
 from utils import exceptions
 from utils.config import Config
 from utils.plane import PlaneEnum
@@ -116,7 +116,16 @@ class SwaggerSpecsModuleManager:
 class SwaggerSpecsManager:
 
     def __init__(self):
-        self.specs = SwaggerSpecs(folder_path=Config.SWAGGER_PATH)
+        if Config.SWAGGER_PATH:
+            self.specs = SwaggerSpecs(folder_path=Config.SWAGGER_PATH)
+        elif Config.SWAGGER_MODULE_PATH:
+            if not Config.DEFAULT_SWAGGER_MODULE:
+                raise ValueError("SWAGGER_MODULE is required when using SWAGGER_MODULE_PATH")
+            self.specs = SingleModuleSwaggerSpecs(
+                folder_path=Config.SWAGGER_MODULE_PATH, module_name=Config.DEFAULT_SWAGGER_MODULE)
+        else:
+            raise ValueError("Require SWAGGER_PATH or SWAGGER_MODULE_PATH")
+
         self._modules_cache = {}
         self._module_managers_cache = {}
 

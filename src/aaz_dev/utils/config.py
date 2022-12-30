@@ -9,6 +9,7 @@ class Config:
 
     AAZ_PATH = os.environ.get("AAZ_PATH", None)
     SWAGGER_PATH = os.environ.get("AAZ_SWAGGER_PATH", None)
+    SWAGGER_MODULE_PATH = os.environ.get("AAZ_SWAGGER_MODULE_PATH", None)
 
     DEFAULT_PLANE = PlaneEnum.Mgmt
     DEFAULT_SWAGGER_MODULE = os.environ.get("AAZ_SWAGGER_MODULE", None)  # use '/' to join sub modules
@@ -53,18 +54,29 @@ class Config:
     @classmethod
     def validate_and_setup_aaz_path(cls, ctx, param, value):
         # TODO: verify folder structure
-        cls.AAZ_PATH = os.path.expanduser(value)
-        if not os.path.exists(cls.AAZ_PATH):
-            raise ValueError(f"Path '{cls.AAZ_PATH}' does not exist.")
+        if value != cls.AAZ_PATH:
+            cls.AAZ_PATH = os.path.expanduser(value)
+            if not os.path.exists(cls.AAZ_PATH):
+                raise ValueError(f"Path '{cls.AAZ_PATH}' does not exist.")
         return cls.AAZ_PATH
 
     @classmethod
     def validate_and_setup_swagger_path(cls, ctx, param, value):
         # TODO: verify folder structure
-        cls.SWAGGER_PATH = os.path.expanduser(value)
-        if not os.path.exists(cls.SWAGGER_PATH):
-            raise ValueError(f"Path '{cls.SWAGGER_PATH}' does not exist.")
+        if value != cls.SWAGGER_PATH:
+            cls.SWAGGER_PATH = os.path.expanduser(value)
+            if not os.path.exists(cls.SWAGGER_PATH):
+                raise ValueError(f"Path '{cls.SWAGGER_PATH}' does not exist.")
         return cls.SWAGGER_PATH
+
+    @classmethod
+    def validate_and_setup_swagger_module_path(cls, ctx, param, value):
+        # TODO: verify folder structure
+        if value != cls.SWAGGER_MODULE_PATH:
+            cls.SWAGGER_MODULE_PATH = os.path.expanduser(value)
+            if not os.path.exists(cls.SWAGGER_MODULE_PATH):
+                raise ValueError(f"Path '{cls.SWAGGER_MODULE_PATH}' does not exist.")
+        return cls.SWAGGER_MODULE_PATH
 
     @classmethod
     def validate_and_setup_default_swagger_module(cls, ctx, param, value):
@@ -79,25 +91,28 @@ class Config:
     @classmethod
     def validate_and_setup_cli_path(cls, ctx, param, value):
         # TODO: verify folder structure
-        cls.CLI_PATH = os.path.expanduser(value)
-        if not os.path.exists(cls.CLI_PATH):
-            raise ValueError(f"Path '{cls.CLI_PATH}' does not exist.")
+        if value != cls.CLI_PATH:
+            cls.CLI_PATH = os.path.expanduser(value)
+            if not os.path.exists(cls.CLI_PATH):
+                raise ValueError(f"Path '{cls.CLI_PATH}' does not exist.")
         return cls.CLI_PATH
 
     @classmethod
     def validate_and_setup_cli_extension_path(cls, ctx, param, value):
         # TODO: verify folder structure
-        cls.CLI_EXTENSION_PATH = os.path.expanduser(value)
-        if not os.path.exists(cls.CLI_EXTENSION_PATH):
-            raise ValueError(f"Path '{cls.CLI_EXTENSION_PATH}' does not exist.")
+        if value != cls.CLI_EXTENSION_PATH:
+            cls.CLI_EXTENSION_PATH = os.path.expanduser(value)
+            if not os.path.exists(cls.CLI_EXTENSION_PATH):
+                raise ValueError(f"Path '{cls.CLI_EXTENSION_PATH}' does not exist.")
         return cls.CLI_EXTENSION_PATH
 
     @classmethod
     def validate_and_setup_aaz_dev_workspace_folder(cls, ctx, param, value):
         # TODO: verify folder
-        cls.AAZ_DEV_WORKSPACE_FOLDER = os.path.expanduser(value)
-        if os.path.exists(cls.AAZ_DEV_WORKSPACE_FOLDER) and not os.path.isdir(cls.AAZ_DEV_WORKSPACE_FOLDER):
-            raise ValueError(f"Path '{cls.AAZ_DEV_WORKSPACE_FOLDER}' is not a folder.")
+        if value != cls.AAZ_DEV_WORKSPACE_FOLDER:
+            cls.AAZ_DEV_WORKSPACE_FOLDER = os.path.expanduser(value)
+            if os.path.exists(cls.AAZ_DEV_WORKSPACE_FOLDER) and not os.path.isdir(cls.AAZ_DEV_WORKSPACE_FOLDER):
+                raise ValueError(f"Path '{cls.AAZ_DEV_WORKSPACE_FOLDER}' is not a folder.")
         return cls.AAZ_DEV_WORKSPACE_FOLDER
 
 
