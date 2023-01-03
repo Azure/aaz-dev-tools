@@ -8,7 +8,7 @@ from utils.config import Config
 
 logger = logging.getLogger('backend')
 
-bp = Blueprint('aaz-cmds', __name__, url_prefix='/AAZ/cmds', cli_group="command-model")
+bp = Blueprint('aaz-cmds', __name__, url_prefix='/AAZ/CMDs', cli_group="command-model")
 bp.cli.short_help = "Manage command models in aaz."
 
 
