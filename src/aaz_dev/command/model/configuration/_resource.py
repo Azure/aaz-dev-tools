@@ -22,12 +22,12 @@ class CMDResource(Model):
 
     @property
     def mod_names(self):
-        return self.swagger.split('/')[1:-6]
+        return self.swagger.split("/ResourceProviders/")[0].split('/')[1:]
 
     @property
     def rp_name(self):
-        return self.swagger.split('/')[-5]
+        return self.swagger.split("/ResourceProviders/")[1].split('/')[0]
 
     @property
     def swagger_path(self):
-        return b64decode_str(self.swagger.split('/')[-3])
+        return b64decode_str(self.swagger.split("/Paths/")[1].split('/')[0])

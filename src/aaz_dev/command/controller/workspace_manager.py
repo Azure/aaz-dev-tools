@@ -39,8 +39,8 @@ class WorkspaceManager:
         return workspaces
 
     @classmethod
-    def new(cls, name, plane):
-        manager = cls(name)
+    def new(cls, name, plane, **kwargs):
+        manager = cls(name, **kwargs)
         if os.path.exists(manager.path):
             raise exceptions.ResourceConflict(f"Workspace conflict: Workspace json file path exists: {manager.path}")
         manager.ws = CMDEditorWorkspace({
@@ -53,7 +53,7 @@ class WorkspaceManager:
         })
         return manager
 
-    def __init__(self, name):
+    def __init__(self, name, aaz_manager=None, swagger_manager=None):
         self.name = name
         if not Config.AAZ_DEV_WORKSPACE_FOLDER or os.path.exists(Config.AAZ_DEV_WORKSPACE_FOLDER) and not os.path.isdir(Config.AAZ_DEV_WORKSPACE_FOLDER):
             raise ValueError(
@@ -67,8 +67,8 @@ class WorkspaceManager:
         self._cfg_editors = {}
         self._reusable_leaves = {}
 
-        self.aaz_specs = AAZSpecsManager()
-        self.swagger_specs = SwaggerSpecsManager()
+        self.aaz_specs = aaz_manager or AAZSpecsManager()
+        self.swagger_specs = swagger_manager or SwaggerSpecsManager()
         self.swagger_command_generator = CommandGenerator()
 
     def load(self):
@@ -449,8 +449,9 @@ class WorkspaceManager:
             if self.check_resource_exist(r['id']):
                 raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {r['id']}")
             # convert resource to swagger resource
-            swagger_resource = self.swagger_specs.get_resource_in_version(
-                self.ws.plane, mod_names, r['id'], version)
+            swagger_resource = self.swagger_specs.get_module_manager(
+                plane=self.ws.plane, mod_names=mod_names
+            ).get_resource_in_version(r['id'], version)
             swagger_resources.append(swagger_resource)
             resource_options.append(r.get("options", {}))
             used_resource_ids.update(r['id'])
@@ -527,8 +528,10 @@ class WorkspaceManager:
                 version = reload_resource['version']
                 reload_versions.add(version)
                 if 'swagger_resource' not in reload_resource:
-                    reload_resource['swagger_resource'] = self.swagger_specs.get_resource_in_version(
-                        self.ws.plane, r.mod_names, r.id, version)
+                    reload_resource['swagger_resource'] = self.swagger_specs.get_module_manager(
+                        self.ws.plane, r.mod_names
+                    ).get_resource_in_version(r.id, version)
+
                 if 'cfg_editor' not in reload_resource:
                     reload_resource['cfg_editor'] = self.load_cfg_editor_by_command(leaf)
             if ignore_resources and len(ignore_resources) != len(leaf.resources):

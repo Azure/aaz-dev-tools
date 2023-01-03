@@ -41,10 +41,31 @@ def is_port_in_use(host, port):
     "--swagger-path", '-s',
     type=click.Path(file_okay=False, dir_okay=True, readable=True, resolve_path=True),
     default=Config.SWAGGER_PATH,
-    required=not Config.SWAGGER_PATH,
     callback=Config.validate_and_setup_swagger_path,
     expose_value=False,
     help="The local path of azure-rest-api-specs repo. Official repo is https://github.com/Azure/azure-rest-api-specs"
+)
+@click.option(
+    "--swagger-module-path", "--sm",
+    type=click.Path(file_okay=False, dir_okay=True, readable=True, resolve_path=True),
+    default=Config.SWAGGER_MODULE_PATH,
+    callback=Config.validate_and_setup_swagger_module_path,
+    expose_value=False,
+    help="The local path of swagger in module level. It can be substituted for --swagger-path."
+)
+@click.option(
+    "--module", '-m',
+    default=Config.DEFAULT_SWAGGER_MODULE,
+    callback=Config.validate_and_setup_default_swagger_module,
+    expose_value=False,
+    help="The default swagger module. It is required when using --swagger-module-path."
+)
+@click.option(
+    "--resource-provider", "--rp",
+    default=Config.DEFAULT_RESOURCE_PROVIDER,
+    callback=Config.validate_and_setup_default_resource_provider,
+    expose_value=False,
+    help="The default swagger resource provider."
 )
 @click.option(
     "--cli-path", '-c',

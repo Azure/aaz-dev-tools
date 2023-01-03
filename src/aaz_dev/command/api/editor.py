@@ -4,6 +4,7 @@ from flask import Blueprint, jsonify, request, url_for
 
 from command.controller.workspace_manager import WorkspaceManager
 from utils import exceptions
+from utils.config import Config
 
 bp = Blueprint('editor', __name__, url_prefix='/AAZ/Editor')
 
@@ -58,6 +59,23 @@ def editor_workspace(name):
         'folder': manager.folder,
         'updated': os.path.getmtime(manager.path)
     })
+    return jsonify(result)
+
+
+@bp.route("/Workspaces/<name>/SwaggerDefault", methods=("GET",))
+def get_workspace_swagger_default_options(name):
+    manager = WorkspaceManager(name)
+    manager.load()
+    result = {
+        "plane": manager.ws.plane,
+        "modNames": Config.DEFAULT_SWAGGER_MODULE.split('/') if Config.DEFAULT_SWAGGER_MODULE else None,
+        "rpName": Config.DEFAULT_RESOURCE_PROVIDER,
+    }
+    for leaf in manager.iter_command_tree_leaves():
+        for resource in leaf.resources:
+            result["modNames"] = resource.mod_names
+            result["rpName"] = resource.rp_name
+        break
     return jsonify(result)
 
 

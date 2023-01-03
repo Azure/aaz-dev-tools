@@ -57,8 +57,8 @@ def generate_config(config_path, module, resource_id, version):
     from swagger.controller.specs_manager import SwaggerSpecsManager
     from utils.plane import PlaneEnum
 
-    resource = SwaggerSpecsManager().get_resource_in_version(
-        plane=PlaneEnum.Mgmt, mod_names=module, resource_id=resource_id, version=version)
+    resource = SwaggerSpecsManager().get_module_manager(plane=PlaneEnum.Mgmt, mod_names=module).get_resource_in_version(
+        resource_id=resource_id, version=version)
     if not resource:
         return "Resource not exist"
 
