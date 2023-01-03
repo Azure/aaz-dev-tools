@@ -30,6 +30,7 @@ class SwaggerSpecsModuleManager:
                 rp = v
                 break
         if rp is None:
+
             raise exceptions.ResourceNotFind(f"resource provider not find '{rp_name}'")
         return rp
 

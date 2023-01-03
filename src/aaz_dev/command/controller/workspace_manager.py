@@ -20,6 +20,8 @@ logger = logging.getLogger('backend')
 class WorkspaceManager:
     COMMAND_TREE_ROOT_NAME = "aaz"
 
+    IN_MEMORY = "__IN_MEMORY_WORKSPACE__"
+
     @classmethod
     def list_workspaces(cls):
         workspaces = []
@@ -41,7 +43,7 @@ class WorkspaceManager:
     @classmethod
     def new(cls, name, plane, **kwargs):
         manager = cls(name, **kwargs)
-        if os.path.exists(manager.path):
+        if not manager.is_in_memory and os.path.exists(manager.path):
             raise exceptions.ResourceConflict(f"Workspace conflict: Workspace json file path exists: {manager.path}")
         manager.ws = CMDEditorWorkspace({
             "name": name,
@@ -53,13 +55,16 @@ class WorkspaceManager:
         })
         return manager
 
-    def __init__(self, name, aaz_manager=None, swagger_manager=None):
+    def __init__(self, name, folder=None, aaz_manager=None, swagger_manager=None):
         self.name = name
-        if not Config.AAZ_DEV_WORKSPACE_FOLDER or os.path.exists(Config.AAZ_DEV_WORKSPACE_FOLDER) and not os.path.isdir(Config.AAZ_DEV_WORKSPACE_FOLDER):
-            raise ValueError(
-                f"Invalid AAZ_DEV_WORKSPACE_FOLDER: Expect a folder path: {Config.AAZ_DEV_WORKSPACE_FOLDER}")
-        self.folder = os.path.join(Config.AAZ_DEV_WORKSPACE_FOLDER, name)
-        if os.path.exists(self.folder) and not os.path.isdir(self.folder):
+        if not folder:
+            if not Config.AAZ_DEV_WORKSPACE_FOLDER or os.path.exists(Config.AAZ_DEV_WORKSPACE_FOLDER) and not os.path.isdir(Config.AAZ_DEV_WORKSPACE_FOLDER):
+                raise ValueError(
+                    f"Invalid AAZ_DEV_WORKSPACE_FOLDER: Expect a folder path: {Config.AAZ_DEV_WORKSPACE_FOLDER}")
+            self.folder = os.path.join(Config.AAZ_DEV_WORKSPACE_FOLDER, name)
+        else:
+            self.folder = os.path.expanduser(folder) if folder != self.IN_MEMORY else self.IN_MEMORY
+        if not self.is_in_memory and os.path.exists(self.folder) and not os.path.isdir(self.folder):
             raise ValueError(f"Invalid workspace folder: Expect a folder path: {self.folder}")
         self.path = os.path.join(self.folder, 'ws.json')
 
@@ -71,7 +76,12 @@ class WorkspaceManager:
         self.swagger_specs = swagger_manager or SwaggerSpecsManager()
         self.swagger_command_generator = CommandGenerator()
 
+    @property
+    def is_in_memory(self):
+        return self.folder == self.IN_MEMORY
+
     def load(self):
+        assert not self.is_in_memory
         # TODO: handle exception
         if not os.path.exists(self.path) or not os.path.isfile(self.path):
             raise exceptions.ResourceNotFind(f"Workspace json file not exist: {self.path}")
@@ -82,6 +92,7 @@ class WorkspaceManager:
         self._cfg_editors = {}
 
     def rename(self, new_name):
+        assert not self.is_in_memory
         new_folder = os.path.join(Config.AAZ_DEV_WORKSPACE_FOLDER, new_name)
         if os.path.exists(new_folder):
             raise ValueError(f"Invalid new workspace folder: folder path exists: {new_folder}")
@@ -94,7 +105,7 @@ class WorkspaceManager:
         self.save()
 
     def delete(self):
-        if os.path.exists(self.path):
+        if not self.is_in_memory and os.path.exists(self.path):
             # make sure ws.json exist in folder
             if not os.path.isfile(self.path):
                 raise exceptions.ResourceConflict(f"Workspace conflict: Is not file path: {self.path}")
@@ -103,6 +114,8 @@ class WorkspaceManager:
         return False
 
     def save(self):
+        assert not self.is_in_memory
+
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
 
@@ -295,6 +308,7 @@ class WorkspaceManager:
             # load from modified dict
             cfg_editor = self._cfg_editors[resource_id]
             return None if cfg_editor.deleted else cfg_editor
+        assert not self.is_in_memory
         try:
             cfg_editor = WorkspaceCfgEditor.load_resource(self.folder, resource_id, version)
             for resource in cfg_editor.resources:
