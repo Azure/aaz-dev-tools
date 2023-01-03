@@ -55,6 +55,25 @@ class ResourceProvider:
         resource_map = self._resource_map
         return resource_map
 
+    def get_resource_map_by_tag(self, tag):
+        resource_map = {}
+        if tag not in self.tags:
+            logger.error(f"Tag: `{tag}` is not exist")
+            return resource_map
+
+        for file_path in self.tags[tag]:
+            for resource in self._parse_resources_in_file(file_path):
+                if resource.id in self._ignore_resources:
+                    continue
+                if resource.id not in resource_map:
+                    resource_map[resource.id] = {}
+                if self._replace_current_resource(
+                        curr_resource=resource_map[resource.id].get(resource.version, None),
+                        resource=resource
+                ):
+                    resource_map[resource.id][resource.version] = resource
+        return resource_map
+
     @property
     def tags(self):
         if self._tags is None:

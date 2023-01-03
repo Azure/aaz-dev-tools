@@ -1,3 +1,6 @@
+import json
+
+
 class InvalidAPIUsage(Exception):
     status_code = 400
 
@@ -12,6 +15,17 @@ class InvalidAPIUsage(Exception):
         rv = dict(self.payload or ())
         rv['message'] = self.message
         return rv
+
+    def __str__(self):
+        s = f"{self.message}"
+        if self.status_code:
+            s +=f'\nstatus_code: {self.status_code}'
+        if self.payload:
+            try:
+                s += f'\npayload: {json.dumps(self.payload)}'
+            except:
+                s += f'\npayload: {self.payload}'
+        return s
 
 
 class VerificationError(InvalidAPIUsage):

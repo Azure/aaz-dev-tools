@@ -2,6 +2,7 @@ import os
 
 from utils.plane import PlaneEnum
 from ._swagger_module import MgmtPlaneModule, DataPlaneModule
+from utils.exceptions import ResourceNotFind, InvalidAPIUsage
 
 
 class SwaggerSpecs:
@@ -77,11 +78,12 @@ class SingleModuleSwaggerSpecs:
     def get_mgmt_plane_modules(self, plane):
         names = self._module_name.split('/')
         if not PlaneEnum.is_valid_swagger_module(plane=plane, module_name=names[0]):
-            return None
+            raise InvalidAPIUsage(f"{names[0]} is not a valid mgmt plane module")
 
         path = os.path.join(self._folder_path, 'resource-manager')
         if not os.path.isdir(path):
-            return None
+            raise ResourceNotFind(
+                f"Cannot find manage plane module '{self._module_name}'", payload=f"{path} is not exist")
 
         module = None
         for name in names:
@@ -108,11 +110,12 @@ class SingleModuleSwaggerSpecs:
     def get_data_plane_modules(self, plane):
         names = self._module_name.split('/')
         if not PlaneEnum.is_valid_swagger_module(plane=plane, module_name=names[0]):
-            return None
+            raise InvalidAPIUsage(f"{names[0]} is not a supported data plane module.")
 
         path = os.path.join(self._folder_path, 'data-plane')
         if not os.path.isdir(path):
-            return None
+            raise ResourceNotFind(
+                f"Cannot find data plane module '{self._module_name}'", payload=f"{path} is not exist")
 
         module = None
         for name in names:
