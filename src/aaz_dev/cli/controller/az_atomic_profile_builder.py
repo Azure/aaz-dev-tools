@@ -13,6 +13,7 @@ from command.model.configuration import CMDHttpOperation, CMDCommand, CMDArgGrou
     CMDHttpResponseJsonBody, CMDObjectSchemaBase
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.stage import AAZStageEnum
+from utils.exceptions import ResourceNotFind
 
 logger = logging.getLogger('backend')
 
@@ -41,6 +42,8 @@ class AzAtomicProfileBuilder:
             cmds = {}
             for name, view_cmd in view_command_group.commands.items():
                 cmd = self._build_command(view_cmd)
+                if cmd is None:
+                    continue
                 if cmd.register_info is not None:
                     stages.add(cmd.register_info.stage)
                 cmds[name] = cmd
@@ -52,6 +55,8 @@ class AzAtomicProfileBuilder:
             cmd_groups = {}
             for name, view_cmd_group in view_command_group.command_groups.items():
                 cmd_group = self._build_command_group(view_cmd_group)
+                if cmd_group is None:
+                    continue
                 if cmd_group.register_info is not None:
                     stages.add(cmd_group.register_info.stage)
                 cmd_groups[name] = cmd_group
@@ -79,7 +84,7 @@ class AzAtomicProfileBuilder:
     def _build_command_group_from_aaz(self, *names):
         aaz_cg = self._aaz_spec_manager.find_command_group(*names)
         if not aaz_cg:
-            return None
+            raise ResourceNotFind("Command group '{}' not exist in AAZ".format(' '.join(names)))
         command_group = CLIAtomicCommandGroup()
         command_group.names = [*names]
         command_group.help = CLICommandGroupHelp()
@@ -94,17 +99,17 @@ class AzAtomicProfileBuilder:
     def _build_command_from_aaz(self, *names, version_name):
         aaz_cmd = self._aaz_spec_manager.find_command(*names)
         if not aaz_cmd:
-            return None
+            raise ResourceNotFind("Command '{}' not exist in AAZ".format(' '.join(names)))
         version = None
         for v in (aaz_cmd.versions or []):
             if v.name == version_name:
                 version = v
                 break
         if not version:
-            return None
+            raise ResourceNotFind("Version '{}' of command '{}' not exist in AAZ".format(version_name, ' '.join(names)))
         cfg_reader = self._aaz_spec_manager.load_resource_cfg_reader_by_command_with_version(aaz_cmd, version=version)
         cmd_cfg = cfg_reader.find_command(*names)
-        assert cmd_cfg is not None, f"command configuration miss: '{' '.join(names)}'"
+        assert cmd_cfg is not None, f"command model miss in AAZ: '{' '.join(names)}'"
 
         command = CLIAtomicCommand()
         command.names = [*names]
