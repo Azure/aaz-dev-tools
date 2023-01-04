@@ -482,7 +482,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                     alignItems: 'stretch',
                 }}>
                     {buildCommandCard()}
-                    {command !== undefined && buildArgumentsCard()}
+                    {command !== undefined && command.args !== undefined && buildArgumentsCard()}
                     {command !== undefined && buildExampleCard()}
                 </Box>
                 {command !== undefined && displayCommandDialog && <CommandDialog open={displayCommandDialog} workspaceUrl={workspaceUrl} command={command!} onClose={this.handleCommandDialogClose} />}
