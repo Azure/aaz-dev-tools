@@ -265,7 +265,8 @@ class AzModuleManager:
             data = ast.literal_eval(aaz_info_lines)
             if 'version' not in data:
                 # wait command will be ignored here.
-                logger.info(f"Ignore command without version: '{' '.join(names)}'")
+                if 'wait' != names[-1]:
+                    logger.info(f"Ignore command without version: '{' '.join(names)}'")
                 return None
             version_name = data['version']
         except Exception as err:
