@@ -2,6 +2,15 @@
 
 Release History
 ===============
+0.17.0
+++++++
+* Workspace swagger picker supports load default swagger module and resource providers (#175)
+* `aaz-dev run`: Add `--swagger-module-path`, "--module", "--resource-provider" to specify single swagger repo for code generation (#175)
+* `aaz-dev command-model generate-from-swagger`: Support generate command model from swagger by readme tag for pipeline use (#176)
+* `aaz-dev cli generate-by-swagger-tag`: Support generate code in cli from command models by using readme tag for pipeline use (#178)
+* `aaz-dev regenerate`: Support to regenerate aaz commands from command models (#178)
+* Fix Workspace display no arguments command error (#177)
+* Ignore '/' character in x-ms-identifiers swagger property (#174)
 
 0.16.2
 ++++++
