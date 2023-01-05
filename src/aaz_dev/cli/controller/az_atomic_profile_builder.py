@@ -53,8 +53,6 @@ class AzAtomicProfileBuilder:
             cmd_groups = {}
             for name, view_cmd_group in view_command_group.command_groups.items():
                 cmd_group = self._build_command_group(view_cmd_group)
-                if cmd_group is None:
-                    continue
                 if cmd_group.register_info is not None:
                     stages.add(cmd_group.register_info.stage)
                 cmd_groups[name] = cmd_group
