@@ -42,8 +42,6 @@ class AzAtomicProfileBuilder:
             cmds = {}
             for name, view_cmd in view_command_group.commands.items():
                 cmd = self._build_command(view_cmd)
-                if cmd is None:
-                    continue
                 if cmd.register_info is not None:
                     stages.add(cmd.register_info.stage)
                 cmds[name] = cmd
