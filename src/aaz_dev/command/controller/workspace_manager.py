@@ -810,16 +810,16 @@ class WorkspaceManager:
             leaf = self.find_command_tree_leaf(*cmd_names)
             assert leaf is not None
             cfg_editor = self.load_cfg_editor_by_command(leaf)
-            _, cls_arg, cls_arg_idx = cfg_editor.find_arg_cls_definition(*cmd_names, cls_name=cls_name)
+            _, cls_arg, cls_arg_idx, _ = cfg_editor.find_arg_cls_definition(*cmd_names, cls_name=cls_name)
             _, arg_idx = cfg_editor.find_arg_by_var(*cmd_names, arg_var=arg.var)
             assert arg_idx.startswith(cls_arg_idx)
             idx_suffix = arg_idx[len(cls_arg_idx):]
             assert len(idx_suffix) > 0
 
-            cls_name_prefix = cls_name.split('_')[0]
+            cls_name_prefix = cls_name.split('_')[0]  # remove the subfix such as `_create` `_update`
             for leaf in self.iter_command_tree_leaves():
                 cfg_editor = self.load_cfg_editor_by_command(leaf)
-                for _, similar_cls_arg, similar_cls_arg_idx in cfg_editor.iter_arg_cls_definition(
+                for _, similar_cls_arg, similar_cls_arg_idx, _ in cfg_editor.iter_arg_cls_definition(
                         *leaf.names, cls_name_prefix=cls_name_prefix):
                     # search cls definition in command
                     # find sub arg by idx_suffix
@@ -835,7 +835,7 @@ class WorkspaceManager:
                     }
 
                     # search cls reference in command
-                    for _, _, ref_arg_idx in cfg_editor.iter_arg_cls_reference(*leaf.names, cls_name=similar_cls_arg.cls):
+                    for _, _, ref_arg_idx, _ in cfg_editor.iter_arg_cls_reference(*leaf.names, cls_name=similar_cls_arg.cls):
                         results[key][similar_arg.var].append(ref_arg_idx + idx_suffix)
 
         else:

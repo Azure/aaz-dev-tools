@@ -3,7 +3,8 @@ import json
 from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDInstanceUpdateOperation, \
     CMDCommandGroup, CMDArgGroup, CMDObjectArgBase, CMDArrayArgBase, CMDRequestJson, \
     CMDResponseJson, CMDObjectSchemaBase, CMDArraySchemaBase, CMDSchema, CMDHttpRequestJsonBody, \
-    CMDJsonInstanceUpdateAction, CMDHttpResponseJsonBody, CMDObjectSchemaDiscriminator, CMDInstanceCreateOperation, CMDJsonInstanceCreateAction
+    CMDJsonInstanceUpdateAction, CMDHttpResponseJsonBody, CMDObjectSchemaDiscriminator, CMDInstanceCreateOperation, \
+    CMDJsonInstanceCreateAction, CMDSchemaBase, CMDArraySchema, CMDObjectSchema
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 
 
@@ -296,10 +297,10 @@ class CfgReader:
         def arg_filter(_parent, _arg, _arg_idx, _arg_var):
             if arg_var == _arg_var:
                 # find match
-                return (_parent, _arg, _arg_idx), True
+                return (_parent, _arg, _arg_idx, _arg_var), True
             elif _arg_var.startswith(f'{arg_var}.'):
                 # arg_var already been flattened
-                return (_parent, None, None), True
+                return (_parent, None, None, None), True
             return None, False
 
         for arg_group in command.arg_groups:
@@ -310,7 +311,7 @@ class CfgReader:
                 continue
             assert len(matches) == 1
 
-            parent, arg, arg_idx = matches[0]
+            parent, arg, arg_idx, arg_var = matches[0]
             if arg:
                 arg_idx = cls.arg_idx_to_str(arg_idx)
             return parent, arg, arg_idx
@@ -368,14 +369,17 @@ class CfgReader:
     def find_arg_cls_definition(self, *cmd_names, cls_name):
         command = self.find_command(*cmd_names)
         if not command:
-            return None, None, None
+            return None, None, None, None
+        return self._find_arg_cls_definition(command, cls_name)
+
+    def _find_arg_cls_definition(self, command, cls_name):
 
         assert isinstance(cls_name, str) and not cls_name.startswith('@')
 
         def arg_filter(_parent, _arg, _arg_idx, _arg_var):
             if getattr(_arg, 'cls', None) == cls_name:
                 # find match
-                return (_parent, _arg, _arg_idx), True
+                return (_parent, _arg, _arg_idx, _arg_var), True
             return None, False
 
         for arg_group in command.arg_groups:
@@ -386,39 +390,50 @@ class CfgReader:
                 continue
             assert len(matches) == 1
 
-            parent, arg, arg_idx = matches[0]
+            parent, arg, arg_idx, arg_var = matches[0]
             if arg:
                 arg_idx = self.arg_idx_to_str(arg_idx)
-            return parent, arg, arg_idx
-        return None, None, None
+            return parent, arg, arg_idx, arg_var
+        return None, None, None, None
 
-    def iter_arg_cls_definition(self, *cmd_names, cls_name_prefix):
+    def iter_arg_cls_definition(self, *cmd_names, cls_name_prefix=None):
         command = self.find_command(*cmd_names)
         if not command:
             return
 
-        assert isinstance(cls_name_prefix, str) and not cls_name_prefix.startswith('@')
-        if not cls_name_prefix.endswith('_'):
-            cls_name_prefix += '_'
+        for match in self._iter_arg_cls_definition(command, cls_name_prefix=cls_name_prefix):
+            yield match
+
+    def _iter_arg_cls_definition(self, command, cls_name_prefix=None):
+        if cls_name_prefix is not None:
+            assert isinstance(cls_name_prefix, str) and not cls_name_prefix.startswith('@')
+            if not cls_name_prefix.endswith('_'):
+                # make sure cls_name_prefix ends with '_' to match
+                # `<cls>_create`, `<cls>_update` kind cls_name only
+                cls_name_prefix += '_'
 
         def arg_filter(_parent, _arg, _arg_idx, _arg_var):
             _cls = getattr(_arg, 'cls', None)
-            if _cls is not None and _cls.startswith(cls_name_prefix):
+            if _cls is not None and (cls_name_prefix is None or _cls.startswith(cls_name_prefix)):
                 # find match
-                return (_parent, _arg, _arg_idx), False
+                return (_parent, _arg, _arg_idx, _arg_var), False
             return None, False
 
         for arg_group in command.arg_groups:
-            for parent, arg, arg_idx in self._iter_args_in_group(arg_group, arg_filter=arg_filter):
+            for parent, arg, arg_idx, arg_var in self._iter_args_in_group(arg_group, arg_filter=arg_filter):
                 if arg:
                     arg_idx = self.arg_idx_to_str(arg_idx)
-                yield parent, arg, arg_idx
+                yield parent, arg, arg_idx, arg_var
 
     def iter_arg_cls_reference(self, *cmd_names, cls_name):
         command = self.find_command(*cmd_names)
         if not command:
             return
 
+        for match in self._iter_arg_cls_reference(command, cls_name=cls_name):
+            yield match
+
+    def _iter_arg_cls_reference(self, command, cls_name):
         assert isinstance(cls_name, str) and not cls_name.startswith('@')
 
         cls_type_name = f"@{cls_name}"
@@ -426,15 +441,25 @@ class CfgReader:
         def arg_filter(_parent, _arg, _arg_idx, _arg_var):
             if _arg.type == cls_type_name:
                 # find match
-                return (_parent, _arg, _arg_idx), False
+                return (_parent, _arg, _arg_idx, _arg_var), False
             return None, False
 
         for arg_group in command.arg_groups:
-            for parent, arg, arg_idx in self._iter_args_in_group(
+            for parent, arg, arg_idx, arg_var in self._iter_args_in_group(
                     arg_group, arg_filter=arg_filter):
                 if arg:
                     arg_idx = self.arg_idx_to_str(arg_idx)
-                yield parent, arg, arg_idx
+                yield parent, arg, arg_idx, arg_var
+
+    def iter_args_in_command(self, command):
+        def arg_filter(_parent, _arg, _arg_idx, _arg_var):
+            return (_parent, _arg, _arg_idx, _arg_var), False
+
+        for arg_group in command.arg_groups:
+            for parent, arg, arg_idx, arg_var in self._iter_args_in_group(arg_group, arg_filter=arg_filter):
+                if arg:
+                    arg_idx = self.arg_idx_to_str(arg_idx)
+                yield parent, arg, arg_idx, arg_var
 
     # TODO: build arg_idx in command link call
     @classmethod
@@ -448,10 +473,10 @@ class CfgReader:
             if ret:
                 return
 
-            for sub_parent, sub_arg, sub_arg_idx in cls._iter_sub_args(arg, arg.var, arg_filter):
+            for sub_parent, sub_arg, sub_arg_idx, sub_arg_var in cls._iter_sub_args(arg, arg.var, arg_filter):
                 if sub_arg_idx:
                     sub_arg_idx = [arg_option, *sub_arg_idx]
-                yield sub_parent, sub_arg, sub_arg_idx
+                yield sub_parent, sub_arg, sub_arg_idx, sub_arg_var
 
     @classmethod
     def _iter_sub_args(cls, parent, arg_var, arg_filter):
@@ -465,10 +490,10 @@ class CfgReader:
                     if ret:
                         return
 
-                    for sub_parent, sub_arg, sub_arg_idx in cls._iter_sub_args(arg, arg.var, arg_filter):
+                    for sub_parent, sub_arg, sub_arg_idx, sub_arg_var in cls._iter_sub_args(arg, arg.var, arg_filter):
                         if sub_arg:
                             sub_arg_idx = [arg_option, *sub_arg_idx]
-                        yield sub_parent, sub_arg, sub_arg_idx
+                        yield sub_parent, sub_arg, sub_arg_idx, sub_arg_var
 
             if parent.additional_props and parent.additional_props.item:
                 item = parent.additional_props.item
@@ -480,10 +505,10 @@ class CfgReader:
                 if ret:
                     return
 
-                for sub_parent, sub_arg, sub_arg_idx in cls._iter_sub_args(item, item_var, arg_filter):
+                for sub_parent, sub_arg, sub_arg_idx, sub_arg_var in cls._iter_sub_args(item, item_var, arg_filter):
                     if sub_arg:
                         sub_arg_idx = ['{}', *sub_arg_idx]
-                    yield sub_parent, sub_arg, sub_arg_idx
+                    yield sub_parent, sub_arg, sub_arg_idx, sub_arg_var
 
         elif isinstance(parent, CMDArrayArgBase):
             item = parent.item
@@ -495,10 +520,10 @@ class CfgReader:
             if ret:
                 return
 
-            for sub_parent, sub_arg, sub_arg_idx in cls._iter_sub_args(item, item_var, arg_filter):
+            for sub_parent, sub_arg, sub_arg_idx, sub_arg_var in cls._iter_sub_args(item, item_var, arg_filter):
                 if sub_arg:
                     sub_arg_idx = ['[]', *sub_arg_idx]
-                yield sub_parent, sub_arg, sub_arg_idx
+                yield sub_parent, sub_arg, sub_arg_idx, sub_arg_var
 
     @staticmethod
     def arg_idx_to_list(arg_idx):
@@ -604,8 +629,11 @@ class CfgReader:
                     if param.name == remain_idx[0]:
                         return param
 
-        if isinstance(request.body, CMDHttpResponseJsonBody) and current_idx == _SchemaIdxEnum.Body:
-            return cls.find_schema_in_json(request.body.json, remain_idx)
+        if isinstance(request.body, CMDHttpRequestJsonBody) and current_idx == _SchemaIdxEnum.Body:
+            current_idx = remain_idx[0]
+            remain_idx = remain_idx[1:]
+            if current_idx == _SchemaIdxEnum.Json:
+                return cls.find_schema_in_json(request.body.json, remain_idx)
         return None
 
     @classmethod
@@ -690,9 +718,19 @@ class CfgReader:
     @classmethod
     def iter_schema_in_operation_by_arg_var(cls, operation, arg_var):
         def schema_filter(_parent, _schema, _schema_idx):
-            if isinstance(_schema, CMDSchema) and _schema.arg == arg_var:
-                # find match
-                return (_parent, _schema, _schema_idx), False
+            if isinstance(_schema, CMDSchema):
+                if _schema.arg == arg_var:
+                    # find match
+                    return (_parent, _schema, _schema_idx), False
+            elif isinstance(_schema, CMDSchemaBase):
+                if arg_var.endswith('[]') and _schema_idx[-1] == '[]' and \
+                        isinstance(_parent, CMDArraySchema) and _parent.arg == arg_var[:-2]:
+                    # find match
+                    return (_parent, _schema, _schema_idx), False
+                elif arg_var.endswith('{}') and _schema_idx[-1] == '{}' and \
+                        isinstance(_parent, CMDObjectSchema) and _parent.arg == arg_var[:-2]:
+                    # find match
+                    return (_parent, _schema, _schema_idx), False
             return None, False
 
         if isinstance(operation, CMDHttpOperation) and operation.http.request:

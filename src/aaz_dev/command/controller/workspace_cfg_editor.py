@@ -301,7 +301,10 @@ class WorkspaceCfgEditor(CfgReader):
 
     def unwrap_cls_arg(self, *cmd_names, arg_var):
         command = self.find_command(*cmd_names)
-        parent_arg, arg, _ = self.find_arg_with_parent_by_var(*cmd_names, arg_var=arg_var)
+        self._unwrap_cls_arg_in_command(command, arg_var)
+
+    def _unwrap_cls_arg_in_command(self, command, arg_var):
+        parent_arg, arg, _ = self.find_arg_in_command_with_parent_by_var(command, arg_var=arg_var)
         if not arg:
             raise exceptions.InvalidAPIUsage(
                 f"Argument not exist: {arg.var}")
@@ -319,32 +322,15 @@ class WorkspaceCfgEditor(CfgReader):
 
         linked_schema_parent = None
         linked_schema = None
+
         # find linked schema
-        if isinstance(arg, CMDArg):
-            for parent_schema, schema, _ in self.iter_schema_in_command_by_arg_var(command, arg_var=arg.var):
-                if linked_schema is not None:
-                    raise exceptions.InvalidAPIUsage(
-                        f"Cannot unwrap argument: {arg.var} is used by mutiple schemas."
-                    )
-                linked_schema_parent = parent_schema
-                linked_schema = schema
-        elif isinstance(arg, CMDArgBase):
-            if not isinstance(parent_arg, CMDArg):
-                raise NotImplementedError()
-            for _, parent_schema, _ in self.iter_schema_in_command_by_arg_var(command, arg_var=parent_arg.var):
-                if linked_schema is not None:
-                    raise exceptions.InvalidAPIUsage(
-                        f"Cannot unwrap argument: {arg.var} is used by mutiple schemas."
-                    )
-                linked_schema_parent = parent_schema
-                if arg_var.endswith('[]'):
-                    assert isinstance(parent_schema, CMDArraySchemaBase)
-                    linked_schema = parent_schema.item
-                elif arg_var.endswith('{}'):
-                    assert isinstance(parent_schema, CMDObjectSchemaBase) and parent_schema.additional_props
-                    linked_schema = parent_schema.additional_props.item
-                else:
-                    raise NotImplementedError()
+        for parent_schema, schema, _ in self.iter_schema_in_command_by_arg_var(command, arg_var=arg.var):
+            if linked_schema is not None:
+                raise exceptions.InvalidAPIUsage(
+                    f"Cannot unwrap argument: {arg.var} is used by mutiple schemas."
+                )
+            linked_schema_parent = parent_schema
+            linked_schema = schema
 
         if linked_schema is None:
             raise exceptions.InvalidAPIUsage(
@@ -791,6 +777,45 @@ class WorkspaceCfgEditor(CfgReader):
             # inherit confirmation
             if ref_command.confirmation is not None:
                 command.confirmation = ref_command.confirmation
+
+            # inherit unwrap modification
+            arg_cls_names = set()
+            for _, arg, _, arg_var in self._iter_arg_cls_definition(command):
+                arg_cls_names.add(arg.cls)
+
+            for cls_name in arg_cls_names:
+                unwrap_detect = True
+                while unwrap_detect:
+                    _, _, _, arg_var = self._find_arg_cls_definition(command, cls_name=cls_name)
+                    if not arg_var:
+                        break
+
+                    arg_vars = [arg_var]
+                    for _, _, _, arg_var in self._iter_arg_cls_reference(command, cls_name=cls_name):
+                        arg_vars.append(arg_var)
+
+                    unwrap_arg_vars = set()
+                    for arg_var in arg_vars:
+                        schema_idx = None
+                        for _, _, s_idx in self.iter_schema_in_command_by_arg_var(command, arg_var):
+                            assert schema_idx is None
+                            schema_idx = s_idx
+                        assert schema_idx is not None
+                        # find the schema in ref_command
+                        ref_s = ref_cfg.find_schema_in_command(ref_command, schema_idx)
+                        if not ref_s:
+                            continue
+                        if not isinstance(ref_s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                            continue
+                        if ref_s.cls:
+                            continue
+                        unwrap_arg_vars.add(arg_var)
+
+                    for arg_var in unwrap_arg_vars:
+                        self._unwrap_cls_arg_in_command(command, arg_var)
+
+                    # When unwrapped, the schema changed, so it's required to continue to verify the cls_name
+                    unwrap_detect = len(unwrap_arg_vars) > 0
 
             # inherit arguments modification
             ref_args = []
