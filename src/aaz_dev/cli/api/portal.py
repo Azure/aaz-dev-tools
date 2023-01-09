@@ -6,7 +6,7 @@ from cli.controller.portal_cli_generator import PortalCliGenerator
 
 logging.basicConfig(level="INFO")
 
-bp = Blueprint('portal', __name__, url_prefix='/AAZ/Portal')
+bp = Blueprint('portal', __name__, url_prefix='/CLI/Portal')
 
 # commands
 @bp.cli.command("generate", short_help="Generate command portal json file.")
