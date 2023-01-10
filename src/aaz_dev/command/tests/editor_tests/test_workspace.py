@@ -529,7 +529,8 @@ class WorkspaceEditorTest(CommandTestCase):
                 if arg.var == '$Path.endpointName':
                     self.assertEqual(arg.options, ['endpoint-name'])
                 elif arg.var == '$endpoint.properties.originGroups[].properties.origins[Index]':
-                    self.assertTrue(arg.required)
+                    # create command will append item if index is not provided.
+                    self.assertFalse(arg.required)
                     self.assertFalse(arg.nullable)
                 elif arg.var == '$endpoint.properties.originGroups[].properties.origins[].id':
                     self.assertFalse(arg.required)
