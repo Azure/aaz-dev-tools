@@ -324,7 +324,7 @@ class WorkspaceCfgEditor(CfgReader):
         linked_schema = None
 
         # find linked schema
-        for parent_schema, schema, _ in self.iter_schema_in_command_by_arg_var(command, arg_var=arg.var):
+        for parent_schema, schema, _ in self.iter_schema_in_command_by_arg_var(command, arg_var=arg_var):
             if linked_schema is not None:
                 raise exceptions.InvalidAPIUsage(
                     f"Cannot unwrap argument: {arg.var} is used by mutiple schemas."

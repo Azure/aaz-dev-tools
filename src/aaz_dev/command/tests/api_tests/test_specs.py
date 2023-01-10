@@ -224,5 +224,3 @@ class APIAAZSpecsTest(CommandTestCase):
                     "versions": ['2021-12-01']
                 },
             ])
-
-
