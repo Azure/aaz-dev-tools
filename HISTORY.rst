@@ -2,6 +2,13 @@
 
 Release History
 ===============
+
+0.18.0
+++++++
+* Relink command after class unwrapped (#182)
+* Support unwrap class modification inherit (#181)
+* Change portal namespace (#179)
+
 0.17.0
 ++++++
 * Workspace swagger picker supports load default swagger module and resource providers (#175)
