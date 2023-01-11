@@ -360,6 +360,7 @@ class WorkspaceCfgEditor(CfgReader):
 
         # regenerate args and its relationship with schema
         command.generate_args()
+        command.link()
         self.reformat()
 
     @staticmethod
