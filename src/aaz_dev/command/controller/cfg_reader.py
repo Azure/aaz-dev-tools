@@ -372,7 +372,8 @@ class CfgReader:
             return None, None, None, None
         return self._find_arg_cls_definition(command, cls_name)
 
-    def _find_arg_cls_definition(self, command, cls_name):
+    @classmethod
+    def _find_arg_cls_definition(cls, command, cls_name):
 
         assert isinstance(cls_name, str) and not cls_name.startswith('@')
 
@@ -383,7 +384,7 @@ class CfgReader:
             return None, False
 
         for arg_group in command.arg_groups:
-            matches = [match for match in self._iter_args_in_group(
+            matches = [match for match in cls._iter_args_in_group(
                 arg_group, arg_filter=arg_filter
             )]
             if not matches:
@@ -392,7 +393,7 @@ class CfgReader:
 
             parent, arg, arg_idx, arg_var = matches[0]
             if arg:
-                arg_idx = self.arg_idx_to_str(arg_idx)
+                arg_idx = cls.arg_idx_to_str(arg_idx)
             return parent, arg, arg_idx, arg_var
         return None, None, None, None
 
@@ -404,7 +405,8 @@ class CfgReader:
         for match in self._iter_arg_cls_definition(command, cls_name_prefix=cls_name_prefix):
             yield match
 
-    def _iter_arg_cls_definition(self, command, cls_name_prefix=None):
+    @classmethod
+    def _iter_arg_cls_definition(cls, command, cls_name_prefix=None):
         if cls_name_prefix is not None:
             assert isinstance(cls_name_prefix, str) and not cls_name_prefix.startswith('@')
             if not cls_name_prefix.endswith('_'):
@@ -420,9 +422,9 @@ class CfgReader:
             return None, False
 
         for arg_group in command.arg_groups:
-            for parent, arg, arg_idx, arg_var in self._iter_args_in_group(arg_group, arg_filter=arg_filter):
+            for parent, arg, arg_idx, arg_var in cls._iter_args_in_group(arg_group, arg_filter=arg_filter):
                 if arg:
-                    arg_idx = self.arg_idx_to_str(arg_idx)
+                    arg_idx = cls.arg_idx_to_str(arg_idx)
                 yield parent, arg, arg_idx, arg_var
 
     def iter_arg_cls_reference(self, *cmd_names, cls_name):
@@ -433,7 +435,8 @@ class CfgReader:
         for match in self._iter_arg_cls_reference(command, cls_name=cls_name):
             yield match
 
-    def _iter_arg_cls_reference(self, command, cls_name):
+    @classmethod
+    def _iter_arg_cls_reference(cls, command, cls_name):
         assert isinstance(cls_name, str) and not cls_name.startswith('@')
 
         cls_type_name = f"@{cls_name}"
@@ -445,10 +448,10 @@ class CfgReader:
             return None, False
 
         for arg_group in command.arg_groups:
-            for parent, arg, arg_idx, arg_var in self._iter_args_in_group(
+            for parent, arg, arg_idx, arg_var in cls._iter_args_in_group(
                     arg_group, arg_filter=arg_filter):
                 if arg:
-                    arg_idx = self.arg_idx_to_str(arg_idx)
+                    arg_idx = cls.arg_idx_to_str(arg_idx)
                 yield parent, arg, arg_idx, arg_var
 
     def iter_args_in_command(self, command):

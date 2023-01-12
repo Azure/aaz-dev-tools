@@ -302,9 +302,11 @@ class WorkspaceCfgEditor(CfgReader):
     def unwrap_cls_arg(self, *cmd_names, arg_var):
         command = self.find_command(*cmd_names)
         self._unwrap_cls_arg_in_command(command, arg_var)
+        self.reformat()
 
-    def _unwrap_cls_arg_in_command(self, command, arg_var):
-        parent_arg, arg, _ = self.find_arg_in_command_with_parent_by_var(command, arg_var=arg_var)
+    @classmethod
+    def _unwrap_cls_arg_in_command(cls, command, arg_var):
+        parent_arg, arg, _ = cls.find_arg_in_command_with_parent_by_var(command, arg_var=arg_var)
         if not arg:
             raise exceptions.InvalidAPIUsage(
                 f"Argument not exist: {arg.var}")
@@ -324,7 +326,7 @@ class WorkspaceCfgEditor(CfgReader):
         linked_schema = None
 
         # find linked schema
-        for parent_schema, schema, _ in self.iter_schema_in_command_by_arg_var(command, arg_var=arg_var):
+        for parent_schema, schema, _ in cls.iter_schema_in_command_by_arg_var(command, arg_var=arg_var):
             if linked_schema is not None:
                 raise exceptions.InvalidAPIUsage(
                     f"Cannot unwrap argument: {arg.var} is used by mutiple schemas."
@@ -341,15 +343,15 @@ class WorkspaceCfgEditor(CfgReader):
             new_schema = linked_schema.get_unwrapped()
             assert new_schema.cls == linked_schema.type[1:]
             new_schema.cls = None  # set the cls to None
-            self.replace_schema(linked_schema_parent, linked_schema, new_schema)
+            cls.replace_schema(linked_schema_parent, linked_schema, new_schema)
         elif isinstance(linked_schema, (CMDObjectSchemaBase, CMDArraySchemaBase)):
             assert linked_schema.cls is not None
             # unwrap one clsSchema to instance
-            for ref_parent, ref_schema, _ in self.iter_schema_cls_reference(command, linked_schema.cls):
+            for ref_parent, ref_schema, _ in cls.iter_schema_cls_reference(command, linked_schema.cls):
                 assert isinstance(ref_schema, CMDClsSchemaBase)
                 new_ref_schema = ref_schema.get_unwrapped()
                 assert new_ref_schema.cls == linked_schema.cls
-                self.replace_schema(ref_parent, ref_schema, new_ref_schema)
+                cls.replace_schema(ref_parent, ref_schema, new_ref_schema)
                 break
             # unregister current linked schema cls
             linked_schema.cls = None
@@ -361,7 +363,6 @@ class WorkspaceCfgEditor(CfgReader):
         # regenerate args and its relationship with schema
         command.generate_args()
         command.link()
-        self.reformat()
 
     @staticmethod
     def replace_schema(parent, schema, new_schema):
@@ -750,87 +751,111 @@ class WorkspaceCfgEditor(CfgReader):
     def inherit_modification(self, ref_cfg: CfgReader):
         command_rename_list = []
         for cmd_names, command in self.iter_commands():
-            counterpart = None
-
-            # find counterpart
-            ops_methods = set()
-            for operation in command.operations:
-                if isinstance(operation, CMDInstanceUpdateOperation):
-                    ops_methods.add('update')
-                elif isinstance(operation, CMDHttpOperation):
-                    ops_methods.add(operation.http.request.method.lower())
-            for ref_cmd_names, ref_command in ref_cfg.iter_commands_by_operations(*ops_methods):
-                command_resources = {r.id for r in command.resources}
-                ref_command_resources = {r.id for r in ref_command.resources}
-                if not command_resources.issubset(ref_command_resources):
-                    # resources not match
-                    continue
-                if counterpart:
-                    raise exceptions.ResourceConflict(
-                        message=f"Failed to inherit modification for command: '{' '.join(cmd_names)}', multiple reference commands find: '{' '.join(counterpart[0])}' & '{' '.join(ref_cmd_names)}'"
-                    )
-                counterpart = (ref_cmd_names, ref_command)
+            counterpart = self._find_ref_command_counterpart(cmd_names, command, ref_cfg)
             if not counterpart:
                 continue
-
             ref_cmd_names, ref_command = counterpart
+            self._inherit_modification_in_command(command, ref_command)
             command_rename_list.append((cmd_names, ref_cmd_names))
-            # inherit confirmation
-            if ref_command.confirmation is not None:
-                command.confirmation = ref_command.confirmation
-
-            # inherit unwrap modification
-            arg_cls_names = set()
-            for _, arg, _, arg_var in self._iter_arg_cls_definition(command):
-                arg_cls_names.add(arg.cls)
-
-            for cls_name in arg_cls_names:
-                unwrap_detect = True
-                while unwrap_detect:
-                    _, _, _, arg_var = self._find_arg_cls_definition(command, cls_name=cls_name)
-                    if not arg_var:
-                        break
-
-                    arg_vars = [arg_var]
-                    for _, _, _, arg_var in self._iter_arg_cls_reference(command, cls_name=cls_name):
-                        arg_vars.append(arg_var)
-
-                    unwrap_arg_vars = set()
-                    for arg_var in arg_vars:
-                        schema_idx = None
-                        for _, _, s_idx in self.iter_schema_in_command_by_arg_var(command, arg_var):
-                            assert schema_idx is None
-                            schema_idx = s_idx
-                        assert schema_idx is not None
-                        # find the schema in ref_command
-                        ref_s = ref_cfg.find_schema_in_command(ref_command, schema_idx)
-                        if not ref_s:
-                            continue
-                        if not isinstance(ref_s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-                            continue
-                        if ref_s.cls:
-                            continue
-                        unwrap_arg_vars.add(arg_var)
-
-                    for arg_var in unwrap_arg_vars:
-                        self._unwrap_cls_arg_in_command(command, arg_var)
-
-                    # When unwrapped, the schema changed, so it's required to continue to verify the cls_name
-                    unwrap_detect = len(unwrap_arg_vars) > 0
-
-            # inherit arguments modification
-            ref_args = []
-            if ref_command.arg_groups:
-                for group in ref_command.arg_groups:
-                    ref_args.extend(group.args)
-            command.generate_args(ref_args=ref_args)
-
-            # inherit outputs
-            command.generate_outputs(ref_outputs=ref_command.outputs)
 
         # rename commands
         for cmd_names, ref_cmd_names in command_rename_list:
             self.rename_command(*cmd_names, new_cmd_names=ref_cmd_names)
+
+        # inherit sub command
+        # sub_resources = set()
+        # for ref_cmd_names, ref_command in ref_cfg.iter_commands():
+        #     for r in ref_command.resources:
+        #         if not r.subresource:
+        #             continue
+        #         if ref_cfg.get_update_cmd(resource_id=r.id, subresource=r.subresource):
+        #             sub_resources.add((r.id, r.subresource))
+        # for resource_id, subresource in sub_resources:
+        #     pass
+        # pass
+
+    @staticmethod
+    def _find_ref_command_counterpart(cmd_names, command, ref_cfg):
+        counterpart = None
+
+        # find counterpart
+        ops_methods = set()
+        for operation in command.operations:
+            if isinstance(operation, CMDInstanceUpdateOperation):
+                ops_methods.add('update')
+            elif isinstance(operation, CMDInstanceCreateOperation):
+                ops_methods.add('create')
+            elif isinstance(operation, CMDInstanceDeleteOperation):
+                ops_methods.add('delete')
+            elif isinstance(operation, CMDHttpOperation):
+                ops_methods.add(operation.http.request.method.lower())
+        for ref_cmd_names, ref_command in ref_cfg.iter_commands_by_operations(*ops_methods):
+            command_resources = {(r.id, r.subresource) for r in command.resources}
+            ref_command_resources = {(r.id, r.subresource) for r in ref_command.resources}
+            if not command_resources.issubset(ref_command_resources):
+                # resources not match
+                continue
+            if counterpart:
+                raise exceptions.ResourceConflict(
+                    message=f"Failed to inherit modification for command: '{' '.join(cmd_names)}', multiple reference commands find: '{' '.join(counterpart[0])}' & '{' '.join(ref_cmd_names)}'"
+                )
+            counterpart = (ref_cmd_names, ref_command)
+        return counterpart
+
+    @classmethod
+    def _inherit_modification_in_command(cls, command, ref_command):
+        # confirmation
+        if ref_command.confirmation is not None:
+            command.confirmation = ref_command.confirmation
+
+        # unwrap modification
+        arg_cls_names = set()
+        for _, arg, _, arg_var in cls._iter_arg_cls_definition(command):
+            arg_cls_names.add(arg.cls)
+
+        for cls_name in arg_cls_names:
+            unwrap_detect = True
+            while unwrap_detect:
+                _, _, _, arg_var = cls._find_arg_cls_definition(command, cls_name=cls_name)
+                if not arg_var:
+                    break
+
+                arg_vars = [arg_var]
+                for _, _, _, arg_var in cls._iter_arg_cls_reference(command, cls_name=cls_name):
+                    arg_vars.append(arg_var)
+
+                unwrap_arg_vars = set()
+                for arg_var in arg_vars:
+                    schema_idx = None
+                    for _, _, s_idx in cls.iter_schema_in_command_by_arg_var(command, arg_var):
+                        assert schema_idx is None
+                        schema_idx = s_idx
+                    assert schema_idx is not None
+                    # find the schema in ref_command
+                    ref_s = cls.find_schema_in_command(ref_command, schema_idx)
+                    if not ref_s:
+                        continue
+                    if not isinstance(ref_s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                        continue
+                    if ref_s.cls:
+                        continue
+                    unwrap_arg_vars.add(arg_var)
+
+                for arg_var in unwrap_arg_vars:
+                    cls._unwrap_cls_arg_in_command(command, arg_var)
+
+                # When unwrapped, the schema changed, so it's required to continue to verify the cls_name
+                unwrap_detect = len(unwrap_arg_vars) > 0
+
+        # inherit arguments modification
+        ref_args = []
+        if ref_command.arg_groups:
+            for group in ref_command.arg_groups:
+                ref_args.extend(group.args)
+        command.generate_args(ref_args=ref_args)
+
+        # inherit outputs
+        command.generate_outputs(ref_outputs=ref_command.outputs)
 
     def remove_subresource_commands(self, resource_id, version, subresource):
         commands = []
