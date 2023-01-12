@@ -750,6 +750,8 @@ class WorkspaceCfgEditor(CfgReader):
 
     def inherit_modification(self, ref_cfg: CfgReader):
         command_rename_list = []
+        existing_resources = set()
+        existing_sub_resources = set()
         for cmd_names, command in self.iter_commands():
             counterpart = self._find_ref_command_counterpart(cmd_names, command, ref_cfg)
             if not counterpart:
@@ -757,22 +759,100 @@ class WorkspaceCfgEditor(CfgReader):
             ref_cmd_names, ref_command = counterpart
             self._inherit_modification_in_command(command, ref_command)
             command_rename_list.append((cmd_names, ref_cmd_names))
+            for r in ref_command.resources:
+                existing_resources.add(r.id)
+                if r.subresource:
+                    existing_sub_resources.add((r.id, r.subresource))
 
         # rename commands
         for cmd_names, ref_cmd_names in command_rename_list:
             self.rename_command(*cmd_names, new_cmd_names=ref_cmd_names)
 
         # inherit sub command
-        # sub_resources = set()
-        # for ref_cmd_names, ref_command in ref_cfg.iter_commands():
-        #     for r in ref_command.resources:
-        #         if not r.subresource:
-        #             continue
-        #         if ref_cfg.get_update_cmd(resource_id=r.id, subresource=r.subresource):
-        #             sub_resources.add((r.id, r.subresource))
-        # for resource_id, subresource in sub_resources:
-        #     pass
-        # pass
+        sub_resources = set()
+        array_sub_resources = set()
+        dict_sub_resources = set()
+        for ref_cmd_names, ref_command in ref_cfg.iter_commands():
+            for r in ref_command.resources:
+                if r.id not in existing_resources:
+                    # ignore unrelated resources
+                    continue
+                if not r.subresource:
+                    continue
+                subresource_id = r.subresource
+                if subresource_id.endswith('[]'):
+                    subresource_id = subresource_id[:-2]
+                    array_sub_resources.add((r.id, subresource_id))
+                elif subresource_id.endswith('{}'):
+                    subresource_id = subresource_id[:-2]
+                    dict_sub_resources.add((r.id, subresource_id))
+                sub_resources.add((r.id, subresource_id))
+        sub_resources.difference_update(existing_sub_resources)
+        if not sub_resources:
+            return
+
+        command_rename_list = []
+        for resource_id, subresource_id in sub_resources:
+            update_cmd_info = self.get_update_cmd(resource_id)
+            if not update_cmd_info:
+                continue
+            update_cmd_names, update_cmd, update_by = update_cmd_info
+            if update_by != "GenericOnly":
+                continue
+
+            update_op = None
+            for operation in update_cmd.operations:
+                if isinstance(operation, CMDInstanceUpdateOperation):
+                    update_op = operation
+            assert update_op is not None
+            update_json = update_op.instance_update.json
+            subresource_idx = self.idx_to_list(subresource_id)
+            schema = self.find_schema_in_json(update_json, subresource_idx)
+            if schema:
+                # schema not exist
+                continue
+            assert isinstance(schema, CMDSchema)
+            self._generate_sub_commands(schema, subresource_idx, update_cmd, )
+
+            # build ref_args_options
+            cg_names = None
+            ref_args_options = {}
+            for ref_cmd_names, ref_command in ref_cfg.iter_commands_by_resource(resource_id, subresource_id):
+                cg_names = ref_cmd_names[:-1]
+                for ref_arg_group in ref_command.arg_groups():
+                    for ref_arg in ref_arg_group.args:
+                        ref_args_options[ref_arg.var] = [*ref_arg.options]
+            if (resource_id, subresource_id) in array_sub_resources:
+                for ref_cmd_names, ref_command in ref_cfg.iter_commands_by_resource(resource_id, subresource_id + '[]'):
+                    cg_names = ref_cmd_names[:-1]
+                    for ref_arg_group in ref_command.arg_groups():
+                        for ref_arg in ref_arg_group.args:
+                            ref_args_options[ref_arg.var] = [*ref_arg.options]
+            if (resource_id, subresource_id) in dict_sub_resources:
+                for ref_cmd_names, ref_command in ref_cfg.iter_commands_by_resource(resource_id, subresource_id + '{}'):
+                    cg_names = ref_cmd_names[:-1]
+                    for ref_arg_group in ref_command.arg_groups():
+                        for ref_arg in ref_arg_group.args:
+                            ref_args_options[ref_arg.var] = [*ref_arg.options]
+            assert cg_names is not None
+
+            # generate sub commands
+            sub_commands = self._generate_sub_commands(schema, subresource_idx, update_cmd, ref_args_options)
+            for sub_command in sub_commands:
+                cmd_names = [*cg_names, sub_command.name]
+                self._add_command(*cmd_names, command=sub_command)
+                counterpart = self._find_ref_command_counterpart(cmd_names, sub_command, ref_cfg)
+                if not counterpart:
+                    continue
+                ref_cmd_names, ref_command = counterpart
+                self._inherit_modification_in_command(sub_command, ref_command)
+                command_rename_list.append((cmd_names, ref_cmd_names))
+
+        # rename sub commands
+        for cmd_names, ref_cmd_names in command_rename_list:
+            self.rename_command(*cmd_names, new_cmd_names=ref_cmd_names)
+
+        self.reformat()
 
     @staticmethod
     def _find_ref_command_counterpart(cmd_names, command, ref_cfg):
@@ -888,170 +968,53 @@ class WorkspaceCfgEditor(CfgReader):
         if not update_cmd_info:
             raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id}")
 
-        update_cmd_name, update_cmd, update_by = update_cmd_info
+        update_cmd_names, update_cmd, update_by = update_cmd_info
         if update_by != "GenericOnly":
             raise exceptions.InvalidAPIUsage(f"Resource does not exist generic update command: resource_id={resource_id}")
 
         if arg_var.startswith('@'):
             raise exceptions.InvalidAPIUsage(f"Not support class arg={arg_var}, please unwrap it first.")
 
-        # find arg
-        arg, arg_idx = self.find_arg_in_command_by_var(update_cmd, arg_var)
-
-        if not arg or not arg_idx:
-            raise exceptions.InvalidAPIUsage(f"Argument '{arg_var}' not exist in command '{' '.join(update_cmd_name)}'")
-
-        get_op = None
-        put_op = None
         update_op = None
         for operation in update_cmd.operations:
             if isinstance(operation, CMDInstanceUpdateOperation):
                 update_op = operation
-            if isinstance(operation, CMDHttpOperation) and operation.http.request and operation.http.responses:
-                if operation.http.request.method == "get":
-                    get_op = operation
-                if operation.http.request.method == "put":
-                    put_op = operation
-
-        assert get_op is not None
-        assert put_op is not None
         assert update_op is not None
 
         # find schema_idx
-        parent_schema = None
         schema = None
         schema_idx = None
-        for parent_s, s, s_idx in self.iter_schema_in_operation_by_arg_var(update_op, arg_var):
+        for _, s, s_idx in self.iter_schema_in_operation_by_arg_var(update_op, arg_var):
             assert schema is None
-            parent_schema, schema, schema_idx = parent_s, s, s_idx
+            schema, schema_idx = s, s_idx
         if not schema:
             raise exceptions.InvalidAPIUsage(f"Cannot find schema for arg_var={arg_var}")
 
         subresource_idx = self.schema_idx_to_subresource_idx(schema_idx)
         assert subresource_idx
 
-        # find response body
-        response_json = None
-        for response in get_op.http.responses:
-            if response.is_error:
-                continue
-            if not isinstance(response.body, CMDHttpResponseJsonBody):
-                continue
-            if response.body.json.var == update_op.instance_update.ref:
-                response_json = response.body.json
-                break
-        assert response_json is not None
+        sub_commands = self._generate_sub_commands(schema, subresource_idx, update_cmd, ref_args_options)
 
-        update_json = update_op.instance_update.json
+        for sub_command in sub_commands:
+            self._add_command(*cg_names, sub_command.name, command=sub_command)
 
-        def _build_sub_command_base(_subresource_idx, **kwargs):
-            _sub_command = CMDCommand()
-            _sub_command.version = update_cmd.version
-            _resource = [_r for _r in update_cmd.resources if _r.id.lower() == resource_id.lower()][0]
-            _resource = CMDResource(raw_data=_resource.to_native())
-            _resource.subresource = self.idx_to_str(_subresource_idx)
-            _sub_command.resources = [_resource]
-            _sub_command.subresource_selector = self._build_subresource_selector(
-                response_json, update_json, _subresource_idx, **kwargs)
-            return _sub_command
+        self.reformat()
 
-        def _build_subresource_list_or_show_command(_subresource_idx, _ref_args):
-            _sub_command = _build_sub_command_base(_subresource_idx)
-            _sub_command.operations = [get_op.__class__(raw_data=get_op.to_native())]
-            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_args_options)
-            _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
-            _sub_command.link()
-            return _sub_command
+    @classmethod
+    def _generate_sub_commands(cls, schema, subresource_idx, update_cmd, ref_args_options=None):
+        update_op = None
+        for operation in update_cmd.operations:
+            if isinstance(operation, CMDInstanceUpdateOperation):
+                update_op = operation
+        assert update_op is not None
 
-        def _build_subresource_create_command(_subresource_idx, _ref_args):
-            _sub_command = _build_sub_command_base(_subresource_idx, optional_end_index_indentifier=True)
-            _instance_op = CMDInstanceCreateOperation()
-
-            _instance_op.instance_create = CMDJsonInstanceCreateAction()
-            _instance_op.instance_create.ref = _sub_command.subresource_selector.var
-            _instance_op.instance_create.json = CMDRequestJson()
-
-            # fork json schema
-            assert update_cmd.schema_cls_register_map is not None
-            _instance_op_schema = self.fork_schema_in_json(
-                update_json, _subresource_idx, update_cmd.schema_cls_register_map)
-            assert not isinstance(_instance_op_schema, CMDClsSchemaBase)
-            if not isinstance(_instance_op_schema, CMDSchema):
-                # convert schema base to schema
-                if isinstance(_instance_op_schema, CMDObjectSchemaBase):
-                    _instance_op_schema = CMDObjectSchema(raw_data=_instance_op_schema.to_native())
-                elif isinstance(_instance_op_schema, CMDArraySchemaBase):
-                    _instance_op_schema = CMDArraySchema(raw_data=_instance_op_schema.to_native())
-                else:
-                    raise NotImplementedError()
-            # _subresource_idx does not contains update_json.schema.name
-            _instance_op_schema.name = self.idx_to_str([update_json.schema.name, *_subresource_idx])
-            _instance_op_schema.required = True
-            _instance_op.instance_create.json.schema = _instance_op_schema
-
-            _sub_command.operations = [
-                get_op.__class__(raw_data=get_op.to_native()),
-                _instance_op,
-                put_op.__class__(raw_data=put_op.to_native()),
-            ]
-            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_args_options)
-            _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
-            _sub_command.link()
-            return _sub_command
-
-        def _build_subresource_update_command(_subresource_idx, _ref_args):
-            _sub_command = _build_sub_command_base(_subresource_idx)
-            _instance_op = CMDInstanceUpdateOperation()
-
-            _instance_op.instance_update = CMDJsonInstanceUpdateAction()
-            _instance_op.instance_update.ref = _sub_command.subresource_selector.var
-            _instance_op.instance_update.json = CMDRequestJson()
-
-            # fork json schema
-            assert update_cmd.schema_cls_register_map is not None
-            _instance_op_schema = self.fork_schema_in_json(
-                update_json, _subresource_idx, update_cmd.schema_cls_register_map)
-            if not isinstance(_instance_op_schema, CMDSchema):
-                # convert schema base to schema
-                if isinstance(_instance_op_schema, CMDObjectSchemaBase):
-                    _instance_op_schema = CMDObjectSchema(raw_data=_instance_op_schema.to_native())
-                elif isinstance(_instance_op_schema, CMDArraySchemaBase):
-                    _instance_op_schema = CMDArraySchema(raw_data=_instance_op_schema.to_native())
-                else:
-                    raise NotImplementedError()
-            # _subresource_idx does not contains update_json.schema.name
-            _instance_op_schema.name = self.idx_to_str([update_json.schema.name, *_subresource_idx])
-            _instance_op_schema.required = True
-            _instance_op.instance_update.json.schema = _instance_op_schema
-
-            _sub_command.operations = [
-                get_op.__class__(raw_data=get_op.to_native()),
-                _instance_op,
-                put_op.__class__(raw_data=put_op.to_native()),
-            ]
-            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_args_options)
-            _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
-            _sub_command.link()
-            return _sub_command
-
-        def _build_subresource_delete_command(_subresource_idx, _ref_args):
-            _sub_command = _build_sub_command_base(_subresource_idx)
-            _instance_op = CMDInstanceDeleteOperation()
-            _instance_op.instance_delete = CMDJsonInstanceDeleteAction()
-            _instance_op.instance_delete.ref = _sub_command.subresource_selector.var
-            _instance_op.instance_delete.json = CMDRequestJson()
-            _sub_command.operations = [
-                get_op.__class__(raw_data=get_op.to_native()),
-                _instance_op,
-                put_op.__class__(raw_data=put_op.to_native()),
-            ]
-            _sub_command.generate_args(ref_args=_ref_args, ref_options=ref_args_options)
-            _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
-            _sub_command.link()
-            return _sub_command
+        # find arg
+        arg_var = schema.arg
+        arg, arg_idx = cls.find_arg_in_command_by_var(update_cmd, arg_var)
 
         # build ref_args
         ref_args = []
+        update_json = update_op.instance_update.json
         update_arg_prefix = f"${update_json.schema.name}"
         if update_cmd.arg_groups:
             for g in update_cmd.arg_groups:
@@ -1065,10 +1028,18 @@ class WorkspaceCfgEditor(CfgReader):
                         a.options = sorted(a.options, key=lambda o: (len(o), o))[-1:]  # use the longest argument
                     ref_args.append(a)
 
+        if not arg or not arg_idx:
+            raise exceptions.InvalidAPIUsage(f"Argument '{arg_var}' not exist in command")
+
         if isinstance(schema, CMDArraySchema):
             assert isinstance(arg, CMDArrayArg)
             # list command
-            list_command = _build_subresource_list_or_show_command(subresource_idx, ref_args)
+            list_command = cls._build_subresource_list_or_show_command(
+                update_cmd=update_cmd,
+                subresource_idx=subresource_idx,
+                ref_args=ref_args,
+                ref_options=ref_args_options
+            )
 
             # generate item command
             item_subresource_idx = [*subresource_idx, '[]']
@@ -1086,13 +1057,33 @@ class WorkspaceCfgEditor(CfgReader):
             ref_args.extend(item_arg.args)
 
             # create command
-            create_command = _build_subresource_create_command(item_subresource_idx, ref_args)
+            create_command = cls._build_subresource_create_command(
+                update_cmd=update_cmd,
+                subresource_idx=item_subresource_idx,
+                ref_args=ref_args,
+                ref_options=ref_args_options,
+            )
             # update command
-            update_command = _build_subresource_update_command(item_subresource_idx, ref_args)
+            update_command = cls._build_subresource_update_command(
+                update_cmd=update_cmd,
+                subresource_idx=item_subresource_idx,
+                ref_args=ref_args,
+                ref_options=ref_args_options,
+            )
             # delete command
-            delete_command = _build_subresource_delete_command(item_subresource_idx, ref_args)
+            delete_command = cls._build_subresource_delete_command(
+                update_cmd=update_cmd,
+                subresource_idx=item_subresource_idx,
+                ref_args=ref_args,
+                ref_options=ref_args_options,
+            )
             # show command
-            show_command = _build_subresource_list_or_show_command(item_subresource_idx, ref_args)
+            show_command = cls._build_subresource_list_or_show_command(
+                update_cmd=update_cmd,
+                subresource_idx=item_subresource_idx,
+                ref_args=ref_args,
+                ref_options=ref_args_options,
+            )
 
             list_command.name = 'list'
             create_command.name = 'create'
@@ -1100,11 +1091,7 @@ class WorkspaceCfgEditor(CfgReader):
             delete_command.name = 'delete'
             show_command.name = 'show'
 
-            self._add_command(*cg_names, list_command.name, command=list_command)
-            self._add_command(*cg_names, create_command.name, command=create_command)
-            self._add_command(*cg_names, update_command.name, command=update_command)
-            self._add_command(*cg_names, delete_command.name, command=delete_command)
-            self._add_command(*cg_names, show_command.name, command=show_command)
+            return [list_command, create_command, update_command, delete_command, show_command]
 
         elif isinstance(schema, CMDObjectSchema):
             assert isinstance(arg, CMDObjectArg)
@@ -1115,13 +1102,33 @@ class WorkspaceCfgEditor(CfgReader):
                 ref_args.extend(arg.args)
 
                 # create command
-                create_command = _build_subresource_create_command(subresource_idx, ref_args)
+                create_command = cls._build_subresource_create_command(
+                    update_cmd=update_cmd,
+                    subresource_idx=subresource_idx,
+                    ref_args=ref_args,
+                    ref_options=ref_args_options
+                )
                 # update command
-                update_command = _build_subresource_update_command(subresource_idx, ref_args)
+                update_command = cls._build_subresource_update_command(
+                    update_cmd=update_cmd,
+                    subresource_idx=subresource_idx,
+                    ref_args=ref_args,
+                    ref_options=ref_args_options
+                )
                 # delete command
-                delete_command = _build_subresource_delete_command(subresource_idx, ref_args)
+                delete_command = cls._build_subresource_delete_command(
+                    update_cmd=update_cmd,
+                    subresource_idx=subresource_idx,
+                    ref_args=ref_args,
+                    ref_options=ref_args_options
+                )
                 # show command
-                show_command = _build_subresource_list_or_show_command(subresource_idx, ref_args)
+                show_command = cls._build_subresource_list_or_show_command(
+                    update_cmd=update_cmd,
+                    subresource_idx=subresource_idx,
+                    ref_args=ref_args,
+                    ref_options=ref_args_options
+                )
 
             elif schema.additional_props and schema.additional_props.item:
                 item_subresource_idx = [*subresource_idx, '{}']
@@ -1139,14 +1146,33 @@ class WorkspaceCfgEditor(CfgReader):
                 ref_args.extend(item_arg.args)
 
                 # create command
-                create_command = _build_subresource_create_command(item_subresource_idx, ref_args)
+                create_command = cls._build_subresource_create_command(
+                    update_cmd=update_cmd,
+                    subresource_idx=item_subresource_idx,
+                    ref_args=ref_args,
+                    ref_options=ref_args_options
+                )
                 # update command
-                update_command = _build_subresource_update_command(item_subresource_idx, ref_args)
+                update_command = cls._build_subresource_update_command(
+                    update_cmd=update_cmd,
+                    subresource_idx=item_subresource_idx,
+                    ref_args=ref_args,
+                    ref_options=ref_args_options
+                )
                 # delete command
-                delete_command = _build_subresource_delete_command(item_subresource_idx, ref_args)
+                delete_command = cls._build_subresource_delete_command(
+                    update_cmd=update_cmd,
+                    subresource_idx=item_subresource_idx,
+                    ref_args=ref_args,
+                    ref_options=ref_args_options
+                )
                 # show command
-                show_command = _build_subresource_list_or_show_command(item_subresource_idx, ref_args)
-
+                show_command = cls._build_subresource_list_or_show_command(
+                    update_cmd=update_cmd,
+                    subresource_idx=item_subresource_idx,
+                    ref_args=ref_args,
+                    ref_options=ref_args_options
+                )
             else:
                 raise NotImplementedError()
 
@@ -1155,20 +1181,158 @@ class WorkspaceCfgEditor(CfgReader):
             delete_command.name = 'delete'
             show_command.name = 'show'
 
-            self._add_command(*cg_names, create_command.name, command=create_command)
-            self._add_command(*cg_names, update_command.name, command=update_command)
-            self._add_command(*cg_names, delete_command.name, command=delete_command)
-            self._add_command(*cg_names, show_command.name, command=show_command)
+            return [create_command, update_command, delete_command, show_command]
         else:
             raise NotImplementedError()
 
-        self.reformat()
+    @classmethod
+    def _build_sub_command_base(cls, update_cmd, subresource_idx, **kwargs):
+        get_op = None
+        put_op = None
+        update_op = None
+        for operation in update_cmd.operations:
+            if isinstance(operation, CMDInstanceUpdateOperation):
+                update_op = operation
+            if isinstance(operation, CMDHttpOperation) and operation.http.request and operation.http.responses:
+                if operation.http.request.method == "get":
+                    get_op = operation
+                if operation.http.request.method == "put":
+                    put_op = operation
+        assert get_op is not None
+        assert put_op is not None
+        assert update_op is not None
 
-    def _build_subresource_selector(self, response_json, update_json, subresource_idx, **kwargs):
+        # find response body
+        response_json = None
+        for response in get_op.http.responses:
+            if response.is_error:
+                continue
+            if not isinstance(response.body, CMDHttpResponseJsonBody):
+                continue
+            if response.body.json.var == update_op.instance_update.ref:
+                response_json = response.body.json
+                break
+        assert response_json is not None
+
+        update_json = update_op.instance_update.json
+
+        _sub_command = CMDCommand()
+        _sub_command.version = update_cmd.version
+        assert len(update_cmd.resources) == 1
+        _resource = CMDResource(raw_data=update_cmd.resources[0].to_native())
+        _resource.subresource = cls.idx_to_str(subresource_idx)
+        _sub_command.resources = [_resource]
+        _sub_command.subresource_selector = cls._build_subresource_selector(
+            response_json, update_json, subresource_idx, **kwargs)
+        return _sub_command, get_op, put_op, update_json
+
+    @classmethod
+    def _build_subresource_list_or_show_command(cls, update_cmd, subresource_idx, ref_args, ref_options):
+        _sub_command, get_op, _, update_json = cls._build_sub_command_base(update_cmd, subresource_idx)
+
+        _sub_command.operations = [get_op.__class__(raw_data=get_op.to_native())]
+        _sub_command.generate_args(ref_args=ref_args, ref_options=ref_options)
+        _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
+        _sub_command.link()
+        return _sub_command
+
+    @classmethod
+    def _build_subresource_create_command(cls, update_cmd, subresource_idx, ref_args, ref_options):
+        _sub_command, get_op, put_op, update_json = cls._build_sub_command_base(update_cmd, subresource_idx, optional_end_index_indentifier=True)
+
+        _instance_op = CMDInstanceCreateOperation()
+        _instance_op.instance_create = CMDJsonInstanceCreateAction()
+        _instance_op.instance_create.ref = _sub_command.subresource_selector.var
+        _instance_op.instance_create.json = CMDRequestJson()
+
+        # fork json schema
+        assert update_cmd.schema_cls_register_map is not None
+        _instance_op_schema = cls.fork_schema_in_json(
+            update_json, subresource_idx, update_cmd.schema_cls_register_map)
+        assert not isinstance(_instance_op_schema, CMDClsSchemaBase)
+        if not isinstance(_instance_op_schema, CMDSchema):
+            # convert schema base to schema
+            if isinstance(_instance_op_schema, CMDObjectSchemaBase):
+                _instance_op_schema = CMDObjectSchema(raw_data=_instance_op_schema.to_native())
+            elif isinstance(_instance_op_schema, CMDArraySchemaBase):
+                _instance_op_schema = CMDArraySchema(raw_data=_instance_op_schema.to_native())
+            else:
+                raise NotImplementedError()
+        # _subresource_idx does not contains update_json.schema.name
+        _instance_op_schema.name = cls.idx_to_str([update_json.schema.name, *subresource_idx])
+        _instance_op_schema.required = True
+        _instance_op.instance_create.json.schema = _instance_op_schema
+
+        _sub_command.operations = [
+            get_op.__class__(raw_data=get_op.to_native()),
+            _instance_op,
+            put_op.__class__(raw_data=put_op.to_native()),
+        ]
+        _sub_command.generate_args(ref_args=ref_args, ref_options=ref_options)
+        _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
+        _sub_command.link()
+        return _sub_command
+
+    @classmethod
+    def _build_subresource_update_command(cls, update_cmd, subresource_idx, ref_args, ref_options):
+        _sub_command, get_op, put_op, update_json = cls._build_sub_command_base(update_cmd, subresource_idx)
+
+        _instance_op = CMDInstanceUpdateOperation()
+        _instance_op.instance_update = CMDJsonInstanceUpdateAction()
+        _instance_op.instance_update.ref = _sub_command.subresource_selector.var
+        _instance_op.instance_update.json = CMDRequestJson()
+
+        # fork json schema
+        assert update_cmd.schema_cls_register_map is not None
+        _instance_op_schema = cls.fork_schema_in_json(
+            update_json, subresource_idx, update_cmd.schema_cls_register_map)
+        if not isinstance(_instance_op_schema, CMDSchema):
+            # convert schema base to schema
+            if isinstance(_instance_op_schema, CMDObjectSchemaBase):
+                _instance_op_schema = CMDObjectSchema(raw_data=_instance_op_schema.to_native())
+            elif isinstance(_instance_op_schema, CMDArraySchemaBase):
+                _instance_op_schema = CMDArraySchema(raw_data=_instance_op_schema.to_native())
+            else:
+                raise NotImplementedError()
+        # _subresource_idx does not contains update_json.schema.name
+        _instance_op_schema.name = cls.idx_to_str([update_json.schema.name, *subresource_idx])
+        _instance_op_schema.required = True
+        _instance_op.instance_update.json.schema = _instance_op_schema
+
+        _sub_command.operations = [
+            get_op.__class__(raw_data=get_op.to_native()),
+            _instance_op,
+            put_op.__class__(raw_data=put_op.to_native()),
+        ]
+        _sub_command.generate_args(ref_args=ref_args, ref_options=ref_options)
+        _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
+        _sub_command.link()
+        return _sub_command
+
+    @classmethod
+    def _build_subresource_delete_command(cls, update_cmd, subresource_idx, ref_args, ref_options):
+        _sub_command, get_op, put_op, _ = cls._build_sub_command_base(update_cmd, subresource_idx)
+
+        _instance_op = CMDInstanceDeleteOperation()
+        _instance_op.instance_delete = CMDJsonInstanceDeleteAction()
+        _instance_op.instance_delete.ref = _sub_command.subresource_selector.var
+        _instance_op.instance_delete.json = CMDRequestJson()
+        _sub_command.operations = [
+            get_op.__class__(raw_data=get_op.to_native()),
+            _instance_op,
+            put_op.__class__(raw_data=put_op.to_native()),
+        ]
+        _sub_command.generate_args(ref_args=ref_args, ref_options=ref_options)
+        _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
+        _sub_command.link()
+        return _sub_command
+
+    @classmethod
+    def _build_subresource_selector(cls, response_json, update_json, subresource_idx, **kwargs):
         assert isinstance(response_json, CMDResponseJson)
         assert isinstance(update_json, CMDRequestJson)
 
-        idx = self.idx_to_list(subresource_idx)
+        idx = cls.idx_to_list(subresource_idx)
         selector = CMDJsonSubresourceSelector()
         selector.ref = response_json.var
 
@@ -1177,18 +1341,19 @@ class WorkspaceCfgEditor(CfgReader):
             index = CMDObjectIndex()
             index.name = update_json.schema.name
             # disable prune for the outer layer index
-            selector.json = self._build_object_index_base(update_json.schema, idx, index=index, prune=False, **kwargs)
+            selector.json = cls._build_object_index_base(update_json.schema, idx, index=index, prune=False, **kwargs)
         elif isinstance(update_json.schema, CMDArraySchema):
             assert isinstance(response_json.schema, CMDArraySchemaBase)
             index = CMDArrayIndex()
             index.name = update_json.schema.name
-            selector.json = self._build_array_index_base(update_json.schema, idx, index=index, **kwargs)
+            selector.json = cls._build_array_index_base(update_json.schema, idx, index=index, **kwargs)
         else:
             raise NotImplementedError(f"Not support schema {type(update_json.schema)}")
 
         return selector
 
-    def _build_object_index_base(self, schema, idx, index=None, prune=False, **kwargs):
+    @classmethod
+    def _build_object_index_base(cls, schema, idx, index=None, prune=False, **kwargs):
         assert isinstance(schema, CMDObjectSchemaBase)
 
         if not index:
@@ -1210,9 +1375,9 @@ class WorkspaceCfgEditor(CfgReader):
                             prop = prop.implement
                         # ignore the current index, return the sub index with index.name prefix
                         if isinstance(prop, CMDObjectSchema):
-                            return self._build_object_index(prop, remain_idx, name=name, **kwargs)
+                            return cls._build_object_index(prop, remain_idx, name=name, **kwargs)
                         elif isinstance(prop, CMDArraySchema):
-                            return self._build_array_index(prop, remain_idx, name=name, **kwargs)
+                            return cls._build_array_index(prop, remain_idx, name=name, **kwargs)
                         else:
                             raise NotImplementedError()
                     else:
@@ -1220,10 +1385,10 @@ class WorkspaceCfgEditor(CfgReader):
                         if isinstance(prop, CMDClsSchema):
                             prop = prop.implement
                         if isinstance(prop, CMDObjectSchema):
-                            index.prop = self._build_object_index(prop, remain_idx, name=name, **kwargs)
+                            index.prop = cls._build_object_index(prop, remain_idx, name=name, **kwargs)
                             break
                         elif isinstance(prop, CMDArraySchema):
-                            index.prop = self._build_array_index(prop, remain_idx, name=name, **kwargs)
+                            index.prop = cls._build_array_index(prop, remain_idx, name=name, **kwargs)
                             break
                         else:
                             raise NotImplementedError()
@@ -1231,15 +1396,16 @@ class WorkspaceCfgEditor(CfgReader):
         if schema.discriminators:
             for disc in schema.discriminators:
                 if disc.value == current_idx:
-                    index.discriminator = self._build_object_index_discriminator(disc, remain_idx, **kwargs)
+                    index.discriminator = cls._build_object_index_discriminator(disc, remain_idx, **kwargs)
                     break
 
         if schema.additional_props and current_idx == "{}":
-            index.additional_props = self._build_object_index_additional_prop(schema.additional_props, remain_idx, **kwargs)
+            index.additional_props = cls._build_object_index_additional_prop(schema.additional_props, remain_idx, **kwargs)
 
         return index
 
-    def _build_array_index_base(self, schema, idx, index=None, **kwargs):
+    @classmethod
+    def _build_array_index_base(cls, schema, idx, index=None, **kwargs):
         assert isinstance(schema, CMDArraySchemaBase)
 
         if not index:
@@ -1276,25 +1442,28 @@ class WorkspaceCfgEditor(CfgReader):
         index.identifiers = identifiers
 
         if isinstance(item, CMDObjectSchemaBase):
-            index.item = self._build_object_index_base(item, remain_idx, **kwargs)
+            index.item = cls._build_object_index_base(item, remain_idx, **kwargs)
         elif isinstance(item, CMDArraySchemaBase):
-            index.item = self._build_array_index_base(item, remain_idx, **kwargs)
+            index.item = cls._build_array_index_base(item, remain_idx, **kwargs)
         else:
             raise NotImplementedError()
 
         return index
 
-    def _build_object_index(self, schema, idx, name, **kwargs):
+    @classmethod
+    def _build_object_index(cls, schema, idx, name, **kwargs):
         index = CMDObjectIndex()
         index.name = name
-        return self._build_object_index_base(schema, idx, index, prune=True, **kwargs)
+        return cls._build_object_index_base(schema, idx, index, prune=True, **kwargs)
 
-    def _build_array_index(self, schema, idx, name, **kwargs):
+    @classmethod
+    def _build_array_index(cls, schema, idx, name, **kwargs):
         index = CMDArrayIndex()
         index.name = name
-        return self._build_array_index_base(schema, idx, index, **kwargs)
+        return cls._build_array_index_base(schema, idx, index, **kwargs)
 
-    def _build_object_index_discriminator(self, schema, idx, **kwargs):
+    @classmethod
+    def _build_object_index_discriminator(cls, schema, idx, **kwargs):
         assert isinstance(schema, CMDObjectSchemaDiscriminator)
 
         index = CMDObjectIndexDiscriminator()
@@ -1315,10 +1484,10 @@ class WorkspaceCfgEditor(CfgReader):
                         prop = prop.implement
 
                     if isinstance(prop, CMDObjectSchema):
-                        index.prop = self._build_object_index(prop, remain_idx, name, **kwargs)
+                        index.prop = cls._build_object_index(prop, remain_idx, name, **kwargs)
                         break
                     elif isinstance(prop, CMDArraySchema):
-                        index.prop = self._build_array_index(prop, remain_idx, name, **kwargs)
+                        index.prop = cls._build_array_index(prop, remain_idx, name, **kwargs)
                         break
                     else:
                         raise NotImplementedError()
@@ -1326,12 +1495,13 @@ class WorkspaceCfgEditor(CfgReader):
         if schema.discriminators:
             for disc in schema.discriminators:
                 if disc.value == current_idx:
-                    index.discriminator = self._build_object_index_discriminator(disc, remain_idx, **kwargs)
+                    index.discriminator = cls._build_object_index_discriminator(disc, remain_idx, **kwargs)
                     break
 
         return index
 
-    def _build_object_index_additional_prop(self, schema, idx, **kwargs):
+    @classmethod
+    def _build_object_index_additional_prop(cls, schema, idx, **kwargs):
         assert isinstance(schema, CMDObjectSchemaAdditionalProperties)
         index = CMDObjectIndexAdditionalProperties()
 
@@ -1344,9 +1514,9 @@ class WorkspaceCfgEditor(CfgReader):
         if isinstance(item, CMDClsSchemaBase):
             item = item.implement
         if isinstance(item, CMDObjectSchemaBase):
-            index.item = self._build_object_index_base(item, idx, **kwargs)
+            index.item = cls._build_object_index_base(item, idx, **kwargs)
         elif isinstance(item, CMDArraySchemaBase):
-            index.item = self._build_array_index_base(item, idx, **kwargs)
+            index.item = cls._build_array_index_base(item, idx, **kwargs)
         else:
             raise NotImplementedError()
 
