@@ -875,6 +875,8 @@ class CfgReader:
     @classmethod
     def _iter_schema_in_json(cls, js, schema_filter):
         assert isinstance(js, (CMDRequestJson, CMDResponseJson))
+        if js.schema is None:
+            return
         match, ret = schema_filter(js, js.schema, [_SchemaIdxEnum.Json])
         if match:
             yield match
