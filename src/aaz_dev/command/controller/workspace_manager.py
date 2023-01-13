@@ -557,10 +557,10 @@ class WorkspaceManager:
 
         swagger_resources = []
         for resource_id, reload_resource in reload_resource_map.items():
-            swagger_resoruce = reload_resource.get('swagger_resource', None)
-            if not swagger_resoruce:
+            swagger_resource = reload_resource.get('swagger_resource', None)
+            if not swagger_resource:
                 raise exceptions.ResourceNotFind(f"Command not exist for '{resource_id}'")
-            swagger_resources.append(swagger_resoruce)
+            swagger_resources.append(swagger_resource)
 
         self.swagger_command_generator.load_resources(swagger_resources)
 
