@@ -800,6 +800,7 @@ class WorkspaceCfgEditor(CfgReader):
             if update_by != "GenericOnly":
                 continue
 
+            update_cmd.link()
             update_op = None
             for operation in update_cmd.operations:
                 if isinstance(operation, CMDInstanceUpdateOperation):
@@ -808,30 +809,29 @@ class WorkspaceCfgEditor(CfgReader):
             update_json = update_op.instance_update.json
             subresource_idx = self.idx_to_list(subresource_id)
             schema = self.find_schema_in_json(update_json, subresource_idx)
-            if schema:
+            if not schema:
                 # schema not exist
                 continue
             assert isinstance(schema, CMDSchema)
-            self._generate_sub_commands(schema, subresource_idx, update_cmd, )
 
             # build ref_args_options
             cg_names = None
             ref_args_options = {}
             for ref_cmd_names, ref_command in ref_cfg.iter_commands_by_resource(resource_id, subresource_id):
                 cg_names = ref_cmd_names[:-1]
-                for ref_arg_group in ref_command.arg_groups():
+                for ref_arg_group in ref_command.arg_groups:
                     for ref_arg in ref_arg_group.args:
                         ref_args_options[ref_arg.var] = [*ref_arg.options]
             if (resource_id, subresource_id) in array_sub_resources:
                 for ref_cmd_names, ref_command in ref_cfg.iter_commands_by_resource(resource_id, subresource_id + '[]'):
                     cg_names = ref_cmd_names[:-1]
-                    for ref_arg_group in ref_command.arg_groups():
+                    for ref_arg_group in ref_command.arg_groups:
                         for ref_arg in ref_arg_group.args:
                             ref_args_options[ref_arg.var] = [*ref_arg.options]
             if (resource_id, subresource_id) in dict_sub_resources:
                 for ref_cmd_names, ref_command in ref_cfg.iter_commands_by_resource(resource_id, subresource_id + '{}'):
                     cg_names = ref_cmd_names[:-1]
-                    for ref_arg_group in ref_command.arg_groups():
+                    for ref_arg_group in ref_command.arg_groups:
                         for ref_arg in ref_arg_group.args:
                             ref_args_options[ref_arg.var] = [*ref_arg.options]
             assert cg_names is not None
@@ -862,11 +862,11 @@ class WorkspaceCfgEditor(CfgReader):
         ops_methods = set()
         for operation in command.operations:
             if isinstance(operation, CMDInstanceUpdateOperation):
-                ops_methods.add('update')
+                ops_methods.add('instance-update')
             elif isinstance(operation, CMDInstanceCreateOperation):
-                ops_methods.add('create')
+                ops_methods.add('instance-create')
             elif isinstance(operation, CMDInstanceDeleteOperation):
-                ops_methods.add('delete')
+                ops_methods.add('instance-delete')
             elif isinstance(operation, CMDHttpOperation):
                 ops_methods.add(operation.http.request.method.lower())
         for ref_cmd_names, ref_command in ref_cfg.iter_commands_by_operations(*ops_methods):
@@ -1322,6 +1322,7 @@ class WorkspaceCfgEditor(CfgReader):
             _instance_op,
             put_op.__class__(raw_data=put_op.to_native()),
         ]
+        _sub_command.confirmation = DEFAULT_CONFIRMATION_PROMPT
         _sub_command.generate_args(ref_args=ref_args, ref_options=ref_options)
         _sub_command.generate_outputs(ref_outputs=update_cmd.outputs)
         _sub_command.link()

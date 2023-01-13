@@ -4,7 +4,7 @@ from command.model.configuration import CMDConfiguration, CMDHttpOperation, CMDI
     CMDCommandGroup, CMDArgGroup, CMDObjectArgBase, CMDArrayArgBase, CMDRequestJson, \
     CMDResponseJson, CMDObjectSchemaBase, CMDArraySchemaBase, CMDSchema, CMDHttpRequestJsonBody, \
     CMDJsonInstanceUpdateAction, CMDHttpResponseJsonBody, CMDObjectSchemaDiscriminator, CMDInstanceCreateOperation, \
-    CMDJsonInstanceCreateAction, CMDSchemaBase, CMDArraySchema, CMDObjectSchema
+    CMDJsonInstanceCreateAction, CMDSchemaBase, CMDArraySchema, CMDObjectSchema, CMDInstanceDeleteOperation
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 
 
@@ -102,7 +102,7 @@ class CfgReader:
             yield result
 
     def iter_commands_by_operations(self, *methods):
-        # use 'update' as the methods of instance update operation
+        # use 'instance-*' as the methods of instance update operation
         methods = {m.lower() for m in methods}
 
         def _filter_by_operation(cmd_names, command):
@@ -110,10 +110,20 @@ class CfgReader:
             has_extra_methods = False
             for operation in command.operations:
                 if isinstance(operation, CMDInstanceUpdateOperation):
-                    if 'update' not in methods:
+                    if 'instance-update' not in methods:
                         has_extra_methods = True
                         break
-                    ops_methods.add('update')
+                    ops_methods.add('instance-update')
+                elif isinstance(operation, CMDInstanceCreateOperation):
+                    if 'instance-create' not in methods:
+                        has_extra_methods = True
+                        break
+                    ops_methods.add('instance-create')
+                elif isinstance(operation, CMDInstanceDeleteOperation):
+                    if 'instance-delete' not in methods:
+                        has_extra_methods = True
+                        break
+                    ops_methods.add('instance-delete')
                 elif isinstance(operation, CMDHttpOperation):
                     http = operation.http
                     if http.request.method.lower() not in methods:
