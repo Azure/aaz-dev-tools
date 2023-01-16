@@ -819,6 +819,8 @@ class WorkspaceManager:
                     if key not in existing_sub_resources:
                         existing_sub_resources[key] = set()
                     existing_sub_resources[key].add(r.subresource)
+                    if r.subresource.endswith("[]") or r.subresource.endswith("{}"):
+                        existing_sub_resources[key].add(r.subresource[:-2])
 
             aaz_ref = {}
             for (r_id, r_version), r_sub_resources in existing_sub_resources.items():
@@ -847,7 +849,9 @@ class WorkspaceManager:
                         logger.error(
                             f"Command Group '{' '.join(cmd_names)}' in workspace conflict the name of Subresource Command in `aaz`")
                         continue
-                    editor._add_command(*cmd_names, command=CMDCommand(command.to_native()))
+                    command = CMDCommand(command.to_native())
+                    command.link()
+                    editor._add_command(*cmd_names, command=command)
                     inserted_commands.add(cmd_names_str)
                     aaz_ref[cmd_names_str] = r_version
             if aaz_ref:
@@ -855,6 +859,7 @@ class WorkspaceManager:
                 updated_cfgs = [(editor, aaz_ref)]
 
         for editor, aaz_ref in updated_cfgs:
+            self.remove_cfg(editor)
             self.add_cfg(editor, aaz_ref)
 
     def find_similar_args(self, *cmd_names, arg):
