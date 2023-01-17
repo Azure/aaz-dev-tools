@@ -20,6 +20,7 @@ interface CLIModViewCommandGroup {
     names: string[],
     commandGroups?: CLIModViewCommandGroups,
     commands?: CLIModViewCommands,
+    waitCommand?: CLIModViewCommand,
 }
 
 interface CLIModViewCommands {
@@ -30,6 +31,7 @@ interface CLIModViewCommand {
     names: string[],
     registered: boolean,
     version: string,
+    modified: boolean,
 }
 
 export type { CLIModView, CLIModViewProfile, CLIModViewProfiles, CLIModViewCommandGroup, CLIModViewCommandGroups, CLIModViewCommand, CLIModViewCommands }

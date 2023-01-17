@@ -45,7 +45,7 @@ def az_main_modules():
     return jsonify(result)
 
 
-@bp.route("/Main/Modules/<Name:module_name>", methods=("GET", "PUT"))
+@bp.route("/Main/Modules/<Name:module_name>", methods=("GET", "PUT", "PATCH"))
 def az_main_module(module_name):
     manager = AzMainManager()
     if request.method == "PUT":
@@ -57,6 +57,17 @@ def az_main_module(module_name):
             "profiles": data['profiles']
         })
         module = manager.update_module(module_name, module.profiles)
+        result = module.to_primitive()
+        result['url'] = url_for('az.az_main_module', module_name=module.name)
+    elif request.method == "PATCH":
+        data = request.get_json()
+        if 'profiles' not in data:
+            raise exceptions.InvalidAPIUsage("miss profiles for module")
+        module = CLIModule({
+            "name": module_name,
+            "profiles": data['profiles']
+        })
+        module = manager.update_module(module_name, module.profiles, by_patch=True)
         result = module.to_primitive()
         result['url'] = url_for('az.az_main_module', module_name=module.name)
     elif request.method == "GET":
@@ -94,7 +105,7 @@ def az_extension_modules():
     return jsonify(result)
 
 
-@bp.route("/Extension/Modules/<Name:module_name>", methods=("GET", "PUT"))
+@bp.route("/Extension/Modules/<Name:module_name>", methods=("GET", "PUT", "PATCH"))
 def az_extension_module(module_name):
     manager = AzExtensionManager()
     if request.method == "PUT":
@@ -108,6 +119,17 @@ def az_extension_module(module_name):
         module = manager.update_module(module_name, module.profiles)
         result = module.to_primitive()
         result['url'] = url_for('az.az_extension_module', module_name=module.name)
+    elif request.method == "PATCH":
+        data = request.get_json()
+        if 'profiles' not in data:
+            raise exceptions.InvalidAPIUsage("miss profiles for module")
+        module = CLIModule({
+            "name": module_name,
+            "profiles": data['profiles']
+        })
+        module = manager.update_module(module_name, module.profiles, by_patch=True)
+        result = module.to_primitive()
+        result['url'] = url_for('az.az_extension_module', module_name=module.name)
     elif request.method == "GET":
         module = manager.load_module(module_name)
         result = module.to_primitive()
@@ -115,6 +137,7 @@ def az_extension_module(module_name):
     else:
         raise NotImplementedError()
     return jsonify(result)
+
 
 @bp.route("/Main/Modules/<Name:module_name>/ExportPortalConfig", methods=("POST",))
 def portal_generate_main_module(module_name):
@@ -135,6 +158,7 @@ def portal_generate_main_module(module_name):
     cmd_portal_list = portal_cli_generator.generate_cmds_portal_info(aaz_spec_manager, registered_cmds)
     portal_cli_generator.generate_cmds_portal(cmd_portal_list)
     return "Done"
+
 
 @bp.route("/Extension/Modules/<Name:module_name>/ExportPortalConfig", methods=("POST",))
 def portal_generate_extension_module(module_name):

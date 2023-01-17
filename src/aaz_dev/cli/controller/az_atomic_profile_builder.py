@@ -20,8 +20,9 @@ logger = logging.getLogger('backend')
 
 class AzAtomicProfileBuilder:
 
-    def __init__(self):
+    def __init__(self, by_patch=False):
         self._aaz_spec_manager = AAZSpecsManager()
+        self._by_patch = by_patch
 
     def __call__(self, view_profile):
         profile = CLIAtomicProfile()
@@ -39,15 +40,29 @@ class AzAtomicProfileBuilder:
         stages = set()
 
         if view_command_group.commands:
+            # always load cfg for full generation
+            load_cfg = not self._by_patch
             cmds = {}
+            if not load_cfg:
+                for name, view_cmd in view_command_group.commands.items():
+                    if view_cmd.modified:
+                        # when one or more command modified, load the cfg of all the commands in this command group
+                        # BTW, sub command groups are not included
+                        load_cfg = True
+                        break
             for name, view_cmd in view_command_group.commands.items():
-                cmd = self._build_command(view_cmd)
+                cmd = self._build_command(view_cmd, load_cfg)
                 if cmd.register_info is not None:
                     stages.add(cmd.register_info.stage)
                 cmds[name] = cmd
             command_group.commands = cmds
-
-            self._complete_command_wait_info(command_group)
+            if load_cfg:
+                command_group.wait_command = self._complete_command_wait_info(command_group)
+            elif view_command_group.wait_command and len(stages):
+                # keep wait file not changed.
+                command_group.wait_command = CLIAtomicCommand()
+                command_group.wait_command.names = [*view_command_group.wait_command.names]
+                command_group.wait_command.register_info = CLIAtomicCommandRegisterInfo()
 
         if view_command_group.command_groups:
             cmd_groups = {}
@@ -71,8 +86,8 @@ class AzAtomicProfileBuilder:
 
         return command_group
 
-    def _build_command(self, view_command):
-        command = self._build_command_from_aaz(*view_command.names, version_name=view_command.version)
+    def _build_command(self, view_command, load_cfg):
+        command = self._build_command_from_aaz(*view_command.names, version_name=view_command.version, load_cfg=load_cfg)
         if not view_command.registered:
             command.register_info = None
         return command
@@ -92,7 +107,7 @@ class AzAtomicProfileBuilder:
         })
         return command_group
 
-    def _build_command_from_aaz(self, *names, version_name):
+    def _build_command_from_aaz(self, *names, version_name, load_cfg=True):
         aaz_cmd = self._aaz_spec_manager.find_command(*names)
         if not aaz_cmd:
             raise ResourceNotFind("Command '{}' not exist in AAZ".format(' '.join(names)))
@@ -103,9 +118,6 @@ class AzAtomicProfileBuilder:
                 break
         if not version:
             raise ResourceNotFind("Version '{}' of command '{}' not exist in AAZ".format(version_name, ' '.join(names)))
-        cfg_reader = self._aaz_spec_manager.load_resource_cfg_reader_by_command_with_version(aaz_cmd, version=version)
-        cmd_cfg = cfg_reader.find_command(*names)
-        assert cmd_cfg is not None, f"command model miss in AAZ: '{' '.join(names)}'"
 
         command = CLIAtomicCommand()
         command.names = [*names]
@@ -118,14 +130,19 @@ class AzAtomicProfileBuilder:
             command.help.examples = [CLICommandExample(e.to_primitive()) for e in version.examples]
         command.version = version.name
         command.stage = version.stage or AAZStageEnum.Stable
-        command.cfg = cmd_cfg
         command.resources = [CLISpecsResource(r.to_primitive()) for r in version.resources]
         command.register_info = CLIAtomicCommandRegisterInfo({
             "stage": command.stage,
-            "confirmation": cmd_cfg.confirmation,
         })
 
-        if command.register_info is not None:
+        if load_cfg:
+            # load cfg file, which will generate the command in code
+            cfg_reader = self._aaz_spec_manager.load_resource_cfg_reader_by_command_with_version(
+                aaz_cmd, version=version)
+            cmd_cfg = cfg_reader.find_command(*names)
+            assert cmd_cfg is not None, f"command model miss in AAZ: '{' '.join(names)}'"
+
+            command.cfg = cmd_cfg
             command.register_info.confirmation = cmd_cfg.confirmation
         return command
 
@@ -214,7 +231,7 @@ class AzAtomicProfileBuilder:
 
         wait_cmd_info = [*wait_cmd_rids.values()][0]
 
-        command_group.wait_command = wait_command = CLIAtomicCommand()
+        wait_command = CLIAtomicCommand()
         wait_command.names = [*command_group.names, "wait"]
         wait_command.help = CLICommandHelp()
         wait_command.help.short = "Place the CLI in a waiting state until a condition is met."
@@ -246,6 +263,7 @@ class AzAtomicProfileBuilder:
             raise ValueError("Output ref is empty")
         output.client_flatten = False
         cfg.outputs = [output]
+        return wait_command
 
     @staticmethod
     def _has_provisioning_state(get_op):
