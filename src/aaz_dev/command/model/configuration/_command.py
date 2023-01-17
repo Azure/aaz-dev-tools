@@ -148,46 +148,8 @@ class CMDCommand(Model):
     def reformat(self, **kwargs):
         self.resources = sorted(self.resources, key=lambda r: r.id)
         try:
-            if self.arg_groups:
-                used_options = set()
-                args_in_group = {}
-                for arg_group in self.arg_groups:
-                    for arg in arg_group.args:
-                        group_name = arg.group or ""
-                        if group_name not in args_in_group:
-                            args_in_group[group_name] = []
-                        args_in_group[group_name].append(arg)
-                        for option in arg.options:
-                            if option in used_options:
-                                raise exceptions.VerificationError(
-                                    message=f"Argument option '{option}' duplicated.",
-                                    details={
-                                        "type": "Argument",
-                                        "options": arg.options,
-                                        "var": arg.var,
-                                    }
-                                )
-                            used_options.add(option)
-                arg_groups = []
-                for group_name, args in args_in_group.items():
-                    arg_group = CMDArgGroup()
-                    arg_group.name = group_name
-                    arg_group.args = args
-                    arg_group.reformat(**kwargs)
-                    arg_groups.append(arg_group)
-                self.arg_groups = sorted(arg_groups, key=lambda a: a.name)
-
-            if self.operations:
-                schema_cls_map = {}
-                for operation in self.operations:
-                    operation.reformat(schema_cls_map=schema_cls_map, **kwargs)
-
-                for key, value in schema_cls_map.items():
-                    if value is None:
-                        raise exceptions.VerificationError(
-                            message=f"ReformatError: Schema Class '{key}' not defined.",
-                            details=None
-                        )
+            self._reformat_arg_groups(**kwargs)
+            self._reformat_operations(**kwargs)
         except exceptions.VerificationError as err:
             err.payload['details'] = {
                 "type": "Command",
@@ -196,6 +158,52 @@ class CMDCommand(Model):
                 "details": err.payload['details']
             }
             raise err
+
+    def _reformat_arg_groups(self, **kwargs):
+        if not self.arg_groups:
+            return
+
+        used_options = set()
+        args_in_group = {}
+        for arg_group in self.arg_groups:
+            for arg in arg_group.args:
+                group_name = arg.group or ""
+                if group_name not in args_in_group:
+                    args_in_group[group_name] = []
+                args_in_group[group_name].append(arg)
+                for option in arg.options:
+                    if option in used_options:
+                        raise exceptions.VerificationError(
+                            message=f"Argument option '{option}' duplicated.",
+                            details={
+                                "type": "Argument",
+                                "options": arg.options,
+                                "var": arg.var,
+                            }
+                        )
+                    used_options.add(option)
+        arg_groups = []
+        for group_name, args in args_in_group.items():
+            arg_group = CMDArgGroup()
+            arg_group.name = group_name
+            arg_group.args = args
+            arg_group.reformat(**kwargs)
+            arg_groups.append(arg_group)
+        self.arg_groups = sorted(arg_groups, key=lambda a: a.name)
+
+    def _reformat_operations(self, **kwargs):
+        if not self.operations:
+            return
+        schema_cls_map = {}
+        for operation in self.operations:
+            operation.reformat(schema_cls_map=schema_cls_map, **kwargs)
+
+        for key, value in schema_cls_map.items():
+            if value is None:
+                raise exceptions.VerificationError(
+                    message=f"ReformatError: Schema Class '{key}' not defined.",
+                    details=None
+                )
 
     def link(self):
         self.arg_cls_register_map = {}
