@@ -12,7 +12,7 @@ from utils import exceptions
 from utils.config import Config
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor
-from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg
+from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand
 
 logger = logging.getLogger('backend')
 
@@ -262,7 +262,7 @@ class WorkspaceManager:
             reusable_leaf = self._reusable_leaves.pop(tuple(cmd_names), None)
             if reusable_leaf:
                 new_cmd = reusable_leaf
-            elif aaz_ref and (ref_v_name := aaz_ref.get(' '.join(cmd_names), None))and (aaz_leaf := self.aaz_specs.find_command(*cmd_names)):
+            elif aaz_ref and (ref_v_name := aaz_ref.get(' '.join(cmd_names), None)) and (aaz_leaf := self.aaz_specs.find_command(*cmd_names)):
                 # reference from aaz specs
                 ref_v = None
                 for v in aaz_leaf.versions:
@@ -785,6 +785,9 @@ class WorkspaceManager:
         return leaf
 
     def generate_to_aaz(self):
+        # Merge the commands of subresources which exported in aaz but not exist in current workspace
+        self._merge_sub_resources_in_aaz()
+
         # update configurations
         for ws_leaf in self.iter_command_tree_leaves():
             editor = self.load_cfg_editor_by_command(ws_leaf)
@@ -800,6 +803,64 @@ class WorkspaceManager:
                 continue
             self.aaz_specs.update_command_group_by_ws(ws_node)
         self.aaz_specs.save()
+
+    def _merge_sub_resources_in_aaz(self):
+        """Merge the commands of subresources which exported in aaz but not exist in current workspace"""
+        updated_cfgs = []
+        inserted_commands = set()
+        for ws_leaf in self.iter_command_tree_leaves():
+            editor = self.load_cfg_editor_by_command(ws_leaf)
+            existing_sub_resources = {}
+            for cmd_names, command in editor.iter_commands():
+                for r in command.resources:
+                    if not r.subresource:
+                        continue
+                    key = (r.id, r.version)
+                    if key not in existing_sub_resources:
+                        existing_sub_resources[key] = set()
+                    existing_sub_resources[key].add(r.subresource)
+                    if r.subresource.endswith("[]") or r.subresource.endswith("{}"):
+                        existing_sub_resources[key].add(r.subresource[:-2])
+
+            aaz_ref = {}
+            for (r_id, r_version), r_sub_resources in existing_sub_resources.items():
+                pre_cfg_reader = self.aaz_specs.load_resource_cfg_reader(
+                    editor.cfg.plane, resource_id=r_id, version=r_version
+                )
+                for cmd_names, command in pre_cfg_reader.iter_commands():
+                    insert_command = True
+                    for r in command.resources:
+                        if (r.id, r.version) not in existing_sub_resources:
+                            insert_command = False
+                            break
+                        if not r.subresource or r.subresource in r_sub_resources:
+                            insert_command = False
+                            break
+                    if not insert_command:
+                        continue
+                    cmd_names_str = ' '.join(cmd_names)
+                    if cmd_names_str in inserted_commands:
+                        continue
+                    if self.find_command_tree_leaf(*cmd_names) is not None:
+                        logger.error(
+                            f"Command '{' '.join(cmd_names)}' in workspace conflict the name of Subresource Command in `aaz`")
+                        continue
+                    if self.find_command_tree_node(*cmd_names) is not None:
+                        logger.error(
+                            f"Command Group '{' '.join(cmd_names)}' in workspace conflict the name of Subresource Command in `aaz`")
+                        continue
+                    command = CMDCommand(command.to_native())
+                    command.link()
+                    editor._add_command(*cmd_names, command=command)
+                    inserted_commands.add(cmd_names_str)
+                    aaz_ref[cmd_names_str] = r_version
+            if aaz_ref:
+                editor.reformat()
+                updated_cfgs = [(editor, aaz_ref)]
+
+        for editor, aaz_ref in updated_cfgs:
+            self.remove_cfg(editor)
+            self.add_cfg(editor, aaz_ref)
 
     def find_similar_args(self, *cmd_names, arg):
         assert isinstance(arg, CMDArg)

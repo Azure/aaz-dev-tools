@@ -361,6 +361,7 @@ class WorkspaceCfgEditor(CfgReader):
             )
 
         # regenerate args and its relationship with schema
+        command._reformat_operations()  # handle duplicated schema cls definition
         command.generate_args()
         command.link()
 
