@@ -1,5 +1,5 @@
 from command.model.configuration import CMDCommand
-from schematics.types import StringType, ModelType
+from schematics.types import StringType, ModelType, BooleanType
 from utils.config import Config
 
 
@@ -50,3 +50,10 @@ class CLIResourceIdField(StringType):
             deserialize_from='id',
             *args, **kwargs
         )
+
+
+class CLIModifiedField(BooleanType):
+
+    def to_primitive(self, value, context=None):
+        # ignore modified value when using to primitive
+        return None

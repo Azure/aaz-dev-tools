@@ -21,6 +21,11 @@ class CLIViewCommandGroup(Model):
     commands = DictType(
         field=ModelType(CLIViewCommand)
     )
+    wait_command = ModelType(
+        CLIViewCommand,
+        serialized_name="waitCommand",
+        deserialize_from="waitCommand"
+    )
 
     class Options:
         serialize_when_none = False

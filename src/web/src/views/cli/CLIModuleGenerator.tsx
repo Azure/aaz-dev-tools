@@ -230,7 +230,7 @@ function GenerateDialog(props: {
         props.onClose(false);
     };
 
-    const handleGenerate = () => {
+    const handleGenerateAll = () => {
         const profiles: CLIModViewProfiles = {};
         props.profileCommandTrees.forEach(tree => {
             profiles[tree.name] = ExportModViewProfile(tree);
@@ -262,6 +262,39 @@ function GenerateDialog(props: {
             });
     };
 
+    const handleGenerateModified = () => {
+        const profiles: CLIModViewProfiles = {};
+        props.profileCommandTrees.forEach(tree => {
+            profiles[tree.name] = ExportModViewProfile(tree);
+        })
+        const data = {
+            name: props.moduleName,
+            profiles: profiles,
+        }
+
+        setUpdating(true);
+        axios
+            .patch(
+                `/CLI/Az/${props.repoName}/Modules/${props.moduleName}`,
+                data
+            )
+            .then(() => {
+                setUpdating(false);
+                props.onClose(true);
+            })
+            .catch((err) => {
+                console.error(err.response);
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    setInvalidText(
+                        `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
+                    );
+                }
+                setUpdating(false);
+            });
+    }
+
+
     return (
         <Dialog disableEscapeKeyDown open={props.open}>
             <DialogTitle>Generate CLI commands to {props.moduleName}</DialogTitle>
@@ -276,7 +309,8 @@ function GenerateDialog(props: {
                 }
                 {!updating && <React.Fragment>
                     <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleGenerate}>Confirm</Button>
+                    <Button onClick={handleGenerateAll}>Generate All</Button>
+                    <Button onClick={handleGenerateModified}>Generate Edited Only</Button>
                 </React.Fragment>}
             </DialogActions>
         </Dialog>

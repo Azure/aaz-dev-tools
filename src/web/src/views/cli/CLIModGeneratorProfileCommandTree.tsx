@@ -5,6 +5,7 @@ import TreeItem from '@mui/lab/TreeItem';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import FolderIcon from "@mui/icons-material/Folder";
+import EditIcon from '@mui/icons-material/Edit';
 import { Box, Checkbox, FormControl, Typography, Select, MenuItem, styled, TypographyProps, FormHelperText, InputLabel } from "@mui/material";
 import { CLIModViewCommand, CLIModViewCommandGroup, CLIModViewCommandGroups, CLIModViewCommands, CLIModViewProfile } from "./CLIModuleCommon";
 
@@ -100,7 +101,26 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
                         }}
                     />
                     {/* <DescriptionIcon /> */}
-                    <CommandTypography sx={{ marginLeft: 1, minWidth: 100 }}>{leafName}</CommandTypography>
+                    <Box sx={{
+                        marginLeft: 1,
+                        minWidth: 100,
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "flex-start",
+                    }}>
+                        <CommandTypography>{leafName}</CommandTypography>
+                        <Box sx={{
+                            marginLeft: 1,
+                            width: 20,
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}>
+                            {command.modified && <EditIcon fontSize="small" color="info" />}
+                        </Box>
+                    </Box>
                     {command.selectedVersion !== undefined && <Box sx={{
                         marginLeft: 1,
                         display: "flex",
@@ -108,6 +128,7 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
                         alignItems: "center",
                         justifyContent: "flex-start"
                     }}>
+
                         <FormControl sx={{
                             minWidth: 150,
                             marginLeft: 1,
@@ -218,6 +239,7 @@ interface ProfileCTCommandGroup {
 
     commandGroups?: ProfileCTCommandGroup[];
     commands?: ProfileCTCommand[];
+    waitCommand?: CLIModViewCommand;
 
     totalCommands: number;
     selectedCommands: number;
@@ -232,6 +254,7 @@ interface ProfileCTCommand {
 
     selectedVersion?: string;
     registered?: boolean;
+    modified: boolean;
 };
 
 interface ProfileCTCommandVersion {
@@ -254,6 +277,7 @@ function decodeProfileCTCommand(response: any): ProfileCTCommand {
         names: [...response.names],
         help: response.help.short,
         versions: versions,
+        modified: false,
     }
 }
 
@@ -309,6 +333,7 @@ function updateCommand(command: ProfileCTCommand, commandId: string, selected: b
             ...command,
             selectedVersion: selectedVersion,
             registered: registerCommand,
+            modified: true,
         }
 
     } else {
@@ -316,6 +341,7 @@ function updateCommand(command: ProfileCTCommand, commandId: string, selected: b
             ...command,
             selectedVersion: undefined,
             registered: undefined,
+            modified: true,
         }
     }
 }
@@ -416,6 +442,7 @@ function updateCommandGroupByModView(commandGroup: ProfileCTCommandGroup, view: 
         commands: commands,
         commandGroups: commandGroups,
         selectedCommands: selectedCommands,
+        waitCommand: view.waitCommand,
     }
 }
 
@@ -455,6 +482,7 @@ function ExportModViewCommand(command: ProfileCTCommand): CLIModViewCommand | un
         names: command.names,
         registered: command.registered!,
         version: command.selectedVersion!,
+        modified: command.modified,
     }
 }
 
@@ -489,7 +517,8 @@ function ExportModViewCommandGroup(commandGroup: ProfileCTCommandGroup): CLIModV
     return {
         names: commandGroup.names,
         commandGroups: commandGroups,
-        commands: commands
+        commands: commands,
+        waitCommand: commandGroup.waitCommand,
     }
 }
 

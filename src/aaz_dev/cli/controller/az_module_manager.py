@@ -72,7 +72,7 @@ class AzModuleManager:
     def update_module(self, mod_name, profiles, **kwargs):
         aaz_folder = self.get_aaz_path(mod_name)
         generators = {}
-        atomic_builder = AzAtomicProfileBuilder()
+        atomic_builder = AzAtomicProfileBuilder(by_patch=kwargs.pop('by_patch', False))
         for profile_name, profile in profiles.items():
             profile = atomic_builder(profile)
             generators[profile_name] = AzProfileGenerator(aaz_folder, profile)
@@ -178,17 +178,21 @@ class AzModuleManager:
     def _load_view_commands(self, *names, path):
         """Load commands in the folder"""
         commands = {}
+        wait_command = None
         assert os.path.isdir(path), f'Invalid folder path {path}'
         for name in os.listdir(path):
             sub_path = os.path.join(path, name)
             if os.path.isfile(sub_path) and name.endswith('.py') and not name.startswith('__') and name.startswith('_'):
                 name = name[1:-3].replace('_', '-')  # transform file_name to command_name
-                command = self._load_view_command(*names, name, path=sub_path)  # load command definition
+                command, is_wait = self._load_view_command(*names, name, path=sub_path)  # load command definition
                 if command:
-                    commands[name] = command
+                    if is_wait:
+                        wait_command = command
+                    else:
+                        commands[name] = command
         if not commands:
-            return None
-        return commands
+            return None, None
+        return commands, wait_command
 
     def _load_view_command_group(self, *names, path):
         assert os.path.isdir(path), f'Invalid folder path {path}'
@@ -218,7 +222,7 @@ class AzModuleManager:
         command_group.names = [*names]
 
         command_group.command_groups = self._load_view_command_groups(*names, path=path)
-        command_group.commands = self._load_view_commands(*names, path=path)
+        command_group.commands, command_group.wait_command = self._load_view_commands(*names, path=path)
         return command_group
 
     def _load_view_command(self, *names, path):
@@ -227,18 +231,21 @@ class AzModuleManager:
         register_info_lines = None
         aaz_info_lines = None
         find_command = False
+        is_wait_command = False
         with open(path, 'r') as f:
             while f.readable():
                 line = f.readline()
                 if line.startswith('@register_command('):
                     register_info_lines = []
-                if self._command_pattern.match(line):
+                _command_pattern_match = self._command_pattern.match(line)
+                if _command_pattern_match:
                     find_command = True
+                    is_wait_command = _command_pattern_match[2] is not None
                     break
                 if register_info_lines is not None:
                     register_info_lines.append(line)
             if not find_command:
-                return None
+                return None, None
 
             while f.readable():
                 line = f.readline()
@@ -256,19 +263,17 @@ class AzModuleManager:
                     break
 
         if not find_command:
-            return None
+            return None, None
 
         if not aaz_info_lines:
             raise exceptions.InvalidAPIUsage(f"Command info miss in code: '{' '.join(names)}'")
 
         try:
             data = ast.literal_eval(aaz_info_lines)
-            if 'version' not in data:
-                # wait command will be ignored here.
-                if 'wait' != names[-1]:
-                    logger.info(f"Ignore command without version: '{' '.join(names)}'")
-                return None
-            version_name = data['version']
+            if 'version' not in data and not is_wait_command:
+                logger.info(f"Ignore command without version: '{' '.join(names)}'")
+                return None, None
+            version_name = data.get('version', None)
         except Exception as err:
             raise exceptions.InvalidAPIUsage(f"Command info invalid in code: '{' '.join(names)}': {err}: {aaz_info_lines}")
 
@@ -278,7 +283,20 @@ class AzModuleManager:
 
         if register_info_lines:
             command.registered = True
-        return command
+        return command, is_wait_command
+
+    def _load_view_wait_command(self, *names, path):
+        wait_command = None
+        assert os.path.isdir(path), f'Invalid folder path {path}'
+        for name in os.listdir(path):
+            sub_path = os.path.join(path, name)
+            if os.path.isfile(sub_path) and name.endswith('.py') and not name.startswith('__') and name.startswith('_'):
+                name = name[1:-3].replace('_', '-')  # transform file_name to command_name
+                command = self._load_view_command(*names, name, path=sub_path)  # load command definition
+        # name = '_wait.py'
+        # names = [*cg_names, name]
+        # assert os.path.isdir(path), f'Invalid folder path {path}'
+        # sub_path = os.path.join(path, name)
 
 
 class AzMainManager(AzModuleManager):
