@@ -3,6 +3,14 @@
 Release History
 ===============
 
+0.19.0
+++++++
+* Feature support subcommand modification inheritance (#184)
+* Fix _iter_schema_in_json when js has not schema (#185)
+* Update requirements to support Python 3.11 (#186)
+* Inherent subresource commands in aaz when export workspace (#187)
+* Support partial commands generation in a module (#189)
+
 0.18.0
 ++++++
 * Relink command after class unwrapped (#182)
