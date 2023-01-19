@@ -200,12 +200,14 @@ class {{ leaf.cls_name }}(
         {%- endfor %}
 
         {%- for op in leaf.operations %}
-        {%- if op.name in ("pre_instance_update", "post_instance_update")  %}
+        {%- if op.name in ("pre_instance_update", "post_instance_update", "post_instance_create")  %}
         {%- if op.is_selector_variant %}
         self.{{ op.name }}({{ op.variant_key }}.required())
         {%- else %}
         self.{{ op.name }}({{ op.variant_key }})
         {%- endif %}
+        {%- elif op.name in ("pre_instance_create", "pre_instance_delete", "post_instance_delete") %}
+        self.{{ op.name }}()
         {%- else %}
 
         {%- if op.when is not none and op.when|length %}
@@ -231,10 +233,15 @@ class {{ leaf.cls_name }}(
         pass
 
     {%- for op in leaf.operations %}
-    {%- if op.name in ("pre_instance_update", "post_instance_update")  %}
+    {%- if op.name in ("pre_instance_update", "post_instance_update", "post_instance_create")  %}
 
     @register_callback
     def {{ op.name }}(self, instance):
+        pass
+    {%- elif op.name in ("pre_instance_create", "pre_instance_delete", "post_instance_delete") %}
+
+    @register_callback
+    def {{ op.name }}(self):
         pass
     {%- endif %}
     {%- endfor %}
