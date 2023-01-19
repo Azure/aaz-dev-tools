@@ -8,7 +8,7 @@ from utils.plane import PlaneEnum
 from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator, \
     AzGenericUpdateOperationGenerator, AzRequestClsGenerator, AzResponseClsGenerator, \
     AzInstanceUpdateOperationGenerator, AzLifeCycleInstanceUpdateCallbackGenerator, AzJsonCreateOperationGenerator, \
-    AzJsonDeleteOperationGenerator
+    AzJsonDeleteOperationGenerator, AzLifeCycleCallbackGenerator
 from .az_arg_group_generator import AzArgGroupGenerator, AzArgClsGenerator
 from .az_output_generator import AzOutputGenerator
 from .az_selector_generator import AzJsonSelectorGenerator
@@ -246,6 +246,38 @@ class AzCommandGenerator:
         if first_instance_op_idx is not None and first_instance_op_idx > 0:
             pre_op_generator = AzLifeCycleInstanceUpdateCallbackGenerator('pre_instance_update', self.operations[first_instance_op_idx].variant_key, self.operations[last_instance_op_idx].is_selector_variant)
             self.operations = [*self.operations[:first_instance_op_idx], pre_op_generator, *self.operations[first_instance_op_idx:]]
+
+        # Add instance create callbacks
+        first_instance_op_idx = None
+        last_instance_op_idx = None
+        for idx, op in enumerate(self.operations):
+            if isinstance(op, AzJsonCreateOperationGenerator):
+                if first_instance_op_idx is None:
+                    first_instance_op_idx = idx
+                last_instance_op_idx = idx
+        if last_instance_op_idx is not None and len(self.operations) > last_instance_op_idx + 1:
+            post_op_generator = AzLifeCycleInstanceUpdateCallbackGenerator('post_instance_create', self.operations[last_instance_op_idx].variant_key, self.operations[last_instance_op_idx].is_selector_variant)
+            self.operations = [*self.operations[:last_instance_op_idx+1], post_op_generator, *self.operations[last_instance_op_idx+1:]]
+        if first_instance_op_idx is not None and first_instance_op_idx > 0:
+            pre_op_generator = AzLifeCycleCallbackGenerator('pre_instance_create')
+            self.operations = [*self.operations[:first_instance_op_idx], pre_op_generator, *self.operations[first_instance_op_idx:]]
+
+        # Add instance delete callbacks
+        first_instance_op_idx = None
+        last_instance_op_idx = None
+        for idx, op in enumerate(self.operations):
+            if isinstance(op, AzJsonDeleteOperationGenerator):
+                if first_instance_op_idx is None:
+                    first_instance_op_idx = idx
+                last_instance_op_idx = idx
+        if last_instance_op_idx is not None and len(self.operations) > last_instance_op_idx + 1:
+            post_op_generator = AzLifeCycleCallbackGenerator('post_instance_delete')
+            self.operations = [*self.operations[:last_instance_op_idx + 1], post_op_generator,
+                               *self.operations[last_instance_op_idx + 1:]]
+        if first_instance_op_idx is not None and first_instance_op_idx > 0:
+            pre_op_generator = AzLifeCycleCallbackGenerator('pre_instance_delete')
+            self.operations = [*self.operations[:first_instance_op_idx], pre_op_generator,
+                               *self.operations[first_instance_op_idx:]]
 
         self.plane = None
         for resource in self.cmd.resources:
