@@ -1425,16 +1425,24 @@ class WorkspaceCfgEditor(CfgReader):
             item = item.implement
 
         identifiers = []
-        if schema.identifiers:
+        identifier_names = schema.identifiers
+        if not identifier_names and isinstance(item, CMDObjectSchemaBase):
+            prop_names = {prop.name for prop in item.props}
+            if 'id' in prop_names and 'name' in prop_names:
+                # use name as default identifier when schema containes 'id' property
+                identifier_names = ['name']
+
+        if identifier_names:
             assert isinstance(item, CMDObjectSchemaBase)
             for prop in item.props:
-                if prop.name in schema.identifiers:
+                if prop.name in identifier_names:
                     identifier = prop.__class__(raw_data=prop.to_native())
                     identifier.name = '[].' + prop.name
                     identifier.required = True
                     identifier.read_only = False
                     identifier.frozen = False
                     identifiers.append(identifier)
+
         if not identifiers:
             # use index as identifier
             identifier = CMDIntegerSchema()
