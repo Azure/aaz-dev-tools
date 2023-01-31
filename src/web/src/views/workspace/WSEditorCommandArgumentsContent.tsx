@@ -1953,8 +1953,10 @@ function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsA
                         ...clsDefineMap,
                         ...itemArgBaseParse.clsDefineMap,
                     }
+                    const argBaseType = `array<${itemArgBaseParse.argBase.type}>`
                     argBase = {
                         ...argBase,
+                        type: argBaseType,
                         item: itemArgBaseParse.argBase,
                     }
                 } else {
