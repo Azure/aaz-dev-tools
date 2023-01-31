@@ -549,7 +549,7 @@ class AAZSpecsManager:
     @staticmethod
     def render_resource_cfg_to_json(cfg):
         data = cfg.to_primitive()
-        return json.dumps(data, ensure_ascii=False, indent=4)
+        return json.dumps(data, ensure_ascii=False)
 
     @staticmethod
     def render_resource_cfg_to_xml(cfg):
