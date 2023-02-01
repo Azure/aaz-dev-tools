@@ -87,7 +87,7 @@ class CMDBuilder:
     def build_schema(self, schema):
         schema_type = getattr(schema, 'type', None)
         if schema_type == "string":
-            if schema.format is None:
+            if schema.format is None or schema.format == "uri":
                 if self.in_base:
                     model = CMDStringSchemaBase()
                 else:

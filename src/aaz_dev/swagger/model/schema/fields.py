@@ -8,7 +8,7 @@ class DataTypeFormatEnum(StringType):
         "byte", "binary", "date", "date-time", "password",
         # additional formats
         "duration", "uuid",
-        "file",
+        "file", "uri",
     )
 
     def __init__(self, **kwargs):
@@ -54,6 +54,17 @@ class XmsCodeGenerationSettingsField(BaseType):
             default=False,
             serialized_name="x-ms-code-generation-settings",
             deserialize_from="x-ms-code-generation-settings",
+            **kwargs
+        )
+
+
+class XcadlGeneratedField(BaseType):
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            default=False,
+            serialized_name="x-cadl-generated",
+            deserialize_from="x-cadl-generated",
             **kwargs
         )
 
