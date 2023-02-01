@@ -3,6 +3,14 @@
 Release History
 ===============
 
+0.19.1
+++++++
+* Add pre_instance_create, post_instance_create, pre_instance_delete, post_instance_delete callbacks (#191)
+* When generating subresource commands, set default identifier to 'name' if the element of array<object> contains 'id' and 'name' properties (#192)
+* Fix array argument element class type display issue (#193)
+* Compact json file in aaz output (#194)
+* Support 'uri' format in swagger, support 'x-cadl-generated' property in swagger (#195)
+
 0.19.0
 ++++++
 * Feature support subcommand modification inheritance (#184)
