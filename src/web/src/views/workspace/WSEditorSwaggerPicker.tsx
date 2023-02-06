@@ -46,6 +46,7 @@ interface WSEditorSwaggerPickerState {
     updateOption: string,
     invalidText?: string,
     filterText: string,
+    realFilterText: string,
 }
 
 type ResourceVersionOperations = {
@@ -123,6 +124,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
             updateOptions: UpdateOptions,
             updateOption: UpdateOptions[0],
             filterText: "",
+            realFilterText: "",
         }
     }
 
@@ -519,7 +521,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     }
 
     render() {
-        const { selectedResources, existingResources, resourceOptions, resourceMap, selectedVersion, selectedModule, selectedResourceInheritanceAAZVersionMap, filterText } = this.state;
+        const { selectedResources, existingResources, resourceOptions, resourceMap, selectedVersion, selectedModule, selectedResourceInheritanceAAZVersionMap, filterText, realFilterText } = this.state;
         return (
             <React.Fragment>
                 <AppBar sx={{ position: "fixed" }}>
@@ -634,9 +636,11 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                                         inputProps={{ 'aria-label': 'Filter by keywords' }}
                                         value={filterText}
                                         onChange={(event: any) => {
+                                            const reg = /\{.*?\}/g
                                             this.setState({
                                                 filterText: event.target.value,
-                                                })
+                                                realFilterText: event.target.value.toLocaleLowerCase().replace(reg, "{}"),
+                                            })
                                         }}
                                     />
                                 </Paper>
@@ -646,9 +650,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
 
                         {resourceOptions.length > 0 && <Paper sx={{ ml: 2, mr: 2 }} variant="outlined" square>
                             {resourceOptions.filter((option) => {
-                                if (filterText.trim().length > 0) {
-                                    const reg = /\{.*?\}/gi
-                                    const realFilterText = filterText.trim().toLocaleLowerCase().replace(reg, "{}")
+                                if (realFilterText.trim().length > 0) {
                                     return option.id.indexOf(realFilterText) > -1;
                                 }else{
                                     return true;
