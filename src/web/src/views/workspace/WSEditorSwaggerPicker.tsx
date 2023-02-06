@@ -647,7 +647,9 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                         {resourceOptions.length > 0 && <Paper sx={{ ml: 2, mr: 2 }} variant="outlined" square>
                             {resourceOptions.filter((option) => {
                                 if (filterText.trim().length > 0) {
-                                    return option.id.indexOf(filterText.trim()) > -1;
+                                    const reg = /\{.*?\}/gi
+                                    const realFilterText = filterText.trim().toLocaleLowerCase().replace(reg, "{}")
+                                    return option.id.indexOf(realFilterText) > -1;
                                 }else{
                                     return true;
                                 }
