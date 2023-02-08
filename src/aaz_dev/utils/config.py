@@ -5,7 +5,7 @@ from .plane import PlaneEnum
 
 class Config:
 
-    MIN_CLI_CORE_VERSION = version.parse("2.44.1")
+    MIN_CLI_CORE_VERSION = version.parse("2.45.0")
 
     AAZ_PATH = os.environ.get("AAZ_PATH", None)
     SWAGGER_PATH = os.environ.get("AAZ_SWAGGER_PATH", None)
