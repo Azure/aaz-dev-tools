@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.19.2
+++++++
+* Support resource id filtered by request path in swagger picker (#198)
+
 0.19.1
 ++++++
 * Add pre_instance_create, post_instance_create, pre_instance_delete, post_instance_delete callbacks (#191)
