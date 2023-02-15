@@ -3,13 +3,16 @@ import logging
 import inflect
 from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, \
     CMDSchemaDefault, CMDHttpResponseJsonBody, CMDArrayOutput, CMDJsonInstanceUpdateAction, \
-    CMDInstanceUpdateOperation, CMDRequestJson, DEFAULT_CONFIRMATION_PROMPT, CMDClsSchemaBase
+    CMDInstanceUpdateOperation, CMDRequestJson, DEFAULT_CONFIRMATION_PROMPT, CMDClsSchemaBase, CMDHttpResponse, \
+    CMDResponseJson
 from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
 from swagger.model.specs import SwaggerLoader
 from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case, get_url_path_valid_parts
 from utils import exceptions
+from utils.config import Config
+from utils.plane import PlaneEnum
 from utils.error_format import AAZErrorFormatEnum
 
 logger = logging.getLogger('backend')
@@ -226,7 +229,6 @@ class CommandGenerator:
             if resp.is_error:
                 if not isinstance(resp.body, CMDHttpResponseJsonBody):
                     if not resp.body:
-
                         raise exceptions.InvalidAPIUsage(
                             f"Invalid `Error` response schema in operation `{op.operation_id}`: "
                             f"Missing `schema` property in response "
@@ -256,10 +258,22 @@ class CommandGenerator:
                     resp.body.json.var = BuildInVariants.Instance
 
         if not error_format:
-            raise exceptions.InvalidAPIUsage(
-                f"Missing `Error` response schema in operation `{op.operation_id}`: "
-                f"Please define the `default` response in swagger for error."
-            )
+            if Config.DEFAULT_PLANE != PlaneEnum.Mgmt:
+                raise exceptions.InvalidAPIUsage(
+                    f"Missing `Error` response schema in operation `{op.operation_id}`: "
+                    f"Please define the `default` response in swagger for error."
+                )
+            # use MgmtErrorFormat for default error response schema
+            error_format = AAZErrorFormatEnum.MgmtErrorFormat
+            err_response = CMDHttpResponse()
+            err_response.is_error = True
+            err_response.status_codes = []
+            err_response.body = CMDHttpResponseJsonBody()
+            err_response.body.json = CMDResponseJson()
+            err_schema = CMDClsSchemaBase()
+            err_schema._type = f"@{error_format}"
+            err_response.body.json.schema = err_schema
+            op.http.responses.append(err_response)
         elif not AAZErrorFormatEnum.validate(error_format):
             raise exceptions.InvalidAPIUsage(
                 f"Invalid `Error` response schema in operation `{op.operation_id}`: "
