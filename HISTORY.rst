@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.19.3
+++++++
+* Support default error format for mgmt-plane API (#202)
+
 0.19.2
 ++++++
 * Support resource id filtered by request path in swagger picker (#198)
