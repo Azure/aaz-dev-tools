@@ -42,7 +42,7 @@ def regenerate_code(extension_or_module_name, cli_path=None, cli_extension_path=
     from utils.config import Config
     from utils.exceptions import InvalidAPIUsage
     from cli.controller.az_module_manager import AzExtensionManager, AzMainManager
-    if not cli_path and not cli_path:
+    if not cli_path and not cli_extension_path:
         logger.error("Please provide `--cli-path` or `--cli-extension-path`")
         sys.exit(1)
     if cli_path and cli_extension_path:
