@@ -827,6 +827,9 @@ class WorkspaceManager:
                 pre_cfg_reader = self.aaz_specs.load_resource_cfg_reader(
                     editor.cfg.plane, resource_id=r_id, version=r_version
                 )
+                if not pre_cfg_reader:
+                    continue
+
                 for cmd_names, command in pre_cfg_reader.iter_commands():
                     insert_command = True
                     for r in command.resources:
