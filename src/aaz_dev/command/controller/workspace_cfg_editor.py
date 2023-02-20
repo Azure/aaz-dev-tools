@@ -446,6 +446,7 @@ class WorkspaceCfgEditor(CfgReader):
                 used_options.add(option)
 
             sub_arg.group = to_camel_case(arg.options[0])
+            sub_arg.hide = sub_arg.hide or arg.hide  # inherient the hide property from the parent arguments
             parent.args.append(sub_arg)
 
         # regenerate args and its relationship with schema
