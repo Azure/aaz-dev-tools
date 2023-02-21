@@ -6,7 +6,7 @@ import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import FolderIcon from "@mui/icons-material/Folder";
 import EditIcon from '@mui/icons-material/Edit';
-import { Box, Checkbox, FormControl, Typography, Select, MenuItem, styled, TypographyProps, FormHelperText, InputLabel } from "@mui/material";
+import { Box, Checkbox, FormControl, Typography, Select, MenuItem, styled, TypographyProps, InputLabel, IconButton } from "@mui/material";
 import { CLIModViewCommand, CLIModViewCommandGroup, CLIModViewCommandGroups, CLIModViewCommands, CLIModViewProfile } from "./CLIModuleCommon";
 
 
@@ -78,7 +78,7 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
     }
 
     render() {
-        const { defaultExpanded } = this.state
+        const { defaultExpanded } = this.state;
         const renderCommand = (command: ProfileCTCommand) => {
             const leafName = command.names[command.names.length - 1];
             const selected = command.selectedVersion !== undefined;
@@ -118,6 +118,13 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
                             alignItems: "center",
                             justifyContent: "center",
                         }}>
+                            {!command.modified && command.selectedVersion !== undefined && <IconButton
+                                onClick={(event) => {
+                                    this.onSelectCommand(command.id, true);
+                                }}
+                            >
+                                <EditIcon fontSize="small" color="disabled" />
+                            </IconButton>}
                             {command.modified && <EditIcon fontSize="small" color="info" />}
                         </Box>
                     </Box>

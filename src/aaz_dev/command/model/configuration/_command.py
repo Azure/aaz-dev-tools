@@ -89,7 +89,9 @@ class CMDCommand(Model):
             if self.outputs:
                 ref_outputs = [*self.outputs]
 
-        client_flatten = ref_outputs[0].client_flatten if ref_outputs else True
+        client_flatten = True
+        if ref_outputs and isinstance(ref_outputs[0], (CMDArrayOutput, CMDObjectOutput)):
+            client_flatten = ref_outputs[0].client_flatten
 
         output = None
         if self.subresource_selector:
@@ -112,7 +114,7 @@ class CMDCommand(Model):
             if output and ref_outputs:
                 assert len(ref_outputs) == 1, "Only support one reference output"
                 ref_output = ref_outputs[0]
-                if ref_output.ref.startswith(output.ref + '.') and isinstance(ref_output, CMDArrayOutput):
+                if isinstance(ref_output, CMDArrayOutput) and ref_output.ref.startswith(output.ref + '.'):
                     # inherit pageable
                     output = CMDArrayOutput()
                     output.ref = ref_output.ref

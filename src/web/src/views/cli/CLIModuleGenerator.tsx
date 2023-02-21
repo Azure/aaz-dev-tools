@@ -79,7 +79,7 @@ class CLIModuleGenerator extends React.Component<CLIModuleGeneratorProps, CLIMod
                     throw new Error(`Invalid profile ${profile}`);
                 }
                 commandTrees[idx] = UpdateProfileCommandTreeByModView(commandTrees[idx], modView.profiles[profile]);
-            })            
+            })
 
             let selectedProfileIdx = profiles.length > 0 ? 0 : undefined;
             let selectedCommandTree = selectedProfileIdx !== undefined ? commandTrees[selectedProfileIdx] : undefined;
