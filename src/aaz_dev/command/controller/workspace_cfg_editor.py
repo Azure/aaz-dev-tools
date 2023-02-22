@@ -1011,8 +1011,14 @@ class WorkspaceCfgEditor(CfgReader):
         assert update_op is not None
 
         # find arg
-        arg_var = schema.arg
-        arg, arg_idx = cls.find_arg_in_command_by_var(update_cmd, arg_var)
+        if schema.arg:
+            arg_var = schema.arg
+            arg, arg_idx = cls.find_arg_in_command_by_var(update_cmd, arg_var)
+            if not arg or not arg_idx:
+                raise exceptions.InvalidAPIUsage(f"Argument '{arg_var}' not exist in command")
+        else:
+            # schema is flatten
+            arg = None
 
         # build ref_args
         ref_args = []
@@ -1029,9 +1035,6 @@ class WorkspaceCfgEditor(CfgReader):
                         a = a.__class__(raw_data=a.to_native())
                         a.options = sorted(a.options, key=lambda o: (len(o), o))[-1:]  # use the longest argument
                     ref_args.append(a)
-
-        if not arg or not arg_idx:
-            raise exceptions.InvalidAPIUsage(f"Argument '{arg_var}' not exist in command")
 
         if isinstance(schema, CMDArraySchema):
             assert isinstance(arg, CMDArrayArg)
@@ -1096,12 +1099,13 @@ class WorkspaceCfgEditor(CfgReader):
             return [list_command, create_command, update_command, delete_command, show_command]
 
         elif isinstance(schema, CMDObjectSchema):
-            assert isinstance(arg, CMDObjectArg)
             if schema.props and schema.additional_props:
                 raise NotImplementedError()
 
             if schema.props:
-                ref_args.extend(arg.args)
+                if arg:
+                    assert isinstance(arg, CMDObjectArg)
+                    ref_args.extend(arg.args)
 
                 # create command
                 create_command = cls._build_subresource_create_command(
@@ -1133,6 +1137,7 @@ class WorkspaceCfgEditor(CfgReader):
                 )
 
             elif schema.additional_props and schema.additional_props.item:
+                assert isinstance(arg, CMDObjectArg)
                 item_subresource_idx = [*subresource_idx, '{}']
 
                 item_arg = arg.additional_props.item
