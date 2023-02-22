@@ -3,6 +3,14 @@
 Release History
 ===============
 
+0.20.0
+++++++
+* Fix incorrect statement when checking for content in --cli-path and --cli-extension-path (#205)
+* Fix bug when merge sub resources in aaz (#206)
+* Support inherent argument hide property on flatten (#207)
+* Fix bug for string type output commands (#209)
+* Fix sub command inherit bugs (#211)
+
 0.19.3
 ++++++
 * Support default error format for mgmt-plane API (#202)
