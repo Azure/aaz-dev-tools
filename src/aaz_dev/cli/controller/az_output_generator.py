@@ -9,7 +9,7 @@ class AzOutputGenerator:
 
     @property
     def ref(self):
-        if isinstance(self._output, (CMDObjectOutput, CMDArrayOutput)) and self._output.ref:
+        if isinstance(self._output, (CMDObjectOutput, CMDArrayOutput, CMDStringOutput)) and self._output.ref:
             ref, is_selector = self._cmd_ctx.get_variant(self._output.ref)
             if is_selector:
                 return f'{ref}.required()'
@@ -29,6 +29,8 @@ class AzOutputGenerator:
     def client_flatten(self):
         if isinstance(self._output, (CMDObjectOutput, CMDArrayOutput)):
             return self._output.client_flatten is True
+        elif isinstance(self._output, CMDStringOutput):
+            return False
         else:
             raise NotImplementedError()
 
