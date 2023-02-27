@@ -64,4 +64,7 @@ class CMDArrayOutput(CMDOutput):
 class CMDStringOutput(CMDOutput):
     TYPE_VALUE = 'string'
 
-    value = StringType(required=True)
+    # ref means get value from content
+    ref = CMDVariantField()
+    # use placeholder value as output
+    value = StringType()
