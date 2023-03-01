@@ -3,6 +3,10 @@
 Release History
 ===============
 
+0.20.1
+++++++
+* String output support ref (#213)
+
 0.20.0
 ++++++
 * Fix incorrect statement when checking for content in --cli-path and --cli-extension-path (#205)
