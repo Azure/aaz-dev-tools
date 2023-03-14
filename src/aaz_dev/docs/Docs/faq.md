@@ -23,6 +23,10 @@ git config --system core.longpaths true
 ---
 According to [azure rpc protocol](https://github.com/Azure/azure-resource-manager-rpc/blob/master/v1.0/async-api-reference.md#202-accepted-and-location-headers), if the operation is `x-ms-long-running-operation`, 202 response status should be defined in swagger file. Therefore, either change the operation not `x-ms-long-running-operation`, or add 202 response in swagger for this operation.
 
-## 5. Why my codegen V2 generated cmds' help message not inherited from my "summary" message from its swagger file?
+## 5. Why does Long-Running Operation fail to deserialize the final response?
+---
+Definition of a response with a status code of 200 (or 201) is missing in the Swagger Specification. For more design considerations about LRO, please refer to [Considerations for Service Design](https://github.com/microsoft/api-guidelines/blob/vNext/azure/ConsiderationsForServiceDesign.md#long-running-operations).
+
+## 6. Why my codegen V2 generated cmds' help message not inherited from my "summary" message from its swagger file?
 ---
 Codegen v2 uses "description" of swagger definition for cmd's 'help' message, not 'summary'
