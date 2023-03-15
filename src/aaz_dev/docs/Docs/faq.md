@@ -25,7 +25,7 @@ According to [azure rpc protocol](https://github.com/Azure/azure-resource-manage
 
 ## 5. Why does Long-Running Operation fail to deserialize the final response?
 ---
-Definition of a response with a status code of 200 (or 201) is missing in the Swagger Specification. For more design considerations about LRO, please refer to [Considerations for Service Design](https://github.com/microsoft/api-guidelines/blob/vNext/azure/ConsiderationsForServiceDesign.md#long-running-operations).
+The definition of [200/201 Responses](https://github.com/Azure/azure-rest-api-specs/blob/main/documentation/openapi-authoring-automated-guidelines.md#r2064-lrostatuscodesreturntypeschema) is missing in the Swagger Specification. For more design considerations about LRO, please refer to [Considerations for Service Design](https://github.com/microsoft/api-guidelines/blob/vNext/azure/ConsiderationsForServiceDesign.md#long-running-operations).
 
 ## 6. Why my codegen V2 generated cmds' help message not inherited from my "summary" message from its swagger file?
 ---
