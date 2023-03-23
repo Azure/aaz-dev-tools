@@ -117,7 +117,8 @@ class CMDArgBuilder:
                 return self._flatten
             if self.schema.client_flatten:
                 return True
-            if self.schema.name == "properties":
+            if self.schema.name == "properties" and self.schema.props:
+                # flatten 'properties' property by default if it has props
                 return True
         if isinstance(self.schema, CMDObjectSchemaDiscriminator):
             return self._parent._flatten_discriminators
