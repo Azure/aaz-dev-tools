@@ -339,6 +339,8 @@ class CMDBuilder:
     def setup_description(model, schema):
         if schema.description:
             model.description = schema.description
+        elif schema.title:
+            model.description = schema.title
 
     @staticmethod
     def build_cmd_string_format(schema):
