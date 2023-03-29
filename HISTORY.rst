@@ -3,6 +3,15 @@
 Release History
 ===============
 
+1.0.0
+++++++
+* GA release
+* Add FAQ for LRO missing response defination (#217)
+* Add OpenAPI link for LRO response (#218)
+* Flatten properties named property by default only when it has sub properties. (#219)
+* Fix bug in classify error format (#220)
+* Support title property in swagger definition (#221)
+
 0.20.1
 ++++++
 * String output support ref (#213)
