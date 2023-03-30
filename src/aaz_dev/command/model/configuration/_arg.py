@@ -221,6 +221,7 @@ class CMDArg(CMDArgBase):
         arg.var = builder.get_var()
         arg.options = builder.get_options()
         arg.help = builder.get_help()
+        arg.group = builder.get_group()
 
         arg.required = builder.get_required()
         arg.default = builder.get_default()
@@ -247,6 +248,10 @@ class CMDClsArgBase(CMDArgBase):
     def _get_type(self):
         return self._type
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.implement = None
+
     @classmethod
     def _claim_polymorphic(cls, data):
         if isinstance(data, dict):
@@ -262,6 +267,21 @@ class CMDClsArgBase(CMDArgBase):
         arg = super().build_arg_base(builder)
         arg._type = builder.get_type()
         return arg
+
+    def get_unwrapped(self, **kwargs):
+        if self.implement is None:
+            return None
+        assert isinstance(self.implement, CMDArgBase)
+        if isinstance(self.implement, CMDObjectArgBase):
+            cls = CMDObjectArg if isinstance(self, CMDClsArg) else CMDObjectArgBase
+        elif isinstance(self.implement, CMDArrayArgBase):
+            cls = CMDArrayArg if isinstance(self, CMDClsArg) else CMDArrayArgBase
+        else:
+            raise NotImplementedError()
+        data = {k: v for k, v in self.implement.to_native().items() if k in cls._schema.valid_input_keys}
+        data.update(kwargs)
+        unwrapped = cls(data)
+        return unwrapped
 
 
 class CMDClsArg(CMDClsArgBase, CMDArg):
@@ -283,6 +303,20 @@ class CMDClsArg(CMDClsArgBase, CMDArg):
         if self.singular_options:
             self.singular_options = sorted(self.singular_options, key=lambda op: (len(op), op))
 
+    def get_unwrapped(self, **kwargs):
+        uninherent = {
+            "var": self.var,
+            "options": [*self.options],
+            "required": self.required,
+            "stage": self.stage,
+            "hide": self.hide,
+            "group": self.group,
+            "id_part": self.id_part,
+            "help": self.help.to_native() if self.help else None,
+            "default": self.default.to_native() if self.default else None,
+        }
+        uninherent.update(kwargs)
+        return super().get_unwrapped(**uninherent)
 
 # string
 class CMDStringArgBase(CMDArgBase):
@@ -307,10 +341,20 @@ class CMDStringArgBase(CMDArgBase):
         super()._reformat_base(**kwargs)
         if self.enum:
             self.enum.reformat(**kwargs)
+        if self.blank:
+            if not isinstance(self.blank.value, str) and not (self.nullable and self.blank.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid blank value", details=f"'{self.blank.value}' is not a valid string arg value")
 
 
 class CMDStringArg(CMDStringArgBase, CMDArg):
-    pass
+
+    def _reformat(self, **kwargs):
+        super()._reformat(**kwargs)
+        if self.default:
+            if not isinstance(self.default.value, str) and not (self.nullable and self.default.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid default value", details=f"'{self.default.value}' is not a valid string arg value")
 
 
 # byte: base64 encoded characters
@@ -421,7 +465,6 @@ class CMDResourceLocationArgBase(CMDStringArgBase):
     TYPE_VALUE = "ResourceLocation"
 
     no_rg_default = CMDBooleanField()  # the default value will not be the location of resource group
-    # TODO: support global as default
 
     @classmethod
     def build_arg_base(cls, builder):
@@ -465,10 +508,20 @@ class CMDIntegerArgBase(CMDArgBase):
         super()._reformat_base(**kwargs)
         if self.enum:
             self.enum.reformat(**kwargs)
+        if self.blank:
+            if not isinstance(self.blank.value, int) and not (self.nullable and self.blank.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid blank value", details=f"'{self.blank.value}' is not a valid int arg value")
 
 
 class CMDIntegerArg(CMDIntegerArgBase, CMDArg):
-    pass
+
+    def _reformat(self, **kwargs):
+        super()._reformat(**kwargs)
+        if self.default:
+            if not isinstance(self.default.value, int) and not (self.nullable and self.default.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid default value", details=f"'{self.default.value}' is not a valid int arg value")
 
 
 # integer32
@@ -504,7 +557,13 @@ class CMDBooleanArgBase(CMDArgBase):
 
 
 class CMDBooleanArg(CMDBooleanArgBase, CMDArg):
-    pass
+
+    def _reformat(self, **kwargs):
+        super()._reformat(**kwargs)
+        if self.default:
+            if not isinstance(self.default.value, bool) and not (self.nullable and self.default.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid default value", details=f"'{self.default.value}' is not a valid boolean arg value")
 
 
 # float
@@ -530,10 +589,20 @@ class CMDFloatArgBase(CMDArgBase):
         super()._reformat_base(**kwargs)
         if self.enum:
             self.enum.reformat(**kwargs)
+        if self.blank:
+            if not isinstance(self.blank.value, float) and not (self.nullable and self.blank.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid blank value", details=f"'{self.blank.value}' is not a valid float arg value")
 
 
 class CMDFloatArg(CMDFloatArgBase, CMDArg):
-    pass
+
+    def _reformat(self, **kwargs):
+        super()._reformat(**kwargs)
+        if self.default:
+            if not isinstance(self.default.value, float) and not (self.nullable and self.default.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid default value", details=f"'{self.default.value}' is not a valid float arg value")
 
 
 # float32
@@ -558,6 +627,10 @@ class CMDFloat64Arg(CMDFloat64ArgBase, CMDFloatArg):
 class CMDObjectArgAdditionalProperties(Model):
     # properties as nodes
     item = CMDArgBaseField()
+    any_type = CMDBooleanField(
+        serialized_name="anyType",
+        deserialize_from="anyType",
+    )  # when item is not defined and support any type for additional properties
 
     class Options:
         serialize_when_none = False
@@ -566,10 +639,16 @@ class CMDObjectArgAdditionalProperties(Model):
     def build_arg_base(cls, builder):
         arg = cls()
         arg.item = builder.get_sub_item()
+        arg.any_type = builder.get_any_type()
         return arg
 
     def reformat(self, **kwargs):
         if self.item:
+            if self.any_type:
+                raise exceptions.VerificationError(
+                    "InvalidAdditionalPropertiesDefinition",
+                    details="Additional property defined 'item' and 'any_type'."
+                )
             try:
                 self.item.reformat(**kwargs)
             except exceptions.VerificationError as err:
@@ -595,7 +674,16 @@ class CMDObjectArgBase(CMDArgBase):
         deserialize_from="additionalProps",
     )
 
-    # cls definition will not include properties in CMDArg only
+    # cls definition will not include properties in CMDArg only, such as following properties:
+    # var
+    # options
+    # required
+    # stage
+    # hide
+    # group
+    # id_part
+    # help
+    # default
     cls = CMDClassField()
 
     @classmethod
@@ -645,6 +733,11 @@ class CMDObjectArgBase(CMDArgBase):
         if self.additional_props:
             self.additional_props.reformat(**kwargs)
 
+        if self.blank:
+            if not isinstance(self.blank.value, dict) and not (self.nullable and self.blank.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid blank value", details=f"'{self.blank.value}' is not a valid object arg value")
+
 
 class CMDObjectArg(CMDObjectArgBase, CMDArg):
 
@@ -653,6 +746,13 @@ class CMDObjectArg(CMDObjectArgBase, CMDArg):
         arg = super().build_arg(builder)
         assert isinstance(arg, CMDObjectArg)
         return arg
+
+    def _reformat(self, **kwargs):
+        super()._reformat(**kwargs)
+        if self.default:
+            if not isinstance(self.default.value, dict) and not (self.nullable and self.default.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid default value", details=f"'{self.default.value}' is not a valid object arg value")
 
 
 # array
@@ -667,7 +767,16 @@ class CMDArrayArgBase(CMDArgBase):
 
     item = CMDArgBaseField(required=True)
 
-    # cls definition will not include properties in CMDArg only
+    # cls definition will not include properties in CMDArg only, such as following properties:
+    # var
+    # options
+    # required
+    # stage
+    # hide
+    # group
+    # id_part
+    # help
+    # default
     cls = CMDClassField()
 
     def _get_type(self):
@@ -684,6 +793,11 @@ class CMDArrayArgBase(CMDArgBase):
 
     def _reformat_base(self, **kwargs):
         super()._reformat_base(**kwargs)
+        if self.item is None:
+            raise exceptions.VerificationError(
+                "Invalid array type",
+                details="Array item is not defined "
+            )
         try:
             self.item.reformat(**kwargs)
         except exceptions.VerificationError as err:
@@ -692,6 +806,11 @@ class CMDArrayArgBase(CMDArgBase):
                 "details": err.payload['details']
             }
             raise err
+
+        if self.blank:
+            if not isinstance(self.blank.value, list) and not (self.nullable and self.blank.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid blank value", details=f"'{self.blank.value}' is not a valid array arg value")
 
 
 class CMDArrayArg(CMDArrayArgBase, CMDArg):
@@ -713,3 +832,7 @@ class CMDArrayArg(CMDArrayArgBase, CMDArg):
         super()._reformat(**kwargs)
         if self.singular_options:
             self.singular_options = sorted(self.singular_options, key=lambda op: (len(op), op))
+        if self.default:
+            if not isinstance(self.default.value, list) and not (self.nullable and self.default.value is None):
+                raise exceptions.VerificationError(
+                    f"Invalid default value", details=f"'{self.default.value}' is not a valid array arg value")

@@ -3,6 +3,188 @@
 Release History
 ===============
 
+1.0.1
+++++++
+* Fix generated code issue for class arguments (#224)
+
+1.0.0
+++++++
+* GA release
+* Add FAQ for LRO missing response defination (#217)
+* Add OpenAPI link for LRO response (#218)
+* Flatten properties named property by default only when it has sub properties. (#219)
+* Fix bug in classify error format (#220)
+* Support title property in swagger definition (#221)
+
+0.20.1
+++++++
+* String output support ref (#213)
+
+0.20.0
+++++++
+* Fix incorrect statement when checking for content in --cli-path and --cli-extension-path (#205)
+* Fix bug when merge sub resources in aaz (#206)
+* Support inherent argument hide property on flatten (#207)
+* Fix bug for string type output commands (#209)
+* Fix sub command inherit bugs (#211)
+
+0.19.3
+++++++
+* Support default error format for mgmt-plane API (#202)
+
+0.19.2
+++++++
+* Support resource id filtered by request path in swagger picker (#198)
+
+0.19.1
+++++++
+* Add pre_instance_create, post_instance_create, pre_instance_delete, post_instance_delete callbacks (#191)
+* When generating subresource commands, set default identifier to 'name' if the element of array<object> contains 'id' and 'name' properties (#192)
+* Fix array argument element class type display issue (#193)
+* Compact json file in aaz output (#194)
+* Support 'uri' format in swagger, support 'x-cadl-generated' property in swagger (#195)
+
+0.19.0
+++++++
+* Feature support subcommand modification inheritance (#184)
+* Fix _iter_schema_in_json when js has not schema (#185)
+* Update requirements to support Python 3.11 (#186)
+* Inherent subresource commands in aaz when export workspace (#187)
+* Support partial commands generation in a module (#189)
+
+0.18.0
+++++++
+* Relink command after class unwrapped (#182)
+* Support unwrap class modification inherit (#181)
+* Change portal namespace (#179)
+
+0.17.0
+++++++
+* Workspace swagger picker supports load default swagger module and resource providers (#175)
+* `aaz-dev run`: Add `--swagger-module-path`, "--module", "--resource-provider" to specify single swagger repo for code generation (#175)
+* `aaz-dev command-model generate-from-swagger`: Support generate command model from swagger by readme tag for pipeline use (#176)
+* `aaz-dev cli generate-by-swagger-tag`: Support generate code in cli from command models by using readme tag for pipeline use (#178)
+* `aaz-dev regenerate`: Support to regenerate aaz commands from command models (#178)
+* Fix Workspace display no arguments command error (#177)
+* Ignore '/' character in x-ms-identifiers swagger property (#174)
+
+0.16.2
+++++++
+* Fix subresource selector in generic update operation (#172)
+
+0.16.1
+++++++
+* Ignore argument id-parts when generate code for list commands (#169)
+* Optimize swagger `Error response` invalid hints (#170)
+
+0.16.0
+++++++
+* Support build-in keywords in property name generation (#167)
+* Add portal CLI generator (#153)
+* Support to generate property name starts with digit (#166)
+* Support to modify default for array, dict and object arguments (#165)
+* Fix `id_part` setup (#164)
+* Disable `id_part` for create command and subcommand (#163)
+* Support array index auto generate (#162)
+* Support to modify argument options for subcommand (#161)
+* Support subcommand generation (#154)
+* Add FAQs for Swagger definition (#160)
+* Fix `x-ms-skip-url-encoding` unparsed in Swagger (#159)
+
+0.15.1
+++++++
+* Fix `workspace` bug on class argument unwrap (#155)
+* Fix `workspace` reload issue for update command using patch (#156)
+* Optimize `generation` error message display when loading modules (#157)
+
+0.15.0
+++++++
+* Fix workspace export to aaz issue. (#148)
+* Ignore empty confirmation string in generated code (#149)
+* Fix version and readiness parse issue in swagger file path (#150)
+* Fix class inheritance overwritten issue (#151)
+
+0.14.0
+++++++
+* Support class type arguments `unwrap` and `flatten` (#145)
+* Support resource url filter in swagger picker (#146)
+
+0.13.0
+++++++
+* Support free from dict for `"additionalProperties":True` swagger definition (#138)
+* Support command confirmation prompt modification (#141)
+* Fix duplicated option names detect when flatten argument (#142)
+* Fix reload swagger aug group name overwrite (#143)
+
+0.12.0
+++++++
+* Disable Read only inherent in swagger translators (#139)
+* Enable register_callback decorator (#129)
+
+0.11.2
+++++++
+* Fix cls argument base inherent (#136)
+* Fix reload swagger error if no arg change previously (#135)
+* Add delete confirmation for workspace delete (#134)
+
+0.11.1
+++++++
+* Fix patch only not work in workspace editors (#132)
+* Fix UI bugs in CLI generators (#132)
+* Fix swagger frozen issue in additional properties (#130)
+
+0.11.0
+++++++
+* Support export unregistered command code (#126)
+* Refactor CLI Generators (#126)
+* Support lifecycle callbacks in generated AAZCommand code (#127)
+
+0.10.3
+++++++
+* Support workspace rename and delete (#123)
+* Fix resource folder name 255 length limitation (#124)
+
+0.10.2
+++++++
+* Add cmd unit test docs (#119)
+* Limit empty object for create mutability only (#120)
+* Fix argument content refresh issue in worksapce editor (#121)
+
+0.10.1
+++++++
+* Support to parse swagger resource providers without `microsoft` keywords (#116)
+* Support swagger modification reload in workspace (#117)
+
+0.10.0
+++++++
+* Fix command schema duplicated diff calculation issue (#112)
+* Support workspace modification inheritance (#113)
+* Disable flatten for argument when the schema has cls definition (#114)
+* Optimize command description when generated from swagger (#114)
+* Support examples inherit (#114)
+
+0.9.6
++++++
+* Support modify argument default value and reverse bool argument expression (#106)
+* Add default and blank value validation for argbase and arg(#106)
+* Add reformat to verify command model(#106)
+* Support default value modification ui(#106)
+* Ignore argument default for update actions (#107)
+* Add argument to specify workspace path (#108)
+* Fix bug to print string with newline (#110)
+
+0.9.5
++++++
+* Limit minimal python version to 3.8 (#98)(#99)(#101)
+* Fix issue when rename commands in cfg_editor (#100)
+* Remove python-Levenshtein reliance (#102)
+* Disable paging for long running commands (#103)
+* Add provisioning state field verification in wait command generation (#104)
+
+0.9.4
++++++
+* Update docs (#94)(#95)(#96)
+
 0.9.3
 +++++
 * Support `DurationArg`, `DateArg`, `DateTimeArg` and `UuidArg` generation (#90)

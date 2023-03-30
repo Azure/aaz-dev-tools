@@ -1,7 +1,8 @@
 from command.model.configuration import CMDHttpOperation, CMDHttpRequestJsonBody, CMDArraySchema, \
     CMDInstanceUpdateOperation, CMDRequestJson, CMDHttpResponseJsonBody, CMDObjectSchema, CMDSchema, \
     CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase, CMDBooleanSchemaBase, CMDObjectSchemaBase, \
-    CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction, CMDObjectSchemaDiscriminator, CMDSchemaEnum
+    CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction, CMDObjectSchemaDiscriminator, CMDSchemaEnum, \
+    CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction, CMDInstanceCreateOperation, CMDInstanceDeleteOperation
 from utils import exceptions
 from utils.case import to_snack_case
 from utils.error_format import AAZErrorFormatEnum
@@ -18,6 +19,24 @@ class AzOperationGenerator:
     @property
     def when(self):
         return self._operation.when
+
+
+class AzLifeCycleCallbackGenerator(AzOperationGenerator):
+
+    def __init__(self, name):
+        super().__init__(name, None, None)
+
+    @property
+    def when(self):
+        return None
+
+
+class AzLifeCycleInstanceUpdateCallbackGenerator(AzLifeCycleCallbackGenerator):
+
+    def __init__(self, name, variant_key, is_selector_variant):
+        super().__init__(name)
+        self.variant_key = variant_key
+        self.is_selector_variant = is_selector_variant
 
 
 class AzHttpOperationGenerator(AzOperationGenerator):
@@ -45,8 +64,18 @@ class AzHttpOperationGenerator(AzOperationGenerator):
                 self.success_responses.append(AzHttpResponseGenerator(self._cmd_ctx, response))
             else:
                 if not isinstance(response.body, CMDHttpResponseJsonBody):
-                    raise exceptions.InvalidAPIUsage(
-                        f"Invalid error response body: Only support json, current is '{type(response.body)}'")
+                    if not response.body:
+                        raise exceptions.InvalidAPIUsage(
+                            f"Invalid `Error` response schema in operation `{self._operation.operation_id}`: "
+                            f"Missing `schema` property in response "
+                            f"`{response.status_codes or 'default'}`."
+                        )
+                    else:
+                        raise exceptions.InvalidAPIUsage(
+                            f"Invalid `Error` response schema in operation `{self._operation.operation_id}`: "
+                            f"Only support json schema, current is '{type(response.body)}' in response "
+                            f"`{response.status_codes or 'default'}`"
+                        )
                 schema = response.body.json.schema
                 if not isinstance(schema, CMDClsSchemaBase):
                     raise NotImplementedError()
@@ -54,9 +83,20 @@ class AzHttpOperationGenerator(AzOperationGenerator):
                 if not error_format:
                     error_format = name
                 if error_format != name:
-                    raise exceptions.InvalidAPIUsage(f"Multiple error formats in one operation: {name}, {error_format}")
-        if not AAZErrorFormatEnum.validate(error_format):
-            raise exceptions.InvalidAPIUsage(f"Invalid error format: {error_format}")
+                    raise exceptions.InvalidAPIUsage(
+                        f"Invalid `Error` response schema in operation `{self._operation.operation_id}`: "
+                        f"Multiple schema formats are founded: {name}, {error_format}"
+                    )
+        if not error_format:
+            raise exceptions.InvalidAPIUsage(
+                f"Missing `Error` response schema in operation `{self._operation.operation_id}`: "
+                f"Please define the `default` response in swagger for error."
+            )
+        elif not AAZErrorFormatEnum.validate(error_format):
+            raise exceptions.InvalidAPIUsage(
+                f"Invalid `Error` response schema in operation `{self._operation.operation_id}`: "
+                f"Invalid error format `{error_format}`. Support `ODataV4Format` and `MgmtErrorFormat` only"
+            )
 
         if self.is_long_running:
             callback_name = None
@@ -212,24 +252,120 @@ class AzHttpOperationGenerator(AzOperationGenerator):
         return parameters
 
 
-class AzJsonUpdateOperationGenerator(AzOperationGenerator):
+class AzInstanceOperationGenerator(AzOperationGenerator):
 
-    UPDATER_NAME = "_update_instance"
+    def __init__(self, name, cmd_ctx, operation, arg_key, variant_key, is_selector_variant):
+        super().__init__(name, cmd_ctx, operation)
+        self.arg_key = arg_key
+        self.variant_key = variant_key
+        self.is_selector_variant = is_selector_variant
+
+
+class AzJsonCreateOperationGenerator(AzInstanceOperationGenerator):
+
+    HANDLER_NAME = "_create_instance"
 
     VALUE_NAME = "_instance_value"
 
     BUILDER_NAME = "_builder"
 
     def __init__(self, name, cmd_ctx, operation):
-        super().__init__(name, cmd_ctx, operation)
+        variant_key, is_selector_variant = cmd_ctx.get_variant(operation.instance_create.ref)
+
+        super().__init__(name, cmd_ctx, operation,
+                         arg_key="self.ctx.args",
+                         variant_key=variant_key,
+                         is_selector_variant=is_selector_variant)
+
+        assert isinstance(self._operation, CMDInstanceCreateOperation)
+        assert isinstance(self._operation.instance_create, CMDJsonInstanceCreateAction)
+        self._json = self._operation.instance_create.json
+
+        assert self._json.ref is None
+        assert isinstance(self._json.schema, CMDSchema)
+        if self._json.schema.arg:
+            self.arg_key, hide = self._cmd_ctx.get_argument(self._json.schema.arg)
+            assert not hide
+
+        self.typ, _, self.cls_builder_name = render_schema(
+            self._json.schema, self._cmd_ctx.update_clses, name=self._json.schema.name)
+
+        self._update_over_schema(self._json.schema)
+
+    def _update_over_schema(self, s):
+        if getattr(s, 'cls', None):
+            self._cmd_ctx.set_update_cls(s)
+
+        if isinstance(s, CMDObjectSchemaBase):
+            if s.props:
+                for prop in s.props:
+                    self._update_over_schema(prop)
+            if s.additional_props and s.additional_props.item:
+                self._update_over_schema(s.additional_props.item)
+            if s.discriminators:
+                for disc in s.discriminators:
+                    self._update_over_schema(disc)
+        elif isinstance(s, CMDArraySchemaBase):
+            if s.item:
+                self._update_over_schema(s.item)
+        elif isinstance(s, CMDObjectSchemaDiscriminator):
+            if s.props:
+                for prop in s.props:
+                    self._update_over_schema(prop)
+            if s.discriminators:
+                for disc in s.discriminators:
+                    self._update_over_schema(disc)
+
+    def iter_scopes(self):
+        if not self._json.schema or not isinstance(self._json.schema, (CMDObjectSchema, CMDArraySchema)):
+            return
+
+        for scopes in _iter_request_scopes_by_schema_base(self._json.schema, self.BUILDER_NAME, None, self.arg_key, self._cmd_ctx):
+            yield scopes
+
+
+class AzJsonDeleteOperationGenerator(AzInstanceOperationGenerator):
+
+    HANDLER_NAME = "_delete_instance"
+
+    def __init__(self, name, cmd_ctx, operation):
+        variant_key, is_selector_variant = cmd_ctx.get_variant(operation.instance_delete.ref)
+
+        super().__init__(name, cmd_ctx, operation,
+                         arg_key="self.ctx.args",
+                         variant_key=variant_key,
+                         is_selector_variant=is_selector_variant)
+        assert isinstance(self._operation, CMDInstanceDeleteOperation)
+        assert isinstance(self._operation.instance_delete, CMDJsonInstanceDeleteAction)
+        self._json = self._operation.instance_delete.json
+
+        assert self._json.ref is None
+        assert self._json.schema is None
+
+
+class AzInstanceUpdateOperationGenerator(AzInstanceOperationGenerator):
+    pass
+
+
+class AzJsonUpdateOperationGenerator(AzInstanceUpdateOperationGenerator):
+
+    HANDLER_NAME = "_update_instance"
+
+    VALUE_NAME = "_instance_value"
+
+    BUILDER_NAME = "_builder"
+
+    def __init__(self, name, cmd_ctx, operation):
+        variant_key, is_selector_variant = cmd_ctx.get_variant(operation.instance_update.ref)
+        super().__init__(name, cmd_ctx, operation,
+                         arg_key="self.ctx.args",
+                         variant_key=variant_key,
+                         is_selector_variant=is_selector_variant)
         assert isinstance(self._operation, CMDInstanceUpdateOperation)
         assert isinstance(self._operation.instance_update, CMDJsonInstanceUpdateAction)
-        self.variant_key = self._cmd_ctx.get_variant(self._operation.instance_update.instance)
         self._json = self._operation.instance_update.json
 
         assert self._json.ref is None
-
-        self.arg_key = "self.ctx.args"
         assert isinstance(self._json.schema, CMDSchema)
         if self._json.schema.arg:
             self.arg_key, hide = self._cmd_ctx.get_argument(self._json.schema.arg)
@@ -271,12 +407,13 @@ class AzJsonUpdateOperationGenerator(AzOperationGenerator):
             yield scopes
 
 
-class AzGenericUpdateOperationGenerator(AzOperationGenerator):
+class AzGenericUpdateOperationGenerator(AzInstanceUpdateOperationGenerator):
 
-    def __init__(self, cmd_ctx, variant_key):
-        super().__init__("InstanceUpdateByGeneric", cmd_ctx, None)
-        self.variant_key = variant_key
-        self.arg_key = "self.ctx.generic_update_args"
+    def __init__(self, cmd_ctx, variant_key, is_selector_variant):
+        super().__init__("InstanceUpdateByGeneric", cmd_ctx, None,
+                         arg_key="self.ctx.generic_update_args",
+                         variant_key=variant_key,
+                         is_selector_variant=is_selector_variant)
 
     @property
     def when(self):
@@ -291,7 +428,10 @@ class AzHttpRequestContentGenerator:
         self._cmd_ctx = cmd_ctx
         assert isinstance(body.json, CMDRequestJson)
         self._json = body.json
-        self.ref = self._cmd_ctx.get_variant(self._json.ref) if self._json.ref else None
+        self.ref = None
+        if self._json.ref:
+            self.ref, is_selector = self._cmd_ctx.get_variant(self._json.ref)
+            assert not is_selector
         self.arg_key = "self.ctx.args"
         if self.ref is None:
             assert isinstance(self._json.schema, CMDSchema)
@@ -461,7 +601,10 @@ class AzResponseClsGenerator:
                     s_name = to_snack_case(s.name)
                     self.props.append(s_name)
             elif schema.additional_props:
-                self.props.append("Element")
+                if schema.additional_props.item is not None:
+                    self.props.append("Element")
+                else:
+                    assert schema.additional_props.any_type is True
             else:
                 raise NotImplementedError()
         elif isinstance(schema, CMDArraySchemaBase):
@@ -537,20 +680,30 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
                         search_schemas[s_name] = (s, s_arg_key)
 
         elif schema.additional_props:
-            assert schema.additional_props.item is not None  # make sure additional props schema defined its element schema
-            s = schema.additional_props.item
-            s_name = '{}'
-            s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, cmd_ctx.update_clses)
-            s_arg_key = arg_key + '{}'
-            r_key = '.'  # if element exist, always fill it
+            if schema.additional_props.any_type is True:
+                s_name = '{}'
+                r_key = '.'  # if element exist, always fill it
 
-            is_const = False
-            const_value = None
-            rendered_schemas.append(
-                (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
-            )
-            if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
-                search_schemas[s_name] = (s, s_arg_key)
+                is_const = False
+                const_value = None
+                rendered_schemas.append(
+                    (s_name, None, is_const, const_value, r_key, None, None)
+                )
+            else:
+                assert schema.additional_props.item is not None
+                s = schema.additional_props.item
+                s_name = '{}'
+                s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, cmd_ctx.update_clses)
+                s_arg_key = arg_key + '{}'
+                r_key = '.'  # if element exist, always fill it
+
+                is_const = False
+                const_value = None
+                rendered_schemas.append(
+                    (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
+                )
+                if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
+                    search_schemas[s_name] = (s, s_arg_key)
 
     elif isinstance(schema, CMDObjectSchemaDiscriminator):
         if schema.discriminators:
@@ -610,7 +763,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
     elif isinstance(schema, CMDArraySchemaBase):
         assert schema.item is not None  # make sure array schema defined its element schema
         s = schema.item
-        s_name = "[]"
+        s_name = '[]'
         s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, cmd_ctx.update_clses)
         s_arg_key = arg_key + '[]'
         r_key = '.'  # if element exist, always fill it
@@ -633,10 +786,10 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
     scope_define = scope_define or ""
     for s_name, (s, s_arg_key) in search_schemas.items():
         if s_name == '[]':
-            s_scope_define = scope_define + "[]"
+            s_scope_define = scope_define + '[]'
             s_name = '_elements'
         elif s_name == '{}':
-            s_scope_define = scope_define + "{}"
+            s_scope_define = scope_define + '{}'
             s_name = '_elements'
         else:
             s_scope_define = f"{scope_define}.{s_name}"
@@ -673,8 +826,8 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, cmd_ctx):
                 if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
                     search_schemas[s_name] = s
         elif schema.additional_props:
-            # AAZDictType
             if schema.additional_props.item is not None:
+                # AAZDictType
                 s = schema.additional_props.item
                 s_name = "Element"
                 s_typ, s_typ_kwargs, cls_builder_name = render_schema_base(s, cmd_ctx.response_clses)
@@ -682,9 +835,7 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, cmd_ctx):
                 if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
                     search_schemas[s_name] = s
             else:
-                # TODO: handler additional props with no item schema
-                pass
-
+                assert schema.additional_props.any_type is True
         else:
             raise NotImplementedError()
 
@@ -789,7 +940,11 @@ def render_schema_base(schema, cls_map, schema_kwargs=None):
             if schema.additional_props:
                 raise NotImplementedError()
         elif schema.additional_props:
-            schema_type = "AAZDictType"
+            if schema.additional_props.any_type is True:
+                schema_type = "AAZFreeFormDictType"
+            else:
+                assert schema.additional_props.item is not None
+                schema_type = "AAZDictType"
         else:
             # empty object
             schema_type = "AAZObjectType"

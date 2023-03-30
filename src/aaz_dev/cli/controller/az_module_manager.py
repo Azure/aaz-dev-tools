@@ -1,38 +1,29 @@
-import os
-import pkgutil
-import glob
-
-from cli.model.atomic import CLIAtomicProfile, CLIModule, CLIAtomicCommandGroup, CLIAtomicCommandGroupRegisterInfo, \
-    CLIAtomicCommand, CLIAtomicCommandRegisterInfo, CLISpecsResource, CLICommandGroupHelp, CLICommandHelp, CLICommandExample
-from cli.templates import get_templates
-from command.controller.specs_manager import AAZSpecsManager
-from command.controller.cfg_reader import CfgReader
-from command.model.configuration import CMDHttpOperation, CMDCommand, CMDArgGroup, CMDObjectOutput, CMDHttpResponseJsonBody
-from cli.controller.az_profile_generator import AzProfileGenerator
-from swagger.utils.tools import swagger_resource_path_to_resource_id
-from utils import exceptions
-from utils.config import Config
-from utils.stage import AAZStageEnum
-
 import ast
-import re
+import glob
 import json
 import logging
+import os
+import pkgutil
+import re
+
+from cli.controller.az_profile_generator import AzProfileGenerator
+from cli.controller.az_atomic_profile_builder import AzAtomicProfileBuilder
+from cli.model.view import CLIModule, CLIViewProfile, CLIViewCommandGroup, CLIViewCommand
+from cli.templates import get_templates
+from utils import exceptions
+from utils.config import Config
+from collections import deque
 
 logger = logging.getLogger('backend')
 
 
 class AzModuleManager:
-
     _command_group_pattern = re.compile(r'^class\s+(.*)\(.*AAZCommandGroup.*\)\s*:\s*$')
     _command_pattern = re.compile(r'^class\s+(.*)\(.*AAZ(Wait)?Command.*\)\s*:\s*$')
     _is_preview_param = re.compile(r'\s*is_preview\s*=\s*True\s*')
     _is_experimental_param = re.compile(r'\s*is_experimental\s*=\s*True\s*')
     _def_pattern = re.compile(r'^\s*def\s+')
     _aaz_info_pattern = re.compile(r'^\s*_aaz_info\s*=\s*({.*)$')
-
-    def __init__(self):
-        self._aaz_spec_manager = AAZSpecsManager()
 
     @staticmethod
     def pkg_name(mod_name):
@@ -44,6 +35,30 @@ class AzModuleManager:
     def get_aaz_path(self, mod_name):
         raise NotImplementedError()
 
+    def has_module(self, mod_name):
+        mod_folder = self.get_mod_path(mod_name)
+        if not os.path.exists(mod_folder):
+            #print(f"Invalid module folder: cannot find modules in: '{mod_folder}'")
+            return False
+        return True
+
+    def find_module_cmd_registered(self, node):
+        group_nodes = deque()
+        group_nodes.append(node)
+        registered_cmds = []
+
+        while len(group_nodes) > 0:
+            group_node = group_nodes.popleft()
+            if 'command_groups' in group_node and group_node.command_groups is not None:
+                for group in group_node.command_groups:
+                    group_nodes.append(group_node.command_groups[group])
+            if 'commands' in group_node and group_node.commands is not None:
+                for command in group_node.commands:
+                    cmd_node = group_node.commands[command]
+                    if cmd_node.registered:
+                        registered_cmds.append(cmd_node.names + [cmd_node.version])
+        return registered_cmds
+
     def load_module(self, mod_name):
         module = CLIModule()
         module.name = mod_name
@@ -51,17 +66,15 @@ class AzModuleManager:
 
         module.profiles = {}
         for profile_name in Config.CLI_PROFILES:
-            module.profiles[profile_name] = self._load_profile(profile_name, self.get_aaz_path(mod_name))
-
+            module.profiles[profile_name] = self._load_view_profile(profile_name, self.get_aaz_path(mod_name))
         return module
 
     def update_module(self, mod_name, profiles, **kwargs):
         aaz_folder = self.get_aaz_path(mod_name)
         generators = {}
+        atomic_builder = AzAtomicProfileBuilder(by_patch=kwargs.pop('by_patch', False))
         for profile_name, profile in profiles.items():
-            if profile.command_groups:
-                for command_group in profile.command_groups.values():
-                    self._complete_command_group(command_group)
+            profile = atomic_builder(profile)
             generators[profile_name] = AzProfileGenerator(aaz_folder, profile)
         for generator in generators.values():
             generator.generate()
@@ -84,8 +97,7 @@ class AzModuleManager:
         """Patch the __init__.py file of module"""
         file = os.path.join(os.path.dirname(self.get_aaz_path(mod_name)), '__init__.py')
         if not os.path.exists(file) or not os.path.isfile(file):
-            logger.error(f"Patch Module failed: Cannot find file: {file}")
-            return
+            raise exceptions.InvalidAPIUsage(f"Patch Module failed: Cannot find file: {file}")
 
         with open(file, 'r') as f:
             lines = f.read().split('\n')
@@ -111,14 +123,14 @@ class AzModuleManager:
                         args_name = 'args'
                         lines[idx] = "    def load_command_table(self, args):" + def_match[3]
             else:
-                if line.startswith(f"{space}{space}return") or line.startswith(f"{space}def ") or not line.startswith(space):
+                if line.startswith(f"{space}{space}return") or line.startswith(f"{space}def ") or not line.startswith(
+                        space):
                     # finish the load_command_table function
                     break
                 if line.startswith(f"{space}{space}from ") or line.startswith(f"{space}{space}import "):
                     insert_after = idx
         if start_line is None:
-            logger.error(f"Patch Module failed: Cannot find load_command_table function in file: {file}")
-            return
+            raise exceptions.InvalidAPIUsage(f"Patch Module failed: Cannot find load_command_table function in file: {file}")
 
         insert_lines = [
             f"{space}{space}from azure.cli.core.aaz import load_aaz_command_table",
@@ -133,23 +145,21 @@ class AzModuleManager:
             f"{space}{space}{space}{space}args={args_name}",
             f"{space}{space}{space})"
         ]
-        lines = lines[:insert_after+1] + insert_lines + lines[insert_after+1:]
+        lines = lines[:insert_after + 1] + insert_lines + lines[insert_after + 1:]
 
         yield file, '\n'.join(lines)
 
-    def _load_profile(self, profile_name, aaz_path):
-        profile = CLIAtomicProfile()
+    def _load_view_profile(self, profile_name, aaz_path):
+        profile = CLIViewProfile()
         profile.name = profile_name
         profile_folder_name = profile_name.lower().replace('-', '_')
         profile_path = os.path.join(aaz_path, profile_folder_name)
         if not os.path.exists(profile_path):
             return profile
-
-        profile.command_groups = self._load_command_groups(path=profile_path)
-
+        profile.command_groups = self._load_view_command_groups(path=profile_path)
         return profile
 
-    def _load_command_groups(self, *names, path):
+    def _load_view_command_groups(self, *names, path):
         """Load command groups folder in the folder"""
         command_groups = {}
         assert os.path.isdir(path), f'Invalid folder path {path}'
@@ -157,29 +167,34 @@ class AzModuleManager:
             sub_path = os.path.join(path, name)
             if not name.startswith('_') and os.path.isdir(sub_path):
                 name = name.replace('_', '-')  # transform folder_name to command_group_name
-                command_group = self._load_command_group(*names, name, path=sub_path)  # load command group definition
+                command_group = self._load_view_command_group(*names, name,
+                                                              path=sub_path)  # load command group definition
                 if command_group:
                     command_groups[name] = command_group
         if not command_groups:
             return None
         return command_groups
 
-    def _load_commands(self, *names, path):
+    def _load_view_commands(self, *names, path):
         """Load commands in the folder"""
         commands = {}
+        wait_command = None
         assert os.path.isdir(path), f'Invalid folder path {path}'
         for name in os.listdir(path):
             sub_path = os.path.join(path, name)
             if os.path.isfile(sub_path) and name.endswith('.py') and not name.startswith('__') and name.startswith('_'):
                 name = name[1:-3].replace('_', '-')  # transform file_name to command_name
-                command = self._load_command(*names, name, path=sub_path)  # load command definition
+                command, is_wait = self._load_view_command(*names, name, path=sub_path)  # load command definition
                 if command:
-                    commands[name] = command
+                    if is_wait:
+                        wait_command = command
+                    else:
+                        commands[name] = command
         if not commands:
-            return None
-        return commands
+            return None, None
+        return commands, wait_command
 
-    def _load_command_group(self, *names, path):
+    def _load_view_command_group(self, *names, path):
         assert os.path.isdir(path), f'Invalid folder path {path}'
         init_file = os.path.join(path, '__init__.py')
         if not os.path.exists(init_file) or not os.path.isfile(init_file):
@@ -203,57 +218,34 @@ class AzModuleManager:
         if not find_command_group:
             return None
 
-        # load from aaz
-        command_group = self.build_command_group_from_aaz(*names)
-        if not command_group:
-            logger.error(f"CommandGroup miss in aaz repo: '{' '.join(names)}'")
-            return None
-
-        if register_info_lines:
-            command_group.register_info = CLIAtomicCommandGroupRegisterInfo()
-            for line in register_info_lines:
-                if self._is_preview_param.findall(line):
-                    command_group.register_info.stage = AAZStageEnum.Preview
-                if self._is_experimental_param.findall(line):
-                    command_group.register_info.stage = AAZStageEnum.Experimental
-
-        command_group.command_groups = self._load_command_groups(*names, path=path)
-        command_group.commands = self._load_commands(*names, path=path)
-        return command_group
-
-    def build_command_group_from_aaz(self, *names):
-        aaz_cg = self._aaz_spec_manager.find_command_group(*names)
-        if not aaz_cg:
-            return None
-        command_group = CLIAtomicCommandGroup()
+        command_group = CLIViewCommandGroup()
         command_group.names = [*names]
-        command_group.help = CLICommandGroupHelp()
-        command_group.help.short = aaz_cg.help.short
-        if aaz_cg.help.lines:
-            command_group.help.long = '\n'.join(aaz_cg.help.lines)
-        command_group.register_info = CLIAtomicCommandGroupRegisterInfo({
-            "stage": AAZStageEnum.Stable
-        })
+
+        command_group.command_groups = self._load_view_command_groups(*names, path=path)
+        command_group.commands, command_group.wait_command = self._load_view_commands(*names, path=path)
         return command_group
 
-    def _load_command(self, *names, path):
+    def _load_view_command(self, *names, path):
         assert os.path.isfile(path), f'Invalid file path {path}'
 
         register_info_lines = None
         aaz_info_lines = None
         find_command = False
+        is_wait_command = False
         with open(path, 'r') as f:
             while f.readable():
                 line = f.readline()
                 if line.startswith('@register_command('):
                     register_info_lines = []
-                if self._command_pattern.match(line):
+                _command_pattern_match = self._command_pattern.match(line)
+                if _command_pattern_match:
                     find_command = True
+                    is_wait_command = _command_pattern_match[2] is not None
                     break
                 if register_info_lines is not None:
                     register_info_lines.append(line)
             if not find_command:
-                return None
+                return None, None
 
             while f.readable():
                 line = f.readline()
@@ -271,207 +263,40 @@ class AzModuleManager:
                     break
 
         if not find_command:
-            return None
+            return None, None
 
         if not aaz_info_lines:
-            logger.error(f"Command info miss in code: '{' '.join(names)}'")
-            return None
+            raise exceptions.InvalidAPIUsage(f"Command info miss in code: '{' '.join(names)}'")
 
         try:
             data = ast.literal_eval(aaz_info_lines)
-            if 'version' not in data:
-                # wait command will be ignored here.
+            if 'version' not in data and not is_wait_command:
                 logger.info(f"Ignore command without version: '{' '.join(names)}'")
-                return None
-            version_name = data['version']
+                return None, None
+            version_name = data.get('version', None)
         except Exception as err:
-            logger.error(f"Command info invalid in code: '{' '.join(names)}': {err}: {aaz_info_lines}")
-            return None
+            raise exceptions.InvalidAPIUsage(f"Command info invalid in code: '{' '.join(names)}': {err}: {aaz_info_lines}")
 
-        command = self.build_command_from_aaz(*names, version_name=version_name)
-        if not command:
-            logger.error(f"Command miss in aaz repo: '{' '.join(names)}'")
-            return None
+        command = CLIViewCommand()
+        command.names = [*names]
+        command.version = version_name
 
         if register_info_lines:
-            command.register_info = CLIAtomicCommandRegisterInfo()
-            for line in register_info_lines:
-                if self._is_preview_param.findall(line):
-                    command.register_info.stage = AAZStageEnum.Preview
-                if self._is_experimental_param.findall(line):
-                    command.register_info.stage = AAZStageEnum.Experimental
-        return command
+            command.registered = True
+        return command, is_wait_command
 
-    def build_command_from_aaz(self, *names, version_name):
-        aaz_cmd = self._aaz_spec_manager.find_command(*names)
-        if not aaz_cmd:
-            return None
-        version = None
-        for v in (aaz_cmd.versions or []):
-            if v.name == version_name:
-                version = v
-                break
-        if not version:
-            return None
-        command = CLIAtomicCommand()
-        command.names = [*names]
-        command.help = CLICommandHelp()
-        command.help.short = aaz_cmd.help.short
-        if aaz_cmd.help.lines:
-            command.help.long = '\n'.join(aaz_cmd.help.lines)
-
-        if version.examples:
-            command.help.examples = [CLICommandExample(e.to_primitive()) for e in version.examples]
-
-        command.version = version.name
-        command.stage = version.stage or AAZStageEnum.Stable
-        command.resources = [CLISpecsResource(r.to_primitive()) for r in version.resources]
-        command.register_info = CLIAtomicCommandRegisterInfo({
-            "stage": command.stage,
-        })
-        return command
-
-    def _complete_command_group(self, command_group):
-        # fill more information for command group
-        if command_group.commands:
-            for command in command_group.commands.values():
-                self._complete_command(command)
-            self._complete_command_wait_info(command_group)
-        if command_group.command_groups:
-            for sub_group in command_group.command_groups.values():
-                self._complete_command_group(sub_group)
-
-    def _complete_command(self, command):
-        # fill more properties for command
-        aaz_cmd = self._aaz_spec_manager.find_command(*command.names)
-        if not aaz_cmd:
-            raise exceptions.InvalidAPIUsage(f"Command miss in aaz repo: '{' '.join(command.names)}'")
-        version = None
-        for v in (aaz_cmd.versions or []):
-            if v.name == command.version:
-                version = v
-                break
-        if not version:
-            raise exceptions.InvalidAPIUsage(f"Command Version miss in aaz repo: '{' '.join(command.names)}' '{command.version}'")
-        cfg_reader = self._aaz_spec_manager.load_resource_cfg_reader_by_command_with_version(aaz_cmd, version=version)
-        cmd_cfg = cfg_reader.find_command(*command.names)
-        assert cmd_cfg is not None, f"command configuration miss: '{' '.join(command.names)}'"
-        command.cfg = cmd_cfg
-        if command.register_info is not None:
-            command.register_info.confirmation = cmd_cfg.confirmation
-
-    @staticmethod
-    def _complete_command_wait_info(command_group):
-        assert command_group.commands
-        wait_cmd_rids = {}
-        for command in command_group.commands.values():
-            lro_list = []
-            for operation in command.cfg.operations:
-                if isinstance(operation, CMDHttpOperation):
-                    if operation.long_running:
-                        lro_list.append(operation)
-
-            if len(lro_list) == 1:
-                # support no wait if there are only one long running operation
-                # not support multiple long running operations
-                command.support_no_wait = True
-                if command.register_info is not None:
-                    # command is registered
-                    rid = swagger_resource_path_to_resource_id(lro_list[0].http.path)
-                    if rid not in wait_cmd_rids:
-                        wait_cmd_rids[rid] = {
-                            "methods": set()
-                        }
-
-        if not wait_cmd_rids:
-            return
-
-        # build wait command
-        for command in command_group.commands.values():
-            for operation in command.cfg.operations:
-                # find get operations for wait command
-                if not isinstance(operation, CMDHttpOperation):
-                    continue
-                rid = swagger_resource_path_to_resource_id(operation.http.path)
-                if rid not in wait_cmd_rids:
-                    continue
-                if operation.http.request.method != 'get':
-                    wait_cmd_rids[rid]['methods'].add(operation.http.request.method)
-                    continue
-                if 'get_op' in wait_cmd_rids[rid]:
-                    continue
-
-                wait_cmd_rids[rid]['get_op'] = operation.__class__(operation.to_primitive())
-                wait_cmd_rids[rid]['args'] = {}
-                for resource in command.resources:
-                    if rid == resource.id:
-                        wait_cmd_rids[rid]['resource'] = resource.__class__(resource.to_primitive())
-
-                params = []
-                if operation.http.request.path and operation.http.request.path.params:
-                    params += operation.http.request.path.params
-                if operation.http.request.query and operation.http.request.query.params:
-                    params += operation.http.request.query.params
-                if operation.http.request.header and operation.http.request.header.params:
-                    params += operation.http.request.header.params
-                for param in params:
-                    if not param.arg:
-                        continue
-                    assert param.arg.startswith("$"), f"Not support path arg name: '{param.arg}'"
-                    arg, arg_idx = CfgReader.find_arg_in_command_by_var(
-                        command=command.cfg,
-                        arg_var=param.arg
-                    )
-                    assert arg is not None
-                    wait_cmd_rids[rid]['args'][arg_idx] = arg.__class__(arg.to_primitive())
-
-        for rid, value in [*wait_cmd_rids.items()]:
-            if "get_op" not in value:
-                logger.error(f'Failed to support wait command for resource: Get operation does not exist: {rid}')
-                del wait_cmd_rids[rid]
-
-        if not wait_cmd_rids:
-            return
-
-        if len(wait_cmd_rids) > 1:
-            # Not support to generate wait command for multiple resources
-            logger.error(f'A wait command cannot apply on multiple resources')
-            return
-
-        wait_cmd_info = [*wait_cmd_rids.values()][0]
-
-        command_group.wait_command = wait_command = CLIAtomicCommand()
-        wait_command.names = [*command_group.names, "wait"]
-        wait_command.help = CLICommandHelp()
-        wait_command.help.short = "Place the CLI in a waiting state until a condition is met."
-        wait_command.register_info = CLIAtomicCommandRegisterInfo()
-        wait_command.resources = [wait_cmd_info['resource']]
-        wait_command.cfg = cfg = CMDCommand()
-        cfg.name = "wait"
-        cfg.version = "undefined"
-
-        arg_group = CMDArgGroup()
-        cfg.arg_groups = [arg_group]
-        arg_group.name = ""
-        arg_group.args = [
-            *wait_cmd_info['args'].values()
-        ]
-        get_op = wait_cmd_info['get_op']
-        cfg.operations = [get_op]
-
-        output = CMDObjectOutput()
-        for response in get_op.http.responses:
-            if response.is_error:
-                continue
-            if not isinstance(response.body, CMDHttpResponseJsonBody):
-                continue
-            if response.body.json.var:
-                output.ref = response.body.json.var
-                break
-        if not output.ref:
-            raise ValueError("Output ref is empty")
-        output.client_flatten = False
-        cfg.outputs = [output]
+    def _load_view_wait_command(self, *names, path):
+        wait_command = None
+        assert os.path.isdir(path), f'Invalid folder path {path}'
+        for name in os.listdir(path):
+            sub_path = os.path.join(path, name)
+            if os.path.isfile(sub_path) and name.endswith('.py') and not name.startswith('__') and name.startswith('_'):
+                name = name[1:-3].replace('_', '-')  # transform file_name to command_name
+                command = self._load_view_command(*names, name, path=sub_path)  # load command definition
+        # name = '_wait.py'
+        # names = [*cg_names, name]
+        # assert os.path.isdir(path), f'Invalid folder path {path}'
+        # sub_path = os.path.join(path, name)
 
 
 class AzMainManager(AzModuleManager):
@@ -590,13 +415,12 @@ class AzMainManager(AzModuleManager):
 
         module.profiles = {}
         for profile_name in Config.CLI_PROFILES:
-            module.profiles[profile_name] = self._load_profile(profile_name, self.get_aaz_path(mod_name))
+            module.profiles[profile_name] = self._load_view_profile(profile_name, self.get_aaz_path(mod_name))
 
         return module
 
 
 class AzExtensionManager(AzModuleManager):
-
     _folder = None
     _folder_is_module = None
 
@@ -693,7 +517,7 @@ class AzExtensionManager(AzModuleManager):
                 metadata["azext.minCliCoreVersion"] = str(Config.MIN_CLI_CORE_VERSION)
         else:
             metadata = {
-                "azext.isExperimental": True,
+                "azext.isPreview": True,
                 "azext.minCliCoreVersion": str(Config.MIN_CLI_CORE_VERSION),
             }
         return metadata_path, metadata
@@ -836,6 +660,6 @@ class AzExtensionManager(AzModuleManager):
 
         module.profiles = {}
         for profile_name in Config.CLI_PROFILES:
-            module.profiles[profile_name] = self._load_profile(profile_name, self.get_aaz_path(mod_name))
+            module.profiles[profile_name] = self._load_view_profile(profile_name, self.get_aaz_path(mod_name))
 
         return module

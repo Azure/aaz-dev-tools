@@ -4,6 +4,7 @@ from flask import Blueprint, jsonify, request, url_for
 
 from command.controller.workspace_manager import WorkspaceManager
 from utils import exceptions
+from utils.config import Config
 
 bp = Blueprint('editor', __name__, url_prefix='/AAZ/Editor')
 
@@ -58,6 +59,43 @@ def editor_workspace(name):
         'folder': manager.folder,
         'updated': os.path.getmtime(manager.path)
     })
+    return jsonify(result)
+
+
+@bp.route("/Workspaces/<name>/SwaggerDefault", methods=("GET",))
+def get_workspace_swagger_default_options(name):
+    manager = WorkspaceManager(name)
+    manager.load()
+    result = {
+        "plane": manager.ws.plane,
+        "modNames": Config.DEFAULT_SWAGGER_MODULE.split('/') if Config.DEFAULT_SWAGGER_MODULE else None,
+        "rpName": Config.DEFAULT_RESOURCE_PROVIDER,
+    }
+    for leaf in manager.iter_command_tree_leaves():
+        for resource in leaf.resources:
+            result["modNames"] = resource.mod_names
+            result["rpName"] = resource.rp_name
+        break
+    return jsonify(result)
+
+
+@bp.route("/Workspaces/<name>/Rename", methods=("POST",))
+def rename_workspace(name):
+    manager = WorkspaceManager(name)
+    if request.method == "POST":
+        data = request.get_json()
+        if 'name' not in data or not data['name']:
+            raise exceptions.InvalidAPIUsage("Invalid request")
+        new_name = data['name'].strip()
+        manager.rename(new_name)
+        result = manager.ws.to_primitive()
+        result.update({
+            'url': url_for('editor.editor_workspace', name=manager.name),
+            'folder': manager.folder,
+            'updated': os.path.getmtime(manager.path)
+        })
+    else:
+        raise NotImplementedError()
     return jsonify(result)
 
 
@@ -169,6 +207,8 @@ def editor_workspace_command(name, node_names, leaf_name):
         if 'examples' in data:
             leaf = manager.update_command_tree_leaf_examples(*leaf.names, examples=data['examples'])
         cfg_editor = manager.load_cfg_editor_by_command(leaf)
+        if 'confirmation' in data:
+            cfg_editor.update_command_confirmation(*leaf.names, confirmation=data['confirmation'])
         command = cfg_editor.find_command(*leaf.names)
         result = command.to_primitive()
         manager.save()
@@ -253,6 +293,13 @@ def editor_workspace_command_argument(name, node_names, leaf_name, arg_var):
     return jsonify(result)
 
 
+# TODO: support to modify element of array or dict arguments
+# @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>/Element",
+#           methods=("GET", "PATCH"))
+# def editor_workspace_command_arg_element_of_array_or_dict(name, node_names, leaf_name, arg_var):
+#     pass
+
+
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>/Flatten",
           methods=("POST", ))
 def editor_workspace_command_argument_flatten(name, node_names, leaf_name, arg_var):
@@ -310,13 +357,27 @@ def editor_workspace_command_argument_unflatten(name, node_names, leaf_name, arg
     return jsonify(result)
 
 
-# @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>/UnwrapClass",
-#           methods=("POST", ))
-# def editor_workspace_command_argument_unwrap_class(name, node_names, leaf_name, arg_var):
-#     if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
-#         raise exceptions.ResourceNotFind("Command not exist")
-#     node_names = node_names[1:]
-#     # TODO: support it later
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>/UnwrapClass",
+          methods=("POST", ))
+def editor_workspace_command_argument_unwrap_class(name, node_names, leaf_name, arg_var):
+    if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
+        raise exceptions.ResourceNotFind("Command not exist")
+    node_names = node_names[1:]
+
+    manager = WorkspaceManager(name)
+    manager.load()
+    leaf = manager.find_command_tree_leaf(*node_names, leaf_name)
+    if not leaf:
+        raise exceptions.ResourceNotFind("Command not exist")
+    cfg_editor = manager.load_cfg_editor_by_command(leaf)
+
+    # unwrap argument variant
+    arg, _ = cfg_editor.find_arg_by_var(*node_names, leaf_name, arg_var=arg_var)
+    if not arg:
+        raise exceptions.ResourceNotFind("Argument not exit")
+    cfg_editor.unwrap_cls_arg(*node_names, leaf_name, arg_var=arg_var)
+    manager.save()
+    return '', 200
 
 
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>/FindSimilar",
@@ -382,6 +443,8 @@ def editor_workspace_tree_node_resources(name, node_names):
     if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command group not exist")
     node_names = node_names[1:]
+    if len(node_names) > 0:
+        raise exceptions.InvalidAPIUsage("Not support to add resources under a specific node.")
 
     manager = WorkspaceManager(name)
     manager.load()
@@ -404,7 +467,6 @@ def editor_workspace_tree_node_resources(name, node_names):
         mod_names=mod_names,
         version=version,
         resources=resources,
-        *node_names
     )
     manager.save()
     return "", 200
@@ -444,8 +506,24 @@ def editor_workspace_resources_merge(name):
     return "", 200
 
 
+@bp.route("/Workspaces/<name>/Resources/ReloadSwagger", methods=("POST",))
+def editor_workspace_resource_reload_swagger(name):
+    # update resource by reloading swagger
+    manager = WorkspaceManager(name)
+    manager.load()
+    data = request.get_json()
+    try:
+        resources = data['resources']
+    except KeyError:
+        raise exceptions.InvalidAPIUsage("Invalid request")
+    manager.reload_swagger_resources(resources=resources)
+    manager.save()
+    return "", 200
+
+
 @bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>", methods=("DELETE",))
 def editor_workspace_resource(name, resource_id, version):
+    # remove commands of the resource, including commands of subresources
     manager = WorkspaceManager(name)
     manager.load()
     if not manager.remove_resource(resource_id, version):
@@ -456,6 +534,7 @@ def editor_workspace_resource(name, resource_id, version):
 
 @bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>/Commands", methods=("GET",))
 def list_workspace_resource_related_commands(name, resource_id, version):
+    # list commands of the resource, including commands of sub resources
     manager = WorkspaceManager(name)
     manager.load()
     commands = manager.list_commands_by_resource(resource_id, version)
@@ -463,13 +542,42 @@ def list_workspace_resource_related_commands(name, resource_id, version):
     return jsonify(result)
 
 
-@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Resources/ReloadSwagger", methods=("POST",))
-def editor_workspace_resource_reload_swagger(name, node_names):
-    # update resource by reloading swagger
+@bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>/Subresources", methods=("POST",))
+def editor_workspace_subresources(name, resource_id, version):
+    # add subresource command
+    manager = WorkspaceManager(name)
+    manager.load()
     data = request.get_json()
-    # data = (resource_id, swagger_version)
-    # TODO:
-    raise NotImplementedError()
+    try:
+        arg_var = data['arg']
+        cg_names = [nm for nm in data['commandGroupName'].split(' ') if nm]
+        ref_args_options = data.get('refArgsOptions', None)
+    except KeyError:
+        raise exceptions.InvalidAPIUsage("Invalid request")
+    manager.add_subresource_by_arg_var(resource_id, version, arg_var, cg_names, ref_args_options)
+    manager.save()
+    return "", 200
+
+
+@bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>/Subresources/<base64:subresource>", methods=("DELETE",))
+def editor_workspace_subresource(name, resource_id, version, subresource):
+    # Remove commands of subresource
+    manager = WorkspaceManager(name)
+    manager.load()
+    if not manager.remove_subresource(resource_id, version, subresource):
+        return "", 204
+    manager.save()
+    return "", 200
+
+
+@bp.route("/Workspaces/<name>/Resources/<base64:resource_id>/V/<base64:version>/Subresources/<base64:subresource>/Commands", methods=("GET",))
+def list_workspace_subresource_related_commands(name, resource_id, version, subresource):
+    # list commands of subresource
+    manager = WorkspaceManager(name)
+    manager.load()
+    commands = manager.list_commands_by_subresource(resource_id, version, subresource)
+    result = [command.to_primitive() for command in commands]
+    return jsonify(result)
 
 
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Try", methods=("POST",))

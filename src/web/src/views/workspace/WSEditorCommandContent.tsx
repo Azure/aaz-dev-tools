@@ -1,14 +1,14 @@
-import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Accordion, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps, AccordionDetails, IconButton, Input, InputAdornment, AccordionSummaryProps } from '@mui/material';
+import { Alert, Box, Button, Card, CardActions, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Accordion, InputLabel, LinearProgress, Radio, RadioGroup, TextField, Typography, TypographyProps, AccordionDetails, IconButton, Input, InputAdornment, AccordionSummaryProps, FormGroup, FormLabel } from '@mui/material';
 import { styled } from '@mui/system';
 import axios from 'axios';
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import MuiAccordionSummary from '@mui/material/AccordionSummary';
 import { NameTypography, ShortHelpTypography, ShortHelpPlaceHolderTypography, LongHelpTypography, StableTypography, PreviewTypography, ExperimentalTypography, SubtitleTypography, CardTitleTypography } from './WSEditorTheme';
 import DoDisturbOnRoundedIcon from '@mui/icons-material/DoDisturbOnRounded';
 import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import LabelIcon from '@mui/icons-material/Label';
-import WSEditorCommandArgumentsContent from './WSEditorCommandArgumentsContent';
+import WSEditorCommandArgumentsContent, { ClsArgDefinitionMap, CMDArg, DecodeArgs } from './WSEditorCommandArgumentsContent';
 import EditIcon from '@mui/icons-material/Edit';
 
 interface Example {
@@ -19,6 +19,7 @@ interface Example {
 interface Resource {
     id: string,
     version: string,
+    subresource?: string,
     swagger: string,
 }
 
@@ -33,6 +34,11 @@ interface Command {
     version: string
     examples?: Example[]
     resources: Resource[]
+
+    // additional property
+    confirmation?: string
+    args?: CMDArg[]
+    clsArgDefineMap?: ClsArgDefinitionMap
 }
 
 interface ResponseCommand {
@@ -45,6 +51,8 @@ interface ResponseCommand {
     version: string,
     examples?: Example[],
     resources: Resource[],
+    confirmation?: string,
+    argGroups?: any[],
 }
 
 interface ResponseCommands {
@@ -53,15 +61,22 @@ interface ResponseCommands {
 
 interface WSEditorCommandContentProps {
     workspaceUrl: string
-    command: Command
+    previewCommand: Command
+    reloadTimestamp: number
     onUpdateCommand: (command: Command | null) => void
 }
 
 interface WSEditorCommandContentState {
+    command?: Command
     displayCommandDialog: boolean
     displayExampleDialog: boolean
     displayCommandDeleteDialog: boolean
+    displayAddSubcommandDialog: boolean
+    subcommandDefaultGroupNames?: string[],
+    subcommandArgVar?: string,
+    subcommandSubArgOptions?: { var: string, options: string }[],
     exampleIdx?: number
+    loading: boolean
 }
 
 const commandPrefix = 'az '
@@ -105,9 +120,46 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
     constructor(props: WSEditorCommandContentProps) {
         super(props);
         this.state = {
+            command: undefined,
             displayCommandDialog: false,
             displayExampleDialog: false,
             displayCommandDeleteDialog: false,
+            displayAddSubcommandDialog: false,
+            loading: false,
+        }
+    }
+
+    loadCommand = async () => {
+        this.setState({ loading: true })
+        let { workspaceUrl, previewCommand } = this.props
+        let commandNames = previewCommand.names;
+        const leafUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + commandNames.slice(0, -1).join('/') + '/Leaves/' + commandNames[commandNames.length - 1];
+        
+        try {
+            let res = await axios.get(leafUrl);
+            let command = DecodeResponseCommand(res.data);
+            if (command.id === this.props.previewCommand.id) {
+                this.setState({
+                    loading: false,
+                    command: command
+                })
+            }
+        } catch (err: any) {
+            this.setState({ loading: false })
+            console.error(err)
+        }
+    }
+
+    componentDidMount() {
+        this.loadCommand();
+    }
+
+    componentDidUpdate(prevProps: WSEditorCommandContentProps) {
+        if (prevProps.workspaceUrl !== this.props.workspaceUrl || prevProps.previewCommand.id !== this.props.previewCommand.id || prevProps.reloadTimestamp !== this.props.reloadTimestamp) {
+            if (prevProps.previewCommand.id !== this.props.previewCommand.id) {
+                this.setState({ command: undefined })
+            }
+            this.loadCommand();
         }
     }
 
@@ -124,21 +176,21 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
     }
 
     handleCommandDialogClose = (newCommand?: Command) => {
-        this.setState({
-            displayCommandDialog: false,
-        })
         if (newCommand) {
             this.props.onUpdateCommand(newCommand!);
         }
+        this.setState({
+            displayCommandDialog: false,
+        })
     }
 
     handleCommandDeleteDialogClose = (deleted: boolean) => {
-        this.setState({
-            displayCommandDeleteDialog: false,
-        })
         if (deleted) {
             this.props.onUpdateCommand(null);
         }
+        this.setState({
+            displayCommandDeleteDialog: false,
+        })
     }
 
     onExampleDialogDisplay = (idx?: number) => {
@@ -149,25 +201,41 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
     }
 
     handleExampleDialogClose = (newCommand?: Command) => {
-        this.setState({
-            displayExampleDialog: false,
-        })
         if (newCommand) {
             this.props.onUpdateCommand(newCommand!);
         }
+        this.setState({
+            displayExampleDialog: false,
+        })
+    }
+
+    onAddSubcommandDialogDisplay = (argVar: string, subArgOptions: { var: string, options: string }[], argStackNames: string[]) => {
+        this.setState({
+            displayAddSubcommandDialog: true,
+            subcommandArgVar: argVar,
+            subcommandSubArgOptions: subArgOptions,
+            subcommandDefaultGroupNames: [...this.props.previewCommand.names.slice(0, -1), ...argStackNames],
+        })
+    }
+
+    handleAddSubcommandDisplayClose = (add: boolean) => {
+        if (add) {
+            this.props.onUpdateCommand(this.state.command!);
+        }
+        this.setState({
+            displayAddSubcommandDialog: false,
+            subcommandArgVar: undefined,
+            subcommandDefaultGroupNames: undefined
+        })
     }
 
     render() {
-        const { workspaceUrl, command } = this.props;
-        const name = commandPrefix + this.props.command.names.join(' ');
-        const shortHelp = this.props.command.help?.short;
-        const longHelp = this.props.command.help?.lines?.join('\n');
-        const lines: string[] = this.props.command.help?.lines ?? [];
-        const stage = this.props.command.stage;
-        const version = this.props.command.version;
-        const examples: Example[] = this.props.command.examples ?? [];
-        const commandUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + command.names.slice(0, -1).join('/') + '/Leaves/' + command.names[command.names.length - 1];
-        const { displayCommandDialog, displayExampleDialog, displayCommandDeleteDialog, exampleIdx } = this.state;
+        const { workspaceUrl, previewCommand } = this.props;
+        const commandNames = previewCommand.names;
+        const name = commandPrefix + commandNames.join(' ');
+        const commandUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + commandNames.slice(0, -1).join('/') + '/Leaves/' + commandNames[commandNames.length - 1];
+
+        const { command, displayCommandDialog, displayExampleDialog, displayCommandDeleteDialog, displayAddSubcommandDialog, exampleIdx, loading } = this.state;
 
         const buildExampleView = (example: Example, idx: number) => {
             const buildCommand = (exampleCommand: string, cmdIdx: number) => {
@@ -234,6 +302,178 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
             )
         }
 
+        const buildCommandCard = () => {
+            const shortHelp = (command ?? previewCommand).help?.short;
+            const longHelp = (command ?? previewCommand).help?.lines?.join('\n');
+            const lines: string[] = (command ?? previewCommand).help?.lines ?? [];
+            const stage = (command ?? previewCommand).stage;
+            const version = (command ?? previewCommand).version;
+
+            return (<Card
+                onDoubleClick={this.onCommandDialogDisplay}
+                elevation={3}
+                sx={{
+                    flexGrow: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    p: 2
+                }}>
+                <CardContent sx={{
+                    flex: '1 0 auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'stretch',
+                }}>
+                    <Box sx={{
+                        mb: 2,
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: "center"
+                    }}>
+                        <CardTitleTypography sx={{ flexShrink: 0 }}>
+                            [ COMMAND ]
+                        </CardTitleTypography>
+                        <Box sx={{ flexGrow: 1 }} />
+                        {stage === "Stable" && <StableTypography
+                            sx={{ flexShrink: 0 }}
+                        >
+                            {`v${version}`}
+                        </StableTypography>}
+                        {stage === "Preview" && <PreviewTypography
+                            sx={{ flexShrink: 0 }}
+                        >
+                            {`v${version}`}
+                        </PreviewTypography>}
+                        {stage === "Experimental" && <ExperimentalTypography
+                            sx={{ flexShrink: 0 }}
+                        >
+                            {`v${version}`}
+                        </ExperimentalTypography>}
+                    </Box>
+
+                    <NameTypography sx={{ mt: 1 }}>
+                        {name}
+                    </NameTypography>
+                    {shortHelp && <ShortHelpTypography sx={{ ml: 6, mt: 2 }}> {shortHelp} </ShortHelpTypography>}
+                    {!shortHelp && <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>Please add command short summary!</ShortHelpPlaceHolderTypography>}
+                    {longHelp && <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
+                        {lines.map((line, idx) => (<LongHelpTypography key={idx}>{line}</LongHelpTypography>))}
+                    </Box>}
+                </CardContent>
+                <CardActions sx={{
+                    display: "flex",
+                    flexDirection: "row-reverse",
+                    alignContent: "center",
+                    justifyContent: "flex-start"
+                }}>
+                    {loading && <Box sx={{ width: '100%' }}>
+                        <LinearProgress color='info' />
+                    </Box>}
+                    {!loading && <Box sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignContent: "center",
+                        justifyContent: "flex-start"
+                    }}>
+
+                        <Button
+                            variant='contained' size="small" color='info' disableElevation
+                            onClick={this.onCommandDialogDisplay}
+                            disabled={loading}
+                            sx={{ mr: 2 }}
+                        >
+                            <Typography variant='body2'>
+                                Edit
+                            </Typography>
+                        </Button>
+                        <Button
+                            variant='outlined' size="small" color='info'
+                            onClick={this.onCommandDeleteDialogDisplay}
+                            disabled={loading}
+                            sx={{ mr: 2 }}
+                        >
+                            <Typography variant='body2'>
+                                Delete
+                            </Typography>
+                        </Button>
+                        <Button
+                            variant='outlined' size="small" color='info'
+                            sx={{ mr: 2 }}
+                            disabled
+                        >
+                            <Typography variant='body2'>
+                                Try
+                            </Typography>
+                        </Button>
+                    </Box>}
+                </CardActions>
+            </Card>)
+        }
+
+        const buildArgumentsCard = () => {
+            return (<Card
+                elevation={3}
+                sx={{
+                    flexGrow: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    mt: 1,
+                    p: 2
+                }}>
+                <WSEditorCommandArgumentsContent commandUrl={commandUrl} args={command!.args!} clsArgDefineMap={command!.clsArgDefineMap!} onReloadArgs={this.loadCommand} onAddSubCommand={this.onAddSubcommandDialogDisplay} />
+            </Card>)
+        }
+
+        const buildExampleCard = () => {
+            const examples = command!.examples ?? []
+            return (<Card
+                elevation={3}
+                sx={{
+                    flexGrow: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    mt: 1,
+                    p: 2
+                }}>
+
+                <CardContent sx={{
+                    flex: '1 0 auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'stretch',
+                }}>
+                    <Box sx={{
+                        mb: 2,
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: "center"
+                    }}>
+                        <CardTitleTypography sx={{ flexShrink: 0 }}>
+                            [ EXAMPLE ]
+                        </CardTitleTypography>
+
+                    </Box>
+                    {examples.length > 0 && <Box>
+                        {examples.map(buildExampleView)}
+                    </Box>}
+                </CardContent>
+
+                <CardActions sx={{
+                    display: "flex",
+                    flexDirection: "row-reverse",
+                }}>
+                    <Button
+                        variant='contained' size="small" color='info' disableElevation
+                        onClick={() => this.onExampleDialogDisplay(undefined)}
+                    >
+                        <Typography variant='body2'>
+                            Add
+                        </Typography>
+                    </Button>
+                </CardActions>
+            </Card>)
+        }
+
         return (
             <React.Fragment>
                 <Box sx={{
@@ -241,164 +481,14 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                     flexDirection: 'column',
                     alignItems: 'stretch',
                 }}>
-                    <Card
-                        onDoubleClick={this.onCommandDialogDisplay}
-                        elevation={3}
-                        sx={{
-                            flexGrow: 1,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            p: 2
-                        }}>
-                        <CardContent sx={{
-                            flex: '1 0 auto',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'stretch',
-                        }}>
-                            <Box sx={{
-                                mb: 2,
-                                display: 'flex',
-                                flexDirection: 'row',
-                                alignItems: "center"
-                            }}>
-                                <CardTitleTypography sx={{ flexShrink: 0 }}>
-                                    [ COMMAND ]
-                                </CardTitleTypography>
-                                <Box sx={{ flexGrow: 1 }} />
-                                {stage === "Stable" && <StableTypography
-                                    sx={{ flexShrink: 0 }}
-                                >
-                                    {`v${version}`}
-                                </StableTypography>}
-                                {stage === "Preview" && <PreviewTypography
-                                    sx={{ flexShrink: 0 }}
-                                >
-                                    {`v${version}`}
-                                </PreviewTypography>}
-                                {stage === "Experimental" && <ExperimentalTypography
-                                    sx={{ flexShrink: 0 }}
-                                >
-                                    {`v${version}`}
-                                </ExperimentalTypography>}
-                            </Box>
-
-                            <NameTypography sx={{ mt: 1 }}>
-                                {name}
-                            </NameTypography>
-                            {shortHelp && <ShortHelpTypography sx={{ ml: 6, mt: 2 }}> {shortHelp} </ShortHelpTypography>}
-                            {!shortHelp && <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>Please add command short summary!</ShortHelpPlaceHolderTypography>}
-                            {longHelp && <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
-                                {lines.map((line, idx) => (<LongHelpTypography key={idx}>{line}</LongHelpTypography>))}
-                            </Box>}
-                        </CardContent>
-                        <CardActions sx={{
-                            display: "flex",
-                            flexDirection: "row-reverse",
-                            alignContent: "center",
-                            justifyContent: "flex-start"
-                        }}>
-                            <Box sx={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignContent: "center",
-                                justifyContent: "flex-start"
-                            }}>
-
-                                <Button
-                                    variant='contained' size="small" color='info' disableElevation
-                                    onClick={this.onCommandDialogDisplay}
-                                    sx={{ mr: 2 }}
-                                >
-                                    <Typography variant='body2'>
-                                        Edit
-                                    </Typography>
-                                </Button>
-                                <Button
-                                    variant='outlined' size="small" color='info'
-                                    onClick={this.onCommandDeleteDialogDisplay}
-                                    sx={{ mr: 2 }}
-                                >
-                                    <Typography variant='body2'>
-                                        Delete
-                                    </Typography>
-                                </Button>
-                                <Button
-                                    variant='outlined' size="small" color='info'
-                                    sx={{ mr: 2 }}
-                                    disabled
-                                >
-                                    <Typography variant='body2'>
-                                        Try
-                                    </Typography>
-                                </Button>
-                            </Box>
-                        </CardActions>
-                    </Card>
-
-                    <Card
-                        elevation={3}
-                        sx={{
-                            flexGrow: 1,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            mt: 1,
-                            p: 2
-                        }}>
-                        <WSEditorCommandArgumentsContent commandUrl={commandUrl} />
-                    </Card>
-
-                    <Card
-                        elevation={3}
-                        sx={{
-                            flexGrow: 1,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            mt: 1,
-                            p: 2
-                        }}>
-
-                        <CardContent sx={{
-                            flex: '1 0 auto',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'stretch',
-                        }}>
-                            <Box sx={{
-                                mb: 2,
-                                display: 'flex',
-                                flexDirection: 'row',
-                                alignItems: "center"
-                            }}>
-                                <CardTitleTypography sx={{ flexShrink: 0 }}>
-                                    [ EXAMPLE ]
-                                </CardTitleTypography>
-
-                            </Box>
-                            {examples.length > 0 && <Box>
-                                {examples.map(buildExampleView)}
-                            </Box>}
-                        </CardContent>
-
-                        <CardActions sx={{
-                            display: "flex",
-                            flexDirection: "row-reverse",
-                        }}>
-                            <Button
-                                variant='contained' size="small" color='info' disableElevation
-                                onClick={() => this.onExampleDialogDisplay(undefined)}
-                            >
-                                <Typography variant='body2'>
-                                    Add
-                                </Typography>
-                            </Button>
-                        </CardActions>
-                    </Card>
-
+                    {buildCommandCard()}
+                    {command !== undefined && command.args !== undefined && buildArgumentsCard()}
+                    {command !== undefined && buildExampleCard()}
                 </Box>
-                {displayCommandDialog && <CommandDialog open={displayCommandDialog} workspaceUrl={workspaceUrl} command={command} onClose={this.handleCommandDialogClose} />}
-                {displayExampleDialog && <ExampleDialog open={displayExampleDialog} workspaceUrl={workspaceUrl} command={command} idx={exampleIdx} onClose={this.handleExampleDialogClose} />}
-                {displayCommandDeleteDialog && <CommandDeleteDialog open={displayCommandDeleteDialog} workspaceUrl={workspaceUrl} command={command} onClose={this.handleCommandDeleteDialogClose} />}
+                {command !== undefined && displayCommandDialog && <CommandDialog open={displayCommandDialog} workspaceUrl={workspaceUrl} command={command!} onClose={this.handleCommandDialogClose} />}
+                {command !== undefined && displayExampleDialog && <ExampleDialog open={displayExampleDialog} workspaceUrl={workspaceUrl} command={command!} idx={exampleIdx} onClose={this.handleExampleDialogClose} />}
+                {command !== undefined && displayCommandDeleteDialog && <CommandDeleteDialog open={displayCommandDeleteDialog} workspaceUrl={workspaceUrl} command={command!} onClose={this.handleCommandDeleteDialogClose} />}
+                {command !== undefined && displayAddSubcommandDialog && <AddSubcommandDialog open={displayAddSubcommandDialog} workspaceUrl={workspaceUrl} command={command!} onClose={this.handleAddSubcommandDisplayClose} argVar={this.state.subcommandArgVar!} subArgOptions={this.state.subcommandSubArgOptions!} defaultGroupNames={this.state.subcommandDefaultGroupNames!} />}
             </React.Fragment>
         )
     }
@@ -414,17 +504,38 @@ function CommandDeleteDialog(props: {
     const [updating, setUpdating] = React.useState<boolean>(false);
     const [relatedCommands, setRelatedCommands] = React.useState<string[]>([]);
 
-    React.useEffect(() => {
-        setRelatedCommands([]);
-        const urls = props.command.resources.map(resource => {
+    const getUrls = () => {
+        let urls: string[] = [];
+
+        props.command.resources.forEach(resource => {
             const resourceId = btoa(resource.id)
             const version = btoa(resource.version)
-            return `${props.workspaceUrl}/Resources/${resourceId}/V/${version}`
+            if (resource.subresource !== undefined) {
+                let subresource = btoa(resource.subresource)
+                // TODO: delete list command together with crud
+                // if (resource.subresource.endsWith('[]') || resource.subresource.endsWith('{}')) {
+                //     let subresource2 = btoa(resource.subresource.slice(0, -2))
+                //     urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource2}`)
+                // } else {
+                //     let subresource2 = btoa(resource.subresource + '[]');
+                //     urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource2}`)
+                //     subresource2 = btoa(resource.subresource + '{}');
+                //     urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource2}`)
+                // }
+                urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource}`)
+            } else {
+                urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}`)
+            }
         })
+        return urls;
+    }
+
+    React.useEffect(() => {
+        setRelatedCommands([]);
+        const urls = getUrls();
         const promisesAll = urls.map(url => {
             return axios.get(`${url}/Commands`)
         })
-
         Promise.all(promisesAll)
             .then(responses => {
                 const commands = new Set<string>();
@@ -451,15 +562,10 @@ function CommandDeleteDialog(props: {
     }
     const handleDelete = () => {
         setUpdating(true);
-        const urls = props.command.resources.map(resource => {
-            const resourceId = btoa(resource.id)
-            const version = btoa(resource.version)
-            return `${props.workspaceUrl}/Resources/${resourceId}/V/${version}`
-        })
+        const urls = getUrls();
         const promisesAll = urls.map(url => {
             return axios.delete(url)
         })
-
         Promise.all(promisesAll)
             .then(res => {
                 setUpdating(false);
@@ -495,8 +601,6 @@ function CommandDeleteDialog(props: {
 
         </Dialog>
     )
-
-
 }
 
 interface CommandDialogProps {
@@ -512,6 +616,7 @@ interface CommandDialogState {
     shortHelp: string,
     longHelp: string,
     invalidText?: string,
+    confirmation: string,
     updating: boolean
 }
 
@@ -525,17 +630,19 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
             shortHelp: this.props.command.help?.short ?? "",
             longHelp: this.props.command.help?.lines?.join('\n') ?? "",
             stage: this.props.command.stage,
+            confirmation: this.props.command.confirmation ?? "",
             updating: false
         }
     }
 
     handleModify = (event: any) => {
-        let { name, stage, shortHelp, longHelp } = this.state
+        let { name, stage, shortHelp, longHelp, confirmation } = this.state
         let { workspaceUrl, command } = this.props
 
         name = name.trim();
         shortHelp = shortHelp.trim();
         longHelp = longHelp.trim();
+        confirmation = confirmation.trim();
 
         const names = name.split(' ').filter(n => n.length > 0);
 
@@ -584,6 +691,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                 lines: lines,
             },
             stage: stage,
+            confirmation: confirmation,
         }).then(res => {
             const name = names.join(' ');
             if (name === command.names.join(' ')) {
@@ -626,7 +734,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
     }
 
     render() {
-        const { name, shortHelp, longHelp, invalidText, updating, stage } = this.state;
+        const { name, shortHelp, longHelp, invalidText, updating, stage, confirmation } = this.state;
         return (
             <Dialog
                 disableEscapeKeyDown
@@ -694,6 +802,22 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                         onChange={(event: any) => {
                             this.setState({
                                 longHelp: event.target.value,
+                            })
+                        }}
+                        margin="normal"
+                    />
+                    <TextField
+                        id="confirmation"
+                        label="Command confirmation"
+                        helperText="Modify or clear confirmation message as needed."
+                        type="text"
+                        fullWidth
+                        multiline
+                        variant='standard'
+                        value={confirmation}
+                        onChange={(event: any) => {
+                            this.setState({
+                                confirmation: event.target.value,
                             })
                         }}
                         margin="normal"
@@ -1018,8 +1142,176 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
     }
 }
 
+function AddSubcommandDialog(props: {
+    workspaceUrl: string,
+    command: Command,
+    argVar: string,
+    subArgOptions: { var: string, options: string }[],
+    defaultGroupNames: string[],
+    open: boolean,
+    onClose: (added: boolean) => void,
+}) {
+
+    const [updating, setUpdating] = useState<boolean>(false);
+    const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
+    const [commandGroupName, setCommandGroupName] = useState<string>("");
+    const [refArgsOptions, setRefArgsOptions] = useState<{ var: string, options: string }[]>([]);
+
+    useEffect(() => {
+        setCommandGroupName(props.defaultGroupNames.join(' '));
+        setRefArgsOptions(props.subArgOptions);
+    }, [props.argVar, props.defaultGroupNames]);
+
+    const handleClose = () => {
+        setInvalidText(undefined);
+        props.onClose(false);
+    }
+
+    const verifyAddSubresource = () => {
+        setInvalidText(undefined);
+        const argOptions: { [argVar: string]: string[] } = {}
+        let invalidText: string | undefined = undefined;
+        refArgsOptions.forEach((arg, idx) => {
+            const names = arg.options.split(' ').filter(n => n.length > 0);
+            if (names.length < 1) {
+                invalidText = `Prop ${idx + 1} option name is required.`
+                return undefined
+            }
+
+            for (const idx in names) {
+                const piece = names[idx];
+                if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(piece)) {
+                    invalidText = `Invalid 'Prop ${idx + 1} option name': '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `
+                    return undefined
+                }
+            }
+            argOptions[arg.var] = names;
+        });
+
+        const names = commandGroupName.split(' ').filter(n => n.length > 0);
+        if (names.length < 1) {
+            invalidText = 'Invalid Command group name';
+            return
+        }
+
+        if (invalidText !== undefined) {
+            setInvalidText(invalidText);
+            return undefined
+        }
+
+        return {
+            commandGroupName: names.join(' '),
+            refArgsOptions: argOptions,
+        }
+    }
+
+    const handleAddSubresource = async () => {
+        const urls = props.command.resources.map(resource => {
+            const resourceId = btoa(resource.id)
+            const version = btoa(resource.version)
+            return `${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources`
+        })
+
+        if (urls.length !== 1) {
+            setInvalidText(`Cannot create subcommands, command contains ${props.command.resources.length} resources`);
+            return;
+        }
+
+        const data = verifyAddSubresource();
+        if (data === undefined) {
+            return;
+        }
+
+        setUpdating(true);
+
+        try {
+            await  axios.post(urls[0], {
+                ...data,
+                arg: props.argVar,
+            })
+            props.onClose(true);
+        } catch (err: any) {
+            console.error(err.response);
+            if (err.response?.data?.message) {
+                const data = err.response!.data!;
+                setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
+            }
+            setUpdating(false);
+        }
+    }
+
+    const buildRefArgText = (arg: { var: string, options: string }, idx: number) => {
+        return (<TextField
+            id={`subArg-${arg.var}`}
+            key={arg.var}
+            label={`${arg.var}`}
+            helperText={idx === 0 ? "You can input multiple names separated by a space character" : undefined}
+            type="text"
+            fullWidth
+            variant='standard'
+            value={arg.options}
+            onChange={(event: any) => {
+                const options = refArgsOptions.map(value => {
+                    if (value.var === arg.var) {
+                        return {
+                            ...value,
+                            options: event.target.value,
+                        }
+                    } else {
+                        return value
+                    }
+                });
+                setRefArgsOptions(options)
+            }}
+            margin="normal"
+            required
+        />)
+    }
+
+    return (<Dialog
+        disableEscapeKeyDown
+        open={props.open}
+        sx={{ '& .MuiDialog-paper': { width: '80%' } }}
+    >
+        <DialogTitle>Add Subcommands</DialogTitle>
+        <DialogContent dividers={true}>
+            {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+            <FormLabel>Subcommand Group</FormLabel>
+            <TextField
+                id='subcommand-group-name'
+                label='name'
+                placeholder='Please input command group name for subcommands'
+                type="text"
+                variant='standard'
+                value={commandGroupName}
+                fullWidth
+                margin="normal"
+                required
+                onChange={(event: any) => {
+                    setCommandGroupName(event.target.value)
+                }}
+            />
+            {refArgsOptions.length > 0 && <>
+                <FormLabel>Argument Options</FormLabel>
+                {refArgsOptions.map(buildRefArgText)}
+            </>}
+        </DialogContent>
+        <DialogActions>
+            {updating &&
+                <Box sx={{ width: '100%' }}>
+                    <LinearProgress color='info' />
+                </Box>
+            }
+            {!updating && <>
+                <Button onClick={handleClose}>Cancel</Button>
+                <Button onClick={handleAddSubresource}>Add Subcommands</Button>
+            </>}
+        </DialogActions>
+    </Dialog>)
+}
+
 const DecodeResponseCommand = (command: ResponseCommand): Command => {
-    return {
+    let cmd: Command = {
         id: 'command:' + command.names.join('/'),
         names: command.names,
         help: command.help,
@@ -1028,9 +1320,22 @@ const DecodeResponseCommand = (command: ResponseCommand): Command => {
         resources: command.resources,
         version: command.version,
     }
+
+    if (command.confirmation) {
+        cmd.confirmation = command.confirmation
+    }
+
+    if (command.argGroups) {
+        cmd = {
+            ...cmd,
+            ...DecodeArgs(command.argGroups!)
+        }
+    }
+
+    return cmd;
 }
 export default WSEditorCommandContent;
 
 export { DecodeResponseCommand };
-export type { Command, ResponseCommand, ResponseCommands };
+export type { Command, Resource, ResponseCommand, ResponseCommands };
 

@@ -1,20 +1,32 @@
-import { AppBar, Button, IconButton, styled, Toolbar, Typography, Tooltip } from '@mui/material';
+import { AppBar, Button, IconButton, styled, Toolbar, Typography, Tooltip, TypographyProps } from '@mui/material';
 import { Box } from '@mui/system';
 import HomeIcon from '@mui/icons-material/Home';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { grey } from '@mui/material/colors'
 
 import * as React from 'react';
 
+
+const ArgEditTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: "#ffffff",
+    fontFamily: "'Work Sans', sans-serif",
+    fontSize: 14,
+    fontWeight: 400,
+}));
 
 interface WSEditorToolBarProps {
     workspaceName: string
     onHomePage: () => void
     onGenerate: () => void
+    onDelete: () => void
+    onModify: () => void
 }
 
 class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
 
     render() {
-        const { workspaceName, onHomePage, onGenerate } = this.props;
+        const { workspaceName, onHomePage, onGenerate, onDelete, onModify } = this.props;
         return (
             <React.Fragment>
                 <AppBar sx={{
@@ -52,10 +64,21 @@ class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
                         >
                             {workspaceName}
                         </Typography>
+                        <Button sx={{ flexShrink: 0, ml: 3 }}
+                            startIcon={<EditIcon sx={{ color: grey[100] }} fontSize='small' />}
+                            onClick={onModify}
+                        >
+                            <ArgEditTypography>EDIT</ArgEditTypography>
+                        </Button>
+                        <Button sx={{ flexShrink: 0, ml: 1 }}
+                            startIcon={<DeleteIcon sx={{ color: grey[100] }} fontSize='small' />}
+                            onClick={onDelete}
+                        >
+                            <ArgEditTypography>DELETE</ArgEditTypography>
+                        </Button>
 
                         <Box sx={{ flexGrow: 1 }} />
                         <Box sx={{ flexShrink: 0 }} >
-                       
                             <Tooltip title='Export Command Models'>
                                 <Button
                                     variant="outlined"
@@ -65,7 +88,6 @@ class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
                                     Export
                                 </Button>
                             </Tooltip>
-
                         </Box>
                     </Toolbar>
                 </AppBar>

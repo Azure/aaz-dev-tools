@@ -187,3 +187,40 @@ class APIAAZSpecsTest(CommandTestCase):
             command_version = rv.get_json()
             self.assertTrue(command_version['names'] == ['edge-order', 'list-configuration'])
             self.assertTrue(command_version['version'] == '2021-12-01')
+
+        # test aaz resources
+        with self.app.test_client() as c:
+            resource_id = swagger_resource_path_to_resource_id("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}")
+            rv = c.get('/AAZ/Specs/Resources/mgmt-plane/{}'.format(b64encode_str(resource_id)))
+            self.assertTrue(rv.status_code == 200)
+            result = rv.get_json()
+            self.assertEqual(result['id'], resource_id)
+            self.assertEqual(result['versions'], ['2021-12-01'])
+
+            resource_id = swagger_resource_path_to_resource_id("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}/invalid")
+            rv = c.get('/AAZ/Specs/Resources/mgmt-plane/{}'.format(b64encode_str(resource_id)))
+            self.assertTrue(rv.status_code == 404)
+
+            resources = [
+                swagger_resource_path_to_resource_id(
+                    "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}"),
+                swagger_resource_path_to_resource_id(
+                    '/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses'),
+                ]
+            rv = c.post('/AAZ/Specs/Resources/mgmt-plane/Filter', json={
+                "resources": resources
+            })
+            self.assertTrue(rv.status_code == 200)
+            result = rv.get_json()
+            self.assertEqual(result['resources'], [
+                {
+                    "id": swagger_resource_path_to_resource_id(
+                        "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EdgeOrder/orderItems/{orderItemName}"),
+                    "versions": ['2021-12-01']
+                },
+                {
+                    "id": swagger_resource_path_to_resource_id(
+                        "/subscriptions/{subscriptionId}/providers/Microsoft.EdgeOrder/addresses"),
+                    "versions": ['2021-12-01']
+                },
+            ])

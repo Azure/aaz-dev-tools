@@ -2,7 +2,7 @@ import * as React from 'react';
 import withRoot from '../../withRoot';
 import { Outlet } from 'react-router';
 
-class GenerationPage extends React.Component {
+class CLIPage extends React.Component {
     render() {
         return (
             <React.Fragment>
@@ -12,4 +12,4 @@ class GenerationPage extends React.Component {
     }
 }
 
-export default withRoot(GenerationPage);
+export default withRoot(CLIPage);

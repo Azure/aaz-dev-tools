@@ -30,7 +30,12 @@ from ._fields import CMDVariantField, StringType, CMDClassField, CMDBooleanField
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, \
     CMDResourceIdFormat
 from ._utils import CMDDiffLevelEnum
+from utils import exceptions
 
+import logging
+
+
+logger = logging.getLogger('backend')
 
 class CMDSchemaEnumItem(Model):
     arg = CMDVariantField()  # value will be used when specific argument is provided
@@ -199,6 +204,8 @@ class CMDSchemaBase(Model):
         pass
 
     def reformat(self, **kwargs):
+        if self.frozen:
+            return
         self._reformat_base(**kwargs)
 
 
@@ -307,6 +314,8 @@ class CMDSchema(CMDSchemaBase):
         pass
 
     def reformat(self, **kwargs):
+        if self.frozen:
+            return
         self._reformat_base(**kwargs)
         self._reformat(**kwargs)
 
@@ -341,6 +350,10 @@ class CMDClsSchemaBase(CMDSchemaBase):
     def _get_type(self):
         return self._type
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.implement = None
+
     @classmethod
     def _claim_polymorphic(cls, data):
         if isinstance(data, dict):
@@ -352,7 +365,7 @@ class CMDClsSchemaBase(CMDSchemaBase):
         return False
 
     @classmethod
-    def build_from_schema_base(cls, schema_base):
+    def build_from_schema_base(cls, schema_base, implement):
         assert isinstance(schema_base, (CMDObjectSchemaBase, CMDArraySchemaBase))
         assert getattr(schema_base, 'cls', None)
         cls_schema = cls()
@@ -361,7 +374,23 @@ class CMDClsSchemaBase(CMDSchemaBase):
         cls_schema.frozen = schema_base.frozen
         cls_schema.const = schema_base.const
         cls_schema.default = schema_base.default
+        cls_schema.implement = implement
         return cls_schema
+
+    def get_unwrapped(self, **kwargs):
+        if self.implement is None:
+            return
+        assert isinstance(self.implement, CMDSchemaBase)
+        if isinstance(self.implement, CMDObjectSchemaBase):
+            cls = CMDObjectSchema if isinstance(self, CMDClsSchema) else CMDObjectSchemaBase
+        elif isinstance(self.implement, CMDArraySchemaBase):
+            cls = CMDArraySchema if isinstance(self, CMDClsSchema) else CMDArraySchemaBase
+        else:
+            raise NotImplementedError()
+        data = {k: v for k, v in self.implement.to_native().items() if k in cls._schema.valid_input_keys}
+        data.update(kwargs)
+        unwrapped = cls(data)
+        return unwrapped
 
 
 class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
@@ -383,9 +412,9 @@ class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
         return diff
 
     @classmethod
-    def build_from_schema(cls, schema):
+    def build_from_schema(cls, schema, implement):
         assert isinstance(schema, (CMDObjectSchema, CMDArraySchema))
-        cls_schema = cls.build_from_schema_base(schema)
+        cls_schema = cls.build_from_schema_base(schema, implement)
         cls_schema.name = schema.name
         cls_schema.arg = schema.arg
         cls_schema.required = schema.required
@@ -394,6 +423,19 @@ class CMDClsSchema(CMDClsSchemaBase, CMDSchema):
         if isinstance(schema, CMDObjectSchema):
             cls_schema.client_flatten = schema.client_flatten
         return cls_schema
+
+    def get_unwrapped(self, **kwargs):
+        uninherent = {
+            "name": self.name,
+            "arg": self.arg,
+            "required": self.required,
+            "description": self.description,
+            "skip_url_encoding": self.skip_url_encoding,
+        }
+        if isinstance(self.implement, CMDObjectSchema):
+            uninherent["client_flatten"] = self.client_flatten
+        uninherent.update(kwargs)
+        return super().get_unwrapped(**uninherent)
 
 
 # string
@@ -712,6 +754,8 @@ class CMDObjectSchemaDiscriminator(Model):
         return diff
 
     def reformat(self, **kwargs):
+        if self.frozen:
+            return
         if self.props:
             for prop in self.props:
                 prop.reformat(**kwargs)
@@ -735,6 +779,10 @@ class CMDObjectSchemaAdditionalProperties(Model):
 
     # properties as nodes
     item = CMDSchemaBaseField()
+    any_type = CMDBooleanField(
+        serialized_name="anyType",
+        deserialize_from="anyType"
+    )
 
     def diff(self, old, level):
         if self.frozen and old.frozen:
@@ -744,6 +792,13 @@ class CMDObjectSchemaAdditionalProperties(Model):
         if level >= CMDDiffLevelEnum.BreakingChange:
             if self.read_only and not old.read_only:
                 diff["read_only"] = f"it's read_only now."
+            if not self.any_type and old.any_type:
+                diff["any_type"] = f"it's not any_type now"
+
+        if level >= CMDDiffLevelEnum.Structure:
+            if self.any_type:
+                if not old.any_type:
+                    diff["any_type"] = f"Now support any_type"
 
         item_diff = _diff_item(self.item, old.item, level)
         if item_diff:
@@ -752,7 +807,14 @@ class CMDObjectSchemaAdditionalProperties(Model):
         return diff
 
     def reformat(self, **kwargs):
+        if self.frozen:
+            return
         if self.item:
+            if self.any_type:
+                raise exceptions.VerificationError(
+                    "InvalidAdditionalPropertiesDefinition",
+                    details="Additional property defined 'item' and 'any_type'."
+                )
             self.item.reformat(**kwargs)
 
 
@@ -822,20 +884,17 @@ class CMDObjectSchemaBase(CMDSchemaBase):
         if level >= CMDDiffLevelEnum.BreakingChange:
             if old.additional_props:
                 if not self.additional_props:
-                    additional_diff = f"Miss additional props"
-                else:
-                    additional_diff = self.additional_props.diff(old.additional_props, level)
-                if additional_diff:
-                    diff["additional_props"] = additional_diff
+                    diff["additional_props"] = f"Miss additional props"
 
         if level >= CMDDiffLevelEnum.Structure:
             if self.additional_props:
                 if not old.additional_props:
-                    additional_diff = f"New additional props"
-                else:
-                    additional_diff = self.additional_props.diff(old.additional_props, level)
-                if additional_diff:
-                    diff["additional_props"] = additional_diff
+                    diff["additional_props"] = f"New additional props"
+
+        if self.additional_props and old.additional_props:
+            additional_diff = self.additional_props.diff(old.additional_props, level)
+            if additional_diff:
+                diff["additional_props"] = additional_diff
 
         return diff
 
@@ -900,8 +959,11 @@ class CMDArraySchemaBase(CMDSchemaBase):
     )
     item = CMDSchemaBaseField()
 
+    # used to indentify item in array
+    identifiers = ListType(StringType())
+
     # properties as tags
-    # define a schema which can be used by others # TODO: convert to arg
+    # define a schema which can be used by others
     # cls definition will not include properties in CMDSchema only, such as following properties:
     #  - name
     #  - arg
@@ -924,11 +986,42 @@ class CMDArraySchemaBase(CMDSchemaBase):
         if item_diff:
             diff["item"] = item_diff
 
+        if level >= CMDDiffLevelEnum.Structure:
+            if old.identifiers:
+                if not self.identifiers:
+                    diff["identifiers"] = f"Miss Identifiers"
+                elif set(old.identifiers) != set(self.identifiers):
+                    diff["identifiers"] = f"Identifier different"
+            elif self.identifiers:
+                diff["identifiers"] = f"New identifiers"
+
         return diff
 
     def _reformat_base(self, **kwargs):
         super()._reformat_base(**kwargs)
         self.item.reformat(**kwargs)
+        if self.identifiers:
+            identifiers = sorted(self.identifiers, key=lambda i: (len(i), i))
+            item_instance = self.item
+            if isinstance(item_instance, CMDClsSchemaBase):
+                item_instance = item_instance.implement
+            if not isinstance(item_instance, CMDObjectSchemaBase):
+                raise exceptions.InvalidAPIUsage(
+                    f"Identifiers should be used in 'array of object'"
+                )
+            item_prop_names = {p.name for p in item_instance.props}
+            new_identifiers = []
+            for identifier in identifiers:
+                if identifier not in item_prop_names:
+                    if '/' in identifier:
+                        # not support identifier with '/' right now
+                        logger.info(f"identifier '{identifier}' is not supported yet")
+                        continue
+                    raise exceptions.InvalidAPIUsage(
+                        f"identifier property '{identifier}' not exist"
+                    )
+                new_identifiers.append(identifier)
+            self.identifiers = new_identifiers or None
 
 
 class CMDArraySchema(CMDArraySchemaBase, CMDSchema):
@@ -948,31 +1041,28 @@ class CMDArraySchema(CMDArraySchemaBase, CMDSchema):
 
 def _diff_fmt(self_fmt, old_fmt, level):
     fmt_diff = None
-    if level >= CMDDiffLevelEnum.BreakingChange:
-        if self_fmt:
-            fmt_diff = self_fmt.diff(old_fmt, level)
 
     if level >= CMDDiffLevelEnum.Structure:
         if old_fmt:
             if not self_fmt:
                 fmt_diff = f"Miss property"
-            else:
-                fmt_diff = self_fmt.diff(old_fmt, level)
+
+    if self_fmt and old_fmt:
+        fmt_diff = self_fmt.diff(old_fmt, level)
+
     return fmt_diff
 
 
 def _diff_enum(self_enum, old_enum, level):
     enum_diff = None
-    if level >= CMDDiffLevelEnum.BreakingChange:
-        if self_enum:
-            enum_diff = self_enum.diff(old_enum, level)
 
     if level >= CMDDiffLevelEnum.Structure:
         if old_enum:
             if not self_enum:
                 enum_diff = f"Miss property"
-            else:
-                enum_diff = self_enum.diff(old_enum, level)
+
+    if self_enum and old_enum:
+        enum_diff = self_enum.diff(old_enum, level)
 
     return enum_diff
 
@@ -990,6 +1080,7 @@ def _diff_props(self_props, old_props, level):
                 diff = prop.diff(old_prop, level)
                 if diff:
                     props_diff[old_prop.name] = diff
+
         for prop in props_dict.values():
             if prop.frozen:
                 continue
@@ -1002,11 +1093,7 @@ def _diff_props(self_props, old_props, level):
             if prop.name not in old_props_dict:
                 if not prop.frozen:
                     props_diff[prop.name] = "New property"
-            else:
-                old_prop = old_props_dict.pop(prop.name)
-                diff = prop.diff(old_prop, level)
-                if diff:
-                    props_diff[prop.name] = diff
+
     return props_diff
 
 
@@ -1030,11 +1117,7 @@ def _diff_discriminators(self_discriminators, old_discriminators, level):
             if disc.value not in old_discs_dict:
                 if not disc.frozen:
                     discs_diff[disc.value] = "New discriminator value"
-            else:
-                old_disc = old_discs_dict.pop(disc.value)
-                diff = disc.diff(old_disc, level)
-                if diff:
-                    discs_diff[disc.value] = diff
+
     return discs_diff
 
 

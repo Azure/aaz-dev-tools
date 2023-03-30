@@ -46,7 +46,7 @@ class CMDVariantField(StringType):
 
     def __init__(self, *args, **kwargs):
         super(CMDVariantField, self).__init__(
-            regex=r'[$@][a-zA-Z0-9_\[\]\.]+',
+            regex=r'[$@][a-zA-Z0-9_\[\]\{\}\.]+',
             *args,
             **kwargs
         )
@@ -100,6 +100,10 @@ class CMDVersionField(StringType):
     def __init__(self, *args, **kwargs):
         super(CMDVersionField, self).__init__(*args, **kwargs)
 
+class CMDConfirmation(StringType):
+
+    def __int__(self, *args, **kwargs):
+        super(CMDConfirmation, self).__init__(*args, **kwargs)
 
 class CMDResourceIdField(StringType):
 

@@ -11,6 +11,7 @@ from command.templates import get_templates
 from utils import exceptions
 from .cfg_reader import CfgReader
 from .cfg_validator import CfgValidator
+from collections import deque
 
 
 class AAZSpecsManager:
@@ -67,7 +68,16 @@ class AAZSpecsManager:
         return os.path.join(self.resources_folder, plane)
 
     def get_resource_cfg_folder(self, plane, resource_id):
-        return os.path.join(self.get_resource_plane_folder(plane), b64encode_str(resource_id))
+        path = self.get_resource_plane_folder(plane)
+        name = b64encode_str(resource_id)
+        while len(name):
+            if len(name) > 255:
+                path = os.path.join(path, name[:254] + '+')
+                name = name[254:]
+            else:
+                path = os.path.join(path, name)
+                name = ""
+        return path
 
     def get_resource_cfg_file_paths(self, plane, resource_id, version):
         """Return Json and XML path"""
@@ -76,6 +86,20 @@ class AAZSpecsManager:
 
     def get_resource_cfg_ref_file_path(self, plane, resource_id, version):
         return os.path.join(self.get_resource_cfg_folder(plane, resource_id), f"{version}.md")
+
+    def get_resource_versions(self, plane, resource_id):
+        path = self.get_resource_cfg_folder(plane, resource_id)
+        if not os.path.exists(path) or not os.path.isdir(path):
+            return None
+        versions = set()
+        for file_name in os.listdir(path):
+            if file_name.endswith('.xml'):
+                versions.add(file_name[:-4])
+            elif file_name.endswith('.json'):
+                versions.add(file_name[:-5])
+            elif file_name.endswith('.md'):
+                versions.add(file_name[:-3])
+        return sorted(versions, reverse=True)
 
     # Command Tree
     def find_command_group(self, *cg_names):
@@ -121,7 +145,9 @@ class AAZSpecsManager:
     def load_resource_cfg_reader(self, plane, resource_id, version):
         key = (plane, resource_id, version)
         if key in self._modified_resource_cfgs:
-            return self._modified_resource_cfgs[key]
+            # cfg already modified
+            cfg = self._modified_resource_cfgs[key]
+            return CfgReader(cfg) if cfg else None
 
         json_path, xml_path = self.get_resource_cfg_file_paths(plane, resource_id, version)
         if not os.path.exists(json_path) and not os.path.exists(xml_path):
@@ -159,7 +185,7 @@ class AAZSpecsManager:
             raise ValueError(f"Invalid file path: {json_path}")
 
         with open(json_path, 'r') as f:
-            print(json_path)
+            #print(json_path)
             data = json.load(f)
         cfg = CMDConfiguration(data)
 
@@ -226,6 +252,10 @@ class AAZSpecsManager:
             parent.command_groups = None
 
         self._modified_command_groups.add(cg_names)
+
+        if not parent.command_groups and not parent.commands:
+            # delete empty parent command group
+            self.delete_command_group(*cg_names[:-1])
         return True
 
     def create_command(self, *cmd_names):
@@ -263,6 +293,10 @@ class AAZSpecsManager:
             parent.commands = None
 
         self._modified_commands.add(cmd_names)
+
+        if not parent.command_groups and not parent.commands:
+            # delete empty parent command group
+            self.delete_command_group(*cmd_names[:-1])
         return True
 
     def delete_command_version(self, *cmd_names, version):
@@ -276,12 +310,16 @@ class AAZSpecsManager:
             if v.name == version:
                 match_idx = idx
                 break
-        if not match_idx:
+        if match_idx is None:
             return False
 
         command.versions = command.versions[:match_idx] + command.versions[match_idx+1:]
 
         self._modified_commands.add(cmd_names)
+
+        if not command.versions:
+            # delete empty command
+            self.delete_command(*cmd_names)
         return True
 
     def update_command_version(self, *cmd_names, plane, cfg_cmd):
@@ -307,6 +345,7 @@ class AAZSpecsManager:
             resource.plane = plane
             resource.id = r.id
             resource.version = r.version
+            resource.subresource = r.subresource
             version.resources.append(resource)
 
         self._modified_commands.add(cmd_names)
@@ -333,8 +372,8 @@ class AAZSpecsManager:
         # remove previous cfg
         for resource in cfg_reader.resources:
             pre_cfg_reader = self.load_resource_cfg_reader(cfg.plane, resource_id=resource.id, version=resource.version)
-            if pre_cfg_reader:
-                self._remove_cfg(cfg)
+            if pre_cfg_reader and pre_cfg_reader.cfg != cfg:
+                self._remove_cfg(pre_cfg_reader.cfg)
 
         # add new command version
         for cmd_names, cmd in cfg_reader.iter_commands():
@@ -510,7 +549,7 @@ class AAZSpecsManager:
     @staticmethod
     def render_resource_cfg_to_json(cfg):
         data = cfg.to_primitive()
-        return json.dumps(data, ensure_ascii=False, indent=4)
+        return json.dumps(data, ensure_ascii=False)
 
     @staticmethod
     def render_resource_cfg_to_xml(cfg):

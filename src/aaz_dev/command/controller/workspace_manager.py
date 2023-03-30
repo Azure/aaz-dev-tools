@@ -12,13 +12,15 @@ from utils import exceptions
 from utils.config import Config
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor
-from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg
+from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand
 
 logger = logging.getLogger('backend')
 
 
 class WorkspaceManager:
     COMMAND_TREE_ROOT_NAME = "aaz"
+
+    IN_MEMORY = "__IN_MEMORY_WORKSPACE__"
 
     @classmethod
     def list_workspaces(cls):
@@ -39,9 +41,9 @@ class WorkspaceManager:
         return workspaces
 
     @classmethod
-    def new(cls, name, plane):
-        manager = cls(name)
-        if os.path.exists(manager.path):
+    def new(cls, name, plane, **kwargs):
+        manager = cls(name, **kwargs)
+        if not manager.is_in_memory and os.path.exists(manager.path):
             raise exceptions.ResourceConflict(f"Workspace conflict: Workspace json file path exists: {manager.path}")
         manager.ws = CMDEditorWorkspace({
             "name": name,
@@ -53,13 +55,16 @@ class WorkspaceManager:
         })
         return manager
 
-    def __init__(self, name):
+    def __init__(self, name, folder=None, aaz_manager=None, swagger_manager=None):
         self.name = name
-        if not Config.AAZ_DEV_WORKSPACE_FOLDER or os.path.exists(Config.AAZ_DEV_WORKSPACE_FOLDER) and not os.path.isdir(Config.AAZ_DEV_WORKSPACE_FOLDER):
-            raise ValueError(
-                f"Invalid AAZ_DEV_WORKSPACE_FOLDER: Expect a folder path: {Config.AAZ_DEV_WORKSPACE_FOLDER}")
-        self.folder = os.path.join(Config.AAZ_DEV_WORKSPACE_FOLDER, name)
-        if os.path.exists(self.folder) and not os.path.isdir(self.folder):
+        if not folder:
+            if not Config.AAZ_DEV_WORKSPACE_FOLDER or os.path.exists(Config.AAZ_DEV_WORKSPACE_FOLDER) and not os.path.isdir(Config.AAZ_DEV_WORKSPACE_FOLDER):
+                raise ValueError(
+                    f"Invalid AAZ_DEV_WORKSPACE_FOLDER: Expect a folder path: {Config.AAZ_DEV_WORKSPACE_FOLDER}")
+            self.folder = os.path.join(Config.AAZ_DEV_WORKSPACE_FOLDER, name)
+        else:
+            self.folder = os.path.expanduser(folder) if folder != self.IN_MEMORY else self.IN_MEMORY
+        if not self.is_in_memory and os.path.exists(self.folder) and not os.path.isdir(self.folder):
             raise ValueError(f"Invalid workspace folder: Expect a folder path: {self.folder}")
         self.path = os.path.join(self.folder, 'ws.json')
 
@@ -67,11 +72,16 @@ class WorkspaceManager:
         self._cfg_editors = {}
         self._reusable_leaves = {}
 
-        self.aaz_specs = AAZSpecsManager()
-        self.swagger_specs = SwaggerSpecsManager()
+        self.aaz_specs = aaz_manager or AAZSpecsManager()
+        self.swagger_specs = swagger_manager or SwaggerSpecsManager()
         self.swagger_command_generator = CommandGenerator()
 
+    @property
+    def is_in_memory(self):
+        return self.folder == self.IN_MEMORY
+
     def load(self):
+        assert not self.is_in_memory
         # TODO: handle exception
         if not os.path.exists(self.path) or not os.path.isfile(self.path):
             raise exceptions.ResourceNotFind(f"Workspace json file not exist: {self.path}")
@@ -81,8 +91,21 @@ class WorkspaceManager:
 
         self._cfg_editors = {}
 
+    def rename(self, new_name):
+        assert not self.is_in_memory
+        new_folder = os.path.join(Config.AAZ_DEV_WORKSPACE_FOLDER, new_name)
+        if os.path.exists(new_folder):
+            raise ValueError(f"Invalid new workspace folder: folder path exists: {new_folder}")
+        os.rename(self.folder, new_folder)
+        self.name = new_name
+        self.folder = new_folder
+        self.path = os.path.join(self.folder, 'ws.json')
+        self.load()
+        self.ws.name = new_name
+        self.save()
+
     def delete(self):
-        if os.path.exists(self.path):
+        if not self.is_in_memory and os.path.exists(self.path):
             # make sure ws.json exist in folder
             if not os.path.isfile(self.path):
                 raise exceptions.ResourceConflict(f"Workspace conflict: Is not file path: {self.path}")
@@ -91,6 +114,8 @@ class WorkspaceManager:
         return False
 
     def save(self):
+        assert not self.is_in_memory
+
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
 
@@ -180,6 +205,9 @@ class WorkspaceManager:
         idx = 0
         while idx < len(node_names):
             name = node_names[idx]
+            if node.commands and name in node.commands:
+                raise exceptions.InvalidAPIUsage(
+                    f"Failed to create command group, '{' '.join(node_names[:idx+1])}' is command")
             if not node.command_groups or name not in node.command_groups:
                 if not node.command_groups:
                     node.command_groups = {}
@@ -217,7 +245,7 @@ class WorkspaceManager:
                     return True
         return False
 
-    def add_cfg(self, cfg_editor):
+    def add_cfg(self, cfg_editor, aaz_ref=None):
         cfg_editor.deleted = False
         for resource in cfg_editor.resources:
             self._cfg_editors[resource.id] = cfg_editor
@@ -234,29 +262,30 @@ class WorkspaceManager:
             reusable_leaf = self._reusable_leaves.pop(tuple(cmd_names), None)
             if reusable_leaf:
                 new_cmd = reusable_leaf
-
+            elif aaz_ref and (ref_v_name := aaz_ref.get(' '.join(cmd_names), None)) and (aaz_leaf := self.aaz_specs.find_command(*cmd_names)):
+                # reference from aaz specs
+                ref_v = None
+                for v in aaz_leaf.versions:
+                    if v.name == ref_v_name:
+                        ref_v = v
+                        break
+                new_cmd = CMDCommandTreeLeaf({
+                    "names": [*cmd_names],
+                    "stage": ref_v.stage if ref_v else node.stage,
+                    "help": aaz_leaf.help.to_primitive(),
+                })
+                if ref_v and ref_v.examples:
+                    new_cmd.examples = []
+                    for example in ref_v.examples:
+                        new_cmd.examples.append(CMDCommandExample(example.to_primitive()))
             else:
-                aaz_leaf = self.aaz_specs.find_command(*cmd_names)
-                if aaz_leaf:
-                    new_cmd = CMDCommandTreeLeaf({
-                        "names": [*cmd_names],
-                        "stage": node.stage,
-                        "help": aaz_leaf.help.to_primitive(),
-                    })
-                    for v in (aaz_leaf.versions or []):
-                        if v.name == command.version:
-                            new_cmd.stage = v.stage
-                            if v.examples:
-                                new_cmd.examples = [CMDCommandExample(example.to_primitive()) for example in v.examples]
-                            break
-                else:
-                    new_cmd = CMDCommandTreeLeaf({
-                        "names": [*cmd_names],
-                        "stage": node.stage,
-                        "help": {
-                            "short": command.description or ""
-                        },
-                    })
+                new_cmd = CMDCommandTreeLeaf({
+                    "names": [*cmd_names],
+                    "stage": node.stage,
+                    "help": {
+                        "short": command.description or ""
+                    },
+                })
             new_cmd.version = command.version
             new_cmd.resources = [CMDResource(r.to_primitive()) for r in command.resources]
             node.commands[name] = new_cmd
@@ -277,7 +306,9 @@ class WorkspaceManager:
     def load_cfg_editor_by_resource(self, resource_id, version, reload=False):
         if not reload and resource_id in self._cfg_editors:
             # load from modified dict
-            return self._cfg_editors[resource_id]
+            cfg_editor = self._cfg_editors[resource_id]
+            return None if cfg_editor.deleted else cfg_editor
+        assert not self.is_in_memory
         try:
             cfg_editor = WorkspaceCfgEditor.load_resource(self.folder, resource_id, version)
             for resource in cfg_editor.resources:
@@ -419,10 +450,9 @@ class WorkspaceManager:
             new_name = f"{name}-untitled{idx}"
         return new_name
 
-    def add_new_resources_by_swagger(self, mod_names, version, resources, *root_node_names):
-        root_node = self.find_command_tree_node(*root_node_names)
-        if not root_node:
-            raise exceptions.InvalidAPIUsage(f"Command Group not exist: '{' '.join(root_node_names)}'")
+    def add_new_resources_by_swagger(self, mod_names, version, resources):
+        root_node = self.find_command_tree_node()
+        assert root_node
 
         swagger_resources = []
         resource_options = []
@@ -432,15 +462,20 @@ class WorkspaceManager:
                 continue
             if self.check_resource_exist(r['id']):
                 raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {r['id']}")
-            swagger_resource = self.swagger_specs.get_resource_in_version(
-                self.ws.plane, mod_names, r['id'], version)
+            # convert resource to swagger resource
+            swagger_resource = self.swagger_specs.get_module_manager(
+                plane=self.ws.plane, mod_names=mod_names
+            ).get_resource_in_version(r['id'], version)
             swagger_resources.append(swagger_resource)
             resource_options.append(r.get("options", {}))
             used_resource_ids.update(r['id'])
 
+        # load swagger resources
         self.swagger_command_generator.load_resources(swagger_resources)
 
+        # generate cfg editors by resource
         cfg_editors = []
+        aaz_ref = {}
         for resource, options in zip(swagger_resources, resource_options):
             try:
                 command_group = self.swagger_command_generator.create_draft_command_group(resource, **options)
@@ -449,21 +484,32 @@ class WorkspaceManager:
                     message=str(err)
                 ) from err
             assert not command_group.command_groups, "The logic to support sub command groups is not supported"
-            cfg_editors.append(WorkspaceCfgEditor.new_cfg(
+            cfg_editor = WorkspaceCfgEditor.new_cfg(
                 plane=self.ws.plane,
                 resources=[resource.to_cmd()],
                 command_groups=[command_group]
-            ))
+            )
 
-        # TODO: apply the command name used in aaz specs
+            # inherit modification from cfg in aaz
+            aaz_version = options.get('aaz_version', None)
+            if aaz_version:
+                try:
+                    aaz_cfg_reader = self.aaz_specs.load_resource_cfg_reader(self.ws.plane, resource.id, aaz_version)
+                except ValueError as err:
+                    raise exceptions.InvalidAPIUsage(message=str(err)) from err
+                cfg_editor.inherit_modification(aaz_cfg_reader)
+                for cmd_names, _ in cfg_editor.iter_commands():
+                    aaz_ref[' '.join(cmd_names)] = aaz_version
 
-        if len(root_node_names) > 0:
-            cg_names = self._calculate_cfgs_common_command_group(cfg_editors, *root_node_names)
-            for cfg_editor in cfg_editors:
-                cfg_editor.rename_command_group(*cg_names, new_cg_names=root_node_names)
+            cfg_editors.append(cfg_editor)
 
+        # add cfg_editors
+        self._add_cfg_editors(cfg_editors, aaz_ref=aaz_ref)
+
+    def _add_cfg_editors(self, cfg_editors, aaz_ref=None):
         for cfg_editor in cfg_editors:
             merged = False
+            rename_list = []
             for cmd_names, command in cfg_editor.iter_commands():
                 cur_cmd = self.find_command_tree_leaf(*cmd_names)
                 if cur_cmd is None:
@@ -473,13 +519,86 @@ class WorkspaceManager:
                     merged_cfg_editor = main_cfg_editor.merge(cfg_editor)
                     if merged_cfg_editor:
                         self.remove_cfg(main_cfg_editor)
-                        self.add_cfg(merged_cfg_editor)
+                        self.add_cfg(merged_cfg_editor, aaz_ref=aaz_ref)
                         merged = True
                         break
                 new_name = self.generate_unique_name(*cmd_names[:-1], name=cmd_names[-1])
-                cfg_editor.rename_command(*cmd_names, new_cmd_names=[*cmd_names[:-1], new_name])
+                rename_list.append((cmd_names, [*cmd_names[:-1], new_name]))
+            for cmd_names, new_cmd_names in rename_list:
+                cfg_editor.rename_command(*cmd_names, new_cmd_names=new_cmd_names)
             if not merged:
-                self.add_cfg(cfg_editor)
+                self.add_cfg(cfg_editor, aaz_ref=aaz_ref)
+
+    def reload_swagger_resources(self, resources):
+        reload_resource_map = {r['id']:{"version": r['version']} for r in resources}
+        for leaf in self.iter_command_tree_leaves():
+            ignore_resources = set()
+            reload_versions = set()
+            for r in leaf.resources:
+                if r.id not in reload_resource_map:
+                    ignore_resources.add(r.id)
+                    continue
+                reload_resource = reload_resource_map[r.id]
+                version = reload_resource['version']
+                reload_versions.add(version)
+                if 'swagger_resource' not in reload_resource:
+                    reload_resource['swagger_resource'] = self.swagger_specs.get_module_manager(
+                        self.ws.plane, r.mod_names
+                    ).get_resource_in_version(r.id, version)
+
+                if 'cfg_editor' not in reload_resource:
+                    reload_resource['cfg_editor'] = self.load_cfg_editor_by_command(leaf)
+            if ignore_resources and len(ignore_resources) != len(leaf.resources):
+                # not support partial resources reload
+                raise exceptions.InvalidAPIUsage(f"Not support partial resources reload in one command: please select the following resources as well: {list(ignore_resources)}")
+            if len(reload_versions) > 1:
+                # not support multiple resource version for the same command
+                raise exceptions.InvalidAPIUsage(f"Please select the same resource version for command: '{' '.join(leaf.names)}'")
+
+        swagger_resources = []
+        for resource_id, reload_resource in reload_resource_map.items():
+            swagger_resource = reload_resource.get('swagger_resource', None)
+            if not swagger_resource:
+                raise exceptions.ResourceNotFind(f"Command not exist for '{resource_id}'")
+            swagger_resources.append(swagger_resource)
+
+        self.swagger_command_generator.load_resources(swagger_resources)
+
+        new_cfg_editors = []
+        for resource_id, reload_resource in reload_resource_map.items():
+            options = {}
+            cfg_editor = reload_resource['cfg_editor']
+            swagger_resource = reload_resource['swagger_resource']
+            methods = cfg_editor.get_used_http_methods(resource_id)
+            if methods:
+                options['methods'] = methods
+            update_cmd_info = cfg_editor.get_update_cmd(resource_id)
+            if update_cmd_info:
+                _, _, update_by = update_cmd_info
+                options['update_by'] = update_by
+            try:
+                command_group = self.swagger_command_generator.create_draft_command_group(
+                    swagger_resource, **options)
+            except InvalidSwaggerValueError as err:
+                raise exceptions.InvalidAPIUsage(
+                    message=str(err)
+                ) from err
+            assert not command_group.command_groups, "The logic to support sub command groups is not supported"
+            new_cfg_editor = WorkspaceCfgEditor.new_cfg(
+                plane=self.ws.plane,
+                resources=[swagger_resource.to_cmd()],
+                command_groups=[command_group]
+            )
+            new_cfg_editor.inherit_modification(cfg_editor)
+            new_cfg_editors.append(new_cfg_editor)
+
+        # remove old cfg editor
+        for resource_id, reload_resource in reload_resource_map.items():
+            cfg_editor = reload_resource['cfg_editor']
+            self.remove_cfg(cfg_editor)
+
+        # add cfg_editors
+        self._add_cfg_editors(new_cfg_editors)
 
     def add_new_command_by_aaz(self, *cmd_names, version):
         # TODO: add support to load from aaz
@@ -535,6 +654,7 @@ class WorkspaceManager:
         return True
 
     def list_commands_by_resource(self, resource_id, version):
+        # will include all commands
         commands = []
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if cfg_editor:
@@ -554,6 +674,38 @@ class WorkspaceManager:
             self.add_cfg(merged_cfg_editor)
             return True
         return False
+
+    def add_subresource_by_arg_var(self, resource_id, version, arg_var, cg_names, ref_args_options):
+
+        cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
+        if not cfg_editor:
+            raise exceptions.InvalidAPIUsage(f"Resource not exist: resource_id={resource_id} version={version}")
+
+        self.remove_cfg(cfg_editor)
+        cfg_editor.build_subresource_commands_by_arg_var(resource_id, arg_var, cg_names, ref_args_options)
+        self.add_cfg(cfg_editor)
+
+    def remove_subresource(self, resource_id, version, subresource):
+        cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
+        if not cfg_editor:
+            return False
+        if not subresource:
+            raise exceptions.InvalidAPIUsage(f"Invalid subresource: '{subresource}'")
+
+        self.remove_cfg(cfg_editor)
+        removed_commands = cfg_editor.remove_subresource_commands(resource_id, version, subresource)
+        self.add_cfg(cfg_editor)
+        return len(removed_commands) > 0
+
+    def list_commands_by_subresource(self, resource_id, version, subresource):
+        commands = []
+        cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
+        if cfg_editor:
+            for cmd_names, _ in cfg_editor.iter_commands_by_resource(resource_id, subresource, version):
+                leaf = self.find_command_tree_leaf(*cmd_names)
+                if leaf:
+                    commands.append(leaf)
+        return commands
 
     @staticmethod
     def _pop_command_tree_node(parent, name):
@@ -633,6 +785,9 @@ class WorkspaceManager:
         return leaf
 
     def generate_to_aaz(self):
+        # Merge the commands of subresources which exported in aaz but not exist in current workspace
+        self._merge_sub_resources_in_aaz()
+
         # update configurations
         for ws_leaf in self.iter_command_tree_leaves():
             editor = self.load_cfg_editor_by_command(ws_leaf)
@@ -649,6 +804,67 @@ class WorkspaceManager:
             self.aaz_specs.update_command_group_by_ws(ws_node)
         self.aaz_specs.save()
 
+    def _merge_sub_resources_in_aaz(self):
+        """Merge the commands of subresources which exported in aaz but not exist in current workspace"""
+        updated_cfgs = []
+        inserted_commands = set()
+        for ws_leaf in self.iter_command_tree_leaves():
+            editor = self.load_cfg_editor_by_command(ws_leaf)
+            existing_sub_resources = {}
+            for cmd_names, command in editor.iter_commands():
+                for r in command.resources:
+                    if not r.subresource:
+                        continue
+                    key = (r.id, r.version)
+                    if key not in existing_sub_resources:
+                        existing_sub_resources[key] = set()
+                    existing_sub_resources[key].add(r.subresource)
+                    if r.subresource.endswith("[]") or r.subresource.endswith("{}"):
+                        existing_sub_resources[key].add(r.subresource[:-2])
+
+            aaz_ref = {}
+            for (r_id, r_version), r_sub_resources in existing_sub_resources.items():
+                pre_cfg_reader = self.aaz_specs.load_resource_cfg_reader(
+                    editor.cfg.plane, resource_id=r_id, version=r_version
+                )
+                if not pre_cfg_reader:
+                    continue
+
+                for cmd_names, command in pre_cfg_reader.iter_commands():
+                    insert_command = True
+                    for r in command.resources:
+                        if (r.id, r.version) not in existing_sub_resources:
+                            insert_command = False
+                            break
+                        if not r.subresource or r.subresource in r_sub_resources:
+                            insert_command = False
+                            break
+                    if not insert_command:
+                        continue
+                    cmd_names_str = ' '.join(cmd_names)
+                    if cmd_names_str in inserted_commands:
+                        continue
+                    if self.find_command_tree_leaf(*cmd_names) is not None:
+                        logger.error(
+                            f"Command '{' '.join(cmd_names)}' in workspace conflict the name of Subresource Command in `aaz`")
+                        continue
+                    if self.find_command_tree_node(*cmd_names) is not None:
+                        logger.error(
+                            f"Command Group '{' '.join(cmd_names)}' in workspace conflict the name of Subresource Command in `aaz`")
+                        continue
+                    command = CMDCommand(command.to_native())
+                    command.link()
+                    editor._add_command(*cmd_names, command=command)
+                    inserted_commands.add(cmd_names_str)
+                    aaz_ref[cmd_names_str] = r_version
+            if aaz_ref:
+                editor.reformat()
+                updated_cfgs = [(editor, aaz_ref)]
+
+        for editor, aaz_ref in updated_cfgs:
+            self.remove_cfg(editor)
+            self.add_cfg(editor, aaz_ref)
+
     def find_similar_args(self, *cmd_names, arg):
         assert isinstance(arg, CMDArg)
         results = {}
@@ -658,16 +874,16 @@ class WorkspaceManager:
             leaf = self.find_command_tree_leaf(*cmd_names)
             assert leaf is not None
             cfg_editor = self.load_cfg_editor_by_command(leaf)
-            _, cls_arg, cls_arg_idx = cfg_editor.find_arg_cls_definition(*cmd_names, cls_name=cls_name)
+            _, cls_arg, cls_arg_idx, _ = cfg_editor.find_arg_cls_definition(*cmd_names, cls_name=cls_name)
             _, arg_idx = cfg_editor.find_arg_by_var(*cmd_names, arg_var=arg.var)
             assert arg_idx.startswith(cls_arg_idx)
             idx_suffix = arg_idx[len(cls_arg_idx):]
             assert len(idx_suffix) > 0
 
-            cls_name_prefix = cls_name.split('_')[0]
+            cls_name_prefix = cls_name.split('_')[0]  # remove the subfix such as `_create` `_update`
             for leaf in self.iter_command_tree_leaves():
                 cfg_editor = self.load_cfg_editor_by_command(leaf)
-                for _, similar_cls_arg, similar_cls_arg_idx in cfg_editor.iter_arg_cls_definition(
+                for _, similar_cls_arg, similar_cls_arg_idx, _ in cfg_editor.iter_arg_cls_definition(
                         *leaf.names, cls_name_prefix=cls_name_prefix):
                     # search cls definition in command
                     # find sub arg by idx_suffix
@@ -683,7 +899,7 @@ class WorkspaceManager:
                     }
 
                     # search cls reference in command
-                    for _, _, ref_arg_idx in cfg_editor.iter_arg_cls_reference(*leaf.names, cls_name=similar_cls_arg.cls):
+                    for _, _, ref_arg_idx, _ in cfg_editor.iter_arg_cls_reference(*leaf.names, cls_name=similar_cls_arg.cls):
                         results[key][similar_arg.var].append(ref_arg_idx + idx_suffix)
 
         else:

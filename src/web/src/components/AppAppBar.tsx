@@ -67,9 +67,9 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                             variant="h6"
                             underline="none"
                             color="inherit"
-                            href="/?#/Generation"
+                            href="/?#/CLI"
                             fontWeight={
-                                this.props.pageName === "Generation" ? 
+                                this.props.pageName === "CLI" ? 
                                 theme.typography.fontWeightMedium : 
                                 theme.typography.fontWeightLight
                             }

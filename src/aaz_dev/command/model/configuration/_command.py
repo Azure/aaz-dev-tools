@@ -4,12 +4,17 @@ from schematics.models import Model
 from schematics.types import ModelType, ListType, PolyModelType, StringType
 
 from ._arg_group import CMDArgGroup
+from ._arg import CMDClsArgBase
 from ._condition import CMDCondition
-from ._fields import CMDDescriptionField, CMDVersionField, CMDCommandNameField, CMDBooleanField
-from ._operation import CMDOperation
-from ._output import CMDOutput
+from ._fields import CMDDescriptionField, CMDVersionField, CMDCommandNameField, CMDBooleanField, CMDConfirmation
+from ._operation import CMDOperation, CMDHttpOperation, CMDInstanceDeleteOperation
+from ._http_response_body import CMDHttpResponseJsonBody
+from ._schema import CMDClsSchemaBase, CMDArraySchemaBase, CMDStringSchemaBase, CMDObjectSchemaBase
+from ._output import CMDOutput, CMDArrayOutput, CMDObjectOutput, CMDStringOutput
 from ._resource import CMDResource
 from ._utils import CMDArgBuildPrefix, CMDDiffLevelEnum
+from ._subresource_selector import CMDSubresourceSelector, CMDJsonSubresourceSelector
+from ._selector_index import CMDArrayIndexBase, CMDObjectIndexBase, CMDObjectIndexDiscriminator, CMDObjectIndexAdditionalProperties
 from utils import exceptions
 
 logger = logging.getLogger('backend')
@@ -30,15 +35,26 @@ class CMDCommand(Model):
         deserialize_from='argGroups',
     )
     conditions = ListType(ModelType(CMDCondition))
+    subresource_selector = PolyModelType(
+        CMDSubresourceSelector,
+        allow_subclasses=True,
+        serialized_name="subresourceSelector",
+        deserialize_from="subresourceSelector"
+    )
     operations = ListType(PolyModelType(CMDOperation, allow_subclasses=True), min_size=1)
     outputs = ListType(PolyModelType(CMDOutput, allow_subclasses=True), min_size=1)  # support to add outputs in different formats, such table
 
-    confirmation = StringType(min_length=1)  # support to prompt for confirmation
+    confirmation = CMDConfirmation()  # support to prompt for confirmation - optional
 
     class Options:
         serialize_when_none = False
 
-    def generate_args(self, ref_args=None):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.arg_cls_register_map = None
+        self.schema_cls_register_map = None
+
+    def generate_args(self, ref_args=None, ref_options=None):
         if not ref_args:
             ref_args = []
             if self.arg_groups:
@@ -47,57 +63,95 @@ class CMDCommand(Model):
             ref_args = ref_args or None
 
         arguments = {}
-        for op in self.operations:
-            for arg in op.generate_args(ref_args=ref_args):
+        has_subresource = False
+        if self.subresource_selector:
+            has_subresource = True
+            for arg in self.subresource_selector.generate_args(ref_args=ref_args):
                 if arg.var not in arguments:
+                    if ref_options and arg.var in ref_options:
+                        # replace generated options by ref_options
+                        arg.options = [*ref_options[arg.var]]
+                    arguments[arg.var] = arg
+
+        for op in self.operations:
+            for arg in op.generate_args(ref_args=ref_args, has_subresource=has_subresource):
+                if arg.var not in arguments:
+                    if ref_options and arg.var in ref_options:
+                        # replace generated options by ref_options
+                        arg.options = [*ref_options[arg.var]]
                     arguments[arg.var] = arg
 
         arguments = self._handle_duplicated_options(arguments)
         self.arg_groups = self._build_arg_groups(arguments)
 
+    def generate_outputs(self, ref_outputs=None, pageable=None):
+        if not ref_outputs:
+            if self.outputs:
+                ref_outputs = [*self.outputs]
+
+        client_flatten = True
+        if ref_outputs and isinstance(ref_outputs[0], (CMDArrayOutput, CMDObjectOutput)):
+            client_flatten = ref_outputs[0].client_flatten
+
+        output = None
+        if self.subresource_selector:
+            delete_op = False
+            for op in self.operations:
+                if isinstance(op, CMDInstanceDeleteOperation):
+                    delete_op = True
+            # instance delete action does not need output
+            if not delete_op:
+                output = self._build_output_type_by_subresource_selector(self.subresource_selector)
+                output.ref = self.subresource_selector.var
+                output.client_flatten = client_flatten
+        else:
+            for op in self.operations:
+                if isinstance(op, CMDHttpOperation):
+                    op_output = self.build_output_by_operation(op, pageable, client_flatten)
+                    if op_output:
+                        output = op_output
+
+            if output and ref_outputs:
+                assert len(ref_outputs) == 1, "Only support one reference output"
+                ref_output = ref_outputs[0]
+                if isinstance(ref_output, CMDArrayOutput) and ref_output.ref.startswith(output.ref + '.'):
+                    # inherit pageable
+                    output = CMDArrayOutput()
+                    output.ref = ref_output.ref
+                    output.next_link = ref_output.next_link
+                    output.client_flatten = client_flatten
+
+        self.outputs = [output] if output else None
+
+    @classmethod
+    def build_output_by_operation(cls, op, pageable=None, client_flatten=True):
+        assert isinstance(op, CMDHttpOperation)
+        output = None
+        for resp in op.http.responses:
+            if resp.is_error:
+                continue
+            if resp.body is None:
+                continue
+            if isinstance(resp.body, CMDHttpResponseJsonBody):
+                body_json = resp.body.json
+                if pageable and pageable.item_name:
+                    output = CMDArrayOutput()
+                    output.ref = f"{body_json.var}.{pageable.item_name}"
+                    if pageable.next_link_name:
+                        output.next_link = f"{body_json.var}.{pageable.next_link_name}"
+                else:
+                    output = cls._build_output_type_schema(body_json.schema)
+                    output.ref = body_json.var
+                output.client_flatten = client_flatten
+            else:
+                raise NotImplementedError()
+        return output
+
     def reformat(self, **kwargs):
         self.resources = sorted(self.resources, key=lambda r: r.id)
         try:
-            if self.arg_groups:
-                used_options = set()
-                args_in_group = {}
-                for arg_group in self.arg_groups:
-                    for arg in arg_group.args:
-                        group_name = arg.group or ""
-                        if group_name not in args_in_group:
-                            args_in_group[group_name] = []
-                        args_in_group[group_name].append(arg)
-                        for option in arg.options:
-                            if option in used_options:
-                                raise exceptions.VerificationError(
-                                    message=f"Argument option '{option}' duplicated.",
-                                    details={
-                                        "type": "Argument",
-                                        "options": arg.options,
-                                        "var": arg.var,
-                                    }
-                                )
-                            used_options.add(option)
-                arg_groups = []
-                for group_name, args in args_in_group.items():
-                    arg_group = CMDArgGroup()
-                    arg_group.name = group_name
-                    arg_group.args = args
-                    arg_group.reformat(**kwargs)
-                    arg_groups.append(arg_group)
-                self.arg_groups = sorted(arg_groups, key=lambda a: a.name)
-
-            if self.operations:
-                schema_cls_map = {}
-                for operation in self.operations:
-                    operation.reformat(schema_cls_map=schema_cls_map, **kwargs)
-
-                for key, value in schema_cls_map.items():
-                    if value is None:
-                        raise exceptions.VerificationError(
-                            message=f"Schema Class '{key}' not defined.",
-                            details=None
-                        )
+            self._reformat_arg_groups(**kwargs)
+            self._reformat_operations(**kwargs)
         except exceptions.VerificationError as err:
             err.payload['details'] = {
                 "type": "Command",
@@ -106,6 +160,93 @@ class CMDCommand(Model):
                 "details": err.payload['details']
             }
             raise err
+
+    def _reformat_arg_groups(self, **kwargs):
+        if not self.arg_groups:
+            return
+
+        used_options = set()
+        args_in_group = {}
+        for arg_group in self.arg_groups:
+            for arg in arg_group.args:
+                group_name = arg.group or ""
+                if group_name not in args_in_group:
+                    args_in_group[group_name] = []
+                args_in_group[group_name].append(arg)
+                for option in arg.options:
+                    if option in used_options:
+                        raise exceptions.VerificationError(
+                            message=f"Argument option '{option}' duplicated.",
+                            details={
+                                "type": "Argument",
+                                "options": arg.options,
+                                "var": arg.var,
+                            }
+                        )
+                    used_options.add(option)
+        arg_groups = []
+        for group_name, args in args_in_group.items():
+            arg_group = CMDArgGroup()
+            arg_group.name = group_name
+            arg_group.args = args
+            arg_group.reformat(**kwargs)
+            arg_groups.append(arg_group)
+        self.arg_groups = sorted(arg_groups, key=lambda a: a.name)
+
+    def _reformat_operations(self, **kwargs):
+        if not self.operations:
+            return
+        schema_cls_map = {}
+        for operation in self.operations:
+            operation.reformat(schema_cls_map=schema_cls_map, **kwargs)
+
+        for key, value in schema_cls_map.items():
+            if value is None:
+                raise exceptions.VerificationError(
+                    message=f"ReformatError: Schema Class '{key}' not defined.",
+                    details=None
+                )
+
+    def link(self):
+        self.arg_cls_register_map = {}
+        self.schema_cls_register_map = {}
+
+        if self.arg_groups:
+            arg_cls_register_map = {}
+            for arg_group in self.arg_groups:
+                arg_group.register_cls(cls_register_map=arg_cls_register_map)
+
+            for key, value in arg_cls_register_map.items():
+                implement = value["implement"]
+                refers = value["refers"]
+                if implement is None:
+                    raise exceptions.VerificationError(
+                        message=f"LinkError: Argument Class '{key}' not defined.",
+                        details=None
+                    )
+                for refer in refers:
+                    assert isinstance(refer, CMDClsArgBase)
+                    refer.implement = implement
+
+            self.arg_cls_register_map = arg_cls_register_map
+
+        if self.operations:
+            schema_cls_register_map = {}
+            for operation in self.operations:
+                operation.register_cls(cls_register_map=schema_cls_register_map)
+            for key, value in schema_cls_register_map.items():
+                implement = value["implement"]
+                refers = value["refers"]
+                if implement is None:
+                    raise exceptions.VerificationError(
+                        message=f"LinkError: Schema Class '{key}' not defined.",
+                        details=None
+                    )
+                for refer in refers:
+                    assert isinstance(refer, CMDClsSchemaBase)
+                    refer.implement = implement
+
+            self.schema_cls_register_map = schema_cls_register_map
 
     def _handle_duplicated_options(self, arguments):
         # check argument with duplicated option names
@@ -158,22 +299,27 @@ class CMDCommand(Model):
             groups.append(group)
         return groups or None
 
-    @staticmethod
-    def _can_replace_argument(arg, old_arg):
+    def _can_replace_argument(self, arg, old_arg):
         arg_prefix = arg.var.split('.')[0]
         old_prefix = old_arg.var.split('.')[0]
+
         if old_prefix in (CMDArgBuildPrefix.Query, CMDArgBuildPrefix.Header, CMDArgBuildPrefix.Path):
             # replace argument should only be in body
             return False
+
         if arg_prefix in (CMDArgBuildPrefix.Query, CMDArgBuildPrefix.Header):
             # only support path argument to replace
             return False
 
         elif arg_prefix == CMDArgBuildPrefix.Path:
             # path argument
+            if self.subresource_selector is not None:
+                return False
+
             arg_schema_required = arg.ref_schema.required
             arg_schema_name = arg.ref_schema.name
             try:
+                # temporary assign required and name for diff
                 arg.ref_schema.required = old_arg.ref_schema.required
                 if old_arg.ref_schema.name == "name" and "name" in arg.options:
                     arg.ref_schema.name = "name"
@@ -190,3 +336,55 @@ class CMDCommand(Model):
             if diff:
                 return False
             return True
+
+    @staticmethod
+    def _build_output_type_schema(schema):
+        if isinstance(schema, CMDClsSchemaBase):
+            schema = schema.implement
+            assert schema is not None
+
+        if isinstance(schema, CMDArraySchemaBase):
+            output = CMDArrayOutput()
+        elif isinstance(schema, CMDObjectSchemaBase):
+            output = CMDObjectOutput()
+        elif isinstance(schema, CMDStringSchemaBase):
+            output = CMDStringOutput()
+        else:
+            raise exceptions.InvalidAPIUsage(
+                f"Invalid output schema, not support: {schema.type}"
+            )
+        return output
+
+    @staticmethod
+    def _build_output_type_by_subresource_selector(subresource_selector):
+        if isinstance(subresource_selector, CMDJsonSubresourceSelector):
+            index = subresource_selector.json
+            pref_index = None
+            while index:
+                pref_index = index
+                index = None
+                if isinstance(pref_index, CMDObjectIndexBase):
+                    if pref_index.prop:
+                        index = pref_index.prop
+                    elif pref_index.discriminator:
+                        index = pref_index.discriminator
+                    elif pref_index.additional_props:
+                        if pref_index.additional_props.item:
+                            index = pref_index.additional_props.item
+                elif isinstance(pref_index, CMDObjectIndexDiscriminator):
+                    if pref_index.prop:
+                        index = pref_index.prop
+                    elif pref_index.discriminator:
+                        index = pref_index.discriminator
+                elif isinstance(pref_index, CMDArrayIndexBase):
+                    if pref_index.item:
+                        index = pref_index.item
+                else:
+                    raise NotImplementedError()
+            if isinstance(pref_index, (CMDObjectIndexBase, CMDObjectIndexDiscriminator)):
+                output = CMDObjectOutput()
+            elif isinstance(pref_index, CMDArrayIndexBase):
+                output = CMDArrayOutput()
+        else:
+            raise NotImplementedError()
+        return output

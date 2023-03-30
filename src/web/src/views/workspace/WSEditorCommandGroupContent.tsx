@@ -37,6 +37,7 @@ const commandPrefix = 'az '
 interface WSEditorCommandGroupContentProps {
     workspaceUrl: string
     commandGroup: CommandGroup
+    reloadTimestamp: number
     onUpdateCommandGroup: (commandGroup: CommandGroup | null) => void
 }
 

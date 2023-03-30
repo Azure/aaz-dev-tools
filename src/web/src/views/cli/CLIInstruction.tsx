@@ -14,12 +14,12 @@ const SpacePadding = styled(Box)(({ theme }) => ({
     width: '3vh'
 }));
 
-class GenerationInstruction extends React.Component {
+class CLIInstruction extends React.Component {
 
     render() {
         return (
             <React.Fragment>
-                <AppAppBar pageName={'Generation'} />
+                <AppAppBar pageName={'CLI'} />
                 <PageLayout>
                     <Box sx={{
                         display: 'flex',
@@ -62,4 +62,4 @@ class GenerationInstruction extends React.Component {
     }
 }
 
-export default GenerationInstruction;
+export default CLIInstruction;

@@ -25,7 +25,7 @@ class AAZErrorFormatEnum:
             schema = props['error']
             if isinstance(schema, CMDClsSchemaBase):
                 schema = builder.get_cls_definition_model(schema)
-            if not isinstance(schema, CMDObjectSchema):
+            if not isinstance(schema, CMDObjectSchemaBase):
                 return None
 
         prop_keys = set()

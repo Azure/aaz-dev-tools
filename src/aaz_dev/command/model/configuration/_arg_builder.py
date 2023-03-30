@@ -1,10 +1,10 @@
 import re
 
-# import inflect
+import inflect
 from utils.case import to_camel_case
 
 from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgDefault, CMDBooleanArgBase, \
-    CMDArgBlank, CMDObjectArgAdditionalProperties, CMDResourceLocationArgBase
+    CMDArgBlank, CMDObjectArgAdditionalProperties, CMDResourceLocationArgBase, CMDClsArgBase
 from ._format import CMDFormat
 from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
     CMDArraySchemaBase, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema, CMDBooleanSchemaBase, \
@@ -12,7 +12,7 @@ from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaB
 
 
 class CMDArgBuilder:
-    # _inflect_engine = inflect.engine()
+    _inflect_engine = inflect.engine()
 
     @classmethod
     def new_builder(cls, schema, parent=None, var_prefix=None, ref_args=None, ref_arg=None, is_update_action=False):
@@ -26,7 +26,7 @@ class CMDArgBuilder:
 
         if parent is None or parent._arg_var is None:
             if isinstance(schema, CMDSchema):
-                if not arg_var.endswith("$"):
+                if not arg_var.endswith("$") and not schema.name.startswith('[') and not schema.name.startswith('{'):
                     arg_var += '.'
                 arg_var += f'{schema.name}'.replace('$', '')  # some schema name may contain $
             else:
@@ -110,11 +110,15 @@ class CMDArgBuilder:
 
     def _need_flatten(self):
         if isinstance(self.schema, CMDObjectSchema):
+            if self.get_cls():
+                # not support to flatten object which is a cls.
+                return False
             if self._flatten is not None:
                 return self._flatten
             if self.schema.client_flatten:
                 return True
-            if self.schema.name == "properties":
+            if self.schema.name == "properties" and self.schema.props:
+                # flatten 'properties' property by default if it has props
                 return True
         if isinstance(self.schema, CMDObjectSchemaDiscriminator):
             return self._parent._flatten_discriminators
@@ -131,7 +135,7 @@ class CMDArgBuilder:
                 self.schema.arg = None
                 if arg.args:
                     for sub_arg in arg.args:
-                        if not sub_arg.group:
+                        if sub_arg.group is None:
                             sub_arg.group = to_camel_case(self.schema.name)
                         if not arg.required:
                             sub_arg.required = False
@@ -146,7 +150,16 @@ class CMDArgBuilder:
         assert isinstance(self.schema, (CMDObjectSchemaBase, CMDObjectSchemaDiscriminator))
         sub_args = []
         discriminator_mapping = {}
-        sub_ref_args = self._ref_arg.args if self._ref_arg else self._sub_ref_args
+        if self._ref_arg:
+            if isinstance(self._ref_arg, CMDClsArgBase):
+                # use the linked instance
+                unwrapped_ref_arg = self._ref_arg.get_unwrapped()
+                assert unwrapped_ref_arg is not None
+                sub_ref_args = unwrapped_ref_arg.args
+            else:
+                sub_ref_args = self._ref_arg.args
+        else:
+            sub_ref_args = self._sub_ref_args
 
         if self.schema.discriminators:
             # update self._flatten_discriminators, if any discriminator need flatten, then all discriminator needs to flatten
@@ -187,6 +200,12 @@ class CMDArgBuilder:
         else:
             return None
 
+    def get_any_type(self):
+        if hasattr(self.schema, "any_type") and self.schema.any_type and self.get_sub_item() is None:
+            return True
+        else:
+            return False
+
     def get_additional_props(self):
         if hasattr(self.schema, "additional_props") and self.schema.additional_props:
             sub_ref_arg = self._ref_arg.additional_props if self._ref_arg else None
@@ -219,10 +238,13 @@ class CMDArgBuilder:
         return False
 
     def get_default(self):
-        # if ref_arg has default value return it, else the default value depends on schema
         if self._ref_arg:
+            # ref_arg already has default value return it
             if self._ref_arg.default:
                 return CMDArgDefault(raw_data=self._ref_arg.default.to_native())
+        if self._is_update_action:
+            # ignore default for update actions
+            return None
         if hasattr(self.schema, 'default') and self.schema.default:
             return CMDArgDefault.build_default(self, self.schema.default)
         return None
@@ -269,7 +291,22 @@ class CMDArgBuilder:
         if isinstance(self.schema, CMDObjectSchemaDiscriminator):
             opt_name = self._build_option_name(self.schema.value)
         elif isinstance(self.schema, CMDSchema):
-            opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
+            name = self.schema.name.replace('$', '')
+            if name == "[Index]" or name == "{Key}":
+                assert self._arg_var.endswith(name)
+                prefix = self._arg_var[:-len(name)].split('.')[-1]
+                prefix = self._inflect_engine.singular_noun(prefix)
+                if name == "[Index]":
+                    name = f'{prefix}-index'
+                elif name == "{Key}":
+                    name = f'{prefix}-key'
+            elif name.startswith('[].') or name.startswith('{}.'):
+                assert self._arg_var.endswith(name)
+                prefix = self._arg_var[:-len(name)].split('.')[-1]
+                prefix = self._inflect_engine.singular_noun(prefix)
+                name = prefix + name[2:]
+            name = name.replace('.', '-')
+            opt_name = self._build_option_name(name)  # some schema name may contain $
         else:
             raise NotImplementedError()
         return [opt_name, ]
@@ -295,8 +332,13 @@ class CMDArgBuilder:
 
         if hasattr(self.schema, 'description') and self.schema.description:
             h = CMDArgumentHelp()
-            h.short = self.schema.description
+            h.short = self.schema.description.replace('\n', ' ')
             return h
+        return None
+
+    def get_group(self):
+        if self._ref_arg:
+            return self._ref_arg.group
         return None
 
     def get_fmt(self):
@@ -328,14 +370,12 @@ class CMDArgBuilder:
 
     def get_reverse_boolean(self):
         assert isinstance(self.schema, CMDBooleanSchemaBase)
-        if self._ref_arg:
-            assert isinstance(self._ref_arg, CMDBooleanArgBase)
+        if self._ref_arg and isinstance(self._ref_arg, CMDBooleanArgBase):
             return self._ref_arg.reverse
         return False
 
     def get_resource_location_no_rg_default(self):
         assert isinstance(self.schema, CMDResourceLocationSchemaBase)
-        if self._ref_arg:
-            assert isinstance(self._ref_arg, CMDResourceLocationArgBase)
+        if self._ref_arg and isinstance(self._ref_arg, CMDResourceLocationArgBase):
             return self._ref_arg.no_rg_default
         return False

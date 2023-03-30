@@ -4,6 +4,8 @@ from schematics.types import PolyModelType, ModelType, ListType, StringType
 from ._fields import CMDVariantField, CMDDescriptionField
 from ._http import CMDHttpAction
 from ._instance_update import CMDInstanceUpdateAction
+from ._instance_create import CMDInstanceCreateAction
+from ._instance_delete import CMDInstanceDeleteAction
 
 
 class CMDOperation(Model):
@@ -26,11 +28,14 @@ class CMDOperation(Model):
             return hasattr(data, cls.POLYMORPHIC_KEY)
         return False
 
-    def generate_args(self, ref_args):
+    def generate_args(self, ref_args, has_subresource):
         raise NotImplementedError()
 
     def reformat(self, **kwargs):
         raise NotImplementedError()
+
+    def register_cls(self, **kwargs):
+        return NotImplementedError()
 
 
 class CMDHttpOperationLongRunning(Model):
@@ -71,11 +76,35 @@ class CMDHttpOperation(CMDOperation):
     # properties as nodes
     http = ModelType(CMDHttpAction, required=True)
 
-    def generate_args(self, ref_args):
-        return self.http.generate_args(ref_args=ref_args)
+    def generate_args(self, ref_args, has_subresource):
+        return self.http.generate_args(ref_args=ref_args, has_subresource=has_subresource)
 
     def reformat(self, **kwargs):
         self.http.reformat(**kwargs)
+
+    def register_cls(self, **kwargs):
+        self.http.register_cls(**kwargs)
+
+
+class CMDInstanceCreateOperation(CMDOperation):
+    POLYMORPHIC_KEY = "instanceCreate"
+
+    instance_create = PolyModelType(
+        CMDInstanceCreateAction,
+        allow_subclasses=True,
+        required=True,
+        serialized_name="instanceCreate",
+        deserialize_from="instanceCreate"
+    )
+
+    def generate_args(self, ref_args, has_subresource):
+        return self.instance_create.generate_args(ref_args=ref_args)
+
+    def reformat(self, **kwargs):
+        self.instance_create.reformat(**kwargs)
+
+    def register_cls(self, **kwargs):
+        self.instance_create.register_cls(**kwargs)
 
 
 class CMDInstanceUpdateOperation(CMDOperation):
@@ -90,8 +119,32 @@ class CMDInstanceUpdateOperation(CMDOperation):
         deserialize_from="instanceUpdate"
     )
 
-    def generate_args(self, ref_args):
+    def generate_args(self, ref_args, has_subresource):
         return self.instance_update.generate_args(ref_args=ref_args)
 
     def reformat(self, **kwargs):
         self.instance_update.reformat(**kwargs)
+
+    def register_cls(self, **kwargs):
+        self.instance_update.register_cls(**kwargs)
+
+
+class CMDInstanceDeleteOperation(CMDOperation):
+    POLYMORPHIC_KEY = "instanceDelete"
+
+    instance_delete = PolyModelType(
+        CMDInstanceDeleteAction,
+        allow_subclasses=True,
+        required=True,
+        serialized_name="instanceDelete",
+        deserialize_from="instanceDelete"
+    )
+
+    def generate_args(self, ref_args, has_subresource):
+        return self.instance_delete.generate_args(ref_args=ref_args)
+
+    def reformat(self, **kwargs):
+        self.instance_delete.reformat(**kwargs)
+
+    def register_cls(self, **kwargs):
+        self.instance_delete.register_cls(**kwargs)

@@ -1737,34 +1737,63 @@ class APIEditorTest(CommandTestCase):
             rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Arguments/{arg.var}/FindSimilar")
             self.assertTrue(rv.status_code == 200)
             results = rv.get_json()
-            assert results == {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {'workspace': {'commands': {'create': {'args': {'$Path.workspaceName': ['workspace-name']}, 'names': ['data-bricks', 'workspace', 'create']}, 'delete': {'args': {'$Path.workspaceName': ['workspace-name']}, 'names': ['data-bricks', 'workspace', 'delete']}, 'show': {'args': {'$Path.workspaceName': ['workspace-name']}, 'names': ['data-bricks', 'workspace', 'show']}, 'update': {'args': {'$Path.workspaceName': ['workspace-name']}, 'names': ['data-bricks', 'workspace', 'update']}}}}}}}}
+            self.assertEqual(results, {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {
+                'workspace': {'commands': {
+                    'create': {'args': {'$Path.workspaceName': ['workspace-name']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create', 'names': ['data-bricks', 'workspace', 'create']},
+                    'delete': {'args': {'$Path.workspaceName': ['workspace-name']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/delete', 'names': ['data-bricks', 'workspace', 'delete']},
+                    'show': {'args': {'$Path.workspaceName': ['workspace-name']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/show', 'names': ['data-bricks', 'workspace', 'show']},
+                    'update': {'args': {'$Path.workspaceName': ['workspace-name']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/update', 'names': ['data-bricks', 'workspace', 'update']}
+                }, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz'}})
 
             arg = cfg_editor.find_arg(*leaf.names, idx='resource-group')
             rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Arguments/{arg.var}/FindSimilar")
             self.assertTrue(rv.status_code == 200)
             results = rv.get_json()
-            assert results == {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {'workspace': {'commandGroups': {'vnet-peering': {'commands': {'create': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'names': ['data-bricks', 'workspace', 'vnet-peering', 'create']}, 'delete': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'names': ['data-bricks', 'workspace', 'vnet-peering', 'delete']}, 'list': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'names': ['data-bricks', 'workspace', 'vnet-peering', 'list']}, 'show': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'names': ['data-bricks', 'workspace', 'vnet-peering', 'show']}, 'update': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'names': ['data-bricks', 'workspace', 'vnet-peering', 'update']}}}}, 'commands': {'create': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'names': ['data-bricks', 'workspace', 'create']}, 'delete': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'names': ['data-bricks', 'workspace', 'delete']}, 'list': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'names': ['data-bricks', 'workspace', 'list']}, 'show': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'names': ['data-bricks', 'workspace', 'show']}, 'update': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'names': ['data-bricks', 'workspace', 'update']}}}}}}}}
+            self.maxDiff = 100000
+            self.assertEqual(results, {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {'workspace': {
+                'commandGroups': {'vnet-peering': {'commands': {
+                    'create': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/create', 'names': ['data-bricks', 'workspace', 'vnet-peering', 'create']},
+                    'delete': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/delete', 'names': ['data-bricks', 'workspace', 'vnet-peering', 'delete']},
+                    'list': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/list', 'names': ['data-bricks', 'workspace', 'vnet-peering', 'list']},
+                    'show': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/show', 'names': ['data-bricks', 'workspace', 'vnet-peering', 'show']},
+                    'update': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/update', 'names': ['data-bricks', 'workspace', 'vnet-peering', 'update']}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering'}},
+                'commands': {
+                    'create': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create', 'names': ['data-bricks', 'workspace', 'create']},
+                    'delete': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/delete', 'names': ['data-bricks', 'workspace', 'delete']},
+                    'list': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/list', 'names': ['data-bricks', 'workspace', 'list']},
+                    'show': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/show', 'names': ['data-bricks', 'workspace', 'show']},
+                    'update': {'args': {'$Path.resourceGroupName': ['resource-group']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/update', 'names': ['data-bricks', 'workspace', 'update']}
+                }, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz'}})
 
             arg = cfg_editor.find_arg(*leaf.names, idx='authorizations[].principal-id')
             rv = c.post(
                 f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Arguments/{arg.var}/FindSimilar")
             self.assertTrue(rv.status_code == 200)
             results = rv.get_json()
-            assert results == {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {'workspace': {'commands': {'create': {'args': {'$parameters.properties.authorizations[].principalId': ['authorizations[].principal-id']}, 'names': ['data-bricks', 'workspace', 'create']}, 'update': {'args': {'$parameters.properties.authorizations[].principalId': ['authorizations[].principal-id']}, 'names': ['data-bricks', 'workspace', 'update']}}}}}}}}
+            self.assertTrue(results, {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {'workspace': {'commands': {
+                'create': {'args': {'$parameters.properties.authorizations[].principalId': ['authorizations[].principal-id']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create', 'names': ['data-bricks', 'workspace', 'create']},
+                'update': {'args': {'$parameters.properties.authorizations[].principalId': ['authorizations[].principal-id']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/update', 'names': ['data-bricks', 'workspace', 'update']}
+            }, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz'}})
 
             arg = cfg_editor.find_arg(*leaf.names, idx='parameters.aml-workspace-id')
             rv = c.post(
                 f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Arguments/{arg.var}/FindSimilar")
             self.assertTrue(rv.status_code == 200)
             results = rv.get_json()
-            assert results == {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {'workspace': {'commands': {'create': {'args': {'$parameters.properties.parameters.amlWorkspaceId': ['parameters.aml-workspace-id']}, 'names': ['data-bricks', 'workspace', 'create']}, 'update': {'args': {'$parameters.properties.parameters.amlWorkspaceId': ['parameters.aml-workspace-id']}, 'names': ['data-bricks', 'workspace', 'update']}}}}}}}}
+            self.assertEqual(results, {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {'workspace': {'commands': {
+                'create': {'args': {'$parameters.properties.parameters.amlWorkspaceId': ['parameters.aml-workspace-id']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create', 'names': ['data-bricks', 'workspace', 'create']},
+                'update': {'args': {'$parameters.properties.parameters.amlWorkspaceId': ['parameters.aml-workspace-id']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/update', 'names': ['data-bricks', 'workspace', 'update']}
+            }, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz'}})
 
             arg = cfg_editor.find_arg(*leaf.names, idx='parameters.aml-workspace-id.value')
             rv = c.post(
                 f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Arguments/{arg.var}/FindSimilar")
             self.assertTrue(rv.status_code == 200)
             results = rv.get_json()
-            assert results == {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {'workspace': {'commands': {'create': {'args': {'@WorkspaceCustomStringParameter_create.value': ['parameters.aml-workspace-id.value', 'parameters.custom-private-subnet-name.value', 'parameters.custom-public-subnet-name.value', 'parameters.custom-virtual-network-id.value', 'parameters.load-balancer-backend-pool-name.value', 'parameters.load-balancer-id.value', 'parameters.nat-gateway-name.value', 'parameters.public-ip-name.value', 'parameters.storage-account-name.value', 'parameters.storage-account-sku-name.value', 'parameters.vnet-address-prefix.value']}, 'names': ['data-bricks', 'workspace', 'create']}, 'update': {'args': {'@WorkspaceCustomStringParameter_update.value': ['parameters.aml-workspace-id.value', 'parameters.custom-private-subnet-name.value', 'parameters.custom-public-subnet-name.value', 'parameters.custom-virtual-network-id.value', 'parameters.load-balancer-backend-pool-name.value', 'parameters.load-balancer-id.value', 'parameters.nat-gateway-name.value', 'parameters.public-ip-name.value', 'parameters.storage-account-name.value', 'parameters.storage-account-sku-name.value', 'parameters.vnet-address-prefix.value']}, 'names': ['data-bricks', 'workspace', 'update']}}}}}}}}
+            self.assertEqual(results, {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {'workspace': {'commands': {
+                'create': {'args': {'@WorkspaceCustomStringParameter_create.value': ['parameters.aml-workspace-id.value', 'parameters.custom-private-subnet-name.value', 'parameters.custom-public-subnet-name.value', 'parameters.custom-virtual-network-id.value', 'parameters.load-balancer-backend-pool-name.value', 'parameters.load-balancer-id.value', 'parameters.nat-gateway-name.value', 'parameters.public-ip-name.value', 'parameters.storage-account-name.value', 'parameters.storage-account-sku-name.value', 'parameters.vnet-address-prefix.value']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create', 'names': ['data-bricks', 'workspace', 'create']},
+                'update': {'args': {'@WorkspaceCustomStringParameter_update.value': ['parameters.aml-workspace-id.value', 'parameters.custom-private-subnet-name.value', 'parameters.custom-public-subnet-name.value', 'parameters.custom-virtual-network-id.value', 'parameters.load-balancer-backend-pool-name.value', 'parameters.load-balancer-id.value', 'parameters.nat-gateway-name.value', 'parameters.public-ip-name.value', 'parameters.storage-account-name.value', 'parameters.storage-account-sku-name.value', 'parameters.vnet-address-prefix.value']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/update', 'names': ['data-bricks', 'workspace', 'update']}
+            }, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz'}})
 
             leaf = manager.find_command_tree_leaf('data-bricks', 'workspace', 'vnet-peering', 'create')
             cfg_editor = manager.load_cfg_editor_by_command(leaf)
@@ -1774,11 +1803,102 @@ class APIEditorTest(CommandTestCase):
                 f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/create/Arguments/{arg.var}/FindSimilar")
             self.assertTrue(rv.status_code == 200)
             results = rv.get_json()
-            assert results == {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {'workspace': {'commandGroups': {'vnet-peering': {'commands': {'create': {'args': {'$VirtualNetworkPeeringParameters.properties.databricksAddressSpace': ['databricks-address-space']}, 'names': ['data-bricks', 'workspace', 'vnet-peering', 'create']}, 'update': {'args': {'$VirtualNetworkPeeringParameters.properties.databricksAddressSpace': ['databricks-address-space']}, 'names': ['data-bricks', 'workspace', 'vnet-peering', 'update']}}}}}}}}}}
+            self.assertEqual(results, {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {'workspace': {'commandGroups': {'vnet-peering': {'commands': {
+                'create': {'args': {'$VirtualNetworkPeeringParameters.properties.databricksAddressSpace': ['databricks-address-space']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/create', 'names': ['data-bricks', 'workspace', 'vnet-peering', 'create']},
+                'update': {'args': {'$VirtualNetworkPeeringParameters.properties.databricksAddressSpace': ['databricks-address-space']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/update', 'names': ['data-bricks', 'workspace', 'vnet-peering', 'update']}
+            }, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz'}})
 
             arg = cfg_editor.find_arg(*leaf.names, idx='databricks-address-space.address-prefixes')
             rv = c.post(
                 f"{ws_url}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/create/Arguments/{arg.var}/FindSimilar")
             self.assertTrue(rv.status_code == 200)
             results = rv.get_json()
-            assert results == {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {'workspace': {'commandGroups': {'vnet-peering': {'commands': {'create': {'args': {'@AddressSpace_create.addressPrefixes': ['databricks-address-space.address-prefixes', 'remote-address-space.address-prefixes']}, 'names': ['data-bricks', 'workspace', 'vnet-peering', 'create']}, 'update': {'args': {'@AddressSpace_update.addressPrefixes': ['databricks-address-space.address-prefixes', 'remote-address-space.address-prefixes']}, 'names': ['data-bricks', 'workspace', 'vnet-peering', 'update']}}}}}}}}}}
+            self.assertEqual(results, {'aaz': {'commandGroups': {'data-bricks': {'commandGroups': {'workspace': {'commandGroups': {'vnet-peering': {'commands': {
+                'create': {'args': {'@AddressSpace_create.addressPrefixes': ['databricks-address-space.address-prefixes', 'remote-address-space.address-prefixes']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/create', 'names': ['data-bricks', 'workspace', 'vnet-peering', 'create']},
+                'update': {'args': {'@AddressSpace_update.addressPrefixes': ['databricks-address-space.address-prefixes', 'remote-address-space.address-prefixes']}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/update', 'names': ['data-bricks', 'workspace', 'vnet-peering', 'update']}
+            }, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks/workspace'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz/data-bricks'}}, 'id': f'/AAZ/Editor/Workspaces/{ws_name}/CommandTree/Nodes/aaz'}})
+
+    @workspace_name("test_workspace_add_subresource_commands")
+    def test_workspace_add_subresource_commands(self, ws_name):
+        module = "cdn"
+        api_version = '2021-06-01'
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum.Mgmt,
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws = rv.get_json()
+            ws_url = ws['url']
+            resource_id = swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}')
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': module,
+                'version': api_version,
+                'resources': [
+                    {'id': resource_id},
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints')},
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(api_version)}/Subresources", json={
+                'arg': '$endpoint.properties.originGroups',
+                'commandGroupName': 'cdn profile endpoint origin-group',
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            node = rv.get_json()
+            cg = node['commandGroups']
+            self.assertTrue(len(cg) == 1 and 'cdn' in cg)
+
+            cg = cg['cdn']['commandGroups']['profile']['commandGroups']['endpoint']['commandGroups']
+            self.assertTrue(len(cg) == 1 and 'origin-group' in cg)
+            commands = cg['origin-group']['commands']
+            self.assertTrue(len(commands) == 5 and set(commands.keys()) == {'create', 'delete', 'list', 'show', 'update'})
+            for cmd_name in ('create', 'delete', 'show', 'update'):
+                self.assertEqual(len(commands[cmd_name]['resources']), 1)
+                self.assertEqual(commands[cmd_name]['resources'][0]['version'], api_version)
+                self.assertEqual(commands[cmd_name]['resources'][0]['id'], resource_id)
+                self.assertEqual(commands[cmd_name]['resources'][0]['subresource'], 'properties.originGroups[]')
+            for cmd_name in ('list',):
+                self.assertEqual(len(commands[cmd_name]['resources']), 1)
+                self.assertEqual(commands[cmd_name]['resources'][0]['version'], api_version)
+                self.assertEqual(commands[cmd_name]['resources'][0]['id'], resource_id)
+                self.assertEqual(commands[cmd_name]['resources'][0]['subresource'], 'properties.originGroups')
+
+            rv = c.get(f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(api_version)}/Commands")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(len(data) == 9)
+
+            rv = c.get(f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(api_version)}/Subresources/{b64encode_str('properties.originGroups')}/Commands")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(len(data) == 1)
+
+            rv = c.get(
+                f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(api_version)}/Subresources/{b64encode_str('properties.originGroups[]')}/Commands")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(len(data) == 4)
+
+            rv = c.delete(
+                f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(api_version)}/Subresources/{b64encode_str('properties.originGroups')}")
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(api_version)}/Commands")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(len(data) == 8)
+
+            rv = c.delete(
+                f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(api_version)}/Subresources/{b64encode_str('properties.originGroups[]')}")
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/Resources/{b64encode_str(resource_id)}/V/{b64encode_str(api_version)}/Commands")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertTrue(len(data) == 4)

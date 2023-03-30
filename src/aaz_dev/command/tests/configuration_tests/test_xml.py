@@ -19,9 +19,8 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
         resource_id = "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}"
 
         generator = CommandGenerator()
-        specs_manager = SwaggerSpecsManager()
-        resource = specs_manager.get_resource_in_version(
-            plane=PlaneEnum.Mgmt, mod_names="network", resource_id=resource_id, version="2021-05-01")
+        specs_module_manager = SwaggerSpecsManager().get_module_manager(plane=PlaneEnum.Mgmt, mod_names="network")
+        resource = specs_module_manager.get_resource_in_version(resource_id=resource_id, version="2021-05-01")
 
         generator.load_resources([resource])
         command_group = generator.create_draft_command_group(resource)

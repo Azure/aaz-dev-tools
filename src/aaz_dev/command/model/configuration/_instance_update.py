@@ -13,7 +13,7 @@ class CMDInstanceUpdateAction(Model):
     POLYMORPHIC_KEY = None
 
     # properties as tags
-    instance = CMDVariantField(required=True)
+    ref = CMDVariantField(required=True, deserialize_from=["ref", "instance"])
 
     @classmethod
     def _claim_polymorphic(cls, data):
@@ -32,6 +32,9 @@ class CMDInstanceUpdateAction(Model):
     def reformat(self, **kwargs):
         raise NotImplementedError()
 
+    def register_cls(self, **kwargs):
+        return NotImplementedError()
+
 
 # json instance update
 class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
@@ -45,3 +48,6 @@ class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
 
     def reformat(self, **kwargs):
         self.json.reformat(**kwargs)
+
+    def register_cls(self, **kwargs):
+        self.json.register_cls(**kwargs)

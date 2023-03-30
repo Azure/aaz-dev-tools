@@ -1,9 +1,9 @@
 # Microsoft Atomic Azure CLI Dev Tools
 
-The *aaz-dev* tool is designed to generate atomic Azure CLI commands from OpenAPI specifications. For more information, please refer to [Introduction](./src/aaz_dev/docs/Docs#introduction-to-aazdev). 
+The *aaz-dev* tool is designed to generate atomic Azure CLI commands from OpenAPI specifications. For more information, please refer to [Doc](./src/aaz_dev/docs/Docs#introduction-to-aazdev) or [Video](https://msit.microsoftstream.com/video/d8c50840-98dc-a27a-806a-f1ed2daa33a9)
 
 ## Installation
-Currently, we can install it with a [.whl file](https://github.com/kairu-ms/aaz-dev-tools/releases). Later on, we'll publish it to PyPI to support *pip install* way of installation.
+Currently, we can install it with a [.whl file](https://github.com/Azure/aaz-dev-tools/releases). Later on, we'll publish it to PyPI to support *pip install* way of installation.
 
 ## Setting up your development environment
 
@@ -13,7 +13,7 @@ Please `Fork` the following repos in your github account and `Clone` them in you
    
    - [Azure CLI](https://github.com/Azure/azure-cli)
    - [Azure CLI Extension](https://github.com/Azure/azure-cli-extensions)
-   - [AAZ](https://github.com/kairu-ms/aaz): Used to upload the command model generated.
+   - [AAZ](https://github.com/Azure/aaz): Used to upload the command model generated.
    - [azure-rest-api-specs](https://github.com/Azure/azure-rest-api-specs) or [azure-rest-api-specs-pr](https://github.com/Azure/azure-rest-api-specs-pr)
 
 After clone you can add `upstream` for every repos in your local clone by using `git remote add upstream`.
@@ -21,12 +21,12 @@ After clone you can add `upstream` for every repos in your local clone by using 
 ### 2 Setup python
 
 #### 2.1 Install python
-Please install python with version >= 3.7 in your local machine.
+Please install python with version >= 3.8 in your local machine.
 
 - For windows: You can download and run full installer from [Python Download](https://www.python.org/downloads/).
 - For linux: You can install python from Package Manager or build a stable relase from source code
 
-Check the version of python, make use it's not less than 3.7.
+Check the version of python, make use it's not less than 3.8.
 - For windows:
     You can run:
     ```PowerShell
@@ -91,17 +91,25 @@ pip install azdev
 - For Windows
     - Powershell
     ```
-    pip install $(Invoke-WebRequest https://api.github.com/repos/kairu-ms/aaz-dev-tools/releases/latest -UseBasicParsing | % { $_.Content } | ConvertFrom-Json | % { $_.assets.browser_download_url } | Select-String -Pattern "https.*.whl" -AllMatches | % { $_.Matches } | % { $_.Value })
+    pip install $(Invoke-WebRequest https://api.github.com/repos/Azure/aaz-dev-tools/releases/latest -UseBasicParsing | % { $_.Content } | ConvertFrom-Json | % { $_.assets.browser_download_url } | Select-String -Pattern "https.*.whl" -AllMatches | % { $_.Matches } | % { $_.Value })
     ```
     - Command Prompt
     ```
-    curl https://api.github.com/repos/kairu-ms/aaz-dev-tools/releases/latest -s | findstr https.*.whl
+    curl https://api.github.com/repos/Azure/aaz-dev-tools/releases/latest -s | findstr https.*.whl
     pip install {the url find in above command}
     ```
 - For linux
     ```bash
-    pip install $(curl https://api.github.com/repos/kairu-ms/aaz-dev-tools/releases/latest -s | grep -o "https.*.whl")
+    pip install $(curl https://api.github.com/repos/Azure/aaz-dev-tools/releases/latest -s | grep -o "https.*.whl")
     ```
+#### 4.3 Set up build env
+- For linux users, set up python3 build tools would avoid other unseen installation issues
+  ```
+  Ubuntu: apt-get install python3-dev build-essential
+  Centos: yum install python3-devel
+  ```
+#### 4.4 Possible problems
+- For windows users, dependency python-levenshtein installation might run into trouble. developers might need to download [.whl](https://www.lfd.uci.edu/~gohlke/pythonlibs/#python-levenshtein) file and install it manually (reference to [link](https://stackoverflow.com/questions/37676623/cant-install-levenshtein-distance-package-on-windows-python-3-5/46414982))
 
 ### 5. Code repos setup
 
@@ -146,11 +154,11 @@ After finish the development, you should push the change in your forked repos fi
 
 - azure-cli: create a Pull Request to `dev` branch of `Azure/azure-cli`
 - azure-cli-extensions: create a Pull Request to `main` branch of `Azure/azure-cli-extensions` 
-- aaz: create a Pull Request to `main` branch of `kairu-ms/azz`
+- aaz: create a Pull Request to `main` branch of `Azure/azz`
 
 
 ## Reporting issues and feedback
-If you encounter any bugs with the tool please file an issue in the [Issues](https://github.com/kairu-ms/aaz-dev-tools/issues) section of our GitHub repository.
+If you encounter any bugs with the tool please file an issue in the [Issues](https://github.com/Azure/aaz-dev-tools/issues) section of our GitHub repository.
 
 ## License
 ```

@@ -8,13 +8,13 @@ from command.model.configuration import CMDSchemaDefault, \
     CMDStringSchema, CMDResourceIdSchema, CMDResourceIdFormat, \
     CMDResourceLocationSchema, \
     CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, CMDObjectSchemaAdditionalProperties, \
-    CMDArraySchemaBase, CMDObjectSchema, CMDIdentityObjectSchema, CMDIdentityObjectSchemaBase
+    CMDArraySchemaBase, CMDObjectSchema, CMDIdentityObjectSchema, CMDIdentityObjectSchemaBase, CMDClsSchemaBase
 from command.model.configuration import CMDSchemaEnum, CMDSchemaEnumItem, CMDSchema, CMDSchemaBase
 from swagger.utils import exceptions
 from .external_documentation import ExternalDocumentation
 from .fields import DataTypeFormatEnum, RegularExpressionField, XmsClientNameField, XmsExternalField, \
     XmsDiscriminatorValueField, XmsClientFlattenField, XmsMutabilityField, XmsClientDefaultField, XNullableField, \
-    XmsAzureResourceField
+    XmsAzureResourceField, MutabilityEnum
 from .fields import XmsSecretField, XAccessibilityField, XAzSearchDeprecatedField, XSfClientLibField, \
     XApimCodeNillableField, XCommentField, XAbstractField, XADLNameField, XCadlNameField
 from .reference import ReferenceField, Linkable
@@ -242,7 +242,7 @@ class Schema(Model, Linkable):
 
     x_nullable = XNullableField()  # when true, specifies that null is a valid value for the associated schema
 
-    x_ms_identifiers = ListType(BaseType(), serialized_name="x-ms-identifiers", deserialize_from="x-ms-identifiers")  # TODO: used to indentify element in array
+    x_ms_identifiers = ListType(StringType(), serialized_name="x-ms-identifiers", deserialize_from="x-ms-identifiers")
 
     # specific properties, will not support
     _x_accessibility = XAccessibilityField()  # only used in ContainerRegistry Data plane
@@ -357,7 +357,7 @@ class Schema(Model, Linkable):
 
         if isinstance(model, CMDArraySchemaBase):
             if self.all_of is not None:
-                # inherent from allOf
+                # inherit from allOf
                 if len(self.all_of) > 1:
                     raise exceptions.InvalidSwaggerValueError(
                         msg=f"Multiple allOf is not supported for `{model.type}` type schema",
@@ -375,16 +375,21 @@ class Schema(Model, Linkable):
                 if not model.frozen and model.item.frozen:
                     model.frozen = True
 
+            if self.x_ms_identifiers:
+                model.identifiers = []
+                for identifier in self.x_ms_identifiers:
+                    model.identifiers.append(identifier)
+
         elif isinstance(model, CMDObjectSchemaBase):
             # props
             prop_dict = {}
             if model.props is not None:
-                # inherent from $ref
+                # inherit from $ref
                 for prop in model.props:
                     prop_dict[prop.name] = prop
 
             if self.all_of:
-                # inherent from allOf
+                # inherit from allOf
                 for item in self.all_of:
                     disc_parent = item.get_disc_parent()
                     if disc_parent is not None and builder.find_traces(item.ref_instance.traces):
@@ -413,7 +418,7 @@ class Schema(Model, Linkable):
                                 break
                         if not is_children and len(self.all_of) == 1 and \
                                 model.props is None and model.additional_props is None:
-                            # inherent from allOf as reference only
+                            # inherit from allOf as reference only
                             model.discriminators = v.discriminators
 
                     if v.additional_props:
@@ -436,9 +441,11 @@ class Schema(Model, Linkable):
                         # because required property will not be included in a cls definition,
                         # so it's fine to update it in parent level when prop_dict[name] is a cls definition.
                         prop_dict[name].required = True
-                        # when a property is required, it's frozen status must be consisted with the defined schema.
-                        # This can help to for empty object schema.
-                        prop_dict[name].frozen = builder.frozen
+                        if MutabilityEnum.Create == builder.mutability:
+                            # for create opreation
+                            # when a property is required, it's frozen status must be consisted with the defined schema.
+                            # This can help to for empty object schema.
+                            prop_dict[name].frozen = builder.frozen
 
             # discriminators
             if self.disc_children:
@@ -545,9 +552,11 @@ class Schema(Model, Linkable):
                         # item is required, it's frozen status must be consisted with the defined schema.
                         # This can help to for empty object.
                         model.additional_props.item.frozen = builder.frozen
-                # Note: not support additional_properties without schema define
-                # elif self.additional_properties is True:
-                #     model.additional_props = CMDObjectSchemaAdditionalProperties()
+                elif isinstance(self.additional_properties, bool) and self.additional_properties is True:
+                    # Free-Form Objects
+                    # additionalProperties: true
+                    model.additional_props = CMDObjectSchemaAdditionalProperties()
+                    model.additional_props.any_type = True
 
             if model.additional_props:
                 if builder.read_only:
@@ -582,7 +591,7 @@ class Schema(Model, Linkable):
 
         else:
             if self.all_of is not None:
-                # inherent from allOf
+                # inherit from allOf
                 if len(self.all_of) > 1:
                     raise exceptions.InvalidSwaggerValueError(
                         msg=f"Multiple allOf is not supported for `{model.type}` type schema",

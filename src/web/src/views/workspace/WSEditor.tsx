@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button } from '@mui/material';
+import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, List, ListSubheader, Paper, ListItemButton, ListItemIcon, Checkbox, ListItemText, ListItem, TextField, Alert} from '@mui/material';
 import { useParams } from 'react-router';
 import axios from 'axios';
 import { TransitionProps } from '@mui/material/transitions';
@@ -7,8 +7,7 @@ import WSEditorSwaggerPicker from './WSEditorSwaggerPicker';
 import WSEditorToolBar from './WSEditorToolBar';
 import WSEditorCommandTree, { CommandTreeLeaf, CommandTreeNode } from './WSEditorCommandTree';
 import WSEditorCommandGroupContent, { CommandGroup, DecodeResponseCommandGroup, ResponseCommandGroup, ResponseCommandGroups } from './WSEditorCommandGroupContent';
-import WSEditorCommandContent, { Command, DecodeResponseCommand, ResponseCommand } from './WSEditorCommandContent';
-import { Alert } from 'reactstrap';
+import WSEditorCommandContent, { Command, Resource, DecodeResponseCommand, ResponseCommand } from './WSEditorCommandContent';
 
 interface CommandGroupMap {
     [id: string]: CommandGroup
@@ -30,14 +29,18 @@ interface WSEditorState {
     plane: string,
 
     selected: Command | CommandGroup | null,
+    reloadTimestamp: number | null,
     expanded: Set<string>,
 
     commandMap: CommandMap,
     commandGroupMap: CommandGroupMap,
     commandTree: CommandTreeNode[],
 
-    showSwaggerResourcePicker: boolean
-    showExportDialog: boolean
+    showSwaggerResourcePicker: boolean,
+    showSwaggerReloadDialog: boolean,
+    showExportDialog: boolean,
+    showDeleteDialog: boolean,
+    showModifyDialog: boolean,
 }
 
 const swaggerResourcePickerTransition = React.forwardRef(function swaggerResourcePickerTransition(
@@ -60,12 +63,16 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             workspaceUrl: `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}`,
             plane: "",
             selected: null,
+            reloadTimestamp: null,
             expanded: new Set<string>(),
             commandMap: {},
             commandGroupMap: {},
             commandTree: [],
             showSwaggerResourcePicker: false,
+            showSwaggerReloadDialog: false,
             showExportDialog: false,
+            showDeleteDialog: false,
+            showModifyDialog: false,
         }
     }
 
@@ -73,14 +80,15 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         this.loadWorkspace();
     }
 
-    loadWorkspace = async (preSelected?: CommandGroup | Command | null) => {
+    loadWorkspace = async (preSelectedId?: string | null) => {
         const { workspaceUrl } = this.state
-        if (preSelected === undefined) {
-            preSelected = this.state.selected;
+        if (preSelectedId === undefined) {
+            preSelectedId = this.state.selected?.id;
         }
 
         try {
             const res = await axios.get(workspaceUrl);
+            const reloadTimestamp = Date.now();
             const commandMap: CommandMap = {};
             const commandGroupMap: CommandGroupMap = {};
 
@@ -148,9 +156,9 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
 
             let selected: Command | CommandGroup | null = null;
 
-            if (preSelected != null) {
-                if (preSelected.id.startsWith('command:')) {
-                    let id: string = preSelected.id;
+            if (preSelectedId != null) {
+                if (preSelectedId.startsWith('command:')) {
+                    let id: string = preSelectedId;
                     if (id in commandMap) {
                         selected = commandMap[id];
                     } else {
@@ -164,8 +172,8 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                             selected = commandGroupMap[id];
                         }
                     }
-                } else if (preSelected.id.startsWith('group:')) {
-                    let id_1: string = preSelected.id;
+                } else if (preSelectedId.startsWith('group:')) {
+                    let id_1: string = preSelectedId;
                     let parts_1 = id_1.split('/');
                     while (parts_1.length > 1 && !(id_1 in commandGroupMap)) {
                         parts_1 = parts_1.slice(0, -1);
@@ -203,6 +211,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                     plane: res.data.plane,
                     commandTree: commandTree,
                     selected: selected,
+                    reloadTimestamp: reloadTimestamp,
                     commandMap: commandMap,
                     commandGroupMap: commandGroupMap,
                     expanded: newExpanded,
@@ -235,10 +244,21 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         }
     }
 
-
-
     showSwaggerResourcePicker = () => {
         this.setState({ showSwaggerResourcePicker: true })
+    }
+
+    showSwaggerReloadDialog = () => {
+        this.setState({ showSwaggerReloadDialog: true})
+    }
+
+    handleSwaggerReloadDialogClose = async (reloaded: boolean) => {
+        if (reloaded) {
+            await this.loadWorkspace()
+        }
+        this.setState({
+            showSwaggerReloadDialog: false
+        })
     }
 
     handleSwaggerResourcePickerClose = (updated: boolean) => {
@@ -266,6 +286,41 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         })
     }
 
+    handleDelete = () => {
+        this.setState({
+            showDeleteDialog: true
+        })
+    }
+
+    handleDeleteClose = (deleted: boolean) => {
+        this.setState({
+            showDeleteDialog: false
+        })
+        if(deleted) {
+            this.handleBackToHomepage();
+        }
+    }
+
+    handleModify = () => {
+        this.setState({
+            showModifyDialog: true
+        })
+    }
+
+    handleModifyClose = (newWSName: string | null) => {
+        this.setState({
+            showModifyDialog: false
+        })
+        if (!newWSName) {
+            return;
+        }
+        setTimeout(() => {
+            const target_url = `/?#/workspace/` + newWSName;
+            window.location.href = target_url;
+            window.location.reload();
+        })
+    }
+
     handleCommandTreeSelect = (nodeId: string) => {
         if (nodeId.startsWith('command:')) {
             this.setState(preState => {
@@ -287,11 +342,11 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 
     handleCommandGroupUpdate = (commandGroup: CommandGroup | null) => {
-        this.loadWorkspace(commandGroup);
+        this.loadWorkspace(commandGroup?.id);
     }
 
     handleCommandUpdate = (command: Command | null) => {
-        this.loadWorkspace(command);
+        this.loadWorkspace(command?.id);
     }
 
     handleCommandTreeToggle = (nodeIds: string[]) => {
@@ -302,14 +357,14 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 
     render() {
-        const { showSwaggerResourcePicker, showExportDialog, plane, name, commandTree, selected, workspaceUrl, expanded } = this.state;
+        const { showSwaggerResourcePicker, showSwaggerReloadDialog, showExportDialog, showDeleteDialog, showModifyDialog, plane, name, commandTree, selected, reloadTimestamp, workspaceUrl, expanded } = this.state;
         const expandedIds: string[] = []
         expanded.forEach((expandId) => {
             expandedIds.push(expandId);
         })
         return (
             <React.Fragment>
-                <WSEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onGenerate={this.handleGenerate}>
+                <WSEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onGenerate={this.handleGenerate} onDelete={this.handleDelete} onModify={this.handleModify} >
                 </WSEditorToolBar>
 
                 <Box sx={{ display: 'flex' }}>
@@ -328,6 +383,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                                 onSelected={this.handleCommandTreeSelect}
                                 onToggle={this.handleCommandTreeToggle}
                                 onAdd={this.showSwaggerResourcePicker}
+                                onReload={this.showSwaggerReloadDialog}
                                 selected={selected!.id}
                                 expanded={expandedIds}
                             />
@@ -342,12 +398,14 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                         {selected != null && selected.id.startsWith('group:') &&
                             <WSEditorCommandGroupContent
                                 workspaceUrl={workspaceUrl} commandGroup={(selected as CommandGroup)}
+                                reloadTimestamp={reloadTimestamp!}
                                 onUpdateCommandGroup={this.handleCommandGroupUpdate}
                             />
                         }
                         {selected != null && selected.id.startsWith('command:') &&
                             <WSEditorCommandContent
-                                workspaceUrl={workspaceUrl} command={(selected as Command)}
+                                workspaceUrl={workspaceUrl} previewCommand={(selected as Command)}
+                                reloadTimestamp={reloadTimestamp!}
                                 onUpdateCommand={this.handleCommandUpdate}
                             />
                         }
@@ -362,7 +420,10 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 >
                     <WSEditorSwaggerPicker plane={plane} workspaceName={name} onClose={this.handleSwaggerResourcePickerClose} />
                 </Dialog>
+                {showModifyDialog && <WSRenameDialog workspaceUrl={workspaceUrl} workspaceName={name} open={showModifyDialog} onClose={this.handleModifyClose} />}
+                {showDeleteDialog && <WSEditorDeleteDialog workspaceName={name} open={showDeleteDialog} onClose={this.handleDeleteClose} />}
                 {showExportDialog && <WSEditorExportDialog workspaceUrl={workspaceUrl} open={showExportDialog} onClose={this.handleGenerationClose} />}
+                {showSwaggerReloadDialog && <WSEditorSwaggerReloadDialog workspaceUrl={workspaceUrl} open={showSwaggerReloadDialog} onClose={this.handleSwaggerReloadDialogClose} />}
             </React.Fragment>
         )
     }
@@ -422,6 +483,426 @@ function WSEditorExportDialog(props: {
             </DialogActions>
         </Dialog>
     )
+}
+
+function WSEditorDeleteDialog(props: {
+    workspaceName: string,
+    open: boolean,
+    onClose: (deleted: boolean) => void
+}) {
+    const [updating, setUpdating] = React.useState<boolean>(false);
+    const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
+    const [confirmName, setConfirmName] = React.useState<string | undefined>(undefined);
+
+    const handleClose = () => {
+        props.onClose(false);
+    }
+
+    const handleDelete = () => {
+        setUpdating(true);
+        const nodeUrl = `/AAZ/Editor/Workspaces/` + props.workspaceName;
+        axios.delete(nodeUrl)
+            .then((res) => {
+                setUpdating(false);
+                props.onClose(true);
+            })            
+            .catch(err => {
+                console.error(err.response.data);
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    setInvalidText(
+                        `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
+                    );
+                }
+                setUpdating(false);
+        })
+
+    }
+
+    return (
+        <Dialog
+            disableEscapeKeyDown
+            open={props.open}
+        >
+            <DialogTitle>Delete '{props.workspaceName}' workspace?</DialogTitle>
+            <DialogContent dividers={true}>
+                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                    <TextField
+                        id="name"
+                        label="Workspace Name"
+                        helperText="Please type workspace name to confirm."
+                        type="text"
+                        fullWidth
+                        variant='standard'
+                        value={confirmName}
+                        onChange={(event: any) => {
+                            setConfirmName(event.target.value)
+                        }}
+                        margin="normal" required
+                    />
+                </DialogContent>
+            <DialogActions>
+                {updating &&
+                    <Box sx={{ width: '100%' }}>
+                        <LinearProgress color='info' />
+                    </Box>
+                }
+                {!updating && <React.Fragment>
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleDelete} disabled={props.workspaceName !== confirmName}>Confirm</Button>
+                </React.Fragment>}
+            </DialogActions>
+        </Dialog>
+    )
+}
+
+interface WSEditorSwaggerReloadDialogProps {
+    workspaceUrl: string,
+    open: boolean,
+    onClose: (exported: boolean) => void,
+}
+
+interface WSEditorSwaggerReloadDialogState {
+    updating: boolean,
+    invalidText?: string,
+    resourceOptions: Resource[],
+    selectedResources: Set<string>,
+}
+
+class WSEditorSwaggerReloadDialog extends React.Component<WSEditorSwaggerReloadDialogProps, WSEditorSwaggerReloadDialogState> {
+
+    constructor(props: WSEditorSwaggerReloadDialogProps) {
+        super(props);
+        this.state = {
+            updating: false,
+            invalidText: undefined,
+            resourceOptions: [],
+            selectedResources: new Set(),
+        }
+    }
+    
+    componentDidMount() {
+        this.loadResourceOptions();
+    }
+
+    loadResourceOptions = async () => {
+        this.setState({
+            invalidText: undefined,
+            updating: true,
+        })
+        try {
+            const res = await axios.get(`${this.props.workspaceUrl}/CommandTree/Nodes/aaz/Resources`)
+            const resources: Resource[] = res.data;
+            this.setState({
+                updating: false,
+                resourceOptions: resources,
+                selectedResources: new Set(resources.map(resource => resource.id)),
+            })
+        } catch (err: any) {
+            console.error(err.response);
+            if (err.response?.data?.message) {
+                const data = err.response!.data!;
+                this.setState({
+                    invalidText: `ResponseError: ${data.message!}`,
+                    updating: false,
+                })
+            }
+        }
+    }
+
+    handleClose = () => {
+        this.props.onClose(false);
+    }
+
+    handleReload = async () => {
+        const {selectedResources, resourceOptions} = this.state;
+        const data = {
+            resources: resourceOptions
+            .filter(option => selectedResources.has(option.id))
+            .map(option => {
+                return {
+                    id: option.id,
+                    version: option.version,
+                }
+            })
+        }
+
+        const url = `${this.props.workspaceUrl}/Resources/ReloadSwagger`;
+        this.setState({
+            invalidText: undefined,
+            updating: true,
+        })
+        
+        try {
+            await axios.post(url, data);
+            this.setState({
+                updating: false,
+            })
+            this.props.onClose(true);
+        } catch (err: any) {
+            console.error(err.response);
+            if (err.response?.data?.message) {
+                const data = err.response!.data!;
+                this.setState({
+                    invalidText: `ResponseError: ${data.message!}`,
+                    updating: false,
+                })
+            }
+        }
+    }
+
+    onSelectedAllClick = () => {
+        this.setState(preState => {
+            return {
+                ...preState,
+                selectedResources: preState.selectedResources.size > 0 ? new Set() : new Set(preState.resourceOptions.map(op => op.id))
+            }
+        })
+    }
+
+    onResourceItemClick = (resourceId: string) => {
+        return () => {
+            this.setState(preState => {
+                const selectedResources = new Set(preState.selectedResources);
+                if (selectedResources.has(resourceId)) {
+                    selectedResources.delete(resourceId);
+                } else {
+                    selectedResources.add(resourceId);
+                }
+                return {
+                    ...preState,
+                    selectedResources: selectedResources,
+                }
+            })
+        }
+    }
+
+    render() {
+        const {invalidText, selectedResources, updating, resourceOptions} = this.state;
+
+        return (
+            <Dialog
+                disableEscapeKeyDown
+                open={this.props.open}
+                fullWidth={true}
+                maxWidth="xl"
+            >
+                <DialogTitle>Reload Swagger Resources</DialogTitle>
+                <DialogContent>
+                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                    <List
+                            sx={{ flexGrow: 1 }}
+                            subheader={<ListSubheader>
+                                <Box sx={{
+                                    mt: 1,
+                                    mb: 1,
+                                    flexDirection: 'column',
+                                    display: 'flex',
+                                    alignItems: 'stretch',
+                                    justifyContent: 'flex-start',
+                                }} color='inherit'>
+                                    {/* <Typography component='h6'>Resource Url</Typography> */}
+    
+                                    <Paper sx={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        mt: 1,
+                                    }} variant="outlined" square>
+    
+                                        <ListItemButton dense onClick={this.onSelectedAllClick} disabled={resourceOptions.length === 0}>
+                                            <ListItemIcon>
+                                                <Checkbox
+                                                    edge="start"
+                                                    checked={selectedResources.size > 0 && selectedResources.size === resourceOptions.length}
+                                                    indeterminate={selectedResources.size > 0 && selectedResources.size < resourceOptions.length}
+                                                    tabIndex={-1}
+                                                    disableRipple
+                                                    inputProps={{ 'aria-labelledby': 'SelectAll' }}
+                                                />
+                                            </ListItemIcon>
+                                            <ListItemText id="SelectAll"
+                                                primary={`All (${resourceOptions.length})`}
+                                                primaryTypographyProps={{
+                                                    variant: "h6",
+                                                }}
+                                            />
+                                        </ListItemButton>
+                                    </Paper>
+                                </Box>
+                            </ListSubheader>}
+                        >
+    
+                            {resourceOptions.length > 0 && <Paper sx={{ ml: 2, mr: 2 }} variant="outlined" square>
+                                {resourceOptions.map((option) => {
+                                    const labelId = `resource-${option.id}`;
+                                    const selected = selectedResources.has(option.id);
+                                    return <ListItem
+                                        key={option.id}
+                                        sx={{
+                                            display: 'flex',
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                        }}
+                                        disablePadding
+                                    >
+                                        <ListItemButton dense onClick={this.onResourceItemClick(option.id)}>
+                                            <ListItemIcon>
+                                                <Checkbox
+                                                    edge="start"
+                                                    checked={selected}
+                                                    tabIndex={-1}
+                                                    disableRipple
+                                                    inputProps={{ 'aria-labelledby': labelId }}
+                                                />
+                                            </ListItemIcon>
+                                            <ListItemText id={labelId}
+                                                primary={`${option.version} ${option.id}`}
+                                                primaryTypographyProps={{
+                                                    variant: "h6",
+                                                }}
+                                            />
+                                        </ListItemButton>
+                                    </ListItem>
+                                })}
+                            </Paper>}
+                        </List>
+                </DialogContent>
+                <DialogActions>
+                    {updating &&
+                        <Box sx={{ width: '100%' }}>
+                            <LinearProgress color='info' />
+                        </Box>
+                    }
+                    {!updating && <React.Fragment>
+                        <Button onClick={this.handleClose}>Cancel</Button>
+                        <Button onClick={this.handleReload}>Reload</Button>
+                    </React.Fragment>}
+                </DialogActions>
+            </Dialog>
+        ) 
+    }
+
+}
+
+interface WSRenameDialogProps {
+    workspaceUrl: string,
+    workspaceName: string,
+    open: boolean,
+    onClose: (newWSName: string | null) => void
+}
+
+interface WSRenameDialogState {
+    newWSName: string,
+    invalidText?: string,
+    updating: boolean
+}
+
+class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialogState> {
+
+    constructor(props: WSRenameDialogProps) {
+        super(props);
+        this.state = {
+            newWSName: this.props.workspaceName,
+            updating: false
+        }
+    }
+
+    handleModify = (event: any) => {
+        let { newWSName } = this.state;
+        let { workspaceUrl, workspaceName } = this.props;
+
+        let nName = newWSName.trim();
+        if (nName.length < 1){
+            this.setState({
+                invalidText: `Field 'Name' is required.`
+            })
+            return;
+        }
+
+        this.setState({
+            invalidText: undefined
+        });
+        this.setState({
+            updating: true,
+        })
+
+        if (workspaceName === nName) {
+            this.setState({
+                updating: false,
+            })
+            this.props.onClose(null);
+        } else {
+            axios.post(`${workspaceUrl}/Rename`, {
+                name: nName
+            }).then(res => {
+                this.setState({
+                    updating: false,
+                })
+                this.props.onClose(res.data.name);
+            }).catch(err => {
+                this.setState({
+                    updating: false,
+                })
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    this.setState({
+                        invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
+                    })
+                }
+                
+            })
+        }
+        
+    }
+
+    handleClose = () => {
+        this.setState({
+            invalidText: undefined
+        });
+        this.props.onClose(null);
+    }
+
+    render() {
+        const { invalidText, updating } = this.state;
+        return (
+            <Dialog
+                disableEscapeKeyDown
+                open={this.props.open}
+                sx={{ '& .MuiDialog-paper': { width: '80%' } }}
+            >
+                <DialogTitle>Rename Workspace</DialogTitle>
+                <DialogContent dividers={true}>
+                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                    <TextField
+                        id="name"
+                        label="Name"
+                        type="text"
+                        fullWidth
+                        variant='standard'
+                        value={this.state.newWSName}
+                        onChange={(event: any) => {
+                            this.setState({
+                                newWSName: event.target.value,
+                            })
+                        }}
+                        margin="normal" required
+                    />
+                </DialogContent>
+                <DialogActions>
+                    {updating &&
+                        <Box sx={{ width: '100%' }}>
+                            <LinearProgress color='info' />
+                        </Box>
+                    }
+                    {!updating && <React.Fragment>
+                        <Button onClick={this.handleClose}>Cancel</Button>
+                        <Button onClick={this.handleModify}>Save</Button>
+                    </React.Fragment>}
+                </DialogActions>
+            </Dialog>
+        )
+    }
 }
 
 const WSEditorWrapper = (props: any) => {

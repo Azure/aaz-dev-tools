@@ -6,7 +6,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Box, IconButton, Tooltip, Typography, TypographyProps } from '@mui/material';
 import { styled } from '@mui/system';
 import AddIcon from '@mui/icons-material/Add';
-
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 interface CommandTreeLeaf {
     id: string
@@ -29,6 +29,7 @@ interface WSEditorCommandTreeProps {
     onSelected: (nodeId: string) => void
     onToggle: (nodeIds: string[]) => void
     onAdd: () => void
+    onReload: () => void
 }
 
 
@@ -53,7 +54,7 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
     }
 
     render() {
-        const { commandTreeNodes, selected, onAdd, expanded } = this.props;
+        const { commandTreeNodes, selected, onAdd, onReload, expanded } = this.props;
 
         const renderLeaf = (leaf: CommandTreeLeaf) => {
             const leafName = leaf.names[leaf.names.length - 1];
@@ -102,6 +103,15 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
                 }}>
                     <HeaderTypography>Command Tree</HeaderTypography>
                     <Box sx={{ flexGrow: 1 }} />
+                    <Tooltip title='Reload Swagger Change'>
+                        <IconButton
+                            color='info'
+                            onClick={onReload}
+                            aria-label='reload'
+                        >
+                            <RefreshIcon />
+                        </IconButton>
+                    </Tooltip>
                     <Tooltip title='Add from Swagger'>
                         <IconButton
                             color='info'

@@ -79,7 +79,8 @@ class AzProfileGenerator:
             for sub_group in command_group.command_groups.values():
                 assert sub_group.names[:-1] == command_group.names, f"Invalid command group name: {sub_group.names}"
                 self._generate_by_command_group(profile_folder_name=profile_folder_name, command_group=sub_group)
-                folders.add(sub_group.names[-1])
+                sub_group_folder_name = sub_group.names[-1].replace('-', '_')
+                folders.add(sub_group_folder_name)
 
         # delete other folders
         del_folders = cur_folders.difference(folders)
@@ -102,7 +103,9 @@ class AzProfileGenerator:
             if command_group.wait_command:
                 command = command_group.wait_command
                 cmd_file_name = self._command_file_name(command.names[-1])
-                self._generate_by_command(profile_folder_name, command, is_wait=True)
+                if command.cfg:
+                    # configuration attached, that means to update command file
+                    self._generate_by_command(profile_folder_name, command, is_wait=True)
                 files.add(cmd_file_name)
 
         # update __cmd_group.py file

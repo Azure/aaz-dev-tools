@@ -49,14 +49,12 @@ setup(
         "Environment :: Console",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10"
     ],
     keywords="azure",
-    url="https://github.com/kairu-ms/aaz-dev-tools",
+    url="https://github.com/Azure/aaz-dev-tools",
     author="Microsoft Corporation",
     author_email="azpycli@microsoft.com",
     license='MIT',
@@ -69,7 +67,7 @@ setup(
     ),
     include_package_data=True,
     install_requires=read_requirements("requirements.txt"),
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     entry_points={
         "console_scripts": ["aaz-dev=aaz_dev.app.main:main"]
     },

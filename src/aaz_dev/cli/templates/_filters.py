@@ -1,7 +1,7 @@
 from jinja2.filters import pass_environment
 from utils.stage import AAZStageEnum
 from utils.case import to_camel_case, to_snack_case
-import json
+import re
 
 
 @pass_environment
@@ -32,7 +32,7 @@ def is_stable(env, stage):
 @pass_environment
 def constant_convert(env, data):
     if isinstance(data, str):
-        return f'"%s"' % data.replace('"', '\\"')
+        return f'"%s"' % data.replace('"', '\\"').replace('\n', '\\n')
     elif isinstance(data, (int, float, bool)):
         return f"{data}"
     elif data is None:
@@ -48,6 +48,22 @@ def constant_convert(env, data):
         raise NotImplementedError()
 
 
+_PYTHON_BUILD_IN_KEYWORDS = (
+    'False', 'await', 'else', 'import', 'pass', 'None', 'break', 'except', 'in', 'raise', 'True', 'class', 'finally',
+    'is', 'return', 'and', 'continue', 'for', 'lambda', 'try', 'as', 'def', 'from', 'nonlocal', 'while', 'assert',
+    'del', 'global', 'not', 'with', 'async', 'elif', 'if', 'or', 'yield'
+)
+
+
+@pass_environment
+def get_prop(env, data):
+    assert isinstance(data, str)
+    if re.match('^[0-9].*$', data) or data in _PYTHON_BUILD_IN_KEYWORDS:
+        return f'[{constant_convert(env, data)}]'
+    else:
+        return f'.{data}'
+
+
 custom_filters = {
     "camel_case": camel_case,
     "snake_case": snake_case,
@@ -55,4 +71,5 @@ custom_filters = {
     "is_preview": is_preview,
     "is_stable": is_stable,
     "constant_convert": constant_convert,
+    "get_prop": get_prop
 }
