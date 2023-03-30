@@ -3,6 +3,10 @@
 Release History
 ===============
 
+1.0.1
+++++++
+* Fix generated code issue for class arguments (#224)
+
 1.0.0
 ++++++
 * GA release
