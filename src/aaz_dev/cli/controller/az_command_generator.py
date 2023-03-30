@@ -50,7 +50,10 @@ class AzCommandCtx:
                 )
             if map_name not in self._cls_arg_maps:
                 self._cls_arg_maps[map_name] = {}
-            self._cls_arg_maps[map_name][var_name] = ('.'.join(keys), hide)
+            self._cls_arg_maps[map_name][var_name] = (
+                '.'.join(keys).replace('.[', '[').replace('.{', '{'),
+                hide
+            )
         else:
             self._ctx_arg_map[var_name] = (
                 '.'.join([ctx_namespace, *keys]).replace('.[', '[').replace('.{', '{'),
