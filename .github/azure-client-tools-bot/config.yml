@@ -1,0 +1,6 @@
+release_notify:
+  enable: True
+  messages:
+    - name: "aaz"
+      targetType: "channel"
+      recipients: "19%3a5aaa7fae6eae4b6b9bae42e5295c10a3%40thread.tacv2"
