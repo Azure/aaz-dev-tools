@@ -586,7 +586,7 @@ class CfgReader:
                 for response in operation.http.responses:
                     if response.is_error:
                         continue
-                    if '_'.join([_SchemaIdxEnum.Response, *response.status_codes]) == next_idx:
+                    if '_'.join([_SchemaIdxEnum.Response, *[str(code) for code in response.status_codes]]) == next_idx:
                         schema = cls.find_schema_in_response(response, remain_idx)
                         if schema:
                             return schema
@@ -797,9 +797,10 @@ class CfgReader:
                     for response in op.http.responses:
                         if response.is_error:
                             continue
+                        schema_idx_prefix = [_SchemaIdxEnum.Http, '_'.join([_SchemaIdxEnum.Response, *[str(code) for code in response.status_codes]])]
                         for parent, schema, schema_idx in cls._iter_schema_in_response(response, schema_filter=schema_filter):
                             if schema:
-                                schema_idx = [_SchemaIdxEnum.Http, '_'.join([_SchemaIdxEnum.Response, *response.status_codes]), *schema_idx]
+                                schema_idx = [*schema_idx_prefix, *schema_idx]
                             yield parent, schema, schema_idx
 
             if isinstance(op, CMDInstanceUpdateOperation):
