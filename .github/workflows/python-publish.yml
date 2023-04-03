@@ -64,6 +64,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 'Log out'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az logout
+            az cache purge
+            az account clear
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -180,11 +192,6 @@ jobs:
         run: |
           python scripts/release_notes.py > ${{ github.workspace }}-RELEASE_NOTES.md
 
-#      - name: Publish package to PyPI
-#        run: |
-#          pip install twine>=1.11.0
-#          twine upload -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }} dist/*
-
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v1
         env:
@@ -194,3 +201,20 @@ jobs:
           prerelease: ${{ contains(env.TAG, 'rc') }}
           files: |
             dist/*
+
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      #      - name: Publish package to PyPI
+      #        run: |
+      #          pip install twine>=1.11.0
+      #          twine upload -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }} dist/*
+
+      - name: 'Log out'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az logout
+            az cache purge
+            az account clear
