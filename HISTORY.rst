@@ -3,6 +3,11 @@
 Release History
 ===============
 
+1.0.2
+++++++
+* Support PyPI installation (#230)
+* Fix cfg reader response.status_codes string join issue (#228)
+
 1.0.1
 ++++++
 * Fix generated code issue for class arguments (#224)
