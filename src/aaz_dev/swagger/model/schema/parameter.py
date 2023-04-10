@@ -9,7 +9,7 @@ from swagger.utils import exceptions
 from .fields import XmsClientNameField, XmsClientFlattenField, XmsClientDefaultField
 from .fields import XmsClientRequestIdField, XNullableField, XPublishField, XRequiredField, XClientNameField, \
     XNewPatternField, XPreviousPatternField, XCommentField
-from .fields import XmsParameterLocationField, XmsApiVersionField, XmsSkipUrlEncodingField
+from .fields import XmsParameterLocationField, XmsApiVersionField, XmsSkipUrlEncodingField, XmsArmIdDetailsField
 from .fields import XmsSkipURLEncodingField, XAccessibilityField, XmsHeaderCollectionPrefix, XOriginalNameField
 from .items import Items
 from .reference import Reference, Linkable
@@ -43,6 +43,7 @@ class ParameterBase(Model):
     x_ms_client_name = XmsClientNameField()  # TODO:
     x_ms_client_flatten = XmsClientFlattenField()  # TODO:
     x_ms_client_default = XmsClientDefaultField()
+    x_ms_arm_id_details = XmsArmIdDetailsField()  # TODO: Add support for it, can be used for resource id template
 
     # specific properties
     _x_accessibility = XAccessibilityField()  # only used in ContainerRegistry Data plane

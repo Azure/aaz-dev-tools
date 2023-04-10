@@ -9,6 +9,7 @@ class DataTypeFormatEnum(StringType):
         # additional formats
         "duration", "uuid",
         "file", "uri",
+        "arm-id",
     )
 
     def __init__(self, **kwargs):
@@ -260,6 +261,20 @@ class XmsClientDefaultField(BaseType):
         super().__init__(
             serialized_name='x-ms-client-default',
             deserialize_from='x-ms-client-default',
+            **kwargs
+        )
+
+
+class XmsArmIdDetailsField(BaseType):
+    """
+
+    http://azure.github.io/autorest/extensions/#x-ms-arm-id-details
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            serialized_name='x-ms-arm-id-details',
+            deserialize_from='x-ms-arm-id-details',
             **kwargs
         )
 

@@ -10,6 +10,7 @@ from command.model.configuration import CMDSchemaDefault, \
     CMDPasswordSchema, CMDPasswordSchemaBase, \
     CMDDurationSchema, CMDDurationSchemaBase, \
     CMDUuidSchema, CMDUuidSchemaBase, \
+    CMDResourceIdSchema, CMDResourceIdSchemaBase, \
     CMDIntegerSchema, CMDIntegerSchemaBase, \
     CMDInteger32Schema, CMDInteger32SchemaBase, \
     CMDInteger64Schema, CMDInteger64SchemaBase, \
@@ -127,6 +128,11 @@ class CMDBuilder:
                     model = CMDUuidSchemaBase()
                 else:
                     model = CMDUuidSchema()
+            elif schema.format == "arm-id":
+                if self.in_base:
+                    model = CMDResourceIdSchemaBase()
+                else:
+                    model = CMDResourceIdSchema()
             else:
                 raise exceptions.InvalidSwaggerValueError(
                     f"format is not supported", key=getattr(schema, "traces", None), value=[schema_type, schema.format])
