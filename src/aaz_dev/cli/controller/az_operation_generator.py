@@ -898,6 +898,8 @@ def render_schema(schema, cls_map, name):
         flags['skip_quote'] = True
     if getattr(schema, 'client_flatten', False):
         flags['client_flatten'] = True
+    if getattr(schema, 'secret', False):
+        flags['secret'] = True
 
     if flags:
         schema_kwargs['flags'] = flags

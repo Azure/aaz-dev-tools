@@ -268,6 +268,8 @@ class CMDSchema(CMDSchemaBase):
         deserialize_from="skipUrlEncoding",
     )  # used in path and query parameters
 
+    secret = CMDBooleanField()
+
     @classmethod
     def _claim_polymorphic(cls, data):
         if super(CMDSchema, cls)._claim_polymorphic(data):
@@ -286,10 +288,14 @@ class CMDSchema(CMDSchemaBase):
                 diff["required"] = f"it's required now."
             if (not self.skip_url_encoding) != (not old.skip_url_encoding):  # None should be same as false
                 diff["skip_url_encoding"] = f"{old.skip_url_encoding} != {self.skip_url_encoding}"
+            if not self.secret and old.secret:
+                diff["secret"] = f"it's not secret property now."
 
         if level >= CMDDiffLevelEnum.Structure:
             if (not self.required) != (not old.required):
                 diff["required"] = f"{old.required} != {self.required}"
+            if self.secret != old.secret:
+                diff["secret"] = f"{old.secret} != {self.secret}"
 
         if level >= CMDDiffLevelEnum.Associate:
             if self.arg != old.arg:

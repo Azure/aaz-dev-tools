@@ -239,7 +239,7 @@ class Schema(Model, Linkable):
 
     x_ms_azure_resource = XmsAzureResourceField()
 
-    x_ms_secret = XmsSecretField()  # TODO:
+    x_ms_secret = XmsSecretField()
 
     x_nullable = XNullableField()  # when true, specifies that null is a valid value for the associated schema
 
@@ -607,5 +607,6 @@ class Schema(Model, Linkable):
 
         if isinstance(model, CMDSchema):
             builder.setup_description(model, self)
+            builder.setup_secret(model, self)
 
         return model
