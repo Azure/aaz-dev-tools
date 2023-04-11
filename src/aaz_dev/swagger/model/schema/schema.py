@@ -14,7 +14,7 @@ from swagger.utils import exceptions
 from .external_documentation import ExternalDocumentation
 from .fields import DataTypeFormatEnum, RegularExpressionField, XmsClientNameField, XmsExternalField, \
     XmsDiscriminatorValueField, XmsClientFlattenField, XmsMutabilityField, XmsClientDefaultField, XNullableField, \
-    XmsAzureResourceField, MutabilityEnum
+    XmsAzureResourceField, MutabilityEnum, XmsArmIdDetailsField
 from .fields import XmsSecretField, XAccessibilityField, XAzSearchDeprecatedField, XSfClientLibField, \
     XApimCodeNillableField, XCommentField, XAbstractField, XADLNameField, XCadlNameField
 from .reference import ReferenceField, Linkable
@@ -235,6 +235,7 @@ class Schema(Model, Linkable):
     x_ms_client_flatten = XmsClientFlattenField()
     x_ms_mutability = XmsMutabilityField()
     x_ms_client_default = XmsClientDefaultField()
+    x_ms_arm_id_details = XmsArmIdDetailsField()  # TODO: Add support for it, can be used for resource id template
 
     x_ms_azure_resource = XmsAzureResourceField()
 
