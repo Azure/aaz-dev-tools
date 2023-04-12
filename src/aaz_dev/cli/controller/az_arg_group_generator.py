@@ -329,8 +329,9 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
             arg_type = "AAZDateTimeArg"
         elif isinstance(arg, CMDUuidArgBase):
             arg_type = "AAZUuidArg"
-        elif isinstance(arg, CMDPasswordArgBase):
-            raise NotImplementedError()
+        # TODO: Support Password Arg
+        # elif isinstance(arg, CMDPasswordArgBase):
+            # arg_type = "AAZPasswordArg"
 
     elif isinstance(arg, CMDIntegerArgBase):
         arg_type = "AAZIntArg"

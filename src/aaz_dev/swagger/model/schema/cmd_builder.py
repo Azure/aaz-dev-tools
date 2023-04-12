@@ -349,6 +349,11 @@ class CMDBuilder:
             model.description = schema.title
 
     @staticmethod
+    def setup_secret(model, schema):
+        if getattr(schema, 'x_ms_secret', False):
+            model.secret = schema.x_ms_secret
+
+    @staticmethod
     def build_cmd_string_format(schema):
         fmt_assigned = False
         fmt = CMDStringFormat()
