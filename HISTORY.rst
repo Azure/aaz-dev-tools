@@ -3,6 +3,11 @@
 Release History
 ===============
 
+1.1.0
+++++++
+* Support x-ms-secret of swagger (#235)
+* Add support to parse x-ms-arm-id-details and "arm-id" format in swagger (#234)
+
 1.0.2
 ++++++
 * Support PyPI installation (#230)
