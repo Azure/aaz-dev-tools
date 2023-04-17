@@ -4,11 +4,11 @@ import inflect
 from utils.case import to_camel_case
 
 from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgDefault, CMDBooleanArgBase, \
-    CMDArgBlank, CMDObjectArgAdditionalProperties, CMDResourceLocationArgBase, CMDClsArgBase
+    CMDArgBlank, CMDObjectArgAdditionalProperties, CMDResourceLocationArgBase, CMDClsArgBase, CMDPasswordArgPromptInput
 from ._format import CMDFormat
 from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
     CMDArraySchemaBase, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema, CMDBooleanSchemaBase, \
-    CMDResourceLocationSchemaBase
+    CMDResourceLocationSchemaBase, CMDPasswordSchema
 
 
 class CMDArgBuilder:
@@ -249,7 +249,20 @@ class CMDArgBuilder:
             return CMDArgDefault.build_default(self, self.schema.default)
         return None
 
+    def get_prompt(self):
+        if self._ref_arg:
+            # ref_arg already has prompt return it
+            if self._ref_arg.prompt:
+                return self._ref_arg.prompt.__class__(raw_data=self._ref_arg.prompt.to_native())
+        if isinstance(self.schema, CMDPasswordSchema):
+            return CMDPasswordArgPromptInput(raw_data={"msg": "Password:"})
+        return None
+
     def get_blank(self):
+        if self.get_prompt() is not None:
+            # disable blank when get prompt is available
+            return None
+
         if self._ref_arg:
             if self._ref_arg.blank:
                 return CMDArgBlank(raw_data=self._ref_arg.blank.to_native())

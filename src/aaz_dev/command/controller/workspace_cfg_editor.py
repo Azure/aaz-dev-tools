@@ -286,6 +286,15 @@ class WorkspaceCfgEditor(CfgReader):
                 arg.default = None
             else:
                 arg.default = CMDArgDefault(kwargs['default'])
+        if 'prompt' in kwargs:
+            if kwargs['prompt'] is None:
+                arg.prompt = None
+            elif 'confirm' in kwargs['prompt']:
+                arg.prompt = CMDPasswordArgPromptInput(kwargs['prompt'])
+                arg.blank = None
+            else:
+                arg.prompt = CMDArgPromptInput(kwargs['prompt'])
+                arg.blank = None
 
     def _update_boolean_arg(self, arg, **kwargs):
         if 'reverse' in kwargs:

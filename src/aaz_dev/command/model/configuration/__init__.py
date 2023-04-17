@@ -20,7 +20,8 @@ from ._arg import CMDArgEnumItem, CMDArgEnum, \
     CMDFloatArgBase, CMDFloatArg, \
     CMDFloat32ArgBase, CMDFloat32Arg, CMDFloat64ArgBase, CMDFloat64Arg, \
     CMDObjectArgBase, CMDObjectArg, \
-    CMDArrayArgBase, CMDArrayArg
+    CMDArrayArgBase, CMDArrayArg, \
+    CMDArgPromptInput, CMDPasswordArgPromptInput
 from ._arg_builder import CMDArgBuilder
 from ._arg_group import CMDArgGroup
 from ._command import CMDCommand
