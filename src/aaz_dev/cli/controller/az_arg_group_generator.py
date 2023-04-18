@@ -252,7 +252,7 @@ def render_arg(arg, cmd_ctx, arg_group=None):
                     "msg": arg.prompt.msg,
                 }
             }
-            if arg.confirm:
+            if arg.prompt.confirm:
                 arg_kwargs["prompt"]["kwargs"]["confirm"] = arg.prompt.confirm
         else:
             arg_kwargs["prompt"] = {
@@ -261,7 +261,8 @@ def render_arg(arg, cmd_ctx, arg_group=None):
                     "msg": arg.prompt.msg,
                 }
             }
-
+    if "blank" in arg_kwargs and "prompt" in arg_kwargs:
+        raise KeyError("An argument cannot contain both prompt and blank")
     return arg_type, arg_kwargs, cls_builder_name
 
 

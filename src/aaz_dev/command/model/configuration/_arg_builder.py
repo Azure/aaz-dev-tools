@@ -252,7 +252,7 @@ class CMDArgBuilder:
     def get_prompt(self):
         if self._ref_arg:
             # ref_arg already has prompt return it
-            if self._ref_arg.prompt:
+            if hasattr(self._ref_arg, "prompt") and self._ref_arg.prompt:
                 return self._ref_arg.prompt.__class__(raw_data=self._ref_arg.prompt.to_native())
         if isinstance(self.schema, CMDPasswordSchema):
             return CMDPasswordArgPromptInput(raw_data={"msg": "Password:"})
