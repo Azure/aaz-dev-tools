@@ -887,13 +887,17 @@ function ArgumentDialog(props: {
         let { arg, clsArgDefineMap } = props;
 
         setOptions(arg.options.join(" "));
-        setHasPrompt(undefined);
         if (arg.type.startsWith("array")) {
             setSingularOptions((arg as CMDArrayArg).singularOptions?.join(" ") ?? "")
         } else if (arg.type.startsWith('@') && clsArgDefineMap[(arg as CMDClsArg).clsName].type.startsWith("array")) {
             setSingularOptions((arg as CMDClsArg).singularOptions?.join(" ") ?? "")
         } else {
             setSingularOptions(undefined);
+        }
+
+        if (arg.type === "object" || arg.type.startsWith("dict<") || arg.type.startsWith("array<") || arg.type.startsWith("@")) {
+            setHasPrompt(undefined);
+        } else {
             setHasPrompt(arg.prompt !== undefined);
             if (arg.prompt !== undefined) {
                 setPromptMsg(arg.prompt.msg);
