@@ -544,16 +544,14 @@ class CMDBuilder:
             success_responses.append(success_204_response)
 
         success_codes = reduce(lambda x, y: x | y, [codes for codes, _ in success_responses])
-        if schema.x_ms_lro_final_state_schema:
-            lro_response = Response()
-            lro_response.description = "Response schema for long-running operation."
-            lro_response.schema = schema.x_ms_lro_final_state_schema
+        if schema.x_ms_long_running_operation and not success_codes & {200, 201}:
+            if lro_schema := schema.x_ms_lro_final_state_schema:
+                lro_response = Response()
+                lro_response.description = "Response schema for long-running operation."
+                lro_response.schema = lro_schema
 
-            # use `final-state-schema` when there is no 200/201
-            if status_codes := {200, 201} - success_codes:
-                success_responses.append((status_codes, lro_response))
-        else:
-            if schema.x_ms_long_running_operation and not success_codes & {200, 201}:
+                success_responses.append(({200, 201}, lro_response))  # use `final-state-schema` as response
+            else:
                 logger.warning(f"No response schema for long-running-operation: {schema.operation_id}.")
 
         # # default response
