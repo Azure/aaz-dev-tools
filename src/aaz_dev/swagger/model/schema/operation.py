@@ -127,7 +127,8 @@ class Operation(Model, Linkable):
             self.x_ms_lro_final_state_schema = ReferenceSchema()
             self.x_ms_lro_final_state_schema.ref = self.x_ms_long_running_operation_options.final_state_schema
             self.x_ms_lro_final_state_schema.link(
-                swagger_loader, *self.traces, "x_ms_long_running_operation_options", "final_state_schema"
+                swagger_loader,
+                *self.traces, "x_ms_long_running_operation_options", "final_state_schema"
             )
 
     def to_cmd(self, builder, parent_parameters, **kwargs):
