@@ -227,3 +227,25 @@ class SchemaTest(SwaggerSpecsTestCase):
                 raise err
             parsed += 1
         print(f"Parsed: {parsed}")
+
+    def test_lro_final_state_schema(self):
+        from functools import reduce
+        from swagger.controller.command_generator import CommandGenerator
+
+        rp = next(self.get_mgmt_plane_resource_providers(
+            module_filter=lambda m: m.name == "dnsresolver",
+            resource_provider_filter=lambda r: r.name == "Microsoft.Network"
+        ))
+        version = "2022-07-01"
+        r_id = "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/dnsresolvers/{}"
+
+        resource_map = rp.get_resource_map()
+        resource = resource_map[r_id][version]
+
+        generator = CommandGenerator()
+        generator.load_resources([resource])
+        command_group = generator.create_draft_command_group(resource, methods={"put"})  # only modify PUT operation
+        responses = command_group.commands[0].operations[0].http.responses
+        status_codes = reduce(lambda x, y: x + y, [r.status_codes for r in responses])
+
+        assert set(status_codes).issuperset({200, 201})

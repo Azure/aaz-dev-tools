@@ -12,6 +12,7 @@ from .parameter import ParameterField, PathParameter, QueryParameter, HeaderPara
     FormDataParameter, ParameterBase
 from .reference import Reference, Linkable
 from .response import Response
+from .schema import ReferenceSchema
 from .x_ms_long_running_operation import XmsLongRunningOperationField, XmsLongRunningOperationOptionsField
 from .x_ms_odata import XmsODataField
 from .x_ms_pageable import XmsPageableField
@@ -60,6 +61,7 @@ class Operation(Model, Linkable):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.x_ms_odata_instance = None
+        self.x_ms_lro_final_state_schema = None
 
     def link(self, swagger_loader, *traces):
         if self.is_linked():
@@ -118,6 +120,16 @@ class Operation(Model, Linkable):
                 self.x_ms_odata, *self.traces, 'x_ms_odata')
             if isinstance(self.x_ms_odata_instance, Linkable):
                 self.x_ms_odata_instance.link(swagger_loader, *instance_traces)
+
+        if self.x_ms_long_running_operation_options is not None and \
+                self.x_ms_long_running_operation_options.final_state_schema is not None:
+            # `final-state-schema` to `$ref`
+            self.x_ms_lro_final_state_schema = ReferenceSchema()
+            self.x_ms_lro_final_state_schema.ref = self.x_ms_long_running_operation_options.final_state_schema
+            self.x_ms_lro_final_state_schema.link(
+                swagger_loader,
+                *self.traces, "x_ms_long_running_operation_options", "final_state_schema"
+            )
 
     def to_cmd(self, builder, parent_parameters, **kwargs):
         cmd_op = CMDHttpOperation()

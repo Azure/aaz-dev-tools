@@ -38,6 +38,11 @@ class XmsLongRunningOperationOptions(Model):
         deserialize_from='final-state-via',
     )
 
+    final_state_schema = StringType(
+        serialized_name="final-state-schema",
+        deserialize_from="final-state-schema",
+    )
+
 
 class XmsLongRunningOperationOptionsField(ModelType):
 

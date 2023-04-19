@@ -25,10 +25,15 @@ from command.model.configuration import CMDSchemaDefault, \
 
 from swagger.utils import exceptions
 from .fields import MutabilityEnum
+from .response import Response
 from .schema import ReferenceSchema
 from .x_ms_pageable import XmsPageable
+from functools import reduce
 from utils.case import to_camel_case
+import logging
 import re
+
+logger = logging.getLogger("backend")
 
 
 class CMDBuilder:
@@ -548,6 +553,17 @@ class CMDBuilder:
         if success_204_response is not None:
             # append 204 No Content response at the end of success response
             success_responses.append(success_204_response)
+
+        success_codes = reduce(lambda x, y: x | y, [codes for codes, _ in success_responses])
+        if schema.x_ms_long_running_operation and not success_codes & {200, 201}:
+            if lro_schema := schema.x_ms_lro_final_state_schema:
+                lro_response = Response()
+                lro_response.description = "Response schema for long-running operation."
+                lro_response.schema = lro_schema
+
+                success_responses.append(({200, 201}, lro_response))  # use `final-state-schema` as response
+            else:
+                logger.warning(f"No response schema for long-running-operation: {schema.operation_id}.")
 
         # # default response
         # if 'default' not in error_responses and len(error_responses) == 1:
