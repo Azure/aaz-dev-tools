@@ -3,6 +3,10 @@
 Release History
 ===============
 
+1.1.1
+++++++
+* Support x-ms-long-running-operation-options.final-state-schema of swagger (#237)
+
 1.1.0
 ++++++
 * Support x-ms-secret of swagger (#235)
