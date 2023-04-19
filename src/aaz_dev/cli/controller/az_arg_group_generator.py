@@ -244,6 +244,25 @@ def render_arg(arg, cmd_ctx, arg_group=None):
 
     arg_type, arg_kwargs, cls_builder_name = render_arg_base(arg, cmd_ctx, arg_kwargs)
 
+    if arg.prompt:
+        if arg_type == "AAZPasswordArg":
+            arg_kwargs["prompt"] = {
+                "cls": "AAZPromptPasswordInput",
+                "kwargs": {
+                    "msg": arg.prompt.msg,
+                }
+            }
+            if arg.prompt.confirm:
+                arg_kwargs["prompt"]["kwargs"]["confirm"] = arg.prompt.confirm
+        else:
+            arg_kwargs["prompt"] = {
+                "cls": "AAZPromptInput",
+                "kwargs": {
+                    "msg": arg.prompt.msg,
+                }
+            }
+    if "blank" in arg_kwargs and "prompt" in arg_kwargs:
+        raise KeyError("An argument cannot contain both prompt and blank")
     return arg_type, arg_kwargs, cls_builder_name
 
 
@@ -329,9 +348,8 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
             arg_type = "AAZDateTimeArg"
         elif isinstance(arg, CMDUuidArgBase):
             arg_type = "AAZUuidArg"
-        # TODO: Support Password Arg
-        # elif isinstance(arg, CMDPasswordArgBase):
-            # arg_type = "AAZPasswordArg"
+        elif isinstance(arg, CMDPasswordArgBase):
+            arg_type = "AAZPasswordArg"
 
     elif isinstance(arg, CMDIntegerArgBase):
         arg_type = "AAZIntArg"

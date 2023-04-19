@@ -93,6 +93,19 @@ class CMDArgBlank(Model):
     value = CMDPrimitiveField()  # json value format string, support null
 
 
+class CMDArgPromptInput(Model):
+    """ Support the prompt input for """
+
+    # The prompt string, if given, is printed to standard output without a trailing newline before reading input.
+    msg = StringType(required=True)
+
+
+class CMDPasswordArgPromptInput(CMDArgPromptInput):
+
+    # Ask the user to re-enter the same value to confirm. It's supported for CMDPasswordArg only.
+    confirm = CMDBooleanField()
+
+
 class CMDArgBase(Model):
     TYPE_VALUE = None
 
@@ -199,6 +212,7 @@ class CMDArg(CMDArgBase):
     # properties as nodes
     help = ModelType(CMDArgumentHelp)
     default = ModelType(CMDArgDefault)  # default value is used when argument isn't in command
+    prompt = ModelType(CMDArgPromptInput)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -225,7 +239,7 @@ class CMDArg(CMDArgBase):
 
         arg.required = builder.get_required()
         arg.default = builder.get_default()
-
+        arg.prompt = builder.get_prompt()
         arg.hide = builder.get_hide()
         return arg
 
@@ -417,7 +431,8 @@ class CMDPasswordArgBase(CMDStringArgBase):
 
 
 class CMDPasswordArg(CMDPasswordArgBase, CMDStringArg):
-    pass
+
+    prompt = ModelType(CMDPasswordArgPromptInput)
 
 
 # subscription
