@@ -46,9 +46,6 @@ def create_app():
     from cli.api import register_blueprints
     register_blueprints(app)
 
-    from docs.api import register_blueprints
-    register_blueprints(app)
-
     return app
 
 
