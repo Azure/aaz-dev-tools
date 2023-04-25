@@ -1,3 +1,10 @@
+---
+layout: page
+title: Command Usage/Testing
+permalink: /usage/command-usage-testing/
+weight: 103
+---
+
 # Command Usage/Testing
 
 ## Overview
@@ -21,7 +28,7 @@ For issues debugging, use `--debug` parameter appended the above cmd.
 
 For Pycharm Community, set env `Azure_TEST_RUN_LIVE` to be `true` for live mode and `false` for non-live mode.
 
-![pycharm_env](/Docs/images/pycharm_live.png)
+![pycharm_env](../../assets/images/pycharm_live.png)
 
 ### 2. intergration test
 Run tests for specific modules

@@ -1,3 +1,10 @@
+---
+layout: page
+title: FAQ
+permalink: /faq/
+weight: 999
+---
+
 # FAQ
 ---
 
