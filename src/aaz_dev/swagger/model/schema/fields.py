@@ -70,6 +70,17 @@ class XcadlGeneratedField(BaseType):
         )
 
 
+class XTypespecGeneratedField(BaseType):
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            default=False,
+            serialized_name="x-typespec-generated",
+            deserialize_from="x-typespec-generated",
+            **kwargs
+        )
+
+
 class XmsSkipURLEncodingField(BooleanType):
     """
     skips URL encoding for path and query parameters.
@@ -380,6 +391,16 @@ class XCadlNameField(StringType):
         super().__init__(
             serialized_name='x-cadl-name',
             deserialize_from='x-cadl-name',
+            **kwargs
+        )
+
+
+class XTypespecNameField(StringType):
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            serialized_name='x-typespec-name',
+            deserialize_from='x-typespec-name',
             **kwargs
         )
 

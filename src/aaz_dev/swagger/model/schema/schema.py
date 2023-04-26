@@ -16,7 +16,7 @@ from .fields import DataTypeFormatEnum, RegularExpressionField, XmsClientNameFie
     XmsDiscriminatorValueField, XmsClientFlattenField, XmsMutabilityField, XmsClientDefaultField, XNullableField, \
     XmsAzureResourceField, MutabilityEnum, XmsArmIdDetailsField
 from .fields import XmsSecretField, XAccessibilityField, XAzSearchDeprecatedField, XSfClientLibField, \
-    XApimCodeNillableField, XCommentField, XAbstractField, XADLNameField, XCadlNameField
+    XApimCodeNillableField, XCommentField, XAbstractField, XADLNameField, XCadlNameField, XTypespecNameField
 from .reference import ReferenceField, Linkable
 from .x_ms_enum import XmsEnumField
 from .xml import XML
@@ -258,6 +258,7 @@ class Schema(Model, Linkable):
     _x_dictionary_key = ModelType(ReferenceSchema, serialized_name="x-dictionaryKey", deserialize_from="x-dictionaryKey")  # Only used in Marketplane Catalog Data Plane
 
     _x_cadl_name = XCadlNameField()  # Cadl field name
+    _x_typespec_name = XTypespecNameField()  # Typespec field name
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
