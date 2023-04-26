@@ -6,7 +6,7 @@ Release History
 1.2.0
 ++++++
 * Support argument prompt input (#238)
-* Setup Github Pages, move content into docs and link docs to Github Pages in aaz-dev-tools
+* Setup Github Pages, move content into docs and link docs to Github Pages in aaz-dev-tools (#240)
 
 1.1.1
 ++++++
