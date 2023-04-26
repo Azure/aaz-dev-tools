@@ -106,7 +106,7 @@ class CLIModuleGenerator extends React.Component<CLIModuleGeneratorProps, CLIMod
     }
 
     handleBackToHomepage = () => {
-        window.location.href = `/?#/cli`
+        window.open('/?#/cli', "_blank");
     }
 
     handleGenerate = () => {

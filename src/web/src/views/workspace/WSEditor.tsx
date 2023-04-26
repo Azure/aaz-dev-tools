@@ -271,7 +271,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 
     handleBackToHomepage = () => {
-        window.location.href = `/?#/workspace`
+        window.open('/?#/workspace', "_blank");
     }
 
     handleGenerate = () => {
