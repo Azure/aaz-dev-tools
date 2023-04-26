@@ -3,6 +3,10 @@
 Release History
 ===============
 
+1.2.1
+++++++
+* Support x-typespec-name and x-typespec-generated in swagger (#243)
+
 1.2.0
 ++++++
 * Support argument prompt input (#238)
