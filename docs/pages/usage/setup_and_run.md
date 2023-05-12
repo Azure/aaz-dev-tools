@@ -10,7 +10,7 @@ weight: 100
 ## Setup python
 
 ### Setup build env
-- For linux users, setup python3 build tools would avoid other unseen installation issues
+- For Linux users, setup python3 build tools would avoid other unseen installation issues
     ```bash
     apt install python3-dev build-essential # Ubuntu, Debian 
     yum install python3-devel # Centos
@@ -20,17 +20,17 @@ weight: 100
 
 This tool is compatible with python versions >=3.8 and <=3.10. You can use an existing python or install a new one by the following ways:
 
-- For windows users: You can download and run full installer from [Python Download](https://www.python.org/downloads/).
-- For linux users: You can install python from Package Manager or build a stable release from source code
+- For Windows users: You can download and run full installer from [Python Download](https://www.python.org/downloads/).
+- For Linux users: You can install python from Package Manager or build a stable release from source code
 
 After installation, you can run the following commands to check the version:
-- For windows users:
+- For Windows users:
     You can run:
     ```PowerShell
     C:\Users\{xxxx}\AppData\Local\Programs\Python\Python3{xxxx}\python --version
     ```
     __C:\Users\{xxxx}\AppData\Local\Programs\Python\Python3{xxxx}__ is the python installation path.
-- For linux users:
+- For Linux users:
     ```bash
     python --version
     ```
@@ -44,20 +44,20 @@ After installation, you can run the following commands to check the version:
 Please create a new virtual environment for Azure CLI development to isolate from the system environment.
 
 You can run the following command to create a new virtual environment:
-- For windows users:
+- For Windows users:
     ```PowerShell
     C:\Users\{xxxx}\AppData\Local\Programs\Python\Python3{xxxx}\python -m venv {some path}\{venv name}
     ```
-- For linux users:
+- For Linux users:
     ```bash
     python3.8 -m venv {some path}/{venv name}
     ```
 
 ### Active existing virtual environment
 
-You should __always__ active the virtual environment for azure-cli development. When a virtual environment is activated, the `python` command will always be the `python` that created this virtual environment.
+You should __always__ activate the virtual environment for azure-cli development. When a virtual environment is activated, the `python` command will always be the `python` that created this virtual environment.
 
-- For windows users:
+- For Windows users:
     - Powershell
         ```powershell
         {some path}\{venv name}\Scripts\Activate.ps1
@@ -66,7 +66,7 @@ You should __always__ active the virtual environment for azure-cli development. 
         ```Command Prompt
         {some path}\{venv name}\Scripts\activate.bat
         ```
-- For linux users:
+- For Linux users:
     ```bash
     source {some path}/{venv name}/bin/activate
     ```
@@ -84,18 +84,18 @@ pip install aaz-dev
 ```
 
 ### python-levenshtein installation issues
-- For windows users, dependency python-levenshtein installation might run into trouble. developers might need to download [.whl](https://www.lfd.uci.edu/~gohlke/pythonlibs/#python-levenshtein) file and install it manually (reference to [link](https://stackoverflow.com/questions/37676623/cant-install-levenshtein-distance-package-on-windows-python-3-5/46414982))
+- For Windows users, dependency python-levenshtein installation might run into trouble. developers might need to download [.whl](https://www.lfd.uci.edu/~gohlke/pythonlibs/#python-levenshtein) file and install it manually (reference to [link](https://stackoverflow.com/questions/37676623/cant-install-levenshtein-distance-package-on-windows-python-3-5/46414982))
 
 ## Code repos setup
 
 ### Fork and clone repos
 
-`aaz-dev-tools` relies on the following repos, Please `Fork` these repos in your github account and `Clone` them in your local disk. After clone you can add `upstream` for every repos in your local clone by using `git remote add upstream`.
+`aaz-dev-tools` relies on the following repos, Please `Fork` these repos in your GitHub account and `Clone` them in your local disk. After clone, you can add `upstream` for every repo in your local clone by using `git remote add upstream`.
 
    - Azure CLI code repos:
-     - [Azure CLI](https://github.com/Azure/azure-cli): Before start to the development task, you should always sync the code in the `dev` branch of `upstream`(Azure/Azure-cli). If your commands will generated to azure-cli repo, you should checkout a new branch with `feature-` prefix.
+     - [Azure CLI](https://github.com/Azure/azure-cli): Before start to the development task, you should always sync the code in the `dev` branch of `upstream`(Azure/Azure-cli). If your commands will be generated to azure-cli repo, you should checkout a new branch with `feature-` prefix.
 
-     - [Azure CLI Extension](https://github.com/Azure/azure-cli-extensions): If your commands will generated to azure-cli-extension repo, you should sync the code in the `main` branch of `upstream`(Azure/Azure-cli-extensions), and checkout a new branch with `feature-` prefix.
+     - [Azure CLI Extension](https://github.com/Azure/azure-cli-extensions): If your commands will be generated to azure-cli-extension repo, you should sync the code in the `main` branch of `upstream`(Azure/Azure-cli-extensions), and checkout a new branch with `feature-` prefix.
 
    - AAZ command models repo:
      - [AAZ](https://github.com/Azure/aaz): This repo is used to upload the command models generated. Before start to the development task, you should always sync the change in the `main` branch of `upstream`, and checkout a new branch with `feature-` prefix.
