@@ -120,7 +120,7 @@ The following command will start a backend service and open a web page in the br
 aaz-dev run --cli-path {path to azure-cli} --cli-extension-path {path to azure-cli-extensions} --swagger-path {path to azure-rest-api-specs or azure-rest-api-specs-pr} --aaz-path {path to aaz}
 ```
 
-![quick start](../../assets/images/setup_and_run/quick_start.png)
+![quick start](../../assets/recordings/setup_and_run/quick_start.gif)
 
 ### Other arguments
 
@@ -131,7 +131,7 @@ aaz-dev run --cli-path {path to azure-cli} --cli-extension-path {path to azure-c
 
 You can use the following arguments to specify swagger files for a specific resource provider:
 - `--swagger-module-path, --sm`
-- `-m, --module`
+- `-m, --module`    
 
 ```bash
 aaz-dev run --cli-path {path to azure-cli} --cli-extension-path {path to azure-cli-extensions} --aaz-path {path to aaz} --swagger-module-path {path to swagger files in module level} --module {the name of module}
