@@ -68,3 +68,33 @@ You can select them `All` or only pick some of them on demand which is recommend
 Click `Submit` button will generate command models in workspace and back to the workspace page. Those new commands are added in the command tree.
 
 ![pick_resource_urls](../../assets/recordings/workspace_editor/pick_resource_urls.gif)
+
+#### Inherit modifications from exported command models
+
+While adding a swagger resource, aaz-dev supports to inherit modifications directly from command models of the same resource generated and exported in `aaz` repo. This avoids many repetitive works. You can select different versions to inherit.
+
+![pick_resources_with_inheritance](../../assets/recordings/workspace_editor/pick_resources_with_inheritance.gif)
+
+#### The generation of `Update` commands
+
+There are two mechanisms to implement `Update` in azure-cli.
+
+- Generic Update: use `Get` request to fetch the resource, modify the resource and use `Put` request to submit the whole modified resource. About __99%__ `Update` commands in azure-cli use this mechanism.
+- Patch Update: use `Patch` request to submit the change only.
+
+There's three modes to control the generation of `Update` commands while add the resources.
+
+- Generic(Get&Put) First: If the resource supports `Get` and `Put` methods, generate the _Generic Update_, else if it supports `Patch` method, it generate the _Patch Update_.
+- Patch First: If the resource supports `Patch` method, it generate the _Patch Update_, else if it supports `Get` and `Put` methods.
+- No update command: Never generate `Update` commands for the resource.
+
+> **Note**
+> This selection will apply to all the resources to submit. So if some of the resources should use a different mode, you should pick and submit them in the next new `Add Swagger Resources` page with a different mode.
+
+![pick_resources_with_update_modes](../../assets/recordings/workspace_editor/pick_resources_with_update_modes.gif)
+
+#### Issues while adding swagger
+
+The aaz-dev tool uses strict mode to parse swagger. It will cause problems when adding swagger resources if the swagger files contains non-standard definitions. If you encounter such problem, you should check the __logs__ of aaz-dev __backend service__ and create a github issue in aaz-dev-tools repo or post it in _Team Channel_: `Azure CLIs partners/Azure CLI CodeGen`
+
+![pick_resource_with_issues](../../assets/recordings/workspace_editor/pick_resource_with_issues.gif)
