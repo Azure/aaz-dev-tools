@@ -41,4 +41,30 @@ Click the `DELETE` button you can delete the opened workspace. It requires to in
 ### Add Swagger Resources
 
 When an empty workspace is opened, the `Add Swagger Resources` page will be prompted out by default.
- 
+
+For a workspace contains commands, click the `+` button besides the `command tree`, the `Add Swagger Resources` page will prompted out as well.
+
+![prompt_add_swagger_resources_page](../../assets/recordings/workspace_editor/prompt_add_swagger_resources_page.gif)
+
+#### Swagger Filters
+
+The Swagger Filters can help you quickly filter out the resources to generate commands. They are
+
+- Swagger Module selector
+- Resource Provider selector
+- API Version selector
+
+![filter_swagger_resources](../../assets/recordings/workspace_editor/filter_swagger_resources.gif)
+
+#### Pick Resource Urls
+
+After the resources are filtered, you can select the resource urls on the right table.
+
+> **Note**
+> For the resources already added in the current workspace, their urls will be filtered out in the table. That's by design to avoid you add the same resource multiple times in one workspace, even in different api-versions is not allowed.
+
+You can select them `All` or only pick some of them on demand which is recommended for beginners. You can also use the `Filter` bar to filter out a table by some keywords or the path key in swagger.
+
+Click `Submit` button will generate command models in workspace and back to the workspace page. Those new commands are added in the command tree.
+
+![pick_resource_urls](../../assets/recordings/workspace_editor/pick_resource_urls.gif)
