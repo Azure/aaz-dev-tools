@@ -38,7 +38,7 @@ Click the `DELETE` button you can delete the opened workspace. It requires to in
 
 ![delete_a_workspace](../../assets/recordings/workspace_editor/delete_a_workspace.gif)
 
-### Add Swagger Resources
+## Add Swagger Resources
 
 When an empty workspace is opened, the `Add Swagger Resources` page will be prompted out by default.
 
@@ -46,7 +46,7 @@ For a workspace contains commands, click the `+` button besides the `command tre
 
 ![prompt_add_swagger_resources_page](../../assets/recordings/workspace_editor/prompt_add_swagger_resources_page.gif)
 
-#### Swagger Filters
+### Swagger Filters
 
 The Swagger Filters can help you quickly filter out the resources to generate commands. They are
 
@@ -56,7 +56,7 @@ The Swagger Filters can help you quickly filter out the resources to generate co
 
 ![filter_swagger_resources](../../assets/recordings/workspace_editor/filter_swagger_resources.gif)
 
-#### Pick Resource Urls
+### Pick Resource Urls
 
 After the resources are filtered, you can select the resource urls on the right table.
 
@@ -69,13 +69,13 @@ Click `Submit` button will generate command models in workspace and back to the 
 
 ![pick_resource_urls](../../assets/recordings/workspace_editor/pick_resource_urls.gif)
 
-#### Inherit modifications from exported command models
+### Inherit modifications from exported command models
 
 While adding a swagger resource, aaz-dev supports to inherit modifications directly from command models of the same resource generated and exported in `aaz` repo. This avoids many repetitive works. You can select different versions to inherit.
 
 ![pick_resources_with_inheritance](../../assets/recordings/workspace_editor/pick_resources_with_inheritance.gif)
 
-#### The generation of `Update` commands
+### The generation of `Update` commands
 
 There are two mechanisms to implement `Update` in azure-cli.
 
@@ -93,17 +93,17 @@ There's three modes to control the generation of `Update` commands while add the
 
 ![pick_resources_with_update_modes](../../assets/recordings/workspace_editor/pick_resources_with_update_modes.gif)
 
-#### Issues while adding swagger
+### Issues while adding swagger
 
 The aaz-dev tool uses strict mode to parse swagger. It will cause problems when adding swagger resources if the swagger files contains non-standard definitions. If you encounter such problem, you should check the __logs__ of aaz-dev __backend service__ and post it in [_Team Channel_](https://aka.ms/azure-cli-codegen-channel) or create a github issue.
 
 ![pick_resource_with_issues](../../assets/recordings/workspace_editor/pick_resource_with_issues.gif)
 
-### Modify Command Tree
+## Modify Command Tree
 
 All the commands in a workspace are organized in a tree view. When you rename or delete commands or command groups the tree view will be updated. Usually it is the first step after resources are added,
 
-#### Rename Command/Command Group
+### Rename Command/Command Group
 
 When you select a command or group name in the tree view, its details are displayed in the right area. Click the `Edit` button, you can rename it in the `Name` field. The name are composed of some keywords and are separated by spaces. Every keyword is represented for a node or leaf in the command tree. And the keywork should be in [Kebab_case](https://en.wikipedia.org/wiki/Letter_case#Kebab_case). You can reference [Command Naming Guideline](https://github.com/Azure/azure-cli/blob/dev/doc/command_guidelines.md#command-naming-and-behavior) for more information.
 
@@ -111,14 +111,13 @@ If you rename a group name, it will update all the elements names in its sub tre
 
 ![rename_in_command_tree](../../assets/recordings/workspace_editor/rename_in_command_tree.gif)
 
-
-#### Delete Command Group
+### Delete Command Group
 
 You can delete an empty command group which has no commands in its sub tree. If it contains any commands, the `Delete` button is not clickable.
 
 ![delete_a_command_group](../../assets/recordings/workspace_editor/delete_a_command_group.gif)
 
-#### Delete Commands
+### Delete Commands
 
 The commands in workspace are deleted by the swagger resource, if a resource generates `create`, `delete`, `update` and `show` commands, they will be deleted together.
 
@@ -129,7 +128,7 @@ The commands in workspace are deleted by the swagger resource, if a resource gen
 
 ![delete_the_list_command](../../assets/recordings/workspace_editor/delete_the_list_command.gif)
 
-#### Merge similar resource urls in one command
+### Merge similar resource urls in one command
 
 aaz-dev supports to merge similar resource urls in one command. But there are the following restrictions:
 
@@ -148,3 +147,6 @@ But sometimes two resources cannot be merged because the `valid part` of the url
 > If you're trying to avoid the default merging behavior, you should can add one fist, rename the command to something different to avoid automatic merging, then add the following one.
 
 ![avoid_default_resources_merging](../../assets/recordings/workspace_editor/avoid_default_resources_merging.gif)
+
+## Modify Command Group
+
