@@ -22,7 +22,7 @@ class Operation(Model, Linkable):
     """Describes a single API operation on a path."""
 
     tags = ListType(StringType())  # A list of tags for API documentation control. Tags can be used for logical grouping of operations by resources or any other qualifier.
-    summary = StringType()  # TODO: # A short summary of what the operation does. For maximum readability in the swagger-ui, this field SHOULD be less than 120 characters.
+    summary = StringType()  # A short summary of what the operation does. For maximum readability in the swagger-ui, this field SHOULD be less than 120 characters.
     description = StringType()  # A verbose explanation of the operation behavior. GFM syntax can be used for rich text representation.
     external_docs = ModelType(
         ExternalDocumentation,
