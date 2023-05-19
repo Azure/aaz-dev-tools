@@ -350,8 +350,10 @@ class CMDBuilder:
     def setup_description(model, schema):
         if schema.description:
             model.description = schema.description
-        elif schema.title:
+        elif getattr(schema, 'title', None):
             model.description = schema.title
+        elif getattr(schema, 'summary', None):
+            model.description = schema.summary
 
     @staticmethod
     def setup_secret(model, schema):
