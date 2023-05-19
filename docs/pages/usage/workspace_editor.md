@@ -148,5 +148,74 @@ But sometimes two resources cannot be merged because the `valid part` of the url
 
 ![avoid_default_resources_merging](../../assets/recordings/workspace_editor/avoid_default_resources_merging.gif)
 
-## Modify Command Group
+## Modify Help for Commands and Groups
 
+The are two kinds of summaries for commands and command-groups:
+
+- Short Summary: Will be displayed in the help of the parent level and itself. **It's required for all commands and groups**
+- Long Summary: Only be displayed in its help. It's optional. Supports multiple lines.
+
+Click the `Edit` button, you can fill the `short summary` and `long summary` fields.
+
+![command_group_modify_help](../../assets/recordings/workspace_editor/command_group_modify_help.gif)
+
+## Modify Command
+
+### Command Confirmation
+
+The confirmation message of a command is prompted before it runs. aaz-dev will add default confirmation for all `delete` commands. If you want to disable it, you can clean up the `Command confirmation
+` field in it.
+
+![remove_confirmation_prompt_for_delete](../../assets/recordings/workspace_editor/remove_confirmation_prompt_for_delete.gif)
+
+## Modify Arguments
+
+### Browse Arguments
+
+The command view has the `ARGUMENT` card to display all of the arguments. You can click into any argument to review the detail. And click the index buttons, you can go back to previous views.
+
+![browse_arguments](../../assets/recordings/workspace_editor/browse_arguments.gif)
+
+### Argument Types
+
+Arguments can be divided into two categories:
+
+- Simple Arguments
+- Compound Arguments
+
+#### Simple Argument Types
+
+Most arguments are mapping from the `type` field plus the `format` field (if defined) in swagger. They are shown in the table below:
+
+| Argument Type | Swagger type **+** _format_ | Comments |
+| ---- | ---- | ---- |
+| **boolean** | boolean | Its _blank value_ is `True`, which is compatible with current tree state argument types in azure-cli |
+| **integer** | integer | Support swagger [`enum`](https://swagger.io/docs/specification/2-0/enums/), [`x-ms-enum`](http://azure.github.io/autorest/extensions/#x-ms-enum), `multipleOf`, `maximum` and `minium` fields |
+| **integer32** | integer **+** _int32_ | 32-bit  |
+| **integer64** | integer **+** _int64_ | 64-bit |
+| **float** | number | Support swagger `enum`, `x-ms-enum`, `multipleOf`, `maximum`, `minium`, `exclusiveMaximum` and `exclusiveMinimum` fields |
+| **float32** | number **+** _float_ | 32-bit |
+| **float64** | number **+** _double_ | 64-bit |
+| **string** | string | Support swagger `enum`, `x-ms-enum`, `pattern`, `maxLength` and `minLength` fields |
+| **string** | string **+** _uri_ |  |
+| **duration** | string **+** _duration_ | Use [ISO 8601 duration format](https://www.digi.com/resources/documentation/digidocs//90001488-13/reference/r_iso_8601_duration_format.htm) |
+| **date** | string **+** _date_ | Use `yyyy-mm-dd` date format |
+| **time** | string **+** _time_ | Use `hh:mm:ss.xxxxxx` time format |
+| **dateTime** | string **+** _date-time_ | Use  [ISO 8601 date format](https://www.digi.com/resources/documentation/digidocs//90001488-13/reference/r_iso_8601_date_format.htm) |
+| **uuid** | string **+** _uuid_ |  |
+| **password** | string **+** _password_ | Support prompt input when user provide _blank value_ |
+| **ResourceId** | string **+** _arm-id_ | Arm resource id input file. It will enable azure cli _Cross Tenants Authenticate_ when it contains different subscription id.  |
+| **SubscriptionId** | string | Subscription parameter in the url path. |
+| **ResourceGroupName** | string | Resource group parameter in the url path. |
+| **ResourceLocation** | string | `location` property in the request body. |
+
+#### Component Argument Types
+
+| Argument Type | Swagger type  **+** SpecialField | Comments |
+| ---- | ---- | ---- |
+| **object** | | |
+| **dict<string, \*>** | | |
+| **dict<string, Any>** | | |
+| **array<\*>** | | |
+
+#### Class Argument Type
