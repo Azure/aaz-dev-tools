@@ -1,5 +1,5 @@
 from command.model.configuration import CMDStringArgBase, CMDByteArgBase, CMDBinaryArgBase, CMDDurationArgBase, \
-    CMDDateArgBase, CMDDateTimeArgBase, CMDUuidArgBase, CMDPasswordArgBase, \
+    CMDDateArgBase, CMDDateTimeArgBase, CMDTimeArgBase, CMDTimeArg, CMDUuidArgBase, CMDPasswordArgBase, \
     CMDSubscriptionIdArgBase, CMDResourceGroupNameArgBase, CMDResourceIdArgBase, CMDResourceLocationArgBase, \
     CMDIntegerArgBase, CMDBooleanArgBase, CMDFloatArgBase, CMDObjectArgBase, CMDArrayArgBase, CMDClsArgBase, \
     CMDSubscriptionIdArg, CMDArg
@@ -346,6 +346,8 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
             arg_type = "AAZDateArg"
         elif isinstance(arg, CMDDateTimeArgBase):
             arg_type = "AAZDateTimeArg"
+        elif isinstance(arg, CMDTimeArgBase):
+            arg_type = "AAZTimeArg"
         elif isinstance(arg, CMDUuidArgBase):
             arg_type = "AAZUuidArg"
         elif isinstance(arg, CMDPasswordArgBase):

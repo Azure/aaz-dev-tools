@@ -8,6 +8,7 @@ from ._arg import CMDArgEnumItem, CMDArgEnum, \
     CMDDurationArgBase, CMDDurationArg, \
     CMDDateArgBase, CMDDateArg, \
     CMDDateTimeArgBase, CMDDateTimeArg, \
+    CMDTimeArgBase, CMDTimeArg, \
     CMDUuidArgBase, CMDUuidArg, \
     CMDPasswordArgBase, CMDPasswordArg, \
     CMDSubscriptionIdArgBase, CMDSubscriptionIdArg, \
@@ -60,6 +61,7 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDDurationSchemaBase, CMDDurationSchema, \
     CMDDateSchemaBase, CMDDateSchema, \
     CMDDateTimeSchemaBase, CMDDateTimeSchema, \
+    CMDTimeSchemaBase, CMDTimeSchema, \
     CMDUuidSchemaBase, CMDUuidSchema, \
     CMDPasswordSchemaBase, CMDPasswordSchema, \
     CMDResourceIdSchemaBase, CMDResourceIdSchema, \

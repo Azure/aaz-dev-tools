@@ -7,6 +7,7 @@ from command.model.configuration import CMDSchemaDefault, \
     CMDBinarySchema, CMDBinarySchemaBase, \
     CMDDateSchema, CMDDateSchemaBase, \
     CMDDateTimeSchema, CMDDateTimeSchemaBase, \
+    CMDTimeSchema, CMDTimeSchemaBase, \
     CMDPasswordSchema, CMDPasswordSchemaBase, \
     CMDDurationSchema, CMDDurationSchemaBase, \
     CMDUuidSchema, CMDUuidSchemaBase, \
@@ -118,6 +119,11 @@ class CMDBuilder:
                     model = CMDDateTimeSchemaBase()
                 else:
                     model = CMDDateTimeSchema()
+            elif schema.format == "time":
+                if self.in_base:
+                    model = CMDTimeSchemaBase()
+                else:
+                    model = CMDTimeSchema()
             elif schema.format == "password":
                 if self.in_base:
                     model = CMDPasswordSchemaBase()
