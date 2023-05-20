@@ -1807,6 +1807,9 @@ interface CMDDateArg extends CMDDateArgBase, CMDStringArg { }
 interface CMDDateTimeArgBase extends CMDStringArgBase { }
 interface CMDDateTimeArg extends CMDDateTimeArgBase, CMDStringArg { }
 
+interface CMDTimeArgBase extends CMDStringArgBase { }
+interface CMDTimeArg extends CMDTimeArgBase, CMDStringArg { }
+
 // type: uuid 
 interface CMDUuidArgBase extends CMDStringArgBase { }
 interface CMDUuidArg extends CMDUuidArgBase, CMDStringArg { }
@@ -1966,6 +1969,7 @@ function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsA
         case "duration":
         case "date":
         case "dateTime":
+        case "time":
         case "uuid":
         case "password":
         case "SubscriptionId":
@@ -2145,6 +2149,7 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
         case "duration":
         case "date":
         case "dateTime":
+        case "time":
         case "uuid":
         case "SubscriptionId":
         case "ResourceGroupName":
@@ -2263,6 +2268,7 @@ function convertArgDefaultText(defaultText: string, argType: string): any {
         case "duration":
         case "date":
         case "dateTime":
+        case "time":
         case "uuid":
         case "password":
         case "SubscriptionId":

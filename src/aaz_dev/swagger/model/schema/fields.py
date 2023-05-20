@@ -5,7 +5,7 @@ class DataTypeFormatEnum(StringType):
     VALID_TYPE_FORMATS = (
         "int32", "int64",
         "float", "double",
-        "byte", "binary", "date", "date-time", "password",
+        "byte", "binary", "date", "date-time", "time", "password",
         # additional formats
         "duration", "uuid",
         "file", "uri",

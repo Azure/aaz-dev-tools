@@ -12,6 +12,7 @@ from ._arg import CMDStringArg, CMDStringArgBase, \
     CMDDurationArg, CMDDurationArgBase, \
     CMDDateArg, CMDDateArgBase, \
     CMDDateTimeArg, CMDDateTimeArgBase, \
+    CMDTimeArg, CMDTimeArgBase, \
     CMDUuidArg, CMDUuidArgBase, \
     CMDPasswordArg, CMDPasswordArgBase, \
     CMDResourceIdArg, CMDResourceIdArgBase, \
@@ -527,6 +528,15 @@ class CMDDateTimeSchemaBase(CMDStringSchemaBase):
 
 class CMDDateTimeSchema(CMDDateTimeSchemaBase, CMDStringSchema):
     ARG_TYPE = CMDDateTimeArg
+
+
+class CMDTimeSchemaBase(CMDStringSchemaBase):
+    TYPE_VALUE = "time"
+    ARG_TYPE = CMDTimeArgBase
+
+
+class CMDTimeSchema(CMDTimeSchemaBase, CMDStringSchema):
+    ARG_TYPE = CMDTimeArg
 
 
 # uuid

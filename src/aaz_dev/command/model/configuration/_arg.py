@@ -416,6 +416,14 @@ class CMDDateTimeArg(CMDDateTimeArgBase, CMDStringArg):
     pass
 
 
+class CMDTimeArgBase(CMDStringArgBase):
+    TYPE_VALUE = "time"
+
+
+class CMDTimeArg(CMDTimeArgBase, CMDStringArg):
+    pass
+
+
 # uuid
 class CMDUuidArgBase(CMDStringArgBase):
     TYPE_VALUE = "uuid"
