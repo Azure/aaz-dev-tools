@@ -187,35 +187,75 @@ Arguments can be divided into two categories:
 
 Most arguments are mapping from the `type` field plus the `format` field (if defined) in swagger. They are shown in the table below:
 
-| Argument Type | Swagger type **+** _format_ | Comments |
-| ---- | ---- | ---- |
-| **boolean** | boolean | Its _blank value_ is `True`, which is compatible with current tree state argument types in azure-cli |
-| **integer** | integer | Support swagger [`enum`](https://swagger.io/docs/specification/2-0/enums/), [`x-ms-enum`](http://azure.github.io/autorest/extensions/#x-ms-enum), `multipleOf`, `maximum` and `minium` fields |
-| **integer32** | integer **+** _int32_ | 32-bit  |
-| **integer64** | integer **+** _int64_ | 64-bit |
-| **float** | number | Support swagger `enum`, `x-ms-enum`, `multipleOf`, `maximum`, `minium`, `exclusiveMaximum` and `exclusiveMinimum` fields |
-| **float32** | number **+** _float_ | 32-bit |
-| **float64** | number **+** _double_ | 64-bit |
-| **string** | string | Support swagger `enum`, `x-ms-enum`, `pattern`, `maxLength` and `minLength` fields |
-| **string** | string **+** _uri_ |  |
-| **duration** | string **+** _duration_ | Use [ISO 8601 duration format](https://www.digi.com/resources/documentation/digidocs//90001488-13/reference/r_iso_8601_duration_format.htm) |
-| **date** | string **+** _date_ | Use `yyyy-mm-dd` date format |
-| **time** | string **+** _time_ | Use `hh:mm:ss.xxxxxx` time format |
-| **dateTime** | string **+** _date-time_ | Use  [ISO 8601 date format](https://www.digi.com/resources/documentation/digidocs//90001488-13/reference/r_iso_8601_date_format.htm) |
-| **uuid** | string **+** _uuid_ |  |
-| **password** | string **+** _password_ | Support prompt input when user provide _blank value_ |
-| **ResourceId** | string **+** _arm-id_ | Arm resource id input file. It will enable azure cli _Cross Tenants Authenticate_ when it contains different subscription id.  |
-| **SubscriptionId** | string | Subscription parameter in the url path. |
-| **ResourceGroupName** | string | Resource group parameter in the url path. |
-| **ResourceLocation** | string | `location` property in the request body. |
+| Argument Type         | Swagger type **+** _format_ | Comments                                                                                                                                                                                      |
+| --------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **boolean**           | boolean                     | Its _blank value_ is `True`, which is compatible with current tree state argument types in azure-cli                                                                                          |
+| **integer**           | integer                     | Support swagger [`enum`](https://swagger.io/docs/specification/2-0/enums/), [`x-ms-enum`](http://azure.github.io/autorest/extensions/#x-ms-enum), `multipleOf`, `maximum` and `minium` fields |
+| **integer32**         | integer **+** _int32_       | 32-bit                                                                                                                                                                                        |
+| **integer64**         | integer **+** _int64_       | 64-bit                                                                                                                                                                                        |
+| **float**             | number                      | Support swagger `enum`, `x-ms-enum`, `multipleOf`, `maximum`, `minium`, `exclusiveMaximum` and `exclusiveMinimum` fields                                                                      |
+| **float32**           | number **+** _float_        | 32-bit                                                                                                                                                                                        |
+| **float64**           | number **+** _double_       | 64-bit                                                                                                                                                                                        |
+| **string**            | string                      | Support swagger `enum`, `x-ms-enum`, `pattern`, `maxLength` and `minLength` fields                                                                                                            |
+| **string**            | string **+** _uri_          |                                                                                                                                                                                               |
+| **duration**          | string **+** _duration_     | Use [ISO 8601 duration format](https://www.digi.com/resources/documentation/digidocs//90001488-13/reference/r_iso_8601_duration_format.htm)                                                   |
+| **date**              | string **+** _date_         | Use `yyyy-mm-dd` date format                                                                                                                                                                  |
+| **time**              | string **+** _time_         | Use `hh:mm:ss.xxxxxx` time format                                                                                                                                                             |
+| **dateTime**          | string **+** _date-time_    | Use  [ISO 8601 date format](https://www.digi.com/resources/documentation/digidocs//90001488-13/reference/r_iso_8601_date_format.htm)                                                          |
+| **uuid**              | string **+** _uuid_         |                                                                                                                                                                                               |
+| **password**          | string **+** _password_     | Support prompt input when user provide _blank value_                                                                                                                                          |
+| **ResourceId**        | string **+** _arm-id_       | Arm resource id input file. It will enable azure cli _Cross Tenants Authenticate_ when it contains different subscription id.                                                                 |
+| **SubscriptionId**    | string                      | Subscription parameter in the url path.                                                                                                                                                       |
+| **ResourceGroupName** | string                      | Resource group parameter in the url path.                                                                                                                                                     |
+| **ResourceLocation**  | string                      | `location` property in the request body.                                                                                                                                                      |
 
 #### Component Argument Types
 
-| Argument Type | Swagger type  **+** SpecialField | Comments |
-| ---- | ---- | ---- |
-| **object** | | |
-| **dict<string, \*>** | | |
-| **dict<string, Any>** | | |
-| **array<\*>** | | |
+The arguments are mapping from the `type` field plus some special field in swagger. They are shown in the table below: 
+
+| Argument Type         | Swagger type  **+** SpecialField           | Comments                                                                                   |
+| --------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| **object**            | object + `properties` field                | Properties' names and schemas defined in `properties` field.                               |
+| **dict<string, \*>**  | object + `additionalProperties` field      | The key is string type and the value schema is defined in `additionalProperties` field.    |
+| **dict<string, Any>** | object + `additionalProperties=true` field | Free-form dictionary, which doesn't define the value schema. So the value can be any type. |
+| **array<\*>**         | array + `items` field                      | The element schema is defined in `items` field.                                            |
+
+> **Note**
+> aaz-dev doesn't support swagger using `object` type + `properties` field + `additionalProperties` field. 
+
+### Modify Argument options
+
+Click the `Edit` button, you can update the argument options in that field. Multiple options are seperated by space. They should be in [Kebab_case](https://en.wikipedia.org/wiki/Letter_case#Kebab_case).
+
+![argument_update_option_name](../../assets/recordings/workspace_editor/argument_update_option_name.gif)
+
+> **Note**
+> If similar arguments exist in other commands, you can use `Update Similar` button when submitting. It will find the similar arguments in other commands of current workspace.
+
+![argument_update_similar](../../assets/recordings/workspace_editor/argument_update_similar.gif)
+
+### Using Singular Option Names
+
+For the `array` type argument, it has `Singular option names` field to specify the singular options. A `singular option` flag can accept an element as the value instead of an array.
+
+![argument_singular_option_use](../../assets/recordings/workspace_editor/argument_singular_option_use.gif)
+
+> **Note**
+> This is by design for backward compatibility with existing commands and is not recommended for new commands. So by default, it is unset.
+
+### Flatten Argument
+
+Some arguments have internal properties. For an `object` type argument, when it's neither an array element nor a polymorphism argument, you can flatten its properties to the upper level.
+
+![argument_flatten](../../assets/recordings/workspace_editor/argument_flatten.gif)
+
+> **Warning**
+> aaz-dev does __not__ support revert flattened argument. If you want to undo flatten, the simplest way is deleting the command and regenerate it from swagger again.
 
 #### Class Argument Type
+
+If an argument schema is used by multiple place, aaz-dev will create a class type for it. If you do some modification inside of the class, the change will be applied for the rest.
+
+You can use `unwrap` to seprate the current argument from the class type, and its modification will be independent of the class type.
+
+
