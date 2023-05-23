@@ -252,10 +252,55 @@ Some arguments have internal properties. For an `object` type argument, when it'
 > **Warning**
 > aaz-dev does __not__ support revert flattened argument. If you want to undo flatten, the simplest way is deleting the command and regenerate it from swagger again.
 
+### Required and Optional Arguments
+
+Whether the argument is required or optional is generated from Swagger.
+In swagger, because the properties are in a hierarchical structure, there's a transmission chain for required properties. It will affect the argument.
+If an optional property is flattened, it's required properties will be optional in the parent level.
+
+> **Example** 
+> if a resource has the following properties:
+> 
+> ```
+> Prop_A (required)
+> Prop_B (optional)
+>    L sub_1 (required)
+>    L sub_2 (optional)
+> ```
+>
+> It will generate the following arguments in command level:
+> ```
+> --prop-a (required)
+> --prop-b (optional)
+> ```
+> Inside the optional argument `--prop-b`, its sub arguments will be:
+> ```
+> .sub-1 (required)
+> .sub-2 (optional)
+> ```
+> When you flatten `--prop-b`, the argument in command level will be:
+> ```
+> --prop-a (required)
+> --sub-1 (optional)
+> --sub-2 (optional)
+> ```
+
+![required_or_optional_arguments](../../assets/recordings/workspace_editor/required_or_optional_arguments.gif)
+
+> **Note**
+> aaz-dev does **not** support to change argument from optional to required.
+> If you such needs, you should always check and fix the transmission chain in Swagger.
+> There's a common issue in swagger:
+> aaz-dev will flatten the **properties** property in resource level by default.
+> When it is not required, the required sub arguments will become optional in command level. 
+
+![modify_swagger_update_required_arguments](../../assets/recordings/workspace_editor/modify_swagger_update_required_arguments.gif)
+
+
 #### Class Argument Type
 
 If an argument schema is used by multiple place, aaz-dev will create a class type for it. If you do some modification inside of the class, the change will be applied for the rest.
 
-You can use `unwrap` to seprate the current argument from the class type, and its modification will be independent of the class type.
+You can use `unwrap` to separate the current argument from the class type, and its modification will be independent of the class type.
 
 
