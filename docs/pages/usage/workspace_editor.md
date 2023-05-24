@@ -13,13 +13,13 @@ Workspaces are used to save and edit command models before exporting them to `aa
 
 ## Workspace Editor Usage
 
-When using aaz-dev from stratch, the workspace editor is the starting point. 
+When using aaz-dev from scratch, the workspace editor is the starting point.
 
 ### Workspace operations
 
 #### Create a workspace
 
-In workspace page, the drop-dowm menu can select an existing workspace or create a new one.
+In workspace page, the drop-down menu can select an existing workspace or create a new one.
 
 ![create_a_workspace](../../assets/recordings/workspace_editor/create_a_workspace.gif)
 
@@ -34,7 +34,7 @@ Click the `EDIT` button you can rename the opened workspace.
 Click the `DELETE` button you can delete the opened workspace. It requires to input workspace name again to confirm.
 
 > **Warning**
-> aaz-dev does not support __Undo__. Once the workspace is deleted you cannot get it back unless you use `git` to manage the workspaces folder (default path is `~/.aaz/workspaces`).
+> aaz-dev does not support **Undo**. Once the workspace is deleted you cannot get it back unless you use `git` to manage the workspaces folder (default path is `~/.aaz/workspaces`).
 
 ![delete_a_workspace](../../assets/recordings/workspace_editor/delete_a_workspace.gif)
 
@@ -79,7 +79,7 @@ While adding a swagger resource, aaz-dev supports to inherit modifications direc
 
 There are two mechanisms to implement `Update` in azure-cli.
 
-- Generic Update: use `Get` request to fetch the resource, modify the resource and use `Put` request to submit the whole modified resource. About __99%__ `Update` commands in azure-cli use this mechanism.
+- Generic Update: use `Get` request to fetch the resource, modify the resource and use `Put` request to submit the whole modified resource. About **99%** `Update` commands in azure-cli use this mechanism.
 - Patch Update: use `Patch` request to submit the change only.
 
 There's three modes to control the generation of `Update` commands while add the resources.
@@ -95,7 +95,7 @@ There's three modes to control the generation of `Update` commands while add the
 
 ### Issues while adding swagger
 
-The aaz-dev tool uses strict mode to parse swagger. It will cause problems when adding swagger resources if the swagger files contains non-standard definitions. If you encounter such problem, you should check the __logs__ of aaz-dev __backend service__ and post it in [_Team Channel_](https://aka.ms/azure-cli-codegen-channel) or create a github issue.
+The aaz-dev tool uses strict mode to parse swagger. It will cause problems when adding swagger resources if the swagger files contains non-standard definitions. If you encounter such problem, you should check the **logs** of aaz-dev **backend service** and post it in [_Team Channel_](https://aka.ms/azure-cli-codegen-channel) or create a github issue.
 
 ![pick_resource_with_issues](../../assets/recordings/workspace_editor/pick_resource_with_issues.gif)
 
@@ -105,7 +105,7 @@ All the commands in a workspace are organized in a tree view. When you rename or
 
 ### Rename Command/Command Group
 
-When you select a command or group name in the tree view, its details are displayed in the right area. Click the `Edit` button, you can rename it in the `Name` field. The name are composed of some keywords and are separated by spaces. Every keyword is represented for a node or leaf in the command tree. And the keywork should be in [Kebab_case](https://en.wikipedia.org/wiki/Letter_case#Kebab_case). You can reference [Command Naming Guideline](https://github.com/Azure/azure-cli/blob/dev/doc/command_guidelines.md#command-naming-and-behavior) for more information.
+When you select a command or group name in the tree view, its details are displayed in the right area. Click the `Edit` button, you can rename it in the `Name` field. The name are composed of some keywords and are separated by spaces. Every keyword is represented for a node or leaf in the command tree. And the keyword should be in [Kebab_case](https://en.wikipedia.org/wiki/Letter_case#Kebab_case). You can reference [Command Naming Guideline](https://github.com/Azure/azure-cli/blob/dev/doc/command_guidelines.md#command-naming-and-behavior) for more information.
 
 If you rename a group name, it will update all the elements names in its sub tree. If you add a new group name in a command, it will be moved to a new sub tree.
 
@@ -211,7 +211,7 @@ Most arguments are mapping from the `type` field plus the `format` field (if def
 
 #### Component Argument Types
 
-The arguments are mapping from the `type` field plus some special field in swagger. They are shown in the table below: 
+The arguments are mapping from the `type` field plus some special field in swagger. They are shown in the table below:
 
 | Argument Type         | Swagger type  **+** SpecialField           | Comments                                                                                   |
 | --------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------ |
@@ -221,11 +221,11 @@ The arguments are mapping from the `type` field plus some special field in swagg
 | **array<\*>**         | array + `items` field                      | The element schema is defined in `items` field.                                            |
 
 > **Note**
-> aaz-dev doesn't support swagger using `object` type + `properties` field + `additionalProperties` field. 
+> aaz-dev doesn't support swagger using `object` type + `properties` field + `additionalProperties` field.
 
 ### Modify Argument options
 
-Click the `Edit` button, you can update the argument options in that field. Multiple options are seperated by space. They should be in [Kebab_case](https://en.wikipedia.org/wiki/Letter_case#Kebab_case).
+Click the `Edit` button, you can update the argument options in that field. Multiple options are separated by space. They should be in [Kebab_case](https://en.wikipedia.org/wiki/Letter_case#Kebab_case).
 
 ![argument_update_option_name](../../assets/recordings/workspace_editor/argument_update_option_name.gif)
 
@@ -250,7 +250,7 @@ Some arguments have internal properties. For an `object` type argument, when it'
 ![argument_flatten](../../assets/recordings/workspace_editor/argument_flatten.gif)
 
 > **Warning**
-> aaz-dev does __not__ support revert flattened argument. If you want to undo flatten, the simplest way is deleting the command and regenerate it from swagger again.
+> aaz-dev does **NOT** support revert flattened argument. If you want to undo flatten, the simplest way is deleting the command and regenerate it from swagger again.
 
 ### Required and Optional Arguments
 
@@ -258,49 +258,113 @@ Whether the argument is required or optional is generated from Swagger.
 In swagger, because the properties are in a hierarchical structure, there's a transmission chain for required properties. It will affect the argument.
 If an optional property is flattened, it's required properties will be optional in the parent level.
 
-> **Example** 
-> if a resource has the following properties:
-> 
-> ```
-> Prop_A (required)
-> Prop_B (optional)
->    L sub_1 (required)
->    L sub_2 (optional)
-> ```
->
-> It will generate the following arguments in command level:
-> ```
-> --prop-a (required)
-> --prop-b (optional)
-> ```
-> Inside the optional argument `--prop-b`, its sub arguments will be:
-> ```
-> .sub-1 (required)
-> .sub-2 (optional)
-> ```
-> When you flatten `--prop-b`, the argument in command level will be:
-> ```
-> --prop-a (required)
-> --sub-1 (optional)
-> --sub-2 (optional)
-> ```
+**Example**
+if a resource has the following properties:
+
+``` bash
+Prop_A (required)
+Prop_B (optional)
+    L sub_1 (required)
+    L sub_2 (optional)
+```
+
+It will generate the following arguments in command level:
+
+``` bash
+--prop-a (required)
+--prop-b (optional)
+```
+
+Inside the optional argument `--prop-b`, its sub arguments will be:
+
+``` bash
+   .sub-1 (required)
+   .sub-2 (optional)
+```
+
+When you flatten `--prop-b`, the argument in command level will be:
+
+``` bash
+--prop-a (required)
+--sub-1 (optional)
+--sub-2 (optional) 
+```
 
 ![required_or_optional_arguments](../../assets/recordings/workspace_editor/required_or_optional_arguments.gif)
 
 > **Note**
-> aaz-dev does **not** support to change argument from optional to required.
+> aaz-dev does **NOT** support to change argument from optional to required.
 > If you such needs, you should always check and fix the transmission chain in Swagger.
 > There's a common issue in swagger:
 > aaz-dev will flatten the **properties** property in resource level by default.
-> When it is not required, the required sub arguments will become optional in command level. 
+> When it is optional, the required sub arguments will become optional in command level.
 
 ![modify_swagger_update_required_arguments](../../assets/recordings/workspace_editor/modify_swagger_update_required_arguments.gif)
 
+### Hidden Arguments
 
-#### Class Argument Type
+While editing the arguments, you can hidden it. The code of hidden arguments will **NOT** be generated in azure-cli, so the users cannot pass a value for hidden arguments. The command models in aaz will keep the hidden arguments, and you can enable them in the future.  
+
+![hidden_arguments](../../assets/recordings/workspace_editor/hidden_arguments.gif)
+
+### Default value for Arguments
+
+You can set `Default` value for an argument, the `Default` value will be used when users not declare this argument in the command.
+
+When a required argument has `Default` value, it will become optional in the command help.
+
+![argument_with_default_value](../../assets/recordings/workspace_editor/argument_with_default_value.gif)
+
+> **Warning**
+> Do **NOT** set `Default` value of arguments in `update` commands using generic update mechanism. Because generic update will use `GET` to fetch the resource and use `PUT` to update the whole. So the default value of properties should comes from the `GET` response **NOT** the argument `Default` value.
+
+> **Note**
+> The `Default` value is different from the `Blank` value. `Blank` value is used when user declared the argument but didn't pass a value in it.
+> For example if the `--arg` has both `Default` value and `Blank` value,
+> When user run command without `--arg`, the `Default` value is used:
+>
+> `az some-command --name name --group group`
+>
+> When user run command with `--arg`, but with no value added, the `Blank` value is used:
+>
+> `az some-command --name name --group group --arg`
+>
+> In aaz-dev, you can only modify `Default` value for the argument right now.
+
+### Prompt Input for Arguments
+
+aaz-dev support prompt input for arguments when user declared it but didn't pass a value for it. There are two kinds of prompt input:
+
+- Prompt Input: The value is displayed during input.
+- Password Prompt Input: It is used for the password prompt input of the `Password` arguments, and the value is **NOT** displayed during input, and it supports secondary input confirmation.
+
+![argument_prompt_input](../../assets/recordings/workspace_editor/argument_prompt_input.gif)
+
+### Class Argument Type
 
 If an argument schema is used by multiple place, aaz-dev will create a class type for it. If you do some modification inside of the class, the change will be applied for the rest.
 
 You can use `unwrap` to separate the current argument from the class type, and its modification will be independent of the class type.
 
+![class_type_argument](../../assets/recordings/workspace_editor/class_type_argument.gif)
 
+## Command Examples
+
+In the `EXAMPLE` section, you can add examples for the commands.
+
+![add_command_examples](../../assets/recordings/workspace_editor/add_command_examples.gif)
+
+## Reload from swagger
+
+When developing commands, it may be necessary to correct Swagger errors. You can use the `↻` button to reload swagger resources on demand. aaz-dev tool can apply the change in swagger and inherit previous modifications in workspace intelligently.
+
+![reload_from_swagger](../../assets/recordings/workspace_editor/reload_from_swagger.gif)
+
+## Export Command Models to AAZ
+
+A workspace is a local place that holds command models while developing. `AAZ` Repo is where command models are kept for persistence. When you click the `Export` button, it will export the command models into `AAZ`. `AAZ` is different from workspace, it can save different version command models of the same resource.
+
+> **Note**
+> It's important to submit your change in `AAZ` repo together with the pull request in azure-cli, so that the other colleagues to carry out follow-up development on the basis of your current command models.
+
+![export_command_models](../../assets/recordings/workspace_editor/export_command_models.gif)
