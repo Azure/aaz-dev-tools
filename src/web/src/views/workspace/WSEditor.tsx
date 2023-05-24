@@ -270,8 +270,12 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         })
     }
 
-    handleBackToHomepage = () => {
-        window.open('/?#/workspace', "_blank");
+    handleBackToHomepage = (blank: boolean) => {
+        if (blank) {
+            window.open('/?#/workspace', "_blank");
+        } else {
+            window.location.href = '/?#/workspace';
+        }
     }
 
     handleGenerate = () => {
@@ -297,7 +301,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             showDeleteDialog: false
         })
         if(deleted) {
-            this.handleBackToHomepage();
+            this.handleBackToHomepage(false);
         }
     }
 
@@ -364,7 +368,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         })
         return (
             <React.Fragment>
-                <WSEditorToolBar workspaceName={name} onHomePage={this.handleBackToHomepage} onGenerate={this.handleGenerate} onDelete={this.handleDelete} onModify={this.handleModify} >
+                <WSEditorToolBar workspaceName={name} onHomePage={() => {this.handleBackToHomepage(true);}} onGenerate={this.handleGenerate} onDelete={this.handleDelete} onModify={this.handleModify} >
                 </WSEditorToolBar>
 
                 <Box sx={{ display: 'flex' }}>
