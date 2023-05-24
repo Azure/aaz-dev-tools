@@ -3,6 +3,11 @@
 Release History
 ===============
 
+1.3.0
+++++++
+* Support TimeSchema and TimeArg (#250)
+* Support `summary` field for swagger operation (#249)
+
 1.2.1
 ++++++
 * Support x-typespec-name and x-typespec-generated in swagger (#243)
