@@ -5,8 +5,8 @@ Release History
 
 1.3.0
 ++++++
-# Support TimeSchema and TimeArg (#250)
-# Support `summary` field for swagger operation (#249)
+* Support TimeSchema and TimeArg (#250)
+* Support `summary` field for swagger operation (#249)
 * Support `title` field for swagger operation (#248)
 
 1.2.1
