@@ -2,6 +2,11 @@
 layout: default
 ---
 
+<nav class="toc">
+  <h4>Table of Contents</h4>
+  {% include toc.html html=content h_min=2 h_max=6 %}
+</nav>
+
 <div class="page">
   {{ content }}
 </div>

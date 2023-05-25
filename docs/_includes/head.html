@@ -1,26 +1,48 @@
 <head>
-  <link href="http://gmpg.org/xfn/11" rel="profile">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <link href="http://gmpg.org/xfn/11" rel="profile" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
   <!-- Enable responsiveness on mobile devices-->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1"
+  />
 
   <title>
-    {% if page.title == "Home" %}
-      {{ site.title }} &middot; {{ site.tagline }}
-    {% else %}
-      {{ page.title }} &middot; {{ site.title }}
-    {% endif %}
+    {% if page.title == "Home" %} {{ site.title }} &middot; {{ site.tagline }}
+    {% else %} {{ page.title }} &middot; {{ site.title }} {% endif %}
   </title>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/poole.css">
-  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/syntax.css">
-  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/hyde.css">
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/poole.css" />
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/syntax.css" />
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/hyde.css" />
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/page.css" />
 
-  <!-- Icons -->
-  <!-- <link rel="apple-touch-icon-precomposed" sizes="144x144" href="{{ site.baseurl }}public/apple-touch-icon-144-precomposed.png">
-                                 <link rel="shortcut icon" href="{{ site.baseurl }}public/favicon.ico"> -->
+  <link
+    href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css"
+    rel="stylesheet"
+  />
 
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+
+  <script>
+    $(function () {
+      return $("h2, h3, h4, h5, h6").each(function (i, el) {
+        var $el, icon, id;
+        $el = $(el);
+        id = $el.attr("id");
+        icon = '<i class="fa fa-link"></i>';
+        if (id) {
+          return $el.append(
+            $("<a />")
+              .addClass("header-link")
+              .attr("href", "#" + id)
+              .html(icon)
+          );
+        }
+      });
+    });
+  </script>
 </head>
