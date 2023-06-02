@@ -1,6 +1,6 @@
 
 .ArticleGridLayout_containerBox {
-    max-width: 720px;
+    max-width: 1400px;
     display: grid;
     padding-top: 24px;
     grid-template-columns: minmax(0,1fr);
@@ -57,12 +57,12 @@
     border-radius: 6px;
 }
 
-@media (min-width: 1012px) {
+@media (min-width: 1400px) {
     .ArticleGridLayout_containerBox {
         max-width: none;
         padding-top: 24px;
         grid-template-rows: auto 1fr;
-        grid-template-columns: minmax(500px,720px) minmax(220px,1fr);
+        grid-template-columns: minmax(600px,1400px) minmax(280px,1fr);
         grid-template-areas: "topper sidebar" "content sidebar" "content sidebar";
         -moz-column-gap: 80px;
         column-gap: 80px;

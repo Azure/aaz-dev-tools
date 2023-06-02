@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Setup development environment and run
+title: Setup environment and run
 permalink: /pages/usage/setup-and-run/
 weight: 100
 ---
