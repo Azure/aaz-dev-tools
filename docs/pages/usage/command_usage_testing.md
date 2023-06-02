@@ -1,11 +1,9 @@
 ---
 layout: page
-title: Command Usage/Testing
-permalink: /usage/command-usage-testing/
+title: Command Usage and Testing
+permalink: /pages/usage/command-usage-testing/
 weight: 103
 ---
-
-# Command Usage/Testing
 
 ## Overview
 
@@ -18,7 +16,8 @@ For integration tests, we provide the `ScenarioTest` and `LiveScenarioTest` clas
 Details about these two types of testing, env preparation, test policies and issue troubleshooting, please refer to the [doc](https://github.com/Azure/azure-cli/blob/dev/doc/authoring_tests.md)
 
 After generating code from CodeGenV2, target cmd's test can be added into folder `path/to/your/cloned/azure-cli/target_mod`. Below is the demonstration of tests using azdev and [Pycharm Community](https://www.jetbrains.com/pycharm/download/#section=linux)
-### 1. unit test
+### unit test
+
 When first run unit test, use `--live` to access api and record `yaml` file for integration tests.
 ```
 live mode: azdev test test_function_of_your_code --live
@@ -30,7 +29,8 @@ For Pycharm Community, set env `Azure_TEST_RUN_LIVE` to be `true` for live mode 
 
 ![pycharm_env](../../assets/images/pycharm_live.png)
 
-### 2. intergration test
+### intergration test
+
 Run tests for specific modules
 ```
 azdev test {mod1} {mod2}
@@ -41,7 +41,8 @@ azdev test --lf
 ```
 For more details about using `azdev`, please check message of `azdev test --help` 
 
-### 3. Cmd usage
+### Cmd usage
+
 1. Before using the generated cmd, `az login` and `az account set -s your-subscription-id` should be set properly as noted [here](https://github.com/Azure/aaz-dev-tools#before-using-generated-commands)
 2. Run generated cmd `az your-module your-cmd`
 3. For issue debugging, please use `az your-module your-cmd --debug` to check the error and fix it. If more help or instruction needed, please leave a message to us with the error info printed in console.

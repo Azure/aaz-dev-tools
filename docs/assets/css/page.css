@@ -1,17 +1,80 @@
-.header-link {
-    position: relative;
-    margin-left: 0.5rem;
-    opacity: 0;
-  
-    /* -webkit-transition: opacity 0.2s ease-in-out 0.1s;
-    -moz-transition: opacity 0.2s ease-in-out 0.1s;
-    -ms-transition: opacity 0.2s ease-in-out 0.1s; */
+
+.ArticleGridLayout_containerBox {
+    max-width: 720px;
+    display: grid;
+    padding-top: 24px;
+    grid-template-columns: minmax(0,1fr);
+    grid-template-areas: "topper" "sidebar" "content";
+    grid-row-gap: 8px;
+    row-gap: 8px;    
 }
 
-h2:hover .header-link,
-h3:hover .header-link,
-h4:hover .header-link,
-h5:hover .header-link,
-h6:hover .header-link {
-  opacity: 1;
+.ArticleGridLayout_containerBox-topper {
+    grid-area: topper / topper / topper / topper;
+}
+
+.ArticleGridLayout_containerBox-sidebar {
+    align-self: flex-start;
+    grid-area: sidebar / sidebar / sidebar / sidebar;
+}
+
+.ArticleGridLayout_containerBox-content {
+    grid-area: content / content / content / content;
+}
+
+.toc-header {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.toc-section {
+    list-style: none;
+}
+
+.toc-item {
+    position: relative;
+    display: list-item;
+    font-size: 14px;
+    line-height: 20px;
+    min-height: 5px;
+    border-radius: 6px;
+    cursor: pointer;
+    appearance: none;
+    width: calc(100% - 16px);
+}
+
+.toc-submenu {
+    display: block;
+    list-style: none;
+}
+
+.toc-anchor {
+    color: inherit;
+    text-decoration: none;
+    display: flex;
+    -webkit-box-flex: 1;
+    flex-grow: 1;
+    border-radius: 6px;
+}
+
+@media (min-width: 1012px) {
+    .ArticleGridLayout_containerBox {
+        max-width: none;
+        padding-top: 24px;
+        grid-template-rows: auto 1fr;
+        grid-template-columns: minmax(500px,720px) minmax(220px,1fr);
+        grid-template-areas: "topper sidebar" "content sidebar" "content sidebar";
+        -moz-column-gap: 80px;
+        column-gap: 80px;
+        row-gap: 0;    
+    }
+
+    .ArticleGridLayout_containerBox-sidebar {
+        position: sticky;
+        padding-top: 24px;
+        top: 5em;
+        max-height: calc(100vh - 5em);
+        overflow-y: auto;
+        padding-bottom: 40px!important;
+    }
 }

@@ -15,15 +15,9 @@
   </title>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/poole.css" />
-  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/syntax.css" />
-  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/hyde.css" />
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/github.css" />
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/tree.css" />
   <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/page.css" />
-
-  <link
-    href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css"
-    rel="stylesheet"
-  />
 
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 
@@ -33,11 +27,11 @@
         var $el, icon, id;
         $el = $(el);
         id = $el.attr("id");
-        icon = '<i class="fa fa-link"></i>';
+        icon = '<span class="heading-link-symbol" aria-hidden="true"></span>';
         if (id) {
           return $el.append(
             $("<a />")
-              .addClass("header-link")
+              .addClass("heading-link")
               .attr("href", "#" + id)
               .html(icon)
           );

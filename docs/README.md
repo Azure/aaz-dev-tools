@@ -1,18 +1,14 @@
 ---
-layout: default
-title: Home
+layout: page
+title: Introduction
 permalink: /
----
-
-# Introduction to AAZDev
 ---
 
 _AAZDev is a tool that helps Azure CLI developers generate Atomic CLI commands from REST API Specifications._
 
-## 1 Background
----
+## Background
 
-### 1.1 What is Azure CLI?
+### What is Azure CLI?
 
 The full name of Azure CLI is Azure command-line interface. It's a set of commands used to create and manage Azure resources.
 
@@ -41,7 +37,7 @@ There are two repos to maintain Azure CLI commands：
 - [Azure CLI](https://github.com/Azure/azure-cli)
 - [Azure CLI Extension](https://github.com/Azure/azure-cli-extensions)
 
-## 1.2 What is Swagger(OpenAPI Specification)?
+### What is Swagger(OpenAPI Specification)?
 
 Azure uses swagger to define REST API specifications. Most of swagger files are maintained in the following two repos:
 - [azure-rest-api-specs](https://github.com/Azure/azure-rest-api-specs)
@@ -49,7 +45,7 @@ Azure uses swagger to define REST API specifications. Most of swagger files are 
 
 So the definition of API in swagger is required before using AAZDev tool.
 
-## 1.3 What is Atomic CLI Command?
+### What is Atomic CLI Command?
 
 _An Atomic CLI Command operate on one azure resource without dependencies on other things, such as SDK or other commands._
 
@@ -69,8 +65,7 @@ The SDK packages a batch of APIs, and when one API has new change and is release
  Each time we bump up a SDK, hundreds of tests need to rerun in live and their recording files need to be updated, we also need to fix other commands that are broken by new SDK.
  It wasted a lot of time and created a lot of hidden problems. By applying Atomic CLI commands, we can avoid them.
 
-## 2 Overview
----
+## Overview
 
 ![Architecture](assets/diagrams/out/archutecture/architecture.svg)
 
@@ -86,12 +81,11 @@ AAZDev Tool consists of 4 parts:
 
 For CLI Developers, they edit command models in Model Editors and select command models for Code Generators. 
 
-## 3 Swagger V2 Translator
----
+## Swagger V2 Translator
 
 A Resource can be translated into a single command or multiple commands under a command group.
 
-### 3.1 Group part naming
+### Group part naming
 
 Swagger V2 translator uses the `valid part` of url to generate the group part of a command.
 
@@ -100,17 +94,17 @@ The `valid part` of url is the url suffix starts by it's Resource Provider with 
 The table below show some examples with valid part highlighted.
 | Resource Provider | Resource Url | valid part of url |
 | ---- | ---- | ---- |
-| Microsoft.EdgeOrder | /subscriptions/{subscriptionId}/providers/`Microsoft.EdgeOrder/addresses` | Microsoft.EdgeOrder/addresses |
-| Microsoft.EdgeOrder | /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/`Microsoft.EdgeOrder/addresses` | Microsoft.EdgeOrder/addresses |
-| Microsoft.EdgeOrder | /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/`Microsoft.EdgeOrder/addresses/{`addressName`}` | Microsoft.EdgeOrder/addresses/{} |
-| Microsoft.EdgeOrder | /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/`Microsoft.EdgeOrder`/locations/{location}`/orders/{`orderName`}` | Microsoft.EdgeOrder/orders/{} |
-| Microsoft.Network | /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/`Microsoft.Network/virtualNetworks/{`virtualNetworkName`}/subnets/{`subnetName`}` | Microsoft.Network/virtualNetworks/{}/subnets/{} |
-| Microsoft.Consumption | /providers/Microsoft.Management/managementGroups/{managementGroupId}/providers/Microsoft.Billing/billingPeriods/{billingPeriodName}/`Microsoft.Consumption/aggregatedcost` | Microsoft.Consumption/aggregatedcost |
+| Microsoft.EdgeOrder | /subscriptions/{subscriptionId}/providers/**Microsoft.EdgeOrder/addresses** | Microsoft.EdgeOrder/addresses |
+| Microsoft.EdgeOrder | /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/**Microsoft.EdgeOrder/addresses** | Microsoft.EdgeOrder/addresses |
+| Microsoft.EdgeOrder | /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/**Microsoft.EdgeOrder/addresses/{addressName}** | Microsoft.EdgeOrder/addresses/{} |
+| Microsoft.EdgeOrder | /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/**Microsoft.EdgeOrder**/locations/{location}**/orders/{orderName}** | Microsoft.EdgeOrder/orders/{} |
+| Microsoft.Network | /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/**Microsoft.Network/virtualNetworks/{virtualNetworkName}/subnets/{subnetName}** | Microsoft.Network/virtualNetworks/{}/subnets/{} |
+| Microsoft.Consumption | /providers/Microsoft.Management/managementGroups/{managementGroupId}/providers/Microsoft.Billing/billingPeriods/{billingPeriodName}/**Microsoft.Consumption/aggregatedcost** | Microsoft.Consumption/aggregatedcost |
 
 Each segments of valid part corresponds to a group name. The parameter segments are ignored by default. And `Microsoft.` prefix in resource provider segment is ignored too. The singular values of the remaining segments are converted to snake case with `-` as separator.
  For example `Microsoft.Network/virtualNetworks/{}/subnets/{}` has three segments: `Microsoft.Network`, `virtualNetworks`, `subnets` and they correspond to `network`, `virtual-network` and `subnet`. So the full command group name will be `network virtual-network subnet`
 
-### 3.2 Operation part naming
+### Operation part naming
 
 Swagger V2 translator use the HTTP methods to generate the operation part of a command.
 
@@ -170,9 +164,7 @@ Translators will automatic merge them into one `list` commands if their response
 
 The `POST` method is special. If a resource has `POST` method only and the last segment of valid part is not a parameter segment, that segment will be used as operation name, else a temporary name will be generated, which can be renamed in editor later.
 
-
-## 4 Workspace
----
+## Workspace
 
 Before developers finish customizing the command models and export them in AAZ repo for persistence, the draft is saved in a workspace.
 Workspaces are like containers, they are isolated so that changes in one do not affect the others. Therefore, developers can create as many workspaces as needed for different purposes. 
@@ -182,18 +174,18 @@ Another note is that a workspace don't allow to add a resource multiple times in
 
 Please jump to [Workspace Editor](pages/usage/workspace_editor_usage.md) for more details.
 
-## 5 AAZ Repo
----
+## AAZ Repo
 
 The name __AAZ__ comes from the abbreviation of Atomic Azure. This repo is to maintain Atomic Azure Cli command models. You can access this repo by [link](https://github.com/Azure/aaz/tree/main).
 
 There a two folders in the root of AAZ:
+
 - Commands:
   This folder provides an index of command models available in AAZ. They are organized in a command tree. 
 - Resources:
   This folder save command models in xml files which is called command configurations. Those files are separated by resources.
 
-### 5.1 Command Tree
+### Command Tree
 
 The data of command tree is in [Commands/tree.json](https://github.com/Azure/aaz/blob/main/Commands/tree.json). Json files are hard to read, so the data is also rendered as Markdown files in a tree hierarchy.
 
@@ -205,7 +197,7 @@ Each folder represents each node of the tree and also represents a command group
 
 Each Markdown files starts with '_' represents each leaf of the tree which also represents a command. Its contains the summary, versions and examples of this command. And each version links to a command configuration in Resources folder. 
 
-### 5.2 Command Configuration
+### Command Configuration
 
 The format of command configuration file path is:
 
@@ -223,6 +215,7 @@ The diagram below show the structure of command configuration file.
 The commands in a configuration file organized in hierarchy.
 
 There are three sections in every commands:
+
 - Argument Section:
   The arguments defined in argument section and grouped by Argument Group.
 - Operation Section:
@@ -234,18 +227,18 @@ There are three sections in every commands:
 The data flow from Argument Section to Operation Section and then to Output Section. The arguments are linked with operations by their variant name. The operations are generated by swagger and do not support customization.
  The Operation Section in diagram is from a classic `update` command which use `get+put` methods. In model editors the modification of arguments and special output formats are supported.
 
-## 6 CLI Generator and CLI Extension Generator
----
+## CLI Generator and CLI Extension Generator
 
-### 6.1 Command Module
+### Command Module
 
 CLI commands are separated into different command modules in Azure CLI repo or Azure CLI extension repo. So it's required to select a specific module for generators.
 
 ![CommandModules](assets/images/az_cli_and_az_cli_extension_command_modules.png)
 
-### 6.2 Profile
+### Profile
 
 Azure CLI uses profiles to support Azure Stack. There are five profiles:
+
 - latest
 - 2020-09-01-hybrid
 - 2019-03-01-hybrid
