@@ -1,23 +1,24 @@
 ---
 layout: page
-title: CLI Generator
-permalink: /usage/cli-generator-usage/
+title: CLI Generator Usage
+permalink: /pages/usage/cli-generator-usage/
 weight: 102
 ---
 
-# CLI Generator Usage
----
 ## Command Generation
----
-### 1. Choose Command Model
+
+### Choose Command Model
+
 CLI commands are separated into different command models in Azure CLI repo or Azure CLI extension repo. Before generate CLI command, select the target command module.
 ![model_select](../../assets/images/module_select.png)
-### 2. Generate Commands
+
+### Generate Commands
+
 In the commands display page, check the commands exported from [model editor](#/Workspace), and select the target api version, then click the top-right `Generate` buttton. CLI command code generated from AAZ Development Tool has been added into your cloned local azure-cli directory for further debugging and testing. 
 ![code_gen](../../assets/images/code_gen.png)
 
 ## About
----
+
 ### Azure CLI vs Azure CLI Extension
 
 #### CLI Modules
@@ -43,8 +44,8 @@ In the commands display page, check the commands exported from [model editor](#/
 - For more details about CLI vs CLI extension, please check [here](https://github.com/Azure/azure-cli/blob/dev/doc/onboarding_guide.md#extension-vs-module)
 - In this editor, only CLI commands are generated. For advanced CLI extension generation techniques, please check [here](https://github.com/Azure/azure-cli/blob/dev/doc/extensions/authoring.md)
 
-
 ### Profile
+
 The Azure CLI supports multiple profiles. Help can be authored to take advantage of this.  
 Commands available, arguments, descriptions and examples all change dynamically based on the profile in use.
 

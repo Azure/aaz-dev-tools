@@ -1,7 +1,23 @@
 ---
 layout: default
 ---
-
-<div class="page">
-  {{ content }}
+<div class="container-xl px-3 px-md-6 my-4">
+  <div class="ArticleGridLayout_containerBox pt-3">
+    <div class="ArticleGridLayout_containerBox-topper pb-4">
+      <div class="d-flex flex-items-baseline flex-justify-between my-2">
+        <h1 id="title-h1" class="border-bottom-0">{{ page.title }}</h1>
+      </div>
+    </div>
+    <div class="ArticleGridLayout_containerBox-sidebar border-bottom border-lg-0 pb-4 mb-5 pb-xl-0 mb-xl-0">
+      <h2 class="mb-1 ml-3 toc-header">In this article</h2>
+      <nav class="my-2 toc-content">
+        {% include toc.html html=content class="toc-section my-2" item_class="toc-item mx-2" submenu_class="toc-submenu py-2 ml-3" anchor_class="toc-anchor ml-2" h_min=2 h_max=3 %}
+      </nav>
+    </div>
+    <div class="ArticleGridLayout_containerBox-content">
+      <div class="markdown-body">
+        {{ content }}
+      </div>
+    </div>
+  </div>
 </div>

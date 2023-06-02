@@ -1,11 +1,9 @@
 ---
 layout: page
-title: Workspace Editor
-permalink: /usage/workspace-editor/
+title: Introduction to Workspace Editor
+permalink: /pages/usage/workspace-editor/
 weight: 101
 ---
-
-# Introduction to Workspace Editor
 
 ![Architecture](../../assets/diagrams/out/archutecture/architecture.svg)
 
@@ -75,7 +73,7 @@ While adding a swagger resource, aaz-dev supports to inherit modifications direc
 
 ![pick_resources_with_inheritance](../../assets/recordings/workspace_editor/pick_resources_with_inheritance.gif)
 
-### The generation of `Update` commands
+### The generation of **Update** commands
 
 There are two mechanisms to implement `Update` in azure-cli.
 
@@ -360,7 +358,7 @@ When developing commands, it may be necessary to correct Swagger errors. You can
 
 ![reload_from_swagger](../../assets/recordings/workspace_editor/reload_from_swagger.gif)
 
-## Export Command Models to AAZ
+## Export Command Models to **AAZ** repo
 
 A workspace is a local place that holds command models while developing. `AAZ` Repo is where command models are kept for persistence. When you click the `Export` button, it will export the command models into `AAZ`. `AAZ` is different from workspace, it can save different version command models of the same resource.
 

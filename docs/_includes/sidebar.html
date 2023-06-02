@@ -1,36 +1,63 @@
-<div class="sidebar">
-  <div class="container sidebar-sticky">
-    <div class="sidebar-about">
-      <h1>
-        <a href="{{ site.baseurl }}/">
-          {{ site.title }}
-        </a>
-      </h1>
-      <p class="lead">{{ site.description }}</p>
+<div
+  class="position-sticky border-right d-block"
+  style="width: 326px; height: calc(100vh - 65px); top: 65px"
+>
+  <div class="px-4 pb-3 border-bottom d-block">
+    <div class="mt-5">
+      <a
+        class="d-block pl-1 mb-2 h3 color-fg-default no-underline"
+        href="{{ site.baseurl }}/"
+        >{{ site.title }}</a
+      >
     </div>
-
-    <nav class="sidebar-nav">
-      <a class="sidebar-nav-item{% if page.url == site.baseurl %} active{% endif %}" href="{{ site.baseurl }}/">Home</a>
-
-      {% comment %}
-        The code below dynamically generates a sidebar nav of pages with
-        `layout: page` in the front-matter. See readme for usage.
-      {% endcomment %}
-
-      {% assign pages_list = site.pages | sort: "weight" %}
-      {% for node in pages_list %}
-        {% if node.title != null %}
-          {% if node.layout == "page" %}
-            <a class="sidebar-nav-item{% if page.url == site.baseurl+node.url %} active{% endif %}" href="{{ site.baseurl }}{{ node.url }}">{{ node.title }}</a>
-          {% endif %}
-        {% endif %}
-      {% endfor %}
-
-      <a class="sidebar-nav-item" href="{{ site.pypi }}">PyPI</a>
-      <a class="sidebar-nav-item" href="{{ site.github.repo }}">GitHub project</a>
-      <!-- <span class="sidebar-nav-item">Currently v{{ site.version }}</span> -->
+  </div>
+  <div
+    class="border-right d-block bg-primary overflow-y-auto flex-shrink-0"
+    role="banner"
+    style="width: 326px; height: 100vh; padding-bottom: 185px"
+  >
+    <nav>
+      <div class="pt-3" style="overflow-y: auto">
+        <div class="ml-3">
+          <ul role="tree" class="TreeView">
+            {% assign pages_list = site.pages | sort: "weight" %}
+            {% for node in pages_list %}
+            {% if node.title != null %}
+            {% if node.layout == "page" %}
+            <div>
+              <li
+                class="TreeView-item"
+                id="{{ site.baseurl }}{{ node.url }}"
+                role="treeitem"
+              >
+                <div class="TreeView-item-container" style="--level: 1">
+                  <div
+                    style="
+                      grid-area: spacer / spacer / spacer / spacer;
+                      display: flex;
+                    "
+                  >
+                    <div style="width: 100%; display: flex"></div>
+                  </div>
+                  <div class="TreeView-item-content">
+                    <span class="TreeView-item-content-text"
+                      ><a
+                        class="color-fg-default no-underline"
+                        href="{{ site.baseurl }}{{ node.url }}"
+                        tabindex="-1"
+                        >{{ node.title }}</a
+                      ></span
+                    >
+                  </div>
+                </div>
+              </li>
+            </div>
+            {% endif %}
+            {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
     </nav>
-
-    <p>&copy; {{ site.time | date: '%Y' }}. All rights reserved.</p>
   </div>
 </div>
