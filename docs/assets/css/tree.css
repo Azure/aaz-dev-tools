@@ -4,7 +4,7 @@
     margin: 0;
     display: block;
     margin-block: 1em;
-    padding-inline-start: 20px;
+    /* padding-inline-start: 10px; */
 }
 
 .TreeView-item-container {
