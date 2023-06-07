@@ -1,5 +1,5 @@
 
-_MAJOR, _MINOR, _PATCH, _SUFFIX = ("1", "3", "0", "")
+_MAJOR, _MINOR, _PATCH, _SUFFIX = ("1", "3", "1", "")
 
 # _PATCH: On main and in a nightly release the patch should be one ahead of the last released build.
 # _SUFFIX: This is mainly for nightly builds which have the suffix ".dev$DATE". See
