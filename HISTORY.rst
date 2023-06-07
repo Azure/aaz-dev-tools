@@ -3,6 +3,13 @@
 Release History
 ===============
 
+1.3.1
+++++++
+* Rewrite the workspace editor doc (#253)
+* Refactor the github page for docs (#254)
+* Adjust layout for small screen displays. (#255)
+* Update faq.md (#256)
+
 1.3.0
 ++++++
 * Support TimeSchema and TimeArg (#250)
