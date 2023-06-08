@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Introduction to Workspace Editor
+title: Workspace Editor Usage
 permalink: /pages/usage/workspace-editor/
 weight: 101
 ---
@@ -9,29 +9,28 @@ weight: 101
 
 Workspaces are used to save and edit command models before exporting them to `aaz` repo. They are isolated with each other. So you can create multiple workspaces for different purpose. And they are saved in `~/.aaz/workspaces` folder by default.
 
-## Workspace Editor Usage
+## Workspace operations
 
 When using aaz-dev from scratch, the workspace editor is the starting point.
 
-### Workspace operations
-
-#### Create a workspace
+### Create a workspace
 
 In workspace page, the drop-down menu can select an existing workspace or create a new one.
 
 ![create_a_workspace](../../assets/recordings/workspace_editor/create_a_workspace.gif)
 
-#### Rename a workspace
+### Rename a workspace
 
 Click the `EDIT` button you can rename the opened workspace.
 
 ![rename_a_workspace](../../assets/recordings/workspace_editor/rename_a_workspace.gif)
 
-#### Delete a workspace
+### Delete a workspace
 
 Click the `DELETE` button you can delete the opened workspace. It requires to input workspace name again to confirm.
 
 > **Warning**
+>
 > aaz-dev does not support **Undo**. Once the workspace is deleted you cannot get it back unless you use `git` to manage the workspaces folder (default path is `~/.aaz/workspaces`).
 
 ![delete_a_workspace](../../assets/recordings/workspace_editor/delete_a_workspace.gif)
@@ -59,6 +58,7 @@ The Swagger Filters can help you quickly filter out the resources to generate co
 After the resources are filtered, you can select the resource urls on the right table.
 
 > **Note**
+>
 > For the resources already added in the current workspace, their urls will be filtered out in the table. That's by design to avoid you add the same resource multiple times in one workspace, even in different api-versions is not allowed.
 
 You can select them `All` or only pick some of them on demand which is recommended for beginners. You can also use the `Filter` bar to filter out a table by some keywords or the path key in swagger.
@@ -87,6 +87,7 @@ There's three modes to control the generation of `Update` commands while add the
 - No update command: Never generate `Update` commands for the resource.
 
 > **Note**
+>
 > This selection will apply to all the resources to submit. So if some of the resources should use a different mode, you should pick and submit them in the next new `Add Swagger Resources` page with a different mode.
 
 ![pick_resources_with_update_modes](../../assets/recordings/workspace_editor/pick_resources_with_update_modes.gif)
@@ -122,6 +123,7 @@ The commands in workspace are deleted by the swagger resource, if a resource gen
 ![delete_commands_of_the_same_resource](../../assets/recordings/workspace_editor/delete_commands_of_the_same_resource.gif)
 
 > **Note**
+>
 > Sometime a command contains multiple resource urls, usually the `list` command. You should delete it multiple times. Because the resources should be removed one by one.
 
 ![delete_the_list_command](../../assets/recordings/workspace_editor/delete_the_list_command.gif)
@@ -142,6 +144,7 @@ But sometimes two resources cannot be merged because the `valid part` of the url
 ![merge_similar_resources_step_by_step](../../assets/recordings/workspace_editor/merge_similar_resources_step_by_step.gif)
 
 > **Note**
+>
 > If you're trying to avoid the default merging behavior, you should can add one fist, rename the command to something different to avoid automatic merging, then add the following one.
 
 ![avoid_default_resources_merging](../../assets/recordings/workspace_editor/avoid_default_resources_merging.gif)
@@ -219,6 +222,7 @@ The arguments are mapping from the `type` field plus some special field in swagg
 | **array<\*>**         | array + `items` field                      | The element schema is defined in `items` field.                                            |
 
 > **Note**
+>
 > aaz-dev doesn't support swagger using `object` type + `properties` field + `additionalProperties` field.
 
 ### Modify Argument options
@@ -228,6 +232,7 @@ Click the `Edit` button, you can update the argument options in that field. Mult
 ![argument_update_option_name](../../assets/recordings/workspace_editor/argument_update_option_name.gif)
 
 > **Note**
+>
 > If similar arguments exist in other commands, you can use `Update Similar` button when submitting. It will find the similar arguments in other commands of current workspace.
 
 ![argument_update_similar](../../assets/recordings/workspace_editor/argument_update_similar.gif)
@@ -239,6 +244,7 @@ For the `array` type argument, it has `Singular option names` field to specify t
 ![argument_singular_option_use](../../assets/recordings/workspace_editor/argument_singular_option_use.gif)
 
 > **Note**
+>
 > This is by design for backward compatibility with existing commands and is not recommended for new commands. So by default, it is unset.
 
 ### Flatten Argument
@@ -248,6 +254,7 @@ Some arguments have internal properties. For an `object` type argument, when it'
 ![argument_flatten](../../assets/recordings/workspace_editor/argument_flatten.gif)
 
 > **Warning**
+>
 > aaz-dev does **NOT** support revert flattened argument. If you want to undo flatten, the simplest way is deleting the command and regenerate it from swagger again.
 
 ### Required and Optional Arguments
@@ -291,6 +298,7 @@ When you flatten `--prop-b`, the argument in command level will be:
 ![required_or_optional_arguments](../../assets/recordings/workspace_editor/required_or_optional_arguments.gif)
 
 > **Note**
+>
 > aaz-dev does **NOT** support to change argument from optional to required.
 > If you such needs, you should always check and fix the transmission chain in Swagger.
 > There's a common issue in swagger:
@@ -314,9 +322,11 @@ When a required argument has `Default` value, it will become optional in the com
 ![argument_with_default_value](../../assets/recordings/workspace_editor/argument_with_default_value.gif)
 
 > **Warning**
+>
 > Do **NOT** set `Default` value of arguments in `update` commands using generic update mechanism. Because generic update will use `GET` to fetch the resource and use `PUT` to update the whole. So the default value of properties should comes from the `GET` response **NOT** the argument `Default` value.
 
 > **Note**
+>
 > The `Default` value is different from the `Blank` value. `Blank` value is used when user declared the argument but didn't pass a value in it.
 > For example if the `--arg` has both `Default` value and `Blank` value,
 > When user run command without `--arg`, the `Default` value is used:
@@ -363,6 +373,7 @@ When developing commands, it may be necessary to correct Swagger errors. You can
 A workspace is a local place that holds command models while developing. `AAZ` Repo is where command models are kept for persistence. When you click the `Export` button, it will export the command models into `AAZ`. `AAZ` is different from workspace, it can save different version command models of the same resource.
 
 > **Note**
+>
 > It's important to submit your change in `AAZ` repo together with the pull request in azure-cli, so that the other colleagues to carry out follow-up development on the basis of your current command models.
 
 ![export_command_models](../../assets/recordings/workspace_editor/export_command_models.gif)
