@@ -40,6 +40,16 @@
                     <div style="width: 100%; display: flex"></div>
                   </div>
                   <div class="TreeView-item-content">
+                    {% if page.url == node.url %}
+                    <span class="TreeView-item-content-text"
+                      ><a
+                        class="color-fg-default no-underline text-bold"
+                        href="{{ site.baseurl }}{{ node.url }}"
+                        tabindex="-1"
+                        >{{ node.title }}</a
+                      ></span
+                    >
+                    {% else %}
                     <span class="TreeView-item-content-text"
                       ><a
                         class="color-fg-default no-underline"
@@ -48,6 +58,7 @@
                         >{{ node.title }}</a
                       ></span
                     >
+                    {% endif %}
                   </div>
                 </div>
               </li>
