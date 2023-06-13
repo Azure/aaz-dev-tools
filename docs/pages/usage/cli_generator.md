@@ -94,7 +94,7 @@ One reason is that your `aaz` repo is out of date. Please pull the latest change
 
 ![missing_command_models_in_aaz](../../assets/recordings/cli_generator/missing_command_models_in_aaz.gif)
 
-> **Important**
+> **Note**
 >
 > When you finish the azure-cli development, please submit your change of `aaz` repo to [Azure aaz repo](https://github.com/Azure/aaz) so that the following developer will not missing command models.
 
