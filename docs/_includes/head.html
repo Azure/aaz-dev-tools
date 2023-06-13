@@ -23,7 +23,7 @@
 
   <script>
     $(function () {
-      return $("h2, h3, h4, h5, h6").each(function (i, el) {
+      $("h2, h3, h4, h5, h6").each(function (i, el) {
         var $el, icon, id;
         $el = $(el);
         id = $el.attr("id");
@@ -36,6 +36,15 @@
               .html(icon)
           );
         }
+      });
+      $(".markdown-body").find("blockquote").each(function (i, el) {
+        var $el;
+        $el = $(el);
+        if ($el.find('p:first-child').html() == '<strong>Warning</strong>') {
+          $el.addClass("border rounded-1 mb-4 p-3 color-border-danger color-bg-danger");
+        } else if ($el.find('p:first-child').html() == '<strong>Note</strong>') {
+          $el.addClass("border rounded-1 mb-4 p-3 color-border-accent-emphasis color-bg-accent");
+        }        
       });
     });
   </script>
