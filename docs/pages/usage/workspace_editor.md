@@ -362,6 +362,10 @@ In the `EXAMPLE` section, you can add examples for the commands.
 
 ![add_command_examples](../../assets/recordings/workspace_editor/add_command_examples.gif)
 
+> **Note**
+>
+> Please use [shorthand syntax](https://github.com/Azure/azure-cli/blob/dev/doc/shorthand_syntax.md) for complicated argument values, so that the examples can be run in **Powershell**, **Windows Command Prompt** and **Bash** without [escaping rules](https://learn.microsoft.com/en-us/cli/azure/use-cli-effectively?tabs=bash%2Cbash2#use-quotation-marks-in-parameters).
+
 ## Reload from swagger
 
 When developing commands, it may be necessary to correct Swagger errors. You can use the `↻` button to reload swagger resources on demand. aaz-dev tool can apply the change in swagger and inherit previous modifications in workspace intelligently.
