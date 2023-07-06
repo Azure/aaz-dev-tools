@@ -12,3 +12,4 @@ packaging>=21.3
 Jinja2~=3.0.3
 MarkupSafe~=2.0.1
 jsonschema~=4.17.1
+click~=8.1.2

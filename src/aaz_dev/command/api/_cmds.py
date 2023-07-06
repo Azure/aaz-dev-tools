@@ -1,10 +1,14 @@
 import click
 import logging
-from flask import Blueprint
+import os
+import re
 import sys
+from flask import Blueprint
 
+from command.controller.specs_manager import AAZSpecsManager
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.config import Config
+from utils.exceptions import VerificationError
 
 logger = logging.getLogger('backend')
 
@@ -145,3 +149,79 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
     except ValueError as err:
         logger.error(err)
         sys.exit(1)
+
+
+@bp.cli.command("verify-aaz", short_help="Verify data consistency within `aaz` repository.")
+@click.option(
+    "--aaz-path", "-a",
+    type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
+    default=Config.AAZ_PATH,
+    required=not Config.AAZ_PATH,
+    callback=Config.validate_and_setup_aaz_path,
+    expose_value=False,
+    help="Path of `aaz` repository."
+)
+def verify_aaz():
+    aaz = AAZSpecsManager()
+    stack = [(aaz.commands_folder, aaz.tree.root)]  # root nodes
+
+    while stack:
+        curr_path, curr_node = stack.pop()
+        if os.path.isdir(curr_path):
+            readme_path = os.path.join(curr_path, "readme.md")
+            if not os.path.exists(readme_path):
+                raise Exception(f"Missing `readme.md` under {curr_path}.")
+
+            with open(readme_path, "r") as fp:
+                content = fp.read()
+            level = re.findall(r"## (.+)", content)[0]
+            items = re.findall(r"- \[([^[\]]+)]", content)
+
+            if level == "Groups":
+                if len(items) != len(set(items)):
+                    raise Exception(f"{readme_path} has duplicate command group names.")
+
+                items = set(items)
+
+                folders = set(os.listdir(curr_path)) - {"readme.md", "tree.json"}
+                if folders != items:
+                    diff = folders - items or items - folders
+                    raise Exception(f"Command group info {diff} doesn't match in {readme_path}.")
+
+                groups = set(curr_node.command_groups.keys())
+                if groups != set(items):
+                    diff = groups - items or items - groups
+                    raise Exception(f"Command group info {diff} in tree.json doesn't match in {readme_path}.")
+
+                subpaths = [(os.path.join(curr_path, folder), curr_node.command_groups[folder]) for folder in folders]
+                stack += subpaths
+            elif level == "Subgroups":
+                if len(items) != len(set(items)):
+                    raise Exception(f"{readme_path} has duplicate command group names.")
+
+                items = set(items)
+
+                folders = set(os.listdir(curr_path)) - {"readme.md"}
+                if folders != items:
+                    diff = folders - items or items - folders
+                    raise Exception(f"Command group info {diff} doesn't match in {readme_path}.")
+
+                groups = set(curr_node.command_groups.keys())
+                if groups != items:
+                    raise Exception(f"Command group info in tree.json doesn't match in {readme_path}.")
+
+                subpaths = [(os.path.join(curr_path, folder), curr_node.command_groups[folder]) for folder in folders]
+                stack += subpaths
+            else:
+                if len(items) != len(set(items)):
+                    raise Exception(f"{readme_path} has duplicate command names.")
+
+                items = set(items)
+
+                files = set(os.listdir(curr_path)) - {"readme.md"}
+                if map(lambda x: x[1:-3], files) != items:  # _<command_name>.md
+                    raise Exception(f"Command info doesn't match in {readme_path}.")
+
+                groups = set(curr_node.commands.keys())
+                if groups != items:
+                    raise Exception(f"Command info in tree.json doesn't match in {readme_path}.")
