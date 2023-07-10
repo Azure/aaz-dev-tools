@@ -1,4 +1,5 @@
 import click
+import json
 import logging
 import os
 import re
@@ -6,6 +7,7 @@ import sys
 from flask import Blueprint
 
 from command.controller.specs_manager import AAZSpecsManager
+from command.templates import get_templates
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.config import Config
 from utils.exceptions import VerificationError
@@ -162,6 +164,34 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
     help="Path of `aaz` repository."
 )
 def verify_aaz():
+    def verify_command(file_path, node):
+        with open(file_path, "r") as fp:
+            content = fp.read()
+
+        paths = re.findall(r"]\(([^)]+)\)", content)
+        for path in paths:
+            json_path = os.path.join(Config.AAZ_PATH, os.path.splitext(path)[0][1:] + ".json")
+            json_path = os.path.normpath(json_path)
+            if not os.path.exists(json_path):
+                raise Exception(f"{json_path} defined in {file_path} is missing.")
+
+            with open(json_path, "r", encoding="utf-8") as fp:
+                model = json.load(fp)
+            group, command = " ".join(node.names[:-1]), node.names[-1]
+            for g in model["commandGroups"]:
+                if g["name"] == group:
+                    if not any(cmd["name"] == command for cmd in g["commands"]):
+                        raise Exception(f"There is no {command} command info in {json_path}.")
+
+                    break
+
+            model_set.add(json_path)
+
+        tmpl = get_templates()["command"]
+        if not tmpl.render(command=node) == content:
+            raise Exception(f"{file_path} cannot be rendered correctly.")
+
+    model_set = set()
     aaz = AAZSpecsManager()
     stack = [(aaz.commands_folder, aaz.tree.root)]  # root nodes
 
@@ -172,56 +202,56 @@ def verify_aaz():
             if not os.path.exists(readme_path):
                 raise Exception(f"Missing `readme.md` under {curr_path}.")
 
-            with open(readme_path, "r") as fp:
+            with open(readme_path, "r", encoding="utf-8") as fp:
                 content = fp.read()
-            level = re.findall(r"## (.+)", content)[0]
-            items = re.findall(r"- \[([^[\]]+)]", content)
 
-            if level == "Groups":
-                if len(items) != len(set(items)):
-                    raise Exception(f"{readme_path} has duplicate command group names.")
+            matches = re.findall(r"## (.+)\n\n(((?!\n##)[\s\S])+)", content)
+            for match in matches:
+                level = match[0]
+                items = re.findall(r"- \[([^[\]]+)]", match[1])
 
-                items = set(items)
+                if level == "Commands":
+                    if len(items) != len(set(items)):
+                        raise Exception(f"{readme_path} has duplicate command names.")
 
-                folders = set(os.listdir(curr_path)) - {"readme.md", "tree.json"}
-                if folders != items:
-                    diff = folders - items or items - folders
-                    raise Exception(f"Command group info {diff} doesn't match in {readme_path}.")
+                    items = set(items)
 
-                groups = set(curr_node.command_groups.keys())
-                if groups != set(items):
-                    diff = groups - items or items - groups
-                    raise Exception(f"Command group info {diff} in tree.json doesn't match in {readme_path}.")
+                    files = {i for i in os.listdir(curr_path) if os.path.isfile(os.path.join(curr_path, i))}
+                    files.remove("readme.md")
 
-                subpaths = [(os.path.join(curr_path, folder), curr_node.command_groups[folder]) for folder in folders]
-                stack += subpaths
-            elif level == "Subgroups":
-                if len(items) != len(set(items)):
-                    raise Exception(f"{readme_path} has duplicate command group names.")
+                    if (cmd_set := set(map(lambda x: x[1:-3], files))) != items:  # _<command_name>.md
+                        diff = cmd_set - items or items - cmd_set
+                        raise Exception(f"Command info {diff} doesn't match in {readme_path}.")
 
-                items = set(items)
+                    groups = set(curr_node.commands.keys())
+                    if groups != items:
+                        diff = groups - items or items - groups
+                        raise Exception(f"Command info {diff} in tree.json doesn't match in {readme_path}.")
 
-                folders = set(os.listdir(curr_path)) - {"readme.md"}
-                if folders != items:
-                    diff = folders - items or items - folders
-                    raise Exception(f"Command group info {diff} doesn't match in {readme_path}.")
+                    for file in files:
+                        verify_command(os.path.join(curr_path, file), curr_node.commands[file[1:-3]])
+                else:
+                    if len(items) != len(set(items)):
+                        raise Exception(f"{readme_path} has duplicate command group names.")
 
-                groups = set(curr_node.command_groups.keys())
-                if groups != items:
-                    raise Exception(f"Command group info in tree.json doesn't match in {readme_path}.")
+                    items = set(items)
 
-                subpaths = [(os.path.join(curr_path, folder), curr_node.command_groups[folder]) for folder in folders]
-                stack += subpaths
-            else:
-                if len(items) != len(set(items)):
-                    raise Exception(f"{readme_path} has duplicate command names.")
+                    folders = {i for i in os.listdir(curr_path) if os.path.isdir(os.path.join(curr_path, i))}
+                    if folders != items:
+                        diff = folders - items or items - folders
+                        raise Exception(f"Command group info {diff} doesn't match in {readme_path}.")
 
-                items = set(items)
+                    groups = set(curr_node.command_groups.keys())
+                    if groups != set(items):
+                        diff = groups - items or items - groups
+                        raise Exception(f"Command group info {diff} in tree.json doesn't match in {readme_path}.")
 
-                files = set(os.listdir(curr_path)) - {"readme.md"}
-                if map(lambda x: x[1:-3], files) != items:  # _<command_name>.md
-                    raise Exception(f"Command info doesn't match in {readme_path}.")
+                    for folder in folders:
+                        stack.append((os.path.join(curr_path, folder), curr_node.command_groups[folder]))
 
-                groups = set(curr_node.commands.keys())
-                if groups != items:
-                    raise Exception(f"Command info in tree.json doesn't match in {readme_path}.")
+    for root, dirs, files in os.walk(aaz.resources_folder):
+        for file in files:
+            if file.endswith(".json"):
+                file_path = os.path.join(root, file)
+                if file_path not in model_set:
+                    raise Exception(f"{file_path} is redundant.")
