@@ -251,7 +251,9 @@ def verify_aaz():
 
     for root, dirs, files in os.walk(aaz.resources_folder):
         for file in files:
-            if file.endswith(".json"):
-                file_path = os.path.join(root, file)
-                if file_path not in model_set:
-                    raise Exception(f"{file_path} is redundant.")
+            if not file.endswith(".json"):
+                continue
+
+            file_path = os.path.join(root, file)
+            if file_path not in model_set:
+                raise Exception(f"{file_path} is redundant.")
