@@ -10,7 +10,6 @@ from command.controller.specs_manager import AAZSpecsManager
 from command.templates import get_templates
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.config import Config
-from utils.exceptions import VerificationError
 
 logger = logging.getLogger('backend')
 
@@ -164,11 +163,11 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
     help="Path of `aaz` repository."
 )
 def verify():
-    def verify_command(file_path, node):
-        with open(file_path, "r") as fp:
-            content = fp.read()
+    def verify_command(cmd_path, node):
+        with open(cmd_path, "r") as f:
+            cmd_content = f.read()
 
-        paths = re.findall(r"]\(([^)]+)\)", content)
+        paths = re.findall(r"]\(([^)]+)\)", cmd_content)
         for path in paths:
             json_path = os.path.join(Config.AAZ_PATH, os.path.splitext(path)[0][1:] + ".json")
             json_path = os.path.normpath(json_path)
@@ -188,7 +187,7 @@ def verify():
             model_set.add(json_path)
 
         tmpl = get_templates()["command"]
-        if not tmpl.render(command=node) == content:
+        if not tmpl.render(command=node) == cmd_content:
             raise Exception(f"{file_path} cannot be rendered correctly.")
 
     model_set = set()
