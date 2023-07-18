@@ -3,6 +3,14 @@
 Release History
 ===============
 
+1.4.0
+++++++
+* Improve Docs of CLI Generator (#258)
+* Improve doc display (#259)
+* [Doc] Add note for examples (#260)
+* Update generation template for pagination (#261)
+* Change the initial extension version to 1.0.0b1 (#263)
+
 1.3.1
 ++++++
 * Rewrite the workspace editor doc (#253)
