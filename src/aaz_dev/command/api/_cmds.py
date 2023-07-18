@@ -153,7 +153,7 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
         sys.exit(1)
 
 
-@bp.cli.command("verify-aaz", short_help="Verify data consistency within `aaz` repository.")
+@bp.cli.command("verify", short_help="Verify data consistency within `aaz` repository.")
 @click.option(
     "--aaz-path", "-a",
     type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
@@ -163,7 +163,7 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
     expose_value=False,
     help="Path of `aaz` repository."
 )
-def verify_aaz():
+def verify():
     def verify_command(file_path, node):
         with open(file_path, "r") as fp:
             content = fp.read()
