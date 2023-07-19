@@ -163,11 +163,11 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
     help="Path of `aaz` repository."
 )
 def verify():
-    def verify_command(cmd_path, node):
-        with open(cmd_path, "r") as f:
-            cmd_content = f.read()
+    def verify_command(file_path, node):
+        with open(file_path, "r") as fp:
+            content = fp.read()
 
-        paths = re.findall(r"]\(([^)]+)\)", cmd_content)
+        paths = re.findall(r"]\(([^)]+)\)", content)
         for path in paths:
             json_path = os.path.join(Config.AAZ_PATH, os.path.splitext(path)[0][1:] + ".json")
             json_path = os.path.normpath(json_path)
@@ -187,7 +187,7 @@ def verify():
             model_set.add(json_path)
 
         tmpl = get_templates()["command"]
-        if not tmpl.render(command=node) == cmd_content:
+        if not tmpl.render(command=node) == content:
             raise Exception(f"{file_path} cannot be rendered correctly.")
 
     model_set = set()
@@ -196,6 +196,7 @@ def verify():
 
     while stack:
         curr_path, curr_node = stack.pop()
+        logger.info(f"Checking {curr_path}")
         if os.path.isdir(curr_path):
             readme_path = os.path.join(curr_path, "readme.md")
             if not os.path.exists(readme_path):
