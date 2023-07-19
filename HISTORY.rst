@@ -3,6 +3,10 @@
 Release History
 ===============
 
+1.5.0
+++++++
+* Add command `aaz-dev command-model verify` to verify aaz metadata (#265)
+
 1.4.0
 ++++++
 * Improve Docs of CLI Generator (#258)
