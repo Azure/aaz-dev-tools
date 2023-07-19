@@ -3,6 +3,10 @@
 Release History
 ===============
 
+1.5.1
+++++++
+* Add log information for aaz verification (#268)
+
 1.5.0
 ++++++
 * Add command `aaz-dev command-model verify` to verify aaz metadata (#265)
