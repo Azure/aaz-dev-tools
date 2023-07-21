@@ -47,5 +47,5 @@ For `Pycharm` users, please set env `Azure_TEST_RUN_LIVE` to be `true` for live 
 
 > **Note**
 >
-> When you recording tests, please make sure the latest change of `dev` branch of **azure-cli** has been synced to your local repo.
+> When you record tests, please make sure the latest change of `dev` branch of **azure-cli** has been synced to your local repo.
 > Developers will always encounter this issue when the tests passed locally but failed in CI. This is because the api versions used by commands of **azure-cli** can be changed in `dev` branch. When the tests recorded in your local may uses out of date azure-cli commands, the recording will be failed in CI. That's why we need to sync the latest change of `dev` branch of **azure-cli** before recording tests.
