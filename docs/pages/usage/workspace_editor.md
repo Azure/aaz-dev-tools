@@ -383,7 +383,7 @@ For some cases, it will be much convenience for users by using subcommands. You 
 > 
 > The subcommands generation relies on **Generic(Get&Put)** update. So please make sure the __update__ command of the resource is Generic(Get&Put) update.
 
-When the argument used of subcommands generation is `array` type, the subcommand will has `--xxxxx-index` argument to index the element of array.
+When the argument used of subcommands generation is `array` type, the subcommand will have `--xxxxx-index` argument to index the element of array.
 Sometimes, the element can be identified by its specific property such as `name`. So you can state [x-ms-identifiers](https://github.com/Azure/autorest/blob/main/docs/extensions/readme.md#x-ms-identifiers) in swagger,
 and we will replace the index argument by that.
 
