@@ -372,6 +372,23 @@ When developing commands, it may be necessary to correct Swagger errors. You can
 
 ![reload_from_swagger](../../assets/recordings/workspace_editor/reload_from_swagger.gif)
 
+## Subcommand generation
+
+For some compound arguments, we support [shorthand syntax](https://github.com/Azure/azure-cli/blob/dev/doc/shorthand_syntax.md) to pass values.
+For some cases, it will be much convenience for users by using subcommands. You can use the following way to create subcommands.
+
+![generate_subcommands](../../assets/recordings/workspace_editor/generate_subcommands.gif)
+
+> **Warning**
+> 
+> The subcommands generation relies on **Generic(Get&Put)** update. So please make sure the __update__ command of the resource is Generic(Get&Put) update.
+
+When the argument used of subcommands generation is `array` type, the subcommand will has `--xxxxx-index` argument to index the element of array.
+Sometimes, the element can be identified by its specific property such as `name`. So you can state [x-ms-identifiers](https://github.com/Azure/autorest/blob/main/docs/extensions/readme.md#x-ms-identifiers) in swagger,
+and we will replace the index argument by that.
+
+![generate_subcommands_with_x_ms_identifiers](../../assets/recordings/workspace_editor/generate_subcommands_with_x_ms_identifiers.gif)
+
 ## Export Command Models to **AAZ** repo
 
 A workspace is a local place that holds command models while developing. `AAZ` Repo is where command models are kept for persistence. When you click the `Export` button, it will export the command models into `AAZ`. `AAZ` is different from workspace, it can save different version command models of the same resource.
