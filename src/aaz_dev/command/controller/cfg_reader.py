@@ -699,7 +699,7 @@ class CfgReader:
 
             elif schema.discriminators:
                 for disc in schema.discriminators:
-                    if current_idx == disc.value:
+                    if current_idx == disc.get_safe_value():
                         if not remain_idx:
                             return disc
                         return cls.find_sub_schema(disc, remain_idx)
@@ -716,7 +716,7 @@ class CfgReader:
 
             elif schema.discriminators:
                 for disc in schema.discriminators:
-                    if current_idx == disc.value:
+                    if current_idx == disc.get_safe_value():
                         if not remain_idx:
                             return disc
                         return cls.find_sub_schema(disc, remain_idx)
@@ -934,7 +934,7 @@ class CfgReader:
                 for disc in parent.discriminators:
                     for sub_parent, sub_schema, sub_schema_idx in cls._iter_sub_schema(disc, schema_filter):
                         if sub_schema:
-                            sub_schema_idx = [disc.value, *sub_schema_idx]
+                            sub_schema_idx = [disc.get_safe_value(), *sub_schema_idx]
                         yield sub_parent, sub_schema, sub_schema_idx
 
         elif isinstance(parent, CMDObjectSchemaDiscriminator):
@@ -956,7 +956,7 @@ class CfgReader:
                 for disc in parent.discriminators:
                     for sub_parent, sub_schema, sub_schema_idx in cls._iter_sub_schema(disc, schema_filter):
                         if sub_schema:
-                            sub_schema_idx = [disc.value, *sub_schema_idx]
+                            sub_schema_idx = [disc.get_safe_value(), *sub_schema_idx]
                         yield sub_parent, sub_schema, sub_schema_idx
 
         elif isinstance(parent, CMDArraySchemaBase):

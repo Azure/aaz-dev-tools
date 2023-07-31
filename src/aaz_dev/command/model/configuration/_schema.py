@@ -34,7 +34,7 @@ from ._utils import CMDDiffLevelEnum
 from utils import exceptions
 
 import logging
-
+import re
 
 logger = logging.getLogger('backend')
 
@@ -781,6 +781,11 @@ class CMDObjectSchemaDiscriminator(Model):
                 disc.reformat(**kwargs)
             self.discriminators = sorted(self.discriminators, key=lambda disc: disc.value)
 
+    def get_safe_value(self):
+        """Some value may contain special characters such as Microsoft.db/mysql, it will cause issues. This function will replase them by `_`
+        """
+        safe_value = re.sub(r'[^A-Za-z0-9_-]', '_', self.value)
+        return safe_value
 
 # additionalProperties
 class CMDObjectSchemaAdditionalProperties(Model):
