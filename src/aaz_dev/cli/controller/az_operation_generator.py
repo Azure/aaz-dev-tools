@@ -4,7 +4,7 @@ from command.model.configuration import CMDHttpOperation, CMDHttpRequestJsonBody
     CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction, CMDObjectSchemaDiscriminator, CMDSchemaEnum, \
     CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction, CMDInstanceCreateOperation, CMDInstanceDeleteOperation
 from utils import exceptions
-from utils.case import to_snack_case
+from utils.case import to_snack_case, to_variation_name
 from utils.error_format import AAZErrorFormatEnum
 
 
@@ -799,7 +799,8 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
     for disc in discriminators:
         key_name = disc.property
         key_value = disc.value
-        disc_name = f"disc_{to_snack_case(disc.value)}"
+        disc_name = f"disc_{to_variation_name(disc.value)}"
+
         disc_scope_define = scope_define + "{" + key_name + ":" + key_value + "}"
         disc_arg_key = arg_key
         for scopes in _iter_request_scopes_by_schema_base(disc, disc_name, disc_scope_define, disc_arg_key, cmd_ctx):
@@ -879,7 +880,8 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, cmd_ctx):
     for disc in discriminators:
         key_name = to_snack_case(disc.property)
         key_value = disc.value
-        disc_name = f"disc_{to_snack_case(disc.value)}"
+        disc_name = f"disc_{to_variation_name(disc.value)}"
+
         disc_scope_define = f'{scope_define}.discriminate_by("{key_name}", "{key_value}")'
         for scopes in _iter_response_scopes_by_schema_base(disc, disc_name, disc_scope_define, cmd_ctx):
             yield scopes
