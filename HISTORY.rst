@@ -3,6 +3,12 @@
 Release History
 ===============
 
+1.5.2
+++++++
+* Update docs for Command Usage and Testing (#270)
+* Fix bugs while command has no arguments (#271)
+* Add docs for subcommand generation (#272)
+
 1.5.1
 ++++++
 * Add log information for aaz verification (#268)
