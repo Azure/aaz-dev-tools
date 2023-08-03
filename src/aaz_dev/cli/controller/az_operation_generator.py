@@ -4,7 +4,7 @@ from command.model.configuration import CMDHttpOperation, CMDHttpRequestJsonBody
     CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction, CMDObjectSchemaDiscriminator, CMDSchemaEnum, \
     CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction, CMDInstanceCreateOperation, CMDInstanceDeleteOperation
 from utils import exceptions
-from utils.case import to_snack_case, to_variation_name
+from utils.case import to_snack_case
 from utils.error_format import AAZErrorFormatEnum
 
 
