@@ -879,7 +879,7 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, cmd_ctx):
     for disc in discriminators:
         key_name = to_snack_case(disc.property)
         key_value = disc.value
-        disc_name = f"disc_{to_variation_name(disc.value)}"
+        disc_name = f"disc_{to_snack_case(disc.value)}"
 
         disc_scope_define = f'{scope_define}.discriminate_by("{key_name}", "{key_value}")'
         for scopes in _iter_response_scopes_by_schema_base(disc, disc_name, disc_scope_define, cmd_ctx):
