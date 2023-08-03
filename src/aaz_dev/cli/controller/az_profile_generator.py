@@ -13,7 +13,7 @@ class AzProfileGenerator:
     def __init__(self, aaz_folder, profile):
         self.aaz_folder = aaz_folder
         self.profile = profile
-        self.profile_folder_name = profile.name.lower().replace('-', '_')
+        self.profile_folder_name = profile.profile_folder_name
         self._removed_folders = set()
         self._removed_files = set()
         self._modified_files = {}
