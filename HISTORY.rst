@@ -3,6 +3,10 @@
 Release History
 ===============
 
+1.6.0
+++++++
+* Adding `profile_` prefix for azure stack profile in CLI aaz package (#274)
+
 1.5.2
 ++++++
 * Update docs for Command Usage and Testing (#270)
