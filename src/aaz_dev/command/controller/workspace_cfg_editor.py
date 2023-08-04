@@ -1412,7 +1412,7 @@ class WorkspaceCfgEditor(CfgReader):
 
         if schema.discriminators:
             for disc in schema.discriminators:
-                if disc.value == current_idx:
+                if disc.get_safe_value() == current_idx:
                     index.discriminator = cls._build_object_index_discriminator(disc, remain_idx, **kwargs)
                     break
 
@@ -1519,7 +1519,7 @@ class WorkspaceCfgEditor(CfgReader):
 
         if schema.discriminators:
             for disc in schema.discriminators:
-                if disc.value == current_idx:
+                if disc.get_safe_value() == current_idx:
                     index.discriminator = cls._build_object_index_discriminator(disc, remain_idx, **kwargs)
                     break
 

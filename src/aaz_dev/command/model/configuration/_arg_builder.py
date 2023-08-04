@@ -42,7 +42,7 @@ class CMDArgBuilder:
                     if not arg_var.endswith("$"):
                         arg_var += '.'
                     if isinstance(schema, CMDObjectSchemaDiscriminator):
-                        arg_var += f'{schema.value}'
+                        arg_var += schema.get_safe_value()
                     elif isinstance(schema, CMDSchema):
                         arg_var += f'{schema.name}'.replace('$', '')  # some schema name may contain $
                     else:
@@ -302,7 +302,7 @@ class CMDArgBuilder:
             return [*self._ref_arg.options]
 
         if isinstance(self.schema, CMDObjectSchemaDiscriminator):
-            opt_name = self._build_option_name(self.schema.value)
+            opt_name = self._build_option_name(self.schema.get_safe_value())
         elif isinstance(self.schema, CMDSchema):
             name = self.schema.name.replace('$', '')
             if name == "[Index]" or name == "{Key}":
