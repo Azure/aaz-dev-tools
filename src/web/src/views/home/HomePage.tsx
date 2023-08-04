@@ -94,7 +94,6 @@ function HomePage() {
                                                 {"Go to "}
                                                 <Link
                                                     href="https://azure.github.io/aaz-dev-tools/"
-                                                    // align="center"
                                                     underline="always"
                                                     target="_blank"
                                                 >Introduction</Link>
