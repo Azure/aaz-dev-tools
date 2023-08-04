@@ -93,7 +93,7 @@ function HomePage() {
                                             <StepContentTypography>
                                                 {"Go to "}
                                                 <Link
-                                                    href="/?#/Documents"
+                                                    href="https://azure.github.io/aaz-dev-tools/"
                                                     // align="center"
                                                     underline="always"
                                                     target="_blank"
