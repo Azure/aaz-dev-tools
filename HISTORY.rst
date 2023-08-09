@@ -3,6 +3,11 @@
 Release History
 ===============
 
+1.6.1
+++++++
+* Fix bug when special characters appeared in discrimination value (#275)
+* Fix docs link in homepage (#277)
+
 1.6.0
 ++++++
 * Adding `profile_` prefix for azure stack profile in CLI aaz package (#274)
