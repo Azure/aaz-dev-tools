@@ -3,6 +3,10 @@
 Release History
 ===============
 
+1.6.2
+++++++
+* Convert int value to float for FloatArg default and blank value (#279)
+
 1.6.1
 ++++++
 * Fix bug when special characters appeared in discrimination value (#275)
