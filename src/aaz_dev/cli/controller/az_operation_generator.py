@@ -902,6 +902,11 @@ def render_schema(schema, cls_map, name):
         flags['client_flatten'] = True
     if getattr(schema, 'secret', False):
         flags['secret'] = True
+        if 'required' in flags:
+            # when a property is `secret` then remove the required flag for that property.
+            # because a secret property will not be returned in response and for `get+put` update command, it's allowed
+            # without that property in payload.
+            del flags['required']
 
     if flags:
         schema_kwargs['flags'] = flags
