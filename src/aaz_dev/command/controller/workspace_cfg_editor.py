@@ -286,6 +286,8 @@ class WorkspaceCfgEditor(CfgReader):
                 arg.default = None
             else:
                 arg.default = CMDArgDefault(kwargs['default'])
+        if 'configurationKey' in kwargs:
+            arg.configuration_key = kwargs['configurationKey']
         if 'prompt' in kwargs:
             if kwargs['prompt'] is None:
                 arg.prompt = None

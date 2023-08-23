@@ -249,6 +249,11 @@ class CMDArgBuilder:
             return CMDArgDefault.build_default(self, self.schema.default)
         return None
 
+    def get_configuration_key(self):
+        if self._ref_arg:
+            return self._ref_arg.configuration_key
+        return None
+
     def get_prompt(self):
         if self._ref_arg:
             # ref_arg already has prompt return it

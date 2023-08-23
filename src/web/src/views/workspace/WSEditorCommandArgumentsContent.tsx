@@ -609,7 +609,7 @@ function ArgumentReviewer(props: {
                 <Box sx={{ flexGrow: 1 }} />
                 {props.arg.required && <ArgRequiredTypography>[Required]</ArgRequiredTypography>}
             </Box>
-            {(props.arg.default !== undefined || choices.length > 0) && <Box
+            {(props.arg.default !== undefined || choices.length > 0 || props.arg.configurationKey !== undefined) && <Box
                 sx={{
                     ml: 5,
                     mt: 0.5,
@@ -622,6 +622,10 @@ function ArgumentReviewer(props: {
                 </ArgChoicesTypography>}
                 {props.arg.default !== undefined && <ArgChoicesTypography sx={{ ml: 1 }}>
                     {`Default: ${getDefaultValueToString()}`}
+                </ArgChoicesTypography>
+                }
+                {props.arg.configurationKey !== undefined && <ArgChoicesTypography sx={{ ml: 1 }}>
+                    {`ConfigurationKey: ${props.arg.configurationKey}`}
                 </ArgChoicesTypography>
                 }
             </Box>}
@@ -659,6 +663,7 @@ function ArgumentDialog(props: {
     const [hasPrompt, setHasPrompt] = useState<boolean | undefined>(false);
     const [promptMsg, setPromptMsg] = useState<string | undefined>(undefined);
     const [promptConfirm, setPromptConfirm] = useState<boolean | undefined>(undefined);
+    const [configurationKey, setConfigurationKey] = useState<string>("");
 
     const handleClose = () => {
         setInvalidText(undefined);
@@ -672,6 +677,7 @@ function ArgumentDialog(props: {
         let sHelp = shortHelp.trim();
         let lHelp = longHelp.trim();
         let gName = group.trim();
+        let cfgKey = configurationKey.trim();
 
         const names = name.split(' ').filter(n => n.length > 0);
         const sNames = sName?.split(' ').filter(n => n.length > 0) ?? undefined;
@@ -707,6 +713,11 @@ function ArgumentDialog(props: {
         let lines: string[] | null = null;
         if (lHelp.length > 1) {
             lines = lHelp.split('\n').filter(l => l.length > 0);
+        }
+
+        let argCfgKey: string | null = null;
+        if (cfgKey.length > 0) {
+            argCfgKey = cfgKey;
         }
 
         let argDefault = undefined;
@@ -775,6 +786,7 @@ function ArgumentDialog(props: {
             },
             default: argDefault,
             prompt: argPrompt,
+            configurationKey: argCfgKey,
         }
     }
 
@@ -912,6 +924,7 @@ function ArgumentDialog(props: {
         setHide(props.arg.hide);
         setShortHelp(props.arg.help?.short ?? "");
         setLongHelp(props.arg.help?.lines?.join("\n") ?? "");
+        setConfigurationKey(props.arg.configurationKey ?? "");
         setUpdating(false);
         setArgSimilarTree(undefined);
         setArgSimilarTreeExpandedIds([]);
@@ -1042,6 +1055,7 @@ function ArgumentDialog(props: {
                             />
                         </Box>
                     </>}
+
                     {hasPrompt !== undefined && <>
                         <InputLabel shrink sx={{ font: "inherit" }}>Prompt Input</InputLabel>
                         <Box sx={{
@@ -1096,6 +1110,19 @@ function ArgumentDialog(props: {
                             </Box>
                         </Box>
                     </>}
+                    <TextField
+                        id="configurationKey"
+                        label="Configuration Key"
+                        helperText="The key to retrieve the default value from cli Configuration"
+                        type='text'
+                        fullWidth
+                        variant='standard'
+                        value={configurationKey}
+                        onChange={(event: any) => {
+                            setConfigurationKey(event.target.value);
+                        }}
+                        margin="normal"
+                    />
 
                     <TextField
                         id="shortSummary"
@@ -1759,6 +1786,7 @@ interface CMDArg extends CMDArgBase {
     default?: CMDArgDefault<any>
     idPart?: string
     prompt?: CMDArgPromptInput
+    configurationKey?: string
 }
 
 interface CMDArgBaseT<T> extends CMDArgBase {
@@ -2141,6 +2169,7 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
         help: help,
         idPart: response.idPart,
         prompt: prompt,
+        configurationKey: response.configurationKey,
     }
 
     switch (argBase.type) {

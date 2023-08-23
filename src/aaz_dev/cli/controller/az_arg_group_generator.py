@@ -242,6 +242,9 @@ def render_arg(arg, cmd_ctx, arg_group=None):
     if arg.default:
         arg_kwargs["default"] = arg.default.value
 
+    if arg.configuration_key:
+        arg_kwargs["configured_default"] = arg.configuration_key
+
     arg_type, arg_kwargs, cls_builder_name = render_arg_base(arg, cmd_ctx, arg_kwargs)
 
     if arg.prompt:

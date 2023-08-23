@@ -212,6 +212,10 @@ class CMDArg(CMDArgBase):
     # properties as nodes
     help = ModelType(CMDArgumentHelp)
     default = ModelType(CMDArgDefault)  # default value is used when argument isn't in command
+    configuration_key = StringType(
+        serialized_name='configurationKey',
+        deserialize_from='configurationKey',
+    )  # the key to retrieve the default value from cli configuration
     prompt = ModelType(CMDArgPromptInput)
 
     def __init__(self, *args, **kwargs):
@@ -239,6 +243,7 @@ class CMDArg(CMDArgBase):
 
         arg.required = builder.get_required()
         arg.default = builder.get_default()
+        arg.configuration_key = builder.get_configuration_key()
         arg.prompt = builder.get_prompt()
         arg.hide = builder.get_hide()
         return arg
