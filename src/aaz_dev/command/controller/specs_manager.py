@@ -42,9 +42,12 @@ class AAZSpecsManager:
         if not os.path.isfile(tree_path):
             raise ValueError(f"Invalid Command Tree file path, expect a file: {tree_path}")
 
-        with open(tree_path, 'r') as f:
-            data = json.load(f)
-            self.tree = CMDSpecsCommandTree(data)
+        try:
+            with open(tree_path, 'r') as f:
+                data = json.load(f)
+                self.tree = CMDSpecsCommandTree(data)
+        except json.decoder.JSONDecodeError as e:
+            raise ValueError(f"Invalid Command Tree file: {tree_path}") from e
 
     # Commands folder
     def get_tree_file_path(self):
