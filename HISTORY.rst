@@ -2,6 +2,10 @@
 
 Release History
 ===============
+1.7.0
+++++++
+* Mark a secret property as not required in response flags (#281)
+* Raise error when command tree failed to decode, and support configuration key (#282)
 
 1.6.2
 ++++++
