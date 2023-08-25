@@ -8,7 +8,7 @@ def to_camel_case(name):
     return "".join(parts)
 
 
-def to_snack_case(name, separator='_'):
+def to_snake_case(name, separator='_'):
     assert isinstance(name, str)
     name = re.sub('(.)([A-Z][a-z]+)', r'\1' + separator + r'\2', name)
     name = re.sub('([a-z0-9])([A-Z])', r'\1' + separator + r'\2', name).lower()

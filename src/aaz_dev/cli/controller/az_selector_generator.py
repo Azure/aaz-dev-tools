@@ -1,7 +1,7 @@
 from command.model.configuration import CMDJsonSubresourceSelector, CMDArrayIndexBase, CMDObjectIndexBase, \
     CMDObjectIndexDiscriminator, CMDObjectIndexAdditionalProperties, CMDObjectIndex, CMDArrayIndex, CMDSchema, \
     CMDObjectIndexAdditionalProperties, CMDSelectorIndex
-from utils.case import to_camel_case, to_snack_case
+from utils.case import to_camel_case
 
 
 class AzJsonSelectorGenerator:

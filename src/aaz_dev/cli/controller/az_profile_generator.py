@@ -2,7 +2,7 @@ import os
 import shutil
 from cli.templates import get_templates
 from command.model.configuration import CMDCommand
-from utils.case import to_snack_case
+from utils.case import to_snake_case
 from .az_command_generator import AzCommandGenerator
 from utils import exceptions
 
@@ -193,7 +193,7 @@ class AzProfileGenerator:
 
     @staticmethod
     def _command_file_name(name):
-        return f"_{to_snack_case(name)}.py"
+        return f"_{to_snake_case(name)}.py"
 
     @staticmethod
     def _command_group_folder_names(*names):
