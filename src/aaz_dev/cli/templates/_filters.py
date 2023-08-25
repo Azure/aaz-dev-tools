@@ -1,6 +1,6 @@
 from jinja2.filters import pass_environment
 from utils.stage import AAZStageEnum
-from utils.case import to_camel_case, to_snack_case
+from utils.case import to_camel_case, to_snake_case
 import re
 
 
@@ -11,7 +11,7 @@ def camel_case(env, name):
 
 @pass_environment
 def snake_case(env, name):
-    return to_snack_case(name)
+    return to_snake_case(name)
 
 
 @pass_environment
@@ -58,7 +58,10 @@ _PYTHON_BUILD_IN_KEYWORDS = (
 @pass_environment
 def get_prop(env, data):
     assert isinstance(data, str)
-    if re.match('^[0-9].*$', data) or data in _PYTHON_BUILD_IN_KEYWORDS:
+    if not re.match('^[A-Za-z_][A-Za-z0-9_]*$', data) or data in _PYTHON_BUILD_IN_KEYWORDS:
+        # including property name starts with digit like `0ab`
+        # including property name special character such as `odata.type`
+        # including python build in keywords
         return f'[{constant_convert(env, data)}]'
     else:
         return f'.{data}'

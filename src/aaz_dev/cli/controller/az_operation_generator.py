@@ -4,7 +4,7 @@ from command.model.configuration import CMDHttpOperation, CMDHttpRequestJsonBody
     CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction, CMDObjectSchemaDiscriminator, CMDSchemaEnum, \
     CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction, CMDInstanceCreateOperation, CMDInstanceDeleteOperation
 from utils import exceptions
-from utils.case import to_snack_case
+from utils.case import to_snake_case
 from utils.error_format import AAZErrorFormatEnum
 
 
@@ -575,7 +575,7 @@ class AzResponseClsGenerator:
 
     @staticmethod
     def _generate_schema_name(name):
-        return "_schema_" + to_snack_case(name)
+        return "_schema_" + to_snake_case(name)
 
     def __init__(self, cmd_ctx, name, schema):
         self._cmd_ctx = cmd_ctx
@@ -593,12 +593,12 @@ class AzResponseClsGenerator:
                 raise NotImplementedError()
             if schema.discriminators:
                 for disc in schema.discriminators:
-                    disc_key = to_snack_case(disc.property)
+                    disc_key = to_snake_case(disc.property)
                     disc_value = disc.value
                     self.discriminators.append((disc_key, disc_value))
             if schema.props:
                 for s in schema.props:
-                    s_name = to_snack_case(s.name)
+                    s_name = to_snake_case(s.name)
                     self.props.append(s_name)
             elif schema.additional_props:
                 if schema.additional_props.item is not None:
@@ -613,7 +613,7 @@ class AzResponseClsGenerator:
         self.props = sorted(self.props)
 
     def iter_scopes(self):
-        for scopes in _iter_response_scopes_by_schema_base(self.schema, to_snack_case(self.name), self.schema_name, self._cmd_ctx):
+        for scopes in _iter_response_scopes_by_schema_base(self.schema, to_snake_case(self.name), self.schema_name, self._cmd_ctx):
             yield scopes
 
 
@@ -793,13 +793,13 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
             s_name = '_elements'
         else:
             s_scope_define = f"{scope_define}.{s_name}"
-        for scopes in _iter_request_scopes_by_schema_base(s, to_snack_case(s_name), s_scope_define, s_arg_key, cmd_ctx):
+        for scopes in _iter_request_scopes_by_schema_base(s, to_snake_case(s_name), s_scope_define, s_arg_key, cmd_ctx):
             yield scopes
 
     for disc in discriminators:
         key_name = disc.property
         key_value = disc.value
-        disc_name = f"disc_{to_snack_case(disc.get_safe_value())}"
+        disc_name = f"disc_{to_snake_case(disc.get_safe_value())}"
 
         disc_scope_define = scope_define + "{" + key_name + ":" + key_value + "}"
         disc_arg_key = arg_key
@@ -821,7 +821,7 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, cmd_ctx):
 
         if schema.props:
             for s in schema.props:
-                s_name = to_snack_case(s.name)
+                s_name = to_snake_case(s.name)
                 s_typ, s_typ_kwargs, cls_builder_name = render_schema(s, cmd_ctx.response_clses, s_name)
                 rendered_schemas.append((s_name, s_typ, s_typ_kwargs, cls_builder_name))
                 if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
@@ -846,7 +846,7 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, cmd_ctx):
 
         if schema.props:
             for s in schema.props:
-                s_name = to_snack_case(s.name)
+                s_name = to_snake_case(s.name)
                 s_typ, s_typ_kwargs, cls_builder_name = render_schema(s, cmd_ctx.response_clses, s_name)
                 rendered_schemas.append((s_name, s_typ, s_typ_kwargs, cls_builder_name))
                 if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
@@ -878,9 +878,9 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, cmd_ctx):
             yield scopes
 
     for disc in discriminators:
-        key_name = to_snack_case(disc.property)
+        key_name = to_snake_case(disc.property)
         key_value = disc.value
-        disc_name = f"disc_{to_snack_case(disc.get_safe_value())}"
+        disc_name = f"disc_{to_snake_case(disc.get_safe_value())}"
 
         disc_scope_define = f'{scope_define}.discriminate_by("{key_name}", "{key_value}")'
         for scopes in _iter_response_scopes_by_schema_base(disc, disc_name, disc_scope_define, cmd_ctx):
@@ -969,4 +969,4 @@ def render_schema_base(schema, cls_map, schema_kwargs=None):
 
 
 def parse_cls_builder_name(cls_name):
-    return f"_build_schema_{to_snack_case(cls_name)}"
+    return f"_build_schema_{to_snake_case(cls_name)}"
