@@ -2,6 +2,10 @@
 
 Release History
 ===============
+1.7.1
+++++++
+* Fix bug when generate property name with special characters in code (#284)
+
 1.7.0
 ++++++
 * Mark a secret property as not required in response flags (#281)
