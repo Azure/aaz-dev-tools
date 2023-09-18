@@ -196,6 +196,10 @@ class BodyParameter(ParameterBase, Linkable):
     def to_cmd(self, builder, **kwargs):
         v = builder(self.schema, in_base=False, support_cls_schema=True)
         v.name = self.name
+        if self.required:
+            # A required body parameter cannot be frozen.
+            # This can help to create an empty payload.
+            v.frozen = False
         if v.frozen:
             logger.warning(
                 msg=f"Request Body Parameter is None: {self.traces}"
