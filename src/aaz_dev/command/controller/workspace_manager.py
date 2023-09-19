@@ -72,13 +72,31 @@ class WorkspaceManager:
         self._cfg_editors = {}
         self._reusable_leaves = {}
 
-        self.aaz_specs = aaz_manager or AAZSpecsManager()
-        self.swagger_specs = swagger_manager or SwaggerSpecsManager()
-        self.swagger_command_generator = CommandGenerator()
+        self._aaz_specs = aaz_manager
+        self._swagger_specs = swagger_manager
+        self._swagger_command_generator = None
 
     @property
     def is_in_memory(self):
         return self.folder == self.IN_MEMORY
+
+    @property
+    def aaz_specs(self):
+        if not self._aaz_specs:
+            self._aaz_specs = AAZSpecsManager()
+        return self._aaz_specs
+
+    @property
+    def swagger_specs(self):
+        if not self._swagger_specs:
+            self._swagger_specs = SwaggerSpecsManager()
+        return self._swagger_specs
+
+    @property
+    def swagger_command_generator(self):
+        if not self._swagger_command_generator:
+            self._swagger_command_generator = CommandGenerator()
+        return self._swagger_command_generator
 
     def load(self):
         assert not self.is_in_memory
