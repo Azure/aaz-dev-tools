@@ -2,6 +2,12 @@
 
 Release History
 ===============
+1.8.0
+++++++
+* Support to pass an empty request body when it's required (#286)
+* Improve the response time of '/AAZ/Editor/Workspaces' api (#287)
+* Ignore non-UTF-8 of aaz json file verification (#288)
+
 1.7.1
 ++++++
 * Fix bug when generate property name with special characters in code (#284)
