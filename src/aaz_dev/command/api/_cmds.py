@@ -174,7 +174,7 @@ def verify():
             if not os.path.exists(json_path):
                 raise Exception(f"{json_path} defined in {file_path} is missing.")
 
-            with open(json_path, "r", encoding="utf-8") as fp:
+            with open(json_path, "r", encoding="utf-8", errors="ignore") as fp:
                 model = json.load(fp)
             group, command = " ".join(node.names[:-1]), node.names[-1]
             for g in model["commandGroups"]:
