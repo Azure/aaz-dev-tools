@@ -41,13 +41,14 @@ class WorkspaceManager:
         return workspaces
 
     @classmethod
-    def new(cls, name, plane, **kwargs):
+    def new(cls, name, plane, resource_provider, **kwargs):
         manager = cls(name, **kwargs)
         if not manager.is_in_memory and os.path.exists(manager.path):
             raise exceptions.ResourceConflict(f"Workspace conflict: Workspace json file path exists: {manager.path}")
         manager.ws = CMDEditorWorkspace({
             "name": name,
             "plane": plane,
+            "resourceProvider": resource_provider,
             "version": datetime.utcnow(),
             "commandTree": {
                 "names": [cls.COMMAND_TREE_ROOT_NAME],

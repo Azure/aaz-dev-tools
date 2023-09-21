@@ -290,6 +290,7 @@ class AzCommandGenerator:
                 raise ValueError(f"Find multiple planes in a command: {resource.plane}, {self.plane}")
 
         self.client_type = PlaneEnum.http_client(self.plane)
+        # TODO: add support for DataPlaneClient client_type
 
         # prepare outputs
         self.outputs = []

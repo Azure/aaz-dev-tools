@@ -136,7 +136,7 @@ class SwaggerSpecsManager:
 
         if plane == PlaneEnum.Mgmt:
             modules = self.specs.get_mgmt_plane_modules(plane=plane)
-        elif plane in PlaneEnum.choices():
+        elif plane == PlaneEnum.Data:
             modules = self.specs.get_data_plane_modules(plane=plane)
         else:
             raise exceptions.InvalidAPIUsage(f"invalid plane name '{plane}'")
@@ -158,7 +158,7 @@ class SwaggerSpecsManager:
 
         if plane == PlaneEnum.Mgmt:
             module = self.specs.get_mgmt_plane_module(*mod_names, plane=plane)
-        elif plane in PlaneEnum.choices():
+        elif plane == PlaneEnum.Data:
             module = self.specs.get_data_plane_module(*mod_names, plane=plane)
         else:
             raise exceptions.InvalidAPIUsage(f"invalid plane name '{plane}'")

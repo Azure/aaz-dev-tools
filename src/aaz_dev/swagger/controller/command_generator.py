@@ -258,6 +258,7 @@ class CommandGenerator:
                     resp.body.json.var = BuildInVariants.Instance
 
         if not error_format:
+            # TODO: refactor the following line to support data plane command generation.
             if Config.DEFAULT_PLANE != PlaneEnum.Mgmt:
                 raise exceptions.InvalidAPIUsage(
                     f"Missing `Error` response schema in operation `{op.operation_id}`: "

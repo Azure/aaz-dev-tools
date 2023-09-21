@@ -19,7 +19,8 @@ def editor_workspaces():
             raise exceptions.InvalidAPIUsage("Invalid request body")
         name = data['name']
         plane = data['plane']
-        manager = WorkspaceManager.new(name, plane)
+        resource_provider = data['resourceProvider']
+        manager = WorkspaceManager.new(name, plane, resource_provider)
         manager.save()
         result = manager.ws.to_primitive()
         result.update({

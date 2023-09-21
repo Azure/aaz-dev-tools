@@ -40,6 +40,10 @@ class CMDEditorWorkspace(Model):
     version = UTCDateTimeType(required=True)  # this property updated when workspace saved in file.
     name = StringType(required=True)
     plane = PlaneField(required=True)
+    resource_provider = StringType(
+        serialized_name='resourceProvider',
+        deserialize_from='resourceProvider'
+    )
     command_tree = ModelType(
         CMDCommandTreeNode,
         required=True,
