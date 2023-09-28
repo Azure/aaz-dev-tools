@@ -6,12 +6,14 @@ from utils.fields import PlaneField
 
 
 class CMDCommandTreeLeaf(Model):
-    names = ListType(field=CMDCommandNameField(), min_size=1, required=True)   # full name of a command
+    names = ListType(field=CMDCommandNameField(), min_size=1,
+                     required=True)   # full name of a command
     stage = CMDStageField()
     version = CMDVersionField(required=True)
 
     help = ModelType(CMDHelp)
-    resources = ListType(ModelType(CMDResource), min_size=1)  # the azure resources used in this command
+    # the azure resources used in this command
+    resources = ListType(ModelType(CMDResource), min_size=1)
     examples = ListType(ModelType(CMDCommandExample))
 
     class Options:
@@ -19,7 +21,8 @@ class CMDCommandTreeLeaf(Model):
 
 
 class CMDCommandTreeNode(Model):
-    names = ListType(field=CMDCommandNameField(), min_size=1, required=True)   # full name of a command group
+    names = ListType(field=CMDCommandNameField(), min_size=1,
+                     required=True)   # full name of a command group
     stage = CMDStageField()
 
     help = ModelType(CMDHelp)
@@ -37,9 +40,14 @@ class CMDCommandTreeNode(Model):
 
 
 class CMDEditorWorkspace(Model):
-    version = UTCDateTimeType(required=True)  # this property updated when workspace saved in file.
+    # this property updated when workspace saved in file.
+    version = UTCDateTimeType(required=True)
     name = StringType(required=True)
     plane = PlaneField(required=True)
+    mod_names = StringType(
+        serialized_name='modNames',
+        deserialize_from='modNames',
+    )  # The mod names in azure-rest-api-specs. The names are joined by '/'
     resource_provider = StringType(
         serialized_name='resourceProvider',
         deserialize_from='resourceProvider'

@@ -128,7 +128,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         }
     }
 
-    componentDidMount() {    
+    componentDidMount() {
         this.loadWorkspaceResources().then(async () => {
             await this.loadSwaggerModules(this.props.plane);
             try {
@@ -138,7 +138,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     return;
                 }
                 let moduleValueUrl = `/Swagger/Specs/${this.props.plane}/` + res.data.modNames.join('/');
-                if (this.state.moduleOptions.findIndex(v => v === moduleValueUrl) == -1 ) {
+                if (this.state.moduleOptions.findIndex(v => v === moduleValueUrl) == -1) {
                     return
                 }
                 let rpUrl = null;
@@ -386,7 +386,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 selectedModule: moduleValueUrl
             });
         }
-       
+
     }
 
     onResourceProviderUpdate = async (resourceProviderUrl: string | null) => {
@@ -394,7 +394,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
             this.setState({
                 selectedResourceProvider: resourceProviderUrl
             })
-            await  this.loadResources(resourceProviderUrl);
+            await this.loadResources(resourceProviderUrl);
         } else {
             this.setState({
                 selectedResourceProvider: resourceProviderUrl
@@ -652,7 +652,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                             {resourceOptions.filter((option) => {
                                 if (realFilterText.trim().length > 0) {
                                     return option.id.indexOf(realFilterText) > -1;
-                                }else{
+                                } else {
                                     return true;
                                 }
                             }).map((option) => {
@@ -767,7 +767,6 @@ class SwaggerItemSelector extends React.Component<SwaggerItemsSelectorProps> {
     }
 
     render() {
-        // const { value } = this.state;
         const { name, options, commonPrefix, value } = this.props;
         return (
             <Autocomplete
@@ -806,7 +805,5 @@ class SwaggerItemSelector extends React.Component<SwaggerItemsSelectorProps> {
 }
 
 
-// class WSEditorResourceListHeader extends React.Com
-
-
 export default WSEditorSwaggerPicker;
+export { SwaggerItemSelector };

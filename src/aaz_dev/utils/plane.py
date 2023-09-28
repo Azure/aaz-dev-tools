@@ -6,10 +6,13 @@ class PlaneEnum:
 
     _config = {
         Mgmt: {
+            "displayName": "Control plane",
             "client": "MgmtClient",  # MgmtClient is implemented in azure.cli.core.aaz._client
         },
         Data: {
-            "client": "DataPlaneClient",  # DataPlaneClient is implemented as the default client for data plane using AAD Auth
+            "displayName": "Data plane",
+            # DataPlaneClient is implemented as the default client for data plane using AAD Auth
+            "client": "DataPlaneClient",
         }
     }
 
