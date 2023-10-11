@@ -41,13 +41,16 @@ class WorkspaceManager:
         return workspaces
 
     @classmethod
-    def new(cls, name, plane, **kwargs):
+    def new(cls, name, plane, mod_names, resource_provider, **kwargs):
         manager = cls(name, **kwargs)
         if not manager.is_in_memory and os.path.exists(manager.path):
-            raise exceptions.ResourceConflict(f"Workspace conflict: Workspace json file path exists: {manager.path}")
+            raise exceptions.ResourceConflict(
+                f"Workspace conflict: Workspace json file path exists: {manager.path}")
         manager.ws = CMDEditorWorkspace({
             "name": name,
             "plane": plane,
+            "modNames": mod_names,
+            "resourceProvider": resource_provider,
             "version": datetime.utcnow(),
             "commandTree": {
                 "names": [cls.COMMAND_TREE_ROOT_NAME],
@@ -63,9 +66,11 @@ class WorkspaceManager:
                     f"Invalid AAZ_DEV_WORKSPACE_FOLDER: Expect a folder path: {Config.AAZ_DEV_WORKSPACE_FOLDER}")
             self.folder = os.path.join(Config.AAZ_DEV_WORKSPACE_FOLDER, name)
         else:
-            self.folder = os.path.expanduser(folder) if folder != self.IN_MEMORY else self.IN_MEMORY
+            self.folder = os.path.expanduser(
+                folder) if folder != self.IN_MEMORY else self.IN_MEMORY
         if not self.is_in_memory and os.path.exists(self.folder) and not os.path.isdir(self.folder):
-            raise ValueError(f"Invalid workspace folder: Expect a folder path: {self.folder}")
+            raise ValueError(
+                f"Invalid workspace folder: Expect a folder path: {self.folder}")
         self.path = os.path.join(self.folder, 'ws.json')
 
         self.ws = None
@@ -102,10 +107,15 @@ class WorkspaceManager:
         assert not self.is_in_memory
         # TODO: handle exception
         if not os.path.exists(self.path) or not os.path.isfile(self.path):
-            raise exceptions.ResourceNotFind(f"Workspace json file not exist: {self.path}")
+            raise exceptions.ResourceNotFind(
+                f"Workspace json file not exist: {self.path}")
         with open(self.path, 'r') as f:
             data = json.load(f)
             self.ws = CMDEditorWorkspace(raw_data=data)
+
+        if not self.ws.mod_names or not self.ws.resource_provider:
+            # calculate mod_names and resource_provider for old workspaces
+            self.__update_mod_names_and_resource_provider()
 
         self._cfg_editors = {}
 
@@ -113,7 +123,8 @@ class WorkspaceManager:
         assert not self.is_in_memory
         new_folder = os.path.join(Config.AAZ_DEV_WORKSPACE_FOLDER, new_name)
         if os.path.exists(new_folder):
-            raise ValueError(f"Invalid new workspace folder: folder path exists: {new_folder}")
+            raise ValueError(
+                f"Invalid new workspace folder: folder path exists: {new_folder}")
         os.rename(self.folder, new_folder)
         self.name = new_name
         self.folder = new_folder
@@ -126,7 +137,8 @@ class WorkspaceManager:
         if not self.is_in_memory and os.path.exists(self.path):
             # make sure ws.json exist in folder
             if not os.path.isfile(self.path):
-                raise exceptions.ResourceConflict(f"Workspace conflict: Is not file path: {self.path}")
+                raise exceptions.ResourceConflict(
+                    f"Workspace conflict: Is not file path: {self.path}")
             shutil.rmtree(self.folder)  # remove the whole folder
             return True
         return False
@@ -146,11 +158,17 @@ class WorkspaceManager:
             for r_id, data in cfg_editor.iter_cfg_files_data():
                 assert r_id not in used_resources
                 if data is None:
-                    remove_folders.append(WorkspaceCfgEditor.get_cfg_folder(self.folder, r_id))
+                    remove_folders.append(
+                        WorkspaceCfgEditor.get_cfg_folder(self.folder, r_id))
                 else:
-                    update_files.append((WorkspaceCfgEditor.get_cfg_path(self.folder, r_id), data))
+                    update_files.append(
+                        (WorkspaceCfgEditor.get_cfg_path(self.folder, r_id), data))
                 used_resources.add(r_id)
         assert set(self._cfg_editors.keys()) == used_resources
+
+        if not self.ws.mod_names or not self.ws.resource_provider:
+            # calculate mod_names and resource_provider for old workspaces
+            self.__update_mod_names_and_resource_provider()
 
         # verify ws timestamps
         # TODO: add write lock for path file
@@ -159,7 +177,8 @@ class WorkspaceManager:
                 data = json.load(f)
                 pre_ws = CMDEditorWorkspace(data)
             if pre_ws.version != self.ws.version:
-                raise exceptions.InvalidAPIUsage(f"Workspace Changed after: {self.ws.version}")
+                raise exceptions.InvalidAPIUsage(
+                    f"Workspace Changed after: {self.ws.version}")
 
         self.ws.version = datetime.utcnow()
         with open(self.path, 'w') as f:
@@ -175,6 +194,18 @@ class WorkspaceManager:
                 f.write(data)
 
         self._cfg_editors = {}
+    
+    def __update_mod_names_and_resource_provider(self):
+        resource_mod_set = set()
+        resource_rp_set = set()
+        for leaf in self.iter_command_tree_leaves():
+            for r in leaf.resources:
+                resource_mod_set.add('/'.join(r.mod_names))
+                resource_rp_set.add(r.rp_name)
+        if not self.ws.mod_names and len(resource_mod_set) == 1:
+            self.ws.mod_names = resource_mod_set.pop()
+        if not self.ws.resource_provider and len(resource_rp_set) == 1:
+            self.ws.resource_provider = resource_rp_set.pop()
 
     def find_command_tree_node(self, *node_names):
         node = self.ws.command_tree
@@ -189,7 +220,8 @@ class WorkspaceManager:
 
     def find_command_tree_leaf(self, *leaf_names):
         if len(leaf_names) < 1:
-            raise exceptions.InvalidAPIUsage(f"Invalid command name: '{' '.join(leaf_names)}'")
+            raise exceptions.InvalidAPIUsage(
+                f"Invalid command name: '{' '.join(leaf_names)}'")
 
         node = self.find_command_tree_node(*leaf_names[:-1])
         if not node:
@@ -229,7 +261,8 @@ class WorkspaceManager:
             if not node.command_groups or name not in node.command_groups:
                 if not node.command_groups:
                     node.command_groups = {}
-                aaz_node = self.aaz_specs.find_command_group(*node_names[:idx + 1])
+                aaz_node = self.aaz_specs.find_command_group(
+                    *node_names[:idx + 1])
                 if aaz_node is not None:
                     new_node = CMDCommandTreeNode({
                         "names": node_names[:idx + 1],
@@ -246,7 +279,8 @@ class WorkspaceManager:
 
     def delete_command_tree_node(self, *node_names):
         for _ in self.iter_command_tree_leaves(*node_names):
-            raise exceptions.ResourceConflict("Cannot delete command group with commands")
+            raise exceptions.ResourceConflict(
+                "Cannot delete command group with commands")
         parent = self.find_command_tree_node(*node_names[:-1])
         name = node_names[-1]
         if not parent or not parent.command_groups or name not in parent.command_groups:
@@ -295,7 +329,8 @@ class WorkspaceManager:
                 if ref_v and ref_v.examples:
                     new_cmd.examples = []
                     for example in ref_v.examples:
-                        new_cmd.examples.append(CMDCommandExample(example.to_primitive()))
+                        new_cmd.examples.append(
+                            CMDCommandExample(example.to_primitive()))
             else:
                 new_cmd = CMDCommandTreeLeaf({
                     "names": [*cmd_names],
@@ -305,7 +340,8 @@ class WorkspaceManager:
                     },
                 })
             new_cmd.version = command.version
-            new_cmd.resources = [CMDResource(r.to_primitive()) for r in command.resources]
+            new_cmd.resources = [CMDResource(
+                r.to_primitive()) for r in command.resources]
             node.commands[name] = new_cmd
 
     def remove_cfg(self, cfg_editor):
@@ -319,7 +355,8 @@ class WorkspaceManager:
             name = cmd_names[-1]
             if node and node.commands and name in node.commands:
                 # add into reusable leaves in case it's added in add_cfg again.
-                self._reusable_leaves[tuple(cmd_names)] = node.commands.pop(name)
+                self._reusable_leaves[tuple(
+                    cmd_names)] = node.commands.pop(name)
 
     def load_cfg_editor_by_resource(self, resource_id, version, reload=False):
         if not reload and resource_id in self._cfg_editors:
@@ -328,12 +365,14 @@ class WorkspaceManager:
             return None if cfg_editor.deleted else cfg_editor
         assert not self.is_in_memory
         try:
-            cfg_editor = WorkspaceCfgEditor.load_resource(self.folder, resource_id, version)
+            cfg_editor = WorkspaceCfgEditor.load_resource(
+                self.folder, resource_id, version)
             for resource in cfg_editor.resources:
                 self._cfg_editors[resource.id] = cfg_editor
             return cfg_editor
         except Exception as e:
-            logger.error(f"load workspace resource cfg failed: {e}: {self.name} {resource_id} {version}")
+            logger.error(
+                f"load workspace resource cfg failed: {e}: {self.name} {resource_id} {version}")
             return None
 
     def load_cfg_editor_by_command(self, cmd, reload=False):
@@ -342,7 +381,8 @@ class WorkspaceManager:
     def update_command_tree_node_help(self, *node_names, help):
         node = self.find_command_tree_node(*node_names)
         if not node:
-            raise exceptions.ResourceNotFind(f"Command Tree Node not found: '{' '.join(node_names)}'")
+            raise exceptions.ResourceNotFind(
+                f"Command Tree Node not found: '{' '.join(node_names)}'")
 
         if isinstance(help, CMDHelp):
             help = help.to_primitive()
@@ -354,7 +394,8 @@ class WorkspaceManager:
     def update_command_tree_leaf_help(self, *leaf_names, help):
         leaf = self.find_command_tree_leaf(*leaf_names)
         if not leaf:
-            raise exceptions.ResourceNotFind(f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
+            raise exceptions.ResourceNotFind(
+                f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
 
         if isinstance(help, CMDHelp):
             help = help.to_primitive()
@@ -366,7 +407,8 @@ class WorkspaceManager:
     def update_command_tree_node_stage(self, *node_names, stage):
         node = self.find_command_tree_node(*node_names)
         if not node:
-            raise exceptions.ResourceNotFind(f"Command Tree Node not found: '{' '.join(node_names)}'")
+            raise exceptions.ResourceNotFind(
+                f"Command Tree Node not found: '{' '.join(node_names)}'")
 
         if node.stage == stage:
             return
@@ -374,17 +416,20 @@ class WorkspaceManager:
 
         if node.command_groups:
             for sub_node_name in node.command_groups:
-                self.update_command_tree_node_stage(*node_names, sub_node_name, stage=stage)
+                self.update_command_tree_node_stage(
+                    *node_names, sub_node_name, stage=stage)
 
         if node.commands:
             for leaf_name in node.commands:
-                self.update_command_tree_leaf_stage(*node_names, leaf_name, stage=stage)
+                self.update_command_tree_leaf_stage(
+                    *node_names, leaf_name, stage=stage)
         return node
 
     def update_command_tree_leaf_stage(self, *leaf_names, stage):
         leaf = self.find_command_tree_leaf(*leaf_names)
         if not leaf:
-            raise exceptions.ResourceNotFind(f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
+            raise exceptions.ResourceNotFind(
+                f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
 
         if leaf.stage == stage:
             return
@@ -394,7 +439,8 @@ class WorkspaceManager:
     def update_command_tree_leaf_examples(self, *leaf_names, examples):
         leaf = self.find_command_tree_leaf(*leaf_names)
         if not leaf:
-            raise exceptions.ResourceNotFind(f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
+            raise exceptions.ResourceNotFind(
+                f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
         if not examples:
             leaf.examples = None
         else:
@@ -404,19 +450,22 @@ class WorkspaceManager:
                 try:
                     example.validate()
                 except Exception as err:
-                # if not example.get('name', None) or not isinstance(example['name'], str):
-                    raise exceptions.InvalidAPIUsage(f"Invalid example data: {err}")
+                    # if not example.get('name', None) or not isinstance(example['name'], str):
+                    raise exceptions.InvalidAPIUsage(
+                        f"Invalid example data: {err}")
                 leaf.examples.append(example)
         return leaf
 
     def rename_command_tree_node(self, *node_names, new_node_names):
         new_name = ' '.join(new_node_names)
         if not new_name:
-            raise exceptions.InvalidAPIUsage(f"Invalid new command name: {new_name}")
+            raise exceptions.InvalidAPIUsage(
+                f"Invalid new command name: {new_name}")
 
         node = self.find_command_tree_node(*node_names)
         if not node:
-            raise exceptions.ResourceNotFind(f"Command Tree Node not found: '{' '.join(node_names)}'")
+            raise exceptions.ResourceNotFind(
+                f"Command Tree Node not found: '{' '.join(node_names)}'")
 
         if node.names == new_node_names:
             return
@@ -425,7 +474,8 @@ class WorkspaceManager:
         name = node.names[-1]
         if not parent or not parent.command_groups or name not in parent.command_groups or \
                 node != parent.command_groups[name]:
-            raise exceptions.ResourceConflict(f"Command Tree node not exist: '{' '.join(node.names)}'")
+            raise exceptions.ResourceConflict(
+                f"Command Tree node not exist: '{' '.join(node.names)}'")
 
         self._pop_command_tree_node(parent, name)
 
@@ -435,11 +485,13 @@ class WorkspaceManager:
     def rename_command_tree_leaf(self, *leaf_names, new_leaf_names):
         new_name = ' '.join(new_leaf_names)
         if not new_name:
-            raise exceptions.InvalidAPIUsage(f"Invalid new command name: {new_name}")
+            raise exceptions.InvalidAPIUsage(
+                f"Invalid new command name: {new_name}")
 
         leaf = self.find_command_tree_leaf(*leaf_names)
         if not leaf:
-            raise exceptions.ResourceNotFind(f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
+            raise exceptions.ResourceNotFind(
+                f"Command Tree leaf not found: '{' '.join(leaf_names)}'")
 
         if leaf.names == new_leaf_names:
             return
@@ -447,7 +499,8 @@ class WorkspaceManager:
         parent = self.find_command_tree_node(*leaf.names[:-1])
         name = leaf.names[-1]
         if not parent or not parent.commands or name not in parent.commands or leaf != parent.commands[name]:
-            raise exceptions.ResourceConflict(f"Command Tree leaf not exist: '{' '.join(leaf.names)}")
+            raise exceptions.ResourceConflict(
+                f"Command Tree leaf not exist: '{' '.join(leaf.names)}")
 
         self._pop_command_tree_leaf(parent, name)
 
@@ -457,7 +510,8 @@ class WorkspaceManager:
     def generate_unique_name(self, *node_names, name):
         node = self.find_command_tree_node(*node_names)
         if not node:
-            raise exceptions.ResourceConflict(f"Command Tree node not exist: '{' '.join(node_names)}'")
+            raise exceptions.ResourceConflict(
+                f"Command Tree node not exist: '{' '.join(node_names)}'")
         if (not node.commands or name not in node.commands) and (
                 not node.command_groups or name not in node.command_groups):
             return name
@@ -479,7 +533,8 @@ class WorkspaceManager:
             if r['id'] in used_resource_ids:
                 continue
             if self.check_resource_exist(r['id']):
-                raise exceptions.InvalidAPIUsage(f"Resource already added in Workspace: {r['id']}")
+                raise exceptions.InvalidAPIUsage(
+                    f"Resource already added in Workspace: {r['id']}")
             # convert resource to swagger resource
             swagger_resource = self.swagger_specs.get_module_manager(
                 plane=self.ws.plane, mod_names=mod_names
@@ -496,7 +551,8 @@ class WorkspaceManager:
         aaz_ref = {}
         for resource, options in zip(swagger_resources, resource_options):
             try:
-                command_group = self.swagger_command_generator.create_draft_command_group(resource, **options)
+                command_group = self.swagger_command_generator.create_draft_command_group(
+                    resource, **options)
             except InvalidSwaggerValueError as err:
                 raise exceptions.InvalidAPIUsage(
                     message=str(err)
@@ -512,7 +568,8 @@ class WorkspaceManager:
             aaz_version = options.get('aaz_version', None)
             if aaz_version:
                 try:
-                    aaz_cfg_reader = self.aaz_specs.load_resource_cfg_reader(self.ws.plane, resource.id, aaz_version)
+                    aaz_cfg_reader = self.aaz_specs.load_resource_cfg_reader(
+                        self.ws.plane, resource.id, aaz_version)
                 except ValueError as err:
                     raise exceptions.InvalidAPIUsage(message=str(err)) from err
                 cfg_editor.inherit_modification(aaz_cfg_reader)
@@ -540,15 +597,18 @@ class WorkspaceManager:
                         self.add_cfg(merged_cfg_editor, aaz_ref=aaz_ref)
                         merged = True
                         break
-                new_name = self.generate_unique_name(*cmd_names[:-1], name=cmd_names[-1])
+                new_name = self.generate_unique_name(
+                    *cmd_names[:-1], name=cmd_names[-1])
                 rename_list.append((cmd_names, [*cmd_names[:-1], new_name]))
             for cmd_names, new_cmd_names in rename_list:
-                cfg_editor.rename_command(*cmd_names, new_cmd_names=new_cmd_names)
+                cfg_editor.rename_command(
+                    *cmd_names, new_cmd_names=new_cmd_names)
             if not merged:
                 self.add_cfg(cfg_editor, aaz_ref=aaz_ref)
 
     def reload_swagger_resources(self, resources):
-        reload_resource_map = {r['id']:{"version": r['version']} for r in resources}
+        reload_resource_map = {
+            r['id']: {"version": r['version']} for r in resources}
         for leaf in self.iter_command_tree_leaves():
             ignore_resources = set()
             reload_versions = set()
@@ -565,19 +625,23 @@ class WorkspaceManager:
                     ).get_resource_in_version(r.id, version)
 
                 if 'cfg_editor' not in reload_resource:
-                    reload_resource['cfg_editor'] = self.load_cfg_editor_by_command(leaf)
+                    reload_resource['cfg_editor'] = self.load_cfg_editor_by_command(
+                        leaf)
             if ignore_resources and len(ignore_resources) != len(leaf.resources):
                 # not support partial resources reload
-                raise exceptions.InvalidAPIUsage(f"Not support partial resources reload in one command: please select the following resources as well: {list(ignore_resources)}")
+                raise exceptions.InvalidAPIUsage(
+                    f"Not support partial resources reload in one command: please select the following resources as well: {list(ignore_resources)}")
             if len(reload_versions) > 1:
                 # not support multiple resource version for the same command
-                raise exceptions.InvalidAPIUsage(f"Please select the same resource version for command: '{' '.join(leaf.names)}'")
+                raise exceptions.InvalidAPIUsage(
+                    f"Please select the same resource version for command: '{' '.join(leaf.names)}'")
 
         swagger_resources = []
         for resource_id, reload_resource in reload_resource_map.items():
             swagger_resource = reload_resource.get('swagger_resource', None)
             if not swagger_resource:
-                raise exceptions.ResourceNotFind(f"Command not exist for '{resource_id}'")
+                raise exceptions.ResourceNotFind(
+                    f"Command not exist for '{resource_id}'")
             swagger_resources.append(swagger_resource)
 
         self.swagger_command_generator.load_resources(swagger_resources)
@@ -683,8 +747,10 @@ class WorkspaceManager:
         return commands
 
     def merge_resources(self, main_resource_id, main_resource_version, plus_resource_id, plus_resource_version):
-        main_cfg_editor = self.load_cfg_editor_by_resource(main_resource_id, main_resource_version)
-        plus_cfg_editor = self.load_cfg_editor_by_resource(plus_resource_id, plus_resource_version)
+        main_cfg_editor = self.load_cfg_editor_by_resource(
+            main_resource_id, main_resource_version)
+        plus_cfg_editor = self.load_cfg_editor_by_resource(
+            plus_resource_id, plus_resource_version)
         merged_cfg_editor = main_cfg_editor.merge(plus_cfg_editor)
         if merged_cfg_editor:
             self.remove_cfg(plus_cfg_editor)
@@ -697,10 +763,12 @@ class WorkspaceManager:
 
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if not cfg_editor:
-            raise exceptions.InvalidAPIUsage(f"Resource not exist: resource_id={resource_id} version={version}")
+            raise exceptions.InvalidAPIUsage(
+                f"Resource not exist: resource_id={resource_id} version={version}")
 
         self.remove_cfg(cfg_editor)
-        cfg_editor.build_subresource_commands_by_arg_var(resource_id, arg_var, cg_names, ref_args_options)
+        cfg_editor.build_subresource_commands_by_arg_var(
+            resource_id, arg_var, cg_names, ref_args_options)
         self.add_cfg(cfg_editor)
 
     def remove_subresource(self, resource_id, version, subresource):
@@ -708,10 +776,12 @@ class WorkspaceManager:
         if not cfg_editor:
             return False
         if not subresource:
-            raise exceptions.InvalidAPIUsage(f"Invalid subresource: '{subresource}'")
+            raise exceptions.InvalidAPIUsage(
+                f"Invalid subresource: '{subresource}'")
 
         self.remove_cfg(cfg_editor)
-        removed_commands = cfg_editor.remove_subresource_commands(resource_id, version, subresource)
+        removed_commands = cfg_editor.remove_subresource_commands(
+            resource_id, version, subresource)
         self.add_cfg(cfg_editor)
         return len(removed_commands) > 0
 
@@ -728,13 +798,15 @@ class WorkspaceManager:
     @staticmethod
     def _pop_command_tree_node(parent, name):
         if not parent.command_groups or name not in parent.command_groups:
-            raise IndexError(f"Command Tree node '{' '.join(parent.names)}' don't contain '{name}' sub node")
+            raise IndexError(
+                f"Command Tree node '{' '.join(parent.names)}' don't contain '{name}' sub node")
         return parent.command_groups.pop(name)
 
     @staticmethod
     def _pop_command_tree_leaf(parent, name):
         if not parent.commands or name not in parent.commands:
-            raise IndexError(f"Command Tree node '{' '.join(parent.names)}' don't contain '{name}' leaf")
+            raise IndexError(
+                f"Command Tree node '{' '.join(parent.names)}' don't contain '{name}' leaf")
         return parent.commands.pop(name)
 
     def _add_command_tree_node(self, parent, node, name):
@@ -888,24 +960,29 @@ class WorkspaceManager:
         results = {}
         if arg.var.startswith("@"):
             # specify idx_suffix
-            cls_name = arg.var[1:].replace('[', '.[').replace('{', '.{').split('.')[0]
+            cls_name = arg.var[1:].replace(
+                '[', '.[').replace('{', '.{').split('.')[0]
             leaf = self.find_command_tree_leaf(*cmd_names)
             assert leaf is not None
             cfg_editor = self.load_cfg_editor_by_command(leaf)
-            _, cls_arg, cls_arg_idx, _ = cfg_editor.find_arg_cls_definition(*cmd_names, cls_name=cls_name)
-            _, arg_idx = cfg_editor.find_arg_by_var(*cmd_names, arg_var=arg.var)
+            _, cls_arg, cls_arg_idx, _ = cfg_editor.find_arg_cls_definition(
+                *cmd_names, cls_name=cls_name)
+            _, arg_idx = cfg_editor.find_arg_by_var(
+                *cmd_names, arg_var=arg.var)
             assert arg_idx.startswith(cls_arg_idx)
             idx_suffix = arg_idx[len(cls_arg_idx):]
             assert len(idx_suffix) > 0
 
-            cls_name_prefix = cls_name.split('_')[0]  # remove the subfix such as `_create` `_update`
+            # remove the subfix such as `_create` `_update`
+            cls_name_prefix = cls_name.split('_')[0]
             for leaf in self.iter_command_tree_leaves():
                 cfg_editor = self.load_cfg_editor_by_command(leaf)
                 for _, similar_cls_arg, similar_cls_arg_idx, _ in cfg_editor.iter_arg_cls_definition(
                         *leaf.names, cls_name_prefix=cls_name_prefix):
                     # search cls definition in command
                     # find sub arg by idx_suffix
-                    similar_arg = cfg_editor.find_sub_arg(similar_cls_arg, idx=idx_suffix)
+                    similar_arg = cfg_editor.find_sub_arg(
+                        similar_cls_arg, idx=idx_suffix)
                     if similar_arg is None or not cfg_editor.is_similar_args(arg, similar_arg):
                         continue
                     similar_arg_idx = similar_cls_arg_idx + idx_suffix
@@ -918,12 +995,14 @@ class WorkspaceManager:
 
                     # search cls reference in command
                     for _, _, ref_arg_idx, _ in cfg_editor.iter_arg_cls_reference(*leaf.names, cls_name=similar_cls_arg.cls):
-                        results[key][similar_arg.var].append(ref_arg_idx + idx_suffix)
+                        results[key][similar_arg.var].append(
+                            ref_arg_idx + idx_suffix)
 
         else:
             for leaf in self.iter_command_tree_leaves():
                 cfg_editor = self.load_cfg_editor_by_command(leaf)
-                similar_arg, similar_arg_idx = cfg_editor.find_arg_by_var(*leaf.names, arg_var=arg.var)
+                similar_arg, similar_arg_idx = cfg_editor.find_arg_by_var(
+                    *leaf.names, arg_var=arg.var)
                 if similar_arg is None or not cfg_editor.is_similar_args(arg, similar_arg):
                     continue
                 key = tuple(leaf.names)
