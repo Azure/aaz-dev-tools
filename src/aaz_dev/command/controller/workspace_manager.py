@@ -113,6 +113,10 @@ class WorkspaceManager:
             data = json.load(f)
             self.ws = CMDEditorWorkspace(raw_data=data)
 
+        if not self.ws.mod_names or not self.ws.resource_provider:
+            # calculate mod_names and resource_provider for old workspaces
+            self.__update_mod_names_and_resource_provider()
+
         self._cfg_editors = {}
 
     def rename(self, new_name):
@@ -164,18 +168,7 @@ class WorkspaceManager:
 
         if not self.ws.mod_names or not self.ws.resource_provider:
             # calculate mod_names and resource_provider for old workspaces
-            resource_mod_set = set()
-            resource_rp_set = set()
-            for resource_id, cfg_editor in self._cfg_editors.items():
-                if resource_id not in used_resources:
-                    continue
-                for r in cfg_editor.cfg.resources:
-                    resource_mod_set.add('/'.join(r.mod_names))
-                    resource_rp_set.add(r.resource_provider)
-            if not self.ws.mod_names and len(resource_mod_set) == 1:
-                self.ws.mod_names = resource_mod_set.pop()
-            if not self.ws.resource_provider and len(resource_rp_set) == 1:
-                self.ws.resource_provider = resource_rp_set.pop()
+            self.__update_mod_names_and_resource_provider()
 
         # verify ws timestamps
         # TODO: add write lock for path file
@@ -201,6 +194,18 @@ class WorkspaceManager:
                 f.write(data)
 
         self._cfg_editors = {}
+    
+    def __update_mod_names_and_resource_provider(self):
+        resource_mod_set = set()
+        resource_rp_set = set()
+        for leaf in self.iter_command_tree_leaves():
+            for r in leaf.resources:
+                resource_mod_set.add('/'.join(r.mod_names))
+                resource_rp_set.add(r.rp_name)
+        if not self.ws.mod_names and len(resource_mod_set) == 1:
+            self.ws.mod_names = resource_mod_set.pop()
+        if not self.ws.resource_provider and len(resource_rp_set) == 1:
+            self.ws.resource_provider = resource_rp_set.pop()
 
     def find_command_tree_node(self, *node_names):
         node = self.ws.command_tree
