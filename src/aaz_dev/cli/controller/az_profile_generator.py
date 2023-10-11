@@ -2,7 +2,7 @@ import os
 import shutil
 from cli.templates import get_templates
 from command.model.configuration import CMDCommand
-from utils.case import to_snack_case
+from utils.case import to_snake_case
 from .az_command_generator import AzCommandGenerator
 from utils import exceptions
 
@@ -13,7 +13,7 @@ class AzProfileGenerator:
     def __init__(self, aaz_folder, profile):
         self.aaz_folder = aaz_folder
         self.profile = profile
-        self.profile_folder_name = profile.name.lower().replace('-', '_')
+        self.profile_folder_name = profile.profile_folder_name
         self._removed_folders = set()
         self._removed_files = set()
         self._modified_files = {}
@@ -193,7 +193,7 @@ class AzProfileGenerator:
 
     @staticmethod
     def _command_file_name(name):
-        return f"_{to_snack_case(name)}.py"
+        return f"_{to_snake_case(name)}.py"
 
     @staticmethod
     def _command_group_folder_names(*names):

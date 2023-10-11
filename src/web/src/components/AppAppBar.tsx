@@ -83,7 +83,9 @@ class AppAppBar extends React.Component<AppAppBarProps> {
                                 color="inherit"
                                 variant="h6"
                                 underline="none"
-                                href="/?#/Documents"
+                                href="https://azure.github.io/aaz-dev-tools/"
+                                rel="noreferrer"
+                                target="_blank"
                                 fontWeight={
                                     this.props.pageName === "Documents" ?
                                     theme.typography.fontWeightMedium : 

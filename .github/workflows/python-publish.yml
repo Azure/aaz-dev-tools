@@ -180,11 +180,6 @@ jobs:
         run: |
           python scripts/release_notes.py > ${{ github.workspace }}-RELEASE_NOTES.md
 
-#      - name: Publish package to PyPI
-#        run: |
-#          pip install twine>=1.11.0
-#          twine upload -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }} dist/*
-
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v1
         env:
@@ -194,3 +189,24 @@ jobs:
           prerelease: ${{ contains(env.TAG, 'rc') }}
           files: |
             dist/*
+
+      - name: "Azure Log in"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: "Publish package to PyPI"
+        run: |
+          pip install twine>=1.11.0
+          export TWINE_USERNAME=${{ secrets.PYPI_USERNAME }}
+          export TWINE_PASSWORD=$(az keyvault secret show --vault-name ${{ secrets.AZURE_KEYVAULE_USERNAME }}  --name ${{ secrets.AZURE_PYPI_PASSWORD_NAME }}  --query value -otsv)
+          export TWINE_REPOSITORY_URL=https://upload.pypi.org/legacy/
+          twine upload dist/*
+
+      - name: 'Azure Log out'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az logout
+            az cache purge
+            az account clear

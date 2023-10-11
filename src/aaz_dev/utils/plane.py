@@ -2,17 +2,18 @@
 
 class PlaneEnum:
     Mgmt = "mgmt-plane"
-
-    # # data planes should be subdivided by module
-    # Data_KeyVault = "data-plane_keyvault"
+    Data = "data-plane"
 
     _config = {
         Mgmt: {
+            "displayName": "Control plane",
             "client": "MgmtClient",  # MgmtClient is implemented in azure.cli.core.aaz._client
         },
-        # Data_KeyVault: {
-        #     "swagger_modules": ("keyvault", ),
-        # }
+        Data: {
+            "displayName": "Data plane",
+            # DataPlaneClient is implemented as the default client for data plane using AAD Auth
+            "client": "DataPlaneClient",
+        }
     }
 
     @classmethod

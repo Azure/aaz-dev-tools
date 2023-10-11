@@ -93,6 +93,19 @@ class CMDArgBlank(Model):
     value = CMDPrimitiveField()  # json value format string, support null
 
 
+class CMDArgPromptInput(Model):
+    """ Support the prompt input for """
+
+    # The prompt string, if given, is printed to standard output without a trailing newline before reading input.
+    msg = StringType(required=True)
+
+
+class CMDPasswordArgPromptInput(CMDArgPromptInput):
+
+    # Ask the user to re-enter the same value to confirm. It's supported for CMDPasswordArg only.
+    confirm = CMDBooleanField()
+
+
 class CMDArgBase(Model):
     TYPE_VALUE = None
 
@@ -199,6 +212,11 @@ class CMDArg(CMDArgBase):
     # properties as nodes
     help = ModelType(CMDArgumentHelp)
     default = ModelType(CMDArgDefault)  # default value is used when argument isn't in command
+    configuration_key = StringType(
+        serialized_name='configurationKey',
+        deserialize_from='configurationKey',
+    )  # the key to retrieve the default value from cli configuration
+    prompt = ModelType(CMDArgPromptInput)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -225,7 +243,8 @@ class CMDArg(CMDArgBase):
 
         arg.required = builder.get_required()
         arg.default = builder.get_default()
-
+        arg.configuration_key = builder.get_configuration_key()
+        arg.prompt = builder.get_prompt()
         arg.hide = builder.get_hide()
         return arg
 
@@ -402,6 +421,14 @@ class CMDDateTimeArg(CMDDateTimeArgBase, CMDStringArg):
     pass
 
 
+class CMDTimeArgBase(CMDStringArgBase):
+    TYPE_VALUE = "time"
+
+
+class CMDTimeArg(CMDTimeArgBase, CMDStringArg):
+    pass
+
+
 # uuid
 class CMDUuidArgBase(CMDStringArgBase):
     TYPE_VALUE = "uuid"
@@ -417,7 +444,8 @@ class CMDPasswordArgBase(CMDStringArgBase):
 
 
 class CMDPasswordArg(CMDPasswordArgBase, CMDStringArg):
-    pass
+
+    prompt = ModelType(CMDPasswordArgPromptInput)
 
 
 # subscription
@@ -591,8 +619,12 @@ class CMDFloatArgBase(CMDArgBase):
             self.enum.reformat(**kwargs)
         if self.blank:
             if not isinstance(self.blank.value, float) and not (self.nullable and self.blank.value is None):
-                raise exceptions.VerificationError(
-                    f"Invalid blank value", details=f"'{self.blank.value}' is not a valid float arg value")
+                if isinstance(self.blank.value, int):
+                    # frontend will pass an int value when it doesn't have decimal part
+                    self.blank.value = float(self.blank.value)
+                else:
+                    raise exceptions.VerificationError(
+                        f"Invalid blank value", details=f"'{self.blank.value}' is not a valid float arg value")
 
 
 class CMDFloatArg(CMDFloatArgBase, CMDArg):
@@ -601,8 +633,12 @@ class CMDFloatArg(CMDFloatArgBase, CMDArg):
         super()._reformat(**kwargs)
         if self.default:
             if not isinstance(self.default.value, float) and not (self.nullable and self.default.value is None):
-                raise exceptions.VerificationError(
-                    f"Invalid default value", details=f"'{self.default.value}' is not a valid float arg value")
+                if isinstance(self.default.value, int):
+                    # frontend will pass an int value when it doesn't have decimal part
+                    self.default.value = float(self.default.value)
+                else:
+                    raise exceptions.VerificationError(
+                        f"Invalid default value", details=f"'{self.default.value}' is not a valid float arg value")
 
 
 # float32

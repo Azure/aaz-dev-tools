@@ -8,6 +8,7 @@ from ._arg import CMDArgEnumItem, CMDArgEnum, \
     CMDDurationArgBase, CMDDurationArg, \
     CMDDateArgBase, CMDDateArg, \
     CMDDateTimeArgBase, CMDDateTimeArg, \
+    CMDTimeArgBase, CMDTimeArg, \
     CMDUuidArgBase, CMDUuidArg, \
     CMDPasswordArgBase, CMDPasswordArg, \
     CMDSubscriptionIdArgBase, CMDSubscriptionIdArg, \
@@ -20,7 +21,8 @@ from ._arg import CMDArgEnumItem, CMDArgEnum, \
     CMDFloatArgBase, CMDFloatArg, \
     CMDFloat32ArgBase, CMDFloat32Arg, CMDFloat64ArgBase, CMDFloat64Arg, \
     CMDObjectArgBase, CMDObjectArg, \
-    CMDArrayArgBase, CMDArrayArg
+    CMDArrayArgBase, CMDArrayArg, \
+    CMDArgPromptInput, CMDPasswordArgPromptInput
 from ._arg_builder import CMDArgBuilder
 from ._arg_group import CMDArgGroup
 from ._command import CMDCommand
@@ -59,6 +61,7 @@ from ._schema import CMDSchemaEnumItem, CMDSchemaEnum, CMDSchemaDefault, \
     CMDDurationSchemaBase, CMDDurationSchema, \
     CMDDateSchemaBase, CMDDateSchema, \
     CMDDateTimeSchemaBase, CMDDateTimeSchema, \
+    CMDTimeSchemaBase, CMDTimeSchema, \
     CMDUuidSchemaBase, CMDUuidSchema, \
     CMDPasswordSchemaBase, CMDPasswordSchema, \
     CMDResourceIdSchemaBase, CMDResourceIdSchema, \

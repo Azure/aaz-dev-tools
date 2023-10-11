@@ -152,7 +152,7 @@ class AzModuleManager:
     def _load_view_profile(self, profile_name, aaz_path):
         profile = CLIViewProfile()
         profile.name = profile_name
-        profile_folder_name = profile_name.lower().replace('-', '_')
+        profile_folder_name = profile.profile_folder_name
         profile_path = os.path.join(aaz_path, profile_folder_name)
         if not os.path.exists(profile_path):
             return profile

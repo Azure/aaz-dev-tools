@@ -10,8 +10,6 @@ import { WSEditor } from './views/workspace/WSEditor';
 import CommandsPage from './views/commands/CommandsPage';
 import CLIPage from './views/cli/CLIPage';
 import CLIInstruction from './views/cli/CLIInstruction';
-import DocumentsPage from './views/documentation/DocumentsPage';
-import { DocumentsDisplay } from './views/documentation/DocumentsDisplay';
 import { CLIModuleGenerator } from './views/cli/CLIModuleGenerator';
 // import reportWebVitals from './reportWebVitals';
 
@@ -34,10 +32,6 @@ ReactDOM.render(
             <Route path="Instruction" element={<CLIInstruction />} >
             </Route>
             <Route path=":repoName/:moduleName" element={<CLIModuleGenerator />} />
-          </Route>
-          <Route path="Documents" element={<DocumentsPage />}>
-            <Route index element={<DocumentsDisplay/>} />
-            <Route path=":docId" element={<DocumentsDisplay/>} />
           </Route>
         </Route>
       </Routes>

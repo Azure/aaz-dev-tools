@@ -192,10 +192,12 @@ class CfgReader:
             idx = cls.arg_idx_to_list(idx)
         assert isinstance(idx, list), f"invalid arg_idx type: {type(idx)}"
 
-        for arg_group in command.arg_groups:
-            arg = cls.find_arg_in_group(arg_group, idx)
-            if arg:
-                return arg
+        if command.arg_groups:
+            for arg_group in command.arg_groups:
+                arg = cls.find_arg_in_group(arg_group, idx)
+                if arg:
+                    return arg
+
         return None
 
     def find_arg_parent(self, *cmd_names, idx):
@@ -212,9 +214,10 @@ class CfgReader:
         assert isinstance(idx, list), f"invalid arg_idx type: {type(idx)}"
 
         if len(idx) == 1:
-            for arg_group in command.arg_groups:
-                if cls.find_arg_in_group(arg_group, idx) is not None:
-                    return None, arg_group
+            if command.arg_groups:
+                for arg_group in command.arg_groups:
+                    if cls.find_arg_in_group(arg_group, idx) is not None:
+                        return None, arg_group
         else:
             parent_idx = idx[:-1]
             parent_arg = cls.find_arg_in_command(command, idx=parent_idx)
@@ -313,18 +316,20 @@ class CfgReader:
                 return (_parent, None, None, None), True
             return None, False
 
-        for arg_group in command.arg_groups:
-            matches = [match for match in cls._iter_args_in_group(
-                arg_group, arg_filter=arg_filter
-            )]
-            if not matches:
-                continue
-            assert len(matches) == 1
+        if command.arg_groups:
+            for arg_group in command.arg_groups:
+                matches = [match for match in cls._iter_args_in_group(
+                    arg_group, arg_filter=arg_filter
+                )]
+                if not matches:
+                    continue
+                assert len(matches) == 1
 
-            parent, arg, arg_idx, arg_var = matches[0]
-            if arg:
-                arg_idx = cls.arg_idx_to_str(arg_idx)
-            return parent, arg, arg_idx
+                parent, arg, arg_idx, arg_var = matches[0]
+                if arg:
+                    arg_idx = cls.arg_idx_to_str(arg_idx)
+                return parent, arg, arg_idx
+
         return None, None, None
 
     @classmethod
@@ -393,18 +398,20 @@ class CfgReader:
                 return (_parent, _arg, _arg_idx, _arg_var), True
             return None, False
 
-        for arg_group in command.arg_groups:
-            matches = [match for match in cls._iter_args_in_group(
-                arg_group, arg_filter=arg_filter
-            )]
-            if not matches:
-                continue
-            assert len(matches) == 1
+        if command.arg_groups:
+            for arg_group in command.arg_groups:
+                matches = [match for match in cls._iter_args_in_group(
+                    arg_group, arg_filter=arg_filter
+                )]
+                if not matches:
+                    continue
+                assert len(matches) == 1
 
-            parent, arg, arg_idx, arg_var = matches[0]
-            if arg:
-                arg_idx = cls.arg_idx_to_str(arg_idx)
-            return parent, arg, arg_idx, arg_var
+                parent, arg, arg_idx, arg_var = matches[0]
+                if arg:
+                    arg_idx = cls.arg_idx_to_str(arg_idx)
+                return parent, arg, arg_idx, arg_var
+
         return None, None, None, None
 
     def iter_arg_cls_definition(self, *cmd_names, cls_name_prefix=None):
@@ -431,11 +438,12 @@ class CfgReader:
                 return (_parent, _arg, _arg_idx, _arg_var), False
             return None, False
 
-        for arg_group in command.arg_groups:
-            for parent, arg, arg_idx, arg_var in cls._iter_args_in_group(arg_group, arg_filter=arg_filter):
-                if arg:
-                    arg_idx = cls.arg_idx_to_str(arg_idx)
-                yield parent, arg, arg_idx, arg_var
+        if command.arg_groups:
+            for arg_group in command.arg_groups:
+                for parent, arg, arg_idx, arg_var in cls._iter_args_in_group(arg_group, arg_filter=arg_filter):
+                    if arg:
+                        arg_idx = cls.arg_idx_to_str(arg_idx)
+                    yield parent, arg, arg_idx, arg_var
 
     def iter_arg_cls_reference(self, *cmd_names, cls_name):
         command = self.find_command(*cmd_names)
@@ -457,22 +465,24 @@ class CfgReader:
                 return (_parent, _arg, _arg_idx, _arg_var), False
             return None, False
 
-        for arg_group in command.arg_groups:
-            for parent, arg, arg_idx, arg_var in cls._iter_args_in_group(
-                    arg_group, arg_filter=arg_filter):
-                if arg:
-                    arg_idx = cls.arg_idx_to_str(arg_idx)
-                yield parent, arg, arg_idx, arg_var
+        if command.arg_groups:
+            for arg_group in command.arg_groups:
+                for parent, arg, arg_idx, arg_var in cls._iter_args_in_group(
+                        arg_group, arg_filter=arg_filter):
+                    if arg:
+                        arg_idx = cls.arg_idx_to_str(arg_idx)
+                    yield parent, arg, arg_idx, arg_var
 
     def iter_args_in_command(self, command):
         def arg_filter(_parent, _arg, _arg_idx, _arg_var):
             return (_parent, _arg, _arg_idx, _arg_var), False
 
-        for arg_group in command.arg_groups:
-            for parent, arg, arg_idx, arg_var in self._iter_args_in_group(arg_group, arg_filter=arg_filter):
-                if arg:
-                    arg_idx = self.arg_idx_to_str(arg_idx)
-                yield parent, arg, arg_idx, arg_var
+        if command.arg_groups:
+            for arg_group in command.arg_groups:
+                for parent, arg, arg_idx, arg_var in self._iter_args_in_group(arg_group, arg_filter=arg_filter):
+                    if arg:
+                        arg_idx = self.arg_idx_to_str(arg_idx)
+                    yield parent, arg, arg_idx, arg_var
 
     # TODO: build arg_idx in command link call
     @classmethod
@@ -586,7 +596,7 @@ class CfgReader:
                 for response in operation.http.responses:
                     if response.is_error:
                         continue
-                    if '_'.join([_SchemaIdxEnum.Response, *response.status_codes]) == next_idx:
+                    if '_'.join([_SchemaIdxEnum.Response, *[str(code) for code in response.status_codes]]) == next_idx:
                         schema = cls.find_schema_in_response(response, remain_idx)
                         if schema:
                             return schema
@@ -689,7 +699,7 @@ class CfgReader:
 
             elif schema.discriminators:
                 for disc in schema.discriminators:
-                    if current_idx == disc.value:
+                    if current_idx == disc.get_safe_value():
                         if not remain_idx:
                             return disc
                         return cls.find_sub_schema(disc, remain_idx)
@@ -706,7 +716,7 @@ class CfgReader:
 
             elif schema.discriminators:
                 for disc in schema.discriminators:
-                    if current_idx == disc.value:
+                    if current_idx == disc.get_safe_value():
                         if not remain_idx:
                             return disc
                         return cls.find_sub_schema(disc, remain_idx)
@@ -797,9 +807,10 @@ class CfgReader:
                     for response in op.http.responses:
                         if response.is_error:
                             continue
+                        schema_idx_prefix = [_SchemaIdxEnum.Http, '_'.join([_SchemaIdxEnum.Response, *[str(code) for code in response.status_codes]])]
                         for parent, schema, schema_idx in cls._iter_schema_in_response(response, schema_filter=schema_filter):
                             if schema:
-                                schema_idx = [_SchemaIdxEnum.Http, '_'.join([_SchemaIdxEnum.Response, *response.status_codes]), *schema_idx]
+                                schema_idx = [*schema_idx_prefix, *schema_idx]
                             yield parent, schema, schema_idx
 
             if isinstance(op, CMDInstanceUpdateOperation):
@@ -923,7 +934,7 @@ class CfgReader:
                 for disc in parent.discriminators:
                     for sub_parent, sub_schema, sub_schema_idx in cls._iter_sub_schema(disc, schema_filter):
                         if sub_schema:
-                            sub_schema_idx = [disc.value, *sub_schema_idx]
+                            sub_schema_idx = [disc.get_safe_value(), *sub_schema_idx]
                         yield sub_parent, sub_schema, sub_schema_idx
 
         elif isinstance(parent, CMDObjectSchemaDiscriminator):
@@ -945,7 +956,7 @@ class CfgReader:
                 for disc in parent.discriminators:
                     for sub_parent, sub_schema, sub_schema_idx in cls._iter_sub_schema(disc, schema_filter):
                         if sub_schema:
-                            sub_schema_idx = [disc.value, *sub_schema_idx]
+                            sub_schema_idx = [disc.get_safe_value(), *sub_schema_idx]
                         yield sub_parent, sub_schema, sub_schema_idx
 
         elif isinstance(parent, CMDArraySchemaBase):

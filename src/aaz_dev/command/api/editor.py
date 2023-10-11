@@ -19,7 +19,9 @@ def editor_workspaces():
             raise exceptions.InvalidAPIUsage("Invalid request body")
         name = data['name']
         plane = data['plane']
-        manager = WorkspaceManager.new(name, plane)
+        mod_names = data['modNames']
+        resource_provider = data['resourceProvider']
+        manager = WorkspaceManager.new(name, plane, mod_names, resource_provider)
         manager.save()
         result = manager.ws.to_primitive()
         result.update({
@@ -68,14 +70,11 @@ def get_workspace_swagger_default_options(name):
     manager.load()
     result = {
         "plane": manager.ws.plane,
-        "modNames": Config.DEFAULT_SWAGGER_MODULE.split('/') if Config.DEFAULT_SWAGGER_MODULE else None,
-        "rpName": Config.DEFAULT_RESOURCE_PROVIDER,
+        "modNames": manager.ws.mod_names if manager.ws.mod_names else Config.DEFAULT_SWAGGER_MODULE,
+        "rpName": manager.ws.resource_provider if manager.ws.resource_provider else Config.DEFAULT_RESOURCE_PROVIDER,
     }
-    for leaf in manager.iter_command_tree_leaves():
-        for resource in leaf.resources:
-            result["modNames"] = resource.mod_names
-            result["rpName"] = resource.rp_name
-        break
+    if result["modNames"]:
+        result["modNames"] = result["modNames"].split('/')
     return jsonify(result)
 
 

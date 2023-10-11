@@ -1,6 +1,6 @@
 # Microsoft Atomic Azure CLI Dev Tools
 
-The *aaz-dev* tool is designed to generate atomic Azure CLI commands from OpenAPI specifications. For more information, please refer to [Doc](./src/aaz_dev/docs/Docs#introduction-to-aazdev) or [Video](https://msit.microsoftstream.com/video/d8c50840-98dc-a27a-806a-f1ed2daa33a9)
+The *aaz-dev* tool is designed to generate atomic Azure CLI commands from OpenAPI specifications. For more information, please refer to [document](https://azure.github.io/aaz-dev-tools/) and [video](https://msit.microsoftstream.com/video/d8c50840-98dc-a27a-806a-f1ed2daa33a9).
 
 ## Installation
 Currently, we can install it with a [.whl file](https://github.com/Azure/aaz-dev-tools/releases). Later on, we'll publish it to PyPI to support *pip install* way of installation.
@@ -91,16 +91,15 @@ pip install azdev
 - For Windows
     - Powershell
     ```
-    pip install $(Invoke-WebRequest https://api.github.com/repos/Azure/aaz-dev-tools/releases/latest -UseBasicParsing | % { $_.Content } | ConvertFrom-Json | % { $_.assets.browser_download_url } | Select-String -Pattern "https.*.whl" -AllMatches | % { $_.Matches } | % { $_.Value })
+    pip install aaz-dev
     ```
     - Command Prompt
     ```
-    curl https://api.github.com/repos/Azure/aaz-dev-tools/releases/latest -s | findstr https.*.whl
-    pip install {the url find in above command}
+    pip install aaz-dev
     ```
 - For linux
     ```bash
-    pip install $(curl https://api.github.com/repos/Azure/aaz-dev-tools/releases/latest -s | grep -o "https.*.whl")
+    pip install aaz-dev
     ```
 #### 4.3 Set up build env
 - For linux users, set up python3 build tools would avoid other unseen installation issues

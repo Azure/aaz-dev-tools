@@ -2,6 +2,94 @@
 
 Release History
 ===============
+2.0.0
+++++++
+* Limit a workspace to one resource provider only. (#290)
+
+1.8.0
+++++++
+* Support to pass an empty request body when it's required (#286)
+* Improve the response time of '/AAZ/Editor/Workspaces' api (#287)
+* Ignore non-UTF-8 of aaz json file verification (#288)
+
+1.7.1
+++++++
+* Fix bug when generate property name with special characters in code (#284)
+
+1.7.0
+++++++
+* Mark a secret property as not required in response flags (#281)
+* Raise error when command tree failed to decode, and support configuration key (#282)
+
+1.6.2
+++++++
+* Convert int value to float for FloatArg default and blank value (#279)
+
+1.6.1
+++++++
+* Fix bug when special characters appeared in discrimination value (#275)
+* Fix docs link in homepage (#277)
+
+1.6.0
+++++++
+* Adding `profile_` prefix for azure stack profile in CLI aaz package (#274)
+
+1.5.2
+++++++
+* Update docs for Command Usage and Testing (#270)
+* Fix bugs while command has no arguments (#271)
+* Add docs for subcommand generation (#272)
+
+1.5.1
+++++++
+* Add log information for aaz verification (#268)
+
+1.5.0
+++++++
+* Add command `aaz-dev command-model verify` to verify aaz metadata (#265)
+
+1.4.0
+++++++
+* Improve Docs of CLI Generator (#258)
+* Improve doc display (#259)
+* [Doc] Add note for examples (#260)
+* Update generation template for pagination (#261)
+* Change the initial extension version to 1.0.0b1 (#263)
+
+1.3.1
+++++++
+* Rewrite the workspace editor doc (#253)
+* Refactor the github page for docs (#254)
+* Adjust layout for small screen displays. (#255)
+* Update faq.md (#256)
+
+1.3.0
+++++++
+* Support TimeSchema and TimeArg (#250)
+* Support `summary` field for swagger operation (#249)
+
+1.2.1
+++++++
+* Support x-typespec-name and x-typespec-generated in swagger (#243)
+
+1.2.0
+++++++
+* Support argument prompt input (#238)
+* Setup Github Pages, move content into docs and link docs to Github Pages in aaz-dev-tools (#240)
+
+1.1.1
+++++++
+* Support x-ms-long-running-operation-options.final-state-schema of swagger (#237)
+
+1.1.0
+++++++
+* Support x-ms-secret of swagger (#235)
+* Add support to parse x-ms-arm-id-details and "arm-id" format in swagger (#234)
+
+1.0.2
+++++++
+* Support PyPI installation (#230)
+* Fix cfg reader response.status_codes string join issue (#228)
 
 1.0.1
 ++++++

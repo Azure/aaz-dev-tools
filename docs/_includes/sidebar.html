@@ -1,0 +1,74 @@
+<div
+  class="position-sticky border-right d-block"
+  style="width: 280px; height: calc(100vh - 65px); top: 65px"
+>
+  <div class="px-4 pb-3 border-bottom d-block">
+    <div class="mt-5">
+      <a
+        class="d-block pl-1 mb-2 h3 color-fg-default no-underline"
+        href="{{ site.baseurl }}/"
+        >{{ site.title }}</a
+      >
+    </div>
+  </div>
+  <div
+    class="border-right d-block bg-primary overflow-y-auto flex-shrink-0"
+    role="banner"
+    style="width: 280px; height: 100vh; padding-bottom: 185px"
+  >
+    <nav>
+      <div class="pt-3" style="overflow-y: auto">
+        <div class="ml-3">
+          <ul role="tree" class="TreeView">
+            {% assign pages_list = site.pages | sort: "weight" %}
+            {% for node in pages_list %}
+            {% if node.title != null %}
+            {% if node.layout == "page" %}
+            <div>
+              <li
+                class="TreeView-item"
+                id="{{ site.baseurl }}{{ node.url }}"
+                role="treeitem"
+              >
+                <div class="TreeView-item-container" style="--level: 1">
+                  <div
+                    style="
+                      grid-area: spacer / spacer / spacer / spacer;
+                      display: flex;
+                    "
+                  >
+                    <div style="width: 100%; display: flex"></div>
+                  </div>
+                  <div class="TreeView-item-content">
+                    {% if page.url == node.url %}
+                    <span class="TreeView-item-content-text"
+                      ><a
+                        class="color-fg-default no-underline text-bold"
+                        href="{{ site.baseurl }}{{ node.url }}"
+                        tabindex="-1"
+                        >{{ node.title }}</a
+                      ></span
+                    >
+                    {% else %}
+                    <span class="TreeView-item-content-text"
+                      ><a
+                        class="color-fg-default no-underline"
+                        href="{{ site.baseurl }}{{ node.url }}"
+                        tabindex="-1"
+                        >{{ node.title }}</a
+                      ></span
+                    >
+                    {% endif %}
+                  </div>
+                </div>
+              </li>
+            </div>
+            {% endif %}
+            {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </div>
+</div>

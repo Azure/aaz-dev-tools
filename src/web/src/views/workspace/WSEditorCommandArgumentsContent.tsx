@@ -1,4 +1,4 @@
-import { Alert, Box, Button, ButtonBase, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputLabel, LinearProgress, Radio, RadioGroup, Switch, TextField, Typography, TypographyProps } from '@mui/material';
+import { Alert, Box, Button, Checkbox, ButtonBase, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputLabel, LinearProgress, Radio, RadioGroup, Switch, TextField, Typography, TypographyProps } from '@mui/material';
 import { styled } from '@mui/system';
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
@@ -56,7 +56,7 @@ function WSEditorCommandArgumentsContent(props: {
         setDisplayFlattenDialog(true)
     }
 
-    const handleUnwrapClsDialogClose = async (unwrapped: boolean) => {        
+    const handleUnwrapClsDialogClose = async (unwrapped: boolean) => {
         if (unwrapped) {
             props.onReloadArgs();
         }
@@ -79,7 +79,7 @@ function WSEditorCommandArgumentsContent(props: {
                 name = name.slice(1)
             }
             if (name.endsWith('[]') || name.endsWith('{}')) {
-                name = name.slice(0, name.length-2)
+                name = name.slice(0, name.length - 2)
                 name = pluralize.singular(name)
             }
             return name
@@ -609,7 +609,7 @@ function ArgumentReviewer(props: {
                 <Box sx={{ flexGrow: 1 }} />
                 {props.arg.required && <ArgRequiredTypography>[Required]</ArgRequiredTypography>}
             </Box>
-            {(props.arg.default !== undefined || choices.length > 0) && <Box
+            {(props.arg.default !== undefined || choices.length > 0 || props.arg.configurationKey !== undefined) && <Box
                 sx={{
                     ml: 5,
                     mt: 0.5,
@@ -622,6 +622,10 @@ function ArgumentReviewer(props: {
                 </ArgChoicesTypography>}
                 {props.arg.default !== undefined && <ArgChoicesTypography sx={{ ml: 1 }}>
                     {`Default: ${getDefaultValueToString()}`}
+                </ArgChoicesTypography>
+                }
+                {props.arg.configurationKey !== undefined && <ArgChoicesTypography sx={{ ml: 1 }}>
+                    {`ConfigurationKey: ${props.arg.configurationKey}`}
                 </ArgChoicesTypography>
                 }
             </Box>}
@@ -656,6 +660,10 @@ function ArgumentDialog(props: {
     const [hasDefault, setHasDefault] = useState<boolean | undefined>(false);
     const [defaultValue, setDefaultValue] = useState<any | undefined>(undefined);
     const [defaultValueInJson, setDefaultValueInJson] = useState<boolean>(false);
+    const [hasPrompt, setHasPrompt] = useState<boolean | undefined>(false);
+    const [promptMsg, setPromptMsg] = useState<string | undefined>(undefined);
+    const [promptConfirm, setPromptConfirm] = useState<boolean | undefined>(undefined);
+    const [configurationKey, setConfigurationKey] = useState<string>("");
 
     const handleClose = () => {
         setInvalidText(undefined);
@@ -669,6 +677,7 @@ function ArgumentDialog(props: {
         let sHelp = shortHelp.trim();
         let lHelp = longHelp.trim();
         let gName = group.trim();
+        let cfgKey = configurationKey.trim();
 
         const names = name.split(' ').filter(n => n.length > 0);
         const sNames = sName?.split(' ').filter(n => n.length > 0) ?? undefined;
@@ -706,6 +715,11 @@ function ArgumentDialog(props: {
             lines = lHelp.split('\n').filter(l => l.length > 0);
         }
 
+        let argCfgKey: string | null = null;
+        if (cfgKey.length > 0) {
+            argCfgKey = cfgKey;
+        }
+
         let argDefault = undefined;
         if (hasDefault === false) {
             if (props.arg.default !== undefined) {
@@ -734,6 +748,32 @@ function ArgumentDialog(props: {
             }
         }
 
+        let argPrompt = undefined;
+        if (hasPrompt === false) {
+            if (props.arg.prompt !== undefined) {
+                argPrompt = null;
+            }
+        } else if (hasPrompt === true) {
+            if (promptMsg === undefined) {
+                setInvalidText(`Field 'Prompt Message' is undefined.`)
+                return undefined;
+            } else {
+                let msg = promptMsg.trim();
+                if (msg.length < 1) {
+                    setInvalidText(`Field 'Prompt Message' is empty.`)
+                    return undefined;
+                }
+                if (!msg.endsWith(':')) {
+                    setInvalidText(`Field 'Prompt Message' must end with a colon.`)
+                    return undefined;
+                }
+                argPrompt = {
+                    msg: msg,
+                    confirm: promptConfirm,
+                }
+            }
+        }
+
         return {
             options: names,
             singularOptions: sNames,
@@ -745,6 +785,8 @@ function ArgumentDialog(props: {
                 lines: lines
             },
             default: argDefault,
+            prompt: argPrompt,
+            configurationKey: argCfgKey,
         }
     }
 
@@ -857,7 +899,6 @@ function ArgumentDialog(props: {
         let { arg, clsArgDefineMap } = props;
 
         setOptions(arg.options.join(" "));
-
         if (arg.type.startsWith("array")) {
             setSingularOptions((arg as CMDArrayArg).singularOptions?.join(" ") ?? "")
         } else if (arg.type.startsWith('@') && clsArgDefineMap[(arg as CMDClsArg).clsName].type.startsWith("array")) {
@@ -865,18 +906,31 @@ function ArgumentDialog(props: {
         } else {
             setSingularOptions(undefined);
         }
+
+        if (arg.type === "object" || arg.type.startsWith("dict<") || arg.type.startsWith("array<") || arg.type.startsWith("@")) {
+            setHasPrompt(undefined);
+        } else {
+            setHasPrompt(arg.prompt !== undefined);
+            if (arg.prompt !== undefined) {
+                setPromptMsg(arg.prompt.msg);
+                setPromptConfirm(undefined);
+            }
+        }
+        if (arg.type === "password") {
+            setPromptConfirm((arg as CMDPasswordArg).prompt?.confirm ?? false);
+        }
         setStage(props.arg.stage);
         setGroup(props.arg.group);
         setHide(props.arg.hide);
         setShortHelp(props.arg.help?.short ?? "");
         setLongHelp(props.arg.help?.lines?.join("\n") ?? "");
+        setConfigurationKey(props.arg.configurationKey ?? "");
         setUpdating(false);
         setArgSimilarTree(undefined);
         setArgSimilarTreeExpandedIds([]);
 
         if (arg.type === "object" || arg.type.startsWith("dict<") || arg.type.startsWith("array<") || arg.type.startsWith("@")) {
             setDefaultValueInJson(true);
-            console.log(props.arg.default)
             if (props.arg.default !== undefined && props.arg.default !== null) {
                 setHasDefault(true);
                 setDefaultValue(JSON.stringify(props.arg.default.value));
@@ -1001,6 +1055,74 @@ function ArgumentDialog(props: {
                             />
                         </Box>
                     </>}
+
+                    {hasPrompt !== undefined && <>
+                        <InputLabel shrink sx={{ font: "inherit" }}>Prompt Input</InputLabel>
+                        <Box sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "flex-start",
+                            ml: 4,
+                        }}>
+                            <Switch
+                                checked={hasPrompt}
+                                onChange={(event: any) => {
+                                    setHasPrompt(!hasPrompt);
+                                    setPromptMsg(undefined);
+                                }}
+                            />
+                            <Box sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "stretch",
+                                justifyContent: "flex-start",
+                                flexGrow: 1,
+                            }}>
+                                <TextField
+                                    id="SetPromptMsg"
+                                    label="Prompt Message"
+                                    hiddenLabel
+                                    type="text"
+                                    hidden={!hasPrompt}
+                                    fullWidth
+                                    size="small"
+                                    value={promptMsg !== undefined ? promptMsg : ""}
+                                    onChange={(event: any) => {
+                                        setPromptMsg(event.target.value);
+                                    }}
+                                    placeholder="Please input the prompt hint end with a colon."
+                                    margin="normal"
+                                    aria-controls=''
+                                    required
+                                />
+                                {promptConfirm !== undefined && <>
+                                    <FormControlLabel control={
+                                        <Checkbox
+                                            size='small'
+                                            checked={promptConfirm}
+                                            onChange={(event: any) => {
+                                                setPromptConfirm(!promptConfirm);
+                                            }}
+                                        />
+                                    } label="Confirm input" />
+                                </>}
+                            </Box>
+                        </Box>
+                    </>}
+                    <TextField
+                        id="configurationKey"
+                        label="Configuration Key"
+                        helperText="The key to retrieve the default value from cli Configuration"
+                        type='text'
+                        fullWidth
+                        variant='standard'
+                        value={configurationKey}
+                        onChange={(event: any) => {
+                            setConfigurationKey(event.target.value);
+                        }}
+                        margin="normal"
+                    />
 
                     <TextField
                         id="shortSummary"
@@ -1637,6 +1759,14 @@ type CMDArgEnum<T> = {
     items: CMDArgEnumItem<T>[]
 }
 
+interface CMDArgPromptInput {
+    msg: string
+}
+
+interface CMDPasswordArgPromptInput extends CMDArgPromptInput {
+    confirm: boolean
+}
+
 interface CMDArgBase {
     type: string
     nullable: boolean
@@ -1655,6 +1785,8 @@ interface CMDArg extends CMDArgBase {
 
     default?: CMDArgDefault<any>
     idPart?: string
+    prompt?: CMDArgPromptInput
+    configurationKey?: string
 }
 
 interface CMDArgBaseT<T> extends CMDArgBase {
@@ -1703,13 +1835,18 @@ interface CMDDateArg extends CMDDateArgBase, CMDStringArg { }
 interface CMDDateTimeArgBase extends CMDStringArgBase { }
 interface CMDDateTimeArg extends CMDDateTimeArgBase, CMDStringArg { }
 
+interface CMDTimeArgBase extends CMDStringArgBase { }
+interface CMDTimeArg extends CMDTimeArgBase, CMDStringArg { }
+
 // type: uuid 
 interface CMDUuidArgBase extends CMDStringArgBase { }
 interface CMDUuidArg extends CMDUuidArgBase, CMDStringArg { }
 
 // type: password 
 interface CMDPasswordArgBase extends CMDStringArgBase { }
-interface CMDPasswordArg extends CMDPasswordArgBase, CMDStringArg { }
+interface CMDPasswordArg extends CMDPasswordArgBase, CMDStringArg {
+    prompt?: CMDPasswordArgPromptInput
+}
 
 // type: SubscriptionId
 interface CMDSubscriptionIdArgBase extends CMDStringArgBase { }
@@ -1825,6 +1962,27 @@ function decodeArgDefault<T>(response: any | undefined): CMDArgDefault<T> | unde
     }
 }
 
+function decodeArgPromptInput(response: any): CMDArgPromptInput | undefined {
+    if (response === undefined || response === null) {
+        return undefined;
+    }
+
+    return {
+        msg: response.msg as string,
+    }
+}
+
+function decodePasswordArgPromptInput(response: any): CMDPasswordArgPromptInput | undefined {
+    if (response === undefined || response === null) {
+        return undefined;
+    }
+
+    return {
+        msg: response.msg as string,
+        confirm: (response.confirm ?? false) as boolean,
+    }
+}
+
 function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsArgDefinitionMap } {
     let argBase: any = {
         type: response.type,
@@ -1839,6 +1997,7 @@ function decodeArgBase(response: any): { argBase: CMDArgBase, clsDefineMap: ClsA
         case "duration":
         case "date":
         case "dateTime":
+        case "time":
         case "uuid":
         case "password":
         case "SubscriptionId":
@@ -1997,6 +2156,8 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
     let { argBase, clsDefineMap } = decodeArgBase(response);
     const options = (response.options as string[]).sort((a, b) => a.length - b.length).reverse();
     const help = response.help ? decodeArgHelp(response.help) : undefined;
+    const prompt = response.prompt ? decodeArgPromptInput(response.prompt) : undefined;
+
     let arg: any = {
         ...argBase,
         var: response.var as string,
@@ -2007,6 +2168,8 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
         group: (response.group ?? "") as string,
         help: help,
         idPart: response.idPart,
+        prompt: prompt,
+        configurationKey: response.configurationKey,
     }
 
     switch (argBase.type) {
@@ -2015,13 +2178,27 @@ function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinition
         case "duration":
         case "date":
         case "dateTime":
+        case "time":
         case "uuid":
-        case "password":
         case "SubscriptionId":
         case "ResourceGroupName":
         case "ResourceId":
         case "ResourceLocation":
         case "string":
+            if (response.default) {
+                arg = {
+                    ...arg,
+                    default: decodeArgDefault<string>(response.default),
+                }
+            }
+            break
+        case "password":
+            if (response.prompt) {
+                arg = {
+                    ...arg,
+                    prompt: decodePasswordArgPromptInput(response.prompt),
+                }
+            }
             if (response.default) {
                 arg = {
                     ...arg,
@@ -2120,6 +2297,7 @@ function convertArgDefaultText(defaultText: string, argType: string): any {
         case "duration":
         case "date":
         case "dateTime":
+        case "time":
         case "uuid":
         case "password":
         case "SubscriptionId":
@@ -2174,7 +2352,7 @@ function convertArgDefaultText(defaultText: string, argType: string): any {
     }
 }
 
-const DecodeArgs = (argGroups: any[]): { args: CMDArg[], clsArgDefineMap: ClsArgDefinitionMap} => {
+const DecodeArgs = (argGroups: any[]): { args: CMDArg[], clsArgDefineMap: ClsArgDefinitionMap } => {
     let clsDefineMap: ClsArgDefinitionMap = {};
     const args: CMDArg[] = [];
     argGroups.forEach((argGroup: any) => {
@@ -2194,5 +2372,5 @@ const DecodeArgs = (argGroups: any[]): { args: CMDArg[], clsArgDefineMap: ClsArg
 }
 
 export default WSEditorCommandArgumentsContent;
-export {DecodeArgs}
-export type {CMDArg, ClsArgDefinitionMap};
+export { DecodeArgs }
+export type { CMDArg, ClsArgDefinitionMap };

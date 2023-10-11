@@ -41,7 +41,8 @@ setup(
     name='aaz-dev',
     version=VERSION,
     description='Microsoft Atomic Azure CLI Commands Developer Tools',
-    long_description=README + "\n\n" + HISTORY,
+    long_description=README,
+    long_description_content_type='text/markdown',
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",

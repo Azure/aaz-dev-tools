@@ -286,6 +286,17 @@ class WorkspaceCfgEditor(CfgReader):
                 arg.default = None
             else:
                 arg.default = CMDArgDefault(kwargs['default'])
+        if 'configurationKey' in kwargs:
+            arg.configuration_key = kwargs['configurationKey']
+        if 'prompt' in kwargs:
+            if kwargs['prompt'] is None:
+                arg.prompt = None
+            elif 'confirm' in kwargs['prompt']:
+                arg.prompt = CMDPasswordArgPromptInput(kwargs['prompt'])
+                arg.blank = None
+            else:
+                arg.prompt = CMDArgPromptInput(kwargs['prompt'])
+                arg.blank = None
 
     def _update_boolean_arg(self, arg, **kwargs):
         if 'reverse' in kwargs:
@@ -1403,7 +1414,7 @@ class WorkspaceCfgEditor(CfgReader):
 
         if schema.discriminators:
             for disc in schema.discriminators:
-                if disc.value == current_idx:
+                if disc.get_safe_value() == current_idx:
                     index.discriminator = cls._build_object_index_discriminator(disc, remain_idx, **kwargs)
                     break
 
@@ -1510,7 +1521,7 @@ class WorkspaceCfgEditor(CfgReader):
 
         if schema.discriminators:
             for disc in schema.discriminators:
-                if disc.value == current_idx:
+                if disc.get_safe_value() == current_idx:
                     index.discriminator = cls._build_object_index_discriminator(disc, remain_idx, **kwargs)
                     break
 

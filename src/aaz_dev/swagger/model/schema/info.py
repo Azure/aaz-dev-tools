@@ -2,7 +2,7 @@ from schematics.models import Model
 from schematics.types import StringType, ModelType
 from .contact import Contact
 from .license import License
-from .fields import XmsCodeGenerationSettingsField, XcadlGeneratedField
+from .fields import XmsCodeGenerationSettingsField, XcadlGeneratedField, XTypespecGeneratedField
 
 
 class Info(Model):
@@ -21,3 +21,4 @@ class Info(Model):
     # specific properties
     _x_ms_code_generation_settings = XmsCodeGenerationSettingsField()  # Deprecated
     _x_cadl_generated = XcadlGeneratedField()
+    _x_typespec_generated = XTypespecGeneratedField()

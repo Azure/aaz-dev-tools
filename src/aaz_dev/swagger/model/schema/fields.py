@@ -5,10 +5,11 @@ class DataTypeFormatEnum(StringType):
     VALID_TYPE_FORMATS = (
         "int32", "int64",
         "float", "double",
-        "byte", "binary", "date", "date-time", "password",
+        "byte", "binary", "date", "date-time", "time", "password",
         # additional formats
         "duration", "uuid",
         "file", "uri",
+        "arm-id",
     )
 
     def __init__(self, **kwargs):
@@ -65,6 +66,17 @@ class XcadlGeneratedField(BaseType):
             default=False,
             serialized_name="x-cadl-generated",
             deserialize_from="x-cadl-generated",
+            **kwargs
+        )
+
+
+class XTypespecGeneratedField(BaseType):
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            default=False,
+            serialized_name="x-typespec-generated",
+            deserialize_from="x-typespec-generated",
             **kwargs
         )
 
@@ -264,6 +276,20 @@ class XmsClientDefaultField(BaseType):
         )
 
 
+class XmsArmIdDetailsField(BaseType):
+    """
+
+    http://azure.github.io/autorest/extensions/#x-ms-arm-id-details
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            serialized_name='x-ms-arm-id-details',
+            deserialize_from='x-ms-arm-id-details',
+            **kwargs
+        )
+
+
 class XmsAzureResourceField(BooleanType):
     """
     Resource types as defined by the Resource Manager API are tagged by using a x-ms-azure-resource extension.
@@ -365,6 +391,16 @@ class XCadlNameField(StringType):
         super().__init__(
             serialized_name='x-cadl-name',
             deserialize_from='x-cadl-name',
+            **kwargs
+        )
+
+
+class XTypespecNameField(StringType):
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            serialized_name='x-typespec-name',
+            deserialize_from='x-typespec-name',
             **kwargs
         )
 

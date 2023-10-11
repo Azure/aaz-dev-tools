@@ -14,9 +14,9 @@ from swagger.utils import exceptions
 from .external_documentation import ExternalDocumentation
 from .fields import DataTypeFormatEnum, RegularExpressionField, XmsClientNameField, XmsExternalField, \
     XmsDiscriminatorValueField, XmsClientFlattenField, XmsMutabilityField, XmsClientDefaultField, XNullableField, \
-    XmsAzureResourceField, MutabilityEnum
+    XmsAzureResourceField, MutabilityEnum, XmsArmIdDetailsField
 from .fields import XmsSecretField, XAccessibilityField, XAzSearchDeprecatedField, XSfClientLibField, \
-    XApimCodeNillableField, XCommentField, XAbstractField, XADLNameField, XCadlNameField
+    XApimCodeNillableField, XCommentField, XAbstractField, XADLNameField, XCadlNameField, XTypespecNameField
 from .reference import ReferenceField, Linkable
 from .x_ms_enum import XmsEnumField
 from .xml import XML
@@ -235,10 +235,11 @@ class Schema(Model, Linkable):
     x_ms_client_flatten = XmsClientFlattenField()
     x_ms_mutability = XmsMutabilityField()
     x_ms_client_default = XmsClientDefaultField()
+    x_ms_arm_id_details = XmsArmIdDetailsField()  # TODO: Add support for it, can be used for resource id template
 
     x_ms_azure_resource = XmsAzureResourceField()
 
-    x_ms_secret = XmsSecretField()  # TODO:
+    x_ms_secret = XmsSecretField()
 
     x_nullable = XNullableField()  # when true, specifies that null is a valid value for the associated schema
 
@@ -257,6 +258,7 @@ class Schema(Model, Linkable):
     _x_dictionary_key = ModelType(ReferenceSchema, serialized_name="x-dictionaryKey", deserialize_from="x-dictionaryKey")  # Only used in Marketplane Catalog Data Plane
 
     _x_cadl_name = XCadlNameField()  # Cadl field name
+    _x_typespec_name = XTypespecNameField()  # Typespec field name
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -606,5 +608,6 @@ class Schema(Model, Linkable):
 
         if isinstance(model, CMDSchema):
             builder.setup_description(model, self)
+            builder.setup_secret(model, self)
 
         return model

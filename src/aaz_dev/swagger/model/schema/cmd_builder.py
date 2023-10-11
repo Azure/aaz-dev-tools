@@ -7,9 +7,11 @@ from command.model.configuration import CMDSchemaDefault, \
     CMDBinarySchema, CMDBinarySchemaBase, \
     CMDDateSchema, CMDDateSchemaBase, \
     CMDDateTimeSchema, CMDDateTimeSchemaBase, \
+    CMDTimeSchema, CMDTimeSchemaBase, \
     CMDPasswordSchema, CMDPasswordSchemaBase, \
     CMDDurationSchema, CMDDurationSchemaBase, \
     CMDUuidSchema, CMDUuidSchemaBase, \
+    CMDResourceIdSchema, CMDResourceIdSchemaBase, \
     CMDIntegerSchema, CMDIntegerSchemaBase, \
     CMDInteger32Schema, CMDInteger32SchemaBase, \
     CMDInteger64Schema, CMDInteger64SchemaBase, \
@@ -24,10 +26,15 @@ from command.model.configuration import CMDSchemaDefault, \
 
 from swagger.utils import exceptions
 from .fields import MutabilityEnum
+from .response import Response
 from .schema import ReferenceSchema
 from .x_ms_pageable import XmsPageable
+from functools import reduce
 from utils.case import to_camel_case
+import logging
 import re
+
+logger = logging.getLogger("backend")
 
 
 class CMDBuilder:
@@ -112,6 +119,11 @@ class CMDBuilder:
                     model = CMDDateTimeSchemaBase()
                 else:
                     model = CMDDateTimeSchema()
+            elif schema.format == "time":
+                if self.in_base:
+                    model = CMDTimeSchemaBase()
+                else:
+                    model = CMDTimeSchema()
             elif schema.format == "password":
                 if self.in_base:
                     model = CMDPasswordSchemaBase()
@@ -127,6 +139,11 @@ class CMDBuilder:
                     model = CMDUuidSchemaBase()
                 else:
                     model = CMDUuidSchema()
+            elif schema.format == "arm-id":
+                if self.in_base:
+                    model = CMDResourceIdSchemaBase()
+                else:
+                    model = CMDResourceIdSchema()
             else:
                 raise exceptions.InvalidSwaggerValueError(
                     f"format is not supported", key=getattr(schema, "traces", None), value=[schema_type, schema.format])
@@ -339,8 +356,15 @@ class CMDBuilder:
     def setup_description(model, schema):
         if schema.description:
             model.description = schema.description
-        elif schema.title:
+        elif getattr(schema, 'title', None):
             model.description = schema.title
+        elif getattr(schema, 'summary', None):
+            model.description = schema.summary
+
+    @staticmethod
+    def setup_secret(model, schema):
+        if getattr(schema, 'x_ms_secret', False):
+            model.secret = schema.x_ms_secret
 
     @staticmethod
     def build_cmd_string_format(schema):
@@ -537,6 +561,17 @@ class CMDBuilder:
         if success_204_response is not None:
             # append 204 No Content response at the end of success response
             success_responses.append(success_204_response)
+
+        success_codes = reduce(lambda x, y: x | y, [codes for codes, _ in success_responses])
+        if schema.x_ms_long_running_operation and not success_codes & {200, 201}:
+            if lro_schema := schema.x_ms_lro_final_state_schema:
+                lro_response = Response()
+                lro_response.description = "Response schema for long-running operation."
+                lro_response.schema = lro_schema
+
+                success_responses.append(({200, 201}, lro_response))  # use `final-state-schema` as response
+            else:
+                logger.warning(f"No response schema for long-running-operation: {schema.operation_id}.")
 
         # # default response
         # if 'default' not in error_responses and len(error_responses) == 1:

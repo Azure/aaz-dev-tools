@@ -1,12 +1,12 @@
 from command.model.configuration import CMDStringArgBase, CMDByteArgBase, CMDBinaryArgBase, CMDDurationArgBase, \
-    CMDDateArgBase, CMDDateTimeArgBase, CMDUuidArgBase, CMDPasswordArgBase, \
+    CMDDateArgBase, CMDDateTimeArgBase, CMDTimeArgBase, CMDTimeArg, CMDUuidArgBase, CMDPasswordArgBase, \
     CMDSubscriptionIdArgBase, CMDResourceGroupNameArgBase, CMDResourceIdArgBase, CMDResourceLocationArgBase, \
     CMDIntegerArgBase, CMDBooleanArgBase, CMDFloatArgBase, CMDObjectArgBase, CMDArrayArgBase, CMDClsArgBase, \
     CMDSubscriptionIdArg, CMDArg
 from command.model.configuration import CMDArgGroup, CMDArgumentHelp
 from command.model.configuration import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, \
     CMDArrayFormat
-from utils.case import to_camel_case, to_snack_case
+from utils.case import to_camel_case, to_snake_case
 from utils import exceptions
 from utils.stage import AAZStageEnum
 
@@ -81,7 +81,7 @@ class AzArgClsGenerator:
     def __init__(self, name, cmd_ctx, arg):
         self.arg = arg
         self.name = name
-        self.args_schema_name = f"_args_{to_snack_case(name)}"
+        self.args_schema_name = f"_args_{to_snake_case(name)}"
         self.builder_name = parse_cls_builder_name(name)
         self._cmd_ctx = cmd_ctx
         self.arg_type, self.arg_kwargs, _ = render_arg_base(self.arg, self._cmd_ctx)
@@ -106,7 +106,7 @@ class AzArgClsGenerator:
         self.props = sorted(self.props)
 
     def iter_scopes(self):
-        for scopes in _iter_scopes_by_arg_base(self.arg, to_snack_case(self.name), f"cls.{self.args_schema_name}", self._cmd_ctx):
+        for scopes in _iter_scopes_by_arg_base(self.arg, to_snake_case(self.name), f"cls.{self.args_schema_name}", self._cmd_ctx):
             yield scopes
 
 
@@ -164,7 +164,7 @@ def _iter_scopes_by_arg_base(arg, name, scope_define, cmd_ctx):
 
 
 def parse_cls_builder_name(cls_name):
-    return f"_build_args_{to_snack_case(cls_name)}"
+    return f"_build_args_{to_snake_case(cls_name)}"
 
 
 def parse_arg_help(help):
@@ -199,7 +199,7 @@ def parse_arg_name(arg):
     arg_name = None
     for option in arg.options:
         if len(option) > arg_name_length:
-            arg_name = to_snack_case(option)
+            arg_name = to_snake_case(option)
             arg_name_length = len(option)
     return arg_name
 
@@ -242,8 +242,30 @@ def render_arg(arg, cmd_ctx, arg_group=None):
     if arg.default:
         arg_kwargs["default"] = arg.default.value
 
+    if arg.configuration_key:
+        arg_kwargs["configured_default"] = arg.configuration_key
+
     arg_type, arg_kwargs, cls_builder_name = render_arg_base(arg, cmd_ctx, arg_kwargs)
 
+    if arg.prompt:
+        if arg_type == "AAZPasswordArg":
+            arg_kwargs["prompt"] = {
+                "cls": "AAZPromptPasswordInput",
+                "kwargs": {
+                    "msg": arg.prompt.msg,
+                }
+            }
+            if arg.prompt.confirm:
+                arg_kwargs["prompt"]["kwargs"]["confirm"] = arg.prompt.confirm
+        else:
+            arg_kwargs["prompt"] = {
+                "cls": "AAZPromptInput",
+                "kwargs": {
+                    "msg": arg.prompt.msg,
+                }
+            }
+    if "blank" in arg_kwargs and "prompt" in arg_kwargs:
+        raise KeyError("An argument cannot contain both prompt and blank")
     return arg_type, arg_kwargs, cls_builder_name
 
 
@@ -327,10 +349,12 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
             arg_type = "AAZDateArg"
         elif isinstance(arg, CMDDateTimeArgBase):
             arg_type = "AAZDateTimeArg"
+        elif isinstance(arg, CMDTimeArgBase):
+            arg_type = "AAZTimeArg"
         elif isinstance(arg, CMDUuidArgBase):
             arg_type = "AAZUuidArg"
         elif isinstance(arg, CMDPasswordArgBase):
-            raise NotImplementedError()
+            arg_type = "AAZPasswordArg"
 
     elif isinstance(arg, CMDIntegerArgBase):
         arg_type = "AAZIntArg"

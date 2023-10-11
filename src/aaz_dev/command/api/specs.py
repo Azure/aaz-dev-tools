@@ -1,5 +1,6 @@
-from flask import Blueprint, jsonify, request, url_for
+from flask import Blueprint, jsonify, request
 from utils import exceptions
+from utils.plane import PlaneEnum
 from command.controller.specs_manager import AAZSpecsManager
 
 
@@ -57,7 +58,8 @@ def aaz_command_in_version(node_names, leaf_name, version_name):
     if not version:
         raise exceptions.ResourceNotFind("Command of version not exist")
 
-    cfg_reader = manager.load_resource_cfg_reader_by_command_with_version(leaf, version=version)
+    cfg_reader = manager.load_resource_cfg_reader_by_command_with_version(
+        leaf, version=version)
     cmd_cfg = cfg_reader.find_command(*leaf.names)
 
     result = cmd_cfg.to_primitive()
@@ -106,3 +108,30 @@ def filter_resources(plane):
         })
 
     return jsonify(result)
+
+
+# planes
+@bp.route("/Planes", methods=("Get", ))
+def list_planes():
+    result = [
+        {
+            "name": PlaneEnum.Mgmt,
+            **PlaneEnum._config[PlaneEnum.Mgmt],
+        },
+        # {
+        #     "name": PlaneEnum.Data,
+        #     **PlaneEnum._config[PlaneEnum.Data],
+        # }
+    ]
+    return jsonify(result)
+
+
+# TODO: this api is called when data plane workspaces export aaz model.
+# @bp.route("/Planes/" + PlaneEnum.Data +"/ResourceProviders/{name: rp_name}", method=("GET", "PUT"))
+# def data_plane_resource_provider_config(rp_name):
+#     if request.method == "GET":
+#         # Get Data Plane Resource Provider Configuration
+#         pass
+#     elif request.method == "PUT":
+#         # Create or Update Data plane resource provider configuration
+#         pass

@@ -3,7 +3,7 @@ from command.model.configuration import CMDCommand, CMDHttpOperation, CMDConditi
     CMDConditionOrOperator, CMDConditionNotOperator, CMDConditionHasValueOperator, CMDInstanceUpdateOperation, \
     CMDJsonInstanceUpdateAction, CMDResourceGroupNameArg, CMDJsonSubresourceSelector, CMDInstanceCreateOperation, \
     CMDInstanceDeleteOperation, CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction
-from utils.case import to_camel_case, to_snack_case
+from utils.case import to_camel_case, to_snake_case
 from utils.plane import PlaneEnum
 from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator, \
     AzGenericUpdateOperationGenerator, AzRequestClsGenerator, AzResponseClsGenerator, \
@@ -89,7 +89,7 @@ class AzCommandCtx:
     def get_variant(self, variant, name_only=False):
         if variant.startswith('$'):
             variant = variant[1:]
-        variant = to_snack_case(variant)
+        variant = to_snake_case(variant)
         if name_only:
             return variant
 
@@ -290,6 +290,7 @@ class AzCommandGenerator:
                 raise ValueError(f"Find multiple planes in a command: {resource.plane}, {self.plane}")
 
         self.client_type = PlaneEnum.http_client(self.plane)
+        # TODO: add support for DataPlaneClient client_type
 
         # prepare outputs
         self.outputs = []

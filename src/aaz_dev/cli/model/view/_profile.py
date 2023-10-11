@@ -19,3 +19,12 @@ class CLIViewProfile(Model):
 
     class Options:
         serialize_when_none = False
+
+    @property
+    def profile_folder_name(self):
+        profile_folder_name = self.name.lower().replace('-', '_')
+        if profile_folder_name != "latest":
+            # for rest profiles such as 2019-03-01-hybrid, the folder name starts with digit,
+            # it's not a valid python package name.
+            profile_folder_name = "profile_" + profile_folder_name
+        return profile_folder_name

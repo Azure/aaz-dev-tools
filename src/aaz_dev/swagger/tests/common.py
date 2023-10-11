@@ -8,9 +8,6 @@ class SwaggerSpecsTestCase(ApiTestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # register data plane for test only
-        PlaneEnum.Data = "data-plane"
-        PlaneEnum._config[PlaneEnum.Data] = {}
 
         folder_path = os.environ.get("AAZ_SWAGGER_PATH", None)
         if not folder_path or not os.path.isdir(folder_path):
