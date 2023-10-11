@@ -2,6 +2,10 @@
 
 Release History
 ===============
+2.0.0
+++++++
+* Limit a workspace to one resource provider only. (#290)
+
 1.8.0
 ++++++
 * Support to pass an empty request body when it's required (#286)
