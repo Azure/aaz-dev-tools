@@ -18,8 +18,8 @@ interface WSEditorSwaggerPickerState {
 
     plane: string
 
-    // preModuleName: string | null
-    // preResourceProvider: string | null
+    defaultModule: string | null
+    defaultResourceProvider: string | null
     // preVersion: string | null
 
     moduleOptions: string[],
@@ -101,8 +101,8 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         this.state = {
             loading: false,
             invalidText: undefined,
-            // preModuleName: null,
-            // preResourceProvider: null,
+            defaultModule: null,
+            defaultResourceProvider: null,
             // preVersion: null,
             existingResources: new Set(),
 
@@ -146,7 +146,9 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     rpUrl = `${moduleValueUrl}/ResourceProviders/${res.data.rpName}`
                 }
                 this.setState({
-                    selectedModule: moduleValueUrl
+                    defaultModule: moduleValueUrl,
+                    selectedModule: moduleValueUrl,
+                    moduleOptions: [moduleValueUrl],  // only the default module selectable.
                 });
                 await this.loadResourceProviders(moduleValueUrl, rpUrl);
             } catch (err: any) {
@@ -196,12 +198,16 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         if (moduleUrl != null) {
             try {
                 let res = await axios.get(`${moduleUrl}/ResourceProviders`);
-                const options: string[] = res.data.map((v: any) => (v.url));
+                let options: string[] = res.data.map((v: any) => (v.url));
                 let selectedResourceProvider = options.length === 1 ? options[0] : null;
+                let defaultResourceProvider = null;
                 if (preferredRP !== null && options.findIndex(v => v === preferredRP) >= 0) {
                     selectedResourceProvider = preferredRP
+                    defaultResourceProvider = preferredRP
+                    options = [preferredRP]  // only the default resource provider selectable.
                 }
                 this.setState({
+                    defaultResourceProvider: defaultResourceProvider,
                     resourceProviderOptions: options,
                     resourceProviderOptionsCommonPrefix: `${moduleUrl}/ResourceProviders/`
                 });
