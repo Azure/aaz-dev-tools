@@ -6,6 +6,7 @@ import shutil
 from command.model.configuration import CMDConfiguration, CMDHelp, CMDCommandExample, XMLSerializer
 from utils.base64 import b64encode_str
 from utils.config import Config
+from utils.plane import PlaneEnum
 from command.model.specs import CMDSpecsCommandTree, CMDSpecsCommandGroup, CMDSpecsCommand, CMDSpecsCommandVersion, CMDSpecsResource
 from command.templates import get_templates
 from utils import exceptions
@@ -68,7 +69,15 @@ class AAZSpecsManager:
 
     # resources
     def get_resource_plane_folder(self, plane):
-        return os.path.join(self.resources_folder, plane)
+        if plane == PlaneEnum.Mgmt:
+            return os.path.join(self.resources_folder, plane)
+        elif PlaneEnum.is_data_plane(plane):
+            scope = PlaneEnum.get_data_plane_scope(plane)
+            if not scope:
+                raise ValueError(f"Invalid plane: Missing scope in data plane '{plane}'")
+            return os.path.join(self.resources_folder, plane, scope)
+        else:
+            raise ValueError(f"Invalid plane: '{plane}'")
 
     def get_resource_cfg_folder(self, plane, resource_id):
         path = self.get_resource_plane_folder(plane)

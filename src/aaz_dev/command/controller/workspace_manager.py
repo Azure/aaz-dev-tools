@@ -10,6 +10,7 @@ from swagger.controller.specs_manager import SwaggerSpecsManager
 from swagger.utils.exceptions import InvalidSwaggerValueError
 from utils import exceptions
 from utils.config import Config
+from utils.plane import PlaneEnum
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor
 from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand
@@ -46,6 +47,9 @@ class WorkspaceManager:
         if not manager.is_in_memory and os.path.exists(manager.path):
             raise exceptions.ResourceConflict(
                 f"Workspace conflict: Workspace json file path exists: {manager.path}")
+        if plane == PlaneEnum._Data:
+            # add resource provider as the scope for data plane
+            plane = PlaneEnum.Data(resource_provider)
         manager.ws = CMDEditorWorkspace({
             "name": name,
             "plane": plane,

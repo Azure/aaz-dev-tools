@@ -21,7 +21,7 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
 
     def test_data_plane_modules(self):
         with self.app.test_client() as c:
-            rv = c.get(f'/Swagger/Specs/{PlaneEnum.Data}')
+            rv = c.get(f'/Swagger/Specs/{PlaneEnum._Data}')
             json_data = rv.get_json()
             assert rv.status_code == 200, rv.get_json()['message']
             assert len(json_data) > 0
@@ -49,7 +49,7 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
 
     def test_data_plane_rp(self):
         with self.app.test_client() as c:
-            rv = c.get(f'/Swagger/Specs/{PlaneEnum.Data}')
+            rv = c.get(f'/Swagger/Specs/{PlaneEnum._Data}')
             json_data = rv.get_json()
             assert rv.status_code == 200, rv.get_json()['message']
             for module in json_data:
@@ -86,7 +86,7 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
 
     def test_data_plane_resources(self):
         with self.app.test_client() as c:
-            rv = c.get(f'/Swagger/Specs/{PlaneEnum.Data}')
+            rv = c.get(f'/Swagger/Specs/{PlaneEnum._Data}')
             modules = rv.get_json()
             assert rv.status_code == 200, rv.get_json()['message']
             for module in modules:
@@ -125,7 +125,7 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
 
     def test_data_plane_resource_version(self):
         with self.app.test_client() as c:
-            rv = c.get(f'/Swagger/Specs/{PlaneEnum.Data}')
+            rv = c.get(f'/Swagger/Specs/{PlaneEnum._Data}')
             modules = rv.get_json()
             assert rv.status_code == 200, rv.get_json()['message']
             for module in modules:
@@ -171,7 +171,7 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
 
     def test_data_plane_resource_and_version_in_module(self):
         with self.app.test_client() as c:
-            rv = c.get(f'/Swagger/Specs/{PlaneEnum.Data}')
+            rv = c.get(f'/Swagger/Specs/{PlaneEnum._Data}')
             modules = rv.get_json()
             assert rv.status_code == 200, rv.get_json()['message']
             for module in modules:

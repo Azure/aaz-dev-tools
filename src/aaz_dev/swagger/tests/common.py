@@ -15,7 +15,7 @@ class SwaggerSpecsTestCase(ApiTestCase):
         self.specs = SwaggerSpecs(folder_path=folder_path)
 
     def get_data_plane_modules(self, module_filter=None):
-        for module in self.specs.get_data_plane_modules(PlaneEnum.Data):
+        for module in self.specs.get_data_plane_modules(PlaneEnum._Data):
             if module_filter is None or module_filter(module):
                 yield module
 
