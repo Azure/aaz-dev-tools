@@ -157,6 +157,7 @@ def generate_by_swagger_tag(profile, swagger_tag, extension_or_module_name, cli_
                 })
 
             v = v_list[0]
+            # TODO: handle plane here
             cfg_reader = aaz_specs.load_resource_cfg_reader(Config.DEFAULT_PLANE, resource_id, v)
             if not cfg_reader:
                 logger.error(f"Command models not exist in aaz for resource: {resource_id} version: {v}")

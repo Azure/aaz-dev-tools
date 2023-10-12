@@ -15,7 +15,7 @@ def editor_workspaces():
         # create a new workspace
         # the name of workspace is required
         data = request.get_json()
-        if not data or not isinstance(data, dict) or 'name' not in data or 'plane' not in data:
+        if not data or not isinstance(data, dict) or 'name' not in data or 'plane' not in data or 'modNames' not in data or 'resourceProvider' not in data:
             raise exceptions.InvalidAPIUsage("Invalid request body")
         name = data['name']
         plane = data['plane']
