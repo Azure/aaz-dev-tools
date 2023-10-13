@@ -444,7 +444,7 @@ class Schema(Model, Linkable):
                         # so it's fine to update it in parent level when prop_dict[name] is a cls definition.
                         prop_dict[name].required = True
                         if MutabilityEnum.Create == builder.mutability:
-                            # for create opreation
+                            # for create operation
                             # when a property is required, it's frozen status must be consisted with the defined schema.
                             # This can help to for empty object schema.
                             prop_dict[name].frozen = builder.frozen
@@ -572,7 +572,7 @@ class Schema(Model, Linkable):
                 model.client_flatten = True
 
             # when all additional_props and props and discriminators of model is frozen then this model is frozen
-            if not model.frozen:
+            if not model.frozen and (model.additional_props or model.props or model.discriminators):  # an empty object is not included
                 need_frozen = True
                 if model.additional_props:
                     if not model.additional_props.frozen:
@@ -587,7 +587,7 @@ class Schema(Model, Linkable):
                         if not disc.frozen:
                             need_frozen = False
                             break
-                # Note: model will always frozen when object without any props, additional_props or discriminators,
+                # Note: model will always frozen when an unempty object without any props, additional_props or discriminators,
                 # If this property is required by parent schema, it will be updated in parent.
                 model.frozen = need_frozen
 

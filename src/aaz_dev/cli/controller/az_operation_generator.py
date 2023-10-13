@@ -838,7 +838,8 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, cmd_ctx):
             else:
                 assert schema.additional_props.any_type is True
         else:
-            raise NotImplementedError()
+            # allow empty object
+            pass
 
     elif isinstance(schema, CMDObjectSchemaDiscriminator):
         if schema.discriminators:
@@ -852,7 +853,8 @@ def _iter_response_scopes_by_schema_base(schema, name, scope_define, cmd_ctx):
                 if not cls_builder_name and isinstance(s, (CMDObjectSchemaBase, CMDArraySchemaBase)):
                     search_schemas[s_name] = s
         else:
-            raise NotImplementedError()
+            # allow empty object
+            pass
 
     elif isinstance(schema, CMDArraySchemaBase):
         # AAZListType
