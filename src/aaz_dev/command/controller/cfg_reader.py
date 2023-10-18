@@ -46,7 +46,6 @@ class CfgReader:
                 if swagger_resource_path_to_resource_id(http.path) != resource_id:
                     continue
                 methods.add(http.request.method.lower())
-                # if isinstance(op, CMDHttpOperation)
         return tuple(methods) or None
 
     def get_update_cmd(self, resource_id, subresource=None):
