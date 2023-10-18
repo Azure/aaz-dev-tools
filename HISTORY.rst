@@ -2,6 +2,11 @@
 
 Release History
 ===============
+
+2.1.0
+++++++
+* Support empty object defined in Swagger specification. (#293)
+
 2.0.0
 ++++++
 * Limit a workspace to one resource provider only. (#290)
