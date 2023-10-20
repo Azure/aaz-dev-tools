@@ -154,6 +154,7 @@ class CMDClientEndpoints(Model):
                 args.append(builder.get_args())
         return args
 
+
 class CMDClientConfig(Model):
      # this property is used to manage the client config version.
     version = UTCDateTimeType(required=True)
