@@ -3,7 +3,7 @@ import os
 import re
 import shutil
 
-from command.model.configuration import CMDConfiguration, CMDHelp, CMDCommandExample, XMLSerializer
+from command.model.configuration import CMDConfiguration, CMDHelp, CMDCommandExample, XMLSerializer, CMDClientConfig
 from utils.base64 import b64encode_str
 from utils.config import Config
 from utils.plane import PlaneEnum
@@ -11,8 +11,8 @@ from command.model.specs import CMDSpecsCommandTree, CMDSpecsCommandGroup, CMDSp
 from command.templates import get_templates
 from utils import exceptions
 from .cfg_reader import CfgReader
+from .client_cfg_reader import ClientCfgReader
 from .cfg_validator import CfgValidator
-from collections import deque
 
 
 class AAZSpecsManager:
@@ -31,6 +31,7 @@ class AAZSpecsManager:
         self._modified_command_groups = set()
         self._modified_commands = set()
         self._modified_resource_cfgs = {}
+        self._modified_resource_client_cfgs = {}
 
         tree_path = self.get_tree_file_path()
         if not os.path.exists(tree_path):
@@ -78,6 +79,10 @@ class AAZSpecsManager:
             return os.path.join(self.resources_folder, plane, scope)
         else:
             raise ValueError(f"Invalid plane: '{plane}'")
+    
+    def get_resource_client_cfg_paths(self, plane):
+        path = self.get_resource_plane_folder(plane)
+        return os.path.join(path, "client.json"), os.path.join(path, "client.xml")
 
     def get_resource_cfg_folder(self, plane, resource_id):
         path = self.get_resource_plane_folder(plane)
@@ -456,6 +461,55 @@ class AAZSpecsManager:
         if details:
             raise exceptions.VerificationError(message="Invalid Command Tree", details=details)
 
+    # client configuration
+    def load_client_cfg_reader(self, plane):
+        key = (plane, )
+        if key in self._modified_resource_client_cfgs:
+            # cfg already modified
+            cfg = self._modified_resource_client_cfgs[key]
+            return ClientCfgReader(cfg) if cfg else None
+
+        json_path, xml_path = self.get_resource_client_cfg_paths(plane)
+        if not os.path.exists(json_path) and not os.path.exists(xml_path):
+            return None
+        
+        if not os.path.exists(json_path) and os.path.exists(xml_path):
+            if not os.path.isfile(xml_path):
+                raise ValueError(f"Invalid file path: {xml_path}")
+            # Convert existing xml to json.
+            # Not recommend to use xml, because there are some issues in XMLSerializer
+            if not os.path.isfile(xml_path):
+                raise ValueError(f"Invalid file path: {xml_path}")
+            with open(xml_path, 'r') as f:
+                cfg = XMLSerializer.from_xml(CMDClientConfig, f.read())
+            data = self.render_resource_cfg_to_json(cfg)
+            with open(json_path, 'w') as f:
+                f.write(data)
+            data = self.render_resource_cfg_to_xml(cfg)
+            with open(xml_path, 'w') as f:
+                f.write(data)
+        
+        if not os.path.isfile(json_path):
+            raise ValueError(f"Invalid file path: {json_path}")
+        
+        with open(json_path, 'r') as f:
+            #print(json_path)
+            data = json.load(f)
+        cfg = CMDClientConfig(data)
+        return ClientCfgReader(cfg)
+
+    def update_client_cfg(self, cfg):
+        """This function guarantee the client config version is always increasing."""
+        assert isinstance(cfg, CMDClientConfig)
+        old_cfg_reader = self.load_client_cfg_reader(cfg.plane)
+        if old_cfg_reader and old_cfg_reader.cfg.version > cfg.version:
+            raise exceptions.InvalidAPIUsage("Failed to update: a new version of client config exists.")
+        if cfg.version == old_cfg_reader.cfg.version:
+            # didn't change when version is same
+            return
+        key = (cfg.plane, )
+        self._modified_resource_client_cfgs[key] = cfg
+
     def save(self):
         self.verify_command_tree()
 
@@ -513,6 +567,13 @@ class AAZSpecsManager:
                 else:
                     update_files[json_file_path] = self.render_resource_cfg_to_json(cfg)
                     update_files[xml_file_path] = self.render_resource_cfg_to_xml(cfg)
+        
+        # client cfg files
+        for (plane, ), cfg in self._modified_resource_client_cfgs.items():
+            json_file_path, xml_file_path = self.get_resource_client_cfg_paths(plane)
+            assert isinstance(cfg, CMDClientConfig)
+            update_files[json_file_path] = self.render_resource_cfg_to_json(cfg)
+            update_files[xml_file_path] = self.render_resource_cfg_to_xml(cfg)
 
         for remove_file in remove_files:
             if os.path.exists(remove_file):
@@ -529,6 +590,7 @@ class AAZSpecsManager:
         self._modified_command_groups = set()
         self._modified_commands = set()
         self._modified_resource_cfgs = {}
+        self._modified_resource_client_cfgs = {}
 
     @staticmethod
     def render_command_readme(command):

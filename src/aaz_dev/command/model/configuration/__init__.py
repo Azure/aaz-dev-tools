@@ -25,6 +25,7 @@ from ._arg import CMDArgEnumItem, CMDArgEnum, \
     CMDArgPromptInput, CMDPasswordArgPromptInput
 from ._arg_builder import CMDArgBuilder
 from ._arg_group import CMDArgGroup
+from ._client import CMDClientConfig, CMDClientEndpoints, CMDClientEndpointTemplate, CMDClientAuth, CMDClientAADAuthConfig
 from ._command import CMDCommand
 from ._command_group import CMDCommandGroup
 from ._condition import CMDConditionOperator, \
