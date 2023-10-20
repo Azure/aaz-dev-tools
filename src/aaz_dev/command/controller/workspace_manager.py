@@ -13,6 +13,7 @@ from utils.config import Config
 from utils.plane import PlaneEnum
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor
+from .workspace_client_cfg_editor import WorkspaceClientCfgEditor
 from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand
 
 logger = logging.getLogger('backend')
@@ -60,6 +61,7 @@ class WorkspaceManager:
                 "names": [cls.COMMAND_TREE_ROOT_NAME],
             }
         })
+        manager.inherit_client_cfg_from_spec()
         return manager
 
     def __init__(self, name, folder=None, aaz_manager=None, swagger_manager=None):
@@ -79,6 +81,7 @@ class WorkspaceManager:
 
         self.ws = None
         self._cfg_editors = {}
+        self._client_cfg_editor = None
         self._reusable_leaves = {}
 
         self._aaz_specs = aaz_manager
@@ -173,6 +176,10 @@ class WorkspaceManager:
         if not self.ws.mod_names or not self.ws.resource_provider:
             # calculate mod_names and resource_provider for old workspaces
             self.__update_mod_names_and_resource_provider()
+
+        if self._client_cfg_editor:
+            data = self._client_cfg_editor.get_cfg_file_data()
+            update_files.append(WorkspaceClientCfgEditor.get_cfg_path(self.folder), data)
 
         # verify ws timestamps
         # TODO: add write lock for path file
@@ -882,14 +889,21 @@ class WorkspaceManager:
         # Merge the commands of subresources which exported in aaz but not exist in current workspace
         self._merge_sub_resources_in_aaz()
 
+        # update client config
+        editor = self.load_client_cfg_editor()
+        if editor:
+            self.aaz_specs.update_client_cfg(editor.cfg)
+
         # update configurations
         for ws_leaf in self.iter_command_tree_leaves():
             editor = self.load_cfg_editor_by_command(ws_leaf)
             cfg = editor.cfg
             self.aaz_specs.update_resource_cfg(cfg)
+
         # update commands
         for ws_leaf in self.iter_command_tree_leaves():
             self.aaz_specs.update_command_by_ws(ws_leaf)
+
         # update command groups
         for ws_node in self.iter_command_tree_nodes():
             if ws_node == self.ws.command_tree:
@@ -1015,3 +1029,22 @@ class WorkspaceManager:
                     similar_arg.var: [similar_arg_idx]
                 }
         return results
+
+    # client config
+    def load_client_cfg_editor(self, reload=False):
+        if not reload and self._client_cfg_editor:
+            return self._client_cfg_editor
+        assert not self.is_in_memory
+        try:
+            self._client_cfg_editor = WorkspaceClientCfgEditor.load_client_cfg(self.folder)
+            return self._client_cfg_editor
+        except Exception as e:
+            logger.error(
+                f"load workspace client cfg failed: {e}: {self.name}")
+            return None
+
+    def inherit_client_cfg_from_spec(self):
+        # inherit client configuration from aaz specs
+        client_cfg_reader = self.swagger_specs.load_client_cfg_reader(self.ws.plane)
+        if client_cfg_reader:
+            self._client_cfg_editor = WorkspaceClientCfgEditor(client_cfg_reader.cfg)

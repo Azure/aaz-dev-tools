@@ -1,3 +1,5 @@
+import json
+
 from command.model.configuration import CMDClientConfig
 
 
@@ -14,3 +16,7 @@ class ClientCfgReader:
             if arg.var == arg_var:
                 return arg
         return None
+
+    def get_cfg_file_data(self):
+        data = json.dumps(self.cfg.to_primitive(), ensure_ascii=False)
+        return data
