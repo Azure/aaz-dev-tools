@@ -36,4 +36,3 @@ class AAZSpecPortalGenTest(TestCase):
         file_path = "-".join(leaf.names) + ".json"
         with open(file_path, "w") as f_out:
             f_out.write(json.dumps(cmd_portal_info, indent=4))
-

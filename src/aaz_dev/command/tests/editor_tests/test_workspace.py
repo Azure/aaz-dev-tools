@@ -16,7 +16,9 @@ class WorkspaceManagerTest(CommandTestCase):
         manager = WorkspaceManager(ws_name)
         assert manager.path.endswith(os.path.join(ws_name, "ws.json"))
 
-        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt)
+        mod_names = "edgeorder"
+        resource_provider = 'Microsoft.EdgeOrder'
+        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider=resource_provider)
         manager.save()
         assert os.path.exists(manager.path)
         with open(manager.path, 'r') as f:
@@ -44,10 +46,11 @@ class WorkspaceEditorTest(CommandTestCase):
 
     @workspace_name("test_workspace_editor_add_resources_by_swagger")
     def test_workspace_editor_add_resources_by_swagger(self, ws_name):
-        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt)
+        mod_names = "edgeorder"
+        resource_provider = 'Microsoft.EdgeOrder'
+        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider=resource_provider)
         manager.save()
 
-        mod_names = "edgeorder"
 
         manager.add_new_resources_by_swagger(
             mod_names=mod_names,
@@ -85,11 +88,11 @@ class WorkspaceEditorTest(CommandTestCase):
 
     @workspace_name("test_workspace_editor_subresource")
     def test_workspace_editor_subresource(self, ws_name):
-
-        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt)
+        mod_names = "cdn"
+        resource_provider = "Microsoft.Cdn"
+        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider=resource_provider)
         manager.save()
 
-        mod_names = "cdn"
         version = '2021-06-01'
         resource_id = swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}')
 
@@ -324,11 +327,11 @@ class WorkspaceEditorTest(CommandTestCase):
 
     @workspace_name("test_workspace_editor_subresource_with_index")
     def test_workspace_editor_subresource_with_index(self, ws_name):
-
-        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt)
+        mod_names = "cdn"
+        resource_provider = "Microsoft.Cdn"
+        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider=resource_provider)
         manager.save()
 
-        mod_names = "cdn"
         version = '2021-06-01'
         resource_id = swagger_resource_path_to_resource_id(
             '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}')

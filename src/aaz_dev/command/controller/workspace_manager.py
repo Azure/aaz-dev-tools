@@ -1053,6 +1053,6 @@ class WorkspaceManager:
 
     def inherit_client_cfg_from_spec(self):
         # inherit client configuration from aaz specs
-        client_cfg_reader = self.swagger_specs.load_client_cfg_reader(self.ws.plane)
+        client_cfg_reader = self.aaz_specs.load_client_cfg_reader(self.ws.plane)
         if client_cfg_reader:
             self._client_cfg_editor = WorkspaceClientCfgEditor(client_cfg_reader.cfg)
