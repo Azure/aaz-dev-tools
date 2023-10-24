@@ -16,7 +16,7 @@ logger = logging.getLogger('backend')
 
 
 class CMDClientAADAuthConfig(Model):
-    scopes = ListType(StringType, required=True)
+    scopes = ListType(StringType, required=True, min_size=1)
 
     class Options:
         serialize_when_none = False
@@ -86,7 +86,7 @@ class CMDClientEndpointTemplate(Model):
                 self.template = self.template.rstrip('/')
             else:
                 raise exceptions.VerificationError('Invalid endpoints', details='"{}" contains path'.format(self.template))
-        if not parsed.schema or not parsed.netloc:
+        if not parsed.scheme or not parsed.netloc:
             raise exceptions.VerificationError('Invalid endpoints', details='"{}" has no schema or hostname'.format(self.template))
     
     def iter_placeholders(self):
@@ -164,10 +164,11 @@ class CMDClientEndpoints(Model):
                     raise exceptions.VerificationError('Invalid endpoints', details='Unknown endpoint parameter: "{}"'.format(param.name))
                 if param.required != placeholders[param.name]['required']:
                     raise exceptions.VerificationError('Invalid endpoints', details='Inconsistent required for parameter: "{}"'.format(param.name))
-        if len(placeholders) > 0 and not self.params or len(placeholders) != len(self.params):
+        if len(placeholders) > 0 and (not self.params or len(placeholders) != len(self.params)):
             raise exceptions.VerificationError('Invalid endpoints', details='Inconsistent endpoint templates and parameters')
 
-        self.params = sorted(self.params, key=lambda p: p.name)
+        if self.params:
+            self.params = sorted(self.params, key=lambda p: p.name)
     
     def generate_params(self):
         params = {}
@@ -179,7 +180,7 @@ class CMDClientEndpoints(Model):
                         "required": required,
                         "skip_url_encoding": True,
                     })
-        self.params = sorted(params.values(), key=lambda p: p.name)
+        self.params = sorted(params.values(), key=lambda p: p.name) or None
 
     def generate_args(self, ref_args):
         args = []
@@ -189,7 +190,7 @@ class CMDClientEndpoints(Model):
                     schema=param,
                     var_prefix=CMDArgBuildPrefix.ClientEndpoint, ref_args=ref_args
                 )
-                args.append(builder.get_args())
+                args.extend(builder.get_args())
         return args
 
     def diff(self, old, level):
@@ -231,7 +232,8 @@ class CMDClientConfig(Model):
     def reformat(self, **kwargs):
         self.endpoints.reformat(**kwargs)
         self.auth.reformat(**kwargs)
-        self.arg_group.reformat(**kwargs)
+        if self.arg_group:
+            self.arg_group.reformat(**kwargs)
 
     def generate_args(self, ref_args=None, ref_options=None):
         if not ref_args:
