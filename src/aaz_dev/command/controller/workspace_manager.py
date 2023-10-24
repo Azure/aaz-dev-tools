@@ -125,6 +125,7 @@ class WorkspaceManager:
             self.__update_mod_names_and_resource_provider()
 
         self._cfg_editors = {}
+        self._client_cfg_editor = None
 
     def rename(self, new_name):
         assert not self.is_in_memory
@@ -205,7 +206,8 @@ class WorkspaceManager:
                 f.write(data)
 
         self._cfg_editors = {}
-    
+        self._client_cfg_editor = None
+
     def __update_mod_names_and_resource_provider(self):
         resource_mod_set = set()
         resource_rp_set = set()
@@ -1031,6 +1033,12 @@ class WorkspaceManager:
         return results
 
     # client config
+
+    def create_cfg_editor(self, templates, auth):
+        ref_cfg = self.load_client_cfg_editor()
+        self._client_cfg_editor = WorkspaceClientCfgEditor.new_client_cfg(plane=self.ws.plane, templates=templates, auth=auth, ref_cfg=ref_cfg)
+        return self._client_cfg_editor
+
     def load_client_cfg_editor(self, reload=False):
         if not reload and self._client_cfg_editor:
             return self._client_cfg_editor

@@ -8,11 +8,12 @@ from utils import exceptions
 from utils.base64 import b64encode_str
 from utils.case import to_camel_case
 from .cfg_reader import CfgReader
+from .workspace_helper import ArgumentUpdateMixin
 
 logger = logging.getLogger('backend')
 
 
-class WorkspaceCfgEditor(CfgReader):
+class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
 
     @staticmethod
     def get_cfg_folder(ws_folder, resource_id):
@@ -257,58 +258,8 @@ class WorkspaceCfgEditor(CfgReader):
         arg, _ = self.find_arg_by_var(*cmd_names, arg_var=arg_var)
         if not arg:
             return None
-        if isinstance(arg, CMDArg):
-            self._update_cmd_arg(arg, **kwargs)
-        if isinstance(arg, CMDBooleanArg):
-            self._update_boolean_arg(arg, **kwargs)
-        if isinstance(arg, CMDClsArg):
-            self._update_cls_arg(arg, **kwargs)
-        if isinstance(arg, CMDArrayArg):
-            self._update_array_arg(arg, **kwargs)
-
+        self._update_arg(arg, **kwargs)
         self.reformat()
-
-    def _update_cmd_arg(self, arg, **kwargs):
-        if 'options' in kwargs:
-            arg.options = kwargs['options']
-        if 'stage' in kwargs:
-            arg.stage = kwargs['stage']
-        if 'hide' in kwargs:
-            if kwargs['hide'] and arg.required:
-                raise exceptions.ResourceConflict("Cannot hide required argument")
-            arg.hide = kwargs['hide']
-        if 'group' in kwargs:
-            arg.group = kwargs['group']
-        if 'help' in kwargs:
-            arg.help = CMDArgumentHelp(kwargs['help'])
-        if 'default' in kwargs:
-            if kwargs['default'] is None:
-                arg.default = None
-            else:
-                arg.default = CMDArgDefault(kwargs['default'])
-        if 'configurationKey' in kwargs:
-            arg.configuration_key = kwargs['configurationKey']
-        if 'prompt' in kwargs:
-            if kwargs['prompt'] is None:
-                arg.prompt = None
-            elif 'confirm' in kwargs['prompt']:
-                arg.prompt = CMDPasswordArgPromptInput(kwargs['prompt'])
-                arg.blank = None
-            else:
-                arg.prompt = CMDArgPromptInput(kwargs['prompt'])
-                arg.blank = None
-
-    def _update_boolean_arg(self, arg, **kwargs):
-        if 'reverse' in kwargs:
-            arg.reverse = kwargs['reverse'] or False
-
-    def _update_cls_arg(self, arg, **kwargs):
-        if 'singularOptions' in kwargs:
-            arg.singular_options = kwargs['singularOptions'] or None
-
-    def _update_array_arg(self, arg, **kwargs):
-        if 'singularOptions' in kwargs:
-            arg.singular_options = kwargs['singularOptions'] or None
 
     def unwrap_cls_arg(self, *cmd_names, arg_var):
         command = self.find_command(*cmd_names)
