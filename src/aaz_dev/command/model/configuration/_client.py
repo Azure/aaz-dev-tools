@@ -8,7 +8,7 @@ from utils import exceptions
 
 
 from ._arg_group import CMDArgGroup
-from ._utils import CMDArgBuildPrefix
+from ._utils import CMDArgBuildPrefix, CMDDiffLevelEnum
 from ._arg_builder import CMDArgBuilder
 from ._schema import CMDSchemaField, CMDStringSchema
 
@@ -25,22 +25,49 @@ class CMDClientAADAuthConfig(Model):
         # TODO: check scopes schema
         self.scopes = sorted(self.scopes)
 
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if sorted(self.scopes) != sorted(old.scopes):
+                diff['scopes'] = f"{old.scopes} != {self.scopes}"
+        return diff
+
 
 class CMDClientAuth(Model):
-    aad_token = ModelType(
+    aad = ModelType(
         CMDClientAADAuthConfig,
-        serialized_name='AADToken',
-        deserialize_from='AADToken',
     )
 
     class Options:
         serialize_when_none = False
     
     def reformat(self, **kwargs):
-        if self.aad_token:
-            self.aad_token.reformat(**kwargs)
+        if self.aad:
+            self.aad.reformat(**kwargs)
         else:
             raise exceptions.VerificationError('Invalid auth config', default='Client auth is not defined')
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if old.aad:
+                if not self.aad:
+                    diff['aad'] = f"miss aad auth now."
+                else:
+                    aad_diff = self.aad.diff(old.aad, level)
+                    if aad_diff:
+                        diff['aad'] = aad_diff
+
+        if level >= CMDDiffLevelEnum.Structure:
+            if self.aad:
+                aad_diff = self.aad.diff(old.aad, level)
+                if aad_diff:
+                    diff['aad'] = aad_diff
+        return diff
 
 
 class CMDClientEndpointTemplate(Model):
@@ -88,15 +115,26 @@ class CMDClientEndpointTemplate(Model):
 
             yield placeholder, required
 
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.cloud != old.cloud:
+                diff['cloud'] = f"{old.cloud} != {self.cloud}"
+            if self.template != old.template:
+                diff['template'] = f"{old.template} != {self.template}"
+        return diff
+
 
 class CMDClientEndpoints(Model):
 
-    templates = ListType(ModelType(CMDClientEndpointTemplate), required=True)
+    templates = ListType(ModelType(CMDClientEndpointTemplate), required=True, min_size=1)
     params = ListType(CMDSchemaField())
 
     class Options:
         serialize_when_none = False
-    
+
     def reformat(self, **kwargs):
         for template in self.templates:
             template.reformat(**kwargs)
@@ -153,6 +191,28 @@ class CMDClientEndpoints(Model):
                 )
                 args.append(builder.get_args())
         return args
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if len(self.templates) != len(old.templates):
+                diff['templates'] = "template not match"
+            else:
+                templates_diff = {}
+                for template in self.templates:
+                    peer_template = None
+                    for old_template in old.templates:
+                        if old_template.cloud == template.cloud:
+                            peer_template = old_template
+                            break
+                    template_diff = template.diff(peer_template, level)
+                    if template_diff:
+                        templates_diff[template.cloud] = template_diff
+                if templates_diff:
+                    diff['templates'] = templates_diff
+        return diff
 
 
 class CMDClientConfig(Model):
