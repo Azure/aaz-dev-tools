@@ -3,6 +3,7 @@ from schematics.types import ModelType, ListType, DictType
 from .operation import Operation
 from .parameter import ParameterField, ParameterBase
 from .reference import Linkable, Reference
+import re
 
 
 class PathItem(Model, Linkable):
@@ -57,7 +58,11 @@ class PathItem(Model, Linkable):
         if op is None:
             return None
         assert isinstance(op, Operation)
-        cmd_op = builder(op, parent_parameters=self.parameters)
+        host_path, parent_parameters = builder.parse_parameterized_host_path()
+        parent_parameters = parent_parameters or []
+        if self.parameters:
+            parent_parameters.extend(self.parameters)
+        cmd_op = builder(op, parent_parameters=parent_parameters, host_path=host_path)
         return cmd_op
 
 
