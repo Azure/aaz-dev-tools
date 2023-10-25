@@ -76,7 +76,7 @@ class AAZSpecsManager:
             scope = PlaneEnum.get_data_plane_scope(plane)
             if not scope:
                 raise ValueError(f"Invalid plane: Missing scope in data plane '{plane}'")
-            return os.path.join(self.resources_folder, plane, scope)
+            return os.path.join(self.resources_folder, PlaneEnum._Data, scope)
         else:
             raise ValueError(f"Invalid plane: '{plane}'")
     
