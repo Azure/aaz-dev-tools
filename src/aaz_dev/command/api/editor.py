@@ -3,6 +3,7 @@ import os
 from flask import Blueprint, jsonify, request, url_for
 
 from command.controller.workspace_manager import WorkspaceManager
+from swagger.model.specs import SwaggerLoader
 from utils import exceptions
 from utils.config import Config
 
@@ -176,6 +177,23 @@ def editor_workspace_command_tree_node_rename(name, node_names):
     result = node.to_primitive()
     manager.save()
     return jsonify(result)
+
+
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/GenerateExamples",
+          methods=["POST"])
+def editor_workspace_generate_example(name, node_names, leaf_name):
+    if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
+        raise exceptions.ResourceNotFind("Command not exist.")
+
+    manager = WorkspaceManager(name)
+    manager.load()
+
+    node_names = node_names[1:]
+    leaf = manager.find_command_tree_leaf(*node_names, leaf_name)
+    if not leaf:
+        raise exceptions.ResourceNotFind("Command not exist.")
+
+    manager.load_examples_by_swagger(leaf.resources[0])
 
 
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>",

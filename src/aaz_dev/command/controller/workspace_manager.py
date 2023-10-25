@@ -522,6 +522,19 @@ class WorkspaceManager:
             new_name = f"{name}-untitled{idx}"
         return new_name
 
+    def load_examples_by_swagger(self, resource):
+        root = self.find_command_tree_node()
+        assert root
+
+        # convert cmd resource to swagger resource
+        swagger_resource = self.swagger_specs.get_module_manager(
+            plane=self.ws.plane,
+            mod_names=self.ws.mod_names
+        ).get_resource_in_version(resource["id"], resource["version"], resource.rp_name)
+
+        # load swagger resource
+        self.swagger_command_generator.load_examples(swagger_resource)
+
     def add_new_resources_by_swagger(self, mod_names, version, resources):
         root_node = self.find_command_tree_node()
         assert root_node

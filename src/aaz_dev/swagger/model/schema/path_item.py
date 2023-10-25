@@ -52,6 +52,22 @@ class PathItem(Model, Linkable):
         if self.patch is not None:
             self.patch.link(swagger_loader, *self.traces, 'patch')
 
+    def link_examples(self, swagger_loader, *traces):
+        super().link(swagger_loader, *traces)
+
+        if self.get is not None:
+            self.get.link_examples(swagger_loader, *self.traces, "get")
+        if self.put is not None:
+            self.put.link_examples(swagger_loader, *self.traces, "put")
+        if self.post is not None:
+            self.post.link_examples(swagger_loader, *self.traces, "post")
+        if self.delete is not None:
+            self.delete.link_examples(swagger_loader, *self.traces, "delete")
+        if self.head is not None:
+            self.head.link_examples(swagger_loader, *self.traces, "head")
+        if self.patch is not None:
+            self.patch.link_examples(swagger_loader, *self.traces, "patch")
+
     def to_cmd(self, builder, **kwargs):
         op = getattr(self, builder.method, None)
         if op is None:

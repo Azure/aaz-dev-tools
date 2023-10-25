@@ -34,6 +34,10 @@ class CommandGenerator:
             self.loader.load_file(resource.file_path)
         self.loader.link_swaggers()
 
+    def load_examples(self, resource):
+        self.loader.load_file(resource.file_path)
+        self.loader.link_examples()
+
     def create_draft_command_group(self, resource,
                                    update_by=None,
                                    methods=('get', 'delete', 'put', 'post', 'head', 'patch'),

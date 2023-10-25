@@ -207,22 +207,6 @@ class XmsMutabilityField(ListType):
         )
 
 
-class XmsExamplesField(DictType):
-    """
-    Describes the format for specifying examples for request and response of an operation in an OpenAPI definition. It is a dictionary of different variations of the examples for a given operation.
-
-    https://github.com/Azure/azure-rest-api-specs/blob/master/documentation/x-ms-examples.md
-    """
-
-    def __init__(self, **kwargs):
-        super().__init__(
-            field=BaseType(),
-            serialized_name='x-ms-examples',
-            deserialize_from='x-ms-examples',
-            **kwargs
-        )
-
-
 class XmsErrorResponseField(BooleanType):
     """
     Indicates whether the response status code should be treated as an error response or not.
