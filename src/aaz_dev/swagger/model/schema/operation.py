@@ -198,6 +198,9 @@ class Operation(Model, Linkable):
             request.header.client_request_id = client_request_id_name
             request.header.params = []
             for name, model in sorted(param_models[HeaderParameter.IN_VALUE].items()):
+                if name == client_request_id_name:
+                    # ignore client request id parameter for argument generation.
+                    continue
                 request.header.params.append(model)
 
         if BodyParameter.IN_VALUE in param_models:
