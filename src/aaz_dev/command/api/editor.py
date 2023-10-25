@@ -106,6 +106,61 @@ def editor_workspace_generate(name):
     return "", 200
 
 
+# client configuration
+@bp.route("/Workspaces/<name>/ClientConfig", methods=("GET", "POST"))
+def editor_workspace_client_config(name):
+    manager = WorkspaceManager(name)
+    if request.method == "GET":
+        cfg_editor = manager.load_client_cfg_editor()
+        if not cfg_editor:
+            raise exceptions.ResourceNotFind("Client configuration not exist")
+    elif request.method == "POST":
+        data = request.get_json()
+        if 'templates' not in data or 'auth' not in data:
+            raise exceptions.InvalidAPIUsage("Invalid request")
+        cfg_editor = manager.create_cfg_editor(templates=data['templates'], auth=data['auth'])
+        manager.save()
+    else:
+        raise NotImplementedError()
+    result = cfg_editor.cfg.to_primitive()
+    return jsonify(result)
+
+
+@bp.route("/Workspaces/<name>/ClientConfig/InheritFromAAZ", methods=("POST",))
+def inherit_workspace_client_config_from_aaz(name):
+    manager = WorkspaceManager(name)
+    manager.inherit_client_cfg_from_spec()
+    manager.save()
+    cfg_editor = manager.load_client_cfg_editor()
+    if not cfg_editor:
+        raise exceptions.ResourceNotFind("Client configuration not exist")
+    result = cfg_editor.cfg.to_primitive()
+    return jsonify(result)
+
+
+@bp.route("/Workspaces/<name>/ClientConfig/Arguments/<arg_var>", methods=("GET", "PATCH"))
+def editor_workspace_client_config_argument(name, arg_var):
+    manager = WorkspaceManager(name)
+    cfg_editor = manager.load_client_cfg_editor()
+    if not cfg_editor:
+        raise exceptions.ResourceNotFind("Client configuration not exist")
+    arg = cfg_editor.find_arg_by_var(arg_var=arg_var)
+    if not arg:
+        raise exceptions.ResourceNotFind("Argument not exist")
+
+    if request.method == "GET":
+        result = arg.to_primitive()
+    elif request.method == "PATCH":
+        data = request.get_json()
+        cfg_editor.update_arg_by_var(arg_var=arg_var, **data)
+        manager.save()
+        arg = cfg_editor.find_arg_by_var(arg_var=arg_var)
+        result = arg.to_primitive()
+    else:
+        raise NotImplementedError()
+    return jsonify(result)
+
+
 # command tree operations
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>", methods=("GET", "POST", "PATCH", "DELETE"))
 def editor_workspace_command_tree_node(name, node_names):
@@ -277,7 +332,7 @@ def editor_workspace_command_argument(name, node_names, leaf_name, arg_var):
     cfg_editor = manager.load_cfg_editor_by_command(leaf)
     arg, _ = cfg_editor.find_arg_by_var(*node_names, leaf_name, arg_var=arg_var)
     if not arg:
-        raise exceptions.ResourceNotFind("Argument not exit")
+        raise exceptions.ResourceNotFind("Argument not exist")
 
     if request.method == "GET":
         result = arg.to_primitive()

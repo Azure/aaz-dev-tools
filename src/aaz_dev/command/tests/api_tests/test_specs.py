@@ -14,6 +14,8 @@ class APIAAZSpecsTest(CommandTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": "edgeorder",
+                "resourceProvider": "Microsoft.EdgeOrder"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()

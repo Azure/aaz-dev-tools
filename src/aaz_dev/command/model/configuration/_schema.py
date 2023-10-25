@@ -38,6 +38,7 @@ import re
 
 logger = logging.getLogger('backend')
 
+
 class CMDSchemaEnumItem(Model):
     arg = CMDVariantField()  # value will be used when specific argument is provided
 
