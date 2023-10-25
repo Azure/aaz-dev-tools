@@ -1,4 +1,5 @@
 import logging
+import re
 
 import inflect
 from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, \
@@ -348,6 +349,9 @@ class CommandGenerator:
         for part in valid_parts[1:]:  # ignore first part to avoid include resource provider
             if part.startswith('{'):
                 continue
+            # handle part such as `docs('{key}')`
+            part = re.sub(r"\{[^{}]*}", '', part)
+            part = re.sub(r"[^a-zA-Z0-9.-_]", '', part)
             name = camel_case_to_snake_case(part, '-')
             singular_name = cls._inflect_engine.singular_noun(name) or name
             names.append(singular_name)
