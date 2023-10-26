@@ -501,12 +501,12 @@ class AAZSpecsManager:
     def update_client_cfg(self, cfg):
         """This function guarantee the client config version is always increasing."""
         assert isinstance(cfg, CMDClientConfig)
-        old_cfg_reader = self.load_client_cfg_reader(cfg.plane)
-        if old_cfg_reader and old_cfg_reader.cfg.version > cfg.version:
-            raise exceptions.InvalidAPIUsage("Failed to update: a new version of client config exists.")
-        if cfg.version == old_cfg_reader.cfg.version:
-            # didn't change when version is same
-            return
+        if old_cfg_reader := self.load_client_cfg_reader(cfg.plane):
+            if old_cfg_reader.cfg.version > cfg.version:
+                raise exceptions.InvalidAPIUsage("Failed to update: a new version of client config exists.")
+            if cfg.version == old_cfg_reader.cfg.version:
+                # didn't change when version is same
+                return
         key = (cfg.plane, )
         self._modified_resource_client_cfgs[key] = cfg
 

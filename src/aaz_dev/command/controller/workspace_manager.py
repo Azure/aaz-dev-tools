@@ -180,7 +180,8 @@ class WorkspaceManager:
 
         if self._client_cfg_editor:
             data = self._client_cfg_editor.get_cfg_file_data()
-            update_files.append(WorkspaceClientCfgEditor.get_cfg_path(self.folder), data)
+            update_files.append(
+                (WorkspaceClientCfgEditor.get_cfg_path(self.folder), data))
 
         # verify ws timestamps
         # TODO: add write lock for path file

@@ -110,6 +110,7 @@ def editor_workspace_generate(name):
 @bp.route("/Workspaces/<name>/ClientConfig", methods=("GET", "POST"))
 def editor_workspace_client_config(name):
     manager = WorkspaceManager(name)
+    manager.load()
     if request.method == "GET":
         cfg_editor = manager.load_client_cfg_editor()
         if not cfg_editor:
@@ -129,6 +130,7 @@ def editor_workspace_client_config(name):
 @bp.route("/Workspaces/<name>/ClientConfig/InheritFromAAZ", methods=("POST",))
 def inherit_workspace_client_config_from_aaz(name):
     manager = WorkspaceManager(name)
+    manager.load()
     manager.inherit_client_cfg_from_spec()
     manager.save()
     cfg_editor = manager.load_client_cfg_editor()
@@ -141,6 +143,7 @@ def inherit_workspace_client_config_from_aaz(name):
 @bp.route("/Workspaces/<name>/ClientConfig/Arguments/<arg_var>", methods=("GET", "PATCH"))
 def editor_workspace_client_config_argument(name, arg_var):
     manager = WorkspaceManager(name)
+    manager.load()
     cfg_editor = manager.load_client_cfg_editor()
     if not cfg_editor:
         raise exceptions.ResourceNotFind("Client configuration not exist")

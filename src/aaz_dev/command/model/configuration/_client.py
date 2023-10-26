@@ -224,7 +224,11 @@ class CMDClientConfig(Model):
     endpoints = ModelType(CMDClientEndpoints, required=True)
 
     auth = ModelType(CMDClientAuth, required=True)
-    arg_group = ModelType(CMDArgGroup)
+    arg_group = ModelType(
+        CMDArgGroup,
+        serialized_name='argGroup',
+        deserialize_from='argGroup',
+    )
 
     class Options:
         serialize_when_none = False
