@@ -347,7 +347,7 @@ class CommandGenerator:
             names.append(camel_case_to_snake_case(rp_part, '-'))
 
         for part in valid_parts[1:]:  # ignore first part to avoid include resource provider
-            if part.startswith('{'):
+            if re.match(r'^\{[^{}]*}$', part):
                 continue
             # handle part such as `docs('{key}')`
             part = re.sub(r"\{[^{}]*}", '', part)

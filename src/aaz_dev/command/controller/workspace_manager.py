@@ -596,24 +596,38 @@ class WorkspaceManager:
 
     def _add_cfg_editors(self, cfg_editors, aaz_ref=None):
         for cfg_editor in cfg_editors:
+            # command group rename
+            rename_cg_list = []
+            for cg_names in cfg_editor.iter_command_group_names():
+                if self.find_command_tree_leaf(*cg_names):
+                    # command group name conflicted with existing command name
+                    new_name = self.generate_unique_name(*cg_names[:-1], name=cg_names[-1])
+                    rename_cg_list.append((cg_names, [*cg_names[:-1], new_name]))
+            for cg_names, new_cg_names in rename_cg_list:
+                cfg_editor.rename_command_group(*cg_names, new_cg_names=new_cg_names)
+            # command rename
             merged = False
-            rename_list = []
+            rename_cmd_list = []
             for cmd_names, command in cfg_editor.iter_commands():
-                cur_cmd = self.find_command_tree_leaf(*cmd_names)
-                if cur_cmd is None:
-                    continue
-                if cur_cmd.version == command.version:
-                    main_cfg_editor = self.load_cfg_editor_by_command(cur_cmd)
-                    merged_cfg_editor = main_cfg_editor.merge(cfg_editor)
-                    if merged_cfg_editor:
-                        self.remove_cfg(main_cfg_editor)
-                        self.add_cfg(merged_cfg_editor, aaz_ref=aaz_ref)
-                        merged = True
-                        break
-                new_name = self.generate_unique_name(
-                    *cmd_names[:-1], name=cmd_names[-1])
-                rename_list.append((cmd_names, [*cmd_names[:-1], new_name]))
-            for cmd_names, new_cmd_names in rename_list:
+                if self.find_command_tree_node(*cmd_names):
+                    # command name conflicted with existing command group name
+                    new_name = self.generate_unique_name(
+                        *cmd_names[:-1], name=cmd_names[-1])
+                    rename_cmd_list.append((cmd_names, [*cmd_names[:-1], new_name]))
+                elif cur_cmd := self.find_command_tree_leaf(*cmd_names):
+                    # command name conflict with existing one's
+                    if cur_cmd.version == command.version:
+                        main_cfg_editor = self.load_cfg_editor_by_command(cur_cmd)
+                        merged_cfg_editor = main_cfg_editor.merge(cfg_editor)
+                        if merged_cfg_editor:
+                            self.remove_cfg(main_cfg_editor)
+                            self.add_cfg(merged_cfg_editor, aaz_ref=aaz_ref)
+                            merged = True
+                            break
+                    new_name = self.generate_unique_name(
+                        *cmd_names[:-1], name=cmd_names[-1])
+                    rename_cmd_list.append((cmd_names, [*cmd_names[:-1], new_name]))
+            for cmd_names, new_cmd_names in rename_cmd_list:
                 cfg_editor.rename_command(
                     *cmd_names, new_cmd_names=new_cmd_names)
             if not merged:
