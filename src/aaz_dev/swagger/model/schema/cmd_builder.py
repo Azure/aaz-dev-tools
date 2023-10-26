@@ -39,7 +39,7 @@ logger = logging.getLogger("backend")
 
 class CMDBuilder:
 
-    def __init__(self, path, method=None, mutability=None, in_base=False, frozen=False, parent_ids=None, cls_definitions=None):
+    def __init__(self, path, method=None, mutability=None, in_base=False, frozen=False, parent_ids=None, cls_definitions=None, parameterized_host=None):
         self.path = path
         self.method = method
         self.mutability = mutability
@@ -49,6 +49,7 @@ class CMDBuilder:
         self.id = None    # used to find loop
         self.parent_ids = parent_ids or []
         self.cls_definitions = {} if cls_definitions is None else cls_definitions
+        self.parameterized_host = parameterized_host
 
     def __call__(self, schema, **kwargs):
         sub_builder = CMDBuilder(
@@ -59,6 +60,7 @@ class CMDBuilder:
             frozen=kwargs.pop('frozen', self.frozen),
             parent_ids=[*self.parent_ids, self.id],
             cls_definitions=kwargs.pop('cls_definitions', self.cls_definitions),
+            parameterized_host=kwargs.pop('parameterized_host', self.parameterized_host)
         )
         if getattr(schema, 'read_only', None):
             sub_builder.read_only = True
@@ -295,6 +297,24 @@ class CMDBuilder:
         assert isinstance(model, CMDClsSchemaBase)
         name = model.type[1:]
         return self.cls_definitions[name]['model']
+
+    def parse_parameterized_host_path(self):
+        """ parse the path of the host template and parameters used in it. """
+        if not self.parameterized_host or not self.parameterized_host.host_template:
+            return None, None
+        result = re.fullmatch(r"^(.*://)?[^/]*(/.*)$", self.parameterized_host.host_template)
+        host_path = result[2] if result else None
+        if not host_path or host_path == '/':
+            return None, None
+        parameter_names = set()
+        for r in re.finditer(r"\{([^{}]*)}", host_path):
+            parameter_names.add(r[1])
+        parameters = []
+        if self.parameterized_host.parameters:
+            for param in self.parameterized_host.parameters:
+                if param.name in parameter_names:
+                    parameters.append(param)
+        return host_path, parameters
 
     @staticmethod
     def setup_enum(model, schema):

@@ -7,6 +7,7 @@ from command.tests.common import CommandTestCase, workspace_name
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.base64 import b64encode_str
 from utils.plane import PlaneEnum
+from utils.client import CloudEnum
 from utils.stage import AAZStageEnum
 from command.model.configuration import DEFAULT_CONFIRMATION_PROMPT
 
@@ -402,7 +403,7 @@ class APIEditorTest(CommandTestCase):
                 'create' not in data['commands'] and 'show' not in data['commands'] and 'update' not in data[
                     'commands'] and 'delete' not in data['commands'])
 
-            # try delete one resource in list
+            # try deleting one resource in list
             self.assertTrue(len(data['commands']['list']['resources']) > 1)
             resource = data['commands']['list']['resources'][0]
             resource_id = resource['id']
@@ -1936,3 +1937,240 @@ class APIEditorTest(CommandTestCase):
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
             self.assertTrue(len(data) == 4)
+
+    @workspace_name("test_dataplane_workspace")
+    def test_dataplane_workspace(self, ws_name):
+        module = "codesigning"
+        resource_provider = "Azure.CodeSigning"
+        api_version = '2023-06-15-preview'
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum._Data,
+                "modNames": module,
+                "resourceProvider": resource_provider
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws = rv.get_json()
+            self.assertEqual(ws['plane'], PlaneEnum.Data(resource_provider))
+            self.assertEqual(ws['resourceProvider'], resource_provider)
+            self.assertEqual(ws['modNames'], module)
+            ws_url = ws['url']
+
+            # add client configuration
+            rv = c.get(f"{ws_url}/ClientConfig")
+            self.assertTrue(rv.status_code == 404)
+
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://codesigning.azure.net/.default"]
+                    }
+                },
+                "templates": [
+                    {
+                        "cloud": CloudEnum.AzureCloud,
+                        "template": "https://{region}.codesigning.azure.net/"
+                    },
+                    {
+                        "cloud": CloudEnum.AzureChinaCloud,
+                        "template": "https://{region}.codesigning.chinacloudapi.cn"
+                    },
+                    {
+                        "cloud": CloudEnum.AzureUSGovernment,
+                        "template": "https://{region}.codesigning.usgovcloudapi.us"
+                    },
+                    {
+                        "cloud": CloudEnum.AzureGermanCloud,
+                        "template": "https://{region}.codesigning.cloudapi.de"
+                    },
+                ],
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            client_config = rv.get_json()
+            self.assertEqual(client_config['endpoints']['templates'], [
+                {'cloud': 'AzureChinaCloud', 'template': 'https://{region}.codesigning.chinacloudapi.cn'},
+                {'cloud': 'AzureCloud', 'template': 'https://{region}.codesigning.azure.net'},
+                {'cloud': 'AzureGermanCloud', 'template': 'https://{region}.codesigning.cloudapi.de'},
+                {'cloud': 'AzureUSGovernment', 'template': 'https://{region}.codesigning.usgovcloudapi.us'}
+            ])
+            self.assertEqual(client_config['endpoints']['params'], [
+                {'arg': '$Client.Endpoint.region', 'name': 'region', 'required': True, 'skipUrlEncoding': True, 'type': 'string'}
+            ])
+            self.assertEqual(client_config['argGroup']['args'], [
+                {'options': ['region'], 'required': True, 'type': 'string', 'var': '$Client.Endpoint.region'}
+            ])
+
+            # update client arguments
+            rv = c.get(f"{ws_url}/ClientConfig/Arguments/$Client.Endpoint.region")
+            self.assertTrue(rv.status_code == 200)
+            client_arg = rv.get_json()
+            self.assertEqual(client_arg, {'options': ['region'], 'required': True, 'type': 'string', 'var': '$Client.Endpoint.region'})
+            rv = c.patch(f"{ws_url}/ClientConfig/Arguments/$Client.Endpoint.region", json={
+                "options": ["region", "r"],
+                "default": {
+                    "value": "global"
+                },
+                "help": {
+                    "short": "The Azure region wherein requests for signing will be sent."
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+            client_arg = rv.get_json()
+            self.assertEqual(client_arg, {
+                'default': {'value': 'global'},
+                'help': {'short': 'The Azure region wherein requests for signing will be sent.'},
+                'options': ['r', 'region'],
+                'required': True,
+                'type': 'string',
+                'var': '$Client.Endpoint.region'
+            })
+
+            # add resources
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': module,
+                'version': api_version,
+                'resources': [
+                    {'id': swagger_resource_path_to_resource_id('/codesigningaccounts/{codeSigningAccountName}/certificateprofiles/{certificateProfileName}:sign')},
+                    {'id': swagger_resource_path_to_resource_id('/codesigningaccounts/{codeSigningAccountName}/certificateprofiles/{certificateProfileName}/sign/eku')},
+                    {'id': swagger_resource_path_to_resource_id('/codesigningaccounts/{codeSigningAccountName}/certificateprofiles/{certificateProfileName}/sign/{operationId}')},
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
+
+            # modify command tree
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/code-signing/codesigningaccount/certificateprofile/sign-untitled1/eku/Leaves/list/Rename",
+                json={
+                    "name": "code-signing account certificate-profile list-eku"
+                })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/code-signing/codesigningaccount/certificateprofile/sign-untitled2/Leaves/show/Rename",
+                json={
+                    "name": "code-signing account certificate-profile sign-result"
+                })
+            self.assertTrue(rv.status_code == 200)
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/code-signing/codesigningaccount/certificateprofile/Leaves/sign/Rename",
+                json={
+                    "name": "code-signing account certificate-profile sign"
+                })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.delete(f"{ws_url}/CommandTree/Nodes/aaz/code-signing/codesigningaccount")
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/code-signing", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/code-signing/account", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/code-signing/account/certificate-profile", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
+
+            rv = c.post(f"{ws_url}/Generate")
+            self.assertTrue(rv.status_code == 200)
+
+            # create a new workspace which should inherit client config
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name + "_another",
+                "plane": PlaneEnum._Data,
+                "modNames": module,
+                "resourceProvider": resource_provider
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws2 = rv.get_json()
+            self.assertEqual(ws2['plane'], PlaneEnum.Data(resource_provider))
+            self.assertEqual(ws2['resourceProvider'], resource_provider)
+            self.assertEqual(ws2['modNames'], module)
+            ws_url2 = ws2['url']
+
+            rv = c.get(f"{ws_url2}/ClientConfig")
+            self.assertTrue(rv.status_code == 200)
+            client_config = rv.get_json()
+            self.assertEqual(client_config['endpoints']['templates'], [
+                {'cloud': 'AzureChinaCloud', 'template': 'https://{region}.codesigning.chinacloudapi.cn'},
+                {'cloud': 'AzureCloud', 'template': 'https://{region}.codesigning.azure.net'},
+                {'cloud': 'AzureGermanCloud', 'template': 'https://{region}.codesigning.cloudapi.de'},
+                {'cloud': 'AzureUSGovernment', 'template': 'https://{region}.codesigning.usgovcloudapi.us'}
+            ])
+            self.assertEqual(client_config['endpoints']['params'], [
+                {'arg': '$Client.Endpoint.region', 'name': 'region', 'required': True, 'skipUrlEncoding': True, 'type': 'string'}
+            ])
+            self.assertEqual(client_config['argGroup']['args'], [
+                {
+                    'default': {'value': 'global'},
+                    'help': {'short': 'The Azure region wherein requests for signing will be sent.'},
+                    'options': ['r', 'region'],
+                    'required': True,
+                    'type': 'string',
+                    'var': '$Client.Endpoint.region'
+                }
+            ])
+
+            rv = c.post(f"{ws_url2}/Generate")
+            self.assertTrue(rv.status_code == 200)
+
+            # test reload
+            # update in ws 1
+            rv = c.patch(f"{ws_url}/ClientConfig/Arguments/$Client.Endpoint.region", json={
+                "options": ["region"]})
+            self.assertTrue(rv.status_code == 200)
+            client_arg = rv.get_json()
+            self.assertEqual(client_arg, {
+                'default': {'value': 'global'},
+                'help': {'short': 'The Azure region wherein requests for signing will be sent.'},
+                'options': ['region'],
+                'required': True,
+                'type': 'string',
+                'var': '$Client.Endpoint.region'
+            })
+
+            rv = c.post(f"{ws_url}/Generate")
+            self.assertTrue(rv.status_code == 200)
+
+            # outdated version is not allowed
+            rv = c.post(f"{ws_url2}/Generate")
+            self.assertTrue(rv.status_code == 400)
+
+            # refresh in ws 2
+            rv = c.post(f"{ws_url2}/ClientConfig/InheritFromAAZ")
+            self.assertTrue(rv.status_code == 200)
+            client_config = rv.get_json()
+            self.assertEqual(client_config['argGroup']['args'], [
+                {
+                    'default': {'value': 'global'},
+                    'help': {'short': 'The Azure region wherein requests for signing will be sent.'},
+                    'options': ['region'],
+                    'required': True,
+                    'type': 'string',
+                    'var': '$Client.Endpoint.region'
+                }
+            ])
+
+            rv = c.post(f"{ws_url2}/Generate")
+            self.assertTrue(rv.status_code == 200)
