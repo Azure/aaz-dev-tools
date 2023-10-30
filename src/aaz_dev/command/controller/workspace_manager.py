@@ -109,7 +109,7 @@ class WorkspaceManager:
         if not os.path.exists(self.path) or not os.path.isfile(self.path):
             raise exceptions.ResourceNotFind(
                 f"Workspace json file not exist: {self.path}")
-        with open(self.path, 'r') as f:
+        with open(self.path, 'r', encoding="utf-8") as f:
             data = json.load(f)
             self.ws = CMDEditorWorkspace(raw_data=data)
 
@@ -173,7 +173,7 @@ class WorkspaceManager:
         # verify ws timestamps
         # TODO: add write lock for path file
         if os.path.exists(self.path):
-            with open(self.path, 'r') as f:
+            with open(self.path, 'r', encoding="utf-8") as f:
                 data = json.load(f)
                 pre_ws = CMDEditorWorkspace(data)
             if pre_ws.version != self.ws.version:
@@ -181,7 +181,7 @@ class WorkspaceManager:
                     f"Workspace Changed after: {self.ws.version}")
 
         self.ws.version = datetime.utcnow()
-        with open(self.path, 'w') as f:
+        with open(self.path, 'w', encoding="utf-8") as f:
             data = json.dumps(self.ws.to_primitive(), ensure_ascii=False)
             f.write(data)
 
@@ -190,7 +190,7 @@ class WorkspaceManager:
 
         for file_name, data in update_files:
             os.makedirs(os.path.dirname(file_name), exist_ok=True)
-            with open(file_name, 'w') as f:
+            with open(file_name, 'w', encoding="utf-8") as f:
                 f.write(data)
 
         self._cfg_editors = {}
