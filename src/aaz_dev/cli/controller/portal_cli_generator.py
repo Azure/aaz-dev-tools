@@ -5,6 +5,7 @@ from utils.config import Config
 import os, json, re, logging
 import jsonschema
 
+
 class PortalCliGenerator:
     COMMAND_ROOT_NAME = "az"
     DOC_ROOT_NAME = "https://docs.microsoft.com/cli/azure"
@@ -311,8 +312,8 @@ class PortalCliGenerator:
         portal_dict = {}
         cmd_dedup = set()
         for cmd_portal_info in cmd_portal_list:
-            if 'rp_name' not in cmd_portal_info or 'resourceType' not in cmd_portal_info or \
-                'apiVersion' not in cmd_portal_info or 'name' not in cmd_portal_info:
+            if ('rp_name' not in cmd_portal_info or 'resourceType' not in cmd_portal_info or
+                    'apiVersion' not in cmd_portal_info or 'name' not in cmd_portal_info):
                 continue
 
             cmd_name = cmd_portal_info['name']

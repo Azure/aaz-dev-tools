@@ -21,13 +21,13 @@ class PlaneEnum:
         # the general data-plane configuration
         _Data: {
             "displayName": "Data plane",
-            # DataPlaneClient is implemented as the default client for data plane using AAD Auth
-            "client": "DataClient",
+            # DataPlaneClient is `NOT` implemented, the client configuration with endpoints and scopes is required.
+            "client": "DataPlaneClient",
         },
         # example for special data plane configuration
         # create_data_plane_name("Microsoft.Insights"): {
         #     "displayName": "Data plane for Microsoft.Insights",
-        #     "client": "InsightDataClient",
+        #     "client": "InsightDataPlaneClient",
         #     "swagger_modules": ["monitor"],
         # }
     }

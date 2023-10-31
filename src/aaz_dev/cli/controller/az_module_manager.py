@@ -20,6 +20,7 @@ logger = logging.getLogger('backend')
 class AzModuleManager:
     _command_group_pattern = re.compile(r'^class\s+(.*)\(.*AAZCommandGroup.*\)\s*:\s*$')
     _command_pattern = re.compile(r'^class\s+(.*)\(.*AAZ(Wait)?Command.*\)\s*:\s*$')
+    _client_pattern = re.compile(r'^class\s+(.*)\(.*AAZBaseClient.*\)\s*:\s*$')
     _is_preview_param = re.compile(r'\s*is_preview\s*=\s*True\s*')
     _is_experimental_param = re.compile(r'\s*is_experimental\s*=\s*True\s*')
     _def_pattern = re.compile(r'^\s*def\s+')
@@ -72,7 +73,7 @@ class AzModuleManager:
     def update_module(self, mod_name, profiles, **kwargs):
         aaz_folder = self.get_aaz_path(mod_name)
         generators = {}
-        atomic_builder = AzAtomicProfileBuilder(by_patch=kwargs.pop('by_patch', False))
+        atomic_builder = AzAtomicProfileBuilder(mod_name=mod_name, by_patch=kwargs.pop('by_patch', False))
         for profile_name, profile in profiles.items():
             profile = atomic_builder(profile)
             generators[profile_name] = AzProfileGenerator(aaz_folder, profile)
