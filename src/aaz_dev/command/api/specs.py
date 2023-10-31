@@ -120,15 +120,3 @@ def list_planes():
             **items,
         })
     return jsonify(result)
-
-
-# # TODO: this api is called when data plane workspaces export aaz model.
-# @bp.route("/Planes/" + PlaneEnum._Data +"/{name: resource_provider}", method=("GET", "PUT"))
-# def data_plane_resource_provider_config(resource_provider):
-#     plane = PlaneEnum.Data(resource_provider)
-#     if request.method == "GET":
-#         # Get Data Plane Resource Provider Configuration
-#         pass
-#     elif request.method == "PUT":
-#         # Create or Update Data plane resource provider configuration
-#         pass
