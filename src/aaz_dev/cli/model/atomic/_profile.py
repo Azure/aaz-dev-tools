@@ -3,6 +3,7 @@ from schematics.models import Model
 from schematics.types import ModelType, DictType
 
 from ._command_group import CLIAtomicCommandGroup
+from ._client import CLIAtomicClient
 
 
 class CLIAtomicProfile(Model):
@@ -11,6 +12,11 @@ class CLIAtomicProfile(Model):
         field=ModelType(CLIAtomicCommandGroup),
         serialized_name="commandGroups",
         deserialize_from="commandGroups"
+    )
+    _clients = DictType(
+        field=ModelType(CLIAtomicClient),
+        serialized_name="clients",
+        deserialize_from="clients",
     )
 
     class Options:
@@ -24,3 +30,13 @@ class CLIAtomicProfile(Model):
             # it's not a valid python package name.
             profile_folder_name = "profile_" + profile_folder_name
         return profile_folder_name
+
+    def get_client(self, plane, name):
+        if not self._clients:
+            return None
+        return self._clients.get(f'{plane}/{name}', None)
+
+    def add_client(self, client):
+        if not self._clients:
+            self._clients = {}
+        self._clients[f'{client.plane}/{client.name}'] = client

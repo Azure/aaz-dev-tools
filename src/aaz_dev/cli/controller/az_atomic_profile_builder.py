@@ -6,7 +6,7 @@ import logging
 
 from cli.model.atomic import CLIAtomicProfile, CLIAtomicCommandGroup, CLIAtomicCommandGroupRegisterInfo, \
     CLIAtomicCommand, CLIAtomicCommandRegisterInfo, CLISpecsResource, CLICommandGroupHelp, CLICommandHelp, \
-    CLICommandExample
+    CLICommandExample, CLIAtomicClient
 from command.controller.cfg_reader import CfgReader
 from command.controller.specs_manager import AAZSpecsManager
 from command.model.configuration import CMDHttpOperation, CMDCommand, CMDArgGroup, CMDObjectOutput, \
@@ -14,13 +14,16 @@ from command.model.configuration import CMDHttpOperation, CMDCommand, CMDArgGrou
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.stage import AAZStageEnum
 from utils.exceptions import ResourceNotFind
+from utils.plane import PlaneEnum
+from utils.case import to_camel_case
 
 logger = logging.getLogger('backend')
 
 
 class AzAtomicProfileBuilder:
 
-    def __init__(self, by_patch=False):
+    def __init__(self, mod_name, by_patch=False):
+        self._mod_name = mod_name
         self._aaz_spec_manager = AAZSpecsManager()
         self._by_patch = by_patch
 
@@ -29,15 +32,20 @@ class AzAtomicProfileBuilder:
         profile.name = view_profile.name
         if view_profile.command_groups:
             cmd_groups = {}
+            cmd_clients = {}
             for name, view_cmd_group in view_profile.command_groups.items():
-                cmd_group = self._build_command_group(view_cmd_group)
+                cmd_group, clients = self._build_command_group(view_cmd_group)
                 cmd_groups[name] = cmd_group
+                cmd_clients.update(clients)
             profile.command_groups = cmd_groups
+            for client in cmd_clients.values():
+                profile.add_client(client)
         return profile
 
     def _build_command_group(self, view_command_group):
         command_group = self._build_command_group_from_aaz(*view_command_group.names)
         stages = set()
+        cmd_clients = {}
 
         if view_command_group.commands:
             # always load cfg for full generation
@@ -51,10 +59,12 @@ class AzAtomicProfileBuilder:
                         load_cfg = True
                         break
             for name, view_cmd in view_command_group.commands.items():
-                cmd = self._build_command(view_cmd, load_cfg)
+                cmd, client = self._build_command(view_cmd, load_cfg)
                 if cmd.register_info is not None:
                     stages.add(cmd.register_info.stage)
                 cmds[name] = cmd
+                cmd_clients[(client.plane, client.name)] = client
+
             command_group.commands = cmds
             if load_cfg:
                 command_group.wait_command = self._complete_command_wait_info(command_group)
@@ -67,10 +77,11 @@ class AzAtomicProfileBuilder:
         if view_command_group.command_groups:
             cmd_groups = {}
             for name, view_cmd_group in view_command_group.command_groups.items():
-                cmd_group = self._build_command_group(view_cmd_group)
+                cmd_group, clients = self._build_command_group(view_cmd_group)
                 if cmd_group.register_info is not None:
                     stages.add(cmd_group.register_info.stage)
                 cmd_groups[name] = cmd_group
+                cmd_clients.update(clients)
             command_group.command_groups = cmd_groups
 
         if AAZStageEnum.Stable in stages:
@@ -84,13 +95,14 @@ class AzAtomicProfileBuilder:
         else:
             raise NotImplementedError()
 
-        return command_group
+        return command_group, cmd_clients
 
     def _build_command(self, view_command, load_cfg):
         command = self._build_command_from_aaz(*view_command.names, version_name=view_command.version, load_cfg=load_cfg)
         if not view_command.registered:
             command.register_info = None
-        return command
+        client = self._build_client_from_aaz(plane=command.resources[0].plane)
+        return command, client
 
     def _build_command_group_from_aaz(self, *names):
         aaz_cg = self._aaz_spec_manager.find_command_group(*names)
@@ -145,6 +157,24 @@ class AzAtomicProfileBuilder:
             command.cfg = cmd_cfg
             command.register_info.confirmation = cmd_cfg.confirmation
         return command
+
+    def _build_client_from_aaz(self, plane):
+        client = CLIAtomicClient({
+            "plane": plane,
+            "name": PlaneEnum.http_client(plane)
+        })
+        if plane in PlaneEnum._config:
+            # use the clients registered in azure/cli/core/aaz/_client.py
+            client.registered_name = client.name
+        else:
+            # generate client based on client config
+            cfg_reader = self._aaz_spec_manager.load_client_cfg_reader(plane)
+            assert cfg_reader, "Missing Client config for '" + plane + "' plane."
+            client.cfg = cfg_reader.cfg
+            scope = PlaneEnum.get_data_plane_scope(plane) or plane
+            client.registered_name = (to_camel_case(f"AAZ {scope.replace('.', ' ')} {client.name}") +
+                                      f'_{self._mod_name}')  # for example: AAZAzureCodesigningDataPlaneClient_network
+        return client
 
     @classmethod
     def _complete_command_wait_info(cls, command_group):

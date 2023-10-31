@@ -493,7 +493,6 @@ class AAZSpecsManager:
             raise ValueError(f"Invalid file path: {json_path}")
         
         with open(json_path, 'r') as f:
-            #print(json_path)
             data = json.load(f)
         cfg = CMDClientConfig(data)
         return ClientCfgReader(cfg)
