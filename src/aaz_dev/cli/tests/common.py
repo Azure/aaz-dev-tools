@@ -32,6 +32,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name + '_' + api_version,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.EdgeOrder"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -365,6 +367,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name + '_' + api_version,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.EdgeOrder"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -698,6 +702,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.Databricks"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -953,6 +959,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.Databricks"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1208,6 +1216,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.Elastic"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1532,6 +1542,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.Elastic"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1856,6 +1868,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.Elastic"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -2202,6 +2216,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.Elastic"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
