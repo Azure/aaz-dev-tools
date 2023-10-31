@@ -352,7 +352,7 @@ class {{ leaf.cls_name }}(
     {%- for op in leaf.http_operations %}
 
     class {{ op.name }}(AAZHttpOperation):
-        CLIENT_TYPE = "{{ leaf.client_type }}"
+        CLIENT_TYPE = "{{ leaf.client.registered_name }}"
 
         def __call__(self, *args, **kwargs):
             request = self.make_request()
