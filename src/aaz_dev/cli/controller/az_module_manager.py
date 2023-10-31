@@ -233,7 +233,7 @@ class AzModuleManager:
         aaz_info_lines = None
         find_command = False
         is_wait_command = False
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding="utf-8") as f:
             while f.readable():
                 line = f.readline()
                 if line.startswith('@register_command('):

@@ -407,7 +407,7 @@
         </http>
       </operation>
       <operation>
-        <instanceUpdate instance="$Instance">
+        <instanceUpdate ref="$Instance">
           <json>
             <schema type="object" name="VirtualNetworkPeeringParameters" clientFlatten="True">
               <prop type="object" name="properties" required="True" clientFlatten="True">
