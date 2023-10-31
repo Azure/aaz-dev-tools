@@ -193,7 +193,27 @@ def editor_workspace_generate_example(name, node_names, leaf_name):
     if not leaf:
         raise exceptions.ResourceNotFind("Command not exist.")
 
-    manager.load_examples_by_swagger(leaf.resources[0])
+    cfg_editor = manager.load_cfg_editor_by_command(leaf)
+    command = cfg_editor.find_command(*leaf.names)
+
+    if command:
+        examples = manager.gen_examples_by_swagger(leaf, command)
+    else:
+        raise exceptions.ResourceNotFind("Command not exist")
+
+    result = command.to_primitive()
+    # manager.save()
+
+    del result['name']
+    result.update({
+        'names': leaf.names,
+        'help': leaf.help.to_primitive(),
+        'stage': leaf.stage,
+    })
+    if examples:
+        result['examples'] = [e.to_primitive() for e in leaf.examples]
+
+    return jsonify(result)
 
 
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>",

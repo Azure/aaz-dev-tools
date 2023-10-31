@@ -62,11 +62,11 @@ class SwaggerLoader:
             swagger.link(self, file_path)
             self._linked_idx += 1
 
-    def link_examples(self):
-        while self._linked_idx < len(self.loaded_swaggers):
-            file_path, swagger = [*self.loaded_swaggers.items()][self._linked_idx]
-            swagger.link_examples(self, file_path)
-            self._linked_idx += 1
+    def link_examples(self, file_path, path, operation_id):
+        swagger = self.loaded_swaggers[file_path]
+        assert swagger
+
+        swagger.link_examples(self, path, operation_id, file_path)
 
     def get_loaded(self, *traces):
         return self._loaded.get(traces, None)

@@ -6,6 +6,7 @@ from datetime import datetime
 
 from command.model.editor import CMDEditorWorkspace, CMDCommandTreeNode, CMDCommandTreeLeaf
 from swagger.controller.command_generator import CommandGenerator
+from swagger.controller.example_generator import ExampleGenerator
 from swagger.controller.specs_manager import SwaggerSpecsManager
 from swagger.utils.exceptions import InvalidSwaggerValueError
 from utils import exceptions
@@ -80,6 +81,7 @@ class WorkspaceManager:
         self._aaz_specs = aaz_manager
         self._swagger_specs = swagger_manager
         self._swagger_command_generator = None
+        self._swagger_example_generator = None
 
     @property
     def is_in_memory(self):
@@ -102,6 +104,13 @@ class WorkspaceManager:
         if not self._swagger_command_generator:
             self._swagger_command_generator = CommandGenerator()
         return self._swagger_command_generator
+
+    @property
+    def swagger_example_generator(self):
+        if not self._swagger_example_generator:
+            self._swagger_example_generator = ExampleGenerator()
+
+        return self._swagger_example_generator
 
     def load(self):
         assert not self.is_in_memory
@@ -456,6 +465,40 @@ class WorkspaceManager:
                 leaf.examples.append(example)
         return leaf
 
+    def gen_examples_by_swagger(self, leaf, command):
+        return self.generate_examples_by_swagger(command.resources[0],
+                                                 command.operations[0].operation_id,
+                                                 ' '.join(leaf.names))
+
+        # leaf.examples = swagger_examples
+        # for example in examples:
+        #     if not isinstance(example, CMDCommandExample):
+        #         example = CMDCommandExample(example)
+        #     try:
+        #         example.validate()
+        #     except Exception as err:
+        #         # if not example.get('name', None) or not isinstance(example['name'], str):
+        #         raise exceptions.InvalidAPIUsage(
+        #             f"Invalid example data: {err}")
+        #     leaf.examples.append(example)
+
+    def generate_examples_by_swagger(self, resource, operation_id, cmd_name):
+        root = self.find_command_tree_node()
+        assert root
+
+        # convert cmd resource to swagger resource
+        swagger_resource = self.swagger_specs.get_module_manager(
+            plane=self.ws.plane,
+            mod_names=self.ws.mod_names
+        ).get_resource_in_version(resource["id"], resource["version"], resource.rp_name)
+
+        # load swagger resource
+        self.swagger_example_generator.load_examples(swagger_resource, operation_id)
+
+        examples = self.swagger_example_generator.create_draft_examples(swagger_resource, operation_id, cmd_name)
+
+        return examples
+
     def rename_command_tree_node(self, *node_names, new_node_names):
         new_name = ' '.join(new_node_names)
         if not new_name:
@@ -521,19 +564,6 @@ class WorkspaceManager:
             idx += 1
             new_name = f"{name}-untitled{idx}"
         return new_name
-
-    def load_examples_by_swagger(self, resource):
-        root = self.find_command_tree_node()
-        assert root
-
-        # convert cmd resource to swagger resource
-        swagger_resource = self.swagger_specs.get_module_manager(
-            plane=self.ws.plane,
-            mod_names=self.ws.mod_names
-        ).get_resource_in_version(resource["id"], resource["version"], resource.rp_name)
-
-        # load swagger resource
-        self.swagger_command_generator.load_examples(swagger_resource)
 
     def add_new_resources_by_swagger(self, mod_names, version, resources):
         root_node = self.find_command_tree_node()
