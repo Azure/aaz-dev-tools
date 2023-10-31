@@ -135,9 +135,11 @@ class AzProfileGenerator:
         assert isinstance(command.cfg, CMDCommand)
         file_name = self._command_file_name(command.names[-1])
         tmpl = get_templates()['aaz']['command']['_cmd.py']
+        client = self.profile.get_client(command)
+        assert client is not None
         try:
             data = tmpl.render(
-                leaf=AzCommandGenerator(command, is_wait=is_wait)
+                leaf=AzCommandGenerator(command, client, is_wait=is_wait)
             )
         except exceptions.InvalidAPIUsage as err:
             err.message = f"CommandGenerationError: {' '.join(command.names)}: {err.message}"

@@ -1,10 +1,9 @@
-from cli.model.atomic import CLIAtomicCommand
+from cli.model.atomic import CLIAtomicCommand, CLIAtomicClient
 from command.model.configuration import CMDCommand, CMDHttpOperation, CMDCondition, CMDConditionAndOperator, \
     CMDConditionOrOperator, CMDConditionNotOperator, CMDConditionHasValueOperator, CMDInstanceUpdateOperation, \
     CMDJsonInstanceUpdateAction, CMDResourceGroupNameArg, CMDJsonSubresourceSelector, CMDInstanceCreateOperation, \
     CMDInstanceDeleteOperation, CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction
 from utils.case import to_camel_case, to_snake_case
-from utils.plane import PlaneEnum
 from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator, \
     AzGenericUpdateOperationGenerator, AzRequestClsGenerator, AzResponseClsGenerator, \
     AzInstanceUpdateOperationGenerator, AzLifeCycleInstanceUpdateCallbackGenerator, AzJsonCreateOperationGenerator, \
@@ -123,10 +122,11 @@ class AzCommandGenerator:
 
     ARGS_SCHEMA_NAME = "_args_schema"
 
-    def __init__(self, cmd: CLIAtomicCommand, is_wait=False):
+    def __init__(self, cmd: CLIAtomicCommand, client: CLIAtomicClient, is_wait=False):
         self.cmd = cmd
         self.is_wait = is_wait
         self.cmd_ctx = AzCommandCtx()
+        self.client = client
 
         if cmd.names[-1] in ("create", "list"):
             # disable id part for create and list command
@@ -140,6 +140,10 @@ class AzCommandGenerator:
 
         # prepare arguments
         self.arg_groups = []
+        if self.client.cfg and self.client.cfg.arg_group and self.client.cfg.arg_group.args:
+            # add client args
+            self.arg_groups.append(AzArgGroupGenerator(self.ARGS_SCHEMA_NAME, self.cmd_ctx, self.client.cfg.arg_group))
+
         if self.cmd.cfg.arg_groups:
             for arg_group in self.cmd.cfg.arg_groups:
                 if arg_group.args:
@@ -170,7 +174,8 @@ class AzCommandGenerator:
                 op_cls_name = to_camel_case(operation.operation_id)
                 if operation.long_running:
                     lr = True
-                op = AzHttpOperationGenerator(op_cls_name, self.cmd_ctx, operation)
+                client_endpoints = self.client.cfg.endpoints if self.client.cfg else None
+                op = AzHttpOperationGenerator(op_cls_name, self.cmd_ctx, operation, client_endpoints=client_endpoints)
                 self.http_operations.append(op)
             elif isinstance(operation, CMDInstanceUpdateOperation):
                 if isinstance(operation.instance_update, CMDJsonInstanceUpdateAction):
@@ -288,9 +293,6 @@ class AzCommandGenerator:
                 self.plane = resource.plane
             elif resource.plane != self.plane:
                 raise ValueError(f"Find multiple planes in a command: {resource.plane}, {self.plane}")
-
-        self.client_type = PlaneEnum.http_client(self.plane)
-        # TODO: add support for DataPlaneClient client_type
 
         # prepare outputs
         self.outputs = []

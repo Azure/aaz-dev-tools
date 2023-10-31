@@ -1,9 +1,11 @@
-from cli.model.common._fields import CLIProfileNameField
 from schematics.models import Model
 from schematics.types import ModelType, DictType
 
 from ._command_group import CLIAtomicCommandGroup
 from ._client import CLIAtomicClient
+from cli.model.common._fields import CLIProfileNameField
+
+from utils.plane import PlaneEnum
 
 
 class CLIAtomicProfile(Model):
@@ -31,9 +33,11 @@ class CLIAtomicProfile(Model):
             profile_folder_name = "profile_" + profile_folder_name
         return profile_folder_name
 
-    def get_client(self, plane, name):
+    def get_client(self, command):
         if not self._clients:
             return None
+        plane = command.resources[0].plane
+        name = PlaneEnum.http_client(plane)
         return self._clients.get(f'{plane}/{name}', None)
 
     def add_client(self, client):

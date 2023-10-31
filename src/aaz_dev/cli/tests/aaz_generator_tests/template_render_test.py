@@ -2,8 +2,9 @@ import os
 
 from cli.templates import get_templates
 from cli.tests.common import CommandTestCase
-from cli.model.atomic import CLIAtomicCommandGroup, CLIAtomicCommand
+from cli.model.atomic import CLIAtomicCommandGroup, CLIAtomicCommand, CLIAtomicClient
 from utils.stage import AAZStageEnum
+from utils.plane import PlaneEnum
 import json
 from command.model.specs import CMDSpecsCommandTree
 from command.model.configuration import CMDConfiguration, XMLSerializer
@@ -84,8 +85,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -127,8 +133,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -170,8 +181,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -213,8 +229,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -256,8 +277,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -300,8 +326,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -343,8 +374,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -386,8 +422,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -429,8 +470,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -472,8 +518,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -516,8 +567,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -559,8 +615,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -602,8 +663,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -645,8 +711,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -688,8 +759,13 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
