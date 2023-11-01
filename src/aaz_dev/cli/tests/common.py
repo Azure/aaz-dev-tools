@@ -3,6 +3,7 @@ from command.tests.common import workspace_name
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.plane import PlaneEnum
 from utils.stage import AAZStageEnum
+from utils.client import CloudEnum
 
 
 class CommandTestCase(ApiTestCase):
@@ -14,15 +15,20 @@ class CommandTestCase(ApiTestCase):
     #     self.prepare_aaz()
 
     def prepare_aaz(self):
+        # mgmt plane
         self.prepare_edge_order_aaz_2020_12_01_preview()
         self.prepare_edge_order_aaz_2021_12_01()
-        self.prepare_databricks_aaz_2018_04_01()
-        self.prepare_databricks_aaz_2021_04_01_preview()
+        # self.prepare_databricks_aaz_2018_04_01()
+        # self.prepare_databricks_aaz_2021_04_01_preview()
+        #
+        # self.prepare_elastic_aaz_2020_07_01_preview()
+        # self.prepare_elastic_aaz_2020_07_01()
+        # self.prepare_elastic_aaz_2021_09_01_preview()
+        # self.prepare_elastic_aaz_2021_10_01_preview()
 
-        self.prepare_elastic_aaz_2020_07_01_preview()
-        self.prepare_elastic_aaz_2020_07_01()
-        self.prepare_elastic_aaz_2021_09_01_preview()
-        self.prepare_elastic_aaz_2021_10_01_preview()
+        # data plane
+        self.prepare_codesigning_aaz_2023_06_15_preview()
+        self.prepare_monitor_metrics_aaz_2023_05_01_preview()
 
     @workspace_name("prepare_edge_order_aaz_2020_12_01_preview")
     def prepare_edge_order_aaz_2020_12_01_preview(self, ws_name):
@@ -32,6 +38,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name + '_' + api_version,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.EdgeOrder"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -365,6 +373,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name + '_' + api_version,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.EdgeOrder"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -698,6 +708,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.Databricks"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -953,6 +965,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.Databricks"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1208,6 +1222,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.Elastic"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1532,6 +1548,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.Elastic"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1856,6 +1874,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.Elastic"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -2202,6 +2222,8 @@ class CommandTestCase(ApiTestCase):
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.Elastic"
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -2583,6 +2605,259 @@ class CommandTestCase(ApiTestCase):
                 ]
             })
             self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/Generate")
+            self.assertTrue(rv.status_code == 200)
+
+    @workspace_name("prepare_codesigning_aaz_2023_06_15_preview")
+    def prepare_codesigning_aaz_2023_06_15_preview(self, ws_name):
+        module = "codesigning"
+        resource_provider = "Azure.CodeSigning"
+        api_version = '2023-06-15-preview'
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum._Data,
+                "modNames": module,
+                "resourceProvider": resource_provider
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws = rv.get_json()
+            self.assertEqual(ws['plane'], PlaneEnum.Data(resource_provider))
+            self.assertEqual(ws['resourceProvider'], resource_provider)
+            self.assertEqual(ws['modNames'], module)
+            ws_url = ws['url']
+
+            # add client configuration
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://codesigning.azure.net/.default"]
+                    }
+                },
+                "templates": [
+                    {
+                        "cloud": CloudEnum.AzureCloud,
+                        "template": "https://{region}.codesigning.azure.net/"
+                    },
+                    {
+                        "cloud": CloudEnum.AzureChinaCloud,
+                        "template": "https://{region}.codesigning.chinacloudapi.cn"
+                    },
+                    {
+                        "cloud": CloudEnum.AzureUSGovernment,
+                        "template": "https://{region}.codesigning.usgovcloudapi.us"
+                    },
+                    {
+                        "cloud": CloudEnum.AzureGermanCloud,
+                        "template": "https://{region}.codesigning.cloudapi.de"
+                    },
+                ],
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            client_config = rv.get_json()
+            self.assertEqual(client_config['endpoints']['templates'], [
+                {'cloud': 'AzureChinaCloud', 'template': 'https://{region}.codesigning.chinacloudapi.cn'},
+                {'cloud': 'AzureCloud', 'template': 'https://{region}.codesigning.azure.net'},
+                {'cloud': 'AzureGermanCloud', 'template': 'https://{region}.codesigning.cloudapi.de'},
+                {'cloud': 'AzureUSGovernment', 'template': 'https://{region}.codesigning.usgovcloudapi.us'}
+            ])
+            self.assertEqual(client_config['endpoints']['params'], [
+                {'arg': '$Client.Endpoint.region', 'name': 'region', 'required': True, 'skipUrlEncoding': True, 'type': 'string'}
+            ])
+            self.assertEqual(client_config['argGroup']['args'], [
+                {'options': ['region'], 'required': True, 'type': 'string', 'var': '$Client.Endpoint.region'}
+            ])
+
+            # update client arguments
+            rv = c.get(f"{ws_url}/ClientConfig/Arguments/$Client.Endpoint.region")
+            self.assertTrue(rv.status_code == 200)
+            client_arg = rv.get_json()
+            self.assertEqual(client_arg, {'options': ['region'], 'required': True, 'type': 'string', 'var': '$Client.Endpoint.region'})
+            rv = c.patch(f"{ws_url}/ClientConfig/Arguments/$Client.Endpoint.region", json={
+                "options": ["region", "r"],
+                "default": {
+                    "value": "global"
+                },
+                "help": {
+                    "short": "The Azure region wherein requests for signing will be sent."
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+            client_arg = rv.get_json()
+            self.assertEqual(client_arg, {
+                'default': {'value': 'global'},
+                'help': {'short': 'The Azure region wherein requests for signing will be sent.'},
+                'options': ['r', 'region'],
+                'required': True,
+                'type': 'string',
+                'var': '$Client.Endpoint.region'
+            })
+
+            # add resources
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': module,
+                'version': api_version,
+                'resources': [
+                    {'id': swagger_resource_path_to_resource_id('/codesigningaccounts/{codeSigningAccountName}/certificateprofiles/{certificateProfileName}:sign')},
+                    {'id': swagger_resource_path_to_resource_id('/codesigningaccounts/{codeSigningAccountName}/certificateprofiles/{certificateProfileName}/sign/eku')},
+                    {'id': swagger_resource_path_to_resource_id('/codesigningaccounts/{codeSigningAccountName}/certificateprofiles/{certificateProfileName}/sign/{operationId}')},
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
+
+            # modify command tree
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/code-signing/codesigningaccount/certificateprofile/sign-untitled1/eku/Leaves/list/Rename",
+                json={
+                    "name": "code-signing account certificate-profile list-eku"
+                })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/code-signing/codesigningaccount/certificateprofile/sign-untitled2/Leaves/show/Rename",
+                json={
+                    "name": "code-signing account certificate-profile sign-result"
+                })
+            self.assertTrue(rv.status_code == 200)
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/code-signing/codesigningaccount/certificateprofile/Leaves/sign/Rename",
+                json={
+                    "name": "code-signing account certificate-profile sign"
+                })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.delete(f"{ws_url}/CommandTree/Nodes/aaz/code-signing/codesigningaccount")
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/code-signing", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/code-signing/account", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/code-signing/account/certificate-profile", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
+
+            rv = c.post(f"{ws_url}/Generate")
+            self.assertTrue(rv.status_code == 200)
+
+    @workspace_name("prepare_monitor_metrics_aaz_2023_05_01_preview")
+    def prepare_monitor_metrics_aaz_2023_05_01_preview(self, ws_name):
+        module = "monitor"
+        resource_provider = "Microsoft.Insights"
+        api_version = '2023-05-01-preview'
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum._Data,
+                "modNames": module,
+                "resourceProvider": resource_provider
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws = rv.get_json()
+            self.assertEqual(ws['plane'], PlaneEnum.Data(resource_provider))
+            self.assertEqual(ws['resourceProvider'], resource_provider)
+            self.assertEqual(ws['modNames'], module)
+            ws_url = ws['url']
+
+            # add client configuration
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://metrics.monitor.azure.com/.default"]
+                    }
+                },
+                "templates": [
+                    {
+                        "cloud": CloudEnum.AzureCloud,
+                        "template": "https://{region}.metrics.monitor.azure.com/"
+                    },
+                    {
+                        "cloud": CloudEnum.AzureChinaCloud,
+                        "template": "https://{region}.metrics.monitor.chinacloudapi.cn"
+                    },
+                    {
+                        "cloud": CloudEnum.AzureUSGovernment,
+                        "template": "https://{region}.metrics.monitor.usgovcloudapi.us"
+                    },
+                    {
+                        "cloud": CloudEnum.AzureGermanCloud,
+                        "template": "https://{region}.metrics.monitor.cloudapi.de"
+                    },
+                ],
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            # update client arguments
+            rv = c.get(f"{ws_url}/ClientConfig/Arguments/$Client.Endpoint.region")
+            self.assertTrue(rv.status_code == 200)
+            client_arg = rv.get_json()
+            self.assertEqual(client_arg, {'options': ['region'], 'required': True, 'type': 'string',
+                                          'var': '$Client.Endpoint.region'})
+
+            # add resources
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': module,
+                'version': api_version,
+                'resources': [
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{}/metrics:getbatch')},
+                ]
+            })
+
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
+
+            # modify command tree
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/insights/Leaves/metricsget-batch/Rename", json={
+                "name": "monitor metrics get-batch"
+            })
+            self.assertTrue(rv.status_code == 200)
+            rv = c.delete(f"{ws_url}/CommandTree/Nodes/aaz/insights")
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/monitor", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/monitor/metrics", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
 
             rv = c.post(f"{ws_url}/Generate")
             self.assertTrue(rv.status_code == 200)

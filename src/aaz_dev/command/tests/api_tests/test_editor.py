@@ -2174,3 +2174,102 @@ class APIEditorTest(CommandTestCase):
 
             rv = c.post(f"{ws_url2}/Generate")
             self.assertTrue(rv.status_code == 200)
+
+    @workspace_name("test_dataplane_monitor_metrics")
+    def test_dataplane_monitor_metrics(self, ws_name):
+        module = "monitor"
+        resource_provider = "Microsoft.Insights"
+        api_version = '2023-05-01-preview'
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum._Data,
+                "modNames": module,
+                "resourceProvider": resource_provider
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws = rv.get_json()
+            self.assertEqual(ws['plane'], PlaneEnum.Data(resource_provider))
+            self.assertEqual(ws['resourceProvider'], resource_provider)
+            self.assertEqual(ws['modNames'], module)
+            ws_url = ws['url']
+
+            # add client configuration
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://metrics.monitor.azure.com/.default"]
+                    }
+                },
+                "templates": [
+                    {
+                        "cloud": CloudEnum.AzureCloud,
+                        "template": "https://{region}.metrics.monitor.azure.com/"
+                    },
+                    {
+                        "cloud": CloudEnum.AzureChinaCloud,
+                        "template": "https://{region}.metrics.monitor.chinacloudapi.cn"
+                    },
+                    {
+                        "cloud": CloudEnum.AzureUSGovernment,
+                        "template": "https://{region}.metrics.monitor.usgovcloudapi.us"
+                    },
+                    {
+                        "cloud": CloudEnum.AzureGermanCloud,
+                        "template": "https://{region}.metrics.monitor.cloudapi.de"
+                    },
+                ],
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            # update client arguments
+            rv = c.get(f"{ws_url}/ClientConfig/Arguments/$Client.Endpoint.region")
+            self.assertTrue(rv.status_code == 200)
+            client_arg = rv.get_json()
+            self.assertEqual(client_arg, {'options': ['region'], 'required': True, 'type': 'string',
+                                          'var': '$Client.Endpoint.region'})
+
+            # add resources
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': module,
+                'version': api_version,
+                'resources': [
+                    {'id': swagger_resource_path_to_resource_id(
+                        '/subscriptions/{}/metrics:getbatch')},
+                ]
+            })
+
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
+
+            # modify command tree
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/insights/Leaves/metricsget-batch/Rename", json={
+                "name": "monitor metrics get-batch"
+            })
+            self.assertTrue(rv.status_code == 200)
+            rv = c.delete(f"{ws_url}/CommandTree/Nodes/aaz/insights")
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/monitor", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/monitor/metrics", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
+
+            rv = c.post(f"{ws_url}/Generate")
+            self.assertTrue(rv.status_code == 200)

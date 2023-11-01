@@ -5,6 +5,7 @@ from utils.config import Config
 import os, json, re, logging
 import jsonschema
 
+
 class PortalCliGenerator:
     COMMAND_ROOT_NAME = "az"
     DOC_ROOT_NAME = "https://docs.microsoft.com/cli/azure"
@@ -304,15 +305,15 @@ class PortalCliGenerator:
                 if not self.valid_portal_json_format(resource_info):
                     logging.info("json format error")
                     continue
-                with open(resource_file_path, "w") as f_out:
+                with open(resource_file_path, "w", encoding='utf-8') as f_out:
                     f_out.write(json.dumps(resource_info, indent=4))
 
     def generate_cmds_portal_file(self, cmd_portal_list):
         portal_dict = {}
         cmd_dedup = set()
         for cmd_portal_info in cmd_portal_list:
-            if 'rp_name' not in cmd_portal_info or 'resourceType' not in cmd_portal_info or \
-                'apiVersion' not in cmd_portal_info or 'name' not in cmd_portal_info:
+            if ('rp_name' not in cmd_portal_info or 'resourceType' not in cmd_portal_info or
+                    'apiVersion' not in cmd_portal_info or 'name' not in cmd_portal_info):
                 continue
 
             cmd_name = cmd_portal_info['name']

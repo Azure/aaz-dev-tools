@@ -1470,7 +1470,7 @@
         </http>
       </operation>
       <operation>
-        <instanceUpdate instance="$Instance">
+        <instanceUpdate ref="$Instance">
           <json>
             <schema type="object" name="automationRuleToUpsert" clientFlatten="True">
               <prop type="string" name="etag" arg="$automationRuleToUpsert.etag"/>

@@ -1,1 +1,6 @@
 {% extends "python.j2" %}
+{% block imports %}
+{%- if has_clients %}
+from ._clients import *
+{%- endif %}
+{% endblock %}

@@ -41,9 +41,11 @@ class AzLifeCycleInstanceUpdateCallbackGenerator(AzLifeCycleCallbackGenerator):
 
 class AzHttpOperationGenerator(AzOperationGenerator):
 
-    def __init__(self, name, cmd_ctx, operation):
+    def __init__(self, name, cmd_ctx, operation, client_endpoints):
         super().__init__(name, cmd_ctx, operation)
         assert isinstance(self._operation, CMDHttpOperation)
+
+        self.client_endpoints = client_endpoints
 
         if self._operation.long_running is not None:
             self.is_long_running = True
@@ -128,10 +130,27 @@ class AzHttpOperationGenerator(AzOperationGenerator):
 
     @property
     def url_parameters(self):
+        parameters = []
+        # add params in client endpoints
+        if self.client_endpoints and self.client_endpoints.params:
+            for param in self.client_endpoints.params:
+                kwargs = {}
+                if param.skip_url_encoding:
+                    kwargs['skip_quote'] = True
+                if param.required:
+                    kwargs['required'] = param.required
+                arg_key, hide = self._cmd_ctx.get_argument(param.arg)
+                if not hide:
+                    parameters.append([
+                        param.name,
+                        arg_key,
+                        False,
+                        kwargs
+                    ])
+        # add params in client path
         path = self._operation.http.request.path
         if not path:
-            return None
-        parameters = []
+            return parameters or None
         if path.params:
             for param in path.params:
                 kwargs = {}
@@ -161,7 +180,8 @@ class AzHttpOperationGenerator(AzOperationGenerator):
                     True,
                     kwargs
                 ])
-        return parameters
+
+        return parameters or None
 
     @property
     def query_parameters(self):
