@@ -13,7 +13,7 @@ class CliExtensionTemplateRenderTest(CommandTestCase):
         data = tmpl.render()
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name, "HISTORY.rst")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         tmpl = get_templates()['extension']['README.md']
@@ -22,14 +22,14 @@ class CliExtensionTemplateRenderTest(CommandTestCase):
         )
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name, "README.md")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         tmpl = get_templates()['extension']['setup.cfg']
         data = tmpl.render()
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name, "setup.cfg")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         tmpl = get_templates()['extension']['setup.py']
@@ -38,7 +38,7 @@ class CliExtensionTemplateRenderTest(CommandTestCase):
         )
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name, "setup.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     def test_render_azext_base(self):
@@ -52,7 +52,7 @@ class CliExtensionTemplateRenderTest(CommandTestCase):
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name,
                                    azext_name, "__init__.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         tmpl = get_templates()['extension']['azext_']['_help.py']
@@ -60,7 +60,7 @@ class CliExtensionTemplateRenderTest(CommandTestCase):
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name,
                                    azext_name, "_help.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         tmpl = get_templates()['extension']['azext_']['_params.py']
@@ -68,7 +68,7 @@ class CliExtensionTemplateRenderTest(CommandTestCase):
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name,
                                    azext_name, "_params.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         tmpl = get_templates()['extension']['azext_']['commands.py']
@@ -76,7 +76,7 @@ class CliExtensionTemplateRenderTest(CommandTestCase):
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name,
                                    azext_name, "commands.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         tmpl = get_templates()['extension']['azext_']['custom.py']
@@ -84,7 +84,7 @@ class CliExtensionTemplateRenderTest(CommandTestCase):
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name,
                                    azext_name, "custom.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         # tmpl = get_templates()['extension']['azext_']['azext_metadata.json']
@@ -94,7 +94,7 @@ class CliExtensionTemplateRenderTest(CommandTestCase):
         # output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name,
         #                            azext_name, "azext_metadata.json")
         # os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        # with open(output_path, 'w') as f:
+        # with open(output_path, 'w', encoding='utf-8') as f:
         #     f.write(data)
 
     def test_render_azext_tests(self):
@@ -106,7 +106,7 @@ class CliExtensionTemplateRenderTest(CommandTestCase):
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name,
                                    azext_name, "tests", "__init__.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         tmpl = get_templates()['extension']['azext_']['tests']['profile']['__init__.py']
@@ -116,7 +116,7 @@ class CliExtensionTemplateRenderTest(CommandTestCase):
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name,
                                    azext_name, "tests", profile, "__init__.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         name = "aaz_render"
@@ -126,5 +126,5 @@ class CliExtensionTemplateRenderTest(CommandTestCase):
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", mod_name,
                                    azext_name, "tests", profile, f"test_{name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)

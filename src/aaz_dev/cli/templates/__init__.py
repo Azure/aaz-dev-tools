@@ -15,6 +15,7 @@ def get_templates():
                 '__init__.py': env.get_template("aaz/__init__.py.j2"),
                 'profile': {
                     '__init__.py': env.get_template("aaz/profile/__init__.py.j2"),
+                    '_clients.py': env.get_template("aaz/profile/_clients.py.j2"),
                 },
                 'group': {
                     '__cmd_group.py': env.get_template("aaz/group/__cmd_group.py.j2"),

@@ -44,3 +44,7 @@ class CLIAtomicProfile(Model):
         if not self._clients:
             self._clients = {}
         self._clients[f'{client.plane}/{client.name}'] = client
+
+    @property
+    def clients(self):
+        return [*self._clients.values()]
