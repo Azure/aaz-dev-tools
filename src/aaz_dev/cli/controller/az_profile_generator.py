@@ -4,6 +4,7 @@ from cli.templates import get_templates
 from command.model.configuration import CMDCommand
 from utils.case import to_snake_case
 from .az_command_generator import AzCommandGenerator
+from .az_client_generator import AzClientsGenerator
 from utils import exceptions
 
 
@@ -30,12 +31,14 @@ class AzProfileGenerator:
             # remove the whole aaz/{profile}
             self._delete_folder(self.profile_folder_name)
         else:
-            # check aaz/{profile}/__init__.py
+            # generate clients
+            # aaz/{profile}/_clients.py
+            has_clients = self._generate_by_clients(self.profile_folder_name, self.profile.clients)
+            # aaz/{profile}/__init__.py
             file_name = '__init__.py'
-            if not self._exist_file(self.profile_folder_name, file_name):
-                tmpl = get_templates()['aaz']['profile'][file_name]
-                data = tmpl.render()
-                self._update_file(self.profile_folder_name, file_name, data=data)
+            tmpl = get_templates()['aaz']['profile'][file_name]
+            data = tmpl.render(has_clients=has_clients)
+            self._update_file(self.profile_folder_name, file_name, data=data)
 
             remain_folders, _ = self._list_package(self.profile_folder_name)
             for command_group in self.profile.command_groups.values():
@@ -62,7 +65,7 @@ class AzProfileGenerator:
                 pass
         for path, data in self._modified_files.items():
             os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, 'w') as f:
+            with open(path, 'w', encoding='utf-8') as f:
                 f.write(data)
         self._removed_folders = set()
         self._removed_files = set()
@@ -146,6 +149,22 @@ class AzProfileGenerator:
             raise err
         self._update_file(
             profile_folder_name, *self._command_group_folder_names(*command.names[:-1]), file_name, data=data)
+
+    def _generate_by_clients(self, profile_folder_name, clients):
+        generator = AzClientsGenerator(clients)
+        if generator.is_empty():
+            self._delete_file(profile_folder_name, '_clients.py')
+            return False
+        tmpl = get_templates()['aaz']['profile']['_clients.py']
+        try:
+            data = tmpl.render(
+                leaf=generator
+            )
+        except exceptions.InvalidAPIUsage as err:
+            err.message = f"AzClientsGenerator: {err.message}"
+            raise err
+        self._update_file(profile_folder_name, '_clients.py', data=data)
+        return True
 
     # folder operations
     def _get_path(self, *names):

@@ -16,35 +16,35 @@ class CliMainTemplateRenderTest(CommandTestCase):
         )
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", pkg_name, "__init__.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         tmpl = get_templates()['main']['_help.py']
         data = tmpl.render()
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", pkg_name, "_help.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         tmpl = get_templates()['main']['_params.py']
         data = tmpl.render()
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", pkg_name, "_params.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         tmpl = get_templates()['main']['commands.py']
         data = tmpl.render()
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", pkg_name, "commands.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         tmpl = get_templates()['main']['custom.py']
         data = tmpl.render()
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", pkg_name, "custom.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     def test_render_tests(self):
@@ -57,7 +57,7 @@ class CliMainTemplateRenderTest(CommandTestCase):
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", pkg_name, "tests",
                                    "__init__.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         tmpl = get_templates()['main']['tests']['profile']['__init__.py']
@@ -65,7 +65,7 @@ class CliMainTemplateRenderTest(CommandTestCase):
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", pkg_name, "tests", profile,
                                    "__init__.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
         name = "aaz_render"
@@ -74,5 +74,5 @@ class CliMainTemplateRenderTest(CommandTestCase):
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", pkg_name, "tests", profile,
                                    f"test_{name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)

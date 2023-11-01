@@ -15,7 +15,7 @@ from swagger.utils.tools import swagger_resource_path_to_resource_id
 from utils.stage import AAZStageEnum
 from utils.exceptions import ResourceNotFind
 from utils.plane import PlaneEnum
-from utils.case import to_camel_case
+from utils.case import to_camel_case, to_snake_case
 
 logger = logging.getLogger('backend')
 
@@ -173,7 +173,7 @@ class AzAtomicProfileBuilder:
             client.cfg = cfg_reader.cfg
             scope = PlaneEnum.get_data_plane_scope(plane) or plane
             client.registered_name = (to_camel_case(f"AAZ {scope.replace('.', ' ')} {client.name}") +
-                                      f'_{self._mod_name}')  # for example: AAZAzureCodesigningDataPlaneClient_network
+                                      f'_{to_snake_case(self._mod_name)}')  # for example: AAZAzureCodesigningDataPlaneClient_network
         return client
 
     @classmethod

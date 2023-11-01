@@ -25,7 +25,7 @@ class CliMainManagerTest(CommandTestCase):
         for file_path, file_data in manager._patch_module(mod_name):
             file_path = os.path.abspath(file_path).replace(mod_path, output_folder)
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            with open(file_path, 'w') as f:
+            with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(file_data)
 
     def test_patch_module_with_special_args(self):
@@ -37,6 +37,6 @@ class CliMainManagerTest(CommandTestCase):
         for file_path, file_data in manager._patch_module(mod_name):
             file_path = os.path.abspath(file_path).replace(mod_path, output_folder)
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            with open(file_path, 'w') as f:
+            with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(file_data)
 

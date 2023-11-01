@@ -83,7 +83,7 @@ class AzModuleManager:
             generator.save()
         for patch_file, file_data in self._patch_module(mod_name):
             os.makedirs(os.path.dirname(patch_file), exist_ok=True)
-            with open(patch_file, 'w') as f:
+            with open(patch_file, 'w', encoding='utf-8') as f:
                 f.write(file_data)
         module = CLIModule()
         module.name = mod_name
@@ -100,7 +100,7 @@ class AzModuleManager:
         if not os.path.exists(file) or not os.path.isfile(file):
             raise exceptions.InvalidAPIUsage(f"Patch Module failed: Cannot find file: {file}")
 
-        with open(file, 'r') as f:
+        with open(file, 'r', encoding='utf-8') as f:
             lines = f.read().split('\n')
 
         start_line = None
@@ -206,7 +206,7 @@ class AzModuleManager:
 
         register_info_lines = None
         find_command_group = False
-        with open(cmd_group_file, 'r') as f:
+        with open(cmd_group_file, 'r', encoding='utf-8') as f:
             while f.readable():
                 line = f.readline()
                 if line.startswith('@register_command_group('):
@@ -407,7 +407,7 @@ class AzMainManager(AzModuleManager):
         # written files
         for path, data in new_files.items():
             os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, 'w') as f:
+            with open(path, 'w', encoding='utf-8') as f:
                 f.write(data)
 
         module = CLIModule()
@@ -511,7 +511,7 @@ class AzExtensionManager(AzModuleManager):
         ext_path = self.get_mod_ext_path(mod_name)
         metadata_path = os.path.join(ext_path, 'azext_metadata.json')
         if os.path.exists(metadata_path):
-            with open(metadata_path, 'r') as f:
+            with open(metadata_path, 'r', encoding='utf-8') as f:
                 metadata = json.load(f)
             if "azext.minCliCoreVersion" not in metadata or \
                     version.parse(metadata["azext.minCliCoreVersion"]) < Config.MIN_CLI_CORE_VERSION:
@@ -526,7 +526,7 @@ class AzExtensionManager(AzModuleManager):
     def update_module(self, mod_name, profiles, **kwargs):
         module = super().update_module(mod_name, profiles, **kwargs)
         file_path, ext_metadata = self.create_or_update_mod_azext_metadata(mod_name)
-        with open(file_path, 'w') as f:
+        with open(file_path, 'w', encoding='utf-8') as f:
             f.write(json.dumps(ext_metadata, indent=4, sort_keys=True))
         return module
 
@@ -652,7 +652,7 @@ class AzExtensionManager(AzModuleManager):
         # written files
         for path, data in new_files.items():
             os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, 'w') as f:
+            with open(path, 'w', encoding='utf-8') as f:
                 f.write(data)
 
         module = CLIModule()
