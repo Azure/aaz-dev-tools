@@ -36,7 +36,5 @@ class CLIAtomicCommand(Model):
         deserialize_from="supportNoWait",
     )
 
-    client_type = StringType()
-
     class Options:
         serialize_when_none = False
