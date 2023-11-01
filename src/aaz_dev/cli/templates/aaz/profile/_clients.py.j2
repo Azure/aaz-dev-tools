@@ -6,11 +6,9 @@
 
 {% block imports %}
 from azure.cli.core.aaz import *
-from azure.cli.core.cloud import CloudNameEnum
 {% endblock %}
 
 {% block code %}
-{{ "" }}
 {%- for client in leaf.iter_clients() %}
 
 @register_client({{ client.registered_name|constant_convert }})
@@ -39,7 +37,7 @@ class {{ client.registered_name }}(AAZBaseClient):
             credential_scopes=cls._AAD_CREDENTIAL_SCOPES,
             **kwargs
         )
-
+{{ "" }}
 {%- endfor %}
 
 __all__ = [
