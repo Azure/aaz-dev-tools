@@ -1115,7 +1115,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
                             edge="start"
                             color="inherit"
                             onClick={this.onAddExampleCommand}
-                            aria-label="remove"
+                            aria-label="add"
                         >
                             <AddCircleRoundedIcon fontSize="small" />
                         </IconButton>
