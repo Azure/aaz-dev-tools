@@ -41,6 +41,10 @@ interface Command {
     clsArgDefineMap?: ClsArgDefinitionMap
 }
 
+interface ClientConfig {
+    args?: CMDArg[]
+}
+
 interface ResponseCommand {
     names: string[],
     help?: {
@@ -67,16 +71,16 @@ interface WSEditorCommandContentProps {
 }
 
 interface WSEditorCommandContentState {
-    command?: Command
-    displayCommandDialog: boolean
-    displayExampleDialog: boolean
-    displayCommandDeleteDialog: boolean
-    displayAddSubcommandDialog: boolean
+    command?: Command,
+    displayCommandDialog: boolean,
+    displayExampleDialog: boolean,
+    displayCommandDeleteDialog: boolean,
+    displayAddSubcommandDialog: boolean,
     subcommandDefaultGroupNames?: string[],
     subcommandArgVar?: string,
     subcommandSubArgOptions?: { var: string, options: string }[],
-    exampleIdx?: number
-    loading: boolean
+    exampleIdx?: number,
+    loading: boolean,
 }
 
 const commandPrefix = 'az '
@@ -134,7 +138,6 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         let { workspaceUrl, previewCommand } = this.props
         let commandNames = previewCommand.names;
         const leafUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + commandNames.slice(0, -1).join('/') + '/Leaves/' + commandNames[commandNames.length - 1];
-        
         try {
             let res = await axios.get(leafUrl);
             let command = DecodeResponseCommand(res.data);
@@ -147,6 +150,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         } catch (err: any) {
             this.setState({ loading: false })
             console.error(err)
+            return
         }
     }
 
@@ -539,7 +543,7 @@ function CommandDeleteDialog(props: {
         Promise.all(promisesAll)
             .then(responses => {
                 const commands = new Set<string>();
-                responses.forEach(response => {
+                responses.forEach((response: any) => {
                     const responseCommands: ResponseCommand[] = response.data
                     responseCommands
                         .map(responseCommand => DecodeResponseCommand(responseCommand))
@@ -1225,7 +1229,7 @@ function AddSubcommandDialog(props: {
         setUpdating(true);
 
         try {
-            await  axios.post(urls[0], {
+            await axios.post(urls[0], {
                 ...data,
                 arg: props.argVar,
             })
@@ -1334,6 +1338,16 @@ const DecodeResponseCommand = (command: ResponseCommand): Command => {
 
     return cmd;
 }
+
+const DecodeResponseClientConfig = (clientConfig: any): ClientConfig => {
+    if (clientConfig.argGroups === undefined) {
+        return {}
+    }
+    return {
+        args: DecodeArgs(clientConfig.argGroups!).args
+    }
+}
+
 export default WSEditorCommandContent;
 
 export { DecodeResponseCommand };

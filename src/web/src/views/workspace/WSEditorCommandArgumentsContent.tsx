@@ -664,6 +664,7 @@ function ArgumentDialog(props: {
     const [promptMsg, setPromptMsg] = useState<string | undefined>(undefined);
     const [promptConfirm, setPromptConfirm] = useState<boolean | undefined>(undefined);
     const [configurationKey, setConfigurationKey] = useState<string>("");
+    const [isClientArg, setIsClientArg] = useState<boolean>(false);
 
     const handleClose = () => {
         setInvalidText(undefined);
@@ -897,6 +898,7 @@ function ArgumentDialog(props: {
 
     useEffect(() => {
         let { arg, clsArgDefineMap } = props;
+        setIsClientArg(arg.var.startsWith('$Client.'));
 
         setOptions(arg.options.join(" "));
         if (arg.type.startsWith("array")) {
@@ -957,7 +959,7 @@ function ArgumentDialog(props: {
             sx={{ '& .MuiDialog-paper': { width: '80%' } }}
         >
             {!argSimilarTree && <>
-                <DialogTitle>Modify Argument</DialogTitle>
+                <DialogTitle>{isClientArg ? "Modify Client Argument" : "Modify Argument"}</DialogTitle>
                 <DialogContent dividers={true}>
                     {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
                     <TextField
@@ -986,7 +988,7 @@ function ArgumentDialog(props: {
                         }}
                         margin="normal"
                     />}
-                    <TextField
+                    {!isClientArg && <><TextField
                         id="group"
                         label="Argument Group"
                         type="text"
@@ -998,27 +1000,29 @@ function ArgumentDialog(props: {
                         }}
                         margin="normal"
                     />
-                    <InputLabel required shrink sx={{ font: "inherit" }}>Stage</InputLabel>
-                    <RadioGroup
-                        row
-                        value={stage}
-                        name="stage"
-                        onChange={(event: any) => {
-                            setStage(event.target.value);
-                        }}
-                    >
-                        <FormControlLabel value="Stable" control={<Radio />} label="Stable" sx={{ ml: 4 }} />
-                        <FormControlLabel value="Preview" control={<Radio />} label="Preview" sx={{ ml: 4 }} />
-                        <FormControlLabel value="Experimental" control={<Radio />} label="Experimental" sx={{ ml: 4 }} />
-                    </RadioGroup>
-                    {!props.arg.required && <>
-                        <InputLabel shrink sx={{ font: "inherit" }}>Hide Argument</InputLabel>
-                        <Switch sx={{ ml: 4 }}
-                            checked={hide}
+                        <InputLabel required shrink sx={{ font: "inherit" }}>Stage</InputLabel>
+                        <RadioGroup
+                            row
+                            value={stage}
+                            name="stage"
                             onChange={(event: any) => {
-                                setHide(!hide);
+                                setStage(event.target.value);
                             }}
-                        />
+                        >
+                            <FormControlLabel value="Stable" control={<Radio />} label="Stable" sx={{ ml: 4 }} />
+                            <FormControlLabel value="Preview" control={<Radio />} label="Preview" sx={{ ml: 4 }} />
+                            <FormControlLabel value="Experimental" control={<Radio />} label="Experimental" sx={{ ml: 4 }} />
+                        </RadioGroup>
+
+                        {!props.arg.required && <>
+                            <InputLabel shrink sx={{ font: "inherit" }}>Hide Argument</InputLabel>
+                            <Switch sx={{ ml: 4 }}
+                                checked={hide}
+                                onChange={(event: any) => {
+                                    setHide(!hide);
+                                }}
+                            />
+                        </>}
                     </>}
                     {hasDefault !== undefined && <>
                         <InputLabel shrink sx={{ font: "inherit" }}>Default Value</InputLabel>
@@ -1110,19 +1114,20 @@ function ArgumentDialog(props: {
                             </Box>
                         </Box>
                     </>}
-                    <TextField
-                        id="configurationKey"
-                        label="Configuration Key"
-                        helperText="The key to retrieve the default value from cli Configuration"
-                        type='text'
-                        fullWidth
-                        variant='standard'
-                        value={configurationKey}
-                        onChange={(event: any) => {
-                            setConfigurationKey(event.target.value);
-                        }}
-                        margin="normal"
-                    />
+                    {!isClientArg &&
+                        <TextField
+                            id="configurationKey"
+                            label="Configuration Key"
+                            helperText="The key to retrieve the default value from cli Configuration"
+                            type='text'
+                            fullWidth
+                            variant='standard'
+                            value={configurationKey}
+                            onChange={(event: any) => {
+                                setConfigurationKey(event.target.value);
+                            }}
+                            margin="normal"
+                        />}
 
                     <TextField
                         id="shortSummary"
@@ -1170,9 +1175,9 @@ function ArgumentDialog(props: {
                 {!updating && !argSimilarTree && <>
                     <Button onClick={handleClose}>Cancel</Button>
                     {/* cls argument should flatten similar. Customer should unwrap cls argument before to modify it*/}
-                    {!props.arg.var.startsWith("@") && <Button onClick={handleModify}>Update</Button>}
+                    {!props.arg.var.startsWith("@") && <Button onClick={handleModify}>{isClientArg ? "Update Global" : "Update"}</Button>}
                     {/* TODO: support unwrap and update */}
-                    <Button onClick={handleDisplaySimilar}>Update Similar</Button>
+                    {!isClientArg && <Button onClick={handleDisplaySimilar}>Update Similar</Button>}
                 </>}
                 {!updating && argSimilarTree && <>
                     <Button onClick={handleDisableSimilar}>Back</Button>
