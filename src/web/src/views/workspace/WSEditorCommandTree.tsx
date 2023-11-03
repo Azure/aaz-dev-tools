@@ -3,10 +3,11 @@ import TreeView from '@mui/lab/TreeView';
 import TreeItem from '@mui/lab/TreeItem';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { Box, IconButton, Tooltip, Typography, TypographyProps } from '@mui/material';
+import { Box, IconButton, Menu, MenuItem, Tooltip, Typography, TypographyProps } from '@mui/material';
 import { styled } from '@mui/system';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
 
 interface CommandTreeLeaf {
     id: string
@@ -30,6 +31,11 @@ interface WSEditorCommandTreeProps {
     onToggle: (nodeIds: string[]) => void
     onAdd: () => void
     onReload: () => void
+    onEditClientConfig?: () => void
+}
+
+interface WSEditorCommandTreeState {
+    openMore: boolean,
 }
 
 
@@ -41,7 +47,16 @@ const HeaderTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
 }))
 
 
-class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
+class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps, WSEditorCommandTreeState> {
+
+    constructor(props: WSEditorCommandTreeProps) {
+        super(props);
+        this.state = {
+            openMore: false,
+        };
+    }
+
+    moreButtonRef = React.createRef<HTMLButtonElement>();
 
     onNodeSelected = (event: React.SyntheticEvent, nodeIds: string[] | string) => {
         if (typeof nodeIds === 'string') {
@@ -53,8 +68,24 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
         this.props.onToggle(nodeIds);
     }
 
+    handleMoreClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        this.setState(preState => {
+            console.log(event);
+            return {
+                ...preState,
+                openMore: !preState.openMore,
+            }
+        });
+    }
+
+    handleEditClientConfig = () => {
+        this.setState({ openMore: false });
+        this.props.onEditClientConfig!();
+    }
+
     render() {
-        const { commandTreeNodes, selected, onAdd, onReload, expanded } = this.props;
+        const { commandTreeNodes, selected, onAdd, onReload, expanded, onEditClientConfig } = this.props;
+        const { openMore } = this.state;
 
         const renderLeaf = (leaf: CommandTreeLeaf) => {
             const leafName = leaf.names[leaf.names.length - 1];
@@ -121,6 +152,32 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps> {
                             <AddIcon />
                         </IconButton>
                     </Tooltip>
+                    {onEditClientConfig !== undefined && <>
+                        <Tooltip title='More Operations'>
+                            <IconButton
+                                ref={this.moreButtonRef}
+                                id='more-button'
+                                color='info'
+                                aria-controls={openMore ? 'more-menu' : undefined}
+                                aria-expanded={openMore ? 'true' : undefined}
+                                aria-haspopup="true"
+                                onClick={this.handleMoreClick}
+                            >
+                                <MoreHorizSharpIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Menu
+                            id="more-menu"
+                            anchorEl={this.moreButtonRef.current}
+                            open={openMore}
+                            onClose={() => { this.setState({ openMore: false }) }}
+                            MenuListProps={{
+                                'aria-labelledby': 'more-button',
+                            }}
+                        >
+                            <MenuItem onClick={this.handleEditClientConfig}>Edit Client Config</MenuItem>
+                        </Menu>
+                    </>}
                 </Box>
                 <TreeView
                     defaultCollapseIcon={<ExpandMoreIcon />}
