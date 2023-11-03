@@ -1047,7 +1047,6 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
             res.data.endpoints.templates.forEach((value: any) => {
                 clientConfig.templates[value.cloud] = value.template;
             });
-            console.log(clientConfig);
             this.setState({
                 aadAuthScopes: clientConfig.auth.aad.scopes ?? ["",],
                 templateAzureCloud: clientConfig.templates['AzureCloud'] ?? "",

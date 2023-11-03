@@ -70,7 +70,6 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps, WSEd
 
     handleMoreClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         this.setState(preState => {
-            console.log(event);
             return {
                 ...preState,
                 openMore: !preState.openMore,

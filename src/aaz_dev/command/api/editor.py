@@ -1,10 +1,11 @@
 import os
 
-from flask import Blueprint, jsonify, request, url_for
+from flask import Blueprint, jsonify, request, url_for, redirect
 
 from command.controller.workspace_manager import WorkspaceManager
 from utils import exceptions
 from utils.config import Config
+from command.model.configuration._utils import CMDArgBuildPrefix
 
 bp = Blueprint('editor', __name__, url_prefix='/AAZ/Editor')
 
@@ -281,6 +282,12 @@ def editor_workspace_command(name, node_names, leaf_name):
     if leaf.examples:
         result['examples'] = [e.to_primitive() for e in leaf.examples]
 
+    # add client configuration argument group in the command response
+    client_cfg = manager.load_client_cfg_editor()
+    if client_cfg and client_cfg.cfg.arg_group:
+        arg_groups = result.get('argGroups', [])
+        result['argGroups'] = [*arg_groups, client_cfg.cfg.arg_group.to_primitive()]
+
     return jsonify(result)
 
 
@@ -323,6 +330,10 @@ def editor_workspace_command_rename(name, node_names, leaf_name):
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Arguments/<arg_var>",
           methods=("GET", "PATCH"))
 def editor_workspace_command_argument(name, node_names, leaf_name, arg_var):
+    if arg_var.startswith(CMDArgBuildPrefix.ClientEndpoint):
+        # redirect to client config argument
+        return redirect(url_for('editor.editor_workspace_client_config_argument', name=name, arg_var=arg_var))
+
     if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
         raise exceptions.ResourceNotFind("Command not exist")
     node_names = node_names[1:]

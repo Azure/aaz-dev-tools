@@ -252,6 +252,7 @@ class CMDClientConfig(Model):
                 if ref_options and arg.var in ref_options:
                     # replace generated options by ref_options
                     arg.options = [*ref_options[arg.var]]
+                arg.group = 'Client'
                 arguments[arg.var] = arg
 
         # verify duplicated options
@@ -273,7 +274,7 @@ class CMDClientConfig(Model):
 
         if arguments:
             self.arg_group = CMDArgGroup({
-                "name": self.arg_group.name if self.arg_group else 'Client',
+                "name": 'Client',
             })
             self.arg_group.args = sorted(arguments.values(), key=lambda a: a.var)
         else:
