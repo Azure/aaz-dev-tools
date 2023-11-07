@@ -1065,6 +1065,19 @@ class WorkspaceManager:
             logger.error(
                 f"load workspace client cfg failed: {e}: {self.name}")
             return None
+    
+    def compare_client_cfg_with_spec(self):
+        """ Check whether the client configuration version in workspace is later than the aaz specs one. """
+        # compare client configuration from aaz specs
+        aaz_client_cfg_reader = self.aaz_specs.load_client_cfg_reader(self.ws.plane)
+        client_cfg_reader = self.load_client_cfg_editor()
+        if client_cfg_reader and not aaz_client_cfg_reader:
+            return True
+        if aaz_client_cfg_reader and not client_cfg_reader:
+            return False
+        if aaz_client_cfg_reader.cfg.version > client_cfg_reader.cfg.version:
+            return False
+        return True
 
     def inherit_client_cfg_from_spec(self):
         # inherit client configuration from aaz specs
