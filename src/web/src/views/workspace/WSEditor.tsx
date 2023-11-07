@@ -353,10 +353,15 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         })
     }
 
-    handleGenerationClose = (exported: boolean) => {
+    handleGenerationClose = (exported: boolean, showClientConfigDialog: boolean) => {
         this.setState({
             showExportDialog: false
         })
+        if (showClientConfigDialog) {
+            this.setState({
+                showClientConfigDialog: true
+            })
+        }
     }
 
     handleDelete = () => {
@@ -505,7 +510,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 </Dialog>
                 {showModifyDialog && <WSRenameDialog workspaceUrl={workspaceUrl} workspaceName={name} open={showModifyDialog} onClose={this.handleModifyClose} />}
                 {showDeleteDialog && <WSEditorDeleteDialog workspaceName={name} open={showDeleteDialog} onClose={this.handleDeleteClose} />}
-                {showExportDialog && <WSEditorExportDialog workspaceUrl={workspaceUrl} open={showExportDialog} onClose={this.handleGenerationClose} />}
+                {showExportDialog && <WSEditorExportDialog workspaceUrl={workspaceUrl} open={showExportDialog} clientConfigurable={clientConfigurable} onClose={this.handleGenerationClose} />}
                 {showSwaggerReloadDialog && <WSEditorSwaggerReloadDialog workspaceUrl={workspaceUrl} open={showSwaggerReloadDialog} onClose={this.handleSwaggerReloadDialogClose} />}
                 {showClientConfigDialog && <WSEditorClientConfigDialog workspaceUrl={workspaceUrl} open={showClientConfigDialog} onClose={this.handleClientConfigDialogClose} />}
             </React.Fragment>
@@ -513,60 +518,132 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 }
 
-function WSEditorExportDialog(props: {
+interface WSEditorExportDialogProps {
     workspaceUrl: string,
     open: boolean,
-    onClose: (exported: boolean) => void,
-}) {
-    const [updating, setUpdating] = React.useState<boolean>(false);
-    const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
+    clientConfigurable: boolean,
+    onClose: (exported: boolean, showClientConfigDialog: boolean) => void,
+}
 
-    const handleClose = () => {
-        props.onClose(false);
+interface WSEditorExportDialogState {
+    updating: boolean,
+    invalidText: string | undefined,
+    clientConfigOOD: boolean,
+}
+class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WSEditorExportDialogState> {
+
+    constructor(props: WSEditorExportDialogProps) {
+        super(props);
+        this.state = {
+            updating: false,
+            invalidText: undefined,
+            clientConfigOOD: false,
+        }
     }
 
-    const handleExport = () => {
-        const url = `${props.workspaceUrl}/Generate`;
-        setUpdating(true);
+    componentDidMount(): void {
+        if (this.props.clientConfigurable) {
+            this.verifyClientConfig();
+        }
+    }
 
-        axios.post(url)
-            .then(res => {
-                setUpdating(false);
-                props.onClose(true);
-            }).catch(err => {
+    handleClose = () => {
+        this.props.onClose(false, false);
+    }
+
+    verifyClientConfig = async () => {
+        const url = `${this.props.workspaceUrl}/ClientConfig/AAZ/Compare`;
+        this.setState({updating: true});
+        try {
+            await axios.post(url);
+            this.setState({clientConfigOOD: false, updating: false});
+        } catch (err: any) {
+            // catch 409 error
+            if (err.response?.status === 409) {
+                this.setState({
+                    invalidText: `The client config in this workspace is out of date. Please refresh it first.`,
+                    clientConfigOOD: true,
+                    updating: false,
+                });
+                return;
+            } else {
                 console.error(err.response)
                 if (err.response?.data?.message) {
                     const data = err.response!.data!;
-                    setInvalidText(
-                        `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
-                    );
+                    this.setState({
+                        invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
+                    });
                 }
-                setUpdating(false);
-            })
+                this.setState({updating: false});
+            }
+        }
     }
 
-    return (
-        <Dialog
-            disableEscapeKeyDown
-            open={props.open}
-        >
-            <DialogTitle>Export workspace command models to AAZ Repo</DialogTitle>
-            <DialogContent>
-                {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
-            </DialogContent>
-            <DialogActions>
-                {updating &&
-                    <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
-                    </Box>
-                }
-                {!updating && <React.Fragment>
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleExport}>Confirm</Button>
-                </React.Fragment>}
-            </DialogActions>
-        </Dialog>
-    )
+    inheritClientConfig = async () => {
+        const url = `${this.props.workspaceUrl}/ClientConfig/AAZ/Inherit`;
+        this.setState({updating: true});
+        try {
+            await axios.post(url);
+            this.setState({clientConfigOOD: false, updating: false});
+            this.props.onClose(false, true);
+        } catch (err: any) {
+            console.error(err.response)
+            if (err.response?.data?.message) {
+                const data = err.response!.data!;
+                this.setState({
+                    invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
+                });
+            }
+            this.setState({updating: false});
+        }
+    }
+
+    handleExport = async () => {
+        const url = `${this.props.workspaceUrl}/Generate`;
+        this.setState({updating: true});
+
+        try {
+            await axios.post(url);
+            this.setState({updating: false});
+            this.props.onClose(false, false);
+        } catch (err: any) {
+            console.error(err.response)
+            if (err.response?.data?.message) {
+                const data = err.response!.data!;
+                this.setState({
+                    invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
+                });
+            }
+            this.setState({updating: false});
+        }
+    }
+
+    render(): React.ReactNode {
+        const { updating, invalidText, clientConfigOOD } = this.state;
+        return (
+            <Dialog
+                disableEscapeKeyDown
+                open={this.props.open}
+            >
+                <DialogTitle>Export workspace command models to AAZ Repo</DialogTitle>
+                <DialogContent>
+                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                </DialogContent>
+                <DialogActions>
+                    {updating &&
+                        <Box sx={{ width: '100%' }}>
+                            <LinearProgress color='info' />
+                        </Box>
+                    }
+                    {!updating && <React.Fragment>
+                        {clientConfigOOD && <Button onClick={this.inheritClientConfig}>Refresh Client Config</Button>}
+                        {!clientConfigOOD && <Button onClick={this.handleClose}>Cancel</Button>}
+                        {!clientConfigOOD && <Button onClick={this.handleExport}>Confirm</Button>}
+                    </React.Fragment>}
+                </DialogActions>
+            </Dialog>
+        )
+    }
 }
 
 function WSEditorDeleteDialog(props: {
