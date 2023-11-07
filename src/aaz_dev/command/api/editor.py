@@ -127,8 +127,16 @@ def editor_workspace_client_config(name):
     result = cfg_editor.cfg.to_primitive()
     return jsonify(result)
 
+@bp.route("/Workspaces/<name>/ClientConfig/AAZ/Compare", methods=("POST",))
+def compare_workspace_client_config_version_with_aaz(name):
+    manager = WorkspaceManager(name)
+    manager.load()
+    if not manager.compare_client_cfg_with_spec():
+        raise exceptions.ResourceConflict("Client configuration is out of data in current workspace. Please reload it from aaz repo.")
+    return "", 200
 
-@bp.route("/Workspaces/<name>/ClientConfig/InheritFromAAZ", methods=("POST",))
+
+@bp.route("/Workspaces/<name>/ClientConfig/AAZ/Inherit", methods=("POST",))
 def inherit_workspace_client_config_from_aaz(name):
     manager = WorkspaceManager(name)
     manager.load()

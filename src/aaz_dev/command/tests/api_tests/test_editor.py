@@ -1999,14 +1999,14 @@ class APIEditorTest(CommandTestCase):
                 {'arg': '$Client.Endpoint.region', 'name': 'region', 'required': True, 'skipUrlEncoding': True, 'type': 'string'}
             ])
             self.assertEqual(client_config['argGroup']['args'], [
-                {'options': ['region'], 'required': True, 'type': 'string', 'var': '$Client.Endpoint.region'}
+                {'group': 'Client', 'options': ['region'], 'required': True, 'type': 'string', 'var': '$Client.Endpoint.region'}
             ])
 
             # update client arguments
             rv = c.get(f"{ws_url}/ClientConfig/Arguments/$Client.Endpoint.region")
             self.assertTrue(rv.status_code == 200)
             client_arg = rv.get_json()
-            self.assertEqual(client_arg, {'options': ['region'], 'required': True, 'type': 'string', 'var': '$Client.Endpoint.region'})
+            self.assertEqual(client_arg, {'group': 'Client', 'options': ['region'], 'required': True, 'type': 'string', 'var': '$Client.Endpoint.region'})
             rv = c.patch(f"{ws_url}/ClientConfig/Arguments/$Client.Endpoint.region", json={
                 "options": ["region", "r"],
                 "default": {
@@ -2022,6 +2022,7 @@ class APIEditorTest(CommandTestCase):
                 'default': {'value': 'global'},
                 'help': {'short': 'The Azure region wherein requests for signing will be sent.'},
                 'options': ['r', 'region'],
+                'group': 'Client',
                 'required': True,
                 'type': 'string',
                 'var': '$Client.Endpoint.region'
@@ -2127,6 +2128,7 @@ class APIEditorTest(CommandTestCase):
                     'help': {'short': 'The Azure region wherein requests for signing will be sent.'},
                     'options': ['r', 'region'],
                     'required': True,
+                    'group': 'Client',
                     'type': 'string',
                     'var': '$Client.Endpoint.region'
                 }
@@ -2145,6 +2147,7 @@ class APIEditorTest(CommandTestCase):
                 'default': {'value': 'global'},
                 'help': {'short': 'The Azure region wherein requests for signing will be sent.'},
                 'options': ['region'],
+                'group': 'Client',
                 'required': True,
                 'type': 'string',
                 'var': '$Client.Endpoint.region'
@@ -2157,8 +2160,11 @@ class APIEditorTest(CommandTestCase):
             rv = c.post(f"{ws_url2}/Generate")
             self.assertTrue(rv.status_code == 400)
 
+            rv = c.post(f"{ws_url2}/ClientConfig/AAZ/Compare")
+            self.assertTrue(rv.status_code == 409)
+
             # refresh in ws 2
-            rv = c.post(f"{ws_url2}/ClientConfig/InheritFromAAZ")
+            rv = c.post(f"{ws_url2}/ClientConfig/AAZ/Inherit")
             self.assertTrue(rv.status_code == 200)
             client_config = rv.get_json()
             self.assertEqual(client_config['argGroup']['args'], [
@@ -2166,6 +2172,7 @@ class APIEditorTest(CommandTestCase):
                     'default': {'value': 'global'},
                     'help': {'short': 'The Azure region wherein requests for signing will be sent.'},
                     'options': ['region'],
+                    'group': 'Client',
                     'required': True,
                     'type': 'string',
                     'var': '$Client.Endpoint.region'
