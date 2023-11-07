@@ -43,7 +43,7 @@ class AAZSpecsManager:
             raise ValueError(f"Invalid Command Tree file path, expect a file: {tree_path}")
 
         try:
-            with open(tree_path, 'r') as f:
+            with open(tree_path, 'r', encoding="utf-8") as f:
                 data = json.load(f)
                 self.tree = CMDSpecsCommandTree(data)
         except json.decoder.JSONDecodeError as e:
@@ -158,7 +158,7 @@ class AAZSpecsManager:
             if not os.path.exists(ref_path):
                 return None
             json_path = None
-            with open(ref_path, 'r') as f:
+            with open(ref_path, 'r', encoding="utf-8") as f:
                 for line in f.readlines():
                     match = self.REFERENCE_LINE.fullmatch(line)
                     if match:
@@ -175,19 +175,19 @@ class AAZSpecsManager:
             # Not recommend to use xml, because there are some issues in XMLSerializer
             if not os.path.isfile(xml_path):
                 raise ValueError(f"Invalid file path: {xml_path}")
-            with open(xml_path, 'r') as f:
+            with open(xml_path, 'r', encoding="utf-8") as f:
                 cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
             data = self.render_resource_cfg_to_json(cfg)
-            with open(json_path, 'w') as f:
+            with open(json_path, 'w', encoding="utf-8") as f:
                 f.write(data)
             data = self.render_resource_cfg_to_xml(cfg)
-            with open(xml_path, 'w') as f:
+            with open(xml_path, 'w', encoding="utf-8") as f:
                 f.write(data)
 
         if not os.path.isfile(json_path):
             raise ValueError(f"Invalid file path: {json_path}")
 
-        with open(json_path, 'r') as f:
+        with open(json_path, 'r', encoding="utf-8") as f:
             #print(json_path)
             data = json.load(f)
         cfg = CMDConfiguration(data)
@@ -514,7 +514,7 @@ class AAZSpecsManager:
 
         for file_path, data in update_files.items():
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            with open(file_path, 'w') as f:
+            with open(file_path, 'w', encoding="utf-8") as f:
                 f.write(data)
 
         self._modified_command_groups = set()
