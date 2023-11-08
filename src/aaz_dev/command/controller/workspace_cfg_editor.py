@@ -34,12 +34,12 @@ class WorkspaceCfgEditor(CfgReader):
     @classmethod
     def load_resource(cls, ws_folder, resource_id, version):
         path = cls.get_cfg_path(ws_folder, resource_id)
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding="utf-8") as f:
             data = json.load(f)
         if '$ref' in data:
             ref_resource_id = data['$ref']
             path = cls.get_cfg_path(ws_folder, ref_resource_id)
-            with open(path, 'r') as f:
+            with open(path, 'r', encoding="utf-8") as f:
                 data = json.load(f)
         cfg = CMDConfiguration(data)
         for resource in cfg.resources:

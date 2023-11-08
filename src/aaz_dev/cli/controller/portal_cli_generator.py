@@ -304,7 +304,7 @@ class PortalCliGenerator:
                 if not self.valid_portal_json_format(resource_info):
                     logging.info("json format error")
                     continue
-                with open(resource_file_path, "w") as f_out:
+                with open(resource_file_path, "w", encoding="utf-8") as f_out:
                     f_out.write(json.dumps(resource_info, indent=4))
 
     def generate_cmds_portal_file(self, cmd_portal_list):

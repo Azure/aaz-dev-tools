@@ -164,7 +164,7 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
 )
 def verify():
     def verify_command(file_path, node):
-        with open(file_path, "r") as fp:
+        with open(file_path, "r", encoding="utf-8") as fp:
             content = fp.read()
 
         paths = re.findall(r"]\(([^)]+)\)", content)
