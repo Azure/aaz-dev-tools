@@ -3,6 +3,11 @@
 Release History
 ===============
 
+2.2.0
+++++++
+* Add `aaz-dev swagger export-resources` command. (#302)
+* Set `utf-8` encoding for all file open. (#298)
+
 2.1.0
 ++++++
 * Support empty object defined in Swagger specification. (#293)
