@@ -1902,3 +1902,35 @@ class APIEditorTest(CommandTestCase):
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
             self.assertTrue(len(data) == 4)
+
+    @workspace_name("test_workspace_generate_examples")
+    def test_workspace_generate_examples(self, ws_name):
+        module = "eventhub"
+        api_version = "2021-11-01"
+
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": "Microsoft.EventHub"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            ws_url = rv.get_json()["url"]
+            resource_id = swagger_resource_path_to_resource_id("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EventHub/clusters/{clusterName}")
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                "module": module,
+                "version": api_version,
+                "resources": [{
+                    "id": resource_id,
+                    "options": {
+                        "aaz_version": None
+                    }
+                }]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/event-hub/cluster/Leaves/create/GenerateExamples")
+            self.assertTrue(rv.status_code == 200)
