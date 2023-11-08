@@ -197,21 +197,11 @@ def editor_workspace_generate_example(name, node_names, leaf_name):
     command = cfg_editor.find_command(*leaf.names)
 
     if command:
-        examples = manager.gen_examples_by_swagger(leaf, command)
+        examples = manager.generate_examples_by_swagger(leaf, command)
     else:
-        raise exceptions.ResourceNotFind("Command not exist")
+        raise exceptions.ResourceNotFind("Command not exist.")
 
-    result = command.to_primitive()
-    # manager.save()
-
-    del result['name']
-    result.update({
-        'names': leaf.names,
-        'help': leaf.help.to_primitive(),
-        'stage': leaf.stage,
-    })
-    if examples:
-        result['examples'] = [e.to_primitive() for e in leaf.examples]
+    result = [example.to_primitive() for example in examples]
 
     return jsonify(result)
 

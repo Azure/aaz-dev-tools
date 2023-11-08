@@ -52,20 +52,20 @@ class PathItem(Model, Linkable):
         if self.patch is not None:
             self.patch.link(swagger_loader, *self.traces, 'patch')
 
-    def link_examples(self, swagger_loader, operation_id, *traces):
+    def link_examples(self, swagger_loader, operation_ids, *traces):
         super().link(swagger_loader, *traces)
 
-        if self.get is not None and self.get.operation_id == operation_id:
+        if self.get is not None and self.get.operation_id in operation_ids:
             self.get.link_examples(swagger_loader, *self.traces, "get")
-        if self.put is not None and self.put.operation_id == operation_id:
+        if self.put is not None and self.put.operation_id in operation_ids:
             self.put.link_examples(swagger_loader, *self.traces, "put")
-        if self.post is not None and self.post.operation_id == operation_id:
+        if self.post is not None and self.post.operation_id in operation_ids:
             self.post.link_examples(swagger_loader, *self.traces, "post")
-        if self.delete is not None and self.delete.operation_id == operation_id:
+        if self.delete is not None and self.delete.operation_id in operation_ids:
             self.delete.link_examples(swagger_loader, *self.traces, "delete")
-        if self.head is not None and self.head.operation_id == operation_id:
+        if self.head is not None and self.head.operation_id in operation_ids:
             self.head.link_examples(swagger_loader, *self.traces, "head")
-        if self.patch is not None and self.patch.operation_id == operation_id:
+        if self.patch is not None and self.patch.operation_id in operation_ids:
             self.patch.link_examples(swagger_loader, *self.traces, "patch")
 
     def to_cmd(self, builder, **kwargs):

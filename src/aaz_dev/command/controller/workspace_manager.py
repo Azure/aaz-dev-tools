@@ -13,7 +13,7 @@ from utils import exceptions
 from utils.config import Config
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor
-from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand
+from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand, CMDHttpOperation
 
 logger = logging.getLogger('backend')
 
@@ -465,37 +465,52 @@ class WorkspaceManager:
                 leaf.examples.append(example)
         return leaf
 
-    def gen_examples_by_swagger(self, leaf, command):
-        return self.generate_examples_by_swagger(command.resources[0],
-                                                 command.operations[0].operation_id,
-                                                 ' '.join(leaf.names))
+    def generate_examples_by_swagger(self, leaf, command):
+        def is_ready_to_skip(operations):
+            if not operations:
+                return True
 
-        # leaf.examples = swagger_examples
-        # for example in examples:
-        #     if not isinstance(example, CMDCommandExample):
-        #         example = CMDCommandExample(example)
-        #     try:
-        #         example.validate()
-        #     except Exception as err:
-        #         # if not example.get('name', None) or not isinstance(example['name'], str):
-        #         raise exceptions.InvalidAPIUsage(
-        #             f"Invalid example data: {err}")
-        #     leaf.examples.append(example)
+            if len(operations) == 1 and isinstance(operations[0], CMDHttpOperation):
+                return False
 
-    def generate_examples_by_swagger(self, resource, operation_id, cmd_name):
+            # skip when there is more than one operation and not all operations are get requests
+            for op in operations:
+                if not isinstance(op, CMDHttpOperation) or op.http.request.method != "get":
+                    return True
+
+            return False
+
+        if is_ready_to_skip(command.operations):
+            return []
+
+        return self.generate_operations_examples_by_swagger(
+            command.resources,
+            [op.operation_id for op in command.operations],
+            " ".join(leaf.names),
+            command.arg_groups
+        )
+
+    def generate_operations_examples_by_swagger(self, resources, operation_ids, cmd_name, arg_groups):
         root = self.find_command_tree_node()
         assert root
 
         # convert cmd resource to swagger resource
-        swagger_resource = self.swagger_specs.get_module_manager(
-            plane=self.ws.plane,
-            mod_names=self.ws.mod_names
-        ).get_resource_in_version(resource["id"], resource["version"], resource.rp_name)
+        swagger_resources = []
+        for resource in resources:
+            swagger_resources.append(self.swagger_specs.get_module_manager(
+                plane=self.ws.plane,
+                mod_names=self.ws.mod_names
+            ).get_resource_in_version(resource["id"], resource["version"], resource.rp_name))
 
         # load swagger resource
-        self.swagger_example_generator.load_examples(swagger_resource, operation_id)
+        self.swagger_example_generator.load_examples(swagger_resources, operation_ids)
 
-        examples = self.swagger_example_generator.create_draft_examples(swagger_resource, operation_id, cmd_name)
+        examples = self.swagger_example_generator.create_draft_examples(
+            swagger_resources,
+            operation_ids,
+            cmd_name,
+            arg_groups
+        )
 
         return examples
 

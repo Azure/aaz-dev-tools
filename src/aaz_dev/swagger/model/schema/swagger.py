@@ -86,10 +86,10 @@ class Swagger(Model, Linkable):
         if self.x_ms_parameterized_host is not None:
             self.x_ms_parameterized_host.link(swagger_loader, *self.traces, 'x_ms_parameterized_host')
 
-    def link_examples(self, swagger_loader, path, operation_id, *traces):
+    def link_examples(self, swagger_loader, path, operation_ids, *traces):
         super().link(swagger_loader, *traces)
 
         if self.paths is not None:
             for key, path_item in self.paths.items():
                 if key == path:
-                    path_item.link_examples(swagger_loader, operation_id, *self.traces, "paths", key)
+                    path_item.link_examples(swagger_loader, operation_ids, *self.traces, "paths", key)
