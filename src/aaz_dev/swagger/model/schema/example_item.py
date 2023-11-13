@@ -1,9 +1,7 @@
-import json
-
 from schematics.models import Model
 from schematics.types import DictType, ModelType
-from command.model.configuration import CMDCommandExample
 
+from command.model.configuration import CMDCommandExample
 from .reference import Linkable, ReferenceField
 
 
@@ -22,19 +20,16 @@ class ExampleItem(Model, Linkable):
 
         self.ref_instance, instance_traces = swagger_loader.load_ref(self.ref, *self.traces, "ref")
 
-    def to_cmd(self, args_name_map, cmd_name, **kwargs):
-        assert self.ref_instance
+    def to_cmd(self, builder, cmd_name, **kwargs):
+        if not self.ref_instance:
+            return
 
-        params = []
-        for k, v in self.ref_instance.get("parameters", {}).items():
-            if k not in args_name_map:
-                continue
+        params = builder.mapping(self.ref_instance.get("parameters", {}))
 
-            example_key = args_name_map[k]
-            example_val = json.dumps(v)
-            params.extend([example_key, example_val])
-
-        command = cmd_name + " " + " ".join(params)
+        command = cmd_name
+        for k, v in params.items():
+            command += f" --{k} {v}"
+            # command += " --" + k + " " + v
 
         return CMDCommandExample({"commands": [command.strip()]})
 

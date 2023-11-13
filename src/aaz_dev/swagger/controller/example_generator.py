@@ -1,4 +1,4 @@
-from command.model.configuration import CMDCommandExample
+from command.model.configuration._example_builder import SwaggerExampleBuilder
 from swagger.model.schema.example_item import XmsExamplesField
 from swagger.model.schema.path_item import PathItem
 from swagger.model.specs import SwaggerLoader
@@ -15,7 +15,7 @@ class ExampleGenerator:
 
     def create_draft_examples(self, resources, operation_ids, cmd_name, arg_groups):
         cmd_examples = []
-        arg_name_map = get_arg_name_map(arg_groups)
+        example_builder = SwaggerExampleBuilder(arg_groups=arg_groups)
 
         for resource in resources:
             swagger = self.loader.get_loaded(resource.file_path)
@@ -28,39 +28,31 @@ class ExampleGenerator:
             if not isinstance(path_item, PathItem):
                 continue
 
-            linked_examples = XmsExamplesField()
+            swagger_examples = XmsExamplesField()
             if path_item.get is not None and path_item.get.operation_id in operation_ids:
-                linked_examples = path_item.get.x_ms_examples
+                swagger_examples = path_item.get.x_ms_examples
             elif path_item.delete is not None and path_item.delete.operation_id in operation_ids:
-                linked_examples = path_item.delete.x_ms_examples
+                swagger_examples = path_item.delete.x_ms_examples
             elif path_item.put is not None and path_item.put.operation_id in operation_ids:
-                linked_examples = path_item.put.x_ms_examples
+                swagger_examples = path_item.put.x_ms_examples
             elif path_item.post is not None and path_item.post.operation_id in operation_ids:
-                linked_examples = path_item.post.x_ms_examples
+                swagger_examples = path_item.post.x_ms_examples
             elif path_item.head is not None and path_item.head.operation_id in operation_ids:
-                linked_examples = path_item.head.x_ms_examples
+                swagger_examples = path_item.head.x_ms_examples
 
-            for name, example_item in linked_examples.items():
-                example = example_item.to_cmd(arg_name_map, cmd_name)
-                example.name = name
-                cmd_examples.append(example)
+            cmd_examples.extend(self.generate_examples(cmd_name, swagger_examples, example_builder))
 
         return cmd_examples
 
-
-def get_arg_name_map(arg_groups):
-    IGNORE_ARGS = ["subscriptionId"]
-
-    arg_name_map = {}
-    for group in arg_groups:
-        for arg in group.args:
-            swagger_name = arg.var.split(".", maxsplit=1)[-1]
-            if swagger_name in IGNORE_ARGS:
+    @staticmethod
+    def generate_examples(cmd_name, examples, example_builder):
+        cmd_examples = []
+        for name, example_item in examples.items():
+            cmd_example = example_item.to_cmd(example_builder, cmd_name)
+            if not cmd_example:
                 continue
 
-            arg_name = arg.options[-1]
-            arg_name = "-" + arg_name if len(arg_name) == 1 else "--" + arg_name
+            cmd_example.name = name
+            cmd_examples.append(cmd_example)
 
-            arg_name_map[swagger_name] = arg_name
-
-    return arg_name_map
+        return cmd_examples
