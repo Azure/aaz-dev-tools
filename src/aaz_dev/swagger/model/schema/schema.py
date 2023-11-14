@@ -490,7 +490,7 @@ class Schema(Model, Linkable):
 
                     v = builder(disc_child, in_base=True, support_cls_schema=False)
                     assert isinstance(v, CMDObjectSchemaBase)
-                    if v.frozen:
+                    if v.frozen and prop_dict[disc_prop].frozen:
                         disc.frozen = True
                     if v.props:
                         disc.props = [prop for prop in v.props if prop.name not in prop_dict]
