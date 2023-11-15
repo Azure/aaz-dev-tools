@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 from schematics.models import Model
 from schematics.types import StringType, ModelType, ListType, DictType, BooleanType, PolyModelType
 
@@ -131,7 +133,7 @@ class Operation(Model, Linkable):
                 *self.traces, "x_ms_long_running_operation_options", "final_state_schema"
             )
 
-    def to_cmd(self, builder, parent_parameters, **kwargs):
+    def to_cmd(self, builder, parent_parameters, host_path, **kwargs):
         cmd_op = CMDHttpOperation()
         if self.x_ms_long_running_operation:
             cmd_op.long_running = CMDHttpOperationLongRunning()
@@ -142,7 +144,10 @@ class Operation(Model, Linkable):
         builder.setup_description(cmd_op, self)
 
         cmd_op.http = CMDHttpAction()
-        cmd_op.http.path = builder.path
+        if host_path:
+            cmd_op.http.path = host_path + builder.path
+        else:
+            cmd_op.http.path = builder.path
         cmd_op.http.request = CMDHttpRequest()
         cmd_op.http.request.method = builder.method
         cmd_op.http.responses = []
@@ -193,6 +198,9 @@ class Operation(Model, Linkable):
             request.header.client_request_id = client_request_id_name
             request.header.params = []
             for name, model in sorted(param_models[HeaderParameter.IN_VALUE].items()):
+                if name == client_request_id_name:
+                    # ignore client request id parameter for argument generation.
+                    continue
                 request.header.params.append(model)
 
         if BodyParameter.IN_VALUE in param_models:

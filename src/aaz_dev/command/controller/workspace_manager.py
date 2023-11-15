@@ -10,8 +10,10 @@ from swagger.controller.specs_manager import SwaggerSpecsManager
 from swagger.utils.exceptions import InvalidSwaggerValueError
 from utils import exceptions
 from utils.config import Config
+from utils.plane import PlaneEnum
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor
+from .workspace_client_cfg_editor import WorkspaceClientCfgEditor
 from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand
 
 logger = logging.getLogger('backend')
@@ -46,6 +48,9 @@ class WorkspaceManager:
         if not manager.is_in_memory and os.path.exists(manager.path):
             raise exceptions.ResourceConflict(
                 f"Workspace conflict: Workspace json file path exists: {manager.path}")
+        if plane == PlaneEnum._Data:
+            # add resource provider as the scope for data plane
+            plane = PlaneEnum.Data(resource_provider)
         manager.ws = CMDEditorWorkspace({
             "name": name,
             "plane": plane,
@@ -56,6 +61,7 @@ class WorkspaceManager:
                 "names": [cls.COMMAND_TREE_ROOT_NAME],
             }
         })
+        manager.inherit_client_cfg_from_spec()
         return manager
 
     def __init__(self, name, folder=None, aaz_manager=None, swagger_manager=None):
@@ -75,6 +81,7 @@ class WorkspaceManager:
 
         self.ws = None
         self._cfg_editors = {}
+        self._client_cfg_editor = None
         self._reusable_leaves = {}
 
         self._aaz_specs = aaz_manager
@@ -118,6 +125,7 @@ class WorkspaceManager:
             self.__update_mod_names_and_resource_provider()
 
         self._cfg_editors = {}
+        self._client_cfg_editor = None
 
     def rename(self, new_name):
         assert not self.is_in_memory
@@ -170,6 +178,11 @@ class WorkspaceManager:
             # calculate mod_names and resource_provider for old workspaces
             self.__update_mod_names_and_resource_provider()
 
+        if self._client_cfg_editor:
+            data = self._client_cfg_editor.get_cfg_file_data()
+            update_files.append(
+                (WorkspaceClientCfgEditor.get_cfg_path(self.folder), data))
+
         # verify ws timestamps
         # TODO: add write lock for path file
         if os.path.exists(self.path):
@@ -194,7 +207,8 @@ class WorkspaceManager:
                 f.write(data)
 
         self._cfg_editors = {}
-    
+        self._client_cfg_editor = None
+
     def __update_mod_names_and_resource_provider(self):
         resource_mod_set = set()
         resource_rp_set = set()
@@ -583,24 +597,38 @@ class WorkspaceManager:
 
     def _add_cfg_editors(self, cfg_editors, aaz_ref=None):
         for cfg_editor in cfg_editors:
+            # command group rename
+            rename_cg_list = []
+            for cg_names in cfg_editor.iter_command_group_names():
+                if self.find_command_tree_leaf(*cg_names):
+                    # command group name conflicted with existing command name
+                    new_name = self.generate_unique_name(*cg_names[:-1], name=cg_names[-1])
+                    rename_cg_list.append((cg_names, [*cg_names[:-1], new_name]))
+            for cg_names, new_cg_names in rename_cg_list:
+                cfg_editor.rename_command_group(*cg_names, new_cg_names=new_cg_names)
+            # command rename
             merged = False
-            rename_list = []
+            rename_cmd_list = []
             for cmd_names, command in cfg_editor.iter_commands():
-                cur_cmd = self.find_command_tree_leaf(*cmd_names)
-                if cur_cmd is None:
-                    continue
-                if cur_cmd.version == command.version:
-                    main_cfg_editor = self.load_cfg_editor_by_command(cur_cmd)
-                    merged_cfg_editor = main_cfg_editor.merge(cfg_editor)
-                    if merged_cfg_editor:
-                        self.remove_cfg(main_cfg_editor)
-                        self.add_cfg(merged_cfg_editor, aaz_ref=aaz_ref)
-                        merged = True
-                        break
-                new_name = self.generate_unique_name(
-                    *cmd_names[:-1], name=cmd_names[-1])
-                rename_list.append((cmd_names, [*cmd_names[:-1], new_name]))
-            for cmd_names, new_cmd_names in rename_list:
+                if self.find_command_tree_node(*cmd_names):
+                    # command name conflicted with existing command group name
+                    new_name = self.generate_unique_name(
+                        *cmd_names[:-1], name=cmd_names[-1])
+                    rename_cmd_list.append((cmd_names, [*cmd_names[:-1], new_name]))
+                elif cur_cmd := self.find_command_tree_leaf(*cmd_names):
+                    # command name conflict with existing one's
+                    if cur_cmd.version == command.version:
+                        main_cfg_editor = self.load_cfg_editor_by_command(cur_cmd)
+                        merged_cfg_editor = main_cfg_editor.merge(cfg_editor)
+                        if merged_cfg_editor:
+                            self.remove_cfg(main_cfg_editor)
+                            self.add_cfg(merged_cfg_editor, aaz_ref=aaz_ref)
+                            merged = True
+                            break
+                    new_name = self.generate_unique_name(
+                        *cmd_names[:-1], name=cmd_names[-1])
+                    rename_cmd_list.append((cmd_names, [*cmd_names[:-1], new_name]))
+            for cmd_names, new_cmd_names in rename_cmd_list:
                 cfg_editor.rename_command(
                     *cmd_names, new_cmd_names=new_cmd_names)
             if not merged:
@@ -878,14 +906,21 @@ class WorkspaceManager:
         # Merge the commands of subresources which exported in aaz but not exist in current workspace
         self._merge_sub_resources_in_aaz()
 
+        # update client config
+        editor = self.load_client_cfg_editor()
+        if editor:
+            self.aaz_specs.update_client_cfg(editor.cfg)
+
         # update configurations
         for ws_leaf in self.iter_command_tree_leaves():
             editor = self.load_cfg_editor_by_command(ws_leaf)
             cfg = editor.cfg
             self.aaz_specs.update_resource_cfg(cfg)
+
         # update commands
         for ws_leaf in self.iter_command_tree_leaves():
             self.aaz_specs.update_command_by_ws(ws_leaf)
+
         # update command groups
         for ws_node in self.iter_command_tree_nodes():
             if ws_node == self.ws.command_tree:
@@ -1011,3 +1046,41 @@ class WorkspaceManager:
                     similar_arg.var: [similar_arg_idx]
                 }
         return results
+
+    # client config
+
+    def create_cfg_editor(self, templates, auth):
+        ref_cfg = self.load_client_cfg_editor()
+        self._client_cfg_editor = WorkspaceClientCfgEditor.new_client_cfg(plane=self.ws.plane, templates=templates, auth=auth, ref_cfg=ref_cfg)
+        return self._client_cfg_editor
+
+    def load_client_cfg_editor(self, reload=False):
+        if not reload and self._client_cfg_editor:
+            return self._client_cfg_editor
+        assert not self.is_in_memory
+        try:
+            self._client_cfg_editor = WorkspaceClientCfgEditor.load_client_cfg(self.folder)
+            return self._client_cfg_editor
+        except Exception as e:
+            logger.error(
+                f"load workspace client cfg failed: {e}: {self.name}")
+            return None
+    
+    def compare_client_cfg_with_spec(self):
+        """ Check whether the client configuration version in workspace is later than the aaz specs one. """
+        # compare client configuration from aaz specs
+        aaz_client_cfg_reader = self.aaz_specs.load_client_cfg_reader(self.ws.plane)
+        client_cfg_reader = self.load_client_cfg_editor()
+        if client_cfg_reader and not aaz_client_cfg_reader:
+            return True
+        if aaz_client_cfg_reader and not client_cfg_reader:
+            return False
+        if aaz_client_cfg_reader.cfg.version > client_cfg_reader.cfg.version:
+            return False
+        return True
+
+    def inherit_client_cfg_from_spec(self):
+        # inherit client configuration from aaz specs
+        client_cfg_reader = self.aaz_specs.load_client_cfg_reader(self.ws.plane)
+        if client_cfg_reader:
+            self._client_cfg_editor = WorkspaceClientCfgEditor(client_cfg_reader.cfg)

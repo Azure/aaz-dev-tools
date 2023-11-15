@@ -42,91 +42,6 @@ class APIAzTest(CommandTestCase):
                 rv = c.get(mod['url'])
                 self.assertTrue(rv.status_code == 200, mod['url'])
 
-    def test_transfer_command_group(self):
-        self.prepare_aaz()
-        with self.app.test_client() as c:
-            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            self.assertTrue(data['names'] == ['data-bricks'])
-            self.assertTrue(data['help']['short'] == 'Manage databricks workspaces.')
-
-            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            self.assertTrue(data['names'] == ['data-bricks', 'workspace'])
-            self.assertTrue(data['help']['short'] == 'Commands to manage databricks workspace.')
-
-            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            self.assertTrue(data['names'] == ['data-bricks', 'workspace', 'vnet-peering'])
-            self.assertTrue(data['help']['short'] == 'Commands to manage databricks workspace vnet peering.')
-
-    def test_transfer_command(self):
-        self.prepare_aaz()
-
-        with self.app.test_client() as c:
-            version = '2018-04-01'
-            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            self.assertTrue(data['names'] == ['data-bricks', 'workspace', 'create'])
-            self.assertTrue(data['version'] == '2018-04-01')
-            self.assertTrue(data['help'] == {
-                'short': 'Create a new workspace.',
-                'examples': [
-                    {
-                        'commands': [
-                            'data-bricks workspace create --resource-group MyResourceGroup --name MyWorkspace --location westus --sku standard'],
-                        'name': 'Create a workspace'
-                    },
-                    {
-                        'commands': [
-                            'data-bricks workspace create --resource-group MyResourceGroup --name MyWorkspace --location eastus2euap --sku premium --prepare-encryption'],
-                        'name': 'Create a workspace with managed identity for storage account'
-                    }
-                ],
-            })
-            self.assertTrue(data['resources'] == [
-                {
-                    'id': '/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}',
-                    'plane': 'mgmt-plane',
-                    'version': '2018-04-01'
-                }
-            ])
-
-            version = '2021-04-01-preview'
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            self.assertTrue(data['names'] == ['data-bricks', 'workspace', 'create'])
-            self.assertTrue(data['version'] == '2021-04-01-preview')
-            self.assertTrue(data['stage'] == AAZStageEnum.Preview)
-            self.assertTrue(data['help'] == {
-                'short': 'Create a new workspace.',
-                'examples': [
-                    {
-                        'commands': [
-                            'data-bricks workspace create --resource-group MyResourceGroup --name MyWorkspace --location westus --sku standard'],
-                        'name': 'Create a workspace'
-                    },
-                    {
-                        'commands': [
-                            'data-bricks workspace create --resource-group MyResourceGroup --name MyWorkspace --location eastus2euap --sku premium --prepare-encryption'],
-                        'name': 'Create a workspace with managed identity for storage account'
-                    }
-                ],
-            })
-            self.assertTrue(data['resources'] == [
-                {
-                    'id': '/subscriptions/{}/resourcegroups/{}/providers/microsoft.databricks/workspaces/{}',
-                    'plane': 'mgmt-plane',
-                    'version': '2021-04-01-preview'
-                }
-            ])
-
     def test_create_new_module_in_main(self):
         mod_name = "aaz-new-module"
         manager = AzMainManager()
@@ -186,244 +101,180 @@ class APIAzTest(CommandTestCase):
             # latest profile
             version = '2021-12-01'
             profile = profiles[Config.CLI_DEFAULT_PROFILE]
-            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
             profile['commandGroups'] = {
-                'edge-order': data
+                'edge-order': {
+                    'names': ['edge-order'],
+                    'commandGroups': {
+                        'address': {
+                            'names': ['edge-order', 'address'],
+                            'commands': {
+                                'create': {
+                                    'names': ['edge-order', 'address', 'create'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'delete': {
+                                    'names': ['edge-order', 'address', 'delete'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'list': {
+                                    'names': ['edge-order', 'address', 'list'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'show': {
+                                    'names': ['edge-order', 'address', 'show'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'update': {
+                                    'names': ['edge-order', 'address', 'update'],
+                                    'registered': True,
+                                    'version': version,
+                                }
+                            }
+                        },
+                        'order': {
+                            'names': ['edge-order', 'order'],
+                            'commands': {
+                                'list': {
+                                    'names': ['edge-order', 'order', 'list'],
+                                    'version': version,
+                                },
+                                'show': {
+                                    'names': ['edge-order', 'order', 'show'],
+                                    'version': version,
+                                },
+                            }
+                        },
+                        'order-item': {
+                            'names': ['edge-order', 'order-item'],
+                            'commands': {
+                                'cancel': {
+                                    'names': ['edge-order', 'order-item', 'cancel'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'create': {
+                                    'names': ['edge-order', 'order-item', 'create'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'delete': {
+                                    'names': ['edge-order', 'order-item', 'delete'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'show': {
+                                    'names': ['edge-order', 'order-item', 'show'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'update': {
+                                    'names': ['edge-order', 'order-item', 'update'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'return': {
+                                    'names': ['edge-order', 'order-item', 'return'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                            }
+                        }
+                    }
+                }
             }
-
-            edge_order = profile['commandGroups']['edge-order']
-            edge_order['commandGroups'] = {}
-
-            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            edge_order['commandGroups']['address'] = data
-
-            address = profile['commandGroups']['edge-order']['commandGroups']['address']
-            address['commands'] = {}
-
-            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/create/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            address['commands']['create'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/delete/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            address['commands']['delete'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/list/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            address['commands']['list'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/show/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            address['commands']['show'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/update/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            address['commands']['update'] = data
-
-            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            edge_order['commandGroups']['order'] = data
-
-            order = profile['commandGroups']['edge-order']['commandGroups']['order']
-            order['commands'] = {}
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order/Leaves/list/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order['commands']['list'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order/Leaves/show/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order['commands']['show'] = data
-
-            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            edge_order['commandGroups']['order-item'] = data
-
-            order_item = profile['commandGroups']['edge-order']['commandGroups']['order-item']
-            order_item['commands'] = {}
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/cancel/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['cancel'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/create/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['create'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/delete/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['delete'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/list/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['list'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/return/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['return'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/show/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['show'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/update/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['update'] = data
 
             # 2020-09-01-hybrid profile
             version = '2020-12-01-preview'
             profile = profiles[Config.CLI_PROFILES[1]]
-
-            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
             profile['commandGroups'] = {
-                'edge-order': data
+                'edge-order': {
+                    'names': ['edge-order'],
+                    'commandGroups': {
+                        'address': {
+                            'names': ['edge-order', 'address'],
+                            'commands': {
+                                'create': {
+                                    'names': ['edge-order', 'address', 'create'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'delete': {
+                                    'names': ['edge-order', 'address', 'delete'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'list': {
+                                    'names': ['edge-order', 'address', 'list'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'show': {
+                                    'names': ['edge-order', 'address', 'show'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'update': {
+                                    'names': ['edge-order', 'address', 'update'],
+                                    'registered': True,
+                                    'version': version,
+                                }
+                            }
+                        },
+                        'order': {
+                            'names': ['edge-order', 'order'],
+                            'commands': {
+                                'list': {
+                                    'names': ['edge-order', 'order', 'list'],
+                                    'version': version,
+                                },
+                                'show': {
+                                    'names': ['edge-order', 'order', 'show'],
+                                    'version': version,
+                                },
+                            }
+                        },
+                        'order-item': {
+                            'names': ['edge-order', 'order-item'],
+                            'commands': {
+                                'cancel': {
+                                    'names': ['edge-order', 'order-item', 'cancel'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'create': {
+                                    'names': ['edge-order', 'order-item', 'create'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'delete': {
+                                    'names': ['edge-order', 'order-item', 'delete'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'show': {
+                                    'names': ['edge-order', 'order-item', 'show'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'update': {
+                                    'names': ['edge-order', 'order-item', 'update'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'return': {
+                                    'names': ['edge-order', 'order-item', 'return'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                            }
+                        }
+                    }
+                }
             }
-
-            edge_order = profile['commandGroups']['edge-order']
-            edge_order['commandGroups'] = {}
-
-            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            edge_order['commandGroups']['address'] = data
-
-            address = profile['commandGroups']['edge-order']['commandGroups']['address']
-            address['commands'] = {}
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/create/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            address['commands']['create'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/delete/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            address['commands']['delete'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/list/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            address['commands']['list'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/show/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            address['commands']['show'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/address/Leaves/update/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            address['commands']['update'] = data
-
-            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            edge_order['commandGroups']['order'] = data
-
-            order = profile['commandGroups']['edge-order']['commandGroups']['order']
-            order['commands'] = {}
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order/Leaves/list/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order['commands']['list'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order/Leaves/show/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order['commands']['show'] = data
-
-            rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            edge_order['commandGroups']['order-item'] = data
-
-            order_item = profile['commandGroups']['edge-order']['commandGroups']['order-item']
-            order_item['commands'] = {}
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/cancel/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['cancel'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/create/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['create'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/delete/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['delete'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/list/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['list'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/return/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['return'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/show/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['show'] = data
-
-            rv = c.post(
-                f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/edge-order/order-item/Leaves/update/Versions/{b64encode_str(version)}/Transfer")
-            self.assertTrue(rv.status_code == 200)
-            data = rv.get_json()
-            order_item['commands']['update'] = data
 
             rv = c.put(f"/CLI/Az/Main/Modules/{mod_name}", json={
                 "profiles": profiles
@@ -433,116 +284,256 @@ class APIAzTest(CommandTestCase):
             rv = c.get(f"/CLI/Az/Main/Modules/{mod_name}")
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
-            self.assertTrue(data['profiles'] == profiles)
+            self.assertEqual(data['profiles'], profiles)
 
-    # databricks has object whose value type can be anything https://github.com/Azure/azure-rest-api-specs/blob/2c66a689c610dbef623d6c4e4c4e913446d5ac68/specification/databricks/resource-manager/Microsoft.Databricks/stable/2018-04-01/databricks.json#L594-L609
-    # def test_generate_databricks_in_main_repo(self):
-    #     self.prepare_aaz()
-    #     mod_name = "aaz-data-bricks"
-    #     manager = AzMainManager()
-    #     path = manager.get_mod_path(mod_name)
-    #     if os.path.exists(path):
-    #         shutil.rmtree(path, ignore_errors=True)
-    #     with self.app.test_client() as c:
-    #         rv = c.post(f"/CLI/Az/Main/Modules", json={
-    #             "name": mod_name
-    #         })
-    #         self.assertTrue(rv.status_code == 200)
-    #         profiles = rv.get_json()['profiles']
-    #
-    #         # latest profile
-    #         version = '2018-04-01'
-    #         profile = profiles[Config.CLI_DEFAULT_PROFILE]
-    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/Transfer")
-    #         self.assertTrue(rv.status_code == 200)
-    #         data = rv.get_json()
-    #         profile['commandGroups'] = {
-    #             'data-bricks': data
-    #         }
-    #
-    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Transfer")
-    #         self.assertTrue(rv.status_code == 200)
-    #         data = rv.get_json()
-    #         profile['commandGroups']['data-bricks']['commandGroups'] = {
-    #             'workspace': data,
-    #         }
-    #
-    #         workspace = profile['commandGroups']['data-bricks']['commandGroups']['workspace']
-    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Transfer")
-    #         self.assertTrue(rv.status_code == 200)
-    #         data = rv.get_json()
-    #         workspace['commandGroups'] = {
-    #             'vnet-peering': data
-    #         }
-    #
-    #         workspace['commands'] = {}
-    #
-    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/create/Versions/{b64encode_str(version)}/Transfer")
-    #         self.assertTrue(rv.status_code == 200)
-    #         data = rv.get_json()
-    #         workspace['commands']['create'] = data
-    #
-    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/delete/Versions/{b64encode_str(version)}/Transfer")
-    #         self.assertTrue(rv.status_code == 200)
-    #         data = rv.get_json()
-    #         workspace['commands']['delete'] = data
-    #
-    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/list/Versions/{b64encode_str(version)}/Transfer")
-    #         self.assertTrue(rv.status_code == 200)
-    #         data = rv.get_json()
-    #         workspace['commands']['list'] = data
-    #
-    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/show/Versions/{b64encode_str(version)}/Transfer")
-    #         self.assertTrue(rv.status_code == 200)
-    #         data = rv.get_json()
-    #         workspace['commands']['show'] = data
-    #
-    #         rv = c.post(f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/Leaves/update/Versions/{b64encode_str(version)}/Transfer")
-    #         self.assertTrue(rv.status_code == 200)
-    #         data = rv.get_json()
-    #         workspace['commands']['update'] = data
-    #
-    #         vnet_peering = profile['commandGroups']['data-bricks']['commandGroups']['workspace']['commandGroups']['vnet-peering']
-    #         vnet_peering['commands'] = {}
-    #
-    #         rv = c.post(
-    #             f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/create/Versions/{b64encode_str(version)}/Transfer")
-    #         self.assertTrue(rv.status_code == 200)
-    #         data = rv.get_json()
-    #         vnet_peering['commands']['create'] = data
-    #
-    #         rv = c.post(
-    #             f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/delete/Versions/{b64encode_str(version)}/Transfer")
-    #         self.assertTrue(rv.status_code == 200)
-    #         data = rv.get_json()
-    #         vnet_peering['commands']['delete'] = data
-    #
-    #         rv = c.post(
-    #             f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/list/Versions/{b64encode_str(version)}/Transfer")
-    #         self.assertTrue(rv.status_code == 200)
-    #         data = rv.get_json()
-    #         vnet_peering['commands']['list'] = data
-    #
-    #         rv = c.post(
-    #             f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/show/Versions/{b64encode_str(version)}/Transfer")
-    #         self.assertTrue(rv.status_code == 200)
-    #         data = rv.get_json()
-    #         vnet_peering['commands']['show'] = data
-    #
-    #         rv = c.post(
-    #             f"/CLI/Az/AAZ/Specs/CommandTree/Nodes/aaz/data-bricks/workspace/vnet-peering/Leaves/update/Versions/{b64encode_str(version)}/Transfer")
-    #         self.assertTrue(rv.status_code == 200)
-    #         data = rv.get_json()
-    #         vnet_peering['commands']['update'] = data
-    #
-    #         rv = c.put(f"/CLI/Az/Main/Modules/{mod_name}", json={
-    #             "profiles": profiles
-    #         })
-    #         self.assertTrue(rv.status_code == 200)
-    #
-    #         # hybrid_profile = profiles["2020-09-01-hybrid"]
-    #         # hybrid_profile['commandGroups'] = {
-    #         #     "data-bricks": data
-    #         # }
+    def test_generate_data_plane_in_main_repo(self):
+        self.prepare_aaz()
+        mod_name = "aaz-data-plane"
+        manager = AzMainManager()
+        path = manager.get_mod_path(mod_name)
+        if os.path.exists(path):
+            shutil.rmtree(path, ignore_errors=True)
 
+        with self.app.test_client() as c:
+            rv = c.post(f"/CLI/Az/Main/Modules", json={
+                "name": mod_name
+            })
+            self.assertTrue(rv.status_code == 200)
+            profiles = rv.get_json()['profiles']
 
+            # latest profile
+            version = '2021-12-01'
+            profile = profiles[Config.CLI_DEFAULT_PROFILE]
+            profile['commandGroups'] = {
+                'edge-order': {
+                    'names': ['edge-order'],
+                    'commandGroups': {
+                        'address': {
+                            'names': ['edge-order', 'address'],
+                            'commands': {
+                                'create': {
+                                    'names': ['edge-order', 'address', 'create'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'delete': {
+                                    'names': ['edge-order', 'address', 'delete'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'list': {
+                                    'names': ['edge-order', 'address', 'list'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'show': {
+                                    'names': ['edge-order', 'address', 'show'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'update': {
+                                    'names': ['edge-order', 'address', 'update'],
+                                    'registered': True,
+                                    'version': version,
+                                }
+                            }
+                        },
+                        'order': {
+                            'names': ['edge-order', 'order'],
+                            'commands': {
+                                'list': {
+                                    'names': ['edge-order', 'order', 'list'],
+                                    'version': version,
+                                },
+                                'show': {
+                                    'names': ['edge-order', 'order', 'show'],
+                                    'version': version,
+                                },
+                            }
+                        },
+                        'order-item': {
+                            'names': ['edge-order', 'order-item'],
+                            'commands': {
+                                'cancel': {
+                                    'names': ['edge-order', 'order-item', 'cancel'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'create': {
+                                    'names': ['edge-order', 'order-item', 'create'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'delete': {
+                                    'names': ['edge-order', 'order-item', 'delete'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'show': {
+                                    'names': ['edge-order', 'order-item', 'show'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'update': {
+                                    'names': ['edge-order', 'order-item', 'update'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'return': {
+                                    'names': ['edge-order', 'order-item', 'return'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                            }
+                        }
+                    }
+                }
+            }
+
+            version = '2023-06-15-preview'
+            profile['commandGroups']['code-signing'] = {
+                'names': ['code-signing'],
+                'commandGroups': {
+                    'account': {
+                        'names': ['code-signing', 'account'],
+                        'commandGroups': {
+                            'certificate-profile': {
+                                'names': ['code-signing', 'account', 'certificate-profile'],
+                                'commands': {
+                                    'list-eku': {
+                                        'names': ['code-signing', 'account', 'certificate-profile', 'list-eku'],
+                                        'registered': True,
+                                        'version': version,
+                                    },
+                                    # 'sign-result': {
+                                    #     'names': ['code-signing', 'account', 'certificate-profile', 'sign-result'],
+                                    #     'registered': True,
+                                    #     'version': version,
+                                    # },
+                                    # 'sign': {
+                                    #     'names': ['code-signing', 'account', 'certificate-profile', 'sign'],
+                                    #     'registered': True,
+                                    #     'version': version,
+                                    # }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            version = '2023-05-01-preview'
+            profile['commandGroups']['monitor'] = {
+                'names': ['monitor'],
+                'commandGroups': {
+                    'metrics': {
+                        'names': ['monitor', 'metrics'],
+                        'commands': {
+                            'get-batch': {
+                                'names': ['monitor', 'metrics', 'get-batch'],
+                                'registered': True,
+                                'version': version,
+                            }
+                        }
+                    }
+                }
+            }
+
+            # 2020-09-01-hybrid profile
+            version = '2020-12-01-preview'
+            profile = profiles[Config.CLI_PROFILES[1]]
+            profile['commandGroups'] = {
+                'edge-order': {
+                    'names': ['edge-order'],
+                    'commandGroups': {
+                        'address': {
+                            'names': ['edge-order', 'address'],
+                            'commands': {
+                                'create': {
+                                    'names': ['edge-order', 'address', 'create'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'delete': {
+                                    'names': ['edge-order', 'address', 'delete'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'list': {
+                                    'names': ['edge-order', 'address', 'list'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'show': {
+                                    'names': ['edge-order', 'address', 'show'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'update': {
+                                    'names': ['edge-order', 'address', 'update'],
+                                    'registered': True,
+                                    'version': version,
+                                }
+                            }
+                        },
+                        'order': {
+                            'names': ['edge-order', 'order'],
+                            'commands': {
+                                'list': {
+                                    'names': ['edge-order', 'order', 'list'],
+                                    'version': version,
+                                },
+                                'show': {
+                                    'names': ['edge-order', 'order', 'show'],
+                                    'version': version,
+                                },
+                            }
+                        },
+                        'order-item': {
+                            'names': ['edge-order', 'order-item'],
+                            'commands': {
+                                'cancel': {
+                                    'names': ['edge-order', 'order-item', 'cancel'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'create': {
+                                    'names': ['edge-order', 'order-item', 'create'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'delete': {
+                                    'names': ['edge-order', 'order-item', 'delete'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'show': {
+                                    'names': ['edge-order', 'order-item', 'show'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'update': {
+                                    'names': ['edge-order', 'order-item', 'update'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'return': {
+                                    'names': ['edge-order', 'order-item', 'return'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                            }
+                        }
+                    }
+                }
+            }
+
+            rv = c.put(f"/CLI/Az/Main/Modules/{mod_name}", json={
+                "profiles": profiles
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"/CLI/Az/Main/Modules/{mod_name}")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertEqual(data['profiles'], profiles)

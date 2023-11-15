@@ -122,7 +122,7 @@
                               </enum>
                             </prop>
                             <prop readOnly="True" type="object" name="value" required="True">
-                              <additionalProp readOnly="True"/>
+                              <additionalProp readOnly="True" anyType="True"/>
                             </prop>
                           </prop>
                           <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
@@ -258,7 +258,7 @@
                               </enum>
                             </prop>
                             <prop readOnly="True" type="object" name="value" required="True">
-                              <additionalProp readOnly="True"/>
+                              <additionalProp readOnly="True" anyType="True"/>
                             </prop>
                           </prop>
                           <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>

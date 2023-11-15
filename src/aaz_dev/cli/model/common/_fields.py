@@ -1,4 +1,4 @@
-from command.model.configuration import CMDCommand
+from command.model.configuration import CMDCommand, CMDClientConfig
 from schematics.types import StringType, ModelType, BooleanType
 from utils.config import Config
 
@@ -57,3 +57,15 @@ class CLIModifiedField(BooleanType):
     def to_primitive(self, value, context=None):
         # ignore modified value when using to primitive
         return None
+
+
+class CLIClientConfigField(ModelType):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            CMDClientConfig,
+            serialize_when_none=False,
+        )
+
+    def to_primitive(self, value, context=None):
+        return None  # return None when value is false to hide field with `serialize_when_none=False`

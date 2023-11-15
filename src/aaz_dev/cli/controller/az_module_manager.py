@@ -72,7 +72,7 @@ class AzModuleManager:
     def update_module(self, mod_name, profiles, **kwargs):
         aaz_folder = self.get_aaz_path(mod_name)
         generators = {}
-        atomic_builder = AzAtomicProfileBuilder(by_patch=kwargs.pop('by_patch', False))
+        atomic_builder = AzAtomicProfileBuilder(mod_name=mod_name, by_patch=kwargs.pop('by_patch', False))
         for profile_name, profile in profiles.items():
             profile = atomic_builder(profile)
             generators[profile_name] = AzProfileGenerator(aaz_folder, profile)

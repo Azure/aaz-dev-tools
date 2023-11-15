@@ -9,6 +9,7 @@ from schematics.types import ModelType, DictType
 
 from ._command_group import CLIViewCommandGroup
 
+
 class CLIViewProfile(Model):
     name = CLIProfileNameField(required=True)
     command_groups = DictType(

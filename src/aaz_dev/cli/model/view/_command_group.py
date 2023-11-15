@@ -5,7 +5,6 @@
 from cli.model.common._fields import CLICommandNameField
 from schematics.models import Model
 from schematics.types import ModelType, ListType, DictType
-from utils.stage import AAZStageField
 
 from ._command import CLIViewCommand
 

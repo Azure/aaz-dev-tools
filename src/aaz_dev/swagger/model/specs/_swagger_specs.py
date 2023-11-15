@@ -133,7 +133,7 @@ class SingleModuleSwaggerSpecs:
 
         module_str = '/'.join([plane, *names])
         module = None
-        for m in self.get_mgmt_plane_modules(plane):
+        for m in self.get_data_plane_modules(plane):
             if str(m) == module_str:
                 module = m
                 break

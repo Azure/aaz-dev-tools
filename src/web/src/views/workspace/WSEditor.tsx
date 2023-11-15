@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, List, ListSubheader, Paper, ListItemButton, ListItemIcon, Checkbox, ListItemText, ListItem, TextField, Alert} from '@mui/material';
+import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, List, ListSubheader, Paper, ListItemButton, ListItemIcon, Checkbox, ListItemText, ListItem, TextField, Alert, InputLabel, IconButton, Input, Typography, TypographyProps } from '@mui/material';
 import { useParams } from 'react-router';
 import axios from 'axios';
 import { TransitionProps } from '@mui/material/transitions';
@@ -8,6 +8,9 @@ import WSEditorToolBar from './WSEditorToolBar';
 import WSEditorCommandTree, { CommandTreeLeaf, CommandTreeNode } from './WSEditorCommandTree';
 import WSEditorCommandGroupContent, { CommandGroup, DecodeResponseCommandGroup, ResponseCommandGroup, ResponseCommandGroups } from './WSEditorCommandGroupContent';
 import WSEditorCommandContent, { Command, Resource, DecodeResponseCommand, ResponseCommand } from './WSEditorCommandContent';
+import DoDisturbOnRoundedIcon from '@mui/icons-material/DoDisturbOnRounded';
+import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
+import { styled } from '@mui/system';
 
 interface CommandGroupMap {
     [id: string]: CommandGroup
@@ -15,6 +18,29 @@ interface CommandGroupMap {
 
 interface CommandMap {
     [id: string]: Command
+}
+
+interface ClientEndpointTemplate {
+    cloud: string,
+    template: string,
+}
+
+interface ClientTemplateMap {
+    [cloud: string]: string
+}
+
+interface ClientAADAuth {
+    scopes: string[],
+}
+
+interface ClientAuth {
+    aad: ClientAADAuth,
+}
+
+interface ClientConfig {
+    version: string,
+    templates: ClientTemplateMap,
+    auth: ClientAuth,
 }
 
 interface WSEditorProps {
@@ -27,6 +53,7 @@ interface WSEditorState {
     name: string
     workspaceUrl: string,
     plane: string,
+    clientConfigurable: boolean,
 
     selected: Command | CommandGroup | null,
     reloadTimestamp: number | null,
@@ -38,6 +65,7 @@ interface WSEditorState {
 
     showSwaggerResourcePicker: boolean,
     showSwaggerReloadDialog: boolean,
+    showClientConfigDialog: boolean,
     showExportDialog: boolean,
     showDeleteDialog: boolean,
     showModifyDialog: boolean,
@@ -62,6 +90,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             name: this.props.params.workspaceName,
             workspaceUrl: `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}`,
             plane: "",
+            clientConfigurable: false,
             selected: null,
             reloadTimestamp: null,
             expanded: new Set<string>(),
@@ -70,6 +99,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             commandTree: [],
             showSwaggerResourcePicker: false,
             showSwaggerReloadDialog: false,
+            showClientConfigDialog: false,
             showExportDialog: false,
             showDeleteDialog: false,
             showModifyDialog: false,
@@ -87,7 +117,11 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         }
 
         try {
-            const res = await axios.get(workspaceUrl);
+            let res = await axios.get(`/AAZ/Specs/Planes`);
+            let planeNames: String[] = res.data.map((v: any) => {
+                return v.name
+            });
+            res = await axios.get(workspaceUrl);
             const reloadTimestamp = Date.now();
             const commandMap: CommandMap = {};
             const commandGroupMap: CommandGroupMap = {};
@@ -189,6 +223,8 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 selected = commandGroupMap[commandTree[0].id];
             }
 
+            // when the plane name not included in the built-in planes, it is a client configurable plane
+            const clientConfigurable = !planeNames.includes(res.data.plane);
             this.setState(preState => {
                 const newExpanded = new Set<string>();
 
@@ -209,6 +245,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 return {
                     ...preState,
                     plane: res.data.plane,
+                    clientConfigurable: clientConfigurable,
                     commandTree: commandTree,
                     selected: selected,
                     reloadTimestamp: reloadTimestamp,
@@ -227,13 +264,21 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 this.setState(preState => {
                     const newExpanded = new Set(preState.expanded);
                     expandedIdParts.forEach((value, idx) => {
-                        newExpanded.add(expandedIdParts.slice(0, idx+1).join('/'));
+                        newExpanded.add(expandedIdParts.slice(0, idx + 1).join('/'));
                     })
                     return {
                         ...preState,
                         expanded: newExpanded,
                     }
                 })
+            }
+
+            if (clientConfigurable) {
+                const clientConfig = await this.getWorkspaceClientConfig(workspaceUrl);
+                if (clientConfig == null) {
+                    this.showClientConfigDialog();
+                    return;
+                }
             }
 
             if (commandTree.length === 0) {
@@ -244,12 +289,36 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         }
     }
 
+    getWorkspaceClientConfig = async (workspaceUrl: string) => {
+        try {
+            let res = await axios.get(`${workspaceUrl}/ClientConfig`);
+            const clientConfig: ClientConfig = {
+                version: res.data.version,
+                templates: {},
+                auth: res.data.auth,
+            }
+            res.data.endpoints.templates.forEach((value: any) => {
+                clientConfig.templates[value.cloud] = value.template;
+            });
+            return clientConfig;
+        } catch (err: any) {
+            // catch 404 error
+            if (err.response?.status === 404) {
+                return null;
+            }
+        }
+    }
+
+    showClientConfigDialog = () => {
+        this.setState({ showClientConfigDialog: true })
+    }
+
     showSwaggerResourcePicker = () => {
         this.setState({ showSwaggerResourcePicker: true })
     }
 
     showSwaggerReloadDialog = () => {
-        this.setState({ showSwaggerReloadDialog: true})
+        this.setState({ showSwaggerReloadDialog: true })
     }
 
     handleSwaggerReloadDialogClose = async (reloaded: boolean) => {
@@ -284,10 +353,15 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         })
     }
 
-    handleGenerationClose = (exported: boolean) => {
+    handleGenerationClose = (exported: boolean, showClientConfigDialog: boolean) => {
         this.setState({
             showExportDialog: false
         })
+        if (showClientConfigDialog) {
+            this.setState({
+                showClientConfigDialog: true
+            })
+        }
     }
 
     handleDelete = () => {
@@ -300,7 +374,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         this.setState({
             showDeleteDialog: false
         })
-        if(deleted) {
+        if (deleted) {
             this.handleBackToHomepage(false);
         }
     }
@@ -360,15 +434,24 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         });
     }
 
+    handleClientConfigDialogClose = (updated: boolean) => {
+        this.setState({
+            showClientConfigDialog: false
+        })
+        if (updated) {
+            this.loadWorkspace();
+        }
+    }
+
     render() {
-        const { showSwaggerResourcePicker, showSwaggerReloadDialog, showExportDialog, showDeleteDialog, showModifyDialog, plane, name, commandTree, selected, reloadTimestamp, workspaceUrl, expanded } = this.state;
+        const { showSwaggerResourcePicker, showSwaggerReloadDialog, showExportDialog, showDeleteDialog, showModifyDialog, plane, name, commandTree, selected, reloadTimestamp, workspaceUrl, expanded, showClientConfigDialog, clientConfigurable } = this.state;
         const expandedIds: string[] = []
         expanded.forEach((expandId) => {
             expandedIds.push(expandId);
         })
         return (
             <React.Fragment>
-                <WSEditorToolBar workspaceName={name} onHomePage={() => {this.handleBackToHomepage(true);}} onGenerate={this.handleGenerate} onDelete={this.handleDelete} onModify={this.handleModify} >
+                <WSEditorToolBar workspaceName={name} onHomePage={() => { this.handleBackToHomepage(true); }} onGenerate={this.handleGenerate} onDelete={this.handleDelete} onModify={this.handleModify} >
                 </WSEditorToolBar>
 
                 <Box sx={{ display: 'flex' }}>
@@ -390,6 +473,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                                 onReload={this.showSwaggerReloadDialog}
                                 selected={selected!.id}
                                 expanded={expandedIds}
+                                onEditClientConfig={clientConfigurable ? this.showClientConfigDialog : undefined}
                             />
                         }
                     </Drawer>
@@ -426,67 +510,140 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 </Dialog>
                 {showModifyDialog && <WSRenameDialog workspaceUrl={workspaceUrl} workspaceName={name} open={showModifyDialog} onClose={this.handleModifyClose} />}
                 {showDeleteDialog && <WSEditorDeleteDialog workspaceName={name} open={showDeleteDialog} onClose={this.handleDeleteClose} />}
-                {showExportDialog && <WSEditorExportDialog workspaceUrl={workspaceUrl} open={showExportDialog} onClose={this.handleGenerationClose} />}
+                {showExportDialog && <WSEditorExportDialog workspaceUrl={workspaceUrl} open={showExportDialog} clientConfigurable={clientConfigurable} onClose={this.handleGenerationClose} />}
                 {showSwaggerReloadDialog && <WSEditorSwaggerReloadDialog workspaceUrl={workspaceUrl} open={showSwaggerReloadDialog} onClose={this.handleSwaggerReloadDialogClose} />}
+                {showClientConfigDialog && <WSEditorClientConfigDialog workspaceUrl={workspaceUrl} open={showClientConfigDialog} onClose={this.handleClientConfigDialogClose} />}
             </React.Fragment>
         )
     }
 }
 
-function WSEditorExportDialog(props: {
+interface WSEditorExportDialogProps {
     workspaceUrl: string,
     open: boolean,
-    onClose: (exported: boolean) => void,
-}) {
-    const [updating, setUpdating] = React.useState<boolean>(false);
-    const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
+    clientConfigurable: boolean,
+    onClose: (exported: boolean, showClientConfigDialog: boolean) => void,
+}
 
-    const handleClose = () => {
-        props.onClose(false);
+interface WSEditorExportDialogState {
+    updating: boolean,
+    invalidText: string | undefined,
+    clientConfigOOD: boolean,
+}
+class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WSEditorExportDialogState> {
+
+    constructor(props: WSEditorExportDialogProps) {
+        super(props);
+        this.state = {
+            updating: false,
+            invalidText: undefined,
+            clientConfigOOD: false,
+        }
     }
 
-    const handleExport = () => {
-        const url = `${props.workspaceUrl}/Generate`;
-        setUpdating(true);
+    componentDidMount(): void {
+        if (this.props.clientConfigurable) {
+            this.verifyClientConfig();
+        }
+    }
 
-        axios.post(url)
-            .then(res => {
-                setUpdating(false);
-                props.onClose(true);
-            }).catch(err => {
+    handleClose = () => {
+        this.props.onClose(false, false);
+    }
+
+    verifyClientConfig = async () => {
+        const url = `${this.props.workspaceUrl}/ClientConfig/AAZ/Compare`;
+        this.setState({updating: true});
+        try {
+            await axios.post(url);
+            this.setState({clientConfigOOD: false, updating: false});
+        } catch (err: any) {
+            // catch 409 error
+            if (err.response?.status === 409) {
+                this.setState({
+                    invalidText: `The client config in this workspace is out of date. Please refresh it first.`,
+                    clientConfigOOD: true,
+                    updating: false,
+                });
+                return;
+            } else {
                 console.error(err.response)
                 if (err.response?.data?.message) {
                     const data = err.response!.data!;
-                    setInvalidText(
-                        `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
-                    );
+                    this.setState({
+                        invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
+                    });
                 }
-                setUpdating(false);
-            })
+                this.setState({updating: false});
+            }
+        }
     }
 
-    return (
-        <Dialog
-            disableEscapeKeyDown
-            open={props.open}
-        >
-            <DialogTitle>Export workspace command models to AAZ Repo</DialogTitle>
-            <DialogContent>
-                {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
-            </DialogContent>
-            <DialogActions>
-                {updating &&
-                    <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
-                    </Box>
-                }
-                {!updating && <React.Fragment>
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleExport}>Confirm</Button>
-                </React.Fragment>}
-            </DialogActions>
-        </Dialog>
-    )
+    inheritClientConfig = async () => {
+        const url = `${this.props.workspaceUrl}/ClientConfig/AAZ/Inherit`;
+        this.setState({updating: true});
+        try {
+            await axios.post(url);
+            this.setState({clientConfigOOD: false, updating: false});
+            this.props.onClose(false, true);
+        } catch (err: any) {
+            console.error(err.response)
+            if (err.response?.data?.message) {
+                const data = err.response!.data!;
+                this.setState({
+                    invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
+                });
+            }
+            this.setState({updating: false});
+        }
+    }
+
+    handleExport = async () => {
+        const url = `${this.props.workspaceUrl}/Generate`;
+        this.setState({updating: true});
+
+        try {
+            await axios.post(url);
+            this.setState({updating: false});
+            this.props.onClose(false, false);
+        } catch (err: any) {
+            console.error(err.response)
+            if (err.response?.data?.message) {
+                const data = err.response!.data!;
+                this.setState({
+                    invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
+                });
+            }
+            this.setState({updating: false});
+        }
+    }
+
+    render(): React.ReactNode {
+        const { updating, invalidText, clientConfigOOD } = this.state;
+        return (
+            <Dialog
+                disableEscapeKeyDown
+                open={this.props.open}
+            >
+                <DialogTitle>Export workspace command models to AAZ Repo</DialogTitle>
+                <DialogContent>
+                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                </DialogContent>
+                <DialogActions>
+                    {updating &&
+                        <Box sx={{ width: '100%' }}>
+                            <LinearProgress color='info' />
+                        </Box>
+                    }
+                    {!updating && <React.Fragment>
+                        {clientConfigOOD && <Button onClick={this.inheritClientConfig}>Refresh Client Config</Button>}
+                        {!clientConfigOOD && <Button onClick={this.handleClose}>Cancel</Button>}
+                        {!clientConfigOOD && <Button onClick={this.handleExport}>Confirm</Button>}
+                    </React.Fragment>}
+                </DialogActions>
+            </Dialog>
+        )
+    }
 }
 
 function WSEditorDeleteDialog(props: {
@@ -509,7 +666,7 @@ function WSEditorDeleteDialog(props: {
             .then((res) => {
                 setUpdating(false);
                 props.onClose(true);
-            })            
+            })
             .catch(err => {
                 console.error(err.response.data);
                 if (err.response?.data?.message) {
@@ -519,7 +676,7 @@ function WSEditorDeleteDialog(props: {
                     );
                 }
                 setUpdating(false);
-        })
+            })
 
     }
 
@@ -530,21 +687,21 @@ function WSEditorDeleteDialog(props: {
         >
             <DialogTitle>Delete '{props.workspaceName}' workspace?</DialogTitle>
             <DialogContent dividers={true}>
-                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
-                    <TextField
-                        id="name"
-                        label="Workspace Name"
-                        helperText="Please type workspace name to confirm."
-                        type="text"
-                        fullWidth
-                        variant='standard'
-                        value={confirmName}
-                        onChange={(event: any) => {
-                            setConfirmName(event.target.value)
-                        }}
-                        margin="normal" required
-                    />
-                </DialogContent>
+                {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                <TextField
+                    id="name"
+                    label="Workspace Name"
+                    helperText="Please type workspace name to confirm."
+                    type="text"
+                    fullWidth
+                    variant='standard'
+                    value={confirmName}
+                    onChange={(event: any) => {
+                        setConfirmName(event.target.value)
+                    }}
+                    margin="normal" required
+                />
+            </DialogContent>
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
@@ -584,7 +741,7 @@ class WSEditorSwaggerReloadDialog extends React.Component<WSEditorSwaggerReloadD
             selectedResources: new Set(),
         }
     }
-    
+
     componentDidMount() {
         this.loadResourceOptions();
     }
@@ -619,16 +776,16 @@ class WSEditorSwaggerReloadDialog extends React.Component<WSEditorSwaggerReloadD
     }
 
     handleReload = async () => {
-        const {selectedResources, resourceOptions} = this.state;
+        const { selectedResources, resourceOptions } = this.state;
         const data = {
             resources: resourceOptions
-            .filter(option => selectedResources.has(option.id))
-            .map(option => {
-                return {
-                    id: option.id,
-                    version: option.version,
-                }
-            })
+                .filter(option => selectedResources.has(option.id))
+                .map(option => {
+                    return {
+                        id: option.id,
+                        version: option.version,
+                    }
+                })
         }
 
         const url = `${this.props.workspaceUrl}/Resources/ReloadSwagger`;
@@ -636,7 +793,7 @@ class WSEditorSwaggerReloadDialog extends React.Component<WSEditorSwaggerReloadD
             invalidText: undefined,
             updating: true,
         })
-        
+
         try {
             await axios.post(url, data);
             this.setState({
@@ -682,7 +839,7 @@ class WSEditorSwaggerReloadDialog extends React.Component<WSEditorSwaggerReloadD
     }
 
     render() {
-        const {invalidText, selectedResources, updating, resourceOptions} = this.state;
+        const { invalidText, selectedResources, updating, resourceOptions } = this.state;
 
         return (
             <Dialog
@@ -695,82 +852,82 @@ class WSEditorSwaggerReloadDialog extends React.Component<WSEditorSwaggerReloadD
                 <DialogContent>
                     {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
                     <List
-                            sx={{ flexGrow: 1 }}
-                            subheader={<ListSubheader>
-                                <Box sx={{
-                                    mt: 1,
-                                    mb: 1,
-                                    flexDirection: 'column',
+                        sx={{ flexGrow: 1 }}
+                        subheader={<ListSubheader>
+                            <Box sx={{
+                                mt: 1,
+                                mb: 1,
+                                flexDirection: 'column',
+                                display: 'flex',
+                                alignItems: 'stretch',
+                                justifyContent: 'flex-start',
+                            }} color='inherit'>
+                                {/* <Typography component='h6'>Resource Url</Typography> */}
+
+                                <Paper sx={{
                                     display: 'flex',
-                                    alignItems: 'stretch',
-                                    justifyContent: 'flex-start',
-                                }} color='inherit'>
-                                    {/* <Typography component='h6'>Resource Url</Typography> */}
-    
-                                    <Paper sx={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    mt: 1,
+                                }} variant="outlined" square>
+
+                                    <ListItemButton dense onClick={this.onSelectedAllClick} disabled={resourceOptions.length === 0}>
+                                        <ListItemIcon>
+                                            <Checkbox
+                                                edge="start"
+                                                checked={selectedResources.size > 0 && selectedResources.size === resourceOptions.length}
+                                                indeterminate={selectedResources.size > 0 && selectedResources.size < resourceOptions.length}
+                                                tabIndex={-1}
+                                                disableRipple
+                                                inputProps={{ 'aria-labelledby': 'SelectAll' }}
+                                            />
+                                        </ListItemIcon>
+                                        <ListItemText id="SelectAll"
+                                            primary={`All (${resourceOptions.length})`}
+                                            primaryTypographyProps={{
+                                                variant: "h6",
+                                            }}
+                                        />
+                                    </ListItemButton>
+                                </Paper>
+                            </Box>
+                        </ListSubheader>}
+                    >
+
+                        {resourceOptions.length > 0 && <Paper sx={{ ml: 2, mr: 2 }} variant="outlined" square>
+                            {resourceOptions.map((option) => {
+                                const labelId = `resource-${option.id}`;
+                                const selected = selectedResources.has(option.id);
+                                return <ListItem
+                                    key={option.id}
+                                    sx={{
                                         display: 'flex',
                                         flexDirection: 'row',
                                         alignItems: 'center',
-                                        mt: 1,
-                                    }} variant="outlined" square>
-    
-                                        <ListItemButton dense onClick={this.onSelectedAllClick} disabled={resourceOptions.length === 0}>
-                                            <ListItemIcon>
-                                                <Checkbox
-                                                    edge="start"
-                                                    checked={selectedResources.size > 0 && selectedResources.size === resourceOptions.length}
-                                                    indeterminate={selectedResources.size > 0 && selectedResources.size < resourceOptions.length}
-                                                    tabIndex={-1}
-                                                    disableRipple
-                                                    inputProps={{ 'aria-labelledby': 'SelectAll' }}
-                                                />
-                                            </ListItemIcon>
-                                            <ListItemText id="SelectAll"
-                                                primary={`All (${resourceOptions.length})`}
-                                                primaryTypographyProps={{
-                                                    variant: "h6",
-                                                }}
+                                    }}
+                                    disablePadding
+                                >
+                                    <ListItemButton dense onClick={this.onResourceItemClick(option.id)}>
+                                        <ListItemIcon>
+                                            <Checkbox
+                                                edge="start"
+                                                checked={selected}
+                                                tabIndex={-1}
+                                                disableRipple
+                                                inputProps={{ 'aria-labelledby': labelId }}
                                             />
-                                        </ListItemButton>
-                                    </Paper>
-                                </Box>
-                            </ListSubheader>}
-                        >
-    
-                            {resourceOptions.length > 0 && <Paper sx={{ ml: 2, mr: 2 }} variant="outlined" square>
-                                {resourceOptions.map((option) => {
-                                    const labelId = `resource-${option.id}`;
-                                    const selected = selectedResources.has(option.id);
-                                    return <ListItem
-                                        key={option.id}
-                                        sx={{
-                                            display: 'flex',
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                        }}
-                                        disablePadding
-                                    >
-                                        <ListItemButton dense onClick={this.onResourceItemClick(option.id)}>
-                                            <ListItemIcon>
-                                                <Checkbox
-                                                    edge="start"
-                                                    checked={selected}
-                                                    tabIndex={-1}
-                                                    disableRipple
-                                                    inputProps={{ 'aria-labelledby': labelId }}
-                                                />
-                                            </ListItemIcon>
-                                            <ListItemText id={labelId}
-                                                primary={`${option.version} ${option.id}`}
-                                                primaryTypographyProps={{
-                                                    variant: "h6",
-                                                }}
-                                            />
-                                        </ListItemButton>
-                                    </ListItem>
-                                })}
-                            </Paper>}
-                        </List>
+                                        </ListItemIcon>
+                                        <ListItemText id={labelId}
+                                            primary={`${option.version} ${option.id}`}
+                                            primaryTypographyProps={{
+                                                variant: "h6",
+                                            }}
+                                        />
+                                    </ListItemButton>
+                                </ListItem>
+                            })}
+                        </Paper>}
+                    </List>
                 </DialogContent>
                 <DialogActions>
                     {updating &&
@@ -784,7 +941,7 @@ class WSEditorSwaggerReloadDialog extends React.Component<WSEditorSwaggerReloadD
                     </React.Fragment>}
                 </DialogActions>
             </Dialog>
-        ) 
+        )
     }
 
 }
@@ -817,7 +974,7 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
         let { workspaceUrl, workspaceName } = this.props;
 
         let nName = newWSName.trim();
-        if (nName.length < 1){
+        if (nName.length < 1) {
             this.setState({
                 invalidText: `Field 'Name' is required.`
             })
@@ -854,10 +1011,10 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
                         invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
                     })
                 }
-                
+
             })
         }
-        
+
     }
 
     handleClose = () => {
@@ -908,6 +1065,375 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
         )
     }
 }
+
+interface WSEditorClientConfigDialogProps {
+    workspaceUrl: string,
+    open: boolean,
+    onClose: (updated: boolean) => void
+}
+
+interface WSEditorClientConfigDialogState {
+    updating: boolean,
+    invalidText: string | undefined,
+    isAdd: boolean,
+
+    templateAzureCloud: string,
+    templateAzureChinaCloud: string,
+    templateAzureUSGovernment: string,
+    templateAzureGermanCloud: string,
+    aadAuthScopes: string[],
+}
+
+
+const AuthTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: theme.palette.primary.main,
+    fontFamily: "'Roboto Condensed', sans-serif",
+    fontSize: 16,
+    fontWeight: 400,
+}));
+
+class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDialogProps, WSEditorClientConfigDialogState> {
+
+    constructor(props: WSEditorClientConfigDialogProps) {
+        super(props);
+        this.state = {
+            updating: false,
+            invalidText: undefined,
+            isAdd: true,
+            templateAzureCloud: "",
+            templateAzureChinaCloud: "",
+            templateAzureUSGovernment: "",
+            templateAzureGermanCloud: "",
+            aadAuthScopes: ["",],
+        }
+    }
+
+    componentDidMount(): void {
+        this.loadWorkspaceClientConfig();
+    }
+
+    loadWorkspaceClientConfig = async () => {
+        this.setState({ updating: true });
+        try {
+            let res = await axios.get(`${this.props.workspaceUrl}/ClientConfig`);
+            const clientConfig: ClientConfig = {
+                version: res.data.version,
+                templates: {},
+                auth: res.data.auth,
+            }
+            res.data.endpoints.templates.forEach((value: any) => {
+                clientConfig.templates[value.cloud] = value.template;
+            });
+            this.setState({
+                aadAuthScopes: clientConfig.auth.aad.scopes ?? ["",],
+                templateAzureCloud: clientConfig.templates['AzureCloud'] ?? "",
+                templateAzureChinaCloud: clientConfig.templates['AzureChinaCloud'] ?? "",
+                templateAzureUSGovernment: clientConfig.templates['AzureUSGovernment'] ?? "",
+                templateAzureGermanCloud: clientConfig.templates['AzureGermanCloud'] ?? "",
+                isAdd: false
+            });
+        } catch (err: any) {
+            // catch 404 error
+            if (err.response?.status === 404) {
+                this.setState({
+                    isAdd: true,
+                });
+            } else {
+                console.error(err.response);
+                if (err.response?.data?.message) {
+                    const data = err.response!.data!;
+                    this.setState({ invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}` });
+                }
+            }
+        }
+        this.setState({ updating: false });
+    }
+
+    handleClose = () => {
+        this.props.onClose(false);
+    }
+
+    handleUpdate = async () => {
+        let { aadAuthScopes, templateAzureCloud, templateAzureChinaCloud, templateAzureGermanCloud, templateAzureUSGovernment } = this.state
+        templateAzureCloud = templateAzureCloud.trim();
+        if (templateAzureCloud.length < 1) {
+            this.setState({
+                invalidText: "Azure Cloud Endpoint Template is required."
+            });
+            return;
+        }
+        templateAzureChinaCloud = templateAzureChinaCloud.trim();
+        templateAzureUSGovernment = templateAzureUSGovernment.trim();
+        templateAzureGermanCloud = templateAzureGermanCloud.trim();
+        // verify template url using regex, like https://{vaultName}.vault.azure.net
+        const templateRegex = /^https:\/\/((\{[a-zA-Z0-9]+\})|([^{}.]+))(.((\{[a-zA-Z0-9]+\})|([^{}.]+)))*(\/)?$/;
+        if (!templateRegex.test(templateAzureCloud)) {
+            this.setState({
+                invalidText: "Azure Cloud Endpoint Template is invalid."
+            });
+            return;
+        }
+
+        if (templateAzureChinaCloud.length > 0 && !templateRegex.test(templateAzureChinaCloud)) {
+            this.setState({
+                invalidText: "Azure China Cloud Endpoint Template is invalid."
+            });
+            return;
+        }
+
+        if (templateAzureUSGovernment.length > 0 && !templateRegex.test(templateAzureUSGovernment)) {
+            this.setState({
+                invalidText: "Azure US Government Endpoint Template is invalid."
+            });
+            return;
+        }
+
+        if (templateAzureGermanCloud.length > 0 && !templateRegex.test(templateAzureGermanCloud)) {
+            this.setState({
+                invalidText: "Azure German Cloud Endpoint Template is invalid."
+            });
+            return;
+        }
+
+        aadAuthScopes = aadAuthScopes.map(scope => scope.trim()).filter(scope => scope.length > 0);
+        if (aadAuthScopes.length < 1) {
+            this.setState({
+                invalidText: "AAD Auth Scopes is required."
+            });
+            return;
+        }
+
+        let auth = {
+            aad: {
+                scopes: aadAuthScopes,
+            }
+        }
+
+        let templates: ClientEndpointTemplate[] = [
+            { cloud: 'AzureCloud', template: templateAzureCloud },
+        ];
+        if (templateAzureChinaCloud.length > 0) {
+            templates.push({ cloud: 'AzureChinaCloud', template: templateAzureChinaCloud });
+        }
+        if (templateAzureUSGovernment.length > 0) {
+            templates.push({ cloud: 'AzureUSGovernment', template: templateAzureUSGovernment });
+        }
+        if (templateAzureGermanCloud.length > 0) {
+            templates.push({ cloud: 'AzureGermanCloud', template: templateAzureGermanCloud });
+        }
+
+        this.onUpdateClientConfig(
+            templates,
+            auth,
+        );
+    }
+
+    onUpdateClientConfig = async (
+        templates: ClientEndpointTemplate[],
+        auth: ClientAuth,
+    ) => {
+        this.setState({ updating: true });
+        try {
+            await axios.post(`${this.props.workspaceUrl}/ClientConfig`, {
+                templates: templates,
+                auth: auth,
+            });
+            this.setState({ updating: false });
+            this.props.onClose(true);
+        } catch (err: any) {
+            console.error(err.response);
+            if (err.response?.data?.message) {
+                const data = err.response!.data!;
+                this.setState({ invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}` });
+            }
+            this.setState({ updating: false });
+        }
+
+    }
+
+    onRemoveAadScope = (idx: number) => {
+        this.setState(preState => {
+            let aadAuthScopes: string[] = [...preState.aadAuthScopes.slice(0, idx), ...preState.aadAuthScopes.slice(idx + 1)];
+            if (aadAuthScopes.length === 0) {
+                aadAuthScopes.push("");
+            }
+            return {
+                ...preState,
+                aadAuthScopes: aadAuthScopes,
+            }
+        })
+    }
+
+    onModifyAadScope = (scope: string, idx: number) => {
+        this.setState(preState => {
+            return {
+                ...preState,
+                aadAuthScopes: [...preState.aadAuthScopes.slice(0, idx), scope, ...preState.aadAuthScopes.slice(idx + 1)]
+            }
+        })
+    }
+
+    onAddAadScope = () => {
+        this.setState(preState => {
+            return {
+                ...preState,
+                aadAuthScopes: [...preState.aadAuthScopes, ""],
+            }
+        })
+    }
+
+    buildAadScopeInput = (scope: string, idx: number) => {
+        return (
+            <Box key={idx} sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                ml: 1,
+            }}>
+                <IconButton
+                    edge="start"
+                    color="inherit"
+                    onClick={() => this.onRemoveAadScope(idx)}
+                    aria-label='remove'
+                >
+                    <DoDisturbOnRoundedIcon fontSize="small" />
+                </IconButton>
+                <Input
+                    id={`aadScope-${idx}`}
+                    value={scope}
+                    onChange={(event: any) => {
+                        this.onModifyAadScope(event.target.value, idx);
+                    }}
+                    sx={{ flexGrow: 1 }}
+                    placeholder="Input aad auth Scope here, e.g. https://metrics.monitor.azure.com/.default"
+                />
+
+            </Box>
+        )
+    }
+
+    render() {
+        const { invalidText, updating, isAdd, aadAuthScopes, templateAzureCloud, templateAzureChinaCloud, templateAzureUSGovernment, templateAzureGermanCloud } = this.state;
+        return (
+            <Dialog
+                disableEscapeKeyDown
+                fullWidth={true}
+                maxWidth="md"
+                open={this.props.open}
+            >
+                <DialogTitle>{isAdd ? "Setup Client Config" : "Modify Client Config"}</DialogTitle>
+                <DialogContent dividers={true}>
+                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                    <InputLabel required sx={{ font: "inherit", mt: 1 }}>Endpoint Templates</InputLabel>
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        ml: 1,
+                    }}>
+                        <TextField
+                            id="AzureCloud"
+                            label="Azure Cloud"
+                            type="text"
+                            fullWidth
+                            variant='standard'
+                            placeholder="Endpoint template in Azure Cloud, e.g. https://{vaultName}.vault.azure.net"
+                            value={templateAzureCloud}
+                            onChange={(event: any) => {
+                                this.setState({
+                                    templateAzureCloud: event.target.value,
+                                })
+                            }}
+                            margin='dense'
+                            required
+                        />
+
+                        <TextField
+                            id="AzureChinaCloud"
+                            label="Azure China Cloud"
+                            type="text"
+                            fullWidth
+                            variant='standard'
+                            placeholder="Endpoint template in Azure China Cloud, e.g. https://{vaultName}.vault.azure.cn"
+                            value={templateAzureChinaCloud}
+                            onChange={(event: any) => {
+                                this.setState({
+                                    templateAzureChinaCloud: event.target.value,
+                                })
+                            }}
+                            margin='normal'
+                        />
+
+                        <TextField
+                            id="AzureUSGovernment"
+                            label="Azure US Government"
+                            type="text"
+                            fullWidth
+                            variant='standard'
+                            placeholder="Endpoint template in Azure US Government, e.g. https://{vaultName}.vault.usgovcloudapi.net"
+                            value={templateAzureUSGovernment}
+                            onChange={(event: any) => {
+                                this.setState({
+                                    templateAzureUSGovernment: event.target.value,
+                                })
+                            }}
+                            margin='normal'
+                        />
+
+                        <TextField
+                            id="AzureGermanCloud"
+                            label="Azure German Cloud"
+                            type="text"
+                            fullWidth
+                            variant='standard'
+                            placeholder="Endpoint template in Azure German Cloud, e.g. https://{vaultName}.vault.microsoftazure.de"
+                            value={templateAzureGermanCloud}
+                            onChange={(event: any) => {
+                                this.setState({
+                                    templateAzureGermanCloud: event.target.value,
+                                })
+                            }}
+                            margin='normal'
+                        />
+
+                    </Box>
+                    <InputLabel required sx={{ font: "inherit", mt: 1 }}>AAD Auth Scopes</InputLabel>
+                    {aadAuthScopes?.map(this.buildAadScopeInput)}
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        ml: 1,
+                    }}>
+                        <IconButton
+                            edge="start"
+                            color="inherit"
+                            onClick={this.onAddAadScope}
+                            aria-label='add'
+                        >
+                            <AddCircleRoundedIcon fontSize="small" />
+                        </IconButton>
+                        <AuthTypography sx={{ flexShrink: 0 }}> One more scope </AuthTypography>
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    {updating &&
+                        <Box sx={{ width: '100%' }}>
+                            <LinearProgress color='info' />
+                        </Box>
+                    }
+                    {!updating && <React.Fragment>
+                        {!isAdd && <Button onClick={this.handleClose}>Cancel</Button>}
+                        <Button onClick={this.handleUpdate}>Update</Button>
+                    </React.Fragment>}
+                </DialogActions>
+            </Dialog>)
+    }
+}
+
 
 const WSEditorWrapper = (props: any) => {
     const params = useParams()

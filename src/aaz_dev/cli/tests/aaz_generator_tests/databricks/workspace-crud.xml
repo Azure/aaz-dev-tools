@@ -113,7 +113,7 @@
                           </enum>
                         </prop>
                         <prop readOnly="True" type="object" name="value" required="True">
-                          <additionalProp readOnly="True"/>
+                          <additionalProp readOnly="True" anyType="True"/>
                         </prop>
                       </prop>
                       <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
@@ -491,7 +491,7 @@
                           </enum>
                         </prop>
                         <prop readOnly="True" type="object" name="value" required="True">
-                          <additionalProp readOnly="True"/>
+                          <additionalProp readOnly="True" anyType="True"/>
                         </prop>
                       </prop>
                       <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
@@ -765,7 +765,7 @@
                           </enum>
                         </prop>
                         <prop readOnly="True" type="object" name="value" required="True">
-                          <additionalProp readOnly="True"/>
+                          <additionalProp readOnly="True" anyType="True"/>
                         </prop>
                       </prop>
                       <prop type="@WorkspaceCustomStringParameter_read" name="storageAccountName"/>
@@ -821,7 +821,7 @@
         </http>
       </operation>
       <operation>
-        <instanceUpdate instance="$Instance">
+        <instanceUpdate ref="$Instance">
           <json>
             <schema type="object" name="parameters" clientFlatten="True">
               <prop type="object" name="properties" required="True" clientFlatten="True">

@@ -1,0 +1,48 @@
+{% extends "python.j2" %}
+{% block pylint %}
+# pylint: skip-file
+# flake8: noqa
+{% endblock %}
+
+{% block imports %}
+from azure.cli.core.aaz import *
+{% endblock %}
+
+{% block code %}
+{%- for client in leaf.iter_clients() %}
+
+@register_client({{ client.registered_name|constant_convert }})
+class {{ client.registered_name }}(AAZBaseClient):
+
+    _CLOUD_HOST_TEMPLATES = {
+        {%- for cloud, template in client.iter_hosts() %}
+        CloudNameEnum.{{cloud}}: {{ template|constant_convert }},
+        {%- endfor %}
+    }
+
+    _AAD_CREDENTIAL_SCOPES = [
+        {%- for scope in client.aad_scopes %}
+        {{ scope|constant_convert }},
+        {%- endfor %}
+    ]
+
+    @classmethod
+    def _build_base_url(cls, ctx, **kwargs):
+        return cls._CLOUD_HOST_TEMPLATES.get(ctx.cli_ctx.cloud.name, None)
+
+    @classmethod
+    def _build_configuration(cls, ctx, credential, **kwargs):
+        return AAZClientConfiguration(
+            credential=credential,
+            credential_scopes=cls._AAD_CREDENTIAL_SCOPES,
+            **kwargs
+        )
+{{ "" }}
+{%- endfor %}
+
+__all__ = [
+    {%- for client in leaf.iter_clients() %}
+    {{ client.registered_name|constant_convert }},
+    {%- endfor %}
+]
+{% endblock %}
