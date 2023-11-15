@@ -3,6 +3,11 @@
 Release History
 ===============
 
+2.3.0
+++++++
+* Support data-plane generation. (#307)
+* Fix bug in swagger discriminator parse. (#305)
+
 2.2.0
 ++++++
 * Add `aaz-dev swagger export-resources` command. (#302)
