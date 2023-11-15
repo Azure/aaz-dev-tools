@@ -19,7 +19,8 @@ class ClientConfigurationTest(TestCase):
                 }
             }
         })
-        cfg.endpoints = CMDClientEndpoints({
+        cfg.endpoints = CMDClientEndpointsByTemplate({
+            "type": "templates",
             "templates": [{
                 "cloud": CloudEnum.AzureCloud,
                 "template": "https://global.metrics.monitor.azure.com/"
@@ -51,7 +52,8 @@ class ClientConfigurationTest(TestCase):
                 }
             }
         })
-        cfg.endpoints = CMDClientEndpoints({
+        cfg.endpoints = CMDClientEndpointsByTemplate({
+            "type": "templates",
             "templates": [{
                 "cloud": CloudEnum.AzureCloud,
                 "template": "https://{region}.{zone}.metrics.monitor.azure.com/"
@@ -89,7 +91,8 @@ class ClientConfigurationTest(TestCase):
                 }
             }
         })
-        cfg.endpoints = CMDClientEndpoints({
+        cfg.endpoints = CMDClientEndpointsByTemplate({
+            "type": "templates",
             "templates": [{
                 "cloud": CloudEnum.AzureCloud,
                 "template": "https://{region}.metrics.monitor.azure.com/part1/part2"
@@ -112,7 +115,8 @@ class ClientConfigurationTest(TestCase):
                 }
             }
         })
-        cfg.endpoints = CMDClientEndpoints({
+        cfg.endpoints = CMDClientEndpointsByTemplate({
+            "type": "templates",
             "templates": [{
                 "cloud": CloudEnum.AzureCloud,
                 "template": "https://{region}.metrics.monitor.azure.com"
