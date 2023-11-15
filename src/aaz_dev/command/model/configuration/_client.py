@@ -1,7 +1,9 @@
 import logging
+import abc
 
 from schematics.models import Model
-from schematics.types import ModelType, ListType, StringType, UTCDateTimeType
+from schematics.types import ModelType, ListType, StringType, UTCDateTimeType, PolyModelType
+from schematics.types.serializable import serializable
 from utils.fields import PlaneField, CloudField
 from urllib.parse import urlparse
 from utils import exceptions
@@ -128,6 +130,51 @@ class CMDClientEndpointTemplate(Model):
 
 
 class CMDClientEndpoints(Model):
+    # properties as tags
+    TYPE_VALUE = None  # types: "template",
+
+    class Options:
+        serialize_when_none = False
+
+    @serializable
+    def type(self):
+        return self._get_type()
+
+    def _get_type(self):
+        assert self.TYPE_VALUE is not None
+        return self.TYPE_VALUE
+
+    @classmethod
+    def _claim_polymorphic(cls, data):
+        if cls.TYPE_VALUE is None:
+            return False
+
+        if isinstance(data, dict):
+            type_value = data.get('type', None)
+            return type_value == cls.TYPE_VALUE
+        elif isinstance(data, CMDClientEndpoints):
+            return data.TYPE_VALUE == cls.TYPE_VALUE
+        return False
+
+    @abc.abstractmethod
+    def reformat(self, **kwargs):
+        pass
+
+    @abc.abstractmethod
+    def generate_params(self):
+        pass
+
+    @abc.abstractmethod
+    def generate_args(self, ref_args):
+        pass
+
+    @abc.abstractmethod
+    def diff(self, old, level):
+        pass
+
+
+class CMDClientEndpointsByTemplate(CMDClientEndpoints):
+    TYPE_VALUE = 'templates'
 
     templates = ListType(ModelType(CMDClientEndpointTemplate), required=True, min_size=1)
     params = ListType(CMDSchemaField())
@@ -217,11 +264,14 @@ class CMDClientEndpoints(Model):
 
 
 class CMDClientConfig(Model):
-     # this property is used to manage the client config version.
+    # this property is used to manage the client config version.
     version = UTCDateTimeType(required=True)
 
     plane = PlaneField(required=True)
-    endpoints = ModelType(CMDClientEndpoints, required=True)
+    endpoints = PolyModelType(
+        CMDClientEndpoints,
+        allow_subclasses=True,
+        required=True)
 
     auth = ModelType(CMDClientAuth, required=True)
     arg_group = ModelType(
