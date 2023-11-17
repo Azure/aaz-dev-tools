@@ -8,7 +8,7 @@ from schematics.types import StringType, ModelType, ListType, PolyModelType, Int
 from ._fields import CMDVariantField, CMDBooleanField, CMDURLPathField, CMDDescriptionField
 from ._http_request_body import CMDHttpRequestBody
 from ._http_response_body import CMDHttpResponseBody
-from ._schema import CMDSchemaField
+from ._schema import CMDSchemaField, _diff_props
 from ._arg_builder import CMDArgBuilder
 from ._arg import CMDResourceGroupNameArg, CMDSubscriptionIdArg, CMDResourceLocationArg
 from ._utils import CMDDiffLevelEnum
@@ -33,6 +33,19 @@ class CMDHttpRequestArgs(Model):
             for const in self.consts:
                 const.reformat(**kwargs)
             self.consts = sorted(self.consts, key=lambda c: c.name)
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+
+        params_diff = _diff_props(self.params, old.params, level)
+        if params_diff:
+            diff["params"] = params_diff
+        consts_diff = _diff_props(self.consts, old.consts, level)
+        if consts_diff:
+            diff["consts"] = consts_diff
+        return diff
 
 
 class CMDHttpRequestPath(CMDHttpRequestArgs):
@@ -126,6 +139,13 @@ class CMDHttpRequestHeader(CMDHttpRequestArgs):
             args.extend(builder.get_args())
         return args
 
+    def diff(self, old, level):
+        diff = super().diff(old, level)
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.client_request_id != old.client_request_id:
+                diff["client_request_id"] = f"{old.client_request_id} != {self.client_request_id}"
+        return diff
+
 
 class CMDHttpRequest(Model):
     # properties as tags
@@ -165,6 +185,39 @@ class CMDHttpRequest(Model):
     def register_cls(self, **kwargs):
         if self.body:
             self.body.register_cls(**kwargs)
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.method != old.method:
+                diff["method"] = f"{old.method} != {self.method}"
+            if (not self.path) != (not old.path):
+                diff["path"] = "Miss path" if old.path else "New path"
+            elif self.path:
+                path_diff = self.path.diff(old.path, level)
+                if path_diff:
+                    diff["path"] = path_diff
+            if (not self.query) != (not old.query):
+                diff["query"] = "Miss query" if old.query else "New query"
+            elif self.query:
+                query_diff = self.query.diff(old.query, level)
+                if query_diff:
+                    diff["query"] = query_diff
+            if (not self.header) != (not old.header):
+                diff["header"] = "Miss header" if old.header else "New header"
+            elif self.header:
+                header_diff = self.header.diff(old.header, level)
+                if header_diff:
+                    diff["header"] = header_diff
+            if (not self.body) != (not old.body):
+                diff["body"] = "Miss request body" if old.body else "New request body"
+            elif self.body:
+                body_diff = self.body.diff(old.body, level)
+                if body_diff:
+                    diff["body"] = body_diff
+        return diff
 
 
 class CMDHttpResponseHeaderItem(Model):
@@ -324,3 +377,50 @@ class CMDHttpAction(Model):
                 if response.is_error:
                     continue
                 response.register_cls(**kwargs)
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.path != old.path:
+                diff["path"] = f"{old.path} != {self.path}"
+            if (not self.request) != (not old.request):
+                diff["request"] = "Miss request" if old.request else "New request"
+            elif self.request:
+                request_diff = self.request.diff(old.request, level)
+                if request_diff:
+                    diff["request"] = request_diff
+
+        responses_diff = _diff_responses(self.responses or [], old.responses or [], level)
+        if responses_diff:
+            diff["responses"] = responses_diff
+
+        return diff
+
+
+def _diff_responses(responses, old_responses, level):
+    diff = {}
+
+    def _build_key(_r):
+        _codes = ','.join(_r.status_codes) if _r.status_codes else ''
+        _error = 'error' if _r.is_error else ''
+        return '|'.join([_codes, _error])
+
+    if level >= CMDDiffLevelEnum.BreakingChange:
+        responses_dict = {_build_key(resp): resp for resp in responses}
+        for old_resp in old_responses:
+            old_resp_key = _build_key(old_resp)
+            if old_resp_key not in responses_dict:
+                diff[old_resp_key] = "Miss response"
+            else:
+                resp = responses_dict.pop(old_resp_key)
+                resp_diff = resp.diff(old_resp, level)
+                if resp_diff:
+                    diff[old_resp_key] = resp_diff
+
+        for resp in responses_dict.values():
+            resp_key = _build_key(resp)
+            diff[resp_key] = "New response"
+
+    return diff

@@ -788,6 +788,7 @@ class CMDObjectSchemaDiscriminator(Model):
         safe_value = re.sub(r'[^A-Za-z0-9_-]', '_', self.value)
         return safe_value
 
+
 # additionalProperties
 class CMDObjectSchemaAdditionalProperties(Model):
     ARG_TYPE = CMDObjectArgAdditionalProperties

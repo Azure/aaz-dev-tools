@@ -13,6 +13,11 @@ from ._arg_group import CMDArgGroup
 from ._utils import CMDArgBuildPrefix, CMDDiffLevelEnum
 from ._arg_builder import CMDArgBuilder
 from ._schema import CMDSchemaField, CMDStringSchema
+from ._subresource_selector import CMDSubresourceSelector
+from ._operation import CMDHttpOperation
+from ._command import handle_duplicated_options
+from ._resource import CMDResource
+
 
 logger = logging.getLogger('backend')
 
@@ -161,7 +166,7 @@ class CMDClientEndpoints(Model):
         pass
 
     @abc.abstractmethod
-    def generate_params(self):
+    def prepare(self):
         pass
 
     @abc.abstractmethod
@@ -178,9 +183,6 @@ class CMDClientEndpointsByTemplate(CMDClientEndpoints):
 
     templates = ListType(ModelType(CMDClientEndpointTemplate), required=True, min_size=1)
     params = ListType(CMDSchemaField())
-
-    class Options:
-        serialize_when_none = False
 
     def reformat(self, **kwargs):
         for template in self.templates:
@@ -217,7 +219,7 @@ class CMDClientEndpointsByTemplate(CMDClientEndpoints):
         if self.params:
             self.params = sorted(self.params, key=lambda p: p.name)
     
-    def generate_params(self):
+    def prepare(self):
         params = {}
         for template in self.templates:
             for placeholder, required in template.iter_placeholders():
@@ -260,6 +262,67 @@ class CMDClientEndpointsByTemplate(CMDClientEndpoints):
                         templates_diff[template.cloud] = template_diff
                 if templates_diff:
                     diff['templates'] = templates_diff
+        return diff
+
+
+class CMDClientEndpointsByHttpOperation(CMDClientEndpoints):
+    TYPE_VALUE = 'http-operation'
+
+    resource = ModelType(CMDResource, required=True)
+
+    selector = PolyModelType(
+        CMDSubresourceSelector,
+        allow_subclasses=True,
+        serialized_name="selector",
+        deserialize_from="selector",
+    )
+
+    http_operation = ModelType(
+        CMDHttpOperation,
+        required=True,
+        serialized_name="httpOperation",
+        deserialize_from="httpOperation"
+    )
+
+    def reformat(self, **kwargs):
+        self.selector.reformat(**kwargs)
+        schema_cls_map = {}
+        self.operation.reformat(schema_cls_map=schema_cls_map, **kwargs)
+        for key, value in schema_cls_map.items():
+            if value is None:
+                raise exceptions.VerificationError(
+                    message=f"ReformatError: Schema Class '{key}' not defined.",
+                    details=None
+                )
+
+    def prepare(self):
+        # TODO: remove unused schema based on selector
+        pass
+
+    def generate_args(self, ref_args):
+        arguments = {}
+        has_subresource = False
+        if self.selector:
+            has_subresource = True
+            for arg in self.selector.generate_args(ref_args=ref_args):
+                if arg.var not in arguments:
+                    arguments[arg.var] = arg
+
+        for arg in self.operation.generate_args(ref_args=ref_args, has_subresource=has_subresource):
+            if arg.var not in arguments:
+                arguments[arg.var] = arg
+        arguments = handle_duplicated_options(
+            arguments, has_subresource=has_subresource, operation_id=self.operation.operation_id)
+        return [arg for arg in arguments.values()]
+
+    def diff(self, old, level):
+        diff = {}
+        if resource_diff := self.resource.diff(old.resource):
+            diff["resource"] = resource_diff
+        if selector_diff := self.selector.diff(old.selector):
+            diff["selector"] = selector_diff
+        if operation_diff := self.http_operation.diff(old.http_operation):
+            diff["http_operation"] = operation_diff
         return diff
 
 

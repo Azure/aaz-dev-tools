@@ -30,7 +30,7 @@ class ClientConfigurationTest(TestCase):
             }]
         })
         cfg.version = datetime.utcnow()
-        cfg.endpoints.generate_params()
+        cfg.endpoints.prepare()
         cfg.generate_args()
         cfg.reformat()
 
@@ -63,7 +63,7 @@ class ClientConfigurationTest(TestCase):
             }]
         })
         cfg.version = datetime.utcnow()
-        cfg.endpoints.generate_params()
+        cfg.endpoints.prepare()
         cfg.generate_args()
         cfg.reformat()
 
@@ -99,7 +99,7 @@ class ClientConfigurationTest(TestCase):
             }]
         })
         cfg.version = datetime.utcnow()
-        cfg.endpoints.generate_params()
+        cfg.endpoints.prepare()
         cfg.generate_args()
         with self.assertRaises(exceptions.VerificationError):
             cfg.reformat()
@@ -127,7 +127,7 @@ class ClientConfigurationTest(TestCase):
             ]
         })
         cfg.version = datetime.utcnow()
-        cfg.endpoints.generate_params()
+        cfg.endpoints.prepare()
         cfg.generate_args()
 
         with self.assertRaises(exceptions.VerificationError):

@@ -6,6 +6,7 @@ from ._http import CMDHttpAction
 from ._instance_update import CMDInstanceUpdateAction
 from ._instance_create import CMDInstanceCreateAction
 from ._instance_delete import CMDInstanceDeleteAction
+from ._utils import CMDDiffLevelEnum
 
 
 class CMDOperation(Model):
@@ -54,6 +55,15 @@ class CMDHttpOperationLongRunning(Model):
         deserialize_from='finalStateVia',
     )
 
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.final_state_via != old.final_state_via:
+                diff["final_state_via"] = f"{old.final_state_via} != {self.final_state_via}"
+        return diff
+
 
 class CMDHttpOperation(CMDOperation):
     POLYMORPHIC_KEY = "http"
@@ -84,6 +94,30 @@ class CMDHttpOperation(CMDOperation):
 
     def register_cls(self, **kwargs):
         self.http.register_cls(**kwargs)
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if (not self.long_running) != (not old.long_running):
+                diff["long_running"] = "New long_running" if self.long_running else "Miss long_running"
+            elif self.long_running:
+                if lr_diff := self.long_running.diff(old.long_running, level):
+                    diff["long_running"] = lr_diff
+
+        if level >= CMDDiffLevelEnum.Structure:
+            if self.operation_id != old.operation_id:
+                diff["operation_id"] = f"{old.operation_id} != {self.operation_id}"
+
+        if level >= CMDDiffLevelEnum.All:
+            if self.description != old.description:
+                diff["description"] = f"{old.description} != {self.description}"
+
+        http_diff = self.http.diff(old.http, level)
+        if http_diff:
+            diff["http"] = http_diff
+        return diff
 
 
 class CMDInstanceCreateOperation(CMDOperation):

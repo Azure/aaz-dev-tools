@@ -39,7 +39,7 @@ class WorkspaceClientCfgEditor(ClientCfgReader, ArgumentUpdateMixin):
             },
             "auth": auth
         })
-        cfg.endpoints.generate_params()
+        cfg.endpoints.prepare()
         ref_args = ref_cfg.cfg.arg_group.args if ref_cfg and ref_cfg.cfg.arg_group else None
         cfg.generate_args(ref_args=ref_args)
         if not ref_cfg or cfg.endpoints.diff(ref_cfg.cfg.endpoints, CMDDiffLevelEnum.Structure) or cfg.auth.diff(ref_cfg.cfg.auth, CMDDiffLevelEnum.Structure):
