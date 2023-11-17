@@ -7,6 +7,7 @@ from schematics.models import Model
 
 from ._fields import CMDVariantField
 from ._selector_index import CMDSelectorIndexField
+from ._utils import CMDDiffLevelEnum
 
 
 class CMDSubresourceSelector(Model):
@@ -36,6 +37,22 @@ class CMDSubresourceSelector(Model):
 
     def reformat(self, **kwargs):
         raise NotImplementedError()
+
+    def _diff(self, old, level, diff):
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.var != old.var:
+                diff["var"] = f"{old.var} != {self.var}"
+            if self.ref != old.ref:
+                diff["ref"] = f"{old.ref} != {self.ref}"
+        return diff
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+
+        diff = {}
+        diff = self._diff(old, level, diff)
+        return diff
 
 
 class CMDJsonSubresourceSelector(CMDSubresourceSelector):
@@ -107,3 +124,9 @@ class CMDJsonSubresourceSelector(CMDSubresourceSelector):
 
     def reformat(self, **kwargs):
         self.json.reformat(**kwargs)
+
+    def _diff(self, old, level, diff):
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if json_diff := self.json.diff(old.json, level):
+                diff["json"] = json_diff
+        return diff

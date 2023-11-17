@@ -9,6 +9,7 @@ from schematics.types.serializable import serializable
 
 from ._schema import CMDSchemaField
 from ._arg_builder import CMDArgBuilder
+from ._utils import CMDDiffLevelEnum
 
 
 class CMDSelectorIndexBase(Model):
@@ -44,6 +45,16 @@ class CMDSelectorIndexBase(Model):
         elif isinstance(data, CMDSelectorIndexBase):
             return data.TYPE_VALUE == cls.TYPE_VALUE
         return False
+
+    def _diff_base(self, old, level, diff):
+        return diff
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        diff = self._diff_base(old, level, diff)
+        return diff
 
 
 class CMDSelectorIndexBaseField(PolyModelType):
@@ -100,6 +111,20 @@ class CMDSelectorIndex(CMDSelectorIndexBase):
                 return isinstance(data, CMDSelectorIndex)
         return False
 
+    def _diff(self, old, level, diff):
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.name != old.name:
+                diff["name"] = f"{old.name} != {self.name}"
+        return diff
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        diff = self._diff_base(old, level, diff)
+        diff = self._diff(old, level, diff)
+        return diff
+
 
 class CMDSelectorIndexField(PolyModelType):
 
@@ -140,6 +165,27 @@ class CMDObjectIndexDiscriminator(Model):
 
         return args
 
+    def diff(self, old, level):
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.property != old.property:
+                diff["property"] = f"{old.property} != {self.property}"
+            if self.value != old.value:
+                diff["value"] = f"{old.value} != {self.value}"
+
+            if (not self.prop) != (not old.prop):
+                diff["prop"] = f"New prop" if self.prop else f"Miss prop"
+            elif self.prop:
+                if prop_diff := self.prop.diff(old.prop, level):
+                    diff["prop"] = prop_diff
+
+            if (not self.discriminator) != (not old.discriminator):
+                diff["discriminator"] = f"New discriminator" if self.discriminator else f"Miss discriminator"
+            elif self.discriminator:
+                if disc_diff := self.discriminator.diff(old.discriminator, level):
+                    diff["discriminator"] = disc_diff
+        return diff
+
     def reformat(self, **kwargs):
         if self.prop:
             self.prop.reformat(**kwargs)
@@ -166,6 +212,20 @@ class CMDObjectIndexAdditionalProperties(Model):
         var_prefix += '{}'
         args.extend(self.item.generate_args(ref_args, var_prefix))
         return args
+    
+    def diff(self, old, level):
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if diff_item := self.item.diff(old.item):
+                diff['item'] = diff_item
+        identifiers_diff = _diff_identifiers(
+            self.identifiers or [],
+            old.identifiers or [],
+            level
+        )
+        if identifiers_diff:
+            diff["identifiers"] = identifiers_diff
+        return diff
 
     def reformat(self, **kwargs):
         if self.item:
@@ -207,6 +267,27 @@ class CMDObjectIndexBase(CMDSelectorIndexBase):
             self.discriminator.reformat(**kwargs)
         if self.additional_props:
             self.additional_props.reformat(**kwargs)
+
+    def _diff_base(self, old, level, diff):
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if (not self.prop) != (not old.prop):
+                diff['prop'] = f"New prop" if self.prop else f"Miss prop"
+            elif self.prop:
+                if prop_diff := self.prop.diff(old.prop, level):
+                    diff["prop"] = prop_diff
+            
+            if (not self.discriminator) != (not old.discriminator):
+                diff['discriminator'] = f"New discriminator" if self.discriminator else f"Miss discriminator"
+            elif self.discriminator:
+                if discriminator_diff := self.discriminator.diff(old.discriminator, level):
+                    diff["discriminator"] = discriminator_diff
+
+            if (not self.additional_props) != (not old.additional_props):
+                diff['additional_props'] = f"New additional_props" if self.additional_props else f"Miss additional_props"
+            elif self.additional_props:
+                if additional_props_diff := self.additional_props.diff(old.additional_props, level):
+                    diff["additional_props"] = additional_props_diff
+        return diff
 
 
 class CMDObjectIndex(CMDObjectIndexBase, CMDSelectorIndex):
@@ -253,6 +334,22 @@ class CMDArrayIndexBase(CMDSelectorIndexBase):
             for identifier in self.identifiers:
                 identifier.reformat(**kwargs)
             self.identifiers = sorted(self.identifiers, key=lambda i: i.name)
+    
+    def _diff_base(self, old, level, diff):
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if (not self.item) != (not old.item):
+                diff['item'] = f"New item" if self.item else f"Miss item"
+            elif self.item:
+                if item_diff := self.item.diff(old.item, level):
+                    diff["item"] = item_diff
+        identifiers_diff = _diff_identifiers(
+            self.identifiers or [],
+            old.identifiers or [],
+            level
+        )
+        if identifiers_diff:
+            diff["identifiers"] = identifiers_diff
+        return diff
 
 
 class CMDArrayIndex(CMDArrayIndexBase, CMDSelectorIndex):
@@ -264,3 +361,22 @@ class CMDArrayIndex(CMDArrayIndexBase, CMDSelectorIndex):
             var_prefix += f'.{self.name}'
 
         return self._generate_args_base(ref_args, var_prefix)
+
+
+def _diff_identifiers(self_identifiers, old_identifiers, level):
+    identifiers_diff = {}
+    if level >= CMDDiffLevelEnum.BreakingChange:
+        identifiers_dict = {identifier.name: identifier for identifier in self_identifiers}
+        for old_identifier in old_identifiers:
+            if old_identifier.name not in identifiers_dict:
+                identifiers_diff[old_identifier.name] = "Miss identifier"
+            else:
+                identifier = identifiers_dict.pop(old_identifier.name)
+                diff = identifier.diff(old_identifier, level)
+                if diff:
+                    identifiers_diff[old_identifier.name] = diff
+        
+        for identifier in identifiers_dict.values():
+            identifiers_diff[identifier.name] = "New identifier"
+    
+    return identifiers_diff
