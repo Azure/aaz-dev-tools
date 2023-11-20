@@ -21,7 +21,7 @@ class PathItem(Model, Linkable):
     # options = ModelType(Operation)  # A definition of a OPTIONS operation on this path.
     # ref = ReferenceType()  # Allows for an external definition of this path item. The referenced structure MUST be in the format of a Path Item Object. If there are conflicts between the referenced definition and this Path Item's definition, the behavior is undefined.
 
-    def link(self, swagger_loader, *traces):
+    def link(self, swagger_loader, *traces, **kwargs):
         if self.is_linked():
             return
         super().link(swagger_loader, *traces)
@@ -39,17 +39,18 @@ class PathItem(Model, Linkable):
                 assert isinstance(param, ParameterBase)
                 self.parameters[idx] = param
 
-        if self.get is not None:
+        link_operation_ids = kwargs.get('link_operation_ids', None)
+        if self.get is not None and (not link_operation_ids or self.get.operation_id in link_operation_ids):
             self.get.link(swagger_loader, *self.traces, 'get')
-        if self.put is not None:
+        if self.put is not None and (not link_operation_ids or self.put.operation_id in link_operation_ids):
             self.put.link(swagger_loader, *self.traces, 'put')
-        if self.post is not None:
+        if self.post is not None and (not link_operation_ids or self.post.operation_id in link_operation_ids):
             self.post.link(swagger_loader, *self.traces, 'post')
-        if self.delete is not None:
+        if self.delete is not None and (not link_operation_ids or self.delete.operation_id in link_operation_ids):
             self.delete.link(swagger_loader, *self.traces, 'delete')
-        if self.head is not None:
+        if self.head is not None and (not link_operation_ids or self.head.operation_id in link_operation_ids):
             self.head.link(swagger_loader, *self.traces, 'head')
-        if self.patch is not None:
+        if self.patch is not None and (not link_operation_ids or self.patch.operation_id in link_operation_ids):
             self.patch.link(swagger_loader, *self.traces, 'patch')
 
     def link_examples(self, swagger_loader, operation_ids, *traces):

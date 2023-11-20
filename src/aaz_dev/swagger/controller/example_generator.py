@@ -1,5 +1,7 @@
 from command.model.configuration._example_builder import SwaggerExampleBuilder
+from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.schema.example_item import XmsExamplesField
+from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
 from swagger.model.specs import SwaggerLoader
 
@@ -8,14 +10,13 @@ class ExampleGenerator:
     def __init__(self):
         self.loader = SwaggerLoader()
 
-    def load_examples(self, resources, operation_ids):
+    def load_examples(self, resources, cmd_operation_ids):
         for resource in resources:
             self.loader.load_file(resource.file_path)
-            self.loader.link_examples(resource.file_path, resource.path, operation_ids)
+            self.loader.link_examples(resource.file_path, resource.path, cmd_operation_ids)
 
-    def create_draft_examples(self, resources, operation_ids, cmd_name, arg_groups):
+    def create_draft_examples_by_swagger(self, resources, command, cmd_operation_ids, cmd_name):
         cmd_examples = []
-        example_builder = SwaggerExampleBuilder(arg_groups=arg_groups)
 
         for resource in resources:
             swagger = self.loader.get_loaded(resource.file_path)
@@ -28,19 +29,52 @@ class ExampleGenerator:
             if not isinstance(path_item, PathItem):
                 continue
 
-            swagger_examples = XmsExamplesField()
-            if path_item.get is not None and path_item.get.operation_id in operation_ids:
-                swagger_examples = path_item.get.x_ms_examples
-            elif path_item.delete is not None and path_item.delete.operation_id in operation_ids:
-                swagger_examples = path_item.delete.x_ms_examples
-            elif path_item.put is not None and path_item.put.operation_id in operation_ids:
-                swagger_examples = path_item.put.x_ms_examples
-            elif path_item.post is not None and path_item.post.operation_id in operation_ids:
-                swagger_examples = path_item.post.x_ms_examples
-            elif path_item.head is not None and path_item.head.operation_id in operation_ids:
-                swagger_examples = path_item.head.x_ms_examples
+            example_builder = None
+            examples = XmsExamplesField()
+            if path_item.get is not None and path_item.get.operation_id in cmd_operation_ids:
+                cmd_builder = CMDBuilder(path=resource.path, method='get', mutability=MutabilityEnum.Read)
+                example_builder = SwaggerExampleBuilder(operation=path_item.get,
+                                                        command=command,
+                                                        cmd_operation=cmd_operation_ids[path_item.get.operation_id],
+                                                        cmd_builder=cmd_builder)
+                examples = path_item.get.x_ms_examples
 
-            cmd_examples.extend(self.generate_examples(cmd_name, swagger_examples, example_builder))
+            elif path_item.delete is not None and path_item.delete.operation_id in cmd_operation_ids:
+                cmd_builder = CMDBuilder(path=resource.path, method='delete', mutability=MutabilityEnum.Create)
+                example_builder = SwaggerExampleBuilder(operation=path_item.delete,
+                                                        command=command,
+                                                        cmd_operation=cmd_operation_ids[path_item.delete.operation_id],
+                                                        cmd_builder=cmd_builder)
+                examples = path_item.delete.x_ms_examples
+
+            elif path_item.put is not None and path_item.put.operation_id in cmd_operation_ids:
+                cmd_builder = CMDBuilder(path=resource.path, method='put', mutability=MutabilityEnum.Create)
+                example_builder = SwaggerExampleBuilder(operation=path_item.put,
+                                                        command=command,
+                                                        cmd_operation=cmd_operation_ids[path_item.put.operation_id],
+                                                        cmd_builder=cmd_builder)
+                examples = path_item.put.x_ms_examples
+
+            elif path_item.post is not None and path_item.post.operation_id in cmd_operation_ids:
+                cmd_builder = CMDBuilder(path=resource.path, method='post', mutability=MutabilityEnum.Create)
+                example_builder = SwaggerExampleBuilder(operation=path_item.post,
+                                                        command=command,
+                                                        cmd_operation=cmd_operation_ids[path_item.post.operation_id],
+                                                        cmd_builder=cmd_builder)
+                examples = path_item.post.x_ms_examples
+
+            elif path_item.head is not None and path_item.head.operation_id in cmd_operation_ids:
+                cmd_builder = CMDBuilder(path=resource.path, method='head', mutability=MutabilityEnum.Read)
+                example_builder = SwaggerExampleBuilder(operation=path_item.head,
+                                                        command=command,
+                                                        cmd_operation=cmd_operation_ids[path_item.head.operation_id],
+                                                        cmd_builder=cmd_builder)
+                examples = path_item.head.x_ms_examples
+
+            if not example_builder:
+                continue
+
+            cmd_examples.extend(self.generate_examples(cmd_name, examples, example_builder))
 
         return cmd_examples
 

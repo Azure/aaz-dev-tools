@@ -20,16 +20,16 @@ class ExampleItem(Model, Linkable):
 
         self.ref_instance, instance_traces = swagger_loader.load_ref(self.ref, *self.traces, "ref")
 
-    def to_cmd(self, builder, cmd_name, **kwargs):
+    def to_cmd(self, example_builder, cmd_name, **kwargs):
         if not self.ref_instance:
             return
 
-        params = builder.mapping(self.ref_instance.get("parameters", {}))
+        param_models = example_builder.build_arg_var(self.ref_instance.get("parameters", {}))
+        matched_param_models = example_builder.param_mapping(param_models)
 
         command = cmd_name
-        for k, v in params.items():
-            command += f" --{k} {v}"
-            # command += " --" + k + " " + v
+        for model in matched_param_models:
+            command += f" --{model.arg_idx} {model.value}"
 
         return CMDCommandExample({"commands": [command.strip()]})
 

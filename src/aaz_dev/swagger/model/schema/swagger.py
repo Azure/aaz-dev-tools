@@ -57,14 +57,16 @@ class Swagger(Model, Linkable):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def link(self, swagger_loader, *traces):
+    def link(self, swagger_loader, *traces, **kwargs):
         if self.is_linked():
             return
         super().link(swagger_loader, *traces)
 
+        link_path = kwargs.get('link_path', None)
         if self.paths is not None:
             for key, path in self.paths.items():
-                path.link(swagger_loader, *self.traces, 'paths', key)
+                if not link_path or link_path == key:
+                    path.link(swagger_loader, *self.traces, 'paths', key, **kwargs)
 
         if self.definitions is not None:
             for key, definition in self.definitions.items():
@@ -87,7 +89,7 @@ class Swagger(Model, Linkable):
             self.x_ms_parameterized_host.link(swagger_loader, *self.traces, 'x_ms_parameterized_host')
 
     def link_examples(self, swagger_loader, path, operation_ids, *traces):
-        super().link(swagger_loader, *traces)
+        self.link(swagger_loader, *traces, link_path=path, link_operation_ids=operation_ids)
 
         if self.paths is not None:
             for key, path_item in self.paths.items():

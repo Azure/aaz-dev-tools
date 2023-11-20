@@ -4,6 +4,7 @@ import os
 import shutil
 from datetime import datetime
 
+from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand, CMDHttpOperation
 from command.model.editor import CMDEditorWorkspace, CMDCommandTreeNode, CMDCommandTreeLeaf
 from swagger.controller.command_generator import CommandGenerator
 from swagger.controller.example_generator import ExampleGenerator
@@ -13,7 +14,6 @@ from utils import exceptions
 from utils.config import Config
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor
-from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand, CMDHttpOperation
 
 logger = logging.getLogger('backend')
 
@@ -203,7 +203,7 @@ class WorkspaceManager:
                 f.write(data)
 
         self._cfg_editors = {}
-    
+
     def __update_mod_names_and_resource_provider(self):
         resource_mod_set = set()
         resource_rp_set = set()
@@ -484,32 +484,31 @@ class WorkspaceManager:
             return []
 
         return self.generate_operations_examples_by_swagger(
-            command.resources,
-            [op.operation_id for op in command.operations],
-            " ".join(leaf.names),
-            command.arg_groups
+            command,
+            " ".join(leaf.names)
         )
 
-    def generate_operations_examples_by_swagger(self, resources, operation_ids, cmd_name, arg_groups):
+    def generate_operations_examples_by_swagger(self, command, cmd_name):
         root = self.find_command_tree_node()
         assert root
 
         # convert cmd resource to swagger resource
         swagger_resources = []
-        for resource in resources:
+        for resource in command.resources:
             swagger_resources.append(self.swagger_specs.get_module_manager(
                 plane=self.ws.plane,
                 mod_names=self.ws.mod_names
             ).get_resource_in_version(resource["id"], resource["version"], resource.rp_name))
 
         # load swagger resource
-        self.swagger_example_generator.load_examples(swagger_resources, operation_ids)
+        cmd_operation_ids = {op.operation_id: op for op in command.operations}
+        self.swagger_example_generator.load_examples(swagger_resources, cmd_operation_ids)
 
-        examples = self.swagger_example_generator.create_draft_examples(
+        examples = self.swagger_example_generator.create_draft_examples_by_swagger(
             swagger_resources,
-            operation_ids,
-            cmd_name,
-            arg_groups
+            command,
+            cmd_operation_ids,
+            cmd_name
         )
 
         return examples
