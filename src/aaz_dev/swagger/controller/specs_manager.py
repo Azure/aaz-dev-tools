@@ -174,3 +174,8 @@ class SwaggerSpecsManager:
             self._module_managers_cache[key] = SwaggerSpecsModuleManager(plane, module)
 
         return self._module_managers_cache[key]
+
+    def get_swagger_resource(self, plane, mod_names, resource_id, version):
+        return self.get_module_manager(
+            plane=plane, mod_names=mod_names
+        ).get_resource_in_version(resource_id, version)

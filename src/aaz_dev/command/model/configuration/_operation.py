@@ -29,7 +29,7 @@ class CMDOperation(Model):
             return hasattr(data, cls.POLYMORPHIC_KEY)
         return False
 
-    def generate_args(self, ref_args, has_subresource):
+    def generate_args(self, ref_args, has_subresource, var_prefix=None):
         raise NotImplementedError()
 
     def reformat(self, **kwargs):
@@ -86,8 +86,8 @@ class CMDHttpOperation(CMDOperation):
     # properties as nodes
     http = ModelType(CMDHttpAction, required=True)
 
-    def generate_args(self, ref_args, has_subresource):
-        return self.http.generate_args(ref_args=ref_args, has_subresource=has_subresource)
+    def generate_args(self, ref_args, has_subresource, var_prefix=None):
+        return self.http.generate_args(ref_args=ref_args, has_subresource=has_subresource, var_prefix=var_prefix)
 
     def reformat(self, **kwargs):
         self.http.reformat(**kwargs)
@@ -131,8 +131,8 @@ class CMDInstanceCreateOperation(CMDOperation):
         deserialize_from="instanceCreate"
     )
 
-    def generate_args(self, ref_args, has_subresource):
-        return self.instance_create.generate_args(ref_args=ref_args)
+    def generate_args(self, ref_args, has_subresource, var_prefix=None):
+        return self.instance_create.generate_args(ref_args=ref_args, var_prefix=var_prefix)
 
     def reformat(self, **kwargs):
         self.instance_create.reformat(**kwargs)
@@ -153,8 +153,8 @@ class CMDInstanceUpdateOperation(CMDOperation):
         deserialize_from="instanceUpdate"
     )
 
-    def generate_args(self, ref_args, has_subresource):
-        return self.instance_update.generate_args(ref_args=ref_args)
+    def generate_args(self, ref_args, has_subresource, var_prefix=None):
+        return self.instance_update.generate_args(ref_args=ref_args, var_prefix=var_prefix)
 
     def reformat(self, **kwargs):
         self.instance_update.reformat(**kwargs)
@@ -174,8 +174,8 @@ class CMDInstanceDeleteOperation(CMDOperation):
         deserialize_from="instanceDelete"
     )
 
-    def generate_args(self, ref_args, has_subresource):
-        return self.instance_delete.generate_args(ref_args=ref_args)
+    def generate_args(self, ref_args, has_subresource, var_prefix=None):
+        return self.instance_delete.generate_args(ref_args=ref_args, var_prefix=var_prefix)
 
     def reformat(self, **kwargs):
         self.instance_delete.reformat(**kwargs)

@@ -12,9 +12,9 @@ from utils import exceptions
 from utils.config import Config
 from utils.plane import PlaneEnum
 from .specs_manager import AAZSpecsManager
-from .workspace_cfg_editor import WorkspaceCfgEditor
+from .workspace_cfg_editor import WorkspaceCfgEditor, build_endpoint_selector_for_client_config
 from .workspace_client_cfg_editor import WorkspaceClientCfgEditor
-from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand
+from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand, CMDBuildInVariants
 
 logger = logging.getLogger('backend')
 
@@ -550,9 +550,8 @@ class WorkspaceManager:
                 raise exceptions.InvalidAPIUsage(
                     f"Resource already added in Workspace: {r['id']}")
             # convert resource to swagger resource
-            swagger_resource = self.swagger_specs.get_module_manager(
-                plane=self.ws.plane, mod_names=mod_names
-            ).get_resource_in_version(r['id'], version)
+            swagger_resource = self.swagger_specs.get_swagger_resource(
+                plane=self.ws.plane, mod_names=mod_names, resource_id=r['id'], version=version)
             swagger_resources.append(swagger_resource)
             resource_options.append(r.get("options", {}))
             used_resource_ids.update(r['id'])
@@ -566,7 +565,7 @@ class WorkspaceManager:
         for resource, options in zip(swagger_resources, resource_options):
             try:
                 command_group = self.swagger_command_generator.create_draft_command_group(
-                    resource, **options)
+                    resource, instance_var=CMDBuildInVariants.Instance, **options)
             except InvalidSwaggerValueError as err:
                 raise exceptions.InvalidAPIUsage(
                     message=str(err)
@@ -688,7 +687,7 @@ class WorkspaceManager:
                 options['update_by'] = update_by
             try:
                 command_group = self.swagger_command_generator.create_draft_command_group(
-                    swagger_resource, **options)
+                    swagger_resource, instance_var=CMDBuildInVariants.Instance, **options)
             except InvalidSwaggerValueError as err:
                 raise exceptions.InvalidAPIUsage(
                     message=str(err)
@@ -1049,9 +1048,46 @@ class WorkspaceManager:
 
     # client config
 
-    def create_cfg_editor(self, templates, auth):
+    def create_cfg_editor(self, auth, templates=None, arm_resource=None):
         ref_cfg = self.load_client_cfg_editor()
-        self._client_cfg_editor = WorkspaceClientCfgEditor.new_client_cfg(plane=self.ws.plane, templates=templates, auth=auth, ref_cfg=ref_cfg)
+        if templates:
+            endpoints = WorkspaceClientCfgEditor.new_client_endpoints_by_template(templates)
+        elif arm_resource:
+            # arm_resrouce should have these keys: "module", "version", "id", "subresource"
+            mod_names = arm_resource['module']
+            version = arm_resource['version']
+            resource_id = arm_resource['id']
+            subresource = arm_resource['subresource']
+            swagger_resource = self.swagger_specs.get_swagger_resource(
+                plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_id=resource_id, version=version)
+            if 'get' not in set(swagger_resource.operations.values()):
+                raise exceptions.InvalidAPIUsage(f"The resource doesn't has 'get' method: {resource_id}")
+            self.swagger_command_generator.load_resources([swagger_resource])
+
+            resource = swagger_resource.to_cmd()
+            resource.subresource = subresource
+
+            # build get operation by draft command
+            get_op = self.swagger_command_generator.create_draft_command_group(
+                swagger_resource, instance_var=CMDBuildInVariants.EndpointInstance, methods=('get',)
+            ).commands[0].operations[0]
+
+            selector = build_endpoint_selector_for_client_config(get_op, subresource_idx=resource.subresource)
+
+            endpoints = WorkspaceClientCfgEditor.new_client_endpoints_by_http_operation(
+                resource=resource,
+                selector=selector,
+                operation=get_op,
+            )
+        else:
+            raise NotImplementedError()
+
+        self._client_cfg_editor = WorkspaceClientCfgEditor.new_client_cfg(
+            plane=self.ws.plane,
+            auth=auth,
+            endpoints=endpoints,
+            ref_cfg=ref_cfg,
+        )
         return self._client_cfg_editor
 
     def load_client_cfg_editor(self, reload=False):

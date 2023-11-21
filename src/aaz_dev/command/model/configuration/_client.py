@@ -136,7 +136,7 @@ class CMDClientEndpointTemplate(Model):
 
 class CMDClientEndpoints(Model):
     # properties as tags
-    TYPE_VALUE = None  # types: "template",
+    TYPE_VALUE = None  # types: "template", "http-operation"
 
     class Options:
         serialize_when_none = False
@@ -179,7 +179,7 @@ class CMDClientEndpoints(Model):
 
 
 class CMDClientEndpointsByTemplate(CMDClientEndpoints):
-    TYPE_VALUE = 'templates'
+    TYPE_VALUE = 'template'
 
     templates = ListType(ModelType(CMDClientEndpointTemplate), required=True, min_size=1)
     params = ListType(CMDSchemaField())
@@ -277,11 +277,11 @@ class CMDClientEndpointsByHttpOperation(CMDClientEndpoints):
         deserialize_from="selector",
     )
 
-    http_operation = ModelType(
+    operation = ModelType(
         CMDHttpOperation,
         required=True,
-        serialized_name="httpOperation",
-        deserialize_from="httpOperation"
+        serialized_name="operation",
+        deserialize_from="operation"
     )
 
     def reformat(self, **kwargs):
@@ -304,16 +304,23 @@ class CMDClientEndpointsByHttpOperation(CMDClientEndpoints):
         has_subresource = False
         if self.selector:
             has_subresource = True
-            for arg in self.selector.generate_args(ref_args=ref_args):
+            for arg in self.selector.generate_args(
+                    ref_args=ref_args,
+                    var_prefix=CMDArgBuildPrefix.ClientEndpoint
+            ):
                 if arg.var not in arguments:
                     arguments[arg.var] = arg
 
-        for arg in self.operation.generate_args(ref_args=ref_args, has_subresource=has_subresource):
+        for arg in self.operation.generate_args(
+                ref_args=ref_args,
+                has_subresource=has_subresource,
+                var_prefix=CMDArgBuildPrefix.ClientEndpoint
+        ):
             if arg.var not in arguments:
                 arguments[arg.var] = arg
-        arguments = handle_duplicated_options(
+
+        return handle_duplicated_options(
             arguments, has_subresource=has_subresource, operation_id=self.operation.operation_id)
-        return [arg for arg in arguments.values()]
 
     def diff(self, old, level):
         diff = {}
@@ -321,8 +328,8 @@ class CMDClientEndpointsByHttpOperation(CMDClientEndpoints):
             diff["resource"] = resource_diff
         if selector_diff := self.selector.diff(old.selector):
             diff["selector"] = selector_diff
-        if operation_diff := self.http_operation.diff(old.http_operation):
-            diff["http_operation"] = operation_diff
+        if operation_diff := self.operation.diff(old.operation):
+            diff["operation"] = operation_diff
         return diff
 
 

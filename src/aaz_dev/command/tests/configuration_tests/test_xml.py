@@ -1,6 +1,6 @@
 from tempfile import TemporaryFile
 
-from command.model.configuration import CMDConfiguration, XMLSerializer
+from command.model.configuration import CMDConfiguration, XMLSerializer, CMDBuildInVariants
 from swagger.controller.command_generator import CommandGenerator
 from swagger.controller.specs_manager import SwaggerSpecsManager
 from swagger.tests.common import SwaggerSpecsTestCase
@@ -23,7 +23,8 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
         resource = specs_module_manager.get_resource_in_version(resource_id=resource_id, version="2021-05-01")
 
         generator.load_resources([resource])
-        command_group = generator.create_draft_command_group(resource)
+        command_group = generator.create_draft_command_group(
+            resource, instance_var=CMDBuildInVariants.Instance)
 
         cfg = CMDConfiguration({"resources": [resource.to_cmd()], "commandGroups": [command_group]})
         with TemporaryFile("w+t", encoding="utf-8") as fp:
@@ -43,7 +44,8 @@ class XMLSerializerTest(SwaggerSpecsTestCase):
                 for v, resource in r_version_map.items():
                     try:
                         generator.load_resources([resource])
-                        command_group = generator.create_draft_command_group(resource)
+                        command_group = generator.create_draft_command_group(
+                            resource, instance_var=CMDBuildInVariants.Instance)
                     except exceptions.InvalidSwaggerValueError as err:
                         if err.msg not in MUTE_ERROR_MESSAGES:
                             print(err)

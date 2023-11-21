@@ -7,7 +7,7 @@ from schematics.models import Model
 from schematics.types import StringType, ListType, ModelType, PolyModelType
 from schematics.types.serializable import serializable
 
-from ._schema import CMDSchemaField
+from ._schema import CMDSchemaField, CMDStringSchemaBase, CMDStringSchema
 from ._arg_builder import CMDArgBuilder
 from ._utils import CMDDiffLevelEnum
 
@@ -361,6 +361,32 @@ class CMDArrayIndex(CMDArrayIndexBase, CMDSelectorIndex):
             var_prefix += f'.{self.name}'
 
         return self._generate_args_base(ref_args, var_prefix)
+
+
+# simple type index, used to select base types such as string, number, boolean, etc.
+class CMDSimpleIndexBase(CMDSelectorIndexBase):
+    TYPE_VALUE = "simple"
+
+    supported_schema_types = (CMDStringSchemaBase,)
+
+    def _generate_args_base(self, ref_args, var_prefix):
+        return []
+
+    def generate_args(self, ref_args, var_prefix):
+        return self._generate_args_base(ref_args, var_prefix)
+
+    def reformat(self, **kwargs):
+        pass
+
+    def _diff_base(self, old, level, diff):
+        return diff
+
+
+class CMDSimpleIndex(CMDSimpleIndexBase, CMDSelectorIndex):
+
+    supported_schema_types = (CMDStringSchema,)
+
+    pass
 
 
 def _diff_identifiers(self_identifiers, old_identifiers, level):
