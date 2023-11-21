@@ -24,12 +24,11 @@ class ExampleItem(Model, Linkable):
         if not self.ref_instance:
             return
 
-        param_models = example_builder.build_arg_var(self.ref_instance.get("parameters", {}))
-        matched_param_models = example_builder.param_mapping(param_models)
+        example_params = example_builder.param_mapping(self.ref_instance.get("parameters", {}))
 
         command = cmd_name
-        for model in matched_param_models:
-            command += f" --{model.arg_idx} {model.value}"
+        for param_option, param_value in example_params:
+            command += f" --{param_option} {param_value}"
 
         return CMDCommandExample({"commands": [command.strip()]})
 
@@ -41,6 +40,7 @@ class XmsExamplesField(DictType):
 
     https://github.com/Azure/azure-rest-api-specs/blob/master/documentation/x-ms-examples.md
     """
+
     def __init__(self, **kwargs):
         super().__init__(
             field=ModelType(ExampleItem),
