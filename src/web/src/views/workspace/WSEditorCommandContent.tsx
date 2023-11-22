@@ -284,7 +284,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             <SubtitleTypography sx={{ flexShrink: 0 }} >{example.name}</SubtitleTypography>
                             {/* <Box sx={{ flexGrow: 1 }} /> */}
                             <Button sx={{ flexShrink: 0, ml: 3 }}
-                                startIcon={<EditIcon color="info" fontSize='small' />}
+                                startIcon={<EditIcon color="secondary" fontSize='small' />}
                                 onClick={() => { this.onExampleDialogDisplay(idx) }}
                             >
                                 <ExampleEditTypography>Edit</ExampleEditTypography>
@@ -371,7 +371,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                     justifyContent: "flex-start"
                 }}>
                     {loading && <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
+                        <LinearProgress color='secondary' />
                     </Box>}
                     {!loading && <Box sx={{
                         display: "flex",
@@ -381,7 +381,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                     }}>
 
                         <Button
-                            variant='contained' size="small" color='info' disableElevation
+                            variant='contained' size="small" color='secondary' disableElevation
                             onClick={this.onCommandDialogDisplay}
                             disabled={loading}
                             sx={{ mr: 2 }}
@@ -391,7 +391,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             </Typography>
                         </Button>
                         <Button
-                            variant='outlined' size="small" color='info'
+                            variant='outlined' size="small" color='secondary'
                             onClick={this.onCommandDeleteDialogDisplay}
                             disabled={loading}
                             sx={{ mr: 2 }}
@@ -401,7 +401,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             </Typography>
                         </Button>
                         <Button
-                            variant='outlined' size="small" color='info'
+                            variant='outlined' size="small" color='secondary'
                             sx={{ mr: 2 }}
                             disabled
                         >
@@ -467,7 +467,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                     flexDirection: "row-reverse",
                 }}>
                     <Button
-                        variant='contained' size="small" color='info' disableElevation
+                        variant='contained' size="small" color='secondary' disableElevation
                         onClick={() => this.onExampleDialogDisplay(undefined)}
                     >
                         <Typography variant='body2'>
@@ -594,7 +594,7 @@ function CommandDeleteDialog(props: {
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
+                        <LinearProgress color='secondary' />
                     </Box>
                 }
                 {!updating && <React.Fragment>
@@ -830,7 +830,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                 <DialogActions>
                     {updating &&
                         <Box sx={{ width: '100%' }}>
-                            <LinearProgress color='info' />
+                            <LinearProgress color='secondary' />
                         </Box>
                     }
                     {!updating && <React.Fragment>
@@ -1129,7 +1129,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
                 <DialogActions>
                     {updating &&
                         <Box sx={{ width: '100%' }}>
-                            <LinearProgress color='info' />
+                            <LinearProgress color='secondary' />
                         </Box>
                     }
                     {!updating && <React.Fragment>
@@ -1303,7 +1303,7 @@ function AddSubcommandDialog(props: {
         <DialogActions>
             {updating &&
                 <Box sx={{ width: '100%' }}>
-                    <LinearProgress color='info' />
+                    <LinearProgress color='secondary' />
                 </Box>
             }
             {!updating && <>

@@ -578,7 +578,7 @@ function ArgumentReviewer(props: {
             }}>
                 {buildArgOptionsString()}
                 <Button sx={{ flexShrink: 0, ml: 3 }}
-                    startIcon={<EditIcon color="info" fontSize='small' />}
+                    startIcon={<EditIcon color="secondary" fontSize='small' />}
                     onClick={() => { props.onEdit() }}
                 >
                     <ArgEditTypography>Edit</ArgEditTypography>
@@ -601,7 +601,7 @@ function ArgumentReviewer(props: {
                     <ArgTypeTypography>{`/${props.arg.type}/`}</ArgTypeTypography>
                 </Box>
                 {getUnwrapKeywords() !== null && <Button sx={{ flexShrink: 0, ml: 1 }}
-                    startIcon={<ImportExportIcon color="info" fontSize='small' />}
+                    startIcon={<ImportExportIcon color="secondary" fontSize='small' />}
                     onClick={() => { props.onUnwrap() }}
                 >
                     <ArgEditTypography>{getUnwrapKeywords()!}</ArgEditTypography>
@@ -1169,7 +1169,7 @@ function ArgumentDialog(props: {
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
+                        <LinearProgress color='secondary' />
                     </Box>
                 }
                 {!updating && !argSimilarTree && <>
@@ -1415,7 +1415,7 @@ function FlattenDialog(props: {
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
+                        <LinearProgress color='secondary' />
                     </Box>
                 }
                 {!updating && !argSimilarTree && <>
@@ -1493,7 +1493,7 @@ function UnwrapClsDialog(props: {
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
+                        <LinearProgress color='secondary' />
                     </Box>
                 }
                 {!updating && <>
@@ -1710,21 +1710,21 @@ function ArgumentPropsReviewer(props: {
         }}>
             <SubtitleTypography>{props.title}</SubtitleTypography>
             {props.onFlatten !== undefined && <Button sx={{ flexShrink: 0, ml: 3 }}
-                startIcon={<CallSplitSharpIcon color="info" fontSize='small' />}
+                startIcon={<CallSplitSharpIcon color="secondary" fontSize='small' />}
                 onClick={props.onFlatten}
             >
                 <ArgEditTypography>Flatten</ArgEditTypography>
             </Button>}
 
             {/* {props.onUnflatten !== undefined && <Button sx={{ flexShrink: 0, ml: 3 }}
-                startIcon={<CallMergeSharpIcon color="info" fontSize='small' />}
+                startIcon={<CallMergeSharpIcon color="secondary" fontSize='small' />}
                 onClick={props.onUnflatten}
             >
                 <ArgEditTypography>Unflatten</ArgEditTypography>
             </Button>} */}
 
             {props.onAddSubcommand !== undefined && checkCanAddSubcommand() && <Button sx={{ flexShrink: 0, ml: 3 }}
-                startIcon={<AddIcon color="info" fontSize='small' />}
+                startIcon={<AddIcon color="secondary" fontSize='small' />}
                 onClick={props.onAddSubcommand}
             >
                 <ArgEditTypography>Subcommands</ArgEditTypography>

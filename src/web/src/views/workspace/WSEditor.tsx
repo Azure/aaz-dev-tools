@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, List, ListSubheader, Paper, ListItemButton, ListItemIcon, Checkbox, ListItemText, ListItem, TextField, Alert, InputLabel, IconButton, Input, Typography, TypographyProps } from '@mui/material';
+import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, List, ListSubheader, Paper, ListItemButton, ListItemIcon, Checkbox, ListItemText, ListItem, TextField, Alert, InputLabel, IconButton, Input, Typography, TypographyProps, Tabs, Tab } from '@mui/material';
 import { useParams } from 'react-router';
 import axios from 'axios';
 import { TransitionProps } from '@mui/material/transitions';
@@ -307,7 +307,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             } else if (res.data.endpoints.type === "http-operation") {
                 clientConfig.endpointResource = res.data.endpoints.endpointResource;
             }
-           
+
             return clientConfig;
         } catch (err: any) {
             // catch 404 error
@@ -561,10 +561,10 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
 
     verifyClientConfig = async () => {
         const url = `${this.props.workspaceUrl}/ClientConfig/AAZ/Compare`;
-        this.setState({updating: true});
+        this.setState({ updating: true });
         try {
             await axios.post(url);
-            this.setState({clientConfigOOD: false, updating: false});
+            this.setState({ clientConfigOOD: false, updating: false });
         } catch (err: any) {
             // catch 409 error
             if (err.response?.status === 409) {
@@ -582,17 +582,17 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
                         invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
                     });
                 }
-                this.setState({updating: false});
+                this.setState({ updating: false });
             }
         }
     }
 
     inheritClientConfig = async () => {
         const url = `${this.props.workspaceUrl}/ClientConfig/AAZ/Inherit`;
-        this.setState({updating: true});
+        this.setState({ updating: true });
         try {
             await axios.post(url);
-            this.setState({clientConfigOOD: false, updating: false});
+            this.setState({ clientConfigOOD: false, updating: false });
             this.props.onClose(false, true);
         } catch (err: any) {
             console.error(err.response)
@@ -602,17 +602,17 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
                     invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
                 });
             }
-            this.setState({updating: false});
+            this.setState({ updating: false });
         }
     }
 
     handleExport = async () => {
         const url = `${this.props.workspaceUrl}/Generate`;
-        this.setState({updating: true});
+        this.setState({ updating: true });
 
         try {
             await axios.post(url);
-            this.setState({updating: false});
+            this.setState({ updating: false });
             this.props.onClose(false, false);
         } catch (err: any) {
             console.error(err.response)
@@ -622,7 +622,7 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
                     invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
                 });
             }
-            this.setState({updating: false});
+            this.setState({ updating: false });
         }
     }
 
@@ -640,7 +640,7 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
                 <DialogActions>
                     {updating &&
                         <Box sx={{ width: '100%' }}>
-                            <LinearProgress color='info' />
+                            <LinearProgress color='secondary' />
                         </Box>
                     }
                     {!updating && <React.Fragment>
@@ -713,7 +713,7 @@ function WSEditorDeleteDialog(props: {
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
+                        <LinearProgress color='secondary' />
                     </Box>
                 }
                 {!updating && <React.Fragment>
@@ -940,7 +940,7 @@ class WSEditorSwaggerReloadDialog extends React.Component<WSEditorSwaggerReloadD
                 <DialogActions>
                     {updating &&
                         <Box sx={{ width: '100%' }}>
-                            <LinearProgress color='info' />
+                            <LinearProgress color='secondary' />
                         </Box>
                     }
                     {!updating && <React.Fragment>
@@ -1061,7 +1061,7 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
                 <DialogActions>
                     {updating &&
                         <Box sx={{ width: '100%' }}>
-                            <LinearProgress color='info' />
+                            <LinearProgress color='secondary' />
                         </Box>
                     }
                     {!updating && <React.Fragment>
@@ -1085,10 +1085,13 @@ interface WSEditorClientConfigDialogState {
     invalidText: string | undefined,
     isAdd: boolean,
 
+    endpointType: "template" | "http-operation",
+
     templateAzureCloud: string,
     templateAzureChinaCloud: string,
     templateAzureUSGovernment: string,
     templateAzureGermanCloud: string,
+
     aadAuthScopes: string[],
 }
 
@@ -1108,6 +1111,9 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
             updating: false,
             invalidText: undefined,
             isAdd: true,
+
+            endpointType: "template",
+
             templateAzureCloud: "",
             templateAzureChinaCloud: "",
             templateAzureUSGovernment: "",
@@ -1132,21 +1138,27 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
             let templateAzureChinaCloud = "";
             let templateAzureUSGovernment = "";
             let templateAzureGermanCloud = "";
-            if (res.data.endpoints.type === "template") { 
+            let endpointType: "template" | "http-operation" = "template";
+            if (res.data.endpoints.type === "template") {
                 clientConfig.endpointTemplates = {};
                 res.data.endpoints.templates.forEach((value: any) => {
                     clientConfig.endpointTemplates![value.cloud] = value.template;
                 });
+
+                endpointType = "template";
                 templateAzureCloud = clientConfig.endpointTemplates!['AzureCloud'] ?? "";
                 templateAzureChinaCloud = clientConfig.endpointTemplates!['AzureChinaCloud'] ?? "";
                 templateAzureUSGovernment = clientConfig.endpointTemplates!['AzureUSGovernment'] ?? "";
                 templateAzureGermanCloud = clientConfig.endpointTemplates!['AzureGermanCloud'] ?? "";
             } else if (res.data.endpoints.type === "http-operation") {
                 clientConfig.endpointResource = res.data.endpoints.resource;
+
+                endpointType = "http-operation";
             }
-            
+
             this.setState({
                 aadAuthScopes: clientConfig.auth.aad.scopes ?? ["",],
+                endpointType: endpointType,
                 templateAzureCloud: templateAzureCloud,
                 templateAzureChinaCloud: templateAzureChinaCloud,
                 templateAzureUSGovernment: templateAzureUSGovernment,
@@ -1175,7 +1187,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
     }
 
     handleUpdate = async () => {
-        let { aadAuthScopes, templateAzureCloud, templateAzureChinaCloud, templateAzureGermanCloud, templateAzureUSGovernment } = this.state
+        let { aadAuthScopes, endpointType, templateAzureCloud, templateAzureChinaCloud, templateAzureGermanCloud, templateAzureUSGovernment } = this.state
         templateAzureCloud = templateAzureCloud.trim();
         if (templateAzureCloud.length < 1) {
             this.setState({
@@ -1335,7 +1347,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
     }
 
     render() {
-        const { invalidText, updating, isAdd, aadAuthScopes, templateAzureCloud, templateAzureChinaCloud, templateAzureUSGovernment, templateAzureGermanCloud } = this.state;
+        const { invalidText, updating, isAdd, aadAuthScopes, endpointType, templateAzureCloud, templateAzureChinaCloud, templateAzureUSGovernment, templateAzureGermanCloud } = this.state;
         return (
             <Dialog
                 disableEscapeKeyDown
@@ -1346,81 +1358,112 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                 <DialogTitle>{isAdd ? "Setup Client Config" : "Modify Client Config"}</DialogTitle>
                 <DialogContent dividers={true}>
                     {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
-                    <InputLabel required sx={{ font: "inherit", mt: 1 }}>Endpoint Templates</InputLabel>
-                    <Box sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'flex-start',
-                        ml: 1,
-                    }}>
-                        <TextField
-                            id="AzureCloud"
-                            label="Azure Cloud"
-                            type="text"
-                            fullWidth
-                            variant='standard'
-                            placeholder="Endpoint template in Azure Cloud, e.g. https://{vaultName}.vault.azure.net"
-                            value={templateAzureCloud}
-                            onChange={(event: any) => {
-                                this.setState({
-                                    templateAzureCloud: event.target.value,
-                                })
-                            }}
-                            margin='dense'
-                            required
-                        />
+                    <InputLabel required sx={{ font: "inherit", mt: 1 }}>Endpoint</InputLabel>
+                    <Paper square={false} sx={{mt: 1}} >
+                        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                            <Tabs
+                                value={endpointType}
+                                textColor="secondary"
+                                indicatorColor="secondary"
+                                onChange={(event: any, newValue: any) => {
+                                    this.setState({
+                                        endpointType: newValue,
+                                    })
+                                }}>
+                                <Tab label="By templates" value="template" />
+                                <Tab label="By resource property" value="http-operation" />
+                            </Tabs>
+                        </Box>
+                        {endpointType === "template" && <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'flex-start',
+                                pl: 2,
+                                pr: 2,
+                                pb: 2,
+                            }}>
+                            <TextField
+                                id="AzureCloud"
+                                label="Azure Cloud"
+                                type="text"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                fullWidth
+                                variant='standard'
+                                placeholder="Endpoint template in Azure Cloud, e.g. https://{vaultName}.vault.azure.net"
+                                value={templateAzureCloud}
+                                onChange={(event: any) => {
+                                    this.setState({
+                                        templateAzureCloud: event.target.value,
+                                    })
+                                }}
+                                margin='dense'
+                                required
+                            />
 
-                        <TextField
-                            id="AzureChinaCloud"
-                            label="Azure China Cloud"
-                            type="text"
-                            fullWidth
-                            variant='standard'
-                            placeholder="Endpoint template in Azure China Cloud, e.g. https://{vaultName}.vault.azure.cn"
-                            value={templateAzureChinaCloud}
-                            onChange={(event: any) => {
-                                this.setState({
-                                    templateAzureChinaCloud: event.target.value,
-                                })
-                            }}
-                            margin='normal'
-                        />
+                            <TextField
+                                id="AzureChinaCloud"
+                                label="Azure China Cloud"
+                                type="text"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                fullWidth
+                                variant='standard'
+                                placeholder="Endpoint template in Azure China Cloud, e.g. https://{vaultName}.vault.azure.cn"
+                                value={templateAzureChinaCloud}
+                                onChange={(event: any) => {
+                                    this.setState({
+                                        templateAzureChinaCloud: event.target.value,
+                                    })
+                                }}
+                                margin='normal'
+                            />
 
-                        <TextField
-                            id="AzureUSGovernment"
-                            label="Azure US Government"
-                            type="text"
-                            fullWidth
-                            variant='standard'
-                            placeholder="Endpoint template in Azure US Government, e.g. https://{vaultName}.vault.usgovcloudapi.net"
-                            value={templateAzureUSGovernment}
-                            onChange={(event: any) => {
-                                this.setState({
-                                    templateAzureUSGovernment: event.target.value,
-                                })
-                            }}
-                            margin='normal'
-                        />
+                            <TextField
+                                id="AzureUSGovernment"
+                                label="Azure US Government"
+                                type="text"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                fullWidth
+                                variant='standard'
+                                placeholder="Endpoint template in Azure US Government, e.g. https://{vaultName}.vault.usgovcloudapi.net"
+                                value={templateAzureUSGovernment}
+                                onChange={(event: any) => {
+                                    this.setState({
+                                        templateAzureUSGovernment: event.target.value,
+                                    })
+                                }}
+                                margin='normal'
+                            />
 
-                        <TextField
-                            id="AzureGermanCloud"
-                            label="Azure German Cloud"
-                            type="text"
-                            fullWidth
-                            variant='standard'
-                            placeholder="Endpoint template in Azure German Cloud, e.g. https://{vaultName}.vault.microsoftazure.de"
-                            value={templateAzureGermanCloud}
-                            onChange={(event: any) => {
-                                this.setState({
-                                    templateAzureGermanCloud: event.target.value,
-                                })
-                            }}
-                            margin='normal'
-                        />
+                            <TextField
+                                id="AzureGermanCloud"
+                                label="Azure German Cloud"
+                                type="text"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                fullWidth
+                                variant='standard'
+                                placeholder="Endpoint template in Azure German Cloud, e.g. https://{vaultName}.vault.microsoftazure.de"
+                                value={templateAzureGermanCloud}
+                                onChange={(event: any) => {
+                                    this.setState({
+                                        templateAzureGermanCloud: event.target.value,
+                                    })
+                                }}
+                                margin='normal'
+                            />
+                        </Box>}
+                    </Paper>
 
-                    </Box>
-                    <InputLabel required sx={{ font: "inherit", mt: 1 }}>AAD Auth Scopes</InputLabel>
+                    <InputLabel required sx={{ font: "inherit", mt: 4 }}>AAD Auth Scopes</InputLabel>
                     {aadAuthScopes?.map(this.buildAadScopeInput)}
                     <Box sx={{
                         display: 'flex',
@@ -1443,7 +1486,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                 <DialogActions>
                     {updating &&
                         <Box sx={{ width: '100%' }}>
-                            <LinearProgress color='info' />
+                            <LinearProgress color='secondary' />
                         </Box>
                     }
                     {!updating && <React.Fragment>
