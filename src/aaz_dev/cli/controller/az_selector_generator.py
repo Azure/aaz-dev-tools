@@ -1,6 +1,6 @@
 from command.model.configuration import CMDJsonSubresourceSelector, CMDArrayIndexBase, CMDObjectIndexBase, \
     CMDObjectIndexDiscriminator, CMDObjectIndexAdditionalProperties, CMDObjectIndex, CMDArrayIndex, CMDSchema, \
-    CMDObjectIndexAdditionalProperties, CMDSelectorIndex
+    CMDObjectIndexAdditionalProperties, CMDSelectorIndex, CMDSimpleIndexBase, CMDSimpleIndex
 from utils.case import to_camel_case
 
 
@@ -37,7 +37,7 @@ class AzJsonSelectorGenerator:
 
 
 def _iter_selector_scopes_by_index(index, scope_name, scope_define, idx_lines, cmd_ctx, is_set):
-    assert isinstance(index, (CMDObjectIndex, CMDArrayIndex))
+    assert isinstance(index, (CMDObjectIndex, CMDArrayIndex, CMDSimpleIndex))
     if scope_define is not None:
         yield scope_name, scope_define, idx_lines, None, None, False
     scope_define = f"{scope_name}.{index.name}"
@@ -69,7 +69,11 @@ def _iter_selector_scopes_by_index_base(index, scope_name, scope_define, idx_lin
                     idx_lines[0] = f"idx = next(filters, [{arg_keys}.to_serialized_data()])[0]"
                     return
 
-    if isinstance(index, CMDObjectIndexBase):
+    if isinstance(index, CMDSimpleIndexBase):
+        is_end = True
+        _handle_idx_lines_for_end()
+        yield scope_name, scope_define, idx_lines, None, None, is_end
+    elif isinstance(index, CMDObjectIndexBase):
         is_end = False
         if index.prop:
             assert isinstance(index.prop, CMDSelectorIndex)

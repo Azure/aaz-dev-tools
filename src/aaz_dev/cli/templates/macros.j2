@@ -1,0 +1,466 @@
+{%- macro generate_json_selector(selector) %}
+    class {{selector.cls_name}}(AAZJsonSelector):
+
+        def _get(self):
+            {%- for scope, scope_define, idx_lines, filter_builder, filters, is_end in selector.iter_scopes_for_get() %}
+
+            {%- if is_end %}
+            {%- for line in idx_lines %}
+            {{line}}
+            {%- endfor %}
+            return {{ scope_define }}
+
+            {%- else %}
+            {%- for line in idx_lines %}
+            {{line}}
+            {%- endfor %}
+            {{ scope }} = {{ scope_define }}
+
+            {%- if filter_builder is not none %}
+            filters = {{ filter_builder }}
+            {%- for key, value, is_constant in filters %}
+            filters = filter(
+                {%- if is_constant %}
+                lambda e: e{{key}} == {{ value|constant_convert }},
+                {%- else %}
+                lambda e: e{{key}} == {{ value }},
+                {%- endif %}
+                filters
+            )
+            {%- endfor %}
+            {%- endif %}
+
+            {%- endif %}
+
+            {%- endfor %}
+
+        def _set(self, value):
+            {%- for scope, scope_define, idx_lines, filter_builder, filters, is_end in selector.iter_scopes_for_set() %}
+
+            {%- if is_end %}
+            {%- for line in idx_lines %}
+            {{line}}
+            {%- endfor %}
+            {{ scope_define }} = value
+            return
+
+            {%- else %}
+            {%- for line in idx_lines %}
+            {{line}}
+            {%- endfor %}
+            {{ scope }} = {{ scope_define }}
+
+            {%- if filter_builder is not none %}
+            filters = {{ filter_builder }}
+            {%- for key, value, is_constant in filters %}
+            filters = filter(
+                {%- if is_constant %}
+                lambda e: e{{key}} == {{ value|constant_convert }},
+                {%- else %}
+                lambda e: e{{key}} == {{ value }},
+                {%- endif %}
+                filters
+            )
+            {%- endfor %}
+            {%- endif %}
+
+            {%- endif %}
+
+            {%- endfor %}
+{%- endmacro %}
+
+{%- macro generate_http_operation(op, client_registered_name, helper_cls_name, support_no_wait) %}
+    class {{ op.name }}(AAZHttpOperation):
+        CLIENT_TYPE = "{{ client_registered_name }}"
+
+        def __call__(self, *args, **kwargs):
+            request = self.make_request()
+            session = self.client.send_request(request=request, stream=False, **kwargs)
+
+            {%- if op.success_202_response %}
+            if session.http_response.status_code in {{ op.success_202_response.status_codes|constant_convert }}:
+                return self.client.build_lro_polling(
+                    {% if support_no_wait %}self.ctx.args.no_wait{% else %}False{% endif %},
+                    session,
+                    {%- if op.success_202_response.callback_name is not none %}
+                    self.{{ op.success_202_response.callback_name }},
+                    {%- else %}
+                    None,
+                    {%- endif %}
+                    self.on_error,
+                    lro_options={{ op.lro_options|constant_convert }},
+                    path_format_arguments=self.url_parameters,
+                )
+            {%- endif %}
+
+            {%- for response in op.success_responses %}
+            if session.http_response.status_code in {{ response.status_codes|constant_convert }}:
+                {%- if op.is_long_running %}
+                return self.client.build_lro_polling(
+                    {% if support_no_wait %}self.ctx.args.no_wait{% else %}False{% endif %},
+                    session,
+                    self.{{ response.callback_name }},
+                    self.on_error,
+                    lro_options={{ op.lro_options|constant_convert }},
+                    path_format_arguments=self.url_parameters,
+                )
+                {%- else %}
+                return self.{{ response.callback_name }}(session)
+                {%- endif %}
+            {%- endfor %}
+
+            return self.on_error(session.http_response)
+
+        @property
+        def url(self):
+            return self.client.format_url(
+                "{{ op.url }}",
+                **self.url_parameters
+            )
+
+        @property
+        def method(self):
+            return "{{ op.method }}"
+
+        @property
+        def error_format(self):
+            return "{{ op.error_format }}"
+
+        {%- if op.url_parameters is not none and op.url_parameters|length %}
+
+        @property
+        def url_parameters(self):
+            parameters = {
+                {%- for name, data, is_constant, kwargs in op.url_parameters %}
+                {%- if is_constant %}
+                **self.serialize_url_param(
+                    "{{ name }}", {{ data|constant_convert }},
+                    {%- for key, value in kwargs.items() %}
+                    {{ key }}={{ value|constant_convert }},
+                    {%- endfor %}
+                ),
+                {%- else %}
+                **self.serialize_url_param(
+                    "{{ name }}", {{ data }},
+                    {%- for key, value in kwargs.items() %}
+                    {{ key }}={{ value|constant_convert }},
+                    {%- endfor %}
+                ),
+                {%- endif %}
+                {%- endfor %}
+            }
+            return parameters
+        {%- endif %}
+
+        {%- if op.query_parameters is not none and op.query_parameters | length %}
+
+        @property
+        def query_parameters(self):
+            parameters = {
+                {%- for name, data, is_constant, kwargs in op.query_parameters %}
+                {%- if is_constant %}
+                **self.serialize_query_param(
+                    "{{ name }}", {{ data|constant_convert }},
+                    {%- for key, value in kwargs.items() %}
+                    {{ key }}={{ value|constant_convert }},
+                    {%- endfor %}
+                ),
+                {%- else %}
+                **self.serialize_query_param(
+                    "{{ name }}", {{ data }},
+                    {%- for key, value in kwargs.items() %}
+                    {{ key }}={{ value|constant_convert }},
+                    {%- endfor %}
+                ),
+                {%- endif %}
+                {%- endfor %}
+            }
+            return parameters
+        {%- endif %}
+
+        {%- if op.header_parameters is not none and op.header_parameters | length %}
+
+        @property
+        def header_parameters(self):
+            parameters = {
+                {%- for name, data, is_constant, kwargs in op.header_parameters %}
+                {%- if is_constant %}
+                **self.serialize_header_param(
+                    "{{ name }}", {{ data|constant_convert }},
+                    {%- for key, value in kwargs.items() %}
+                    {{ key }}={{ value|constant_convert }},
+                    {%- endfor %}
+                ),
+                {%- else %}
+                **self.serialize_header_param(
+                    "{{ name }}", {{ data }},
+                    {%- for key, value in kwargs.items() %}
+                    {{ key }}={{ value|constant_convert }},
+                    {%- endfor %}
+                ),
+                {%- endif %}
+                {%- endfor %}
+            }
+            return parameters
+        {%- endif %}
+
+        {%- if op.content is not none %}
+
+        @property
+        def content(self):
+            {{ op.content.VALUE_NAME}}, {{ op.content.BUILDER_NAME }} = self.new_content_builder(
+                {{ op.content.arg_key }},
+                {%- if op.content.ref is not none %}
+                value={{ op.content.ref }},
+                {%- else %}
+                typ={{ op.content.typ }},
+                {%- if op.content.typ_kwargs is not none and op.content.typ_kwargs|length %}
+                typ_kwargs={{ op.content.typ_kwargs|constant_convert }}
+                {%- endif %}
+                {%- endif %}
+            )
+
+            {%- if op.content.ref is none %}
+            {%- if op.content.cls_builder_name is not none %}
+            {{ helper_cls_name }}.{{ op.content.cls_builder_name }}({{ op.content.BUILDER_NAME }})
+            {%- endif %}
+
+            {%- for scope, scope_define, props, discriminators in op.content.iter_scopes() %}
+
+            {%- if scope_define is not none %}
+
+            {{ scope }} = {{ op.content.BUILDER_NAME }}.get({{ scope_define|constant_convert }})
+            if {{ scope }} is not None:
+            {%- endif %}
+
+            {%- for prop_name, prop_type, is_const, const_value, arg_key, prop_type_kwargs, cls_builder_name in props %}
+            {% if scope_define is not none %}{{ "    " }}{% endif %}
+            {%- if cls_builder_name is not none %}{{ helper_cls_name }}.{{ cls_builder_name }}({% endif %}
+            {%- if prop_name != '[]' and prop_name != '{}' -%}
+            {%- if is_const -%}
+            {{ scope }}.set_const({{ prop_name|constant_convert }}, {{ const_value|constant_convert }}, {{ prop_type }}
+                {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+                {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+            {%- else -%}
+            {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}
+                {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+                {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+            {%- endif %}
+            {%- elif prop_name == '{}' and prop_type is none -%}
+            {{ scope }}.set_anytype_elements({%- if arg_key is not none %}{{ arg_key|constant_convert }}{% endif %})
+            {%- else -%}
+            {{ scope }}.set_elements({{ prop_type }}
+                {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+                {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+            {%- endif %}
+            {%- if cls_builder_name is not none %}){% endif %}
+            {%- endfor %}
+
+            {%- for disc_name, disc_value in discriminators %}
+            {% if scope_define is not none %}{{ "    " }}{% endif -%}
+            {{ scope }}.discriminate_by({{ disc_name|constant_convert }}, {{ disc_value|constant_convert }})
+            {%- endfor %}
+
+            {%- endfor %}
+            {%- endif %}
+
+            return self.serialize_content({{ op.content.VALUE_NAME }})
+        {%- endif %}
+
+        {%- if op.form_content is not none %}
+
+        @property
+        def form_content(self):
+            # TODO:
+            return None
+        {%- endif %}
+
+        {%- if op.stream_content is not none %}
+
+        @property
+        def stream_content(self):
+            # TODO:
+            return None
+        {%- endif %}
+
+        {%- for response in op.success_responses %}
+
+        def {{ response.callback_name }}(self, session):
+            {%- if response.variant_name is not none %}
+            data = self.deserialize_http_content(session)
+            self.ctx.set_var(
+                "{{ response.variant_name }}",
+                data,
+                schema_builder=self.{{ response.schema.builder_name }}
+            )
+            {%- else %}
+            pass
+            {%- endif %}
+
+        {%- if response.variant_name is not none %}
+
+        {{ response.schema.name }} = None
+
+        @classmethod
+        def {{ response.schema.builder_name }}(cls):
+            if cls.{{ response.schema.name }} is not None:
+                return cls.{{ response.schema.name }}
+
+            cls.{{ response.schema.name }} = {{ response.schema.typ }}(
+            {%- if not response.schema.typ_kwargs|length %})
+            {%- else %}
+                {%- for key, value in response.schema.typ_kwargs.items() %}
+                {{ key }}={{ value|constant_convert }},
+                {%- endfor %}
+            )
+            {%- endif %}
+            {%- if response.schema.cls_builder_name is not none %}
+            {{ helper_cls_name }}.{{ response.schema.cls_builder_name }}(cls.{{ response.schema.name }})
+            {%- endif %}
+
+            {%- for scope, scope_define, props in response.schema.iter_scopes() %}
+
+            {{ scope }} = {{ scope_define }}
+
+            {%- for prop_name, prop_type, prop_kwargs, cls_builder_name in props %}
+            {{ scope }}{{ prop_name|get_prop }} = {{ prop_type }}(
+            {%- if not prop_kwargs|length %})
+            {%- else %}
+                {%- for key, value in prop_kwargs.items() %}
+                {{ key }}={{ value|constant_convert }},
+                {%- endfor %}
+            )
+            {%- endif %}
+            {%- if cls_builder_name is not none %}
+            {{ helper_cls_name }}.{{ cls_builder_name }}({{ scope }}{{ prop_name|get_prop }})
+            {%- endif %}
+            {%- endfor %}
+
+            {%- endfor %}
+
+            return cls.{{ response.schema.name }}
+        {%- endif %}
+
+        {%- endfor %}
+{%- endmacro %}
+
+{%- macro generate_helper_cls(leaf_cls) %}
+class {{ leaf_cls.helper_cls_name }}:
+    """Helper class for {{ leaf_cls.cls_name }}"""
+
+    {%- for update_cls in leaf_cls.get_update_clses() %}
+
+    @classmethod
+    def {{ update_cls.builder_name }}(cls, {{ update_cls.BUILDER_NAME }}):
+        if {{ update_cls.BUILDER_NAME }} is None:
+            return
+
+        {%- for scope, scope_define, props, discriminators in update_cls.iter_scopes() %}
+
+        {%- if scope_define is not none %}
+
+        {{ scope }} = {{ update_cls.BUILDER_NAME }}.get({{ scope_define|constant_convert }})
+        if {{ scope }} is not None:
+        {%- endif %}
+
+        {%- for prop_name, prop_type, is_const, const_value, arg_key, prop_type_kwargs, cls_builder_name in props %}
+        {% if scope_define is not none %}{{ "    " }}{% endif %}
+        {%- if cls_builder_name is not none %}cls.{{ cls_builder_name }}({% endif %}
+        {%- if prop_name != '[]' and prop_name != '{}' -%}
+        {%- if is_const -%}
+        {{ scope }}.set_const({{ prop_name|constant_convert }}, {{ const_value|constant_convert }}, {{ prop_type }}
+            {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+            {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+        {%- else -%}
+        {{ scope }}.set_prop({{ prop_name|constant_convert }}, {{ prop_type }}
+            {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+            {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+        {%- endif %}
+        {%- elif prop_name == '{}' and prop_type is none -%}
+        {{ scope }}.set_anytype_elements({%- if arg_key is not none %}{{ arg_key|constant_convert }}{% endif %})
+        {%- else -%}
+        {{ scope }}.set_elements({{ prop_type }}
+            {%- if arg_key is not none %}, {{ arg_key|constant_convert }}{% endif %}
+            {%- if prop_type_kwargs is not none and prop_type_kwargs|length %}, typ_kwargs={{ prop_type_kwargs|constant_convert }}{% endif %})
+        {%- endif %}
+        {%- if cls_builder_name is not none %}){% endif %}
+        {%- endfor %}
+
+        {%- for disc_name, disc_value in discriminators %}
+        {% if scope_define is not none %}{{ "    " }}{% endif -%}
+        {{ scope }}.discriminate_by({{ disc_name|constant_convert }}, {{ disc_value|constant_convert }})
+        {%- endfor %}
+
+        {%- endfor %}
+
+
+    {%- endfor %}
+
+    {%- for resp_cls in leaf_cls.get_response_clses() %}
+
+    {{ resp_cls.schema_name }} = None
+
+    @classmethod
+    def {{ resp_cls.builder_name }}(cls, _schema):
+        if cls.{{ resp_cls.schema_name }} is not None:
+            {%- for prop_name in resp_cls.props %}
+            _schema{{ prop_name|get_prop }} = cls.{{ resp_cls.schema_name }}{{ prop_name|get_prop }}
+            {%- endfor %}
+            {%- for disc_key, disc_value in resp_cls.discriminators %}
+            _schema.discriminate_by(
+                {{ disc_key|constant_convert }},
+                {{ disc_value|constant_convert }},
+                cls.{{ resp_cls.schema_name }}.discriminate_by(
+                    {{ disc_key|constant_convert }},
+                    {{ disc_value|constant_convert }},
+                )
+            )
+            {%- endfor %}
+            return
+
+        cls.{{ resp_cls.schema_name }} = {{ resp_cls.schema_name }} = {{ resp_cls.typ }}(
+        {%- if not resp_cls.typ_kwargs|length %})
+        {%- else %}
+            {%- for key, value in resp_cls.typ_kwargs.items() %}
+            {{ key }}={{ value|constant_convert }}
+            {%- endfor %}
+        )
+        {%- endif %}
+
+        {%- for scope, scope_define, props in resp_cls.iter_scopes() %}
+
+        {{ scope }} = {{ scope_define }}
+
+        {%- for prop_name, prop_type, prop_kwargs, cls_builder_name in props %}
+        {{ scope }}{{ prop_name|get_prop }} = {{ prop_type }}(
+        {%- if not prop_kwargs|length %})
+        {%- else %}
+            {%- for key, value in prop_kwargs.items() %}
+            {{ key }}={{ value|constant_convert }},
+            {%- endfor %}
+        )
+        {%- endif %}
+        {%- if cls_builder_name is not none %}
+        cls.{{ cls_builder_name }}({{ scope }}{{ prop_name|get_prop }})
+        {%- endif %}
+        {%- endfor %}
+
+        {%- endfor %}
+        {{- "\n" }}
+        {%- for prop_name in resp_cls.props %}
+        _schema{{ prop_name|get_prop }} = cls.{{ resp_cls.schema_name }}{{ prop_name|get_prop }}
+        {%- endfor %}
+        {%- for disc_key, disc_value in resp_cls.discriminators %}
+        _schema.discriminate_by(
+                {{ disc_key|constant_convert }},
+                {{ disc_value|constant_convert }},
+                cls.{{ resp_cls.schema_name }}.discriminate_by(
+                    {{ disc_key|constant_convert }},
+                    {{ disc_value|constant_convert }},
+                )
+            )
+        {%- endfor %}
+
+
+    {%- endfor %}
+{%- endmacro %}
