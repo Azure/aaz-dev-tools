@@ -7,14 +7,14 @@ from schematics.models import Model
 
 from ._fields import CMDVariantField
 from ._selector_index import CMDSelectorIndexField
+from ._utils import CMDDiffLevelEnum, CMDBuildInVariants
 
 
 class CMDSubresourceSelector(Model):
     POLYMORPHIC_KEY = None
-    DEFAULT_VARIANT = "$Subresource"
 
     # properties as tags
-    var = CMDVariantField(required=True, default=DEFAULT_VARIANT)
+    var = CMDVariantField(required=True, default=CMDBuildInVariants.Subresource)
     ref = CMDVariantField(required=True)
 
     class Options:
@@ -31,11 +31,27 @@ class CMDSubresourceSelector(Model):
             return hasattr(data, cls.POLYMORPHIC_KEY)
         return False
 
-    def generate_args(self, ref_args):
+    def generate_args(self, ref_args, var_prefix=None):
         raise NotImplementedError()
 
     def reformat(self, **kwargs):
         raise NotImplementedError()
+
+    def _diff(self, old, level, diff):
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.var != old.var:
+                diff["var"] = f"{old.var} != {self.var}"
+            if self.ref != old.ref:
+                diff["ref"] = f"{old.ref} != {self.ref}"
+        return diff
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+
+        diff = {}
+        diff = self._diff(old, level, diff)
+        return diff
 
 
 class CMDJsonSubresourceSelector(CMDSubresourceSelector):
@@ -102,8 +118,15 @@ class CMDJsonSubresourceSelector(CMDSubresourceSelector):
     # properties as nodes
     json = CMDSelectorIndexField(required=True)
 
-    def generate_args(self, ref_args):
-        return self.json.generate_args(ref_args, "$")
+    def generate_args(self, ref_args, var_prefix=None):
+        var_prefix = var_prefix or "$"
+        return self.json.generate_args(ref_args, var_prefix)
 
     def reformat(self, **kwargs):
         self.json.reformat(**kwargs)
+
+    def _diff(self, old, level, diff):
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if json_diff := self.json.diff(old.json, level):
+                diff["json"] = json_diff
+        return diff

@@ -13,6 +13,11 @@ class CLIAtomicClient(Model):
         serialized_name="registeredName",
         deserialize_from="registeredName"
     )
+    cls_name = StringType(
+        required=True,
+        serialized_name="clsName",
+        deserialize_from="clsName",
+    )
     cfg = CLIClientConfigField()
 
     class Options:

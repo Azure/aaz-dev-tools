@@ -537,3 +537,114 @@ class APIAzTest(CommandTestCase):
             self.assertTrue(rv.status_code == 200)
             data = rv.get_json()
             self.assertEqual(data['profiles'], profiles)
+
+    def test_generate_data_plane_with_dynamic_endpoints_in_main_repo(self):
+        self.prepare_aaz()
+        mod_name = "aaz-data-plane-dynamic"
+        manager = AzMainManager()
+        path = manager.get_mod_path(mod_name)
+        if os.path.exists(path):
+            shutil.rmtree(path, ignore_errors=True)
+
+        with self.app.test_client() as c:
+            rv = c.post(f"/CLI/Az/Main/Modules", json={
+                "name": mod_name
+            })
+            self.assertTrue(rv.status_code == 200)
+            profiles = rv.get_json()['profiles']
+
+            # latest profile
+            version = '2021-06-01-preview'
+            profile = profiles[Config.CLI_DEFAULT_PROFILE]
+            profile['commandGroups'] = {
+                'attestation': {
+                    'names': ['attestation'],
+                    'commandGroups': {
+                        'provider': {
+                            'names': ['attestation', 'provider'],
+                            'commands': {
+                                'create': {
+                                    'names': ['attestation', 'provider', 'create'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'delete': {
+                                    'names': ['attestation', 'provider', 'delete'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'list': {
+                                    'names': ['attestation', 'provider', 'list'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'show': {
+                                    'names': ['attestation', 'provider', 'show'],
+                                    'registered': True,
+                                    'version': version,
+                                },
+                                'update': {
+                                    'names': ['attestation', 'provider', 'update'],
+                                    'registered': True,
+                                    'version': version,
+                                }
+                            }
+                        },
+                    }
+                }
+            }
+
+            version = '2022-09-01-preview'
+            profile['commandGroups']['attestation']['commandGroups']['policy'] = {
+                'names': ['attestation', 'policy'],
+                'commands': {
+                    'set': {
+                        'names': ['attestation', 'policy', 'set'],
+                        'registered': True,
+                        'version': version,
+                    },
+                    'reset': {
+                        'names': ['attestation', 'policy', 'reset'],
+                        'registered': True,
+                        'version': version,
+                    },
+                    'show': {
+                        'names': ['attestation', 'policy', 'show'],
+                        'registered': True,
+                        'version': version,
+                    },
+
+                }
+            }
+
+            profile['commandGroups']['attestation']['commandGroups']['signer'] = {
+                'names': ['attestation', 'signer'],
+                'commands': {
+                    'add': {
+                        'names': ['attestation', 'signer', 'add'],
+                        'registered': True,
+                        'version': version,
+                    },
+                    'list': {
+                        'names': ['attestation', 'signer', 'list'],
+                        'registered': True,
+                        'version': version,
+                    },
+                    'remove': {
+                        'names': ['attestation', 'signer', 'remove'],
+                        'registered': True,
+                        'version': version,
+                    },
+
+                }
+            }
+
+            rv = c.put(f"/CLI/Az/Main/Modules/{mod_name}", json={
+                "profiles": profiles
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"/CLI/Az/Main/Modules/{mod_name}")
+            self.assertTrue(rv.status_code == 200)
+            data = rv.get_json()
+            self.assertEqual(data['profiles'], profiles)

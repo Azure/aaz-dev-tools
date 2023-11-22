@@ -26,7 +26,7 @@ class CMDInstanceDeleteAction(Model):
             return hasattr(data, cls.POLYMORPHIC_KEY)
         return False
 
-    def generate_args(self, ref_args):
+    def generate_args(self, ref_args, var_prefix=None):
         raise NotImplementedError()
 
     def reformat(self, **kwargs):
@@ -43,8 +43,8 @@ class CMDJsonInstanceDeleteAction(CMDInstanceDeleteAction):
     # # properties as nodes
     json = ModelType(CMDRequestJson, required=True)
 
-    def generate_args(self, ref_args):
-        return self.json.generate_args(ref_args)
+    def generate_args(self, ref_args, var_prefix=None):
+        return self.json.generate_args(ref_args, var_prefix=var_prefix)
 
     def reformat(self, **kwargs):
         self.json.reformat(**kwargs)

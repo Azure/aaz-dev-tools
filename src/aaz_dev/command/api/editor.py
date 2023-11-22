@@ -118,9 +118,18 @@ def editor_workspace_client_config(name):
             raise exceptions.ResourceNotFind("Client configuration not exist")
     elif request.method == "POST":
         data = request.get_json()
-        if 'templates' not in data or 'auth' not in data:
-            raise exceptions.InvalidAPIUsage("Invalid request")
-        cfg_editor = manager.create_cfg_editor(templates=data['templates'], auth=data['auth'])
+        if 'auth' not in data:
+            raise exceptions.InvalidAPIUsage("Invalid request: auth info is required.")
+        if 'templates' not in data and 'resource' not in data:
+            raise exceptions.InvalidAPIUsage("Invalid request: templates or resource is required for endpoints.")
+        if 'resource' in data:
+            if 'id' not in data['resource'] or 'version' not in data['resource'] or 'module' not in data['resource'] or 'subresource' not in data['resource']:
+                raise exceptions.InvalidAPIUsage("Invalid request")
+        cfg_editor = manager.create_cfg_editor(
+            auth=data['auth'],
+            templates=data.get('templates', None),
+            arm_resource=data.get('resource', None),
+        )
         manager.save()
     else:
         raise NotImplementedError()

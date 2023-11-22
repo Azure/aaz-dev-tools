@@ -39,7 +39,8 @@ interface ClientAuth {
 
 interface ClientConfig {
     version: string,
-    templates: ClientTemplateMap,
+    endpointTemplates?: ClientTemplateMap,
+    endpointResource?: Resource,
     auth: ClientAuth,
 }
 
@@ -294,12 +295,19 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             let res = await axios.get(`${workspaceUrl}/ClientConfig`);
             const clientConfig: ClientConfig = {
                 version: res.data.version,
-                templates: {},
+                endpointTemplates: undefined,
+                endpointResource: undefined,
                 auth: res.data.auth,
             }
-            res.data.endpoints.templates.forEach((value: any) => {
-                clientConfig.templates[value.cloud] = value.template;
-            });
+            if (res.data.endpoints.type === "template") {
+                clientConfig.endpointTemplates = {};
+                res.data.endpoints.templates.forEach((value: any) => {
+                    clientConfig.endpointTemplates![value.cloud] = value.template;
+                });
+            } else if (res.data.endpoints.type === "http-operation") {
+                clientConfig.endpointResource = res.data.endpoints.endpointResource;
+            }
+           
             return clientConfig;
         } catch (err: any) {
             // catch 404 error
@@ -1118,18 +1126,31 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
             let res = await axios.get(`${this.props.workspaceUrl}/ClientConfig`);
             const clientConfig: ClientConfig = {
                 version: res.data.version,
-                templates: {},
                 auth: res.data.auth,
             }
-            res.data.endpoints.templates.forEach((value: any) => {
-                clientConfig.templates[value.cloud] = value.template;
-            });
+            let templateAzureCloud = "";
+            let templateAzureChinaCloud = "";
+            let templateAzureUSGovernment = "";
+            let templateAzureGermanCloud = "";
+            if (res.data.endpoints.type === "template") { 
+                clientConfig.endpointTemplates = {};
+                res.data.endpoints.templates.forEach((value: any) => {
+                    clientConfig.endpointTemplates![value.cloud] = value.template;
+                });
+                templateAzureCloud = clientConfig.endpointTemplates!['AzureCloud'] ?? "";
+                templateAzureChinaCloud = clientConfig.endpointTemplates!['AzureChinaCloud'] ?? "";
+                templateAzureUSGovernment = clientConfig.endpointTemplates!['AzureUSGovernment'] ?? "";
+                templateAzureGermanCloud = clientConfig.endpointTemplates!['AzureGermanCloud'] ?? "";
+            } else if (res.data.endpoints.type === "http-operation") {
+                clientConfig.endpointResource = res.data.endpoints.resource;
+            }
+            
             this.setState({
                 aadAuthScopes: clientConfig.auth.aad.scopes ?? ["",],
-                templateAzureCloud: clientConfig.templates['AzureCloud'] ?? "",
-                templateAzureChinaCloud: clientConfig.templates['AzureChinaCloud'] ?? "",
-                templateAzureUSGovernment: clientConfig.templates['AzureUSGovernment'] ?? "",
-                templateAzureGermanCloud: clientConfig.templates['AzureGermanCloud'] ?? "",
+                templateAzureCloud: templateAzureCloud,
+                templateAzureChinaCloud: templateAzureChinaCloud,
+                templateAzureUSGovernment: templateAzureUSGovernment,
+                templateAzureGermanCloud: templateAzureGermanCloud,
                 isAdd: false
             });
         } catch (err: any) {

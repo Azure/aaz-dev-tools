@@ -1323,6 +1323,16 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
         return selector
 
     @classmethod
+    def _build_simple_index_base(cls, schema, idx, index=None, **kwargs):
+        if index is None:
+            if not isinstance(schema, CMDSimpleIndexBase.supported_schema_types):
+                raise NotImplementedError(f"Not support schema '{type(schema)}'")
+            index = CMDSimpleIndexBase()
+        if idx:
+            raise exceptions.InvalidAPIUsage("Simple schema is not support feature index")
+        return index
+
+    @classmethod
     def _build_object_index_base(cls, schema, idx, index=None, prune=False, **kwargs):
         assert isinstance(schema, CMDObjectSchemaBase)
 
@@ -1349,7 +1359,7 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
                         elif isinstance(prop, CMDArraySchema):
                             return cls._build_array_index(prop, remain_idx, name=name, **kwargs)
                         else:
-                            raise NotImplementedError()
+                            return cls._build_simple_index(prop, remain_idx, name=name, **kwargs)
                     else:
                         name = prop.name
                         if isinstance(prop, CMDClsSchema):
@@ -1361,7 +1371,8 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
                             index.prop = cls._build_array_index(prop, remain_idx, name=name, **kwargs)
                             break
                         else:
-                            raise NotImplementedError()
+                            index.prop = cls._build_simple_index(prop, remain_idx, name=name, **kwargs)
+                            break
 
         if schema.discriminators:
             for disc in schema.discriminators:
@@ -1397,7 +1408,7 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
         if not identifier_names and isinstance(item, CMDObjectSchemaBase):
             prop_names = {prop.name for prop in item.props}
             if 'id' in prop_names and 'name' in prop_names:
-                # use name as default identifier when schema containes 'id' property
+                # use name as default identifier when schema contains 'id' property
                 identifier_names = ['name']
 
         if identifier_names:
@@ -1424,9 +1435,17 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
         elif isinstance(item, CMDArraySchemaBase):
             index.item = cls._build_array_index_base(item, remain_idx, **kwargs)
         else:
-            raise NotImplementedError()
+            index.item = cls._build_simple_index_base(item, remain_idx, **kwargs)
 
         return index
+
+    @classmethod
+    def _build_simple_index(cls, schema, idx, name, **kwargs):
+        if not isinstance(schema, CMDSimpleIndex.supported_schema_types):
+            raise NotImplementedError(f"Not support schema '{type(schema)}'")
+        index = CMDSimpleIndex()
+        index.name = name
+        return cls._build_simple_index_base(schema, idx, index=index, **kwargs)
 
     @classmethod
     def _build_object_index(cls, schema, idx, name, **kwargs):
@@ -1468,7 +1487,8 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
                         index.prop = cls._build_array_index(prop, remain_idx, name, **kwargs)
                         break
                     else:
-                        raise NotImplementedError()
+                        index.prop = cls._build_simple_index(prop, remain_idx, name, **kwargs)
+                        break
 
         if schema.discriminators:
             for disc in schema.discriminators:
@@ -1496,7 +1516,7 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
         elif isinstance(item, CMDArraySchemaBase):
             index.item = cls._build_array_index_base(item, idx, **kwargs)
         else:
-            raise NotImplementedError()
+            index.item = cls._build_simple_index_base(item, idx, **kwargs)
 
         return index
 
@@ -1549,3 +1569,36 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
             raise exceptions.InvalidAPIUsage(f"Always miss class implements for {miss_implement_cls_names}")
 
         return schema
+
+
+def build_endpoint_selector_for_client_config(get_op, subresource_idx, **kwargs):
+    # find response body
+    response_json = None
+    for response in get_op.http.responses:
+        if response.is_error:
+            continue
+        if not isinstance(response.body, CMDHttpResponseJsonBody):
+            continue
+        if response.body.json.var == CMDBuildInVariants.EndpointInstance:
+            response_json = response.body.json
+            break
+
+    assert isinstance(response_json, CMDResponseJson)
+    idx = WorkspaceCfgEditor.idx_to_list(subresource_idx)
+    selector = CMDJsonSubresourceSelector()
+    selector.ref = response_json.var
+    selector.var = CMDBuildInVariants.Endpoint
+    if isinstance(response_json.schema, CMDObjectSchemaBase):
+        index = CMDObjectIndex()
+        index.name = 'response'
+        selector.json = WorkspaceCfgEditor._build_object_index_base(
+            response_json.schema, idx, index=index, **kwargs)
+    elif isinstance(response_json.schema, CMDArraySchemaBase):
+        index = CMDArrayIndex()
+        index.name = 'response'
+        selector.json = WorkspaceCfgEditor._build_array_index_base(
+            response_json.schema, idx, index=index, **kwargs)
+    else:
+        raise NotImplementedError(f"Not support schema {type(response_json.schema)}")
+
+    return selector
