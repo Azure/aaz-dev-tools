@@ -24,7 +24,7 @@ class ExampleItem(Model, Linkable):
         if not self.ref_instance:
             return
 
-        example_params = example_builder.param_mapping(self.ref_instance.get("parameters", {}))
+        example_params = example_builder.mapping(self.ref_instance.get("parameters", {}))
 
         command = cmd_name
         for param_option, param_value in example_params:

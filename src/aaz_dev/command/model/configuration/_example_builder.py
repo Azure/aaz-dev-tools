@@ -1,61 +1,70 @@
 import json
+from abc import abstractmethod
 
 from command.controller.cfg_reader import CfgReader
-from command.model.configuration._arg_group import CMDArgGroup
+from command.model.configuration import CMDArgGroup
 from swagger.model.schema.parameter import PathParameter, QueryParameter, HeaderParameter, BodyParameter
 from ._utils import CMDArgBuildPrefix
 
 
 class ExampleBuilder:
-    def __init__(self, operation=None):
+    def __init__(self, command=None, operation=None):
+        self.command = command
         self.operation = operation
+        self.example_items = []
 
-    def param_mapping(self, params):
-        raise NotImplementedError()
+    def get_option_name(self, arg_var):
+        if not arg_var:
+            return
+
+        arg_parent, arg, arg_option = CfgReader.find_arg_in_command_with_parent_by_var(self.command, arg_var)
+        if isinstance(arg_parent, CMDArgGroup) and arg:
+            return arg_option  # top-level parameter
+
+    @abstractmethod
+    def mapping(self, example_dict):
+        pass
 
 
 class SwaggerExampleBuilder(ExampleBuilder):
-    def __init__(self, operation=None, command=None):
-        super().__init__(operation)
+    def mapping(self, example_dict):
+        for param in self.operation.parameters:
+            if param.name not in example_dict:
+                continue
 
-        self.command = command
+            arg_var = None
+            value = example_dict[param.name]
+            param_name = param.name.replace("$", "")
 
-    def param_mapping(self, example_dict):
-        def build_example_param(arg_var, value):
-            parent, arg, arg_idx = CfgReader.find_arg_in_command_with_parent_by_var(self.command, arg_var)
+            if param.IN_VALUE == BodyParameter.IN_VALUE:
+                arg_var = f"${param_name}"
+                self.example_items += self.build(arg_var, value)
+            else:
+                if param.IN_VALUE == PathParameter.IN_VALUE:
+                    arg_var = f"{CMDArgBuildPrefix.Path}.{param_name}"
+                if param.IN_VALUE == QueryParameter.IN_VALUE:
+                    arg_var = f"{CMDArgBuildPrefix.Query}.{param_name}"
+                if param.IN_VALUE == HeaderParameter.IN_VALUE:
+                    arg_var = f"{CMDArgBuildPrefix.Header}.{param_name}"
 
-            # ignore parameter flattened or not found
-            if arg and isinstance(parent, CMDArgGroup):
-                example_params.append((arg_idx, json.dumps(value)))
+            option = self.get_option_name(arg_var)
+            if option:
+                self.example_items.append((option, json.dumps(value)))
 
-        def build_body_example_param(parent_arg_var, example):
-            if not isinstance(example, dict):
-                return
+        return self.example_items
 
-            for example_param, example_value in example.items():
-                arg_var = parent_arg_var + '.' + example_param
-                build_example_param(arg_var, example_value)
-                build_body_example_param(arg_var, example_value)
+    def build(self, var_prefix, example_dict):
+        if not isinstance(example_dict, dict):
+            return []
 
-        example_params = []
+        example_items = []
+        for name, value in example_dict.items():
+            arg_var = f"{var_prefix}.{name}"
 
-        for op_param in self.operation.parameters:
-            if op_param.name in example_dict:
-                if PathParameter.IN_VALUE == op_param.IN_VALUE:
-                    path_arg_var = CMDArgBuildPrefix.Path + '.' + op_param.name.replace('$', '')
-                    build_example_param(path_arg_var, example_dict[op_param.name])
+            option = self.get_option_name(arg_var)
+            if option:
+                example_items.append((option, json.dumps(value)))
 
-                elif QueryParameter.IN_VALUE == op_param.IN_VALUE:
-                    query_arg_var = CMDArgBuildPrefix.Query + '.' + op_param.name.replace('$', '')
-                    build_example_param(query_arg_var, example_dict[op_param.name])
+            example_items += self.build(arg_var, value)
 
-                elif HeaderParameter.IN_VALUE == op_param.IN_VALUE:
-                    header_arg_var = CMDArgBuildPrefix.Header + '.' + op_param.name.replace('$', '')
-                    build_example_param(header_arg_var, example_dict[op_param.name])
-
-                elif BodyParameter.IN_VALUE == op_param.IN_VALUE:
-                    body_arg_var = '$' + op_param.name.replace('$', '')
-                    build_example_param(body_arg_var, example_dict[op_param.name])
-                    build_body_example_param(body_arg_var, example_dict[op_param.name])
-
-        return example_params
+        return example_items
