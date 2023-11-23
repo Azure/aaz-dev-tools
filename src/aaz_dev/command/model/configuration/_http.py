@@ -319,7 +319,7 @@ class CMDHttpResponse(Model):
     def diff(self, old, level):
         diff = {}
         if level >= CMDDiffLevelEnum.BreakingChange:
-            if (self.status_codes is not None) != (old.status_codes is not None):
+            if (not self.status_codes) != (not old.status_codes):
                 diff["status_codes"] = f"{old.status_codes} != {self.status_codes}"
             elif self.status_codes and set(self.status_codes) != set(old.status_codes):
                 diff["status_codes"] = f"{old.status_codes} != {self.status_codes}"

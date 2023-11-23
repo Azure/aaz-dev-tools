@@ -323,6 +323,8 @@ class CMDClientEndpointsByHttpOperation(CMDClientEndpoints):
             arguments, has_subresource=has_subresource, operation_id=self.operation.operation_id)
 
     def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
         diff = {}
         if resource_diff := self.resource.diff(old.resource, level):
             diff["resource"] = resource_diff

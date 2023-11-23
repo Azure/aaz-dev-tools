@@ -299,7 +299,14 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                 const resourceIdList: string[] = []
                 res.data.forEach((resource: any) => {
                     resourceIdList.push(resource.id);
-                    const resourceVersions = resource.versions.map((v: any) => v.version)
+                    const resourceVersions = resource.versions.filter((v: ResourceVersion) => {
+                        for (let key in v.operations) {
+                            if (v.operations[key].toUpperCase() === 'GET') {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }).map((v: any) => v.version)
                     resourceVersions.forEach((v: any) => {
                         if (!(v in versionResourceIdMap)) {
                             versionResourceIdMap[v] = [];
@@ -829,7 +836,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                                 }}
                                 fullWidth
                                 variant='standard'
-                                placeholder="Endpoint property index in api response, e.g. properties.attestUri"
+                                placeholder="Property index for the api response to fetch the endpoint, e.g. properties.attestUri"
                                 value={subresource}
                                 onChange={(event: any) => {
                                     this.setState({
@@ -888,14 +895,6 @@ interface ClientTemplateMap {
     [cloud: string]: string
 }
 
-// interface ClientEndpointResource {
-//     version: string,
-//     id: string,
-//     subresource: string,
-//     // plane: string,
-//     // module: string,
-// }
-
 interface ClientAADAuth {
     scopes: string[],
 }
@@ -909,6 +908,18 @@ interface ClientConfig {
     endpointTemplates?: ClientTemplateMap,
     endpointResource?: Resource,
     auth: ClientAuth,
+}
+
+type ResourceVersion = {
+    version: string
+    operations: ResourceVersionOperations
+    file: string
+    id: string
+    path: string
+}
+
+type ResourceVersionOperations = {
+    [Named: string]: string
 }
 
 export default WSEditorClientConfigDialog;
