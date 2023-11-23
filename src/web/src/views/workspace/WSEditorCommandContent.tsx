@@ -11,6 +11,13 @@ import LabelIcon from '@mui/icons-material/Label';
 import WSEditorCommandArgumentsContent, { ClsArgDefinitionMap, CMDArg, DecodeArgs } from './WSEditorCommandArgumentsContent';
 import EditIcon from '@mui/icons-material/Edit';
 
+
+interface Plane {
+    name: string,
+    displayName: string,
+    moduleOptions?: string[],
+}
+
 interface Example {
     name: string,
     commands: string[],
@@ -1351,5 +1358,5 @@ const DecodeResponseClientConfig = (clientConfig: any): ClientConfig => {
 export default WSEditorCommandContent;
 
 export { DecodeResponseCommand };
-export type { Command, Resource, ResponseCommand, ResponseCommands };
+export type { Plane, Command, Resource, ResponseCommand, ResponseCommands };
 

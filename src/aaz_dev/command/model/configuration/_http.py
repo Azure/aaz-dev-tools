@@ -421,7 +421,7 @@ def _diff_responses(responses, old_responses, level):
     diff = {}
 
     def _build_key(_r):
-        _codes = ','.join(_r.status_codes) if _r.status_codes else ''
+        _codes = ','.join([str(code) for code in _r.status_codes]) if _r.status_codes else ''
         _error = 'error' if _r.is_error else ''
         return '|'.join([_codes, _error])
 
