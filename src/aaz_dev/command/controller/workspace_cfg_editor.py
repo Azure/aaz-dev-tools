@@ -1329,7 +1329,7 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
                 raise NotImplementedError(f"Not support schema '{type(schema)}'")
             index = CMDSimpleIndexBase()
         if idx:
-            raise exceptions.InvalidAPIUsage("Simple schema is not support feature index")
+            raise exceptions.InvalidAPIUsage(f"Not support remain index {idx}")
         return index
 
     @classmethod
@@ -1344,44 +1344,52 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
 
         current_idx = idx[0]
         remain_idx = idx[1:]
+        find_idx = False
 
         if schema.props:
             for prop in schema.props:
-                if prop.name == current_idx:
-                    if prune:
-                        assert isinstance(index, CMDSelectorIndex)
-                        name = f"{index.name}.{prop.name}"
-                        if isinstance(prop, CMDClsSchema):
-                            prop = prop.implement
-                        # ignore the current index, return the sub index with index.name prefix
-                        if isinstance(prop, CMDObjectSchema):
-                            return cls._build_object_index(prop, remain_idx, name=name, **kwargs)
-                        elif isinstance(prop, CMDArraySchema):
-                            return cls._build_array_index(prop, remain_idx, name=name, **kwargs)
-                        else:
-                            return cls._build_simple_index(prop, remain_idx, name=name, **kwargs)
+                if prop.name != current_idx:
+                    continue
+                find_idx = True
+                if prune:
+                    assert isinstance(index, CMDSelectorIndex)
+                    name = f"{index.name}.{prop.name}"
+                    if isinstance(prop, CMDClsSchema):
+                        prop = prop.implement
+                    # ignore the current index, return the sub index with index.name prefix
+                    if isinstance(prop, CMDObjectSchema):
+                        return cls._build_object_index(prop, remain_idx, name=name, **kwargs)
+                    elif isinstance(prop, CMDArraySchema):
+                        return cls._build_array_index(prop, remain_idx, name=name, **kwargs)
                     else:
-                        name = prop.name
-                        if isinstance(prop, CMDClsSchema):
-                            prop = prop.implement
-                        if isinstance(prop, CMDObjectSchema):
-                            index.prop = cls._build_object_index(prop, remain_idx, name=name, **kwargs)
-                            break
-                        elif isinstance(prop, CMDArraySchema):
-                            index.prop = cls._build_array_index(prop, remain_idx, name=name, **kwargs)
-                            break
-                        else:
-                            index.prop = cls._build_simple_index(prop, remain_idx, name=name, **kwargs)
-                            break
+                        return cls._build_simple_index(prop, remain_idx, name=name, **kwargs)
+                else:
+                    name = prop.name
+                    if isinstance(prop, CMDClsSchema):
+                        prop = prop.implement
+                    if isinstance(prop, CMDObjectSchema):
+                        index.prop = cls._build_object_index(prop, remain_idx, name=name, **kwargs)
+                        break
+                    elif isinstance(prop, CMDArraySchema):
+                        index.prop = cls._build_array_index(prop, remain_idx, name=name, **kwargs)
+                        break
+                    else:
+                        index.prop = cls._build_simple_index(prop, remain_idx, name=name, **kwargs)
+                        break
 
         if schema.discriminators:
             for disc in schema.discriminators:
                 if disc.get_safe_value() == current_idx:
+                    find_idx = True
                     index.discriminator = cls._build_object_index_discriminator(disc, remain_idx, **kwargs)
                     break
 
         if schema.additional_props and current_idx == "{}":
+            find_idx = True
             index.additional_props = cls._build_object_index_additional_prop(schema.additional_props, remain_idx, **kwargs)
+
+        if not find_idx:
+            raise exceptions.InvalidAPIUsage(f"Cannot find remain index {idx}")
 
         return index
 
@@ -1397,7 +1405,8 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
 
         current_idx = idx[0]
         remain_idx = idx[1:]
-        assert current_idx == '[]'
+        if current_idx != '[]':
+            raise exceptions.InvalidAPIUsage(f"Cannot find index '{idx}'")
 
         item = schema.item
         if isinstance(item, CMDClsSchemaBase):
@@ -1473,28 +1482,36 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
         current_idx = idx[0]
         remain_idx = idx[1:]
 
+        find_idx = False
+
         if schema.props:
             for prop in schema.props:
-                if prop.name == current_idx:
-                    name = prop.name
-                    if isinstance(prop, CMDClsSchema):
-                        prop = prop.implement
+                if prop.name != current_idx:
+                    continue
+                find_idx = True
+                name = prop.name
+                if isinstance(prop, CMDClsSchema):
+                    prop = prop.implement
 
-                    if isinstance(prop, CMDObjectSchema):
-                        index.prop = cls._build_object_index(prop, remain_idx, name, **kwargs)
-                        break
-                    elif isinstance(prop, CMDArraySchema):
-                        index.prop = cls._build_array_index(prop, remain_idx, name, **kwargs)
-                        break
-                    else:
-                        index.prop = cls._build_simple_index(prop, remain_idx, name, **kwargs)
-                        break
+                if isinstance(prop, CMDObjectSchema):
+                    index.prop = cls._build_object_index(prop, remain_idx, name, **kwargs)
+                    break
+                elif isinstance(prop, CMDArraySchema):
+                    index.prop = cls._build_array_index(prop, remain_idx, name, **kwargs)
+                    break
+                else:
+                    index.prop = cls._build_simple_index(prop, remain_idx, name, **kwargs)
+                    break
 
         if schema.discriminators:
             for disc in schema.discriminators:
                 if disc.get_safe_value() == current_idx:
+                    find_idx = True
                     index.discriminator = cls._build_object_index_discriminator(disc, remain_idx, **kwargs)
                     break
+
+        if not find_idx:
+            raise exceptions.InvalidAPIUsage(f"Cannot find remain index {idx}")
 
         return index
 

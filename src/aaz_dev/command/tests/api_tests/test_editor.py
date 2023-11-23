@@ -2482,3 +2482,104 @@ class APIEditorTest(CommandTestCase):
             rv = c.post(f"{ws_url}/Generate")
             self.assertTrue(rv.status_code == 200)
 
+            # update client config without change
+            rv = c.get(f"{ws_url}/ClientConfig")
+            self.assertTrue(rv.status_code == 200)
+            client_config = rv.get_json()
+            old_version = client_config['version']
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://attest.azure.net/.default"]
+                    }
+                },
+                "resource": {
+                    "plane": PlaneEnum.Mgmt,
+                    "module": module,
+                    "id": swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders/{providerName}'),
+                    "version": "2021-06-01",
+                    "subresource": "properties.attestUri",
+                },
+            })
+            self.assertTrue(rv.status_code == 200)
+            rv = c.get(f"{ws_url}/ClientConfig")
+            self.assertTrue(rv.status_code == 200)
+            client_config = rv.get_json()
+            self.assertTrue(client_config['version'] == old_version)
+
+            # update client config by api version changed.
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://attest.azure.net/.default"]
+                    }
+                },
+                "resource": {
+                    "plane": PlaneEnum.Mgmt,
+                    "module": module,
+                    "id": swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders/{providerName}'),
+                    "version": "2021-06-01-preview",
+                    "subresource": "properties.attestUri",
+                },
+            })
+            self.assertTrue(rv.status_code == 200)
+            client_config = rv.get_json()
+            # the client version should be updated.
+            self.assertTrue(client_config['version'] != old_version)
+
+            # update client config with invalid subresource
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://attest.azure.net/.default"]
+                    }
+                },
+                "resource": {
+                    "plane": PlaneEnum.Mgmt,
+                    "module": module,
+                    "id": swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders/{providerName}'),
+                    "version": "2021-06-01-preview",
+                    "subresource": "property.attestUri",
+                },
+            })
+            self.assertTrue(rv.status_code == 400)
+            self.assertEqual(rv.json['message'], "Cannot find remain index ['property', 'attestUri']")
+
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://attest.azure.net/.default"]
+                    }
+                },
+                "resource": {
+                    "plane": PlaneEnum.Mgmt,
+                    "module": module,
+                    "id": swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders/{providerName}'),
+                    "version": "2021-06-01-preview",
+                    "subresource": "properties.attest",
+                },
+            })
+            self.assertTrue(rv.status_code == 400)
+            self.assertEqual(rv.json['message'], "Cannot find remain index ['attest']")
+
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://attest.azure.net/.default"]
+                    }
+                },
+                "resource": {
+                    "plane": PlaneEnum.Mgmt,
+                    "module": module,
+                    "id": swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders/{providerName}'),
+                    "version": "2021-06-01-preview",
+                    "subresource": "properties.attestUri.invalid",
+                },
+            })
+            self.assertTrue(rv.status_code == 400)
+            self.assertEqual(rv.json['message'], "Not support remain index ['invalid']")

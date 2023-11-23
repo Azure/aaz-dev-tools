@@ -1093,16 +1093,17 @@ def _diff_enum(self_enum, old_enum, level):
 def _diff_props(self_props, old_props, level):
     props_diff = {}
     if level >= CMDDiffLevelEnum.BreakingChange:
-        props_dict = {prop.name: prop for prop in self_props}
-        for old_prop in old_props:
-            if old_prop.name not in props_dict:
-                if not old_prop.frozen:
-                    props_diff[old_prop.name] = "Miss property"
-            else:
-                prop = props_dict.pop(old_prop.name)
-                diff = prop.diff(old_prop, level)
-                if diff:
-                    props_diff[old_prop.name] = diff
+        props_dict = {prop.name: prop for prop in self_props} if self_props else {}
+        if old_props:
+            for old_prop in old_props:
+                if old_prop.name not in props_dict:
+                    if not old_prop.frozen:
+                        props_diff[old_prop.name] = "Miss property"
+                else:
+                    prop = props_dict.pop(old_prop.name)
+                    diff = prop.diff(old_prop, level)
+                    if diff:
+                        props_diff[old_prop.name] = diff
 
         for prop in props_dict.values():
             if prop.frozen:
@@ -1111,35 +1112,37 @@ def _diff_props(self_props, old_props, level):
                 props_diff[prop.name] = "New required property"
 
     if level >= CMDDiffLevelEnum.Structure:
-        old_props_dict = {prop.name: prop for prop in old_props}
-        for prop in self_props:
-            if prop.name not in old_props_dict:
-                if not prop.frozen:
-                    props_diff[prop.name] = "New property"
-
+        old_props_dict = {prop.name: prop for prop in old_props} if old_props else {}
+        if self_props:
+            for prop in self_props:
+                if prop.name not in old_props_dict:
+                    if not prop.frozen:
+                        props_diff[prop.name] = "New property"
     return props_diff
 
 
 def _diff_discriminators(self_discriminators, old_discriminators, level):
     discs_diff = {}
     if level >= CMDDiffLevelEnum.BreakingChange:
-        discs_dict = {disc.value: disc for disc in self_discriminators}
-        for old_disc in old_discriminators:
-            if old_disc.value not in discs_dict:
-                if not old_disc.frozen:
-                    discs_diff[old_disc.value] = "Miss discriminator value"
-            else:
-                disc = discs_dict.pop(old_disc.value)
-                diff = disc.diff(old_disc, level)
-                if diff:
-                    discs_diff[old_disc.value] = diff
+        discs_dict = {disc.value: disc for disc in self_discriminators} if self_discriminators else {}
+        if old_discriminators:
+            for old_disc in old_discriminators:
+                if old_disc.value not in discs_dict:
+                    if not old_disc.frozen:
+                        discs_diff[old_disc.value] = "Miss discriminator value"
+                else:
+                    disc = discs_dict.pop(old_disc.value)
+                    diff = disc.diff(old_disc, level)
+                    if diff:
+                        discs_diff[old_disc.value] = diff
 
     if level >= CMDDiffLevelEnum.Structure:
-        old_discs_dict = {disc.value: disc for disc in old_discriminators}
-        for disc in self_discriminators:
-            if disc.value not in old_discs_dict:
-                if not disc.frozen:
-                    discs_diff[disc.value] = "New discriminator value"
+        old_discs_dict = {disc.value: disc for disc in old_discriminators} if old_discriminators else {}
+        if self_discriminators:
+            for disc in self_discriminators:
+                if disc.value not in old_discs_dict:
+                    if not disc.frozen:
+                        discs_diff[disc.value] = "New discriminator value"
 
     return discs_diff
 

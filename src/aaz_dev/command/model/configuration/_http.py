@@ -319,7 +319,7 @@ class CMDHttpResponse(Model):
     def diff(self, old, level):
         diff = {}
         if level >= CMDDiffLevelEnum.BreakingChange:
-            if (self.status_codes is not None) != (old.status_codes is not None):
+            if (not self.status_codes) != (not old.status_codes):
                 diff["status_codes"] = f"{old.status_codes} != {self.status_codes}"
             elif self.status_codes and set(self.status_codes) != set(old.status_codes):
                 diff["status_codes"] = f"{old.status_codes} != {self.status_codes}"
@@ -421,7 +421,7 @@ def _diff_responses(responses, old_responses, level):
     diff = {}
 
     def _build_key(_r):
-        _codes = ','.join(_r.status_codes) if _r.status_codes else ''
+        _codes = ','.join([str(code) for code in _r.status_codes]) if _r.status_codes else ''
         _error = 'error' if _r.is_error else ''
         return '|'.join([_codes, _error])
 

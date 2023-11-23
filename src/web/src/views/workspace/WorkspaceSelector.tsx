@@ -5,6 +5,7 @@ import * as React from 'react';
 import { Url } from 'url';
 import { SwaggerItemSelector } from './WSEditorSwaggerPicker';
 import styled from '@emotion/styled';
+import { Plane } from './WSEditorCommandContent';
 
 
 interface Workspace {
@@ -166,12 +167,6 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
             </React.Fragment>
         )
     }
-}
-
-interface Plane {
-    name: string,
-    displayName: string,
-    moduleOptions?: string[],
 }
 
 interface WorkspaceCreateDialogProps {

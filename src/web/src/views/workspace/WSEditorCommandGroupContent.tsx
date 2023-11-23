@@ -166,7 +166,7 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
                                 justifyContent: "flex-start"
                             }}>
                                 <Button
-                                    variant='contained' size="small" color='info' disableElevation
+                                    variant='contained' size="small" color='secondary' disableElevation
                                     onClick={this.onCommandGroupDialogDisplay}
                                 >
                                     <Typography variant='body2'>
@@ -174,7 +174,7 @@ class WSEditorCommandGroupContent extends React.Component<WSEditorCommandGroupCo
                                     </Typography>
                                 </Button>
                                 <Button
-                                    variant='outlined' size="small" color='info'
+                                    variant='outlined' size="small" color='secondary'
                                     onClick={this.onCommandGroupDeleteDialogDisplay}
                                     disabled={!this.props.commandGroup.canDelete}
                                     sx={{ ml: 2 }}
@@ -233,7 +233,7 @@ function CommandGroupDeleteDialog(props: {
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
+                        <LinearProgress color='secondary' />
                     </Box>
                 }
                 {!updating && <React.Fragment>
@@ -450,7 +450,7 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
                 <DialogActions>
                     {updating &&
                         <Box sx={{ width: '100%' }}>
-                            <LinearProgress color='info' />
+                            <LinearProgress color='secondary' />
                         </Box>
                     }
                     {!updating && <React.Fragment>

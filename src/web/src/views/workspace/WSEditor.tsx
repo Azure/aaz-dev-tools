@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, List, ListSubheader, Paper, ListItemButton, ListItemIcon, Checkbox, ListItemText, ListItem, TextField, Alert, InputLabel, IconButton, Input, Typography, TypographyProps } from '@mui/material';
+import { Box, Dialog, Slide, Drawer, Toolbar, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, List, ListSubheader, Paper, ListItemButton, ListItemIcon, Checkbox, ListItemText, ListItem, TextField, Alert} from '@mui/material';
 import { useParams } from 'react-router';
 import axios from 'axios';
 import { TransitionProps } from '@mui/material/transitions';
@@ -8,9 +8,7 @@ import WSEditorToolBar from './WSEditorToolBar';
 import WSEditorCommandTree, { CommandTreeLeaf, CommandTreeNode } from './WSEditorCommandTree';
 import WSEditorCommandGroupContent, { CommandGroup, DecodeResponseCommandGroup, ResponseCommandGroup, ResponseCommandGroups } from './WSEditorCommandGroupContent';
 import WSEditorCommandContent, { Command, Resource, DecodeResponseCommand, ResponseCommand } from './WSEditorCommandContent';
-import DoDisturbOnRoundedIcon from '@mui/icons-material/DoDisturbOnRounded';
-import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
-import { styled } from '@mui/system';
+import WSEditorClientConfigDialog, { ClientConfig } from './WSEditorClientConfig';
 
 interface CommandGroupMap {
     [id: string]: CommandGroup
@@ -18,30 +16,6 @@ interface CommandGroupMap {
 
 interface CommandMap {
     [id: string]: Command
-}
-
-interface ClientEndpointTemplate {
-    cloud: string,
-    template: string,
-}
-
-interface ClientTemplateMap {
-    [cloud: string]: string
-}
-
-interface ClientAADAuth {
-    scopes: string[],
-}
-
-interface ClientAuth {
-    aad: ClientAADAuth,
-}
-
-interface ClientConfig {
-    version: string,
-    endpointTemplates?: ClientTemplateMap,
-    endpointResource?: Resource,
-    auth: ClientAuth,
 }
 
 interface WSEditorProps {
@@ -307,7 +281,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             } else if (res.data.endpoints.type === "http-operation") {
                 clientConfig.endpointResource = res.data.endpoints.endpointResource;
             }
-           
+
             return clientConfig;
         } catch (err: any) {
             // catch 404 error
@@ -561,10 +535,10 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
 
     verifyClientConfig = async () => {
         const url = `${this.props.workspaceUrl}/ClientConfig/AAZ/Compare`;
-        this.setState({updating: true});
+        this.setState({ updating: true });
         try {
             await axios.post(url);
-            this.setState({clientConfigOOD: false, updating: false});
+            this.setState({ clientConfigOOD: false, updating: false });
         } catch (err: any) {
             // catch 409 error
             if (err.response?.status === 409) {
@@ -582,17 +556,17 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
                         invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
                     });
                 }
-                this.setState({updating: false});
+                this.setState({ updating: false });
             }
         }
     }
 
     inheritClientConfig = async () => {
         const url = `${this.props.workspaceUrl}/ClientConfig/AAZ/Inherit`;
-        this.setState({updating: true});
+        this.setState({ updating: true });
         try {
             await axios.post(url);
-            this.setState({clientConfigOOD: false, updating: false});
+            this.setState({ clientConfigOOD: false, updating: false });
             this.props.onClose(false, true);
         } catch (err: any) {
             console.error(err.response)
@@ -602,17 +576,17 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
                     invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
                 });
             }
-            this.setState({updating: false});
+            this.setState({ updating: false });
         }
     }
 
     handleExport = async () => {
         const url = `${this.props.workspaceUrl}/Generate`;
-        this.setState({updating: true});
+        this.setState({ updating: true });
 
         try {
             await axios.post(url);
-            this.setState({updating: false});
+            this.setState({ updating: false });
             this.props.onClose(false, false);
         } catch (err: any) {
             console.error(err.response)
@@ -622,7 +596,7 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
                     invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
                 });
             }
-            this.setState({updating: false});
+            this.setState({ updating: false });
         }
     }
 
@@ -640,7 +614,7 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
                 <DialogActions>
                     {updating &&
                         <Box sx={{ width: '100%' }}>
-                            <LinearProgress color='info' />
+                            <LinearProgress color='secondary' />
                         </Box>
                     }
                     {!updating && <React.Fragment>
@@ -713,7 +687,7 @@ function WSEditorDeleteDialog(props: {
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
+                        <LinearProgress color='secondary' />
                     </Box>
                 }
                 {!updating && <React.Fragment>
@@ -940,7 +914,7 @@ class WSEditorSwaggerReloadDialog extends React.Component<WSEditorSwaggerReloadD
                 <DialogActions>
                     {updating &&
                         <Box sx={{ width: '100%' }}>
-                            <LinearProgress color='info' />
+                            <LinearProgress color='secondary' />
                         </Box>
                     }
                     {!updating && <React.Fragment>
@@ -1061,7 +1035,7 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
                 <DialogActions>
                     {updating &&
                         <Box sx={{ width: '100%' }}>
-                            <LinearProgress color='info' />
+                            <LinearProgress color='secondary' />
                         </Box>
                     }
                     {!updating && <React.Fragment>
@@ -1073,388 +1047,6 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
         )
     }
 }
-
-interface WSEditorClientConfigDialogProps {
-    workspaceUrl: string,
-    open: boolean,
-    onClose: (updated: boolean) => void
-}
-
-interface WSEditorClientConfigDialogState {
-    updating: boolean,
-    invalidText: string | undefined,
-    isAdd: boolean,
-
-    templateAzureCloud: string,
-    templateAzureChinaCloud: string,
-    templateAzureUSGovernment: string,
-    templateAzureGermanCloud: string,
-    aadAuthScopes: string[],
-}
-
-
-const AuthTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Roboto Condensed', sans-serif",
-    fontSize: 16,
-    fontWeight: 400,
-}));
-
-class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDialogProps, WSEditorClientConfigDialogState> {
-
-    constructor(props: WSEditorClientConfigDialogProps) {
-        super(props);
-        this.state = {
-            updating: false,
-            invalidText: undefined,
-            isAdd: true,
-            templateAzureCloud: "",
-            templateAzureChinaCloud: "",
-            templateAzureUSGovernment: "",
-            templateAzureGermanCloud: "",
-            aadAuthScopes: ["",],
-        }
-    }
-
-    componentDidMount(): void {
-        this.loadWorkspaceClientConfig();
-    }
-
-    loadWorkspaceClientConfig = async () => {
-        this.setState({ updating: true });
-        try {
-            let res = await axios.get(`${this.props.workspaceUrl}/ClientConfig`);
-            const clientConfig: ClientConfig = {
-                version: res.data.version,
-                auth: res.data.auth,
-            }
-            let templateAzureCloud = "";
-            let templateAzureChinaCloud = "";
-            let templateAzureUSGovernment = "";
-            let templateAzureGermanCloud = "";
-            if (res.data.endpoints.type === "template") { 
-                clientConfig.endpointTemplates = {};
-                res.data.endpoints.templates.forEach((value: any) => {
-                    clientConfig.endpointTemplates![value.cloud] = value.template;
-                });
-                templateAzureCloud = clientConfig.endpointTemplates!['AzureCloud'] ?? "";
-                templateAzureChinaCloud = clientConfig.endpointTemplates!['AzureChinaCloud'] ?? "";
-                templateAzureUSGovernment = clientConfig.endpointTemplates!['AzureUSGovernment'] ?? "";
-                templateAzureGermanCloud = clientConfig.endpointTemplates!['AzureGermanCloud'] ?? "";
-            } else if (res.data.endpoints.type === "http-operation") {
-                clientConfig.endpointResource = res.data.endpoints.resource;
-            }
-            
-            this.setState({
-                aadAuthScopes: clientConfig.auth.aad.scopes ?? ["",],
-                templateAzureCloud: templateAzureCloud,
-                templateAzureChinaCloud: templateAzureChinaCloud,
-                templateAzureUSGovernment: templateAzureUSGovernment,
-                templateAzureGermanCloud: templateAzureGermanCloud,
-                isAdd: false
-            });
-        } catch (err: any) {
-            // catch 404 error
-            if (err.response?.status === 404) {
-                this.setState({
-                    isAdd: true,
-                });
-            } else {
-                console.error(err.response);
-                if (err.response?.data?.message) {
-                    const data = err.response!.data!;
-                    this.setState({ invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}` });
-                }
-            }
-        }
-        this.setState({ updating: false });
-    }
-
-    handleClose = () => {
-        this.props.onClose(false);
-    }
-
-    handleUpdate = async () => {
-        let { aadAuthScopes, templateAzureCloud, templateAzureChinaCloud, templateAzureGermanCloud, templateAzureUSGovernment } = this.state
-        templateAzureCloud = templateAzureCloud.trim();
-        if (templateAzureCloud.length < 1) {
-            this.setState({
-                invalidText: "Azure Cloud Endpoint Template is required."
-            });
-            return;
-        }
-        templateAzureChinaCloud = templateAzureChinaCloud.trim();
-        templateAzureUSGovernment = templateAzureUSGovernment.trim();
-        templateAzureGermanCloud = templateAzureGermanCloud.trim();
-        // verify template url using regex, like https://{vaultName}.vault.azure.net
-        const templateRegex = /^https:\/\/((\{[a-zA-Z0-9]+\})|([^{}.]+))(.((\{[a-zA-Z0-9]+\})|([^{}.]+)))*(\/)?$/;
-        if (!templateRegex.test(templateAzureCloud)) {
-            this.setState({
-                invalidText: "Azure Cloud Endpoint Template is invalid."
-            });
-            return;
-        }
-
-        if (templateAzureChinaCloud.length > 0 && !templateRegex.test(templateAzureChinaCloud)) {
-            this.setState({
-                invalidText: "Azure China Cloud Endpoint Template is invalid."
-            });
-            return;
-        }
-
-        if (templateAzureUSGovernment.length > 0 && !templateRegex.test(templateAzureUSGovernment)) {
-            this.setState({
-                invalidText: "Azure US Government Endpoint Template is invalid."
-            });
-            return;
-        }
-
-        if (templateAzureGermanCloud.length > 0 && !templateRegex.test(templateAzureGermanCloud)) {
-            this.setState({
-                invalidText: "Azure German Cloud Endpoint Template is invalid."
-            });
-            return;
-        }
-
-        aadAuthScopes = aadAuthScopes.map(scope => scope.trim()).filter(scope => scope.length > 0);
-        if (aadAuthScopes.length < 1) {
-            this.setState({
-                invalidText: "AAD Auth Scopes is required."
-            });
-            return;
-        }
-
-        let auth = {
-            aad: {
-                scopes: aadAuthScopes,
-            }
-        }
-
-        let templates: ClientEndpointTemplate[] = [
-            { cloud: 'AzureCloud', template: templateAzureCloud },
-        ];
-        if (templateAzureChinaCloud.length > 0) {
-            templates.push({ cloud: 'AzureChinaCloud', template: templateAzureChinaCloud });
-        }
-        if (templateAzureUSGovernment.length > 0) {
-            templates.push({ cloud: 'AzureUSGovernment', template: templateAzureUSGovernment });
-        }
-        if (templateAzureGermanCloud.length > 0) {
-            templates.push({ cloud: 'AzureGermanCloud', template: templateAzureGermanCloud });
-        }
-
-        this.onUpdateClientConfig(
-            templates,
-            auth,
-        );
-    }
-
-    onUpdateClientConfig = async (
-        templates: ClientEndpointTemplate[],
-        auth: ClientAuth,
-    ) => {
-        this.setState({ updating: true });
-        try {
-            await axios.post(`${this.props.workspaceUrl}/ClientConfig`, {
-                templates: templates,
-                auth: auth,
-            });
-            this.setState({ updating: false });
-            this.props.onClose(true);
-        } catch (err: any) {
-            console.error(err.response);
-            if (err.response?.data?.message) {
-                const data = err.response!.data!;
-                this.setState({ invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}` });
-            }
-            this.setState({ updating: false });
-        }
-
-    }
-
-    onRemoveAadScope = (idx: number) => {
-        this.setState(preState => {
-            let aadAuthScopes: string[] = [...preState.aadAuthScopes.slice(0, idx), ...preState.aadAuthScopes.slice(idx + 1)];
-            if (aadAuthScopes.length === 0) {
-                aadAuthScopes.push("");
-            }
-            return {
-                ...preState,
-                aadAuthScopes: aadAuthScopes,
-            }
-        })
-    }
-
-    onModifyAadScope = (scope: string, idx: number) => {
-        this.setState(preState => {
-            return {
-                ...preState,
-                aadAuthScopes: [...preState.aadAuthScopes.slice(0, idx), scope, ...preState.aadAuthScopes.slice(idx + 1)]
-            }
-        })
-    }
-
-    onAddAadScope = () => {
-        this.setState(preState => {
-            return {
-                ...preState,
-                aadAuthScopes: [...preState.aadAuthScopes, ""],
-            }
-        })
-    }
-
-    buildAadScopeInput = (scope: string, idx: number) => {
-        return (
-            <Box key={idx} sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'flex-start',
-                ml: 1,
-            }}>
-                <IconButton
-                    edge="start"
-                    color="inherit"
-                    onClick={() => this.onRemoveAadScope(idx)}
-                    aria-label='remove'
-                >
-                    <DoDisturbOnRoundedIcon fontSize="small" />
-                </IconButton>
-                <Input
-                    id={`aadScope-${idx}`}
-                    value={scope}
-                    onChange={(event: any) => {
-                        this.onModifyAadScope(event.target.value, idx);
-                    }}
-                    sx={{ flexGrow: 1 }}
-                    placeholder="Input aad auth Scope here, e.g. https://metrics.monitor.azure.com/.default"
-                />
-
-            </Box>
-        )
-    }
-
-    render() {
-        const { invalidText, updating, isAdd, aadAuthScopes, templateAzureCloud, templateAzureChinaCloud, templateAzureUSGovernment, templateAzureGermanCloud } = this.state;
-        return (
-            <Dialog
-                disableEscapeKeyDown
-                fullWidth={true}
-                maxWidth="md"
-                open={this.props.open}
-            >
-                <DialogTitle>{isAdd ? "Setup Client Config" : "Modify Client Config"}</DialogTitle>
-                <DialogContent dividers={true}>
-                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
-                    <InputLabel required sx={{ font: "inherit", mt: 1 }}>Endpoint Templates</InputLabel>
-                    <Box sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'flex-start',
-                        ml: 1,
-                    }}>
-                        <TextField
-                            id="AzureCloud"
-                            label="Azure Cloud"
-                            type="text"
-                            fullWidth
-                            variant='standard'
-                            placeholder="Endpoint template in Azure Cloud, e.g. https://{vaultName}.vault.azure.net"
-                            value={templateAzureCloud}
-                            onChange={(event: any) => {
-                                this.setState({
-                                    templateAzureCloud: event.target.value,
-                                })
-                            }}
-                            margin='dense'
-                            required
-                        />
-
-                        <TextField
-                            id="AzureChinaCloud"
-                            label="Azure China Cloud"
-                            type="text"
-                            fullWidth
-                            variant='standard'
-                            placeholder="Endpoint template in Azure China Cloud, e.g. https://{vaultName}.vault.azure.cn"
-                            value={templateAzureChinaCloud}
-                            onChange={(event: any) => {
-                                this.setState({
-                                    templateAzureChinaCloud: event.target.value,
-                                })
-                            }}
-                            margin='normal'
-                        />
-
-                        <TextField
-                            id="AzureUSGovernment"
-                            label="Azure US Government"
-                            type="text"
-                            fullWidth
-                            variant='standard'
-                            placeholder="Endpoint template in Azure US Government, e.g. https://{vaultName}.vault.usgovcloudapi.net"
-                            value={templateAzureUSGovernment}
-                            onChange={(event: any) => {
-                                this.setState({
-                                    templateAzureUSGovernment: event.target.value,
-                                })
-                            }}
-                            margin='normal'
-                        />
-
-                        <TextField
-                            id="AzureGermanCloud"
-                            label="Azure German Cloud"
-                            type="text"
-                            fullWidth
-                            variant='standard'
-                            placeholder="Endpoint template in Azure German Cloud, e.g. https://{vaultName}.vault.microsoftazure.de"
-                            value={templateAzureGermanCloud}
-                            onChange={(event: any) => {
-                                this.setState({
-                                    templateAzureGermanCloud: event.target.value,
-                                })
-                            }}
-                            margin='normal'
-                        />
-
-                    </Box>
-                    <InputLabel required sx={{ font: "inherit", mt: 1 }}>AAD Auth Scopes</InputLabel>
-                    {aadAuthScopes?.map(this.buildAadScopeInput)}
-                    <Box sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'flex-start',
-                        ml: 1,
-                    }}>
-                        <IconButton
-                            edge="start"
-                            color="inherit"
-                            onClick={this.onAddAadScope}
-                            aria-label='add'
-                        >
-                            <AddCircleRoundedIcon fontSize="small" />
-                        </IconButton>
-                        <AuthTypography sx={{ flexShrink: 0 }}> One more scope </AuthTypography>
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    {updating &&
-                        <Box sx={{ width: '100%' }}>
-                            <LinearProgress color='info' />
-                        </Box>
-                    }
-                    {!updating && <React.Fragment>
-                        {!isAdd && <Button onClick={this.handleClose}>Cancel</Button>}
-                        <Button onClick={this.handleUpdate}>Update</Button>
-                    </React.Fragment>}
-                </DialogActions>
-            </Dialog>)
-    }
-}
-
 
 const WSEditorWrapper = (props: any) => {
     const params = useParams()
