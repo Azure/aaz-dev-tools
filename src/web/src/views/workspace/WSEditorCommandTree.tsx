@@ -135,7 +135,7 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps, WSEd
                     <Box sx={{ flexGrow: 1 }} />
                     <Tooltip title='Reload Swagger Change'>
                         <IconButton
-                            color='info'
+                            color='secondary'
                             onClick={onReload}
                             aria-label='reload'
                         >
@@ -144,7 +144,7 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps, WSEd
                     </Tooltip>
                     <Tooltip title='Add from Swagger'>
                         <IconButton
-                            color='info'
+                            color='secondary'
                             onClick={onAdd}
                             aria-label='add'
                         >
@@ -156,7 +156,7 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps, WSEd
                             <IconButton
                                 ref={this.moreButtonRef}
                                 id='more-button'
-                                color='info'
+                                color='secondary'
                                 aria-controls={openMore ? 'more-menu' : undefined}
                                 aria-expanded={openMore ? 'true' : undefined}
                                 aria-haspopup="true"

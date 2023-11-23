@@ -2233,7 +2233,7 @@ class APIEditorTest(CommandTestCase):
             rv = c.get(f"{ws_url}/ClientConfig/Arguments/$Client.Endpoint.region")
             self.assertTrue(rv.status_code == 200)
             client_arg = rv.get_json()
-            self.assertEqual(client_arg, {'options': ['region'], 'required': True, 'type': 'string',
+            self.assertEqual(client_arg, {'group': 'Client', 'options': ['region'], 'required': True, 'type': 'string',
                                           'var': '$Client.Endpoint.region'})
 
             # add resources
@@ -2280,3 +2280,306 @@ class APIEditorTest(CommandTestCase):
 
             rv = c.post(f"{ws_url}/Generate")
             self.assertTrue(rv.status_code == 200)
+
+    @workspace_name("test_mgmt_attestation")
+    def test_mgmt_attestation(self, ws_name):
+        module = "attestation"
+        resource_provider = "Microsoft.Attestation"
+        api_version = '2021-06-01-preview'
+
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum.Mgmt,
+                "modNames": module,
+                "resourceProvider": resource_provider
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws = rv.get_json()
+            self.assertEqual(ws['plane'], PlaneEnum.Mgmt)
+            self.assertEqual(ws['resourceProvider'], resource_provider)
+            self.assertEqual(ws['modNames'], module)
+            ws_url = ws['url']
+
+            # add resources
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': module,
+                'version': api_version,
+                'resources': [
+                    {'id': swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders/{providerName}')},
+                    {'id': swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/providers/Microsoft.Attestation/attestationProviders')},
+                    {'id': swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders')},
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            command_tree = rv.get_json()
+
+            # modify command tree
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/attestation/attestation-provider/Rename", json={
+                "name": "attestation provider"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/attestation", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/attestation/provider", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
+
+            rv = c.post(f"{ws_url}/Generate")
+            self.assertTrue(rv.status_code == 200)
+
+    @workspace_name("test_dataplane_attestation")
+    def test_dataplane_attestation(self, ws_name):
+        module = "attestation"
+        resource_provider = "Microsoft.Attestation"
+        api_version = '2022-09-01-preview'
+
+        with self.app.test_client() as c:
+            rv = c.post(f"/AAZ/Editor/Workspaces", json={
+                "name": ws_name,
+                "plane": PlaneEnum._Data,
+                "modNames": module,
+                "resourceProvider": resource_provider
+            })
+            self.assertTrue(rv.status_code == 200)
+            ws = rv.get_json()
+            self.assertEqual(ws['plane'], PlaneEnum.Data(resource_provider))
+            self.assertEqual(ws['resourceProvider'], resource_provider)
+            self.assertEqual(ws['modNames'], module)
+            ws_url = ws['url']
+
+            # add client configuration
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://attest.azure.net/.default"]
+                    }
+                },
+                "resource": {
+                    "plane": PlaneEnum.Mgmt,
+                    "module": module,
+                    "id": swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders/{providerName}'),
+                    "version": "2021-06-01",
+                    "subresource": "properties.attestUri",
+                },
+            })
+            self.assertTrue(rv.status_code == 200)
+            rv = c.get(f"{ws_url}/ClientConfig")
+            self.assertTrue(rv.status_code == 200)
+            client_config = rv.get_json()
+            self.assertEqual(client_config['endpoints']['type'], 'http-operation')
+            self.assertEqual(client_config['endpoints']['selector'], {'json': {'name': 'response', 'prop': {'name': 'properties.attestUri', 'type': 'simple'}, 'type': 'object'}, 'ref': '$EndpointInstance', 'var': '$Endpoint'})
+            self.assertEqual(client_config['endpoints']['resource']['id'], swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders/{providerName}'))
+            self.assertEqual(client_config['endpoints']['resource']['version'], '2021-06-01')
+            self.assertEqual(client_config['endpoints']['resource']['subresource'], 'properties.attestUri')
+            self.assertEqual(client_config['argGroup'], {
+                'name': 'Client',
+                'args': [
+                    {
+                        'var': '$Client.Endpoint.Path.providerName',
+                        'options': ['provider-name'],
+                        'required': True,
+                        'type': 'string',
+                        'group': 'Client',
+                        'idPart': 'name',
+                        'help': {'short': 'Name of the attestation provider.'},
+                    },
+                    {
+                        'var': '$Client.Endpoint.Path.resourceGroupName',
+                        'options': ['g', 'resource-group'],
+                        'required': True,
+                        'type': 'ResourceGroupName',
+                        'group': 'Client',
+                        'idPart': 'resource_group',
+                    },
+                    {
+                        'var': '$Client.Endpoint.Path.subscriptionId',
+                        'options': ['subscription'],
+                        'required': True,
+                        'type': 'SubscriptionId',
+                        'group': 'Client',
+                        'idPart': 'subscription',
+                    }
+                ]
+            })
+
+            # add resources
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/AddSwagger", json={
+                'module': module,
+                'version': api_version,
+                'resources': [
+                    {'id': swagger_resource_path_to_resource_id('/policies/{attestationType}'), 'options': {'update_by': 'None'}},
+                    {'id': swagger_resource_path_to_resource_id('/policies/{attestationType}:reset')},
+                    {'id': swagger_resource_path_to_resource_id('/certificates')},
+                    {'id': swagger_resource_path_to_resource_id('/certificates:add')},
+                    {'id': swagger_resource_path_to_resource_id('/certificates:remove')},
+                ]
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            command_tree = rv.get_json()
+
+            # modify command tree
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/attestation/policy/Leaves/create/Rename", json={
+                "name": "attestation policy set"
+            })
+            self.assertTrue(rv.status_code == 200)
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/attestation/certificate/Leaves/show/Rename", json={
+                "name": "attestation signer list"
+            })
+            self.assertTrue(rv.status_code == 200)
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/attestation/Leaves/certificatesadd/Rename", json={
+                "name": "attestation signer add"
+            })
+            self.assertTrue(rv.status_code == 200)
+            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/attestation/Leaves/certificatesremove/Rename", json={
+                "name": "attestation signer remove"
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.delete(f"{ws_url}/CommandTree/Nodes/aaz/attestation/certificate")
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/attestation", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/attestation/signer", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.patch(f"{ws_url}/CommandTree/Nodes/aaz/attestation/policy", json={
+                "help": {
+                    "short": "test"
+                }
+            })
+            self.assertTrue(rv.status_code == 200)
+
+            rv = c.get(f"{ws_url}/CommandTree/Nodes/aaz")
+            self.assertTrue(rv.status_code == 200)
+            command_tree = rv.get_json()
+
+            rv = c.post(f"{ws_url}/Generate")
+            self.assertTrue(rv.status_code == 200)
+
+            # update client config without change
+            rv = c.get(f"{ws_url}/ClientConfig")
+            self.assertTrue(rv.status_code == 200)
+            client_config = rv.get_json()
+            old_version = client_config['version']
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://attest.azure.net/.default"]
+                    }
+                },
+                "resource": {
+                    "plane": PlaneEnum.Mgmt,
+                    "module": module,
+                    "id": swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders/{providerName}'),
+                    "version": "2021-06-01",
+                    "subresource": "properties.attestUri",
+                },
+            })
+            self.assertTrue(rv.status_code == 200)
+            rv = c.get(f"{ws_url}/ClientConfig")
+            self.assertTrue(rv.status_code == 200)
+            client_config = rv.get_json()
+            self.assertTrue(client_config['version'] == old_version)
+
+            # update client config by api version changed.
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://attest.azure.net/.default"]
+                    }
+                },
+                "resource": {
+                    "plane": PlaneEnum.Mgmt,
+                    "module": module,
+                    "id": swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders/{providerName}'),
+                    "version": "2021-06-01-preview",
+                    "subresource": "properties.attestUri",
+                },
+            })
+            self.assertTrue(rv.status_code == 200)
+            client_config = rv.get_json()
+            # the client version should be updated.
+            self.assertTrue(client_config['version'] != old_version)
+
+            # update client config with invalid subresource
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://attest.azure.net/.default"]
+                    }
+                },
+                "resource": {
+                    "plane": PlaneEnum.Mgmt,
+                    "module": module,
+                    "id": swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders/{providerName}'),
+                    "version": "2021-06-01-preview",
+                    "subresource": "property.attestUri",
+                },
+            })
+            self.assertTrue(rv.status_code == 400)
+            self.assertEqual(rv.json['message'], "Cannot find remain index ['property', 'attestUri']")
+
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://attest.azure.net/.default"]
+                    }
+                },
+                "resource": {
+                    "plane": PlaneEnum.Mgmt,
+                    "module": module,
+                    "id": swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders/{providerName}'),
+                    "version": "2021-06-01-preview",
+                    "subresource": "properties.attest",
+                },
+            })
+            self.assertTrue(rv.status_code == 400)
+            self.assertEqual(rv.json['message'], "Cannot find remain index ['attest']")
+
+            rv = c.post(f"{ws_url}/ClientConfig", json={
+                "auth": {
+                    "aad": {
+                        "scopes": ["https://attest.azure.net/.default"]
+                    }
+                },
+                "resource": {
+                    "plane": PlaneEnum.Mgmt,
+                    "module": module,
+                    "id": swagger_resource_path_to_resource_id(
+                        '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Attestation/attestationProviders/{providerName}'),
+                    "version": "2021-06-01-preview",
+                    "subresource": "properties.attestUri.invalid",
+                },
+            })
+            self.assertTrue(rv.status_code == 400)
+            self.assertEqual(rv.json['message'], "Not support remain index ['invalid']")

@@ -26,7 +26,7 @@ class CMDInstanceUpdateAction(Model):
             return hasattr(data, cls.POLYMORPHIC_KEY)
         return False
 
-    def generate_args(self, ref_args):
+    def generate_args(self, ref_args, var_prefix=None):
         raise NotImplementedError()
 
     def reformat(self, **kwargs):
@@ -43,8 +43,8 @@ class CMDJsonInstanceUpdateAction(CMDInstanceUpdateAction):
     # properties as nodes
     json = ModelType(CMDRequestJson, required=True)
 
-    def generate_args(self, ref_args):
-        return self.json.generate_args(ref_args=ref_args, is_update_action=True)
+    def generate_args(self, ref_args, var_prefix=None):
+        return self.json.generate_args(ref_args=ref_args, var_prefix=var_prefix, is_update_action=True)
 
     def reformat(self, **kwargs):
         self.json.reformat(**kwargs)

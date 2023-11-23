@@ -166,14 +166,15 @@ class AzAtomicProfileBuilder:
         if plane in PlaneEnum._config:
             # use the clients registered in azure/cli/core/aaz/_client.py
             client.registered_name = client.name
+            client.cls_name = client.name
         else:
             # generate client based on client config
             cfg_reader = self._aaz_spec_manager.load_client_cfg_reader(plane)
             assert cfg_reader, "Missing Client config for '" + plane + "' plane."
             client.cfg = cfg_reader.cfg
             scope = PlaneEnum.get_data_plane_scope(plane) or plane
-            client.registered_name = (to_camel_case(f"AAZ {scope.replace('.', ' ')} {client.name}") +
-                                      f'_{to_snake_case(self._mod_name)}')  # for example: AAZAzureCodesigningDataPlaneClient_network
+            client.cls_name = to_camel_case(f"AAZ {scope.replace('.', ' ')} {client.name}")
+            client.registered_name = f'{client.cls_name}_{to_snake_case(self._mod_name)}'  # for example: AAZAzureCodesigningDataPlaneClient_network
         return client
 
     @classmethod

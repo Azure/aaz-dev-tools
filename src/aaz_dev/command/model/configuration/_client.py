@@ -13,6 +13,11 @@ from ._arg_group import CMDArgGroup
 from ._utils import CMDArgBuildPrefix, CMDDiffLevelEnum
 from ._arg_builder import CMDArgBuilder
 from ._schema import CMDSchemaField, CMDStringSchema
+from ._subresource_selector import CMDSubresourceSelector
+from ._operation import CMDHttpOperation
+from ._command import handle_duplicated_options
+from ._resource import CMDResource
+
 
 logger = logging.getLogger('backend')
 
@@ -131,7 +136,7 @@ class CMDClientEndpointTemplate(Model):
 
 class CMDClientEndpoints(Model):
     # properties as tags
-    TYPE_VALUE = None  # types: "template",
+    TYPE_VALUE = None  # types: "template", "http-operation"
 
     class Options:
         serialize_when_none = False
@@ -161,7 +166,7 @@ class CMDClientEndpoints(Model):
         pass
 
     @abc.abstractmethod
-    def generate_params(self):
+    def prepare(self):
         pass
 
     @abc.abstractmethod
@@ -174,13 +179,10 @@ class CMDClientEndpoints(Model):
 
 
 class CMDClientEndpointsByTemplate(CMDClientEndpoints):
-    TYPE_VALUE = 'templates'
+    TYPE_VALUE = 'template'
 
     templates = ListType(ModelType(CMDClientEndpointTemplate), required=True, min_size=1)
     params = ListType(CMDSchemaField())
-
-    class Options:
-        serialize_when_none = False
 
     def reformat(self, **kwargs):
         for template in self.templates:
@@ -217,7 +219,7 @@ class CMDClientEndpointsByTemplate(CMDClientEndpoints):
         if self.params:
             self.params = sorted(self.params, key=lambda p: p.name)
     
-    def generate_params(self):
+    def prepare(self):
         params = {}
         for template in self.templates:
             for placeholder, required in template.iter_placeholders():
@@ -260,6 +262,76 @@ class CMDClientEndpointsByTemplate(CMDClientEndpoints):
                         templates_diff[template.cloud] = template_diff
                 if templates_diff:
                     diff['templates'] = templates_diff
+        return diff
+
+
+class CMDClientEndpointsByHttpOperation(CMDClientEndpoints):
+    TYPE_VALUE = 'http-operation'
+
+    resource = ModelType(CMDResource, required=True)
+
+    selector = PolyModelType(
+        CMDSubresourceSelector,
+        allow_subclasses=True,
+        serialized_name="selector",
+        deserialize_from="selector",
+    )
+
+    operation = ModelType(
+        CMDHttpOperation,
+        required=True,
+        serialized_name="operation",
+        deserialize_from="operation"
+    )
+
+    def reformat(self, **kwargs):
+        self.selector.reformat(**kwargs)
+        schema_cls_map = {}
+        self.operation.reformat(schema_cls_map=schema_cls_map, **kwargs)
+        for key, value in schema_cls_map.items():
+            if value is None:
+                raise exceptions.VerificationError(
+                    message=f"ReformatError: Schema Class '{key}' not defined.",
+                    details=None
+                )
+
+    def prepare(self):
+        # TODO: remove unused schema based on selector
+        pass
+
+    def generate_args(self, ref_args):
+        arguments = {}
+        has_subresource = False
+        if self.selector:
+            has_subresource = True
+            for arg in self.selector.generate_args(
+                    ref_args=ref_args,
+                    var_prefix=CMDArgBuildPrefix.ClientEndpoint
+            ):
+                if arg.var not in arguments:
+                    arguments[arg.var] = arg
+
+        for arg in self.operation.generate_args(
+                ref_args=ref_args,
+                has_subresource=has_subresource,
+                var_prefix=CMDArgBuildPrefix.ClientEndpoint
+        ):
+            if arg.var not in arguments:
+                arguments[arg.var] = arg
+
+        return handle_duplicated_options(
+            arguments, has_subresource=has_subresource, operation_id=self.operation.operation_id)
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        if resource_diff := self.resource.diff(old.resource, level):
+            diff["resource"] = resource_diff
+        if selector_diff := self.selector.diff(old.selector, level):
+            diff["selector"] = selector_diff
+        if operation_diff := self.operation.diff(old.operation, level):
+            diff["operation"] = operation_diff
         return diff
 
 

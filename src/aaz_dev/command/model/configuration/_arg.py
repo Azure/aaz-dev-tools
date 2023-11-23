@@ -337,6 +337,7 @@ class CMDClsArg(CMDClsArgBase, CMDArg):
         uninherent.update(kwargs)
         return super().get_unwrapped(**uninherent)
 
+
 # string
 class CMDStringArgBase(CMDArgBase):
     TYPE_VALUE = "string"

@@ -2,6 +2,7 @@ from schematics.models import Model
 from schematics.types import StringType
 
 from ._fields import CMDResourceIdField, CMDVersionField
+from ._utils import CMDDiffLevelEnum
 from utils.base64 import b64decode_str
 
 
@@ -31,3 +32,27 @@ class CMDResource(Model):
     @property
     def swagger_path(self):
         return b64decode_str(self.swagger.split("/Paths/")[1].split('/')[0])
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.id != old.id:
+                diff["id"] = f"{old.id} != {self.id}"
+            if self.version != old.version:
+                diff["version"] = f"{old.version} != {self.version}"
+            if self.subresource != old.subresource:
+                diff["subresource"] = f"{old.subresource} != {self.subresource}"
+            if self.plane != old.plane:
+                diff["plane"] = f"{old.plane} != {self.plane}"
+            if self.rp_name != old.rp_name:
+                diff["rp_name"] = f"{old.rp_name} != {self.rp_name}"
+
+        if level >= CMDDiffLevelEnum.Structure:
+            if self.mod_names != old.mod_names:
+                diff["mod_names"] = f"{old.mod_names} != {self.mod_names}"
+            if self.swagger_path != old.swagger_path:
+                diff["swagger_path"] = f"{old.swagger_path} != {self.swagger_path}"
+
+        return diff
