@@ -7,19 +7,31 @@ from swagger.model.schema.parameter import PathParameter, QueryParameter, Header
 from ._utils import CMDArgBuildPrefix
 
 
+class ExampleItem:
+    def __init__(self, command=None, arg_var=None, key=None, val=None):
+        self.arg_var = arg_var
+        self.key = key
+        self.val = val
+
+        self.arg_parent, self.arg, self.arg_option = CfgReader.find_arg_in_command_with_parent_by_var(command, arg_var)
+
+        if self.arg_option is not None:
+            self.arg_option = self.arg_option.split(".")[-1]
+
+    @property
+    def is_flat(self):
+        return self.arg_parent and not self.arg
+
+    @property
+    def is_top_level(self):
+        return isinstance(self.arg_parent, CMDArgGroup) and self.arg
+
+
 class ExampleBuilder:
     def __init__(self, command=None, operation=None):
         self.command = command
         self.operation = operation
         self.example_items = []
-
-    def get_option_name(self, arg_var):
-        if not arg_var:
-            return
-
-        arg_parent, arg, arg_option = CfgReader.find_arg_in_command_with_parent_by_var(self.command, arg_var)
-        if isinstance(arg_parent, CMDArgGroup) and arg:
-            return arg_option  # top-level parameter
 
     @abstractmethod
     def mapping(self, example_dict):
@@ -47,24 +59,34 @@ class SwaggerExampleBuilder(ExampleBuilder):
                 if param.IN_VALUE == HeaderParameter.IN_VALUE:
                     arg_var = f"{CMDArgBuildPrefix.Header}.{param_name}"
 
-            option = self.get_option_name(arg_var)
-            if option:
-                self.example_items.append((option, json.dumps(value)))
+            item = ExampleItem(command=self.command, arg_var=arg_var, key=param_name, val=value)
+            if item.is_top_level:
+                self.example_items.append((item.arg_option, json.dumps(value)))
 
         return self.example_items
 
     def build(self, var_prefix, example_dict):
-        if not isinstance(example_dict, dict):
-            return []
-
         example_items = []
-        for name, value in example_dict.items():
-            arg_var = f"{var_prefix}.{name}"
+        if isinstance(example_dict, list):
+            arg_var = f"{var_prefix}[]"
+            for item in example_dict:
+                example_items += self.build(arg_var, item)
+        elif isinstance(example_dict, dict):
+            for name, value in example_dict.copy().items():
+                item = ExampleItem(command=self.command, arg_var=f"{var_prefix}{{}}.{name}", key=name, val=value)
+                if item.arg is None:
+                    item = ExampleItem(command=self.command, arg_var=f"{var_prefix}.{name}", key=name, val=value)
 
-            option = self.get_option_name(arg_var)
-            if option:
-                example_items.append((option, json.dumps(value)))
+                example_items += self.build(item.arg_var, value)
 
-            example_items += self.build(arg_var, value)
+                if item.is_top_level:
+                    example_items.append((item.arg_option, json.dumps(value)))
+                elif item.arg_option:
+                    example_dict.pop(item.key)
+                    example_dict[item.arg_option] = item.val
+                elif item.is_flat:
+                    example_dict.pop(item.key, None)
+                    for k, v in item.val.items():
+                        example_dict[k] = v
 
         return example_items
