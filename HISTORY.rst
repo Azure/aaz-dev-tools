@@ -5,10 +5,7 @@ Release History
 
 2.4.0
 ++++++
-* Support node.js v18 (#312)
 * Support data plane client with dynamic endpoint fetched from a response. (#311)
-* Implement UI for dynamic endpoints of data plane client config (#310)
-* Data plane dynamic endpoint support (Backend) (#309)
 
 2.3.0
 ++++++
