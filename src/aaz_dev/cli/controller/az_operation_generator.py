@@ -1,8 +1,9 @@
-from command.model.configuration import CMDHttpOperation, CMDHttpRequestJsonBody, CMDArraySchema, \
-    CMDInstanceUpdateOperation, CMDRequestJson, CMDHttpResponseJsonBody, CMDObjectSchema, CMDSchema, \
-    CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase, CMDBooleanSchemaBase, CMDObjectSchemaBase, \
-    CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction, CMDObjectSchemaDiscriminator, CMDSchemaEnum, \
-    CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction, CMDInstanceCreateOperation, CMDInstanceDeleteOperation
+from command.model.configuration import (
+    CMDHttpOperation, CMDHttpRequestJsonBody, CMDArraySchema, CMDInstanceUpdateOperation, CMDRequestJson,
+    CMDHttpResponseJsonBody, CMDObjectSchema, CMDSchema, CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase,
+    CMDBooleanSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction,
+    CMDObjectSchemaDiscriminator, CMDSchemaEnum, CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction,
+    CMDInstanceCreateOperation, CMDInstanceDeleteOperation, CMDClientEndpointsByTemplate)
 from utils import exceptions
 from utils.case import to_snake_case
 from utils.error_format import AAZErrorFormatEnum
@@ -45,7 +46,7 @@ class AzHttpOperationGenerator(AzOperationGenerator):
         super().__init__(name, cmd_ctx, operation)
         assert isinstance(self._operation, CMDHttpOperation)
 
-        self.client_endpoints = client_endpoints
+        self._client_endpoints = client_endpoints
 
         if self._operation.long_running is not None:
             self.is_long_running = True
@@ -132,8 +133,8 @@ class AzHttpOperationGenerator(AzOperationGenerator):
     def url_parameters(self):
         parameters = []
         # add params in client endpoints
-        if self.client_endpoints and self.client_endpoints.params:
-            for param in self.client_endpoints.params:
+        if isinstance(self._client_endpoints, CMDClientEndpointsByTemplate) and self._client_endpoints.params:
+            for param in self._client_endpoints.params:
                 kwargs = {}
                 if param.skip_url_encoding:
                     kwargs['skip_quote'] = True
