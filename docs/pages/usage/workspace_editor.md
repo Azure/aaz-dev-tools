@@ -43,13 +43,16 @@ In the client configuration, the client `endpoint` and `authorization` mechanism
 
 In workspace you can set two kinds of `endpoint`:
 
-- Template endpoint: The endpoint follows a special template. The template supports using placeholder which is wrapped by `{}`. For example: `https://{keyVaultName}.vault.azure.net`. Those placeholders will generate arguments, which arg group name is 'Client Args', in all commands.
-- Dynamic endpoint (Coming soon): The endpoint should be retrieved from a property value in a control plane api response.  
+- Template endpoint: The endpoint follows a special template. The template supports using placeholder which is wrapped by `{}`. For example: `https://{keyVaultName}.vault.azure.net`. Those placeholders will generate arguments, which arg group name is 'Client Args', in all commands. We support to define endpoint templates of four clouds that is `AzureCloud`, `AzureChinaCloud`, `AzureUSGovernment` and `AzureGermanCloud`. For air-gapped clouds, you should provide the property index in [ARM Cloud Metadata API](https://management.azure.com/metadata/endpoints?api-version=2019-05-01) response.
+- Dynamic endpoint: The endpoint is retrieved from a property value in a control plane instance. And the generated client will fetch the property from control plane api as the endpoint for data plane commands. For example, the endpoint of data-plane `Microsoft.Attestation` is retrieved from the `properties.attestUri` property in `Microsoft.Attestation/attestationProvider` instance. So the resource api and the property index should be provided in the client configuration.
 
 For tha `authorization` mechanism, we supports `AAD` auth.
 
 When you try to create command for a new resource-provider of data-plane, the workspace will require you set the client configuration at first.
 ![new_client_config](../../assets/recordings/workspace_editor/dataplane_new_client_config.gif)
+
+Here's an example of `Microsoft.Attestation` data-plane client configuration using dynamic endpoint.
+![dynamic_endpoint_client_config](../../assets/recordings/workspace_editor/dataplane_dynamic_endpoint_client_config.gif)
 
 If you want do some modification in existing client configuration, you can click the `Edit Client Config` button. The change will apply to all the data-plane commands of that resource-provider when you export models from the workspace to aaz.
 ![edit_client_config](../../assets/recordings/workspace_editor/dataplane_edit_client_config.gif)
