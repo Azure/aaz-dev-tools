@@ -46,7 +46,7 @@ class SwaggerExampleBuilder(ExampleBuilder):
 
             arg_var = None
             value = example_dict[param.name]
-            param_name = param.name.replace("$", "")
+            param_name = param.name.replace("$", "")  # schema name may contain $
 
             if param.IN_VALUE == BodyParameter.IN_VALUE:
                 arg_var = f"${param_name}"
@@ -81,12 +81,12 @@ class SwaggerExampleBuilder(ExampleBuilder):
 
                 if item.is_top_level:
                     example_items.append((item.arg_option, json.dumps(value)))
+                elif item.is_flat:
+                    example_dict.pop(item.key)
+                    for k, v in item.val.items():
+                        example_dict[k] = v
                 elif item.arg_option:
                     example_dict.pop(item.key)
                     example_dict[item.arg_option] = item.val
-                elif item.is_flat:
-                    example_dict.pop(item.key, None)
-                    for k, v in item.val.items():
-                        example_dict[k] = v
 
         return example_items
