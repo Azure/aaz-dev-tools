@@ -162,7 +162,8 @@ class CMDClientEndpointCloudMetadataTemplate(Model, _EndpointTemplateMixin):
     def iter_placeholders(self):
         if self.prefix_template is None:
             return
-        return self._iter_placeholders(self.prefix_template)
+        for placeholder in self._iter_placeholders(self.prefix_template):
+            yield placeholder
 
     def reformat(self, **kwargs):
         if self.prefix_template is None:

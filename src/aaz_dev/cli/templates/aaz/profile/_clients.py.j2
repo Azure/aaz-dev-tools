@@ -39,9 +39,9 @@ class {{ client.cls_name }}(AAZBaseClient):
     @classmethod
     def _build_base_url(cls, ctx, **kwargs):
         {%- if client.endpoints.type == "template" %}
-        endpoint = None
         {%- if client.endpoints.cloud_metadata %}
         {%- if client.endpoints.cloud_metadata.prefix_template %}
+        endpoint = None
         suffix = cls.get_cloud_suffix(ctx, cls._CLOUD_HOST_METADATA_INDEX)
         if suffix:
             endpoint = cls._CLOUD_HOST_METADATA_PREFIX_TEMPLATE + suffix

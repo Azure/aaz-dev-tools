@@ -6,6 +6,7 @@ import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 import { styled } from '@mui/system';
 import { Plane, Resource } from './WSEditorCommandContent';
 import { SwaggerItemSelector } from './WSEditorSwaggerPicker';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 
 interface WSEditorClientConfigDialogProps {
     workspaceUrl: string,
@@ -24,6 +25,8 @@ interface WSEditorClientConfigDialogState {
     templateAzureChinaCloud: string,
     templateAzureUSGovernment: string,
     templateAzureGermanCloud: string,
+    cloudMetadataSelectorIndex: string,
+    cloudMetadataPrefixTemplate: string,
 
     aadAuthScopes: string[],
 
@@ -67,6 +70,13 @@ const AuthTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     fontWeight: 400,
 }));
 
+const TemplateSuffixTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+    color: theme.palette.primary.main,
+    fontFamily: "'Roboto Condensed', sans-serif",
+    fontSize: 18,
+    fontWeight: 500,
+}));
+
 const MiddlePadding = styled(Box)(({ theme }) => ({
     height: '1.5vh'
 }));
@@ -86,6 +96,8 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
             templateAzureChinaCloud: "",
             templateAzureUSGovernment: "",
             templateAzureGermanCloud: "",
+            cloudMetadataSelectorIndex: "",
+            cloudMetadataPrefixTemplate: "",
 
             aadAuthScopes: ["",],
 
@@ -104,11 +116,11 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
             versionOptions: [],
             versionResourceIdMap: {},
             selectedVersion: null,
-            
+
             resourceIdOptions: [],
             selectedResourceId: null,
             subresource: "",
-            
+
         }
     }
 
@@ -285,7 +297,6 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
         }
     }
 
-    
     loadResources = async (resourceProviderUrl: string | null, selectVersion: string | null) => {
         if (resourceProviderUrl != null) {
             this.setState({
@@ -379,6 +390,8 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
             let templateAzureChinaCloud = "";
             let templateAzureUSGovernment = "";
             let templateAzureGermanCloud = "";
+            let cloudMetadataSelectorIndex = "";
+            let cloudMetadataPrefixTemplate = "";
             let endpointType: "template" | "http-operation" = "template";
             let selectedPlane: string | null = null;
             let selectedModule: string | null = null;
@@ -392,12 +405,15 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                 res.data.endpoints.templates.forEach((value: any) => {
                     clientConfig.endpointTemplates![value.cloud] = value.template;
                 });
+                clientConfig.endpointCloudMetadata = res.data.endpoints.cloudMetadata;
 
                 endpointType = "template";
                 templateAzureCloud = clientConfig.endpointTemplates!['AzureCloud'] ?? "";
                 templateAzureChinaCloud = clientConfig.endpointTemplates!['AzureChinaCloud'] ?? "";
                 templateAzureUSGovernment = clientConfig.endpointTemplates!['AzureUSGovernment'] ?? "";
                 templateAzureGermanCloud = clientConfig.endpointTemplates!['AzureGermanCloud'] ?? "";
+                cloudMetadataSelectorIndex = clientConfig.endpointCloudMetadata?.selectorIndex ?? "";
+                cloudMetadataPrefixTemplate = clientConfig.endpointCloudMetadata?.prefixTemplate ?? "";
             } else if (res.data.endpoints.type === "http-operation") {
                 clientConfig.endpointResource = res.data.endpoints.resource;
                 let rpUrl: string = clientConfig.endpointResource!.swagger.split('/Paths/')[0];
@@ -419,6 +435,8 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                 templateAzureChinaCloud: templateAzureChinaCloud,
                 templateAzureUSGovernment: templateAzureUSGovernment,
                 templateAzureGermanCloud: templateAzureGermanCloud,
+                cloudMetadataSelectorIndex: cloudMetadataSelectorIndex,
+                cloudMetadataPrefixTemplate: cloudMetadataPrefixTemplate,
                 selectedPlane: selectedPlane,
                 selectedModule: selectedModule,
                 selectedResourceProvider: selectedResourceProvider,
@@ -450,9 +468,10 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
     }
 
     handleUpdate = async () => {
-        let { aadAuthScopes, endpointType} = this.state
+        let { aadAuthScopes, endpointType } = this.state
         let templates: ClientEndpointTemplate[] | undefined = undefined;
         let resource: ClientEndpointResource | undefined = undefined;
+        let cloudMetadata: ClientEndpointCloudMetadata | undefined = undefined;
 
         if (endpointType === "template") {
             let { templateAzureCloud, templateAzureChinaCloud, templateAzureGermanCloud, templateAzureUSGovernment } = this.state
@@ -474,21 +493,21 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                 });
                 return;
             }
-    
+
             if (templateAzureChinaCloud.length > 0 && !templateRegex.test(templateAzureChinaCloud)) {
                 this.setState({
                     invalidText: "Azure China Cloud Endpoint Template is invalid."
                 });
                 return;
             }
-    
+
             if (templateAzureUSGovernment.length > 0 && !templateRegex.test(templateAzureUSGovernment)) {
                 this.setState({
                     invalidText: "Azure US Government Endpoint Template is invalid."
                 });
                 return;
             }
-    
+
             if (templateAzureGermanCloud.length > 0 && !templateRegex.test(templateAzureGermanCloud)) {
                 this.setState({
                     invalidText: "Azure German Cloud Endpoint Template is invalid."
@@ -508,9 +527,35 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
             if (templateAzureGermanCloud.length > 0) {
                 templates.push({ cloud: 'AzureGermanCloud', template: templateAzureGermanCloud });
             }
+
+            let { cloudMetadataSelectorIndex, cloudMetadataPrefixTemplate } = this.state;
+            cloudMetadataSelectorIndex = cloudMetadataSelectorIndex.trim();
+            cloudMetadataPrefixTemplate = cloudMetadataPrefixTemplate.trim();
+            if (cloudMetadataSelectorIndex.length < 1 && cloudMetadataPrefixTemplate.length > 0) {
+                this.setState({
+                    invalidText: "Cloud Metadata Selector Index is required."
+                });
+                return;
+            } else if (cloudMetadataSelectorIndex.length > 0 ) {
+
+                cloudMetadata = {
+                    selectorIndex: cloudMetadataSelectorIndex,
+                }
+                if (cloudMetadataPrefixTemplate.length > 0) {
+                    // verify template url using regex, like https://{vaultName}
+                    if (!templateRegex.test(cloudMetadataPrefixTemplate)) {
+                        this.setState({
+                            invalidText: "Cloud Metadata Prefix is invalid."
+                        });
+                        return;
+                    }
+                    cloudMetadata.prefixTemplate = cloudMetadataPrefixTemplate;
+                }
+            }
+
         } else if (endpointType === "http-operation") {
 
-            let {selectedPlane, selectedModule, selectedResourceProvider, selectedVersion, selectedResourceId, subresource, moduleOptionsCommonPrefix} = this.state;
+            let { selectedPlane, selectedModule, selectedResourceProvider, selectedVersion, selectedResourceId, subresource, moduleOptionsCommonPrefix } = this.state;
             if (!selectedPlane) {
                 this.setState({
                     invalidText: "Plane is required."
@@ -574,6 +619,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
 
         this.onUpdateClientConfig(
             templates,
+            cloudMetadata,
             resource,
             auth,
         );
@@ -581,6 +627,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
 
     onUpdateClientConfig = async (
         templates: ClientEndpointTemplate[] | undefined,
+        cloudMetadata: ClientEndpointCloudMetadata | undefined,
         resource: ClientEndpointResource | undefined,
         auth: ClientAuth,
     ) => {
@@ -588,6 +635,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
         try {
             await axios.post(`${this.props.workspaceUrl}/ClientConfig`, {
                 templates: templates,
+                cloudMetadata: cloudMetadata,
                 resource: resource,
                 auth: auth,
             });
@@ -666,7 +714,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
     }
 
     render() {
-        const { invalidText, updating, isAdd, aadAuthScopes, endpointType, templateAzureCloud, templateAzureChinaCloud, templateAzureUSGovernment, templateAzureGermanCloud } = this.state;
+        const { invalidText, updating, isAdd, aadAuthScopes, endpointType, templateAzureCloud, templateAzureChinaCloud, templateAzureUSGovernment, templateAzureGermanCloud, cloudMetadataSelectorIndex, cloudMetadataPrefixTemplate } = this.state;
         const { selectedModule, selectedResourceProvider, selectedVersion, selectedResourceId, subresource } = this.state;
         return (
             <Dialog
@@ -698,12 +746,14 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                             sx={{
                                 display: 'flex',
                                 flexDirection: 'column',
-                                alignItems: 'center',
+                                alignItems: 'stretch',
                                 justifyContent: 'flex-start',
                                 pl: 2,
                                 pr: 2,
                                 pb: 2,
                             }}>
+                            <InputLabel sx={{ font: "inherit", pt: 2 }}>Default Templates</InputLabel>
+
                             <TextField
                                 id="AzureCloud"
                                 label="Azure Cloud"
@@ -780,6 +830,50 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                                 }}
                                 margin='normal'
                             />
+                            <InputLabel sx={{ font: "inherit", pt: 2}}>From Cloud Metadata</InputLabel>
+                            
+                            <TextField
+                                id="selector-index"
+                                label="Index"
+                                type="text"
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                                fullWidth
+                                variant='standard'
+                                placeholder="Property index to fetch endpoint or suffix from cloud metadata api response, e.g. suffixes.keyVaultDns"
+                                value={cloudMetadataSelectorIndex}
+                                onChange={(event: any) => {
+                                    this.setState({
+                                        cloudMetadataSelectorIndex: event.target.value,
+                                    })
+                                }}
+                                margin='dense'
+                            />
+                            <Box sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "flex-end",
+                                justifyContent: "flex-start",
+                            }}>
+                                <TextField
+                                    id="prefix-template"
+                                    label="Prefix"
+                                    type="text"
+                                    fullWidth
+                                    variant='standard'
+                                    placeholder="Template appended before suffix, e.g. https://{vaultName}"
+                                    value={cloudMetadataPrefixTemplate}
+                                    onChange={(event: any) => {
+                                        this.setState({
+                                            cloudMetadataPrefixTemplate: event.target.value,
+                                        })
+                                    }}
+                                    margin='dense'
+                                />
+                                <AddRoundedIcon />
+                                <TemplateSuffixTypography sx={{flexShrink: 0, mr: 1}}>.Suffix</TemplateSuffixTypography> 
+                            </Box>
                         </Box>}
                         {endpointType === "http-operation" && <Box sx={{
                             display: 'flex',
@@ -891,6 +985,11 @@ interface ClientEndpointTemplate {
     template: string,
 }
 
+interface ClientEndpointCloudMetadata {
+    selectorIndex: string,
+    prefixTemplate?: string,
+}
+
 interface ClientTemplateMap {
     [cloud: string]: string
 }
@@ -906,6 +1005,7 @@ interface ClientAuth {
 interface ClientConfig {
     version: string,
     endpointTemplates?: ClientTemplateMap,
+    endpointCloudMetadata?: ClientEndpointCloudMetadata,
     endpointResource?: Resource,
     auth: ClientAuth,
 }
