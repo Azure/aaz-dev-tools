@@ -21,8 +21,13 @@ class {{ client.cls_name }}(AAZBaseClient):
         CloudNameEnum.{{cloud}}: {{ template|constant_convert }},
         {%- endfor %}
     }
+    {%- if client.endpoints.cloud_metadata %}
+    _CLOUD_HOST_METADATA_INDEX = {{ client.endpoints.cloud_metadata.selector_index|constant_convert }}
+    {%- if client.endpoints.cloud_metadata.prefix_template %}
+    _CLOUD_HOST_METADATA_PREFIX_TEMPLATE = {{ client.endpoints.cloud_metadata.prefix_template|constant_convert }}
+    {%- endif %}
+    {%- endif %}
     {%- elif client.endpoints.type == "http-operation" %}
-
     {%- endif %}
 
     _AAD_CREDENTIAL_SCOPES = [
@@ -34,13 +39,25 @@ class {{ client.cls_name }}(AAZBaseClient):
     @classmethod
     def _build_base_url(cls, ctx, **kwargs):
         {%- if client.endpoints.type == "template" %}
-        return cls._CLOUD_HOST_TEMPLATES.get(ctx.cli_ctx.cloud.name, None)
+        endpoint = None
+        {%- if client.endpoints.cloud_metadata %}
+        {%- if client.endpoints.cloud_metadata.prefix_template %}
+        suffix = cls.get_cloud_suffix(ctx, cls._CLOUD_HOST_METADATA_INDEX)
+        if suffix:
+            endpoint = cls._CLOUD_HOST_METADATA_PREFIX_TEMPLATE + suffix
+        {%- else %}
+        endpoint = cls.get_cloud_endpoint(ctx, cls._CLOUD_HOST_METADATA_INDEX)
+        {%- endif %}
+        {%- endif %}
+        if not endpoint:
+            endpoint = cls._CLOUD_HOST_TEMPLATES.get(ctx.cli_ctx.cloud.name, None)
+        return endpoint
         {%- elif client.endpoints.type == "http-operation" %}
         cls._fetch_endpoint(ctx, **kwargs)
-        host = ctx.selectors.{{client.endpoints.selector.name}}.required().to_serialized_data()
-        if not isinstance(host, str):
-            raise ValueError(f"Invalid host value: '{host}'")
-        return host
+        endpoint = ctx.selectors.{{client.endpoints.selector.name}}.required().to_serialized_data()
+        if not isinstance(endpoint, str):
+            raise ValueError(f"Invalid host value type: '{type(endpoint)}' expected 'str'")
+        return endpoint
         {%- endif %}
 
     @classmethod

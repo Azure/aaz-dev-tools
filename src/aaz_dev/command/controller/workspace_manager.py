@@ -1048,10 +1048,10 @@ class WorkspaceManager:
 
     # client config
 
-    def create_cfg_editor(self, auth, templates=None, arm_resource=None):
+    def create_cfg_editor(self, auth, templates=None, cloud_medadata=None, arm_resource=None):
         ref_cfg = self.load_client_cfg_editor()
         if templates:
-            endpoints = WorkspaceClientCfgEditor.new_client_endpoints_by_template(templates)
+            endpoints = WorkspaceClientCfgEditor.new_client_endpoints_by_template(templates, cloud_medadata)
         elif arm_resource:
             # arm_resrouce should have these keys: "module", "version", "id", "subresource"
             mod_names = arm_resource['module']

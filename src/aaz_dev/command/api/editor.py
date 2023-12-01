@@ -128,6 +128,7 @@ def editor_workspace_client_config(name):
         cfg_editor = manager.create_cfg_editor(
             auth=data['auth'],
             templates=data.get('templates', None),
+            cloud_medadata=data.get('cloudMetadata', None),
             arm_resource=data.get('resource', None),
         )
         manager.save()
@@ -135,6 +136,7 @@ def editor_workspace_client_config(name):
         raise NotImplementedError()
     result = cfg_editor.cfg.to_primitive()
     return jsonify(result)
+
 
 @bp.route("/Workspaces/<name>/ClientConfig/AAZ/Compare", methods=("POST",))
 def compare_workspace_client_config_version_with_aaz(name):

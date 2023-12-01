@@ -77,36 +77,16 @@ class CMDClientAuth(Model):
         return diff
 
 
-class CMDClientEndpointTemplate(Model):
-    cloud = CloudField(required=True)
-    
-    # https://{accountName}.{zone}.blob.storage.azure.net
-    template = StringType(required=True)
-
-    class Options:
-        serialize_when_none = False
-
-    def reformat(self, **kwargs):
-        parsed = urlparse(self.template)
-        if parsed.path:
-            if parsed.path == '/' and not parsed.params and not parsed.query and not parsed.fragment:
-                self.template = self.template.rstrip('/')
-            else:
-                raise exceptions.VerificationError('Invalid endpoints', details='"{}" contains path'.format(self.template))
-        if not parsed.scheme or not parsed.netloc:
-            raise exceptions.VerificationError('Invalid endpoints', details='"{}" has no schema or hostname'.format(self.template))
-    
-    def iter_placeholders(self):
-        parsed = urlparse(self.template)
-        return self._iter_placeholders(parsed.netloc)
-
-    def _iter_placeholders(self, endpoint):
+class _EndpointTemplateMixin:
+    @staticmethod
+    def _iter_placeholders(template):
+        endpoint = urlparse(template).netloc
         while True:
             idx = 0
             required = True
             while idx < len(endpoint) and endpoint[idx] != '{':
                 idx += 1
-            endpoint = endpoint[idx+1:]
+            endpoint = endpoint[idx + 1:]
             if not endpoint:
                 # not found '{'
                 return
@@ -122,6 +102,36 @@ class CMDClientEndpointTemplate(Model):
 
             yield placeholder, required
 
+    @staticmethod
+    def _reformat(template):
+        parsed = urlparse(template)
+        if parsed.path:
+            if parsed.path == '/' and not parsed.params and not parsed.query and not parsed.fragment:
+                return template.rstrip('/')
+            else:
+                raise exceptions.VerificationError('Invalid endpoints', details='"{}" contains path'.format(template))
+        if not parsed.scheme or not parsed.netloc:
+            raise exceptions.VerificationError('Invalid endpoints', details='"{}" has no schema or hostname'.format(template))
+
+        return template
+
+
+class CMDClientEndpointTemplate(Model, _EndpointTemplateMixin):
+
+    cloud = CloudField(required=True)
+    
+    # https://{accountName}.{zone}.blob.storage.azure.net
+    template = StringType(required=True)
+
+    class Options:
+        serialize_when_none = False
+
+    def iter_placeholders(self):
+        return self._iter_placeholders(self.template)
+
+    def reformat(self, **kwargs):
+        self.template = self._reformat(self.template)
+
     def diff(self, old, level):
         if type(self) is not type(old):
             return f"Type: {type(old)} != {type(self)}"
@@ -131,6 +141,43 @@ class CMDClientEndpointTemplate(Model):
                 diff['cloud'] = f"{old.cloud} != {self.cloud}"
             if self.template != old.template:
                 diff['template'] = f"{old.template} != {self.template}"
+        return diff
+
+
+class CMDClientEndpointCloudMetadataTemplate(Model, _EndpointTemplateMixin):
+
+    selector_index = StringType(
+        required=True,
+        serialized_name="selectorIndex",
+        deserialize_from="selectorIndex",
+    )  # index, used to retrieve property in arm cloud metadata endpoints.
+    prefix_template = StringType(
+        serialized_name="prefixTemplate",
+        deserialize_from="prefixTemplate",
+    )  # prefix template, required for suffixes.
+
+    class Options:
+        serialize_when_none = False
+
+    def iter_placeholders(self):
+        if self.prefix_template is None:
+            return
+        return self._iter_placeholders(self.prefix_template)
+
+    def reformat(self, **kwargs):
+        if self.prefix_template is None:
+            return
+        self.prefix_template = self._reformat(self.prefix_template)
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.selector_index != old.selector_index:
+                diff['selector_index'] = f"{old.selector_index} != {self.selector_index}"
+            if self.prefix_template != old.prefix_template:
+                diff['prefix_template'] = f"{old.prefix_template} != {self.prefix_template}"
         return diff
 
 
@@ -182,12 +229,17 @@ class CMDClientEndpointsByTemplate(CMDClientEndpoints):
     TYPE_VALUE = 'template'
 
     templates = ListType(ModelType(CMDClientEndpointTemplate), required=True, min_size=1)
+    cloud_metadata = ModelType(CMDClientEndpointCloudMetadataTemplate,
+                               serialized_name="cloudMetadata",
+                               deserialize_from="cloudMetadata")
     params = ListType(CMDSchemaField())
 
     def reformat(self, **kwargs):
         for template in self.templates:
             template.reformat(**kwargs)
         self.templates = sorted(self.templates, key=lambda e: e.cloud)
+        if self.cloud_metadata:
+            self.cloud_metadata.reformat(**kwargs)
 
         # make sure the placeholders across all the endpoints are consistent
         placeholders = {}
@@ -202,9 +254,22 @@ class CMDClientEndpointsByTemplate(CMDClientEndpoints):
                         "required": required,
                         "count": 1
                     }
+        expected_count = len(self.templates)
+        if self.cloud_metadata:
+            for placeholder, required in self.cloud_metadata.iter_placeholders():
+                if placeholder in placeholders:
+                    placeholders[placeholder]['count'] += 1
+                    if placeholders[placeholder]['required'] != required:
+                        raise exceptions.VerificationError('Invalid endpoints', details='Inconsistent required for placeholder "{}" in endpoints or cloud metadata'.format(placeholder))
+                else:
+                    placeholders[placeholder] = {
+                        "required": required,
+                        "count": 1
+                    }
+            expected_count += 1
         for item in placeholders.values():
-            if item['count'] != len(self.templates):
-                raise exceptions.VerificationError('Invalid endpoints', details='placeholder "{}" is missed in some endpoints'.format(placeholder))
+            if item['count'] != expected_count:
+                raise exceptions.VerificationError('Invalid endpoints', details='placeholder "{}" is missed in some endpoints or cloud metadata'.format(placeholder))
 
         # make sure the parameters are consistent with the placeholders
         if self.params:
@@ -229,6 +294,14 @@ class CMDClientEndpointsByTemplate(CMDClientEndpoints):
                         "required": required,
                         "skip_url_encoding": True,
                     })
+        if self.cloud_metadata:
+            for placeholder, required in self.cloud_metadata.iter_placeholders():
+                if placeholder not in params:
+                    params[placeholder] = CMDStringSchema({
+                        "name": placeholder,
+                        "required": required,
+                        "skip_url_encoding": True,
+                    })
         self.params = sorted(params.values(), key=lambda p: p.name) or None
 
     def generate_args(self, ref_args):
@@ -247,6 +320,12 @@ class CMDClientEndpointsByTemplate(CMDClientEndpoints):
             return f"Type: {type(old)} != {type(self)}"
         diff = {}
         if level >= CMDDiffLevelEnum.BreakingChange:
+            if (not self.cloud_metadata) != (not old.cloud_metadata):
+                diff['cloud_metadata'] = "Add cloud metadata" if self.cloud_metadata else "Remove cloud metadata"
+            elif self.cloud_metadata:
+                if cloud_metadata_diff := self.cloud_metadata.diff(old.cloud_metadata, level):
+                    diff['cloud_metadata'] = cloud_metadata_diff
+
             if len(self.templates) != len(old.templates):
                 diff['templates'] = "template not match"
             else:
