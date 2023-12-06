@@ -1,132 +1,30 @@
-from cli.model.atomic import CLIAtomicCommand
-from command.model.configuration import CMDCommand, CMDHttpOperation, CMDCondition, CMDConditionAndOperator, \
-    CMDConditionOrOperator, CMDConditionNotOperator, CMDConditionHasValueOperator, CMDInstanceUpdateOperation, \
-    CMDJsonInstanceUpdateAction, CMDResourceGroupNameArg, CMDJsonSubresourceSelector, CMDInstanceCreateOperation, \
-    CMDInstanceDeleteOperation, CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction
-from utils.case import to_camel_case, to_snake_case
-from utils.plane import PlaneEnum
-from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator, \
-    AzGenericUpdateOperationGenerator, AzRequestClsGenerator, AzResponseClsGenerator, \
-    AzInstanceUpdateOperationGenerator, AzLifeCycleInstanceUpdateCallbackGenerator, AzJsonCreateOperationGenerator, \
-    AzJsonDeleteOperationGenerator, AzLifeCycleCallbackGenerator
-from .az_arg_group_generator import AzArgGroupGenerator, AzArgClsGenerator
-from .az_output_generator import AzOutputGenerator
-from .az_selector_generator import AzJsonSelectorGenerator
-from utils import exceptions
 import logging
 
+from cli.model.atomic import CLIAtomicCommand, CLIAtomicClient
+from command.model.configuration import CMDCommand, CMDHttpOperation, CMDCondition, CMDConditionAndOperator, \
+    CMDConditionOrOperator, CMDConditionNotOperator, CMDConditionHasValueOperator, CMDInstanceUpdateOperation, \
+    CMDJsonInstanceUpdateAction, CMDJsonSubresourceSelector, CMDInstanceCreateOperation, \
+    CMDInstanceDeleteOperation, CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction, CMDClientEndpointsByHttpOperation
+from utils.case import to_camel_case
+from .az_arg_group_generator import AzArgGroupGenerator
+from .az_command_ctx import AzCommandCtx
+from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperationGenerator, \
+    AzGenericUpdateOperationGenerator, AzInstanceUpdateOperationGenerator, AzLifeCycleInstanceUpdateCallbackGenerator, \
+    AzJsonCreateOperationGenerator, AzJsonDeleteOperationGenerator, AzLifeCycleCallbackGenerator
+from .az_output_generator import AzOutputGenerator
+from .az_selector_generator import AzJsonSelectorGenerator
 
 logger = logging.getLogger('backend')
 
 
-class AzCommandCtx:
-
-    def __init__(self):
-        self._cls_arg_maps = {}
-        self._ctx_arg_map = {}
-        self._selectors = {}
-        self.rg_arg_var = None
-
-        self.arg_clses = {}
-        self.update_clses = {}
-        self.response_clses = {}
-        self.support_id_part = True
-
-    def set_argument_cls(self, arg):
-        cls_name = arg.cls
-        self._cls_arg_maps[f"@{cls_name}"] = {}
-        assert cls_name not in self.arg_clses, f"Argument class {cls_name} is defined more than one place"
-        self.arg_clses[cls_name] = AzArgClsGenerator(cls_name, self, arg)
-
-    def set_argument(self, keys, arg, ctx_namespace='self.ctx.args'):
-        var_name = arg.var
-        hide = arg.hide
-        if var_name.startswith('@'):
-            map_name = var_name.replace('[', '.[').replace('{', '.{').split('.', maxsplit=1)[0]
-            if map_name != keys[0]:
-                raise exceptions.VerificationError(
-                    "Invalid argument var",
-                    details=f"argument var '{var_name}' does not start with '{keys[0]}'"
-                )
-            if map_name not in self._cls_arg_maps:
-                self._cls_arg_maps[map_name] = {}
-            self._cls_arg_maps[map_name][var_name] = (
-                '.'.join(keys).replace('.[', '[').replace('.{', '{'),
-                hide
-            )
-        else:
-            self._ctx_arg_map[var_name] = (
-                '.'.join([ctx_namespace, *keys]).replace('.[', '[').replace('.{', '{'),
-                hide
-            )
-
-        if isinstance(arg, CMDResourceGroupNameArg):
-            assert self.rg_arg_var is None, "Resource Group Argument defined twice"
-            self.rg_arg_var = arg.var
-
-    def get_argument(self, var_name):
-        if var_name.startswith('@'):
-            map_name = var_name.replace('[', '.[').replace('{', '.{').split('.', maxsplit=1)[0]
-            if map_name not in self._cls_arg_maps:
-                raise exceptions.VerificationError(
-                    "Invalid argument var",
-                    details=f"argument var '{var_name}' has unregistered class '{map_name}'."
-                )
-            if var_name not in self._cls_arg_maps[map_name]:
-                raise exceptions.VerificationError(
-                    "Invalid argument var",
-                    details=f"argument var '{var_name}' does not find."
-                )
-            return self._cls_arg_maps[map_name][var_name]
-        else:
-            if var_name not in self._ctx_arg_map:
-                raise exceptions.VerificationError(
-                    "Invalid argument var",
-                    details=f"argument var '{var_name}' does not find."
-                )
-            return self._ctx_arg_map[var_name]
-
-    def get_variant(self, variant, name_only=False):
-        if variant.startswith('$'):
-            variant = variant[1:]
-        variant = to_snake_case(variant)
-        if name_only:
-            return variant
-
-        is_selector = variant in self._selectors
-
-        if is_selector:
-            return f'self.ctx.selectors.{variant}', is_selector
-        else:
-            return f'self.ctx.vars.{variant}', is_selector
-
-    def set_update_cls(self, schema):
-        cls_name = schema.cls
-        assert cls_name not in self.update_clses, f"Schema cls '{cls_name}', is defined more than once"
-        self.update_clses[cls_name] = AzRequestClsGenerator(self, cls_name, schema)
-
-    def set_response_cls(self, schema):
-        cls_name = schema.cls
-        assert cls_name not in self.response_clses, f"Schema cls '{cls_name}', is defined more than once"
-        self.response_clses[cls_name] = AzResponseClsGenerator(self, cls_name, schema)
-
-    def set_selector(self, selector):
-        self._selectors[self.get_variant(selector.var, name_only=True)] = selector
-
-    def render_arg_resource_id_template(self, template):
-        # TODO: fill blank placeholders as much as possible
-
-        return template
-
-
 class AzCommandGenerator:
-
     ARGS_SCHEMA_NAME = "_args_schema"
 
-    def __init__(self, cmd: CLIAtomicCommand, is_wait=False):
+    def __init__(self, cmd: CLIAtomicCommand, client: CLIAtomicClient, is_wait=False):
         self.cmd = cmd
         self.is_wait = is_wait
         self.cmd_ctx = AzCommandCtx()
+        self.client = client
 
         if cmd.names[-1] in ("create", "list"):
             # disable id part for create and list command
@@ -140,6 +38,13 @@ class AzCommandGenerator:
 
         # prepare arguments
         self.arg_groups = []
+        if self.client.cfg and self.client.cfg.arg_group and self.client.cfg.arg_group.args:
+            # add client args
+            self.arg_groups.append(AzArgGroupGenerator(self.ARGS_SCHEMA_NAME, self.cmd_ctx, self.client.cfg.arg_group))
+            if isinstance(self.client.cfg.endpoints, CMDClientEndpointsByHttpOperation):
+                # disable id part if client using http operation to fetch dynamic endpoints
+                self.cmd_ctx.support_id_part = False
+
         if self.cmd.cfg.arg_groups:
             for arg_group in self.cmd.cfg.arg_groups:
                 if arg_group.args:
@@ -170,7 +75,8 @@ class AzCommandGenerator:
                 op_cls_name = to_camel_case(operation.operation_id)
                 if operation.long_running:
                     lr = True
-                op = AzHttpOperationGenerator(op_cls_name, self.cmd_ctx, operation)
+                client_endpoints = self.client.cfg.endpoints if self.client.cfg else None
+                op = AzHttpOperationGenerator(op_cls_name, self.cmd_ctx, operation, client_endpoints=client_endpoints)
                 self.http_operations.append(op)
             elif isinstance(operation, CMDInstanceUpdateOperation):
                 if isinstance(operation.instance_update, CMDJsonInstanceUpdateAction):
@@ -233,7 +139,7 @@ class AzCommandGenerator:
                 else:
                     op = AzGenericUpdateOperationGenerator(self.cmd_ctx, variant_key, is_selector_variant)
                     self.json_instance_operations.append(op)
-                    self.operations = [*self.operations[:max_idx+1], op, *self.operations[max_idx+1:]]
+                    self.operations = [*self.operations[:max_idx + 1], op, *self.operations[max_idx + 1:]]
 
         # Add instance update callbacks
         first_instance_op_idx = None
@@ -244,11 +150,15 @@ class AzCommandGenerator:
                     first_instance_op_idx = idx
                 last_instance_op_idx = idx
         if last_instance_op_idx is not None and len(self.operations) > last_instance_op_idx + 1:
-            post_op_generator = AzLifeCycleInstanceUpdateCallbackGenerator('post_instance_update', self.operations[last_instance_op_idx].variant_key, self.operations[last_instance_op_idx].is_selector_variant)
-            self.operations = [*self.operations[:last_instance_op_idx+1], post_op_generator, *self.operations[last_instance_op_idx+1:]]
+            post_op_generator = AzLifeCycleInstanceUpdateCallbackGenerator('post_instance_update', self.operations[
+                last_instance_op_idx].variant_key, self.operations[last_instance_op_idx].is_selector_variant)
+            self.operations = [*self.operations[:last_instance_op_idx + 1], post_op_generator,
+                               *self.operations[last_instance_op_idx + 1:]]
         if first_instance_op_idx is not None and first_instance_op_idx > 0:
-            pre_op_generator = AzLifeCycleInstanceUpdateCallbackGenerator('pre_instance_update', self.operations[first_instance_op_idx].variant_key, self.operations[last_instance_op_idx].is_selector_variant)
-            self.operations = [*self.operations[:first_instance_op_idx], pre_op_generator, *self.operations[first_instance_op_idx:]]
+            pre_op_generator = AzLifeCycleInstanceUpdateCallbackGenerator('pre_instance_update', self.operations[
+                first_instance_op_idx].variant_key, self.operations[last_instance_op_idx].is_selector_variant)
+            self.operations = [*self.operations[:first_instance_op_idx], pre_op_generator,
+                               *self.operations[first_instance_op_idx:]]
 
         # Add instance create callbacks
         first_instance_op_idx = None
@@ -259,11 +169,14 @@ class AzCommandGenerator:
                     first_instance_op_idx = idx
                 last_instance_op_idx = idx
         if last_instance_op_idx is not None and len(self.operations) > last_instance_op_idx + 1:
-            post_op_generator = AzLifeCycleInstanceUpdateCallbackGenerator('post_instance_create', self.operations[last_instance_op_idx].variant_key, self.operations[last_instance_op_idx].is_selector_variant)
-            self.operations = [*self.operations[:last_instance_op_idx+1], post_op_generator, *self.operations[last_instance_op_idx+1:]]
+            post_op_generator = AzLifeCycleInstanceUpdateCallbackGenerator('post_instance_create', self.operations[
+                last_instance_op_idx].variant_key, self.operations[last_instance_op_idx].is_selector_variant)
+            self.operations = [*self.operations[:last_instance_op_idx + 1], post_op_generator,
+                               *self.operations[last_instance_op_idx + 1:]]
         if first_instance_op_idx is not None and first_instance_op_idx > 0:
             pre_op_generator = AzLifeCycleCallbackGenerator('pre_instance_create')
-            self.operations = [*self.operations[:first_instance_op_idx], pre_op_generator, *self.operations[first_instance_op_idx:]]
+            self.operations = [*self.operations[:first_instance_op_idx], pre_op_generator,
+                               *self.operations[first_instance_op_idx:]]
 
         # Add instance delete callbacks
         first_instance_op_idx = None
@@ -288,9 +201,6 @@ class AzCommandGenerator:
                 self.plane = resource.plane
             elif resource.plane != self.plane:
                 raise ValueError(f"Find multiple planes in a command: {resource.plane}, {self.plane}")
-
-        self.client_type = PlaneEnum.http_client(self.plane)
-        # TODO: add support for DataPlaneClient client_type
 
         # prepare outputs
         self.outputs = []

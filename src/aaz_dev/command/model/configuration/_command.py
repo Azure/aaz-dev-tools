@@ -81,7 +81,8 @@ class CMDCommand(Model):
                         arg.options = [*ref_options[arg.var]]
                     arguments[arg.var] = arg
 
-        arguments = self._handle_duplicated_options(arguments)
+        arguments = handle_duplicated_options(
+            arguments, has_subresource=has_subresource, operation_id=self.operations[-1].operation_id)
         self.arg_groups = self._build_arg_groups(arguments)
 
     def generate_outputs(self, ref_outputs=None, pageable=None):
@@ -248,38 +249,6 @@ class CMDCommand(Model):
 
             self.schema_cls_register_map = schema_cls_register_map
 
-    def _handle_duplicated_options(self, arguments):
-        # check argument with duplicated option names
-        dropped_args = set()
-        used_args = set()
-        for arg in arguments.values():
-            used_args.add(arg.var)
-            if arg.var in dropped_args or not arg.options:
-                continue
-            r_arg = None
-            for v in arguments.values():
-                if v.var in used_args or v.var in dropped_args or arg.var == v.var or not v.options:
-                    continue
-                if not set(arg.options).isdisjoint(v.options):
-                    r_arg = v
-                    break
-            if r_arg:
-                # check whether need to replace argument
-                if self._can_replace_argument(r_arg, arg):
-                    arg.ref_schema.arg = r_arg.var
-                    dropped_args.add(arg.var)
-                elif self._can_replace_argument(arg, r_arg):
-                    r_arg.ref_schema.arg = arg.var
-                    dropped_args.add(r_arg.var)
-                else:
-                    # warning developer handle duplicated options
-                    logger.warning(
-                        f"Duplicated Option Value: {set(arg.options).intersection(r_arg.options)} : "
-                        f"{arg.var} with {r_arg.var} : {self.operations[-1].operation_id}"
-                    )
-
-        return [arg for var, arg in arguments.items() if var not in dropped_args]
-
     @staticmethod
     def _build_arg_groups(arguments):
         # build argument groups
@@ -298,44 +267,6 @@ class CMDCommand(Model):
             group.args = [arg for arg in args.values()]
             groups.append(group)
         return groups or None
-
-    def _can_replace_argument(self, arg, old_arg):
-        arg_prefix = arg.var.split('.')[0]
-        old_prefix = old_arg.var.split('.')[0]
-
-        if old_prefix in (CMDArgBuildPrefix.Query, CMDArgBuildPrefix.Header, CMDArgBuildPrefix.Path):
-            # replace argument should only be in body
-            return False
-
-        if arg_prefix in (CMDArgBuildPrefix.Query, CMDArgBuildPrefix.Header):
-            # only support path argument to replace
-            return False
-
-        elif arg_prefix == CMDArgBuildPrefix.Path:
-            # path argument
-            if self.subresource_selector is not None:
-                return False
-
-            arg_schema_required = arg.ref_schema.required
-            arg_schema_name = arg.ref_schema.name
-            try:
-                # temporary assign required and name for diff
-                arg.ref_schema.required = old_arg.ref_schema.required
-                if old_arg.ref_schema.name == "name" and "name" in arg.options:
-                    arg.ref_schema.name = "name"
-                diff = arg.ref_schema.diff(old_arg.ref_schema, level=CMDDiffLevelEnum.Structure)
-                if diff:
-                    return False
-                return True
-            finally:
-                arg.ref_schema.name = arg_schema_name
-                arg.ref_schema.required = arg_schema_required
-        else:
-            # body argument
-            diff = arg.ref_schema.diff(old_arg.ref_schema, level=CMDDiffLevelEnum.Structure)
-            if diff:
-                return False
-            return True
 
     @staticmethod
     def _build_output_type_schema(schema):
@@ -388,3 +319,75 @@ class CMDCommand(Model):
         else:
             raise NotImplementedError()
         return output
+
+
+def handle_duplicated_options(arguments, has_subresource, operation_id):
+    # check argument with duplicated option names
+    dropped_args = set()
+    used_args = set()
+    for arg in arguments.values():
+        used_args.add(arg.var)
+        if arg.var in dropped_args or not arg.options:
+            continue
+        r_arg = None
+        for v in arguments.values():
+            if v.var in used_args or v.var in dropped_args or arg.var == v.var or not v.options:
+                continue
+            if not set(arg.options).isdisjoint(v.options):
+                r_arg = v
+                break
+        if r_arg:
+            # check whether you need to replace argument
+            if _can_replace_argument(r_arg, arg, has_subresource):
+                arg.ref_schema.arg = r_arg.var
+                dropped_args.add(arg.var)
+            elif _can_replace_argument(arg, r_arg, has_subresource):
+                r_arg.ref_schema.arg = arg.var
+                dropped_args.add(r_arg.var)
+            else:
+                # warning developer handle duplicated options
+                logger.warning(
+                    f"Duplicated Option Value: {set(arg.options).intersection(r_arg.options)} : "
+                    f"{arg.var} with {r_arg.var} : {operation_id}"
+                )
+
+    return [arg for var, arg in arguments.items() if var not in dropped_args]
+
+
+def _can_replace_argument(arg, old_arg, has_subresource):
+    arg_prefix = arg.var.split('.')[0]
+    old_prefix = old_arg.var.split('.')[0]
+
+    if old_prefix in (CMDArgBuildPrefix.Query, CMDArgBuildPrefix.Header, CMDArgBuildPrefix.Path):
+        # replace argument should only be in body
+        return False
+
+    if arg_prefix in (CMDArgBuildPrefix.Query, CMDArgBuildPrefix.Header):
+        # only support path argument to replace
+        return False
+
+    elif arg_prefix == CMDArgBuildPrefix.Path:
+        # path argument
+        if has_subresource:
+            return False
+
+        arg_schema_required = arg.ref_schema.required
+        arg_schema_name = arg.ref_schema.name
+        try:
+            # temporary assign required and name for diff
+            arg.ref_schema.required = old_arg.ref_schema.required
+            if old_arg.ref_schema.name == "name" and "name" in arg.options:
+                arg.ref_schema.name = "name"
+            diff = arg.ref_schema.diff(old_arg.ref_schema, level=CMDDiffLevelEnum.Structure)
+            if diff:
+                return False
+            return True
+        finally:
+            arg.ref_schema.name = arg_schema_name
+            arg.ref_schema.required = arg_schema_required
+    else:
+        # body argument
+        diff = arg.ref_schema.diff(old_arg.ref_schema, level=CMDDiffLevelEnum.Structure)
+        if diff:
+            return False
+        return True

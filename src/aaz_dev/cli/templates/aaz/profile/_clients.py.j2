@@ -1,0 +1,73 @@
+{% extends "python.j2" %}
+{% import "macros.j2" as fn %}
+{% block pylint %}
+# pylint: skip-file
+# flake8: noqa
+{% endblock %}
+
+{% block imports %}
+from azure.cli.core.aaz import *
+{% endblock %}
+
+{% block code %}
+{%- for client in leaf.iter_clients() %}
+
+@register_client({{ client.registered_name|constant_convert }})
+class {{ client.cls_name }}(AAZBaseClient):
+
+    {%- if client.endpoints.type == "template" %}
+    _CLOUD_HOST_TEMPLATES = {
+        {%- for cloud, template in client.endpoints.iter_hosts() %}
+        CloudNameEnum.{{cloud}}: {{ template|constant_convert }},
+        {%- endfor %}
+    }
+    {%- elif client.endpoints.type == "http-operation" %}
+
+    {%- endif %}
+
+    _AAD_CREDENTIAL_SCOPES = [
+        {%- for scope in client.aad_scopes %}
+        {{ scope|constant_convert }},
+        {%- endfor %}
+    ]
+
+    @classmethod
+    def _build_base_url(cls, ctx, **kwargs):
+        {%- if client.endpoints.type == "template" %}
+        return cls._CLOUD_HOST_TEMPLATES.get(ctx.cli_ctx.cloud.name, None)
+        {%- elif client.endpoints.type == "http-operation" %}
+        cls._fetch_endpoint(ctx, **kwargs)
+        host = ctx.selectors.{{client.endpoints.selector.name}}.required().to_serialized_data()
+        if not isinstance(host, str):
+            raise ValueError(f"Invalid host value: '{host}'")
+        return host
+        {%- endif %}
+
+    @classmethod
+    def _build_configuration(cls, ctx, credential, **kwargs):
+        return AAZClientConfiguration(
+            credential=credential,
+            credential_scopes=cls._AAD_CREDENTIAL_SCOPES,
+            **kwargs
+        )
+
+    {%- if client.endpoints.type == "http-operation" %}
+
+    @classmethod
+    def _fetch_endpoint(cls, ctx, **kwargs):
+        cls.{{ client.endpoints.selector.cls_name }}(ctx=ctx, name={{client.endpoints.selector.name|constant_convert}})
+        cls.{{ client.endpoints.operation.name }}(ctx=ctx)()
+    {{ fn.generate_json_selector(client.endpoints.selector) }}
+    {{ fn.generate_http_operation(client.endpoints.operation, client.endpoints.client_name, client.helper_cls_name, false) }}
+    {%- endif %}
+
+{{ fn.generate_helper_cls(client) }}
+{{ "" }}
+{%- endfor %}
+
+__all__ = [
+    {%- for client in leaf.iter_clients() %}
+    {{ client.cls_name|constant_convert }},
+    {%- endfor %}
+]
+{% endblock %}

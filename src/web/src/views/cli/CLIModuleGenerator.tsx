@@ -304,7 +304,7 @@ function GenerateDialog(props: {
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: "100%" }}>
-                        <LinearProgress color="info" />
+                        <LinearProgress color="secondary" />
                     </Box>
                 }
                 {!updating && <React.Fragment>

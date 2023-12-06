@@ -1,0 +1,32 @@
+{
+    "rp_name": "Microsoft.ChangeAnalysis",
+    "resourceType": "change",
+    "apiVersion": "2021-04-01",
+    "learnMore": {
+        "url": "https://docs.microsoft.com/cli/azure/change-analysis"
+    },
+    "commands": [
+        {
+            "name": "az change-analysis list",
+            "description": "List the changes of resources in the subscription within the specified time range. Customer data will always be masked.",
+            "path": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ChangeAnalysis/changes",
+            "confirmation": false,
+            "help": {
+                "learnMore": {
+                    "url": "https://docs.microsoft.com/cli/azure/change-analysis#az-change-analysis-list"
+                },
+                "parameterSets": [
+                    {
+                        "parameters": [
+                            "[--resource-group]",
+                            "[--subscription]",
+                            "[--end-time]",
+                            "[--skip-token]",
+                            "[--start-time]"
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

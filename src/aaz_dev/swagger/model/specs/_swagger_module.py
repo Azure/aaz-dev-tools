@@ -7,7 +7,7 @@ from ._resource_provider import ResourceProvider
 class SwaggerModule:
 
     def __init__(self, plane, name, folder_path, parent=None):
-        assert plane in PlaneEnum.choices()
+        assert plane == PlaneEnum.Mgmt or PlaneEnum.is_data_plane(plane), f"Invalid plane: '{plane}'"
         self.plane = plane
         self.name = name
         self.folder_path = folder_path
@@ -74,26 +74,17 @@ class DataPlaneModule(SwaggerModule):
             path = os.path.join(self.folder_path, name)
             if os.path.isdir(path):
                 if name.lower() in ('preview', 'stable'):
-                    readme_path = _search_readme_md_path(self.folder_path)
-                    rp = [ResourceProvider(self.name, self.folder_path, readme_path, swagger_module=self)]
-                    break
+                    continue
                 name_parts = name.split('.')
                 if len(name_parts) >= 2:
                     readme_path = _search_readme_md_path(path, search_parent=True)
                     rp.append(ResourceProvider(name, path, readme_path, swagger_module=self))
                 elif name.lower() != 'common':
-                    has_sub_module = True
-                    for sub_name in os.listdir(path):
-                        sub_module_path = os.path.join(path, sub_name)
-                        if os.path.isdir(sub_module_path) and sub_name.lower() in ('preview', 'stable'):
-                            has_sub_module = False
-                            break
-                    if has_sub_module:
-                        sub_module = DataPlaneModule(plane=self.plane, name=name, folder_path=path, parent=self)
-                        rp.extend(sub_module.get_resource_providers())
-                    else:
-                        readme_path = _search_readme_md_path(path, search_parent=True)
-                        rp.append(ResourceProvider(name, path, readme_path, swagger_module=self))
+                    sub_module = DataPlaneModule(plane=self.plane, name=name, folder_path=path, parent=self)
+                    rp.extend(sub_module.get_resource_providers())
+        scope = PlaneEnum.get_data_plane_scope(self.plane)
+        if scope:
+            rp = [r for r in rp if r.name.lower() == scope]
         return rp
 
 

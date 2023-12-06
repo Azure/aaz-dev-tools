@@ -46,7 +46,6 @@ class CfgReader:
                 if swagger_resource_path_to_resource_id(http.path) != resource_id:
                     continue
                 methods.add(http.request.method.lower())
-                # if isinstance(op, CMDHttpOperation)
         return tuple(methods) or None
 
     def get_update_cmd(self, resource_id, subresource=None):
@@ -134,6 +133,18 @@ class CfgReader:
 
         for result in self.iter_commands(filter=_filter_by_operation):
             yield result
+
+    def iter_command_group_names(self, parent=None):
+        parent_name_len = len(parent.name.split(" ")) if parent else 0
+        parent = parent or self.cfg
+        if not parent.command_groups:
+            return
+        for sub_group in parent.command_groups:
+            sub_names = sub_group.name.split(" ")
+            for i in range(parent_name_len, len(sub_names)):
+                yield sub_names[:i+1]
+            for names in self.iter_command_group_names(parent=sub_group):
+                yield names
 
     def find_command_group(self, *cg_names, parent=None):
         parent = parent or self.cfg

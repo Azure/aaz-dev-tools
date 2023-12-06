@@ -100,10 +100,12 @@ class CMDVersionField(StringType):
     def __init__(self, *args, **kwargs):
         super(CMDVersionField, self).__init__(*args, **kwargs)
 
+
 class CMDConfirmation(StringType):
 
     def __int__(self, *args, **kwargs):
         super(CMDConfirmation, self).__init__(*args, **kwargs)
+
 
 class CMDResourceIdField(StringType):
 

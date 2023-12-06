@@ -1,10 +1,11 @@
-import { Autocomplete, createFilterOptions, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, InputLabel, LinearProgress, Alert } from '@mui/material';
+import { Autocomplete, createFilterOptions, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, InputLabel, Alert } from '@mui/material';
 import { Box } from '@mui/system';
 import axios from 'axios';
 import * as React from 'react';
 import { Url } from 'url';
 import { SwaggerItemSelector } from './WSEditorSwaggerPicker';
 import styled from '@emotion/styled';
+import { Plane } from './WSEditorCommandContent';
 
 
 interface Workspace {
@@ -168,12 +169,6 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
     }
 }
 
-interface Plane {
-    name: string,
-    displayName: string,
-    moduleOptions?: string[],
-}
-
 interface WorkspaceCreateDialogProps {
     openDialog: boolean,
     name: string,
@@ -281,7 +276,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
 
     loadSwaggerModules = async (plane: Plane | null) => {
         if (plane !== null) {
-            if (plane!.moduleOptions?.length ?? 0 > 0) {
+            if (plane!.moduleOptions?.length) {
                 this.setState({
                     moduleOptions: plane!.moduleOptions!,
                     moduleOptionsCommonPrefix: `/Swagger/Specs/${plane!.name}/`,

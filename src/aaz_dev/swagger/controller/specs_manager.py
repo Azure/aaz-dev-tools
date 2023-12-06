@@ -14,7 +14,7 @@ class SwaggerSpecsModuleManager:
         self._rps_catch = None
         self._resource_op_group_map_cache = {}
         self._resource_map_cache = {}
-        assert plane in PlaneEnum.choices(), f"Invalid plane: '{self.plane}'"
+        assert plane == PlaneEnum.Mgmt or PlaneEnum.is_data_plane(plane), f"Invalid plane: '{self.plane}'"
         assert isinstance(module, SwaggerModule), f"Invalid module type: '{type(module)}'"
 
     def get_resource_providers(self):
@@ -136,7 +136,7 @@ class SwaggerSpecsManager:
 
         if plane == PlaneEnum.Mgmt:
             modules = self.specs.get_mgmt_plane_modules(plane=plane)
-        elif plane == PlaneEnum.Data:
+        elif PlaneEnum.is_data_plane(plane):
             modules = self.specs.get_data_plane_modules(plane=plane)
         else:
             raise exceptions.InvalidAPIUsage(f"invalid plane name '{plane}'")
@@ -158,7 +158,7 @@ class SwaggerSpecsManager:
 
         if plane == PlaneEnum.Mgmt:
             module = self.specs.get_mgmt_plane_module(*mod_names, plane=plane)
-        elif plane == PlaneEnum.Data:
+        elif PlaneEnum.is_data_plane(plane):
             module = self.specs.get_data_plane_module(*mod_names, plane=plane)
         else:
             raise exceptions.InvalidAPIUsage(f"invalid plane name '{plane}'")
@@ -174,3 +174,8 @@ class SwaggerSpecsManager:
             self._module_managers_cache[key] = SwaggerSpecsModuleManager(plane, module)
 
         return self._module_managers_cache[key]
+
+    def get_swagger_resource(self, plane, mod_names, resource_id, version):
+        return self.get_module_manager(
+            plane=plane, mod_names=mod_names
+        ).get_resource_in_version(resource_id, version)

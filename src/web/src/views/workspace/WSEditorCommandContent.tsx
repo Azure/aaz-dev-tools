@@ -11,6 +11,13 @@ import LabelIcon from '@mui/icons-material/Label';
 import WSEditorCommandArgumentsContent, { ClsArgDefinitionMap, CMDArg, DecodeArgs } from './WSEditorCommandArgumentsContent';
 import EditIcon from '@mui/icons-material/Edit';
 
+
+interface Plane {
+    name: string,
+    displayName: string,
+    moduleOptions?: string[],
+}
+
 interface Example {
     name: string,
     commands: string[],
@@ -41,6 +48,10 @@ interface Command {
     clsArgDefineMap?: ClsArgDefinitionMap
 }
 
+interface ClientConfig {
+    args?: CMDArg[]
+}
+
 interface ResponseCommand {
     names: string[],
     help?: {
@@ -67,16 +78,16 @@ interface WSEditorCommandContentProps {
 }
 
 interface WSEditorCommandContentState {
-    command?: Command
-    displayCommandDialog: boolean
-    displayExampleDialog: boolean
-    displayCommandDeleteDialog: boolean
-    displayAddSubcommandDialog: boolean
+    command?: Command,
+    displayCommandDialog: boolean,
+    displayExampleDialog: boolean,
+    displayCommandDeleteDialog: boolean,
+    displayAddSubcommandDialog: boolean,
     subcommandDefaultGroupNames?: string[],
     subcommandArgVar?: string,
     subcommandSubArgOptions?: { var: string, options: string }[],
-    exampleIdx?: number
-    loading: boolean
+    exampleIdx?: number,
+    loading: boolean,
 }
 
 const commandPrefix = 'az '
@@ -134,7 +145,6 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         let { workspaceUrl, previewCommand } = this.props
         let commandNames = previewCommand.names;
         const leafUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + commandNames.slice(0, -1).join('/') + '/Leaves/' + commandNames[commandNames.length - 1];
-        
         try {
             let res = await axios.get(leafUrl);
             let command = DecodeResponseCommand(res.data);
@@ -147,6 +157,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
         } catch (err: any) {
             this.setState({ loading: false })
             console.error(err)
+            return
         }
     }
 
@@ -280,7 +291,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             <SubtitleTypography sx={{ flexShrink: 0 }} >{example.name}</SubtitleTypography>
                             {/* <Box sx={{ flexGrow: 1 }} /> */}
                             <Button sx={{ flexShrink: 0, ml: 3 }}
-                                startIcon={<EditIcon color="info" fontSize='small' />}
+                                startIcon={<EditIcon color="secondary" fontSize='small' />}
                                 onClick={() => { this.onExampleDialogDisplay(idx) }}
                             >
                                 <ExampleEditTypography>Edit</ExampleEditTypography>
@@ -367,7 +378,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                     justifyContent: "flex-start"
                 }}>
                     {loading && <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
+                        <LinearProgress color='secondary' />
                     </Box>}
                     {!loading && <Box sx={{
                         display: "flex",
@@ -377,7 +388,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                     }}>
 
                         <Button
-                            variant='contained' size="small" color='info' disableElevation
+                            variant='contained' size="small" color='secondary' disableElevation
                             onClick={this.onCommandDialogDisplay}
                             disabled={loading}
                             sx={{ mr: 2 }}
@@ -387,7 +398,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             </Typography>
                         </Button>
                         <Button
-                            variant='outlined' size="small" color='info'
+                            variant='outlined' size="small" color='secondary'
                             onClick={this.onCommandDeleteDialogDisplay}
                             disabled={loading}
                             sx={{ mr: 2 }}
@@ -397,7 +408,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                             </Typography>
                         </Button>
                         <Button
-                            variant='outlined' size="small" color='info'
+                            variant='outlined' size="small" color='secondary'
                             sx={{ mr: 2 }}
                             disabled
                         >
@@ -463,7 +474,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                     flexDirection: "row-reverse",
                 }}>
                     <Button
-                        variant='contained' size="small" color='info' disableElevation
+                        variant='contained' size="small" color='secondary' disableElevation
                         onClick={() => this.onExampleDialogDisplay(undefined)}
                     >
                         <Typography variant='body2'>
@@ -539,7 +550,7 @@ function CommandDeleteDialog(props: {
         Promise.all(promisesAll)
             .then(responses => {
                 const commands = new Set<string>();
-                responses.forEach(response => {
+                responses.forEach((response: any) => {
                     const responseCommands: ResponseCommand[] = response.data
                     responseCommands
                         .map(responseCommand => DecodeResponseCommand(responseCommand))
@@ -590,7 +601,7 @@ function CommandDeleteDialog(props: {
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
+                        <LinearProgress color='secondary' />
                     </Box>
                 }
                 {!updating && <React.Fragment>
@@ -826,7 +837,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
                 <DialogActions>
                     {updating &&
                         <Box sx={{ width: '100%' }}>
-                            <LinearProgress color='info' />
+                            <LinearProgress color='secondary' />
                         </Box>
                     }
                     {!updating && <React.Fragment>
@@ -1144,7 +1155,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
                             edge="start"
                             color="inherit"
                             onClick={this.onAddExampleCommand}
-                            aria-label="remove"
+                            aria-label="add"
                         >
                             <AddCircleRoundedIcon fontSize="small" />
                         </IconButton>
@@ -1154,7 +1165,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
                 <DialogActions>
                     {updating &&
                         <Box sx={{ width: '100%' }}>
-                            <LinearProgress color='info' />
+                            <LinearProgress color='secondary' />
                         </Box>
                     }
                     {!updating && <React.Fragment>
@@ -1254,7 +1265,7 @@ function AddSubcommandDialog(props: {
         setUpdating(true);
 
         try {
-            await  axios.post(urls[0], {
+            await axios.post(urls[0], {
                 ...data,
                 arg: props.argVar,
             })
@@ -1328,7 +1339,7 @@ function AddSubcommandDialog(props: {
         <DialogActions>
             {updating &&
                 <Box sx={{ width: '100%' }}>
-                    <LinearProgress color='info' />
+                    <LinearProgress color='secondary' />
                 </Box>
             }
             {!updating && <>
@@ -1363,8 +1374,18 @@ const DecodeResponseCommand = (command: ResponseCommand): Command => {
 
     return cmd;
 }
+
+const DecodeResponseClientConfig = (clientConfig: any): ClientConfig => {
+    if (clientConfig.argGroups === undefined) {
+        return {}
+    }
+    return {
+        args: DecodeArgs(clientConfig.argGroups!).args
+    }
+}
+
 export default WSEditorCommandContent;
 
 export { DecodeResponseCommand };
-export type { Command, Resource, ResponseCommand, ResponseCommands };
+export type { Plane, Command, Resource, ResponseCommand, ResponseCommands };
 

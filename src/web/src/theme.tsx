@@ -9,14 +9,14 @@ const rawTheme = createTheme({
             dark: '#1e1e1f',
         },
         secondary: {
-            light: '#fff5f8',
-            main: '#ff3366',
-            dark: '#e62958',
-        },
-        info: {
             light: '#cccfff',
             main: '#5d64cf',
             dark: '#464c99',
+        },
+        info: {
+            light: '#fff5f8',
+            main: '#ff3366',
+            dark: '#e62958',
         },
         warning: {
             main: '#ffc071',

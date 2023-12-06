@@ -8,11 +8,12 @@ from utils import exceptions
 from utils.base64 import b64encode_str
 from utils.case import to_camel_case
 from .cfg_reader import CfgReader
+from .workspace_helper import ArgumentUpdateMixin
 
 logger = logging.getLogger('backend')
 
 
-class WorkspaceCfgEditor(CfgReader):
+class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
 
     @staticmethod
     def get_cfg_folder(ws_folder, resource_id):
@@ -257,58 +258,8 @@ class WorkspaceCfgEditor(CfgReader):
         arg, _ = self.find_arg_by_var(*cmd_names, arg_var=arg_var)
         if not arg:
             return None
-        if isinstance(arg, CMDArg):
-            self._update_cmd_arg(arg, **kwargs)
-        if isinstance(arg, CMDBooleanArg):
-            self._update_boolean_arg(arg, **kwargs)
-        if isinstance(arg, CMDClsArg):
-            self._update_cls_arg(arg, **kwargs)
-        if isinstance(arg, CMDArrayArg):
-            self._update_array_arg(arg, **kwargs)
-
+        self._update_arg(arg, **kwargs)
         self.reformat()
-
-    def _update_cmd_arg(self, arg, **kwargs):
-        if 'options' in kwargs:
-            arg.options = kwargs['options']
-        if 'stage' in kwargs:
-            arg.stage = kwargs['stage']
-        if 'hide' in kwargs:
-            if kwargs['hide'] and arg.required:
-                raise exceptions.ResourceConflict("Cannot hide required argument")
-            arg.hide = kwargs['hide']
-        if 'group' in kwargs:
-            arg.group = kwargs['group']
-        if 'help' in kwargs:
-            arg.help = CMDArgumentHelp(kwargs['help'])
-        if 'default' in kwargs:
-            if kwargs['default'] is None:
-                arg.default = None
-            else:
-                arg.default = CMDArgDefault(kwargs['default'])
-        if 'configurationKey' in kwargs:
-            arg.configuration_key = kwargs['configurationKey']
-        if 'prompt' in kwargs:
-            if kwargs['prompt'] is None:
-                arg.prompt = None
-            elif 'confirm' in kwargs['prompt']:
-                arg.prompt = CMDPasswordArgPromptInput(kwargs['prompt'])
-                arg.blank = None
-            else:
-                arg.prompt = CMDArgPromptInput(kwargs['prompt'])
-                arg.blank = None
-
-    def _update_boolean_arg(self, arg, **kwargs):
-        if 'reverse' in kwargs:
-            arg.reverse = kwargs['reverse'] or False
-
-    def _update_cls_arg(self, arg, **kwargs):
-        if 'singularOptions' in kwargs:
-            arg.singular_options = kwargs['singularOptions'] or None
-
-    def _update_array_arg(self, arg, **kwargs):
-        if 'singularOptions' in kwargs:
-            arg.singular_options = kwargs['singularOptions'] or None
 
     def unwrap_cls_arg(self, *cmd_names, arg_var):
         command = self.find_command(*cmd_names)
@@ -1372,6 +1323,16 @@ class WorkspaceCfgEditor(CfgReader):
         return selector
 
     @classmethod
+    def _build_simple_index_base(cls, schema, idx, index=None, **kwargs):
+        if index is None:
+            if not isinstance(schema, CMDSimpleIndexBase.supported_schema_types):
+                raise NotImplementedError(f"Not support schema '{type(schema)}'")
+            index = CMDSimpleIndexBase()
+        if idx:
+            raise exceptions.InvalidAPIUsage(f"Not support remain index {idx}")
+        return index
+
+    @classmethod
     def _build_object_index_base(cls, schema, idx, index=None, prune=False, **kwargs):
         assert isinstance(schema, CMDObjectSchemaBase)
 
@@ -1383,43 +1344,52 @@ class WorkspaceCfgEditor(CfgReader):
 
         current_idx = idx[0]
         remain_idx = idx[1:]
+        find_idx = False
 
         if schema.props:
             for prop in schema.props:
-                if prop.name == current_idx:
-                    if prune:
-                        assert isinstance(index, CMDSelectorIndex)
-                        name = f"{index.name}.{prop.name}"
-                        if isinstance(prop, CMDClsSchema):
-                            prop = prop.implement
-                        # ignore the current index, return the sub index with index.name prefix
-                        if isinstance(prop, CMDObjectSchema):
-                            return cls._build_object_index(prop, remain_idx, name=name, **kwargs)
-                        elif isinstance(prop, CMDArraySchema):
-                            return cls._build_array_index(prop, remain_idx, name=name, **kwargs)
-                        else:
-                            raise NotImplementedError()
+                if prop.name != current_idx:
+                    continue
+                find_idx = True
+                if prune:
+                    assert isinstance(index, CMDSelectorIndex)
+                    name = f"{index.name}.{prop.name}"
+                    if isinstance(prop, CMDClsSchema):
+                        prop = prop.implement
+                    # ignore the current index, return the sub index with index.name prefix
+                    if isinstance(prop, CMDObjectSchema):
+                        return cls._build_object_index(prop, remain_idx, name=name, **kwargs)
+                    elif isinstance(prop, CMDArraySchema):
+                        return cls._build_array_index(prop, remain_idx, name=name, **kwargs)
                     else:
-                        name = prop.name
-                        if isinstance(prop, CMDClsSchema):
-                            prop = prop.implement
-                        if isinstance(prop, CMDObjectSchema):
-                            index.prop = cls._build_object_index(prop, remain_idx, name=name, **kwargs)
-                            break
-                        elif isinstance(prop, CMDArraySchema):
-                            index.prop = cls._build_array_index(prop, remain_idx, name=name, **kwargs)
-                            break
-                        else:
-                            raise NotImplementedError()
+                        return cls._build_simple_index(prop, remain_idx, name=name, **kwargs)
+                else:
+                    name = prop.name
+                    if isinstance(prop, CMDClsSchema):
+                        prop = prop.implement
+                    if isinstance(prop, CMDObjectSchema):
+                        index.prop = cls._build_object_index(prop, remain_idx, name=name, **kwargs)
+                        break
+                    elif isinstance(prop, CMDArraySchema):
+                        index.prop = cls._build_array_index(prop, remain_idx, name=name, **kwargs)
+                        break
+                    else:
+                        index.prop = cls._build_simple_index(prop, remain_idx, name=name, **kwargs)
+                        break
 
         if schema.discriminators:
             for disc in schema.discriminators:
                 if disc.get_safe_value() == current_idx:
+                    find_idx = True
                     index.discriminator = cls._build_object_index_discriminator(disc, remain_idx, **kwargs)
                     break
 
         if schema.additional_props and current_idx == "{}":
+            find_idx = True
             index.additional_props = cls._build_object_index_additional_prop(schema.additional_props, remain_idx, **kwargs)
+
+        if not find_idx:
+            raise exceptions.InvalidAPIUsage(f"Cannot find remain index {idx}")
 
         return index
 
@@ -1435,7 +1405,8 @@ class WorkspaceCfgEditor(CfgReader):
 
         current_idx = idx[0]
         remain_idx = idx[1:]
-        assert current_idx == '[]'
+        if current_idx != '[]':
+            raise exceptions.InvalidAPIUsage(f"Cannot find index '{idx}'")
 
         item = schema.item
         if isinstance(item, CMDClsSchemaBase):
@@ -1446,7 +1417,7 @@ class WorkspaceCfgEditor(CfgReader):
         if not identifier_names and isinstance(item, CMDObjectSchemaBase):
             prop_names = {prop.name for prop in item.props}
             if 'id' in prop_names and 'name' in prop_names:
-                # use name as default identifier when schema containes 'id' property
+                # use name as default identifier when schema contains 'id' property
                 identifier_names = ['name']
 
         if identifier_names:
@@ -1473,9 +1444,17 @@ class WorkspaceCfgEditor(CfgReader):
         elif isinstance(item, CMDArraySchemaBase):
             index.item = cls._build_array_index_base(item, remain_idx, **kwargs)
         else:
-            raise NotImplementedError()
+            index.item = cls._build_simple_index_base(item, remain_idx, **kwargs)
 
         return index
+
+    @classmethod
+    def _build_simple_index(cls, schema, idx, name, **kwargs):
+        if not isinstance(schema, CMDSimpleIndex.supported_schema_types):
+            raise NotImplementedError(f"Not support schema '{type(schema)}'")
+        index = CMDSimpleIndex()
+        index.name = name
+        return cls._build_simple_index_base(schema, idx, index=index, **kwargs)
 
     @classmethod
     def _build_object_index(cls, schema, idx, name, **kwargs):
@@ -1503,27 +1482,36 @@ class WorkspaceCfgEditor(CfgReader):
         current_idx = idx[0]
         remain_idx = idx[1:]
 
+        find_idx = False
+
         if schema.props:
             for prop in schema.props:
-                if prop.name == current_idx:
-                    name = prop.name
-                    if isinstance(prop, CMDClsSchema):
-                        prop = prop.implement
+                if prop.name != current_idx:
+                    continue
+                find_idx = True
+                name = prop.name
+                if isinstance(prop, CMDClsSchema):
+                    prop = prop.implement
 
-                    if isinstance(prop, CMDObjectSchema):
-                        index.prop = cls._build_object_index(prop, remain_idx, name, **kwargs)
-                        break
-                    elif isinstance(prop, CMDArraySchema):
-                        index.prop = cls._build_array_index(prop, remain_idx, name, **kwargs)
-                        break
-                    else:
-                        raise NotImplementedError()
+                if isinstance(prop, CMDObjectSchema):
+                    index.prop = cls._build_object_index(prop, remain_idx, name, **kwargs)
+                    break
+                elif isinstance(prop, CMDArraySchema):
+                    index.prop = cls._build_array_index(prop, remain_idx, name, **kwargs)
+                    break
+                else:
+                    index.prop = cls._build_simple_index(prop, remain_idx, name, **kwargs)
+                    break
 
         if schema.discriminators:
             for disc in schema.discriminators:
                 if disc.get_safe_value() == current_idx:
+                    find_idx = True
                     index.discriminator = cls._build_object_index_discriminator(disc, remain_idx, **kwargs)
                     break
+
+        if not find_idx:
+            raise exceptions.InvalidAPIUsage(f"Cannot find remain index {idx}")
 
         return index
 
@@ -1545,7 +1533,7 @@ class WorkspaceCfgEditor(CfgReader):
         elif isinstance(item, CMDArraySchemaBase):
             index.item = cls._build_array_index_base(item, idx, **kwargs)
         else:
-            raise NotImplementedError()
+            index.item = cls._build_simple_index_base(item, idx, **kwargs)
 
         return index
 
@@ -1598,3 +1586,36 @@ class WorkspaceCfgEditor(CfgReader):
             raise exceptions.InvalidAPIUsage(f"Always miss class implements for {miss_implement_cls_names}")
 
         return schema
+
+
+def build_endpoint_selector_for_client_config(get_op, subresource_idx, **kwargs):
+    # find response body
+    response_json = None
+    for response in get_op.http.responses:
+        if response.is_error:
+            continue
+        if not isinstance(response.body, CMDHttpResponseJsonBody):
+            continue
+        if response.body.json.var == CMDBuildInVariants.EndpointInstance:
+            response_json = response.body.json
+            break
+
+    assert isinstance(response_json, CMDResponseJson)
+    idx = WorkspaceCfgEditor.idx_to_list(subresource_idx)
+    selector = CMDJsonSubresourceSelector()
+    selector.ref = response_json.var
+    selector.var = CMDBuildInVariants.Endpoint
+    if isinstance(response_json.schema, CMDObjectSchemaBase):
+        index = CMDObjectIndex()
+        index.name = 'response'
+        selector.json = WorkspaceCfgEditor._build_object_index_base(
+            response_json.schema, idx, index=index, **kwargs)
+    elif isinstance(response_json.schema, CMDArraySchemaBase):
+        index = CMDArrayIndex()
+        index.name = 'response'
+        selector.json = WorkspaceCfgEditor._build_array_index_base(
+            response_json.schema, idx, index=index, **kwargs)
+    else:
+        raise NotImplementedError(f"Not support schema {type(response_json.schema)}")
+
+    return selector

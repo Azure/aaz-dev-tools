@@ -231,6 +231,7 @@ class SchemaTest(SwaggerSpecsTestCase):
     def test_lro_final_state_schema(self):
         from functools import reduce
         from swagger.controller.command_generator import CommandGenerator
+        from command.model.configuration import CMDBuildInVariants
 
         rp = next(self.get_mgmt_plane_resource_providers(
             module_filter=lambda m: m.name == "dnsresolver",
@@ -244,7 +245,8 @@ class SchemaTest(SwaggerSpecsTestCase):
 
         generator = CommandGenerator()
         generator.load_resources([resource])
-        command_group = generator.create_draft_command_group(resource, methods={"put"})  # only modify PUT operation
+        command_group = generator.create_draft_command_group(
+            resource, instance_var=CMDBuildInVariants.Instance, methods={"put"})  # only modify PUT operation
         responses = command_group.commands[0].operations[0].http.responses
         status_codes = reduce(lambda x, y: x + y, [r.status_codes for r in responses])
 

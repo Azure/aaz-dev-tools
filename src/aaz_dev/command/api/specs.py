@@ -113,25 +113,10 @@ def filter_resources(plane):
 # planes
 @bp.route("/Planes", methods=("Get", ))
 def list_planes():
-    result = [
-        {
-            "name": PlaneEnum.Mgmt,
-            **PlaneEnum._config[PlaneEnum.Mgmt],
-        },
-        # {
-        #     "name": PlaneEnum.Data,
-        #     **PlaneEnum._config[PlaneEnum.Data],
-        # }
-    ]
+    result = []
+    for name, items in PlaneEnum._config.items():
+        result.append({
+            "name": name,
+            **items,
+        })
     return jsonify(result)
-
-
-# TODO: this api is called when data plane workspaces export aaz model.
-# @bp.route("/Planes/" + PlaneEnum.Data +"/ResourceProviders/{name: rp_name}", method=("GET", "PUT"))
-# def data_plane_resource_provider_config(rp_name):
-#     if request.method == "GET":
-#         # Get Data Plane Resource Provider Configuration
-#         pass
-#     elif request.method == "PUT":
-#         # Create or Update Data plane resource provider configuration
-#         pass

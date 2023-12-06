@@ -1,8 +1,9 @@
-from command.model.configuration import CMDHttpOperation, CMDHttpRequestJsonBody, CMDArraySchema, \
-    CMDInstanceUpdateOperation, CMDRequestJson, CMDHttpResponseJsonBody, CMDObjectSchema, CMDSchema, \
-    CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase, CMDBooleanSchemaBase, CMDObjectSchemaBase, \
-    CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction, CMDObjectSchemaDiscriminator, CMDSchemaEnum, \
-    CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction, CMDInstanceCreateOperation, CMDInstanceDeleteOperation
+from command.model.configuration import (
+    CMDHttpOperation, CMDHttpRequestJsonBody, CMDArraySchema, CMDInstanceUpdateOperation, CMDRequestJson,
+    CMDHttpResponseJsonBody, CMDObjectSchema, CMDSchema, CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase,
+    CMDBooleanSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction,
+    CMDObjectSchemaDiscriminator, CMDSchemaEnum, CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction,
+    CMDInstanceCreateOperation, CMDInstanceDeleteOperation, CMDClientEndpointsByTemplate)
 from utils import exceptions
 from utils.case import to_snake_case
 from utils.error_format import AAZErrorFormatEnum
@@ -41,9 +42,11 @@ class AzLifeCycleInstanceUpdateCallbackGenerator(AzLifeCycleCallbackGenerator):
 
 class AzHttpOperationGenerator(AzOperationGenerator):
 
-    def __init__(self, name, cmd_ctx, operation):
+    def __init__(self, name, cmd_ctx, operation, client_endpoints):
         super().__init__(name, cmd_ctx, operation)
         assert isinstance(self._operation, CMDHttpOperation)
+
+        self._client_endpoints = client_endpoints
 
         if self._operation.long_running is not None:
             self.is_long_running = True
@@ -128,10 +131,27 @@ class AzHttpOperationGenerator(AzOperationGenerator):
 
     @property
     def url_parameters(self):
+        parameters = []
+        # add params in client endpoints
+        if isinstance(self._client_endpoints, CMDClientEndpointsByTemplate) and self._client_endpoints.params:
+            for param in self._client_endpoints.params:
+                kwargs = {}
+                if param.skip_url_encoding:
+                    kwargs['skip_quote'] = True
+                if param.required:
+                    kwargs['required'] = param.required
+                arg_key, hide = self._cmd_ctx.get_argument(param.arg)
+                if not hide:
+                    parameters.append([
+                        param.name,
+                        arg_key,
+                        False,
+                        kwargs
+                    ])
+        # add params in client path
         path = self._operation.http.request.path
         if not path:
-            return None
-        parameters = []
+            return parameters or None
         if path.params:
             for param in path.params:
                 kwargs = {}
@@ -161,7 +181,8 @@ class AzHttpOperationGenerator(AzOperationGenerator):
                     True,
                     kwargs
                 ])
-        return parameters
+
+        return parameters or None
 
     @property
     def query_parameters(self):

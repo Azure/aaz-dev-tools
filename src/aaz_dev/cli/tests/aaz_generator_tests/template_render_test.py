@@ -2,8 +2,9 @@ import os
 
 from cli.templates import get_templates
 from cli.tests.common import CommandTestCase
-from cli.model.atomic import CLIAtomicCommandGroup, CLIAtomicCommand
+from cli.model.atomic import CLIAtomicCommandGroup, CLIAtomicCommand, CLIAtomicClient
 from utils.stage import AAZStageEnum
+from utils.plane import PlaneEnum
 import json
 from command.model.specs import CMDSpecsCommandTree
 from command.model.configuration import CMDConfiguration, XMLSerializer
@@ -31,7 +32,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", "vnet", "__cmd_group.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     def test_render_group_init(self):
@@ -47,7 +48,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", "vnet", "__init__.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # workspace
@@ -56,7 +57,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -79,19 +80,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-crud.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "databricks", "workspace", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # show
@@ -99,7 +105,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -122,19 +128,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-crud.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "databricks", "workspace", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # delete
@@ -142,7 +153,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -165,19 +176,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-crud.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "databricks", "workspace", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # update
@@ -185,7 +201,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -208,19 +224,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-crud.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "databricks", "workspace", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # list
@@ -228,7 +249,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -251,19 +272,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "workspace-list.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "databricks", "workspace", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # vnet-peering
@@ -272,7 +298,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -295,19 +321,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-crud.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "databricks", "workspace", "vnet_peering", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # show
@@ -315,7 +346,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -338,19 +369,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-crud.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "databricks", "workspace", "vnet_peering", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # delete
@@ -358,7 +394,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -381,19 +417,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-crud.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "databricks", "workspace", "vnet_peering", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # update
@@ -401,7 +442,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -424,19 +465,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-crud.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "databricks", "workspace", "vnet_peering", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # list
@@ -444,7 +490,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -467,19 +513,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "vnet-peering-list.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('databricks', 'workspace', 'vnet-peering', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "databricks", "workspace", "vnet_peering", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # sentinel
@@ -488,7 +539,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -511,19 +562,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-crud.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "sentinel", "automation_rule", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # create
@@ -531,7 +587,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -554,19 +610,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-crud.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "sentinel", "automation_rule", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # update
@@ -574,7 +635,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -597,19 +658,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-crud.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "sentinel", "automation_rule", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # delete
@@ -617,7 +683,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -640,19 +706,24 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-crud.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "sentinel", "automation_rule", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 
     # list
@@ -660,7 +731,7 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
         tmpl = get_templates()['aaz']['command']['_cmd.py']
 
         tree_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "tree.json")
-        with open(tree_path, 'r') as f:
+        with open(tree_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             tree = CMDSpecsCommandTree(data)
 
@@ -683,18 +754,23 @@ class CliAAZGeneratorTemplateRenderTest(CommandTestCase):
 
         cfg_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "databricks", "sentinel-automation-rule-list.xml")
 
-        with open(cfg_file_path, 'r') as f:
+        with open(cfg_file_path, 'r', encoding='utf-8') as f:
             cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
         cfg_reader = CfgReader(cfg)
         leaf.cfg = cfg_reader.find_command('sentinel', 'automation-rule', cmd_name)
 
+        client = CLIAtomicClient({
+            "plane": PlaneEnum.Mgmt,
+            "name": PlaneEnum.http_client(PlaneEnum.Mgmt),
+            "registeredName": PlaneEnum.http_client(PlaneEnum.Mgmt),
+        })
         data = tmpl.render(
-            leaf=AzCommandGenerator(leaf)
+            leaf=AzCommandGenerator(leaf, client)
         )
 
         output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "output", "sentinel", "automation_rule", f"_{cmd_name}.py")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as f:
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(data)
 

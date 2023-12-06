@@ -125,7 +125,7 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
                             >
                                 <EditIcon fontSize="small" color="disabled" />
                             </IconButton>}
-                            {command.modified && <EditIcon fontSize="small" color="info" />}
+                            {command.modified && <EditIcon fontSize="small" color="secondary" />}
                         </Box>
                     </Box>
                     {command.selectedVersion !== undefined && <Box sx={{

@@ -11,7 +11,7 @@ Workspaces are used to save and edit command models before exporting them to `aa
 
 ## Workspace operations
 
-When using aaz-dev from scratch, the workspace editor is the starting point.
+When using aaz-dev from scratch, the workspace editor is the starting point. A workspace should service to only one resource provider in the control/data plane.
 
 ### Create a workspace
 
@@ -34,6 +34,28 @@ Click the `DELETE` button you can delete the opened workspace. It requires to in
 > aaz-dev does not support **Undo**. Once the workspace is deleted you cannot get it back unless you use `git` to manage the workspaces folder (default path is `~/.aaz/workspaces`).
 
 ![delete_a_workspace](../../assets/recordings/workspace_editor/delete_a_workspace.gif)
+
+## Data-Plane Client
+
+The data-plane client configuration is required for data-plane commands. It's a resource provider level configuration, which means all data-plane commands in one resource provider will share one configuration.
+
+In the client configuration, the client `endpoint` and `authorization` mechanism should be provided.
+
+In workspace you can set two kinds of `endpoint`:
+
+- Template endpoint: The endpoint follows a special template. The template supports using placeholder which is wrapped by `{}`. For example: `https://{keyVaultName}.vault.azure.net`. Those placeholders will generate arguments, which arg group name is 'Client Args', in all commands. We support to define endpoint templates of four clouds that is `AzureCloud`, `AzureChinaCloud`, `AzureUSGovernment` and `AzureGermanCloud`. For air-gapped clouds, you should provide the property index in [ARM Cloud Metadata API](https://management.azure.com/metadata/endpoints?api-version=2019-05-01) response.
+- Dynamic endpoint: The endpoint is retrieved from a property value in a control plane instance. And the generated client will fetch the property from control plane api as the endpoint for data plane commands. For example, the endpoint of data-plane `Microsoft.Attestation` is retrieved from the `properties.attestUri` property in `Microsoft.Attestation/attestationProvider` instance. So the resource api and the property index should be provided in the client configuration.
+
+For tha `authorization` mechanism, we supports `AAD` auth.
+
+When you try to create command for a new resource-provider of data-plane, the workspace will require you set the client configuration at first.
+![new_client_config](../../assets/recordings/workspace_editor/dataplane_new_client_config.gif)
+
+Here's an example of `Microsoft.Attestation` data-plane client configuration using dynamic endpoint.
+![dynamic_endpoint_client_config](../../assets/recordings/workspace_editor/dataplane_dynamic_endpoint_client_config.gif)
+
+If you want do some modification in existing client configuration, you can click the `Edit Client Config` button. The change will apply to all the data-plane commands of that resource-provider when you export models from the workspace to aaz.
+![edit_client_config](../../assets/recordings/workspace_editor/dataplane_edit_client_config.gif)
 
 ## Add Swagger Resources
 
@@ -124,7 +146,7 @@ The commands in workspace are deleted by the swagger resource, if a resource gen
 
 > **Note**
 >
-> Sometime a command contains multiple resource urls, usually the `list` command. You should delete it multiple times. Because the resources should be removed one by one.
+> Sometimes a command contains multiple resource urls, usually the `list` command. You should delete it multiple times. Because the resources should be removed one by one.
 
 ![delete_the_list_command](../../assets/recordings/workspace_editor/delete_the_list_command.gif)
 
@@ -151,7 +173,7 @@ But sometimes two resources cannot be merged because the `valid part` of the url
 
 ## Modify Help for Commands and Groups
 
-The are two kinds of summaries for commands and command-groups:
+There are two kinds of summaries for commands and command-groups:
 
 - Short Summary: Will be displayed in the help of the parent level and itself. **It's required for all commands and groups**
 - Long Summary: Only be displayed in its help. It's optional. Supports multiple lines.
@@ -309,7 +331,7 @@ When you flatten `--prop-b`, the argument in command level will be:
 
 ### Hidden Arguments
 
-While editing the arguments, you can hidden it. The code of hidden arguments will **NOT** be generated in azure-cli, so the users cannot pass a value for hidden arguments. The command models in aaz will keep the hidden arguments, and you can enable them in the future.  
+While editing the arguments, you can hide it. The code of hidden arguments will **NOT** be generated in azure-cli, so the users cannot pass a value for hidden arguments. The command models in aaz will keep the hidden arguments, and you can enable them in the future.  
 
 ![hidden_arguments](../../assets/recordings/workspace_editor/hidden_arguments.gif)
 

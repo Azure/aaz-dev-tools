@@ -578,7 +578,7 @@ function ArgumentReviewer(props: {
             }}>
                 {buildArgOptionsString()}
                 <Button sx={{ flexShrink: 0, ml: 3 }}
-                    startIcon={<EditIcon color="info" fontSize='small' />}
+                    startIcon={<EditIcon color="secondary" fontSize='small' />}
                     onClick={() => { props.onEdit() }}
                 >
                     <ArgEditTypography>Edit</ArgEditTypography>
@@ -601,7 +601,7 @@ function ArgumentReviewer(props: {
                     <ArgTypeTypography>{`/${props.arg.type}/`}</ArgTypeTypography>
                 </Box>
                 {getUnwrapKeywords() !== null && <Button sx={{ flexShrink: 0, ml: 1 }}
-                    startIcon={<ImportExportIcon color="info" fontSize='small' />}
+                    startIcon={<ImportExportIcon color="secondary" fontSize='small' />}
                     onClick={() => { props.onUnwrap() }}
                 >
                     <ArgEditTypography>{getUnwrapKeywords()!}</ArgEditTypography>
@@ -664,6 +664,7 @@ function ArgumentDialog(props: {
     const [promptMsg, setPromptMsg] = useState<string | undefined>(undefined);
     const [promptConfirm, setPromptConfirm] = useState<boolean | undefined>(undefined);
     const [configurationKey, setConfigurationKey] = useState<string>("");
+    const [isClientArg, setIsClientArg] = useState<boolean>(false);
 
     const handleClose = () => {
         setInvalidText(undefined);
@@ -897,6 +898,7 @@ function ArgumentDialog(props: {
 
     useEffect(() => {
         let { arg, clsArgDefineMap } = props;
+        setIsClientArg(arg.var.startsWith('$Client.'));
 
         setOptions(arg.options.join(" "));
         if (arg.type.startsWith("array")) {
@@ -957,7 +959,7 @@ function ArgumentDialog(props: {
             sx={{ '& .MuiDialog-paper': { width: '80%' } }}
         >
             {!argSimilarTree && <>
-                <DialogTitle>Modify Argument</DialogTitle>
+                <DialogTitle>{isClientArg ? "Modify Client Argument" : "Modify Argument"}</DialogTitle>
                 <DialogContent dividers={true}>
                     {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
                     <TextField
@@ -986,7 +988,7 @@ function ArgumentDialog(props: {
                         }}
                         margin="normal"
                     />}
-                    <TextField
+                    {!isClientArg && <><TextField
                         id="group"
                         label="Argument Group"
                         type="text"
@@ -998,27 +1000,29 @@ function ArgumentDialog(props: {
                         }}
                         margin="normal"
                     />
-                    <InputLabel required shrink sx={{ font: "inherit" }}>Stage</InputLabel>
-                    <RadioGroup
-                        row
-                        value={stage}
-                        name="stage"
-                        onChange={(event: any) => {
-                            setStage(event.target.value);
-                        }}
-                    >
-                        <FormControlLabel value="Stable" control={<Radio />} label="Stable" sx={{ ml: 4 }} />
-                        <FormControlLabel value="Preview" control={<Radio />} label="Preview" sx={{ ml: 4 }} />
-                        <FormControlLabel value="Experimental" control={<Radio />} label="Experimental" sx={{ ml: 4 }} />
-                    </RadioGroup>
-                    {!props.arg.required && <>
-                        <InputLabel shrink sx={{ font: "inherit" }}>Hide Argument</InputLabel>
-                        <Switch sx={{ ml: 4 }}
-                            checked={hide}
+                        <InputLabel required shrink sx={{ font: "inherit" }}>Stage</InputLabel>
+                        <RadioGroup
+                            row
+                            value={stage}
+                            name="stage"
                             onChange={(event: any) => {
-                                setHide(!hide);
+                                setStage(event.target.value);
                             }}
-                        />
+                        >
+                            <FormControlLabel value="Stable" control={<Radio />} label="Stable" sx={{ ml: 4 }} />
+                            <FormControlLabel value="Preview" control={<Radio />} label="Preview" sx={{ ml: 4 }} />
+                            <FormControlLabel value="Experimental" control={<Radio />} label="Experimental" sx={{ ml: 4 }} />
+                        </RadioGroup>
+
+                        {!props.arg.required && <>
+                            <InputLabel shrink sx={{ font: "inherit" }}>Hide Argument</InputLabel>
+                            <Switch sx={{ ml: 4 }}
+                                checked={hide}
+                                onChange={(event: any) => {
+                                    setHide(!hide);
+                                }}
+                            />
+                        </>}
                     </>}
                     {hasDefault !== undefined && <>
                         <InputLabel shrink sx={{ font: "inherit" }}>Default Value</InputLabel>
@@ -1110,19 +1114,20 @@ function ArgumentDialog(props: {
                             </Box>
                         </Box>
                     </>}
-                    <TextField
-                        id="configurationKey"
-                        label="Configuration Key"
-                        helperText="The key to retrieve the default value from cli Configuration"
-                        type='text'
-                        fullWidth
-                        variant='standard'
-                        value={configurationKey}
-                        onChange={(event: any) => {
-                            setConfigurationKey(event.target.value);
-                        }}
-                        margin="normal"
-                    />
+                    {!isClientArg &&
+                        <TextField
+                            id="configurationKey"
+                            label="Configuration Key"
+                            helperText="The key to retrieve the default value from cli Configuration"
+                            type='text'
+                            fullWidth
+                            variant='standard'
+                            value={configurationKey}
+                            onChange={(event: any) => {
+                                setConfigurationKey(event.target.value);
+                            }}
+                            margin="normal"
+                        />}
 
                     <TextField
                         id="shortSummary"
@@ -1164,15 +1169,15 @@ function ArgumentDialog(props: {
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
+                        <LinearProgress color='secondary' />
                     </Box>
                 }
                 {!updating && !argSimilarTree && <>
                     <Button onClick={handleClose}>Cancel</Button>
                     {/* cls argument should flatten similar. Customer should unwrap cls argument before to modify it*/}
-                    {!props.arg.var.startsWith("@") && <Button onClick={handleModify}>Update</Button>}
+                    {!props.arg.var.startsWith("@") && <Button onClick={handleModify}>{isClientArg ? "Update Global" : "Update"}</Button>}
                     {/* TODO: support unwrap and update */}
-                    <Button onClick={handleDisplaySimilar}>Update Similar</Button>
+                    {!isClientArg && <Button onClick={handleDisplaySimilar}>Update Similar</Button>}
                 </>}
                 {!updating && argSimilarTree && <>
                     <Button onClick={handleDisableSimilar}>Back</Button>
@@ -1410,7 +1415,7 @@ function FlattenDialog(props: {
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
+                        <LinearProgress color='secondary' />
                     </Box>
                 }
                 {!updating && !argSimilarTree && <>
@@ -1488,7 +1493,7 @@ function UnwrapClsDialog(props: {
             <DialogActions>
                 {updating &&
                     <Box sx={{ width: '100%' }}>
-                        <LinearProgress color='info' />
+                        <LinearProgress color='secondary' />
                     </Box>
                 }
                 {!updating && <>
@@ -1705,21 +1710,21 @@ function ArgumentPropsReviewer(props: {
         }}>
             <SubtitleTypography>{props.title}</SubtitleTypography>
             {props.onFlatten !== undefined && <Button sx={{ flexShrink: 0, ml: 3 }}
-                startIcon={<CallSplitSharpIcon color="info" fontSize='small' />}
+                startIcon={<CallSplitSharpIcon color="secondary" fontSize='small' />}
                 onClick={props.onFlatten}
             >
                 <ArgEditTypography>Flatten</ArgEditTypography>
             </Button>}
 
             {/* {props.onUnflatten !== undefined && <Button sx={{ flexShrink: 0, ml: 3 }}
-                startIcon={<CallMergeSharpIcon color="info" fontSize='small' />}
+                startIcon={<CallMergeSharpIcon color="secondary" fontSize='small' />}
                 onClick={props.onUnflatten}
             >
                 <ArgEditTypography>Unflatten</ArgEditTypography>
             </Button>} */}
 
             {props.onAddSubcommand !== undefined && checkCanAddSubcommand() && <Button sx={{ flexShrink: 0, ml: 3 }}
-                startIcon={<AddIcon color="info" fontSize='small' />}
+                startIcon={<AddIcon color="secondary" fontSize='small' />}
                 onClick={props.onAddSubcommand}
             >
                 <ArgEditTypography>Subcommands</ArgEditTypography>

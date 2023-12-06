@@ -2,6 +2,8 @@ from swagger.tests.common import SwaggerSpecsTestCase
 from swagger.controller.command_generator import CommandGenerator
 from swagger.model.specs._utils import get_url_path_valid_parts
 from swagger.utils import exceptions
+from command.model.configuration import CMDBuildInVariants
+
 
 MUTE_ERROR_MESSAGES = (
     "type is not supported",
@@ -27,7 +29,7 @@ class CommandGeneratorTestCase(SwaggerSpecsTestCase):
                     continue
                 try:
                     generator.load_resources([resource])
-                    generator.create_draft_command_group(resource)
+                    generator.create_draft_command_group(resource, instance_var=CMDBuildInVariants.Instance)
                 except exceptions.InvalidSwaggerValueError as err:
                     if err.msg not in MUTE_ERROR_MESSAGES:
                         print(err)
@@ -51,7 +53,7 @@ class CommandGeneratorTestCase(SwaggerSpecsTestCase):
                     continue
                 try:
                     generator.load_resources([resource])
-                    generator.create_draft_command_group(resource)
+                    generator.create_draft_command_group(resource, instance_var=CMDBuildInVariants.Instance)
                 except exceptions.InvalidSwaggerValueError as err:
                     if err.msg not in MUTE_ERROR_MESSAGES:
                         print(err)
@@ -75,7 +77,7 @@ class CommandGeneratorTestCase(SwaggerSpecsTestCase):
                     continue
                 try:
                     generator.load_resources([resource])
-                    generator.create_draft_command_group(resource)
+                    generator.create_draft_command_group(resource, instance_var=CMDBuildInVariants.Instance)
                 except exceptions.InvalidSwaggerValueError as err:
                     if err.msg not in MUTE_ERROR_MESSAGES:
                         print(err)
@@ -96,7 +98,7 @@ class CommandGeneratorTestCase(SwaggerSpecsTestCase):
             for v, resource in version_map.items():
                 try:
                     generator.load_resources([resource])
-                    generator.create_draft_command_group(resource)
+                    generator.create_draft_command_group(resource, instance_var=CMDBuildInVariants.Instance)
                 except exceptions.InvalidSwaggerValueError as err:
                     if err.msg not in MUTE_ERROR_MESSAGES:
                         print(err)
@@ -117,7 +119,7 @@ class CommandGeneratorTestCase(SwaggerSpecsTestCase):
             for v, resource in version_map.items():
                 try:
                     generator.load_resources([resource])
-                    generator.create_draft_command_group(resource)
+                    generator.create_draft_command_group(resource, instance_var=CMDBuildInVariants.Instance)
                 except exceptions.InvalidSwaggerValueError as err:
                     if err.msg not in MUTE_ERROR_MESSAGES:
                         print(err)
@@ -138,7 +140,7 @@ class CommandGeneratorTestCase(SwaggerSpecsTestCase):
             for v, resource in version_map.items():
                 try:
                     generator.load_resources([resource])
-                    generator.create_draft_command_group(resource)
+                    generator.create_draft_command_group(resource, instance_var=CMDBuildInVariants.Instance)
                 except exceptions.InvalidSwaggerValueError as err:
                     if err.msg not in MUTE_ERROR_MESSAGES:
                         print(err)
@@ -160,7 +162,7 @@ class CommandGeneratorTestCase(SwaggerSpecsTestCase):
             for v, resource in version_map.items():
                 try:
                     generator.load_resources([resource])
-                    generator.create_draft_command_group(resource)
+                    generator.create_draft_command_group(resource, instance_var=CMDBuildInVariants.Instance)
                 except exceptions.InvalidSwaggerValueError as err:
                     if err.msg not in MUTE_ERROR_MESSAGES:
                         print(err)
@@ -188,7 +190,7 @@ class CommandGeneratorTestCase(SwaggerSpecsTestCase):
                 for v, resource in version_map.items():
                     try:
                         generator.load_resources([resource])
-                        generator.create_draft_command_group(resource)
+                        generator.create_draft_command_group(resource, instance_var=CMDBuildInVariants.Instance)
                     except exceptions.InvalidSwaggerValueError as err:
                         if err.msg not in MUTE_ERROR_MESSAGES:
                             print(err)
@@ -213,7 +215,7 @@ class CommandGeneratorTestCase(SwaggerSpecsTestCase):
                 for v, resource in version_map.items():
                     try:
                         generator.load_resources([resource])
-                        generator.create_draft_command_group(resource)
+                        generator.create_draft_command_group(resource, instance_var=CMDBuildInVariants.Instance)
                     except exceptions.InvalidSwaggerValueError as err:
                         if err.msg not in MUTE_ERROR_MESSAGES:
                             print(err)
