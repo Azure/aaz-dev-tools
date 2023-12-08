@@ -28,7 +28,7 @@ class AzArgGroupGenerator:
     def _update_over_arg(self, arg, *arg_keys):
         if isinstance(arg, CMDArg):
             if isinstance(arg, CMDSubscriptionIdArg) \
-                    and arg_keys == ('subscription', ) and arg.options == ['subscription']:
+                    and arg_keys == ('subscription', ) and 'subscription' in arg.options:
                 # use self.ctx.subscription_id
                 self._cmd_ctx.set_argument(('subscription_id', ), arg, ctx_namespace='self.ctx')
             else:
@@ -58,7 +58,7 @@ class AzArgGroupGenerator:
                 # escape hide argument
                 continue
 
-            if isinstance(a, CMDSubscriptionIdArg) and a.options == ['subscription']:
+            if isinstance(a, CMDSubscriptionIdArg) and 'subscription' in a.options:
                 # ignore subscription id, because cli core registered global _subscription argument
                 continue
 

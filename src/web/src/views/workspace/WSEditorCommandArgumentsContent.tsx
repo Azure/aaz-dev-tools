@@ -706,7 +706,7 @@ function ArgumentDialog(props: {
             }
         }
 
-        if (sHelp.length < 1) {
+        if (sHelp.length < 1 && names.find((n) => { return n === "subscription" || n === "resource-group" }) === undefined) {
             setInvalidText(`Field 'Short Summary' is required.`)
             return undefined
         }
