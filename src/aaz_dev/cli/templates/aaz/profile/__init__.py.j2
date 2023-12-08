@@ -1,4 +1,8 @@
 {% extends "python.j2" %}
+{% block pylint %}
+# pylint: skip-file
+# flake8: noqa
+{% endblock %}
 {% block imports %}
 {%- if has_clients %}
 from ._clients import *
