@@ -1,6 +1,7 @@
 from jinja2.filters import pass_environment
 from utils.base64 import b64encode_str
 from utils.stage import AAZStageEnum
+from utils.plane import PlaneEnum
 
 
 @pass_environment
@@ -15,7 +16,17 @@ def command_readme_path(env, names):
 
 @pass_environment
 def resource_cfg_path(env, resource):
-    return '/'.join(["", "Resources", resource.plane, b64encode_str(resource.id), f"{resource.version}.xml"])
+    plane = resource.plane
+    if plane == PlaneEnum.Mgmt:
+        plane_folder = plane
+    elif PlaneEnum.is_data_plane(plane):
+            scope = PlaneEnum.get_data_plane_scope(plane)
+            if not scope:
+                raise ValueError(f"Invalid plane: Missing scope in data plane '{plane}'")
+            plane_folder = '/'.join([PlaneEnum._Data, scope])
+    else:
+        raise ValueError(f"Invalid plane: '{plane}'")
+    return '/'.join(["", "Resources", plane_folder, b64encode_str(resource.id), f"{resource.version}.xml"])
 
 
 @pass_environment
