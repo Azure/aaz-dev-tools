@@ -834,7 +834,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                             
                             <TextField
                                 id="selector-index"
-                                label="Index"
+                                label="Endpoint/Suffix Index"
                                 type="text"
                                 InputLabelProps={{
                                     shrink: true,
