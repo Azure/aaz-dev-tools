@@ -606,7 +606,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
         aadAuthScopes = aadAuthScopes.map(scope => scope.trim()).filter(scope => scope.length > 0);
         if (aadAuthScopes.length < 1) {
             this.setState({
-                invalidText: "AAD Auth Scopes is required."
+                invalidText: "MS Entra(AAD) Auth Scopes is required."
             });
             return;
         }
@@ -707,7 +707,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                         this.onModifyAadScope(event.target.value, idx);
                     }}
                     sx={{ flexGrow: 1 }}
-                    placeholder="Input aad auth Scope here, e.g. https://metrics.monitor.azure.com/.default"
+                    placeholder="Input Microsoft Entra(AAD) auth Scope here, e.g. https://metrics.monitor.azure.com/.default"
                 />
             </Box>
         )
@@ -944,7 +944,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                         </Box>}
                     </Paper>
 
-                    <InputLabel required sx={{ font: "inherit", mt: 4 }}>AAD Auth Scopes</InputLabel>
+                    <InputLabel required sx={{ font: "inherit", mt: 4 }}>MS Entra(AAD) Auth Scopes</InputLabel>
                     {aadAuthScopes?.map(this.buildAadScopeInput)}
                     <Box sx={{
                         display: 'flex',
