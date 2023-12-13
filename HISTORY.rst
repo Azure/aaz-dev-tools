@@ -3,6 +3,13 @@
 Release History
 ===============
 
+2.5.0
+++++++
+* Ignore `--subscription` generation when it has alias (#318)
+* Fix data-plane generation issue (#317)
+* Fix bug to render dynamic endpoint client (#314)
+* Add documentation for data-plane dynamic endpoint config (#315)
+
 2.4.0
 ++++++
 * Support data plane client with dynamic endpoint fetched from a response. (#311)
