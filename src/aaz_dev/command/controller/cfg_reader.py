@@ -310,34 +310,6 @@ class CfgReader:
         return self.find_arg_in_command_with_parent_by_var(command, arg_var=arg_var)
 
     @classmethod
-    def find_arg_in_arg_groups_by_name(cls, arg_groups, arg_name):
-        assert isinstance(arg_name, str)
-
-        def arg_filter(_parent, _arg, _arg_idx, _arg_var):
-            if _arg_var.endswith(f".{arg_name}"):
-                return (_parent, _arg, _arg_idx, _arg_var), True  # find match
-
-            elif _arg_var.startswith(f"{arg_name}."):
-                return (_parent, None, None, None), True  # arg_var already been flattened
-
-            return None, False
-
-        for arg_group in arg_groups:
-            matches = [match for match in cls._iter_args_in_group(arg_group, arg_filter=arg_filter)]
-            if not matches:
-                continue
-
-            assert len(matches) == 1
-
-            parent, arg, arg_idx, arg_var = matches[0]
-            if arg:
-                arg_idx = cls.arg_idx_to_str(arg_idx)
-
-            return parent, arg, arg_idx
-
-        return None, None, None
-
-    @classmethod
     def find_arg_in_command_by_var(cls, command, arg_var):
         _, arg, arg_idx = cls.find_arg_in_command_with_parent_by_var(command, arg_var=arg_var)
         return arg, arg_idx
