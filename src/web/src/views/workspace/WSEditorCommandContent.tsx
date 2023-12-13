@@ -1012,35 +1012,6 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
         this.onUpdateExamples(examples);
     }
 
-    handleAddBySwagger = () => {
-        let { workspaceUrl, command } = this.props;
-
-        const leafUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + command.names.slice(0, -1).join('/') + '/Leaves/' + command.names[command.names.length - 1] + '/GenerateExamples';
-
-        this.setState({
-            updating: true,
-        })
-        axios.post(leafUrl, {
-        }).then(res => {
-            const cmd = DecodeResponseCommand(res.data);
-            this.setState({
-                updating: false,
-            })
-            this.props.onClose(cmd);
-        }).catch(err => {
-            console.error(err.response);
-            if (err.response?.data?.message) {
-                const data = err.response!.data!;
-                this.setState({
-                    invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
-                })
-            }
-            this.setState({
-                updating: false,
-            })
-        });
-    }
-
     handleClose = () => {
         this.setState({
             invalidText: undefined
@@ -1174,7 +1145,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
                             <Button onClick={this.handleDelete}>Delete</Button>
                             <Button onClick={this.handleModify}>Save</Button>
                         </React.Fragment>}
-                        {isAdd && <Button onClick={this.handleAddBySwagger}>Add</Button>}
+                        {isAdd && <Button onClick={this.handleAdd}>Add</Button>}
                     </React.Fragment>}
                 </DialogActions>
             </Dialog>
