@@ -3,7 +3,6 @@ import os
 from flask import Blueprint, jsonify, request, url_for, redirect
 
 from command.controller.workspace_manager import WorkspaceManager
-from swagger.model.specs import SwaggerLoader
 from utils import exceptions
 from utils.config import Config
 from command.model.configuration._utils import CMDArgBuildPrefix
