@@ -4,7 +4,7 @@ from abc import abstractmethod
 from command.controller.cfg_reader import CfgReader
 from command.model.configuration import CMDArgGroup
 from swagger.model.schema.parameter import PathParameter, QueryParameter, HeaderParameter, BodyParameter
-from ._utils import CMDArgBuildPrefix
+from command.model.configuration._utils import CMDArgBuildPrefix
 
 
 class ExampleItem:
@@ -19,7 +19,7 @@ class ExampleItem:
             self.arg_option = self.arg_option.split(".")[-1]
 
     @property
-    def is_flat(self):
+    def is_flatten(self):
         return self.arg_parent and not self.arg
 
     @property
@@ -28,9 +28,8 @@ class ExampleItem:
 
 
 class ExampleBuilder:
-    def __init__(self, command=None, operation=None):
+    def __init__(self, command=None):
         self.command = command
-        self.operation = operation
         self.example_items = []
 
     @abstractmethod
@@ -39,6 +38,10 @@ class ExampleBuilder:
 
 
 class SwaggerExampleBuilder(ExampleBuilder):
+    def __init__(self, command=None, operation=None):
+        super().__init__(command=command)
+        self.operation = operation
+
     def mapping(self, example_dict):
         for param in self.operation.parameters:
             if param.name not in example_dict:
@@ -81,7 +84,7 @@ class SwaggerExampleBuilder(ExampleBuilder):
 
                 if item.is_top_level:
                     example_items.append((item.arg_option, json.dumps(value)))
-                elif item.is_flat:
+                elif item.is_flatten:
                     example_dict.pop(item.key)
                     for k, v in item.val.items():
                         example_dict[k] = v

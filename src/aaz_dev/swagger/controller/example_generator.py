@@ -1,7 +1,5 @@
-from command.model.configuration._example_builder import SwaggerExampleBuilder
-from swagger.model.schema.cmd_builder import CMDBuilder
+from swagger.controller._example_builder import SwaggerExampleBuilder
 from swagger.model.schema.example_item import XmsExamplesField
-from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
 from swagger.model.specs import SwaggerLoader
 
@@ -30,7 +28,7 @@ class ExampleGenerator:
                 continue
 
             example_builder = None
-            examples = XmsExamplesField()
+            examples = None
             if path_item.get is not None and path_item.get.operation_id in cmd_operation_ids:
                 example_builder = SwaggerExampleBuilder(command=command, operation=path_item.get)
                 examples = path_item.get.x_ms_examples
@@ -51,7 +49,7 @@ class ExampleGenerator:
                 example_builder = SwaggerExampleBuilder(command=command, operation=path_item.head)
                 examples = path_item.head.x_ms_examples
 
-            if not example_builder:
+            if not example_builder or not examples:
                 continue
 
             cmd_examples.extend(self.generate_examples(cmd_name, examples, example_builder))
