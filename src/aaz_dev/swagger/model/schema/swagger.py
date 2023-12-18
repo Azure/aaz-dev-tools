@@ -57,7 +57,7 @@ class Swagger(Model, Linkable):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def link(self, swagger_loader, *traces, **kwargs):
+    def link(self, swagger_loader, *traces):
         if self.is_linked():
             return
         super().link(swagger_loader, *traces)

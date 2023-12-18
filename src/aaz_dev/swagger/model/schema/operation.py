@@ -140,7 +140,7 @@ class Operation(Model, Linkable):
                 try:
                     example.link(swagger_loader, *self.traces, "x_ms_examples", key)
                 except e:
-                    logging.warning(f'Link example failed: {key}')
+                    logging.warning(f"Link example failed at {key}.")
 
     def to_cmd(self, builder, parent_parameters, host_path, **kwargs):
         cmd_op = CMDHttpOperation()
