@@ -2628,7 +2628,12 @@ class APIEditorTest(CommandTestCase):
             )
             self.assertTrue(rv.status_code == 200)
 
-            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/event-hub/namespace/network-rule-set/default/Leaves/create/GenerateExamples")
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/event-hub/namespace/network-rule-set/default/Leaves/create/GenerateExamples",
+                json={
+                    "source": "swagger"
+                }
+            )
             self.assertTrue(rv.status_code == 200)
 
     @workspace_name("test_workspace_generate_examples_dict")
@@ -2665,7 +2670,12 @@ class APIEditorTest(CommandTestCase):
             )
             self.assertTrue(rv.status_code == 200)
 
-            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/event-hub/cluster/Leaves/create/GenerateExamples")
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/event-hub/cluster/Leaves/create/GenerateExamples",
+                json={
+                    "source": "swagger"
+                }
+            )
             self.assertTrue(rv.status_code == 200)
 
     @workspace_name("test_workspace_generate_examples_poly")
@@ -2706,5 +2716,10 @@ class APIEditorTest(CommandTestCase):
             )
             self.assertTrue(rv.status_code == 200)
 
-            rv = c.post(f"{ws_url}/CommandTree/Nodes/aaz/insights/metric-alert/Leaves/create/GenerateExamples")
+            rv = c.post(
+                f"{ws_url}/CommandTree/Nodes/aaz/insights/metric-alert/Leaves/create/GenerateExamples",
+                json={
+                    "source": "swagger"
+                }
+            )
             self.assertTrue(rv.status_code == 200)

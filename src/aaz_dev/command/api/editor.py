@@ -268,17 +268,19 @@ def editor_workspace_generate_examples(name, node_names, leaf_name):
     if not leaf:
         raise exceptions.ResourceNotFind("Command not exist.")
 
+    data = request.get_json()
+    source = data.get("source", None)
+
     cfg_editor = manager.load_cfg_editor_by_command(leaf)
     command = cfg_editor.find_command(*leaf.names)
-
-    if command:
-        examples = manager.generate_examples_by_swagger(leaf, command)
-    else:
+    if not command:
         raise exceptions.ResourceNotFind("Command not exist.")
 
-    result = [example.to_primitive() for example in examples]
+    if source == "swagger":
+        examples = manager.generate_examples_by_swagger(leaf, command)
+        result = [example.to_primitive() for example in examples]
 
-    return jsonify(result)
+        return jsonify(result)
 
 
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Examples",
