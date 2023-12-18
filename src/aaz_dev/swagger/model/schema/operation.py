@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import urljoin
 
 from schematics.models import Model
@@ -134,12 +135,12 @@ class Operation(Model, Linkable):
                 *self.traces, "x_ms_long_running_operation_options", "final_state_schema"
             )
 
-    def link_examples(self, swagger_loader, *traces):
-        super().link(swagger_loader, *traces)
-
         if self.x_ms_examples is not None:
             for key, example in self.x_ms_examples.items():
-                example.link(swagger_loader, *self.traces, "x_ms_examples", key)
+                try:
+                    example.link(swagger_loader, *self.traces, "x_ms_examples", key)
+                except e:
+                    logging.warning(f'Link example failed: {key}')
 
     def to_cmd(self, builder, parent_parameters, host_path, **kwargs):
         cmd_op = CMDHttpOperation()

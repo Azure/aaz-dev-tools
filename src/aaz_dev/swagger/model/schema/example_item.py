@@ -28,7 +28,10 @@ class ExampleItem(Model, Linkable):
 
         command = cmd_name
         for param_option, param_value in example_params:
-            command += f" --{param_option} {param_value}"
+            if len(param_option) == 1:
+                command += f" -{param_option} {param_value}"
+            else:
+                command += f" --{param_option} {param_value}"
 
         return CMDCommandExample({"commands": [command.strip()]})
 

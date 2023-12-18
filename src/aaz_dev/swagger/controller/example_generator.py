@@ -8,10 +8,10 @@ class ExampleGenerator:
     def __init__(self):
         self.loader = SwaggerLoader()
 
-    def load_examples(self, resources, cmd_operation_ids):
+    def load_examples(self, resources):
         for resource in resources:
             self.loader.load_file(resource.file_path)
-            self.loader.link_examples(resource.file_path, resource.path, cmd_operation_ids)
+            self.loader.link_swaggers()
 
     def create_draft_examples_by_swagger(self, resources, command, cmd_operation_ids, cmd_name):
         cmd_examples = []

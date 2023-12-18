@@ -517,7 +517,7 @@ class WorkspaceManager:
 
         # load swagger resource
         cmd_operation_ids = {op.operation_id: op for op in command.operations}
-        self.swagger_example_generator.load_examples(swagger_resources, cmd_operation_ids)
+        self.swagger_example_generator.load_examples(swagger_resources)
 
         examples = self.swagger_example_generator.create_draft_examples_by_swagger(
             swagger_resources,
