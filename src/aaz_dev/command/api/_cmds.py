@@ -251,7 +251,7 @@ def verify():
 
     for root, dirs, files in os.walk(aaz.resources_folder):
         for file in files:
-            if not file.endswith(".json"):
+            if not file.endswith(".json") or file.startswith("client"):  # support data-plane
                 continue
 
             file_path = os.path.join(root, file)
