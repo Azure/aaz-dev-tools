@@ -376,8 +376,8 @@ def _can_replace_argument(arg, old_arg, has_subresource):
         try:
             # temporary assign required and name for diff
             arg.ref_schema.required = old_arg.ref_schema.required
-            if old_arg.ref_schema.name == "name" and "name" in arg.options:
-                arg.ref_schema.name = "name"
+            if old_arg.ref_schema.name.lower() == "name" and "name" in arg.options:
+                arg.ref_schema.name = old_arg.ref_schema.name
             diff = arg.ref_schema.diff(old_arg.ref_schema, level=CMDDiffLevelEnum.Structure)
             if diff:
                 return False
