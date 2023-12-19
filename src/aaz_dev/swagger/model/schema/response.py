@@ -7,7 +7,8 @@ from command.model.configuration import CMDHttpResponse, CMDHttpResponseHeader, 
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.utils import exceptions
 from utils.error_format import AAZErrorFormatEnum
-from .fields import XmsExamplesField, XmsErrorResponseField, XNullableField
+from .example_item import XmsExamplesField
+from .fields import XmsErrorResponseField, XNullableField
 from .header import Header
 from .reference import Linkable
 from .schema import Schema, ReferenceSchema, schema_and_reference_schema_claim_function

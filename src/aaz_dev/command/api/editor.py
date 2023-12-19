@@ -254,6 +254,71 @@ def editor_workspace_command_tree_node_rename(name, node_names):
     return jsonify(result)
 
 
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/GenerateExamples",
+          methods=["POST"])
+def editor_workspace_generate_examples(name, node_names, leaf_name):
+    if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
+        raise exceptions.ResourceNotFind("Command not exist.")
+
+    manager = WorkspaceManager(name)
+    manager.load()
+
+    node_names = node_names[1:]
+    leaf = manager.find_command_tree_leaf(*node_names, leaf_name)
+    if not leaf:
+        raise exceptions.ResourceNotFind("Command not exist.")
+
+    data = request.get_json()
+    source = data.get("source", None)
+
+    cfg_editor = manager.load_cfg_editor_by_command(leaf)
+    command = cfg_editor.find_command(*leaf.names)
+    if not command:
+        raise exceptions.ResourceNotFind("Command not exist.")
+
+    if source == "swagger":
+        examples = manager.generate_examples_by_swagger(leaf, command)
+        result = [example.to_primitive() for example in examples]
+    else:
+        raise exceptions.InvalidAPIUsage("Invalid request.")
+
+    return jsonify(result)
+
+
+@bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Examples",
+          methods=["PATCH"])
+def editor_workspace_examples(name, node_names, leaf_name):
+    if node_names[0] != WorkspaceManager.COMMAND_TREE_ROOT_NAME:
+        raise exceptions.ResourceNotFind("Command not exist")
+    node_names = node_names[1:]
+
+    manager = WorkspaceManager(name)
+    manager.load()
+    leaf = manager.find_command_tree_leaf(*node_names, leaf_name)
+    if not leaf:
+        raise exceptions.ResourceNotFind("Command not exist")
+
+    data = request.get_json()
+    if 'examples' in data:
+        leaf = manager.update_command_tree_leaf_examples(*leaf.names, examples=data['examples'])
+    cfg_editor = manager.load_cfg_editor_by_command(leaf)
+
+    command = cfg_editor.find_command(*leaf.names)
+    result = command.to_primitive()
+    manager.save()
+
+    del result['name']
+    result.update({
+        'names': leaf.names,
+        'help': leaf.help.to_primitive(),
+        'stage': leaf.stage,
+    })
+    if leaf.examples:
+        result['examples'] = [e.to_primitive() for e in leaf.examples]
+
+    return jsonify(result)
+
+
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>",
           methods=("GET", "PATCH"))
 def editor_workspace_command(name, node_names, leaf_name):

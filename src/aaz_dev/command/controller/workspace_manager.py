@@ -4,8 +4,11 @@ import os
 import shutil
 from datetime import datetime
 
+from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand, \
+    CMDBuildInVariants, CMDHttpOperation
 from command.model.editor import CMDEditorWorkspace, CMDCommandTreeNode, CMDCommandTreeLeaf
 from swagger.controller.command_generator import CommandGenerator
+from swagger.controller.example_generator import ExampleGenerator
 from swagger.controller.specs_manager import SwaggerSpecsManager
 from swagger.utils.exceptions import InvalidSwaggerValueError
 from utils import exceptions
@@ -14,7 +17,6 @@ from utils.plane import PlaneEnum
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor, build_endpoint_selector_for_client_config
 from .workspace_client_cfg_editor import WorkspaceClientCfgEditor
-from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand, CMDBuildInVariants
 
 logger = logging.getLogger('backend')
 
@@ -87,6 +89,7 @@ class WorkspaceManager:
         self._aaz_specs = aaz_manager
         self._swagger_specs = swagger_manager
         self._swagger_command_generator = None
+        self._swagger_example_generator = None
 
     @property
     def is_in_memory(self):
@@ -109,6 +112,13 @@ class WorkspaceManager:
         if not self._swagger_command_generator:
             self._swagger_command_generator = CommandGenerator()
         return self._swagger_command_generator
+
+    @property
+    def swagger_example_generator(self):
+        if not self._swagger_example_generator:
+            self._swagger_example_generator = ExampleGenerator()
+
+        return self._swagger_example_generator
 
     def load(self):
         assert not self.is_in_memory
@@ -469,6 +479,54 @@ class WorkspaceManager:
                         f"Invalid example data: {err}")
                 leaf.examples.append(example)
         return leaf
+
+    def generate_examples_by_swagger(self, leaf, command):
+        def is_ready_to_skip(operations):
+            if not operations:
+                return True
+
+            if len(operations) == 1 and isinstance(operations[0], CMDHttpOperation):
+                return False
+
+            # skip when there is more than one operation and not all operations are get requests
+            for op in operations:
+                if not isinstance(op, CMDHttpOperation) or op.http.request.method != "get":
+                    return True
+
+            return False
+
+        if is_ready_to_skip(command.operations):
+            return []
+
+        return self.generate_operations_examples_by_swagger(
+            command,
+            " ".join(leaf.names)
+        )
+
+    def generate_operations_examples_by_swagger(self, command, cmd_name):
+        root = self.find_command_tree_node()
+        assert root
+
+        # convert cmd resource to swagger resource
+        swagger_resources = []
+        for resource in command.resources:
+            swagger_resources.append(self.swagger_specs.get_module_manager(
+                plane=self.ws.plane,
+                mod_names=self.ws.mod_names
+            ).get_resource_in_version(resource["id"], resource["version"], resource.rp_name))
+
+        # load swagger resource
+        cmd_operation_ids = {op.operation_id: op for op in command.operations}
+        self.swagger_example_generator.load_examples(swagger_resources)
+
+        examples = self.swagger_example_generator.create_draft_examples_by_swagger(
+            swagger_resources,
+            command,
+            cmd_operation_ids,
+            cmd_name
+        )
+
+        return examples
 
     def rename_command_tree_node(self, *node_names, new_node_names):
         new_name = ' '.join(new_node_names)
@@ -1101,7 +1159,7 @@ class WorkspaceManager:
             logger.error(
                 f"load workspace client cfg failed: {e}: {self.name}")
             return None
-    
+
     def compare_client_cfg_with_spec(self):
         """ Check whether the client configuration version in workspace is later than the aaz specs one. """
         # compare client configuration from aaz specs
