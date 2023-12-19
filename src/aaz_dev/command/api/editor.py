@@ -279,8 +279,10 @@ def editor_workspace_generate_examples(name, node_names, leaf_name):
     if source == "swagger":
         examples = manager.generate_examples_by_swagger(leaf, command)
         result = [example.to_primitive() for example in examples]
+    else:
+        raise exceptions.InvalidAPIUsage("Invalid request.")
 
-        return jsonify(result)
+    return jsonify(result)
 
 
 @bp.route("/Workspaces/<name>/CommandTree/Nodes/<names_path:node_names>/Leaves/<name:leaf_name>/Examples",
