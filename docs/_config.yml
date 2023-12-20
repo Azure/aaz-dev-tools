@@ -36,7 +36,7 @@ github:
 pypi: https://pypi.org/project/aaz-dev/
 
 # TODO: get version number from github
-version: v2.5.0
+version: v2.5.1
 
 # Build settings
 theme: minima
