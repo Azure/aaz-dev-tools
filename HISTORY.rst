@@ -3,6 +3,11 @@
 Release History
 ===============
 
+2.5.1
+++++++
+* Chore: support model from data-plane (#321)
+* Fix bug when name in upper case (#322)
+
 2.5.0
 ++++++
 * Ignore `--subscription` generation when it has alias (#318)
