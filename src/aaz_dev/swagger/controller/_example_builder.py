@@ -110,35 +110,28 @@ class SwaggerExampleBuilder(ExampleBuilder):
                     )
 
                 for disc in item.discriminators:
-                    if disc.property not in value or value[disc.property] != disc.value or "allOf" not in value:
+                    if disc.property not in value or value[disc.property] != disc.value:
                         continue
 
-                    formatted = dict()
-                    save_value = self.get_safe_value(disc.value)
+                    value.pop(disc.property)  # ignore discriminator prop
+
+                    safe_value = self.get_safe_value(disc.value)
                     disc_item = ExampleItem(
                         command=self.command,
-                        arg_var=f"{item.arg_var}.{save_value}"
+                        arg_var=f"{item.arg_var}.{safe_value}"
                     )
 
+                    formatted = dict()
                     if disc_name := disc_item.arg_option:
-                        formatted[disc_name] = dict()
-                        disc_item = ExampleItem(
-                            command=self.command,
-                            cmd_operation=self.cmd_operation,
-                            arg_var=f"{item.arg_var}.{save_value}.allOf",
-                            key=name,
-                            val=value["allOf"]
-                        )
+                        formatted[disc_name] = value
+                    else:
+                        formatted[safe_value] = value
 
-                        if disc_item.arg_option:
-                            formatted[disc_name][disc_item.arg_option] = value["allOf"]
-
-                    value = formatted
+                    original, value = value, formatted
                     example_dict[item.key] = formatted
                     item.val = formatted
 
-                    example_items += self.build(disc_item.arg_var, disc_item.val)
-
+                    example_items += self.build(disc_item.arg_var, original)
                     break
 
                 else:
