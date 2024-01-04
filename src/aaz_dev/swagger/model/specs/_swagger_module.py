@@ -35,6 +35,27 @@ class SwaggerModule:
         else:
             return [*self._parent.names, self.name]
 
+    # def get_typespec_configs(self):
+    #     if self._parent:
+    #         return self._parent.get_typespec_configs()
+    #     folder_path = self.folder_path
+    #     path, tail = os.path.split(folder_path)
+    #     while tail != self.name:
+    #         folder_path = path
+    #         path, tail = os.path.split(folder_path)
+    #         assert path != "" and path != "/"
+    #     # iterate over the folder_path and find all the sub folders which contains tsconfig.yaml and main.tsp
+    #     cfgs = []
+    #     for root, dirs, _ in os.walk(folder_path):
+    #         if root.startswith(self.folder_path):
+    #             # ignore the swagger json folder
+    #             continue
+    #         ts_path = os.path.join(root, "main.tsp")
+    #         cfg_path = os.path.join(root, "tspconfig.yaml")
+    #         if os.path.isfile(ts_path) and os.path.isfile(cfg_path):
+    #             cfgs.append(TypeSpecConfig(folder_path=root))
+    #     return cfgs
+
 
 class MgmtPlaneModule(SwaggerModule):
 
@@ -46,8 +67,19 @@ class MgmtPlaneModule(SwaggerModule):
 
     def get_resource_providers(self):
         rp = []
-        for name in os.listdir(self.folder_path):
-            path = os.path.join(self.folder_path, name)
+        rp.extend(self._get_openapi_resource_providers())
+        return rp
+
+    def _get_openapi_resource_providers(self):
+        rp = []
+        if 'resource-manager' not in self.folder_path:
+            folder_path = os.path.join(self.folder_path, 'resource-manager')
+        else:
+            folder_path = self.folder_path
+        if not os.path.exists(folder_path):
+            return rp
+        for name in os.listdir(folder_path):
+            path = os.path.join(folder_path, name)
             if os.path.isdir(path):
                 name_parts = name.split('.')
                 if len(name_parts) >= 2:
@@ -70,8 +102,22 @@ class DataPlaneModule(SwaggerModule):
 
     def get_resource_providers(self):
         rp = []
-        for name in os.listdir(self.folder_path):
-            path = os.path.join(self.folder_path, name)
+        rp.extend(self._get_openapi_resource_providers())
+        scope = PlaneEnum.get_data_plane_scope(self.plane)
+        if scope:
+            rp = [r for r in rp if r.name.lower() == scope]
+        return rp
+
+    def _get_openapi_resource_providers(self):
+        rp = []
+        if 'data-plane' not in self.folder_path:
+            folder_path = os.path.join(self.folder_path, 'data-plane')
+        else:
+            folder_path = self.folder_path
+        if not os.path.exists(folder_path):
+            return rp
+        for name in os.listdir(folder_path):
+            path = os.path.join(folder_path, name)
             if os.path.isdir(path):
                 if name.lower() in ('preview', 'stable'):
                     continue
@@ -82,9 +128,6 @@ class DataPlaneModule(SwaggerModule):
                 elif name.lower() != 'common':
                     sub_module = DataPlaneModule(plane=self.plane, name=name, folder_path=path, parent=self)
                     rp.extend(sub_module.get_resource_providers())
-        scope = PlaneEnum.get_data_plane_scope(self.plane)
-        if scope:
-            rp = [r for r in rp if r.name.lower() == scope]
         return rp
 
 
