@@ -2226,8 +2226,18 @@ class APIEditorTest(CommandTestCase):
                         "template": "https://{region}.metrics.monitor.cloudapi.de"
                     },
                 ],
+                "cloudMetadata": {
+                    "selectorIndex": "suffixes.monitorMetrics",
+                    "prefixTemplate": "https://{region}",
+                }
             })
             self.assertTrue(rv.status_code == 200)
+
+            client_config = rv.get_json()
+            self.assertEqual(client_config['endpoints']['cloudMetadata'], {
+                "selectorIndex": "suffixes.monitorMetrics",
+                "prefixTemplate": "https://{region}",
+            })
 
             # update client arguments
             rv = c.get(f"{ws_url}/ClientConfig/Arguments/$Client.Endpoint.region")

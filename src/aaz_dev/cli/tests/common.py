@@ -2810,6 +2810,10 @@ class CommandTestCase(ApiTestCase):
                         "template": "https://{region}.metrics.monitor.cloudapi.de"
                     },
                 ],
+                "cloudMetadata": {
+                    "selectorIndex": "suffixes.monitorMetrics",
+                    "prefixTemplate": "https://{region}",
+                }
             })
             self.assertTrue(rv.status_code == 200)
 

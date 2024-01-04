@@ -5,7 +5,9 @@ from datetime import datetime
 
 from .client_cfg_reader import ClientCfgReader
 from .workspace_helper import ArgumentUpdateMixin
-from command.model.configuration import CMDClientConfig, CMDDiffLevelEnum, CMDClientEndpointsByTemplate, CMDClientEndpointsByHttpOperation, CMDClientEndpoints
+from command.model.configuration import (CMDClientConfig, CMDDiffLevelEnum, CMDClientEndpointsByTemplate,
+                                         CMDClientEndpointsByHttpOperation, CMDClientEndpoints,
+                                         CMDClientEndpointCloudMetadataTemplate)
 
 logger = logging.getLogger('backend')
 
@@ -50,10 +52,12 @@ class WorkspaceClientCfgEditor(ClientCfgReader, ArgumentUpdateMixin):
         return cfg_editor
 
     @classmethod
-    def new_client_endpoints_by_template(cls, templates):
+    def new_client_endpoints_by_template(cls, templates, cloud_medadata):
         endpoints = CMDClientEndpointsByTemplate(raw_data={
-            "templates": templates
+            "templates": templates,
         })
+        if cloud_medadata:
+            endpoints.cloud_metadata = CMDClientEndpointCloudMetadataTemplate(raw_data=cloud_medadata)
         endpoints.prepare()
         return endpoints
 

@@ -79,6 +79,10 @@ class AzClientEndpointsByTemplateGenerator:
     def type(self):
         return self._endpoints.type
 
+    @property
+    def cloud_metadata(self):
+        return self._endpoints.cloud_metadata
+
     def iter_hosts(self):
         for template in self._endpoints.templates:
             yield template.cloud, template.template
@@ -108,4 +112,3 @@ class AzClientEndpointsByHttpOperationGenerator:
     @property
     def type(self):
         return self._endpoints.type
-
