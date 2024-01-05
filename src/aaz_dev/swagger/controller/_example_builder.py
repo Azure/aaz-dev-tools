@@ -1,3 +1,4 @@
+import copy
 import json
 import re
 from abc import abstractmethod
@@ -143,7 +144,7 @@ class SwaggerExampleBuilder(ExampleBuilder):
                 )
 
                 if disc_item and (disc_name := disc_item.arg_option):
-                    example_obj[disc_name] = example_obj.copy()
+                    example_obj[disc_name] = copy.deepcopy(example_obj)  # further trim (polymorphic or not)
                     example_items += self.build(disc_item.arg_var, example_obj[disc_name])
 
             for name, value in example_obj.copy().items():
