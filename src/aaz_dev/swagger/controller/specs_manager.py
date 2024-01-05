@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from swagger.model.specs import SwaggerSpecs, SingleModuleSwaggerSpecs, ResourceProvider, SwaggerModule
+from swagger.model.specs import SwaggerSpecs, SingleModuleSwaggerSpecs, OpenAPIResourceProvider, SwaggerModule, TypeSpecResourceProvider
 from utils import exceptions
 from utils.config import Config
 from utils.plane import PlaneEnum
@@ -22,15 +22,29 @@ class SwaggerSpecsModuleManager:
             self._rps_catch = self.module.get_resource_providers()
         return self._rps_catch
 
-    def get_resource_provider(self, rp_name):
+    def get_openapi_resource_provider(self, rp_name):
         rps = self.get_resource_providers()
         rp = None
         for v in rps:
+            if not isinstance(rp, OpenAPIResourceProvider):
+                continue
             if v.name == rp_name:
                 rp = v
                 break
         if rp is None:
+            raise exceptions.ResourceNotFind(f"resource provider not find '{rp_name}'")
+        return rp
 
+    def get_typespec_resource_provider(self, rp_name):
+        rps = self.get_resource_providers()
+        rp = None
+        for v in rps:
+            if not isinstance(rp, TypeSpecResourceProvider):
+                continue
+            if v.name == rp_name:
+                rp = v
+                break
+        if rp is None:
             raise exceptions.ResourceNotFind(f"resource provider not find '{rp_name}'")
         return rp
 
@@ -39,7 +53,7 @@ class SwaggerSpecsModuleManager:
         if key in self._resource_op_group_map_cache:
             return self._resource_op_group_map_cache[key]
 
-        rp = self.get_resource_provider(rp_name)
+        rp = self.get_openapi_resource_provider(rp_name)
         resource_map = self.get_resource_map(rp)
         resource_op_group_map = OrderedDict()
         for resource_id, version_map in resource_map.items():
@@ -61,7 +75,7 @@ class SwaggerSpecsModuleManager:
 
     def get_resource_version_map(self, resource_id, rp_name=None):
         if rp_name:
-            rps = [self.get_resource_provider(rp_name)]
+            rps = [self.get_openapi_resource_provider(rp_name)]
         else:
             rps = self.get_resource_providers()
 
@@ -85,7 +99,7 @@ class SwaggerSpecsModuleManager:
 
     def get_resource_in_version(self, resource_id, version, rp_name=None):
         if rp_name:
-            rps = [self.get_resource_provider(rp_name)]
+            rps = [self.get_openapi_resource_provider(rp_name)]
         else:
             rps = self.get_resource_providers()
 
@@ -107,7 +121,7 @@ class SwaggerSpecsModuleManager:
         return resources[0]
 
     def get_resource_map(self, rp):
-        assert isinstance(rp, ResourceProvider)
+        assert isinstance(rp, OpenAPIResourceProvider)
         key = str(rp)
         if key not in self._resource_map_cache:
             self._resource_map_cache[key] = rp.get_resource_map()

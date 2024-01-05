@@ -3,6 +3,7 @@ import os
 from utils.plane import PlaneEnum
 from ._swagger_module import MgmtPlaneModule, DataPlaneModule
 from utils.exceptions import ResourceNotFind, InvalidAPIUsage
+from ._typespec_helper import TypeSpecHelper
 
 
 class SwaggerSpecs:
@@ -30,7 +31,7 @@ class SwaggerSpecs:
             return None
 
         path = os.path.join(self._spec_folder_path, name)
-        if os.path.isdir(os.path.join(path, 'resource-manager')):
+        if os.path.isdir(os.path.join(path, 'resource-manager')) or TypeSpecHelper.find_mgmt_plane_entry_files(path):
             module = MgmtPlaneModule(plane=plane, name=name, folder_path=path)
             for name in names[1:]:
                 path = os.path.join(path, name)
@@ -38,7 +39,6 @@ class SwaggerSpecs:
                     return None
                 module = MgmtPlaneModule(plane=plane, name=name, folder_path=path, parent=module)
             return module
-
         return None
 
     def get_data_plane_modules(self, plane):
@@ -57,7 +57,7 @@ class SwaggerSpecs:
             return None
 
         path = os.path.join(self._spec_folder_path, name)
-        if os.path.isdir(os.path.join(path, 'data-plane')):
+        if os.path.isdir(os.path.join(path, 'data-plane')) or TypeSpecHelper.find_data_plane_entry_files(path):
             module = DataPlaneModule(plane=plane, name=name, folder_path=path)
             for name in names[1:]:
                 path = os.path.join(path, name)
@@ -82,7 +82,8 @@ class SingleModuleSwaggerSpecs:
         if not PlaneEnum.is_valid_swagger_module(plane=plane, module_name=names[0]):
             raise InvalidAPIUsage(f"{names[0]} is not a valid mgmt plane module")
 
-        if os.path.isdir(os.path.join(self._folder_path, 'resource-manager')):
+        if (os.path.isdir(os.path.join(self._folder_path, 'resource-manager')) or
+                TypeSpecHelper.find_mgmt_plane_entry_files(self._folder_path)):
             module = None
             for name in names:
                 module = MgmtPlaneModule(plane=plane, name=name, folder_path=None, parent=module)
@@ -115,7 +116,8 @@ class SingleModuleSwaggerSpecs:
         if not PlaneEnum.is_valid_swagger_module(plane=plane, module_name=names[0]):
             raise InvalidAPIUsage(f"{names[0]} is not a supported data plane module.")
 
-        if os.path.isdir(os.path.join(self._folder_path, 'data-plane')):
+        if (os.path.isdir(os.path.join(self._folder_path, 'data-plane')) or
+                TypeSpecHelper.find_data_plane_entry_files(self._folder_path)):
             module = None
             for name in names:
                 module = DataPlaneModule(plane=plane, name=name, folder_path=None, parent=module)

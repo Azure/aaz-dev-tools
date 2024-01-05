@@ -90,7 +90,7 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
         aaz_specs = AAZSpecsManager()
 
         module_manager = swagger_specs.get_module_manager(Config.DEFAULT_PLANE, Config.DEFAULT_SWAGGER_MODULE)
-        rp = module_manager.get_resource_provider(Config.DEFAULT_RESOURCE_PROVIDER)
+        rp = module_manager.get_openapi_resource_provider(Config.DEFAULT_RESOURCE_PROVIDER)
 
         resource_map = rp.get_resource_map_by_tag(swagger_tag)
         if not resource_map:
