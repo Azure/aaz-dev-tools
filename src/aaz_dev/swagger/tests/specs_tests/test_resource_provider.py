@@ -1,21 +1,38 @@
 from swagger.tests.common import SwaggerSpecsTestCase
 from datetime import datetime
+from swagger.model.specs import TypeSpecResourceProvider, OpenAPIResourceProvider
 import time
 
 
 class ResourceProviderLoaderTest(SwaggerSpecsTestCase):
 
-    def test_mgmt_plan_resource_providers(self):
+    def test_mgmt_plan_openapi_resource_providers(self):
         total = 0
-        for rp in self.get_mgmt_plane_resource_providers():
+        for rp in self.get_mgmt_plane_resource_providers(resource_provider_filter=lambda r: isinstance(r, OpenAPIResourceProvider)):
             print(rp)
             total += 1
         print(total)
         time.sleep(1)
 
-    def test_data_plan_resource_providers(self):
+    def test_mgmt_plan_typespec_resource_providers(self):
         total = 0
-        for rp in self.get_data_plane_resource_providers():
+        for rp in self.get_mgmt_plane_resource_providers(resource_provider_filter=lambda r: isinstance(r, TypeSpecResourceProvider)):
+            print(rp)
+            total += 1
+        print(total)
+        time.sleep(1)
+
+    def test_data_plan_openapi_resource_providers(self):
+        total = 0
+        for rp in self.get_data_plane_resource_providers(resource_provider_filter=lambda r: isinstance(r, OpenAPIResourceProvider)):
+            print(rp)
+            total += 1
+        print(total)
+        time.sleep(1)
+
+    def test_data_plan_typespec_resource_providers(self):
+        total = 0
+        for rp in self.get_data_plane_resource_providers(resource_provider_filter=lambda r: isinstance(r, TypeSpecResourceProvider)):
             print(rp)
             total += 1
         print(total)
@@ -24,6 +41,8 @@ class ResourceProviderLoaderTest(SwaggerSpecsTestCase):
     def test_resource_map(self):
         total = 0
         for rp in self.get_resource_providers():
+            if isinstance(rp, TypeSpecResourceProvider):
+                continue
             print(rp)
             resource_map = rp.get_resource_map()
             total += len(resource_map)
@@ -32,6 +51,8 @@ class ResourceProviderLoaderTest(SwaggerSpecsTestCase):
 
     def test_resource_map_similar_path(self):
         for rp in self.get_resource_providers():
+            if isinstance(rp, TypeSpecResourceProvider):
+                continue
             print(rp)
             resource_map = rp.get_resource_map()
             for resource_version_map in resource_map.values():

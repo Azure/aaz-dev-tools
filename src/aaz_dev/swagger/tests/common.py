@@ -1,5 +1,5 @@
 import os
-from swagger.model.specs import SwaggerSpecs
+from swagger.model.specs import SwaggerSpecs, OpenAPIResourceProvider
 from app.tests.common import ApiTestCase
 from utils.plane import PlaneEnum
 
@@ -43,7 +43,7 @@ class SwaggerSpecsTestCase(ApiTestCase):
             yield rp
 
     def get_swagger_file_paths(self, file_path_filter=None, **kwargs):
-        for rp in self.get_resource_providers(**kwargs):
+        for rp in self.get_resource_providers(resource_provider_filter=lambda r: isinstance(r, OpenAPIResourceProvider), **kwargs):
             for root, dirs, files in os.walk(rp.folder_path):
                 for file in files:
                     if not file.endswith('.json'):

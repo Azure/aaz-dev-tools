@@ -14,7 +14,7 @@ from ._utils import map_path_2_repo
 logger = logging.getLogger('backend')
 
 
-class ResourceProvider:
+class OpenAPIResourceProvider:
 
     def __init__(self, name, folder_path, readme_path, swagger_module):
         self.name = name
@@ -116,7 +116,7 @@ class ResourceProvider:
                 tag = piece[2]
                 if tag is None:
                     tag = ''
-                tag = ResourceProviderTag(tag.strip(), self)
+                tag = OpenAPIResourceProviderTag(tag.strip(), self)
                 if tag not in tags:
                     tags[tag] = set()
                 tags[tag] = tags[tag].union(files)
@@ -219,7 +219,7 @@ class ResourceProvider:
         return resources
 
 
-class ResourceProviderTag:
+class OpenAPIResourceProviderTag:
 
     def __init__(self, tag, resource_provider):
         self._tag = tag
@@ -248,3 +248,14 @@ class ResourceProviderTag:
 
     def __ne__(self, other):
         return str(self) != str(other)
+
+
+class TypeSpecResourceProvider:
+
+    def __init__(self, name, entry_folders, swagger_module):
+        self.name = name
+        self.entry_folders = entry_folders
+        self.swagger_module = swagger_module
+
+    def __str__(self):
+        return f'{self.swagger_module}/ResourceProviders/{self.name}'
