@@ -20,6 +20,7 @@ interface WSEditorSwaggerPickerState {
 
     defaultModule: string | null
     defaultResourceProvider: string | null
+    defaultSource: string | null
     // preVersion: string | null
 
     moduleOptions: string[],
@@ -103,6 +104,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
             invalidText: undefined,
             defaultModule: null,
             defaultResourceProvider: null,
+            defaultSource: null,
             // preVersion: null,
             existingResources: new Set(),
 
@@ -144,9 +146,13 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 let rpUrl = null;
                 if (res.data.rpName !== null && res.data.rpName.length > 0) {
                     rpUrl = `${moduleValueUrl}/ResourceProviders/${res.data.rpName}`
+                    if (res.data.source === "TypeSpec") {
+                        rpUrl += `/TypeSpec`;
+                    }
                 }
                 this.setState({
                     defaultModule: moduleValueUrl,
+                    defaultSource: res.data.source,
                     selectedModule: moduleValueUrl,
                     moduleOptions: [moduleValueUrl],  // only the default module selectable.
                 });
@@ -196,8 +202,13 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
 
     loadResourceProviders = async (moduleUrl: string | null, preferredRP: string | null) => {
         if (moduleUrl != null) {
+            let defaultSource = this.state.defaultSource;
             try {
-                let res = await axios.get(`${moduleUrl}/ResourceProviders`);
+                let url = `${moduleUrl}/ResourceProviders`
+                if (defaultSource !== null) {
+                    url += `?type=${defaultSource}`;
+                }
+                let res = await axios.get(url);
                 let options: string[] = res.data.map((v: any) => (v.url));
                 let selectedResourceProvider = options.length === 1 ? options[0] : null;
                 let defaultResourceProvider = null;
@@ -258,61 +269,70 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                 invalidText: undefined,
                 loading: true,
             })
-            try {
-                let res = await axios.get(`${resourceProviderUrl}/Resources`);
-                // const resourceIdVersionMap: ResourceIdVersionMap = {}
-                const versionResourceIdMap: VersionResourceIdMap = {}
-                const versionOptions: string[] = []
-                // const aazVersionOptions: string[] = []
-                const resourceMap: ResourceMap = {}
-                const resourceIdList: string[] = []
-                res.data.forEach((resource: Resource) => {
-                    // resource.versions.sort((a, b) =>  a.version.localeCompare(b.version));
-                    resourceIdList.push(resource.id);
-                    resourceMap[resource.id] = resource;
-                    resourceMap[resource.id].aazVersions = null;
-
-                    const resourceVersions = resource.versions.map((v) => v.version)
-                    // resourceIdVersionMap[resource.id] = versions;
-                    resourceVersions.forEach((v) => {
-                        if (!(v in versionResourceIdMap)) {
-                            versionResourceIdMap[v] = [];
-                            versionOptions.push(v);
-                        }
-                        versionResourceIdMap[v].push(resource);
-                    })
-                })
-                versionOptions.sort((a, b) => a.localeCompare(b)).reverse()
-                let selectVersion = null;
-                if (versionOptions.length > 0) {
-                    selectVersion = versionOptions[0];
-                }
-
-                const filterBody = {
-                    resources: resourceIdList
-                };
-
-                res = await axios.post(`/AAZ/Specs/Resources/${this.props.plane}/Filter`, filterBody);
-                res.data.resources.forEach((aazResource: AAZResource) => {
-                    if (aazResource.versions) {
-                        resourceMap[aazResource.id].aazVersions = aazResource.versions;
-                    }
-
-                })
+            if (resourceProviderUrl.endsWith("/TypeSpec")) {
+                // TODO: load resources from type spec
                 this.setState({
                     loading: false,
-                    versionResourceIdMap: versionResourceIdMap,
-                    resourceMap: resourceMap,
-                    versionOptions: versionOptions,
+                    versionOptions: [],
                 })
-                this.onVersionUpdate(selectVersion);
-            } catch (err: any) {
-                console.error(err.response);
-                if (err.response?.data?.message) {
-                    const data = err.response!.data!;
-                    this.setState({
-                        invalidText: `ResponseError: ${data.message!}`,
+                throw new Error("Not implemented yet");
+            } else {
+                try {
+                    let res = await axios.get(`${resourceProviderUrl}/Resources`);
+                    // const resourceIdVersionMap: ResourceIdVersionMap = {}
+                    const versionResourceIdMap: VersionResourceIdMap = {}
+                    const versionOptions: string[] = []
+                    // const aazVersionOptions: string[] = []
+                    const resourceMap: ResourceMap = {}
+                    const resourceIdList: string[] = []
+                    res.data.forEach((resource: Resource) => {
+                        // resource.versions.sort((a, b) =>  a.version.localeCompare(b.version));
+                        resourceIdList.push(resource.id);
+                        resourceMap[resource.id] = resource;
+                        resourceMap[resource.id].aazVersions = null;
+    
+                        const resourceVersions = resource.versions.map((v) => v.version)
+                        // resourceIdVersionMap[resource.id] = versions;
+                        resourceVersions.forEach((v) => {
+                            if (!(v in versionResourceIdMap)) {
+                                versionResourceIdMap[v] = [];
+                                versionOptions.push(v);
+                            }
+                            versionResourceIdMap[v].push(resource);
+                        })
                     })
+                    versionOptions.sort((a, b) => a.localeCompare(b)).reverse()
+                    let selectVersion = null;
+                    if (versionOptions.length > 0) {
+                        selectVersion = versionOptions[0];
+                    }
+    
+                    const filterBody = {
+                        resources: resourceIdList
+                    };
+    
+                    res = await axios.post(`/AAZ/Specs/Resources/${this.props.plane}/Filter`, filterBody);
+                    res.data.resources.forEach((aazResource: AAZResource) => {
+                        if (aazResource.versions) {
+                            resourceMap[aazResource.id].aazVersions = aazResource.versions;
+                        }
+    
+                    })
+                    this.setState({
+                        loading: false,
+                        versionResourceIdMap: versionResourceIdMap,
+                        resourceMap: resourceMap,
+                        versionOptions: versionOptions,
+                    })
+                    this.onVersionUpdate(selectVersion);
+                } catch (err: any) {
+                    console.error(err.response);
+                    if (err.response?.data?.message) {
+                        const data = err.response!.data!;
+                        this.setState({
+                            invalidText: `ResponseError: ${data.message!}`,
+                        })
+                    }
                 }
             }
         } else {
@@ -751,7 +771,6 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         )
     }
 }
-
 
 
 interface SwaggerItemsSelectorProps {

@@ -1,5 +1,6 @@
 import os
 import logging
+import re
 
 logger = logging.getLogger('backend')
 
@@ -51,7 +52,7 @@ class TypeSpecHelper:
                 is_mgmt_plane = True
             if line.startswith("namespace "):
                 assert namespace is None
-                namespace = line.split(' ')[1].strip()
+                namespace = re.match(r"^namespace\s+([A-Za-z0-9.]+)", line).group(1)
                 # armProviderNamespace will always be appeared before namespace
                 break
         if namespace is None:

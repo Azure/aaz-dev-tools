@@ -6,6 +6,7 @@ import os
 import json
 from utils import exceptions
 from swagger.utils.tools import swagger_resource_path_to_resource_id
+from swagger.utils.source import SourceTypeEnum
 from command.model.configuration import *
 
 
@@ -18,7 +19,7 @@ class WorkspaceManagerTest(CommandTestCase):
 
         mod_names = "edgeorder"
         resource_provider = 'Microsoft.EdgeOrder'
-        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider=resource_provider)
+        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider=resource_provider, source=SourceTypeEnum.OpenAPI)
         manager.save()
         assert os.path.exists(manager.path)
         with open(manager.path, 'r') as f:
@@ -48,7 +49,7 @@ class WorkspaceEditorTest(CommandTestCase):
     def test_workspace_editor_add_resources_by_swagger(self, ws_name):
         mod_names = "edgeorder"
         resource_provider = 'Microsoft.EdgeOrder'
-        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider=resource_provider)
+        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider=resource_provider, source=SourceTypeEnum.OpenAPI)
         manager.save()
 
 
@@ -90,7 +91,7 @@ class WorkspaceEditorTest(CommandTestCase):
     def test_workspace_editor_subresource(self, ws_name):
         mod_names = "cdn"
         resource_provider = "Microsoft.Cdn"
-        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider=resource_provider)
+        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider=resource_provider, source=SourceTypeEnum.OpenAPI)
         manager.save()
 
         version = '2021-06-01'
@@ -329,7 +330,7 @@ class WorkspaceEditorTest(CommandTestCase):
     def test_workspace_editor_subresource_with_index(self, ws_name):
         mod_names = "cdn"
         resource_provider = "Microsoft.Cdn"
-        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider=resource_provider)
+        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider=resource_provider, source=SourceTypeEnum.OpenAPI)
         manager.save()
 
         version = '2021-06-01'

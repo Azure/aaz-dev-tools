@@ -1,6 +1,7 @@
 from command.controller.workspace_manager import WorkspaceManager
 from command.tests.common import CommandTestCase, workspace_name
 from swagger.utils.tools import swagger_resource_path_to_resource_id
+from swagger.utils.source import SourceTypeEnum
 from utils.plane import PlaneEnum
 from utils import exceptions
 
@@ -9,10 +10,10 @@ class ArgumentsGenerationTest(CommandTestCase):
 
     @workspace_name("test_flatten_simple_object_argument")
     def test_flatten_simple_object_argument(self, ws_name):
-        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt)
-        manager.save()
-
         mod_names = "edgeorder"
+        manager = WorkspaceManager.new(
+            ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider="Microsoft.EdgeOrder", source=SourceTypeEnum.OpenAPI)
+        manager.save()
 
         manager.add_new_resources_by_swagger(
             mod_names=mod_names,
@@ -82,10 +83,12 @@ class ArgumentsGenerationTest(CommandTestCase):
 
     @workspace_name("test_flatten_object_argument_invalid")
     def test_flatten_object_argument_invalid(self, ws_name):
-        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt)
+        mod_names = "edgeorder"
+        manager = WorkspaceManager.new(
+            ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider="Microsoft.EdgeOrder", source=SourceTypeEnum.OpenAPI)
         manager.save()
 
-        mod_names = "edgeorder"
+
 
         manager.add_new_resources_by_swagger(
             mod_names=mod_names,

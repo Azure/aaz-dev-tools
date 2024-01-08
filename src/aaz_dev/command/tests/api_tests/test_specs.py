@@ -1,6 +1,7 @@
 from utils.stage import AAZStageEnum
 from command.tests.common import CommandTestCase, workspace_name
 from swagger.utils.tools import swagger_resource_path_to_resource_id
+from swagger.utils.source import SourceTypeEnum
 from utils.plane import PlaneEnum
 from utils.base64 import b64encode_str
 
@@ -15,7 +16,8 @@ class APIAAZSpecsTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "edgeorder",
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()

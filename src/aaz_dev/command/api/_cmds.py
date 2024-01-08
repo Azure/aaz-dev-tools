@@ -9,6 +9,7 @@ from flask import Blueprint
 from command.controller.specs_manager import AAZSpecsManager
 from command.templates import get_templates
 from swagger.utils.tools import swagger_resource_path_to_resource_id
+from swagger.utils.source import SourceTypeEnum
 from utils.config import Config
 
 logger = logging.getLogger('backend')
@@ -111,14 +112,17 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
                 "id": resource_id
             })
 
+        mod_names = Config.DEFAULT_SWAGGER_MODULE.split('/')
         ws = WorkspaceManager.new(
             name=Config.DEFAULT_SWAGGER_MODULE,
             plane=Config.DEFAULT_PLANE,
             folder=workspace_path or WorkspaceManager.IN_MEMORY,  # if workspace path exist, use workspace else use in memory folder
+            mod_names=mod_names,
+            resource_provider=rp.name,
             swagger_manager=swagger_specs,
             aaz_manager=aaz_specs,
+            source=SourceTypeEnum.OpenAPI,
         )
-        mod_names = Config.DEFAULT_SWAGGER_MODULE.split('/')
         for version, resources in version_resource_map.items():
             ws.add_new_resources_by_swagger(
                 mod_names=mod_names, version=version, resources=resources

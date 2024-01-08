@@ -1,6 +1,7 @@
 from app.tests.common import ApiTestCase
 from command.tests.common import workspace_name
 from swagger.utils.tools import swagger_resource_path_to_resource_id
+from swagger.utils.source import SourceTypeEnum
 from utils.plane import PlaneEnum
 from utils.stage import AAZStageEnum
 from utils.client import CloudEnum
@@ -41,7 +42,8 @@ class CommandTestCase(ApiTestCase):
                 "name": ws_name + '_' + api_version,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": module,
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -376,7 +378,8 @@ class CommandTestCase(ApiTestCase):
                 "name": ws_name + '_' + api_version,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": module,
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -711,7 +714,8 @@ class CommandTestCase(ApiTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": module,
-                "resourceProvider": "Microsoft.Databricks"
+                "resourceProvider": "Microsoft.Databricks",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -968,7 +972,8 @@ class CommandTestCase(ApiTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": module,
-                "resourceProvider": "Microsoft.Databricks"
+                "resourceProvider": "Microsoft.Databricks",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1225,7 +1230,8 @@ class CommandTestCase(ApiTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": module,
-                "resourceProvider": "Microsoft.Elastic"
+                "resourceProvider": "Microsoft.Elastic",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1551,7 +1557,8 @@ class CommandTestCase(ApiTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": module,
-                "resourceProvider": "Microsoft.Elastic"
+                "resourceProvider": "Microsoft.Elastic",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1877,7 +1884,8 @@ class CommandTestCase(ApiTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": module,
-                "resourceProvider": "Microsoft.Elastic"
+                "resourceProvider": "Microsoft.Elastic",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -2225,7 +2233,8 @@ class CommandTestCase(ApiTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": module,
-                "resourceProvider": "Microsoft.Elastic"
+                "resourceProvider": "Microsoft.Elastic",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -2621,7 +2630,8 @@ class CommandTestCase(ApiTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum._Data,
                 "modNames": module,
-                "resourceProvider": resource_provider
+                "resourceProvider": resource_provider,
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -2776,7 +2786,8 @@ class CommandTestCase(ApiTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum._Data,
                 "modNames": module,
-                "resourceProvider": resource_provider
+                "resourceProvider": resource_provider,
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -2880,7 +2891,8 @@ class CommandTestCase(ApiTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": module,
-                "resourceProvider": resource_provider
+                "resourceProvider": resource_provider,
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -2944,7 +2956,8 @@ class CommandTestCase(ApiTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum._Data,
                 "modNames": module,
-                "resourceProvider": resource_provider
+                "resourceProvider": resource_provider,
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()

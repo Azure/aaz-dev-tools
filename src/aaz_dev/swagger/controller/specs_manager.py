@@ -26,7 +26,7 @@ class SwaggerSpecsModuleManager:
         rps = self.get_resource_providers()
         rp = None
         for v in rps:
-            if not isinstance(rp, OpenAPIResourceProvider):
+            if not isinstance(v, OpenAPIResourceProvider):
                 continue
             if v.name == rp_name:
                 rp = v
@@ -39,7 +39,7 @@ class SwaggerSpecsModuleManager:
         rps = self.get_resource_providers()
         rp = None
         for v in rps:
-            if not isinstance(rp, TypeSpecResourceProvider):
+            if not isinstance(v, TypeSpecResourceProvider):
                 continue
             if v.name == rp_name:
                 rp = v

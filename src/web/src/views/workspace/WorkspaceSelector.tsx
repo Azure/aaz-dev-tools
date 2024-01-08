@@ -408,11 +408,17 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
             this.setState({ invalidText: `Please select 'Resource Provider'.` });
             return undefined
         }
+        let source = "OpenAPI";
+        if (selectedResourceProvider.endsWith('/TypeSpec')) {
+            selectedResourceProvider = selectedResourceProvider.replace('/TypeSpec', '');
+            source = "TypeSpec";
+        }
         return {
             name: workspaceName,
             plane: plane,
             modNames: selectedModule,
             resourceProvider: selectedResourceProvider,
+            source: source,
         }
     }
 
