@@ -52,6 +52,10 @@ class CMDEditorWorkspace(Model):
         serialized_name='resourceProvider',
         deserialize_from='resourceProvider'
     )
+    source = StringType(
+        choices=['OpenAPI', 'TypeSpec'],
+        default='OpenAPI',
+    )  # The type of the api spec source. It can be 'OpenAPI' or 'TypeSpec'
     command_tree = ModelType(
         CMDCommandTreeNode,
         required=True,

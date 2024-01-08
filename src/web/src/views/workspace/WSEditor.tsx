@@ -28,6 +28,7 @@ interface WSEditorState {
     name: string
     workspaceUrl: string,
     plane: string,
+    source: string,
     clientConfigurable: boolean,
 
     selected: Command | CommandGroup | null,
@@ -65,6 +66,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
             name: this.props.params.workspaceName,
             workspaceUrl: `/AAZ/Editor/Workspaces/${this.props.params.workspaceName}`,
             plane: "",
+            source: "",
             clientConfigurable: false,
             selected: null,
             reloadTimestamp: null,
@@ -220,6 +222,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 return {
                     ...preState,
                     plane: res.data.plane,
+                    source: res.data.source,
                     clientConfigurable: clientConfigurable,
                     commandTree: commandTree,
                     selected: selected,
