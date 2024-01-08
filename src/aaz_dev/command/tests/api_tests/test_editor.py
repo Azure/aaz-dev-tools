@@ -2723,3 +2723,8 @@ class APIEditorTest(CommandTestCase):
                 }
             )
             self.assertTrue(rv.status_code == 200)
+
+            self.assertTrue(
+                "microsoft-azure-monitor-multiple-resource-multiple-metric-criteria" in rv.json[0]["commands"][0]
+            )
+            self.assertTrue("static-threshold-criterion" in rv.json[0]["commands"][0])

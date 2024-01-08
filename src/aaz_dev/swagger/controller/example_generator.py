@@ -30,23 +30,43 @@ class ExampleGenerator:
             example_builder = None
             examples = None
             if path_item.get is not None and path_item.get.operation_id in cmd_operation_ids:
-                example_builder = SwaggerExampleBuilder(command=command, operation=path_item.get)
+                example_builder = SwaggerExampleBuilder(
+                    command=command,
+                    operation=path_item.get,
+                    cmd_operation=cmd_operation_ids[path_item.get.operation_id]
+                )
                 examples = path_item.get.x_ms_examples
 
             elif path_item.delete is not None and path_item.delete.operation_id in cmd_operation_ids:
-                example_builder = SwaggerExampleBuilder(command=command, operation=path_item.delete)
+                example_builder = SwaggerExampleBuilder(
+                    command=command,
+                    operation=path_item.delete,
+                    cmd_operation=cmd_operation_ids[path_item.delete.operation_id]
+                )
                 examples = path_item.delete.x_ms_examples
 
             elif path_item.put is not None and path_item.put.operation_id in cmd_operation_ids:
-                example_builder = SwaggerExampleBuilder(command=command, operation=path_item.put)
+                example_builder = SwaggerExampleBuilder(
+                    command=command,
+                    operation=path_item.put,
+                    cmd_operation=cmd_operation_ids[path_item.put.operation_id]
+                )
                 examples = path_item.put.x_ms_examples
 
             elif path_item.post is not None and path_item.post.operation_id in cmd_operation_ids:
-                example_builder = SwaggerExampleBuilder(command=command, operation=path_item.post)
+                example_builder = SwaggerExampleBuilder(
+                    command=command,
+                    operation=path_item.post,
+                    cmd_operation=cmd_operation_ids[path_item.post.operation_id]
+                )
                 examples = path_item.post.x_ms_examples
 
             elif path_item.head is not None and path_item.head.operation_id in cmd_operation_ids:
-                example_builder = SwaggerExampleBuilder(command=command, operation=path_item.head)
+                example_builder = SwaggerExampleBuilder(
+                    command=command,
+                    operation=path_item.head,
+                    cmd_operation=cmd_operation_ids[path_item.head.operation_id]
+                )
                 examples = path_item.head.x_ms_examples
 
             if not example_builder or not examples:

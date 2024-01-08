@@ -21,6 +21,8 @@ from .x_ms_long_running_operation import XmsLongRunningOperationField, XmsLongRu
 from .x_ms_odata import XmsODataField
 from .x_ms_pageable import XmsPageableField
 
+logger = logging.getLogger('backend')
+
 
 class Operation(Model, Linkable):
     """Describes a single API operation on a path."""
@@ -139,8 +141,8 @@ class Operation(Model, Linkable):
             for key, example in self.x_ms_examples.items():
                 try:
                     example.link(swagger_loader, *self.traces, "x_ms_examples", key)
-                except e:
-                    logging.warning(f"Link example failed at {key}.")
+                except Exception as e:
+                    logger.error(f"Link example failed: {e}: {key}.")
 
     def to_cmd(self, builder, parent_parameters, host_path, **kwargs):
         cmd_op = CMDHttpOperation()
