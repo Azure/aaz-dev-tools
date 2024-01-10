@@ -1,7 +1,7 @@
 from swagger.controller._shorthand import serialize
 
 
-def test_nested():
+def test_with_nesting():
     obj = {
         "microsoft-azure-monitor-single-resource-multiple-metric-criteria": {
             "all-of": [{
