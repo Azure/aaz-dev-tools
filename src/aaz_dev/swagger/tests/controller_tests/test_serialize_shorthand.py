@@ -28,7 +28,9 @@ def test_with_single_quote():
 
 def test_with_special_characters():
     obj = {
-        "name": "monitor metric"
+        "name": "monitor metric",
+        "dimensions": "null",
+        "data": "{a: [1, 2]}"
     }
 
-    assert serialize(obj) == '"{name:\'monitor metric\'}"'
+    assert serialize(obj) == '"{name:\'monitor metric\',dimensions:\'null\',data:\'{a: [1, 2]}\'}"'
