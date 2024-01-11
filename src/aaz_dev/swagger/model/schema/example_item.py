@@ -1,8 +1,8 @@
 from schematics.models import Model
 from schematics.types import DictType, ModelType
 
-from command.model.configuration import CMDCommandExample
 from command.controller.shorthand import serialize
+from command.model.configuration import CMDCommandExample
 from .reference import Linkable, ReferenceField
 
 
