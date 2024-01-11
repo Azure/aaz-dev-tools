@@ -5,7 +5,6 @@ from abc import abstractmethod
 from command.controller.cfg_reader import CfgReader
 from command.model.configuration import CMDArgGroup
 from command.model.configuration._utils import CMDArgBuildPrefix
-from swagger.controller._shorthand import serialize
 from swagger.model.schema.parameter import PathParameter, QueryParameter, HeaderParameter, BodyParameter
 
 
@@ -106,7 +105,7 @@ class SwaggerExampleBuilder(ExampleBuilder):
                 val=value
             )
             if item and item.is_top_level:
-                self.example_items.append((item.arg_option, serialize(value)))
+                self.example_items.append((item.arg_option, value))
 
         return self.example_items
 
@@ -180,7 +179,7 @@ class SwaggerExampleBuilder(ExampleBuilder):
                         example_items += self.build(item.arg_var, value)
 
                     if item.is_top_level:
-                        example_items.append((item.arg_option, serialize(value)))
+                        example_items.append((item.arg_option, value))
 
                     elif item.is_flatten:
                         for k, v in item.val.items():

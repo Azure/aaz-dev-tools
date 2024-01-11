@@ -1,4 +1,4 @@
-from swagger.controller._shorthand import serialize
+from command.controller.shorthand import serialize
 
 
 def test_with_nesting():
@@ -29,8 +29,8 @@ def test_with_single_quote():
 def test_with_special_characters():
     obj = {
         "name": "monitor metric",
-        "dimensions": "null",
+        "dimensions": None,
         "data": "{a: [1, 2]}"
     }
 
-    assert serialize(obj) == '"{name:\'monitor metric\',dimensions:\'null\',data:\'{a: [1, 2]}\'}"'
+    assert serialize(obj) == '"{name:\'monitor metric\',dimensions:null,data:\'{a: [1, 2]}\'}"'
