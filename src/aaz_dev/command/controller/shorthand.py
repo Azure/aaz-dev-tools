@@ -8,7 +8,7 @@ def serialize(obj):
 
         else:
             if obj is None:
-                return repr("null")[1:-1]  # replace None by null
+                return "null"  # replace None by null
 
             escaped = str(obj)
             escaped = escaped.replace("'", "'/")  # use '/ to input '
