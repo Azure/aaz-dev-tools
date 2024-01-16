@@ -248,4 +248,4 @@ Azure CLI uses profiles to support Azure Stack. There are five profiles:
 The `latest` profile contains a full set of commands and the rest profiles contains a sub set of commands from the `latest`.
 One command may call different api versions in different profiles. So its arguments and output schema may vary from profile to profile.
 
-Please jump to [CLI Generator](pages/usage/cli_generator_usage.md) for more details.
+Please jump to [CLI Generator Usage](pages/usage/cli-generator/) for more details.
