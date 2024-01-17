@@ -3,6 +3,11 @@
 Release History
 ===============
 
+2.6.0
+++++++
+* Fix invalid URL in the document (#327)
+* Support dynamic endpoints retrieve from ARM Cloud Metadata API (#316)
+
 2.5.1
 ++++++
 * Chore: support model from data-plane (#321)
