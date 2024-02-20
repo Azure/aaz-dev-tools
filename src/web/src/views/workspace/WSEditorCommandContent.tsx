@@ -10,6 +10,9 @@ import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArro
 import LabelIcon from '@mui/icons-material/Label';
 import WSEditorCommandArgumentsContent, { ClsArgDefinitionMap, CMDArg, DecodeArgs } from './WSEditorCommandArgumentsContent';
 import EditIcon from '@mui/icons-material/Edit';
+import CloseIcon from '@mui/icons-material/Close';
+import Stack from '@mui/material/Stack';
+import { ExampleItemSelector } from './WSEditorExamplePicker';
 
 
 interface Plane {
@@ -866,6 +869,8 @@ interface ExampleDialogState {
     isAdd: boolean
     invalidText?: string
     updating: boolean
+    source?: string
+    exampleOptions: Example[]
 }
 
 const ExampleCommandTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
@@ -887,6 +892,8 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
                 isAdd: true,
                 invalidText: undefined,
                 updating: false,
+                source: undefined,
+                exampleOptions: [],
             }
         } else {
             const example = examples[this.props.idx];
@@ -896,6 +903,8 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
                 isAdd: false,
                 invalidText: undefined,
                 updating: false,
+                source: undefined,
+                exampleOptions: [],
             }
         }
     }
@@ -1050,8 +1059,64 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
         })
     }
 
+    loadSwaggerExamples = async () => {
+        try {
+            let { workspaceUrl, command } = this.props;
+
+            const leafUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + command.names.slice(0, -1).join('/') + '/Leaves/' + command.names[command.names.length - 1] + '/GenerateExamples';
+
+            this.setState({
+                source: "swagger",
+                updating: true,
+            })
+            let res = await axios.post(leafUrl, {
+                source: "swagger"
+            })
+
+            const examples: Example[] = res.data.map((v: any) => {
+                return {
+                    name: v.name,
+                    commands: v.commands
+                }
+            })
+            this.setState({
+                exampleOptions: examples,
+                updating: false
+            })
+            if (examples.length > 0) {
+                this.onExampleSelectorUpdate(examples[0].name);
+            }
+        } catch (err: any) {
+            console.error(err.response);
+            if (err.response?.data?.message) {
+                const data = err.response!.data!;
+                this.setState({
+                    updating: false,
+                    invalidText: `ResponseError: ${data.message!}`,
+                })
+            }
+        }
+    }
+
+    onExampleSelectorUpdate = (exampleDisplayName: string | null) => {
+        let example = this.state.exampleOptions.find((v) => v.name === exampleDisplayName) ?? undefined;
+
+        if (example === undefined) {
+            this.setState({
+                name: exampleDisplayName ?? "",
+            })
+        } else {
+            this.setState({
+                name: example?.name ?? "",
+                exampleCommands: example?.commands ?? ["",],
+            })
+        }
+    }
+
     render() {
-        const { name, exampleCommands, isAdd, invalidText, updating } = this.state;
+        const { name, exampleCommands, isAdd, invalidText, updating, source, exampleOptions } = this.state;
+
+        const selectedName = name
 
         const buildExampleInput = (cmd: string, idx: number) => {
             return (
@@ -1095,44 +1160,82 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
                 open={this.props.open}
                 sx={{ '& .MuiDialog-paper': { width: '80%' } }}
             >
-                <DialogTitle>{isAdd ? "Add Example" : "Modify Example"}</DialogTitle>
+                <DialogTitle>
+                    {isAdd ? "Add Example" : "Modify Example"}
+                    <IconButton style={{ position: "absolute", right: 16, top: 8}} edge="end" color="inherit" onClick={this.handleClose} aria-label="close">
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
                 <DialogContent dividers={true}>
-                    {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
-                    <TextField
-                        id="name"
-                        label="Name"
-                        type="text"
-                        fullWidth
-                        variant='standard'
-                        value={name}
-                        onChange={(event: any) => {
-                            this.setState({
-                                name: event.target.value,
-                            })
-                        }}
-                        margin="normal"
-                        required
-                    />
-                    <InputLabel required sx={{ font: "inherit", mt: 1 }}>Commands</InputLabel>
-                    {exampleCommands.map(buildExampleInput)}
-                    <Box sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'flex-start',
-                        ml: 1,
-                    }}>
-                        <IconButton
-                            edge="start"
-                            color="inherit"
-                            onClick={this.onAddExampleCommand}
-                            aria-label="add"
-                        >
-                            <AddCircleRoundedIcon fontSize="small" />
-                        </IconButton>
-                        <ExampleCommandTypography sx={{ flexShrink: 0 }}> One more command</ExampleCommandTypography>
-                    </Box>
+                    {isAdd && source === undefined &&
+                        <Stack direction="column" spacing={2}>
+                            <Button variant='contained' size="large" color='secondary' sx={{ fontSize: '20px', padding: '10px 20px' }} onClick={() => {this.loadSwaggerExamples()}}>
+                                <Typography variant='body2'>By OpenAPI Specification</Typography>
+                            </Button>
+                            <Button variant='outlined' size="large" color='secondary' sx={{ fontSize: '20px', padding: '10px 20px' }} disabled>
+                                <Typography variant='body2'>By Testing Record</Typography>
+                            </Button>
+                            <Button variant='outlined' size="large" color='secondary' sx={{ fontSize: '20px', padding: '10px 20px' }} disabled>
+                                <Typography variant='body2'>By Request Payload</Typography>
+                            </Button>
+                        </Stack>
+                    }
+                    {(!isAdd || source != undefined) &&
+                        <React.Fragment>
+                            {invalidText && <Alert variant="filled" severity='error'> {invalidText} </Alert>}
+                            {!isAdd &&
+                                <React.Fragment>
+                                    <TextField
+                                        id="name"
+                                        label="Name"
+                                        type="text"
+                                        fullWidth
+                                        variant='standard'
+                                        value={name}
+                                        onChange={(event: any) => {
+                                            this.setState({
+                                                name: event.target.value,
+                                            })
+                                        }}
+                                        margin="normal"
+                                        required
+                                    />
+                                </React.Fragment>
+                            }
+                            {source === "swagger" && 
+                                <React.Fragment>
+                                    <ExampleItemSelector
+                                        name="Name"
+                                        commonPrefix={""}
+                                        options={exampleOptions.map((v: any) => v.name)}
+                                        value={selectedName}
+                                        onValueUpdate={this.onExampleSelectorUpdate}
+                                    />
+                                </React.Fragment>
+                            }
+                            <InputLabel required sx={{ font: "inherit", mt: 1 }}>Commands</InputLabel>
+                            {exampleCommands.map(buildExampleInput)}
+                            <Box sx={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'flex-start',
+                                ml: 1,
+                            }}>
+                                <IconButton
+                                    edge="start"
+                                    color="inherit"
+                                    onClick={this.onAddExampleCommand}
+                                    aria-label="add"
+                                >
+                                    <AddCircleRoundedIcon fontSize="small" />
+                                </IconButton>
+                                <ExampleCommandTypography sx={{ flexShrink: 0 }}> One more command</ExampleCommandTypography>
+                            </Box>
+                        </React.Fragment>
+                    }
                 </DialogContent>
+                {(!isAdd || source != undefined) &&
                 <DialogActions>
                     {updating &&
                         <Box sx={{ width: '100%' }}>
@@ -1140,14 +1243,13 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
                         </Box>
                     }
                     {!updating && <React.Fragment>
-                        <Button onClick={this.handleClose}>Cancel</Button>
                         {!isAdd && <React.Fragment>
                             <Button onClick={this.handleDelete}>Delete</Button>
                             <Button onClick={this.handleModify}>Save</Button>
                         </React.Fragment>}
                         {isAdd && <Button onClick={this.handleAdd}>Add</Button>}
                     </React.Fragment>}
-                </DialogActions>
+                </DialogActions>}
             </Dialog>
         )
     }
@@ -1358,5 +1460,4 @@ const DecodeResponseClientConfig = (clientConfig: any): ClientConfig => {
 export default WSEditorCommandContent;
 
 export { DecodeResponseCommand };
-export type { Plane, Command, Resource, ResponseCommand, ResponseCommands };
-
+export type { Plane, Command, Resource, ResponseCommand, ResponseCommands, Example };
