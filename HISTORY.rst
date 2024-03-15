@@ -3,6 +3,10 @@
 Release History
 ===============
 
+2.6.1
+++++++
+* Adapt new plicies from lro operation (#333)
+
 2.6.0
 ++++++
 * Fix invalid URL in the document (#327)
