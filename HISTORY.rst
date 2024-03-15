@@ -5,7 +5,7 @@ Release History
 
 2.6.1
 ++++++
-* Adapt new plicies from lro operation (#333)
+* Adapt new polices for LRO operation (#333)
 
 2.6.0
 ++++++
