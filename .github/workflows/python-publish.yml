@@ -19,6 +19,9 @@ env:
   CACHE_PREFIX: v0
   PYTHON_PATH: ./
 
+permissions:
+  contents: write
+
 jobs:
   checks:
     name: Python ${{ matrix.python }} - ${{ matrix.task.name }}
