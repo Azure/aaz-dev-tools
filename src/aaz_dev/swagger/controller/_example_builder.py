@@ -150,8 +150,6 @@ class SwaggerExampleBuilder(ExampleBuilder):
                 if name == disc_name:
                     continue
 
-                example_obj.pop(name)  # will push back if arg_var valid
-
                 item = ExampleItem.new_instance(
                     command=self.command,
                     cmd_operation=self.cmd_operation,
@@ -169,6 +167,8 @@ class SwaggerExampleBuilder(ExampleBuilder):
                     )
 
                 if item:
+                    example_obj.pop(name)  # will push back if arg_var valid
+
                     for disc in item.discriminators:
                         if disc.property not in value or value[disc.property] != disc.value:
                             continue
