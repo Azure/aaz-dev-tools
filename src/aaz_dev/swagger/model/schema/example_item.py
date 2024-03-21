@@ -29,6 +29,9 @@ class ExampleItem(Model, Linkable):
 
         command = cmd_name
         for param_option, param_value in example_params:
+            if param_option == "subscription":
+                continue
+
             if len(param_option) == 1:
                 command += f" -{param_option} {serialize(param_value)}"
             else:
