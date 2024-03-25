@@ -544,7 +544,7 @@ class Schema(Model, Linkable):
                     model.props.append(prop)
 
             # additional properties
-            if self.additional_properties:
+            if self.additional_properties or not any([model.props, model.additional_props, model.discriminators]):
                 if isinstance(self.additional_properties, (Schema, ReferenceSchema)):
                     v = builder(self.additional_properties, in_base=True, support_cls_schema=True)
                     if v is not None:
@@ -554,9 +554,15 @@ class Schema(Model, Linkable):
                         # item is required, it's frozen status must be consisted with the defined schema.
                         # This can help to for empty object.
                         model.additional_props.item.frozen = builder.frozen
-                elif isinstance(self.additional_properties, bool) and self.additional_properties is True:
+                elif isinstance(self.additional_properties, bool):
+                    if self.additional_properties is True:
+                        # Free-Form Objects
+                        # additionalProperties: true
+                        model.additional_props = CMDObjectSchemaAdditionalProperties()
+                        model.additional_props.any_type = True
+                elif not any([model.props, model.additional_props, model.discriminators]):
                     # Free-Form Objects
-                    # additionalProperties: true
+                    # an empty object
                     model.additional_props = CMDObjectSchemaAdditionalProperties()
                     model.additional_props.any_type = True
 
