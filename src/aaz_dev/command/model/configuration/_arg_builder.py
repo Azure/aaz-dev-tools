@@ -137,7 +137,7 @@ class CMDArgBuilder:
                     for sub_arg in arg.args:
                         if sub_arg.group is None:
                             sub_arg.group = to_camel_case(self.schema.name)
-                        if not arg.required:
+                        if not arg.required and not sub_arg.required:  # undefined in both inner/outer layers
                             sub_arg.required = False
             return arg.args or []
         elif isinstance(self.schema, CMDSchema):
