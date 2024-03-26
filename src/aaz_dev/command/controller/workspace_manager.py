@@ -43,7 +43,7 @@ class WorkspaceManager:
         return workspaces
 
     @classmethod
-    def new(cls, name, plane, mod_names, resource_provider, **kwargs):
+    def new(cls, name, plane, mod_names, resource_provider, source, **kwargs):
         manager = cls(name, **kwargs)
         if not manager.is_in_memory and os.path.exists(manager.path):
             raise exceptions.ResourceConflict(
@@ -56,6 +56,7 @@ class WorkspaceManager:
             "plane": plane,
             "modNames": mod_names,
             "resourceProvider": resource_provider,
+            "source": source,
             "version": datetime.utcnow(),
             "commandTree": {
                 "names": [cls.COMMAND_TREE_ROOT_NAME],

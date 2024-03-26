@@ -1,6 +1,8 @@
-from flask import Blueprint, jsonify, url_for
+from flask import Blueprint, jsonify, url_for, request
 
 from swagger.controller.specs_manager import SwaggerSpecsManager
+from swagger.model.specs import OpenAPIResourceProvider, TypeSpecResourceProvider
+from swagger.utils.source import SourceTypeEnum
 
 bp = Blueprint('swagger', __name__, url_prefix='/Swagger/Specs')
 
@@ -31,36 +33,55 @@ def get_module(plane, mod_names):
         "resourceProviders": []
     }
     for rp in specs_module_manager.get_resource_providers():
-        result['resourceProviders'].append({
-            "url": url_for('swagger.get_resource_provider', plane=plane, mod_names=mod_names, rp_name=rp.name),
-            "name": rp.name,
-            "folder": rp.folder_path,
-        })
+        if isinstance(rp, OpenAPIResourceProvider):
+            result['resourceProviders'].append({
+                "url": url_for('swagger.get_openapi_resource_provider', plane=plane, mod_names=mod_names, rp_name=rp.name),
+                "name": rp.name,
+                "folder": rp.folder_path,
+                "type": SourceTypeEnum.OpenAPI,
+            })
     return jsonify(result)
 
 
 # resource providers
 @bp.route("/<plane>/<list_path:mod_names>/ResourceProviders", methods=("GET",))
 def get_resource_providers_by(plane, mod_names):
+    # get query param type in request
+    rp_type = request.args.get('type', None)
     specs_module_manager = SwaggerSpecsManager().get_module_manager(plane, mod_names)
     result = []
     for rp in specs_module_manager.get_resource_providers():
-        result.append({
-            "url": url_for('swagger.get_resource_provider', plane=plane, mod_names=mod_names, rp_name=rp.name),
-            "name": rp.name,
-            "folder": rp.folder_path,
-        })
+        if isinstance(rp, OpenAPIResourceProvider):
+            if rp_type and rp_type != 'OpenAPI':
+                continue
+            result.append({
+                "url": url_for('swagger.get_openapi_resource_provider', plane=plane, mod_names=mod_names, rp_name=rp.name),
+                "name": rp.name,
+                "folder": rp.folder_path,
+                "type": SourceTypeEnum.OpenAPI
+            })
+        elif isinstance(rp, TypeSpecResourceProvider):
+            if rp_type and rp_type != 'TypeSpec':
+                continue
+            result.append({
+                "url": url_for('swagger.get_typespec_resource_provider', plane=plane, mod_names=mod_names, rp_name=rp.name),
+                "name": rp.name,
+                "entryFolders": rp.entry_folders,
+                "type": SourceTypeEnum.TypeSpec,
+            })
     return jsonify(result)
 
 
+# TODO: may need to add OpenAPI segment in the url
 @bp.route("/<plane>/<list_path:mod_names>/ResourceProviders/<rp_name>", methods=("GET",))
-def get_resource_provider(plane, mod_names, rp_name):
+def get_openapi_resource_provider(plane, mod_names, rp_name):
     specs_module_manager = SwaggerSpecsManager().get_module_manager(plane, mod_names)
-    rp = specs_module_manager.get_resource_provider(rp_name)
+    rp = specs_module_manager.get_openapi_resource_provider(rp_name)
     result = {
-        "url": url_for('swagger.get_resource_provider', plane=plane, mod_names=mod_names, rp_name=rp.name),
+        "url": url_for('swagger.get_openapi_resource_provider', plane=plane, mod_names=mod_names, rp_name=rp.name),
         "name": rp.name,
         "folder": rp.folder_path,
+        "type": SourceTypeEnum.OpenAPI,
         "resources": []
     }
     resource_op_group_map = specs_module_manager.get_grouped_resource_map(rp_name)
@@ -87,12 +108,25 @@ def get_resource_provider(plane, mod_names, rp_name):
     return jsonify(result)
 
 
+@bp.route("/<plane>/<list_path:mod_names>/ResourceProviders/<rp_name>/TypeSpec", methods=("GET",))
+def get_typespec_resource_provider(plane, mod_names, rp_name):
+    specs_module_manager = SwaggerSpecsManager().get_module_manager(plane, mod_names)
+    rp = specs_module_manager.get_typespec_resource_provider(rp_name)
+    result = {
+        "url": url_for('swagger.get_typespec_resource_provider', plane=plane, mod_names=mod_names, rp_name=rp.name),
+        "name": rp.name,
+        "entryFolders": rp.entry_folders,
+        "type": "TypeSpec",
+    }
+    return jsonify(result)
+
+
 # resources
 @bp.route("/<plane>/<list_path:mod_names>/ResourceProviders/<rp_name>/Resources", methods=("GET",))
 def get_resources_by(plane, mod_names, rp_name):
     specs_module_manager = SwaggerSpecsManager().get_module_manager(plane, mod_names)
     result = []
-    rp = specs_module_manager.get_resource_provider(rp_name)
+    rp = specs_module_manager.get_openapi_resource_provider(rp_name)
     resource_op_group_map = specs_module_manager.get_grouped_resource_map(rp_name)
     for op_group_name, resource_map in resource_op_group_map.items():
         for resource_id, version_map in resource_map.items():

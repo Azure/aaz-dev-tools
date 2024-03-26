@@ -16,13 +16,14 @@ def editor_workspaces():
         # create a new workspace
         # the name of workspace is required
         data = request.get_json()
-        if not data or not isinstance(data, dict) or 'name' not in data or 'plane' not in data or 'modNames' not in data or 'resourceProvider' not in data:
+        if not data or not isinstance(data, dict) or 'name' not in data or 'plane' not in data or 'modNames' not in data or 'resourceProvider' not in data or 'source' not in data:
             raise exceptions.InvalidAPIUsage("Invalid request body")
         name = data['name']
         plane = data['plane']
         mod_names = data['modNames']
         resource_provider = data['resourceProvider']
-        manager = WorkspaceManager.new(name, plane, mod_names, resource_provider)
+        source = data['source']
+        manager = WorkspaceManager.new(name, plane, mod_names, resource_provider, source)
         manager.save()
         result = manager.ws.to_primitive()
         result.update({
@@ -71,6 +72,7 @@ def get_workspace_swagger_default_options(name):
     manager.load()
     result = {
         "plane": manager.ws.plane,
+        "source": manager.ws.source,
         "modNames": manager.ws.mod_names if manager.ws.mod_names else Config.DEFAULT_SWAGGER_MODULE,
         "rpName": manager.ws.resource_provider if manager.ws.resource_provider else Config.DEFAULT_RESOURCE_PROVIDER,
     }

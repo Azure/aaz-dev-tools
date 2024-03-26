@@ -5,6 +5,7 @@ from command.controller.workspace_cfg_editor import WorkspaceCfgEditor
 from command.controller.workspace_manager import WorkspaceManager
 from command.tests.common import CommandTestCase, workspace_name
 from swagger.utils.tools import swagger_resource_path_to_resource_id
+from swagger.utils.source import SourceTypeEnum
 from utils.base64 import b64encode_str
 from utils.plane import PlaneEnum
 from utils.client import CloudEnum
@@ -22,7 +23,8 @@ class APIEditorTest(CommandTestCase):
                 "name": name1,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "edgeorder",
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             assert rv.status_code == 200
             ws1 = rv.get_json()
@@ -30,6 +32,7 @@ class APIEditorTest(CommandTestCase):
             assert ws1['plane'] == PlaneEnum.Mgmt
             assert ws1['modNames'] == "edgeorder"
             assert ws1['resourceProvider'] == "Microsoft.EdgeOrder"
+            assert ws1['source'] == SourceTypeEnum.OpenAPI
             assert ws1['version']
             assert ws1['url']
             assert ws1['commandTree']['names'] == ['aaz']
@@ -39,7 +42,8 @@ class APIEditorTest(CommandTestCase):
                 "name": name2,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "edgeorder",
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             assert rv.status_code == 200
             ws2 = rv.get_json()
@@ -64,7 +68,8 @@ class APIEditorTest(CommandTestCase):
                 "name": name2,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "edgeorder",
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             assert rv.status_code == 409
 
@@ -75,7 +80,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "edgeorder",
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             assert rv.status_code == 200
             ws = rv.get_json()
@@ -99,7 +105,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "edgeorder",
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             assert rv.status_code == 200
             ws = rv.get_json()
@@ -212,7 +219,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "edgeorder",
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -424,7 +432,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "edgeorder",
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -461,7 +470,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "edgeorder",
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -548,7 +558,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "edgeorder",
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -705,7 +716,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "databricks",
-                "resourceProvider": "Microsoft.Databricks"
+                "resourceProvider": "Microsoft.Databricks",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -967,7 +979,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "elastic",
-                "resourceProvider": "Microsoft.Elastic"
+                "resourceProvider": "Microsoft.Elastic",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1288,7 +1301,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "edgeorder",
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1351,7 +1365,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "edgeorder",
-                "resourceProvider": "Microsoft.EdgeOrder"
+                "resourceProvider": "Microsoft.EdgeOrder",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1404,7 +1419,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "databricks",
-                "resourceProvider": "Microsoft.Databricks"
+                "resourceProvider": "Microsoft.Databricks",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1727,7 +1743,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": "databricks",
-                "resourceProvider": "Microsoft.Databricks"
+                "resourceProvider": "Microsoft.Databricks",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1860,7 +1877,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": module,
-                "resourceProvider": "Microsoft.Cdn"
+                "resourceProvider": "Microsoft.Cdn",
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -1948,7 +1966,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum._Data,
                 "modNames": module,
-                "resourceProvider": resource_provider
+                "resourceProvider": resource_provider,
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -2101,7 +2120,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name + "_another",
                 "plane": PlaneEnum._Data,
                 "modNames": module,
-                "resourceProvider": resource_provider
+                "resourceProvider": resource_provider,
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws2 = rv.get_json()
@@ -2192,7 +2212,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum._Data,
                 "modNames": module,
-                "resourceProvider": resource_provider
+                "resourceProvider": resource_provider,
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -2302,7 +2323,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum.Mgmt,
                 "modNames": module,
-                "resourceProvider": resource_provider
+                "resourceProvider": resource_provider,
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()
@@ -2363,7 +2385,8 @@ class APIEditorTest(CommandTestCase):
                 "name": ws_name,
                 "plane": PlaneEnum._Data,
                 "modNames": module,
-                "resourceProvider": resource_provider
+                "resourceProvider": resource_provider,
+                "source": SourceTypeEnum.OpenAPI,
             })
             self.assertTrue(rv.status_code == 200)
             ws = rv.get_json()

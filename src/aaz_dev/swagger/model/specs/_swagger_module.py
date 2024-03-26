@@ -1,7 +1,8 @@
 import os
 
 from utils.plane import PlaneEnum
-from ._resource_provider import ResourceProvider
+from ._resource_provider import OpenAPIResourceProvider, TypeSpecResourceProvider
+from ._typespec_helper import TypeSpecHelper
 
 
 class SwaggerModule:
@@ -46,18 +47,45 @@ class MgmtPlaneModule(SwaggerModule):
 
     def get_resource_providers(self):
         rp = []
-        for name in os.listdir(self.folder_path):
-            path = os.path.join(self.folder_path, name)
+        rp.extend(self._get_openapi_resource_providers())
+        rp.extend(self._get_typespec_resource_providers())
+        return rp
+
+    def _get_openapi_resource_providers(self):
+        rp = []
+        if 'resource-manager' not in self.folder_path:
+            folder_path = os.path.join(self.folder_path, 'resource-manager')
+        else:
+            # ignore to add resource-manager folder for sub openapi modules
+            folder_path = self.folder_path
+        if not os.path.exists(folder_path):
+            return rp
+        for name in os.listdir(folder_path):
+            path = os.path.join(folder_path, name)
             if os.path.isdir(path):
                 name_parts = name.split('.')
                 if len(name_parts) >= 2:
                     readme_path = _search_readme_md_path(path, search_parent=True)
-                    rp.append(ResourceProvider(name, path, readme_path, swagger_module=self))
+                    rp.append(OpenAPIResourceProvider(name, path, readme_path, swagger_module=self))
                 elif name.lower() != 'common':
                     # azsadmin module only
                     sub_module = MgmtPlaneModule(plane=self.plane, name=name, folder_path=path, parent=self)
                     rp.extend(sub_module.get_resource_providers())
         return rp
+
+    def _get_typespec_resource_providers(self):
+        rp = {}
+        if 'resource-manager' in self.folder_path:
+            return rp
+
+        for namespace, ts_path, cfg_path in TypeSpecHelper.find_mgmt_plane_entry_files(self.folder_path):
+            entry_folder = os.path.dirname(ts_path)
+            if namespace in rp:
+                rp[namespace].entry_folders.append(entry_folder)
+            else:
+                rp[namespace] = TypeSpecResourceProvider(
+                    name=namespace, entry_folders=[entry_folder], swagger_module=self)
+        return [*rp.values()]
 
 
 class DataPlaneModule(SwaggerModule):
@@ -70,22 +98,49 @@ class DataPlaneModule(SwaggerModule):
 
     def get_resource_providers(self):
         rp = []
-        for name in os.listdir(self.folder_path):
-            path = os.path.join(self.folder_path, name)
+        rp.extend(self._get_openapi_resource_providers())
+        rp.extend(self._get_typespec_resource_providers())
+        scope = PlaneEnum.get_data_plane_scope(self.plane)
+        if scope:
+            rp = [r for r in rp if r.name.lower() == scope]
+        return rp
+
+    def _get_openapi_resource_providers(self):
+        rp = []
+        if 'data-plane' not in self.folder_path:
+            folder_path = os.path.join(self.folder_path, 'data-plane')
+        else:
+            # ignore to add data-plane folder for sub openapi modules
+            folder_path = self.folder_path
+        if not os.path.exists(folder_path):
+            return rp
+        for name in os.listdir(folder_path):
+            path = os.path.join(folder_path, name)
             if os.path.isdir(path):
                 if name.lower() in ('preview', 'stable'):
                     continue
                 name_parts = name.split('.')
                 if len(name_parts) >= 2:
                     readme_path = _search_readme_md_path(path, search_parent=True)
-                    rp.append(ResourceProvider(name, path, readme_path, swagger_module=self))
+                    rp.append(OpenAPIResourceProvider(name, path, readme_path, swagger_module=self))
                 elif name.lower() != 'common':
                     sub_module = DataPlaneModule(plane=self.plane, name=name, folder_path=path, parent=self)
                     rp.extend(sub_module.get_resource_providers())
-        scope = PlaneEnum.get_data_plane_scope(self.plane)
-        if scope:
-            rp = [r for r in rp if r.name.lower() == scope]
         return rp
+
+    def _get_typespec_resource_providers(self):
+        rp = {}
+        if 'resource-manager' in self.folder_path:
+            return rp
+
+        for namespace, ts_path, cfg_path in TypeSpecHelper.find_data_plane_entry_files(self.folder_path):
+            entry_folder = os.path.dirname(ts_path)
+            if namespace in rp:
+                rp[namespace].entry_folders.append(entry_folder)
+            else:
+                rp[namespace] = TypeSpecResourceProvider(
+                    name=namespace, entry_folders=[entry_folder], swagger_module=self)
+        return [*rp.values()]
 
 
 def _search_readme_md_path(path, search_parent=False):
