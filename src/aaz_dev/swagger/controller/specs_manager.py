@@ -77,7 +77,7 @@ class SwaggerSpecsModuleManager:
         if rp_name:
             rps = [self.get_openapi_resource_provider(rp_name)]
         else:
-            rps = self.get_resource_providers()
+            rps = [rp for rp in self.get_resource_providers() if isinstance(rp, OpenAPIResourceProvider)]
 
         version_maps = []
         resource_rps = []
@@ -101,7 +101,7 @@ class SwaggerSpecsModuleManager:
         if rp_name:
             rps = [self.get_openapi_resource_provider(rp_name)]
         else:
-            rps = self.get_resource_providers()
+            rps = [rp for rp in self.get_resource_providers() if isinstance(rp, OpenAPIResourceProvider)]
 
         resources = []
         for rp in rps:
