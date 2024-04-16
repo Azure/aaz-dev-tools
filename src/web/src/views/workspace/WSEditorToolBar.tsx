@@ -1,5 +1,4 @@
-import { AppBar, Button, IconButton, styled, Toolbar, Typography, Tooltip, TypographyProps } from '@mui/material';
-import { Box } from '@mui/system';
+import { Box, AppBar, Button, IconButton, styled, Toolbar, Typography, Tooltip, TypographyProps } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -8,7 +7,7 @@ import { grey } from '@mui/material/colors'
 import * as React from 'react';
 
 
-const ArgEditTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+const ArgEditTypography = styled(Typography)<TypographyProps>(() => ({
     color: "#ffffff",
     fontFamily: "'Work Sans', sans-serif",
     fontSize: 14,

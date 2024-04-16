@@ -17,7 +17,7 @@ class CLIModGeneratorProfileTabs extends React.Component<CLIModGeneratorProfileT
                 orientation="vertical"
                 variant="scrollable"
                 value={value}
-                onChange={(event, newValue) => {
+                onChange={(_event, newValue) => {
                     onChange(newValue)
                 }}
                 aria-label="Vertical tabs example"

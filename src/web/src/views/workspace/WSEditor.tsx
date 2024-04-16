@@ -95,7 +95,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
 
         try {
             let res = await axios.get(`/AAZ/Specs/Planes`);
-            let planeNames: String[] = res.data.map((v: any) => {
+            const planeNames: string[] = res.data.map((v: any) => {
                 return v.name
             });
             res = await axios.get(workspaceUrl);
@@ -155,7 +155,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 return node;
             };
 
-            let commandTree: CommandTreeNode[] = [];
+            const commandTree: CommandTreeNode[] = [];
 
             if (res.data.commandTree.commandGroups) {
                 const cmdGroups: ResponseCommandGroups = res.data.commandTree.commandGroups;
@@ -238,10 +238,10 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
                 if (expandedId.startsWith('command:')) {
                     expandedId = expandedId.replace('command:', 'group:').split('/').slice(0, -1).join('/')
                 }
-                let expandedIdParts = expandedId.split('/');
+                const expandedIdParts = expandedId.split('/');
                 this.setState(preState => {
                     const newExpanded = new Set(preState.expanded);
-                    expandedIdParts.forEach((value, idx) => {
+                    expandedIdParts.forEach((_value, idx) => {
                         newExpanded.add(expandedIdParts.slice(0, idx + 1).join('/'));
                     })
                     return {
@@ -269,7 +269,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
 
     getWorkspaceClientConfig = async (workspaceUrl: string) => {
         try {
-            let res = await axios.get(`${workspaceUrl}/ClientConfig`);
+            const res = await axios.get(`${workspaceUrl}/ClientConfig`);
             const clientConfig: ClientConfig = {
                 version: res.data.version,
                 endpointTemplates: undefined,
@@ -338,7 +338,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
         })
     }
 
-    handleGenerationClose = (exported: boolean, showClientConfigDialog: boolean) => {
+    handleGenerationClose = (_exported: boolean, showClientConfigDialog: boolean) => {
         this.setState({
             showExportDialog: false
         })
@@ -648,7 +648,7 @@ function WSEditorDeleteDialog(props: {
         setUpdating(true);
         const nodeUrl = `/AAZ/Editor/Workspaces/` + props.workspaceName;
         axios.delete(nodeUrl)
-            .then((res) => {
+            .then(() => {
                 setUpdating(false);
                 props.onClose(true);
             })
@@ -954,11 +954,11 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
         }
     }
 
-    handleModify = (event: any) => {
-        let { newWSName } = this.state;
-        let { workspaceUrl, workspaceName } = this.props;
+    handleModify = () => {
+        const { newWSName } = this.state;
+        const { workspaceUrl, workspaceName } = this.props;
 
-        let nName = newWSName.trim();
+        const nName = newWSName.trim();
         if (nName.length < 1) {
             this.setState({
                 invalidText: `Field 'Name' is required.`

@@ -65,24 +65,24 @@ class CLIModuleGenerator extends React.Component<CLIModuleGeneratorProps, CLIMod
                 loading: true,
             });
             let res = await axios.get(`/CLI/Az/Profiles`);
-            let profiles: string[] = res.data;
+            const profiles: string[] = res.data;
 
             res = await axios.get(`/AAZ/Specs/CommandTree/Nodes/aaz`);
-            let commandTrees: ProfileCommandTree[] = profiles.map((profileName) => BuildProfileCommandTree(profileName, res.data));
+            const commandTrees: ProfileCommandTree[] = profiles.map((profileName) => BuildProfileCommandTree(profileName, res.data));
 
             res = await axios.get(`/CLI/Az/${this.props.params.repoName}/Modules/${this.props.params.moduleName}`);
-            let modView: CLIModView = res.data
+            const modView: CLIModView = res.data
 
             Object.keys(modView.profiles).forEach((profile) => {
-                let idx = profiles.findIndex(v => v === profile);
+                const idx = profiles.findIndex(v => v === profile);
                 if (idx === -1) {
                     throw new Error(`Invalid profile ${profile}`);
                 }
                 commandTrees[idx] = UpdateProfileCommandTreeByModView(commandTrees[idx], modView.profiles[profile]);
             })
 
-            let selectedProfileIdx = profiles.length > 0 ? 0 : undefined;
-            let selectedCommandTree = selectedProfileIdx !== undefined ? commandTrees[selectedProfileIdx] : undefined;
+            const selectedProfileIdx = profiles.length > 0 ? 0 : undefined;
+            const selectedCommandTree = selectedProfileIdx !== undefined ? commandTrees[selectedProfileIdx] : undefined;
             this.setState({
                 loading: false,
                 profiles: profiles,
@@ -115,7 +115,7 @@ class CLIModuleGenerator extends React.Component<CLIModuleGeneratorProps, CLIMod
         })
     }
 
-    handleGenerationClose = (generated: boolean) => {
+    handleGenerationClose = () => {
         this.setState({
             showGenerateDialog: false
         })

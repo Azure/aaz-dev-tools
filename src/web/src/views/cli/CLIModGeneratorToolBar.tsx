@@ -6,8 +6,8 @@ import {
   Toolbar,
   Typography,
   Tooltip,
+  Box,
 } from "@mui/material";
-import { Box } from "@mui/system";
 import HomeIcon from "@mui/icons-material/Home";
 
 interface CLIModGeneratorToolBarProps {

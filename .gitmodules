@@ -1,0 +1,3 @@
+[submodule "src/typespec"]
+	path = src/typespec
+	url = https://github.com/Azure/typespec-azure.git

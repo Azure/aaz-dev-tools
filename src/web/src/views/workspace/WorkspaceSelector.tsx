@@ -1,5 +1,4 @@
-import { Autocomplete, createFilterOptions, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, InputLabel, Alert } from '@mui/material';
-import { Box } from '@mui/system';
+import { Box, Autocomplete, createFilterOptions, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, InputLabel, Alert } from '@mui/material';
 import axios from 'axios';
 import * as React from 'react';
 import { Url } from 'url';
@@ -55,8 +54,8 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
 
     loadWorkspaces = async () => {
         try {
-            let res = await axios.get("/AAZ/Editor/Workspaces");
-            let options = res.data.map((option: any) => {
+            const res = await axios.get("/AAZ/Editor/Workspaces");
+            const options = res.data.map((option: any) => {
                 return {
                     name: option.name,
                     lastModified: new Date(option.updated * 1000),
@@ -103,7 +102,7 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
                     sx={{ width: 280 }}
                     options={options}
                     autoHighlight
-                    onChange={(event, newValue: any) => {
+                    onChange={(_event, newValue: any) => {
                         if (typeof newValue === 'string') {
                             // timeout to avoid instant validation of the dialog's form.
                             setTimeout(() => {
@@ -141,7 +140,7 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
                         return option.name;
                     }}
                     renderOption={(props, option) => {
-                        let labelName = (option && option.title) ? option.title : option.name;
+                        const labelName = (option && option.title) ? option.title : option.name;
                         return (
                             <Box component='li'
                                 {...props}
@@ -230,7 +229,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
                 loading: true
             });
 
-            let res = await axios.get(`/AAZ/Specs/Planes`);
+            const res = await axios.get(`/AAZ/Specs/Planes`);
             const planes: Plane[] = res.data.map((v: any) => {
                 return {
                     name: v.name,
@@ -258,8 +257,8 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
     }
 
     onPlaneSelectorUpdate = async (planeDisplayName: string | null) => {
-        let plane = this.state.planes.find((v) => v.displayName === planeDisplayName) ?? null;
-        if (this.state.selectedPlane !== plane?.displayName ?? null) {
+        const plane = this.state.planes.find((v) => v.displayName === planeDisplayName) ?? null;
+        if (this.state.selectedPlane !== (plane?.displayName ?? null)) {
             if (!plane) {
                 return
             }
@@ -287,11 +286,11 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
                     this.setState({
                         loading: true
                     });
-                    let res = await axios.get(`/Swagger/Specs/${plane!.name}`);
+                    const res = await axios.get(`/Swagger/Specs/${plane!.name}`);
                     const options: string[] = res.data.map((v: any) => (v.url));
                     this.setState(preState => {
-                        let planes = preState.planes;
-                        let index = planes.findIndex((v) => v.name === plane!.name);
+                        const planes = preState.planes;
+                        const index = planes.findIndex((v) => v.name === plane!.name);
                         planes[index].moduleOptions = options;
                         return {
                             ...preState,
@@ -342,9 +341,9 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
                 this.setState({
                     loading: true
                 });
-                let res = await axios.get(`${moduleUrl}/ResourceProviders`);
+                const res = await axios.get(`${moduleUrl}/ResourceProviders`);
                 const options: string[] = res.data.map((v: any) => (v.url));
-                let selectedResourceProvider = options.length === 1 ? options[0] : null;
+                const selectedResourceProvider = options.length === 1 ? options[0] : null;
                 this.setState({
                     loading: false,
                     resourceProviderOptions: options,
@@ -384,14 +383,15 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
 
     verifyCreate = () => {
         this.setState({ invalidText: undefined });
-        let { workspaceName, selectedPlane, planes, selectedModule, moduleOptionsCommonPrefix, selectedResourceProvider, resourceProviderOptionsCommonPrefix } = this.state;
+        let { workspaceName, selectedModule, selectedResourceProvider } = this.state;
+        const { selectedPlane, planes, moduleOptionsCommonPrefix, resourceProviderOptionsCommonPrefix } = this.state;
         workspaceName = workspaceName.trim();
         if (workspaceName.length < 1) {
             this.setState({ invalidText: `'Workspace Name' is required.` });
             return undefined
         }
 
-        let plane = planes.find((v) => v.displayName === selectedPlane)?.name ?? null;
+        const plane = planes.find((v) => v.displayName === selectedPlane)?.name ?? null;
         if (plane === null) {
             this.setState({ invalidText: `Please select 'Plane'.` });
             return undefined
@@ -430,9 +430,9 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
         }
         this.setState({ loading: true });
         try {
-            let res = await axios.post('/AAZ/Editor/Workspaces', data);
-            let workspace = res.data;
-            let value = {
+            const res = await axios.post('/AAZ/Editor/Workspaces', data);
+            const workspace = res.data;
+            const value = {
                 name: workspace.name,
                 plane: workspace.plane,
                 modNames: workspace.modNames,
@@ -533,7 +533,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
     }
 }
 
-const MiddlePadding = styled(Box)(({ theme }) => ({
+const MiddlePadding = styled(Box)(() => ({
     height: '1.5vh'
 }));
 

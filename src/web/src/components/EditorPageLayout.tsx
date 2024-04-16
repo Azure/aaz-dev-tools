@@ -1,5 +1,4 @@
-import { styled } from '@mui/material';
-import { Box } from '@mui/system';
+import { styled, Box } from '@mui/material';
 import * as React from 'react';
 
 const PageContainer = styled(Box)(({theme}) => ({

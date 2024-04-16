@@ -1,5 +1,4 @@
-import { Autocomplete, createFilterOptions, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button } from '@mui/material';
-import { Box } from '@mui/system';
+import { Autocomplete, Box, createFilterOptions, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button } from '@mui/material';
 import axios from 'axios';
 import * as React from 'react';
 
@@ -54,7 +53,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
     loadModules = () => {
         axios.get("/CLI/Az/" + this.props.repo + "/Modules")
             .then((res) => {
-                let options = res.data.map((option: any) => {
+                const options = res.data.map((option: any) => {
                     return {
                         name: option.name,
                         folder: option.folder,
@@ -77,8 +76,8 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
                 name: moduleName,
             })
                 .then((res) => {
-                    let module = res.data;
-                    let value = {
+                    const module = res.data;
+                    const value = {
                         name: module.name,
                         folder: module.folder,
                         url: module.url,
@@ -127,7 +126,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
                     sx={{ width: 280 }}
                     options={options}
                     autoHighlight
-                    onChange={(event, newValue: any) => {
+                    onChange={(_event, newValue: any) => {
                         if (typeof newValue === 'string') {
                             setTimeout(() => {
                                 this.setState({
@@ -172,7 +171,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
                         return option.name;
                     }}
                     renderOption={(props, option) => {
-                        let labelName = (option && option.title) ? option.title : option.name;
+                        const labelName = (option && option.title) ? option.title : option.name;
                         return (
                             <Box component='li'
                                 {...props}

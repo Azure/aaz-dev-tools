@@ -212,7 +212,7 @@ function CommandGroupDeleteDialog(props: {
         setUpdating(true);
 
         axios.delete(nodeUrl)
-            .then(res => {
+            .then(() => {
                 setUpdating(false);
                 props.onClose(true);
             }).catch(err => {
@@ -276,7 +276,7 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
         }
     }
 
-    handleModify = (event: any) => {
+    handleModify = () => {
         let { name, stage, shortHelp, longHelp } = this.state
         let { workspaceUrl, commandGroup } = this.props
 

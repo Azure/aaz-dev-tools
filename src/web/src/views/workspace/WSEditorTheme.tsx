@@ -1,5 +1,4 @@
-import { Typography, TypographyProps } from '@mui/material';
-import { styled } from '@mui/system';
+import { Typography, TypographyProps, styled } from '@mui/material';
 
 const CardTitleTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     color: theme.palette.primary.main,
@@ -23,7 +22,7 @@ const ShortHelpTypography = styled(Typography)<TypographyProps>(({ theme }) => (
     fontStyle: "italic"
 }))
 
-const ShortHelpPlaceHolderTypography = styled(ShortHelpTypography)<TypographyProps>(({ theme }) => ({
+const ShortHelpPlaceHolderTypography = styled(ShortHelpTypography)<TypographyProps>(() => ({
     color: '#5d64cf',
 }))
 
@@ -34,30 +33,30 @@ const LongHelpTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     fontWeight: 400,
 }))
 
-const StableTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+const StableTypography = styled(Typography)<TypographyProps>(() => ({
     color: '#67b349',
     fontFamily: "'Work Sans', sans-serif",
     fontSize: 20,
     fontWeight: 200,
 }))
 
-const PreviewTypography = styled(StableTypography)<TypographyProps>(({ theme }) => ({
+const PreviewTypography = styled(StableTypography)<TypographyProps>(() => ({
     color: '#d1b102',
 }))
 
-const ExperimentalTypography = styled(StableTypography)<TypographyProps>(({ theme }) => ({
+const ExperimentalTypography = styled(StableTypography)<TypographyProps>(() => ({
     color: '#e05376',
 }))
 
-const SmallStableTypography = styled(StableTypography)<TypographyProps>(({ theme }) => ({
+const SmallStableTypography = styled(StableTypography)<TypographyProps>(() => ({
     fontSize: 12,
 }))
 
-const SmallPreviewTypography = styled(PreviewTypography)<TypographyProps>(({ theme }) => ({
+const SmallPreviewTypography = styled(PreviewTypography)<TypographyProps>(() => ({
     fontSize: 12,
 }))
 
-const SmallExperimentalTypography = styled(ExperimentalTypography)<TypographyProps>(({ theme }) => ({
+const SmallExperimentalTypography = styled(ExperimentalTypography)<TypographyProps>(() => ({
     fontSize: 12,
 }))
 

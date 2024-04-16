@@ -6,11 +6,11 @@ import { AppAppBar } from '../../components/AppAppBar';
 import PageLayout from '../../components/PageLayout';
 
 
-const MiddlePadding = styled(Box)(({ theme }) => ({
+const MiddlePadding = styled(Box)(() => ({
     height: '6vh'
 }));
 
-const SpacePadding = styled(Box)(({ theme }) => ({
+const SpacePadding = styled(Box)(() => ({
     width: '3vh'
 }));
 

@@ -3,8 +3,7 @@ import TreeView from '@mui/lab/TreeView';
 import TreeItem from '@mui/lab/TreeItem';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { Box, IconButton, Menu, MenuItem, Tooltip, Typography, TypographyProps } from '@mui/material';
-import { styled } from '@mui/system';
+import { styled, Box, IconButton, Menu, MenuItem, Tooltip, Typography, TypographyProps } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
@@ -58,17 +57,17 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps, WSEd
 
     moreButtonRef = React.createRef<HTMLButtonElement>();
 
-    onNodeSelected = (event: React.SyntheticEvent, nodeIds: string[] | string) => {
+    onNodeSelected = (_event: React.SyntheticEvent, nodeIds: string[] | string) => {
         if (typeof nodeIds === 'string') {
             this.props.onSelected(nodeIds);
         }
     }
 
-    onNodeToggle = (event: React.SyntheticEvent, nodeIds: string[]) => {
+    onNodeToggle = (_event: React.SyntheticEvent, nodeIds: string[]) => {
         this.props.onToggle(nodeIds);
     }
 
-    handleMoreClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    handleMoreClick = () => {
         this.setState(preState => {
             return {
                 ...preState,

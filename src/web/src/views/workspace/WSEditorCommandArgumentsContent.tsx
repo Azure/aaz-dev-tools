@@ -1,5 +1,4 @@
-import { Alert, Box, Button, Checkbox, ButtonBase, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputLabel, LinearProgress, Radio, RadioGroup, Switch, TextField, Typography, TypographyProps } from '@mui/material';
-import { styled } from '@mui/system';
+import { styled, Alert, Box, Button, Checkbox, ButtonBase, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, InputLabel, LinearProgress, Radio, RadioGroup, Switch, TextField, Typography, TypographyProps } from '@mui/material';
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import { CardTitleTypography, ExperimentalTypography, LongHelpTypography, PreviewTypography, ShortHelpPlaceHolderTypography, ShortHelpTypography, SmallExperimentalTypography, SmallPreviewTypography, StableTypography, SubtitleTypography } from './WSEditorTheme';
@@ -22,7 +21,7 @@ function WSEditorCommandArgumentsContent(props: {
 
     const [displayArgumentDialog, setDisplayArgumentDialog] = useState<boolean>(false);
     const [editArg, setEditArg] = useState<CMDArg | undefined>(undefined);
-    const [editArgIdxStack, setEditArgIdxStack] = useState<ArgIdx[] | undefined>(undefined);
+    const [, setEditArgIdxStack] = useState<ArgIdx[] | undefined>(undefined);
     const [displayFlattenDialog, setDisplayFlattenDialog] = useState<boolean>(false);
     const [displayUnwrapClsDialog, setDisplayUnwrapClsDialog] = useState<boolean>(false);
 
@@ -73,7 +72,7 @@ function WSEditorCommandArgumentsContent(props: {
 
     const handleAddSubcommand = (arg: CMDArg, argIdxStack: ArgIdx[]) => {
         const argVar = arg.var;
-        let argStackNames = argIdxStack.map(argIdx => {
+        const argStackNames = argIdxStack.map(argIdx => {
             let name = argIdx.displayKey;
             while (name.startsWith('-')) {
                 name = name.slice(1)
@@ -86,7 +85,7 @@ function WSEditorCommandArgumentsContent(props: {
         });
         let a: CMDArgBase | undefined = arg;
         if (a.type.startsWith('@')) {
-            let clsName = (a as CMDClsArg).clsName;
+            const clsName = (a as CMDClsArg).clsName;
             a = props.clsArgDefineMap[clsName];
         }
         if (a.type.startsWith("dict<")) {
@@ -98,7 +97,7 @@ function WSEditorCommandArgumentsContent(props: {
         if (a !== undefined) {
             let subArgs;
             if (a.type.startsWith('@')) {
-                let clsName = (a as CMDClsArg).clsName;
+                const clsName = (a as CMDClsArg).clsName;
                 subArgs = (props.clsArgDefineMap[clsName] as CMDObjectArgBase).args
             } else {
                 subArgs = (a as CMDObjectArg).args
@@ -161,8 +160,8 @@ function ArgumentNavigation(props: {
 
     const getArgProps = (selectedArgBase: CMDArgBase): { title: string, props: CMDArg[], flattenArgVar: string | undefined } | undefined => {
         if (selectedArgBase.type.startsWith('@')) {
-            let clsArgDefine = props.clsArgDefineMap[(selectedArgBase as CMDClsArgBase).clsName];
-            let clsArgProps = getArgProps(clsArgDefine);
+            const clsArgDefine = props.clsArgDefineMap[(selectedArgBase as CMDClsArgBase).clsName];
+            const clsArgProps = getArgProps(clsArgDefine);
             if (clsArgProps !== undefined && clsArgDefine.type === "object") {
                 clsArgProps!.flattenArgVar = (selectedArgBase as CMDClsArg).var
             }
@@ -175,7 +174,7 @@ function ArgumentNavigation(props: {
                 flattenArgVar: (selectedArgBase as CMDObjectArg).var,
             }
         } else if (selectedArgBase.type.startsWith("dict<")) {
-            let item = (selectedArgBase as CMDDictArgBase).item
+            const item = (selectedArgBase as CMDDictArgBase).item
             const itemProps = item ? getArgProps(item) : undefined;
             if (!itemProps) {
                 return undefined;
@@ -373,7 +372,7 @@ const NavBarItemTypography = styled(Typography)<TypographyProps>(({ theme }) => 
     fontWeight: 400,
 }))
 
-const NavBarItemHightLightedTypography = styled(NavBarItemTypography)<TypographyProps>(({ theme }) => ({
+const NavBarItemHightLightedTypography = styled(NavBarItemTypography)<TypographyProps>(() => ({
     color: '#5d64cf',
 }))
 
@@ -435,7 +434,7 @@ const spliceArgOptionsString = (arg: CMDArg, depth: number) => {
     }).join(" ");
 
     if ((arg as CMDArrayArg).singularOptions) {
-        let singularOptionString = (arg as CMDArrayArg).singularOptions!.map((option) => {
+        const singularOptionString = (arg as CMDArrayArg).singularOptions!.map((option) => {
             if (depth === 0) {
                 if (option.length === 1) {
                     return '-' + option;
@@ -448,7 +447,7 @@ const spliceArgOptionsString = (arg: CMDArg, depth: number) => {
         }).join(" ");
         optionsString += ` (${singularOptionString})`;
     } else if ((arg as CMDClsArg).singularOptions) {
-        let singularOptionString = (arg as CMDArrayArg).singularOptions!.map((option) => {
+        const singularOptionString = (arg as CMDArrayArg).singularOptions!.map((option) => {
             if (depth === 0) {
                 if (option.length === 1) {
                     return '-' + option;
@@ -480,14 +479,14 @@ const ArgTypeTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
     fontWeight: 700,
 }))
 
-const ArgRequiredTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+const ArgRequiredTypography = styled(Typography)<TypographyProps>(() => ({
     color: '#fad105',
     fontFamily: "'Roboto Condensed', sans-serif",
     fontSize: 16,
     fontWeight: 200,
 }))
 
-const ArgEditTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+const ArgEditTypography = styled(Typography)<TypographyProps>(() => ({
     color: "#5d64cf",
     fontFamily: "'Work Sans', sans-serif",
     fontSize: 14,
@@ -673,12 +672,12 @@ function ArgumentDialog(props: {
 
     const verifyModification = () => {
         setInvalidText(undefined);
-        let name = options.trim();
-        let sName = singularOptions?.trim() ?? undefined;
-        let sHelp = shortHelp.trim();
-        let lHelp = longHelp.trim();
-        let gName = group.trim();
-        let cfgKey = configurationKey.trim();
+        const name = options.trim();
+        const sName = singularOptions?.trim() ?? undefined;
+        const sHelp = shortHelp.trim();
+        const lHelp = longHelp.trim();
+        const gName = group.trim();
+        const cfgKey = configurationKey.trim();
 
         const names = name.split(' ').filter(n => n.length > 0);
         const sNames = sName?.split(' ').filter(n => n.length > 0) ?? undefined;
@@ -759,7 +758,7 @@ function ArgumentDialog(props: {
                 setInvalidText(`Field 'Prompt Message' is undefined.`)
                 return undefined;
             } else {
-                let msg = promptMsg.trim();
+                const msg = promptMsg.trim();
                 if (msg.length < 1) {
                     setInvalidText(`Field 'Prompt Message' is empty.`)
                     return undefined;
@@ -791,7 +790,7 @@ function ArgumentDialog(props: {
         }
     }
 
-    const handleModify = async (event: any) => {
+    const handleModify = async () => {
         const data = verifyModification();
         if (data === undefined) {
             return;
@@ -802,10 +801,9 @@ function ArgumentDialog(props: {
         const argumentUrl = `${props.commandUrl}/Arguments/${props.arg.var}`
 
         try {
-            let res = await axios.patch(argumentUrl, {
+            await axios.patch(argumentUrl, {
                 ...data,
             });
-            let newArg = decodeArg(res.data).arg;
             setUpdating(false);
             await props.onClose(true);
         } catch (err: any) {
@@ -897,7 +895,7 @@ function ArgumentDialog(props: {
     }
 
     useEffect(() => {
-        let { arg, clsArgDefineMap } = props;
+        const { arg, clsArgDefineMap } = props;
         setIsClientArg(arg.var.startsWith('$Client.'));
 
         setOptions(arg.options.join(" "));
@@ -1018,7 +1016,7 @@ function ArgumentDialog(props: {
                             <InputLabel shrink sx={{ font: "inherit" }}>Hide Argument</InputLabel>
                             <Switch sx={{ ml: 4 }}
                                 checked={hide}
-                                onChange={(event: any) => {
+                                onChange={() => {
                                     setHide(!hide);
                                 }}
                             />
@@ -1035,7 +1033,7 @@ function ArgumentDialog(props: {
                         }}>
                             <Switch
                                 checked={hasDefault}
-                                onChange={(event: any) => {
+                                onChange={() => {
                                     setHasDefault(!hasDefault);
                                     setDefaultValue(undefined);
                                 }}
@@ -1071,7 +1069,7 @@ function ArgumentDialog(props: {
                         }}>
                             <Switch
                                 checked={hasPrompt}
-                                onChange={(event: any) => {
+                                onChange={() => {
                                     setHasPrompt(!hasPrompt);
                                     setPromptMsg(undefined);
                                 }}
@@ -1105,7 +1103,7 @@ function ArgumentDialog(props: {
                                         <Checkbox
                                             size='small'
                                             checked={promptConfirm}
-                                            onChange={(event: any) => {
+                                            onChange={() => {
                                                 setPromptConfirm(!promptConfirm);
                                             }}
                                         />
@@ -1203,10 +1201,10 @@ function FlattenDialog(props: {
     const [argSimilarTreeArgIdsUpdated, setArgSimilarTreeArgIdsUpdated] = useState<string[]>([]);
 
     useEffect(() => {
-        let { arg, clsArgDefineMap } = props;
+        const { arg, clsArgDefineMap } = props;
         let subArgs;
         if (arg.type.startsWith('@')) {
-            let clsName = (arg as CMDClsArg).clsName;
+            const clsName = (arg as CMDClsArg).clsName;
             subArgs = (clsArgDefineMap[clsName] as CMDObjectArgBase).args
         } else {
             subArgs = (arg as CMDObjectArg).args
@@ -1514,14 +1512,14 @@ const PropArgTypeTypography = styled(Typography)<TypographyProps>(({ theme }) =>
     fontWeight: 400,
 }))
 
-const PropRequiredTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+const PropRequiredTypography = styled(Typography)<TypographyProps>(() => ({
     color: '#dba339',
     fontFamily: "'Work Sans', sans-serif",
     fontSize: 10,
     fontWeight: 400,
 }))
 
-const PropHiddenTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+const PropHiddenTypography = styled(Typography)<TypographyProps>(() => ({
     color: '#8888C3',
     fontFamily: "'Work Sans', sans-serif",
     fontSize: 10,
@@ -1542,7 +1540,7 @@ const PropArgOptionTypography = styled(Typography)<TypographyProps>(({ theme }) 
     fontWeight: 700,
 }))
 
-const PropHiddenArgOptionTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+const PropHiddenArgOptionTypography = styled(Typography)<TypographyProps>(() => ({
     color: '#8888C3',
     fontFamily: "'Roboto Condensed', sans-serif",
     fontSize: 16,
@@ -1820,32 +1818,25 @@ interface CMDStringArgBase extends CMDArgBaseT<string> {
 
 interface CMDStringArg extends CMDStringArgBase, CMDArgT<string> { }
 
-// type: byte
-interface CMDByteArgBase extends CMDStringArgBase { }
-interface CMDByteArg extends CMDByteArgBase, CMDStringArg { }
+// // type: byte
+// interface CMDByteArgBase extends CMDStringArgBase { }
 
-// type: binary
-interface CMDBinaryArgBase extends CMDStringArgBase { }
-interface CMDBinaryArg extends CMDBinaryArgBase, CMDStringArg { }
+// // type: binary
+// interface CMDBinaryArgBase extends CMDStringArgBase { }
 
-// type: duration
-interface CMDDurationArgBase extends CMDStringArgBase { }
-interface CMDDurationArg extends CMDDurationArgBase, CMDStringArg { }
+// // type: duration
+// interface CMDDurationArgBase extends CMDStringArgBase { }
 
-// type: date  As defined by full-date - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
-interface CMDDateArgBase extends CMDStringArgBase { }
-interface CMDDateArg extends CMDDateArgBase, CMDStringArg { }
+// // type: date  As defined by full-date - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
+// interface CMDDateArgBase extends CMDStringArgBase { }
 
-// type: dateTime  As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
-interface CMDDateTimeArgBase extends CMDStringArgBase { }
-interface CMDDateTimeArg extends CMDDateTimeArgBase, CMDStringArg { }
+// // type: dateTime  As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
+// interface CMDDateTimeArgBase extends CMDStringArgBase { }
 
-interface CMDTimeArgBase extends CMDStringArgBase { }
-interface CMDTimeArg extends CMDTimeArgBase, CMDStringArg { }
+// interface CMDTimeArgBase extends CMDStringArgBase { }
 
-// type: uuid 
-interface CMDUuidArgBase extends CMDStringArgBase { }
-interface CMDUuidArg extends CMDUuidArgBase, CMDStringArg { }
+// // type: uuid 
+// interface CMDUuidArgBase extends CMDStringArgBase { }
 
 // type: password 
 interface CMDPasswordArgBase extends CMDStringArgBase { }
@@ -1853,21 +1844,17 @@ interface CMDPasswordArg extends CMDPasswordArgBase, CMDStringArg {
     prompt?: CMDPasswordArgPromptInput
 }
 
-// type: SubscriptionId
-interface CMDSubscriptionIdArgBase extends CMDStringArgBase { }
-interface CMDSubscriptionIdArg extends CMDSubscriptionIdArgBase, CMDStringArg { }
+// // type: SubscriptionId
+// interface CMDSubscriptionIdArgBase extends CMDStringArgBase { }
 
-// type: ResourceGroupName 
-interface CMDResourceGroupNameArgBase extends CMDStringArgBase { }
-interface CMDResourceGroupNameArg extends CMDResourceGroupNameArgBase, CMDStringArg { }
+// // type: ResourceGroupName 
+// interface CMDResourceGroupNameArgBase extends CMDStringArgBase { }
 
-// type: ResourceId 
-interface CMDResourceIdNameArgBase extends CMDStringArgBase { }
-interface CMDResourceIdNameArg extends CMDResourceIdNameArgBase, CMDStringArg { }
+// // type: ResourceId 
+// interface CMDResourceIdNameArgBase extends CMDStringArgBase { }
 
-// type: ResourceLocation
-interface CMDResourceLocationNameArgBase extends CMDStringArgBase { }
-interface CMDResourceLocationNameArg extends CMDResourceLocationNameArgBase, CMDStringArg { }
+// // type: ResourceLocation
+// interface CMDResourceLocationNameArgBase extends CMDStringArgBase { }
 
 
 interface CMDNumberArgBase extends CMDArgBaseT<number> {
@@ -1876,33 +1863,26 @@ interface CMDNumberArgBase extends CMDArgBaseT<number> {
 }
 interface CMDNumberArg extends CMDNumberArgBase, CMDArgT<number> { }
 
-// type: integer
-interface CMDIntegerArgBase extends CMDNumberArgBase { }
-interface CMDIntegerArg extends CMDIntegerArgBase, CMDNumberArg { }
+// // type: integer
+// interface CMDIntegerArgBase extends CMDNumberArgBase { }
 
-// type: integer32
-interface CMDInteger32ArgBase extends CMDNumberArgBase { }
-interface CMDInteger32Arg extends CMDInteger32ArgBase, CMDNumberArg { }
+// // type: integer32
+// interface CMDInteger32ArgBase extends CMDNumberArgBase { }
 
-// type: integer32
-interface CMDInteger64ArgBase extends CMDNumberArgBase { }
-interface CMDInteger64Arg extends CMDInteger64ArgBase, CMDNumberArg { }
+// // type: integer32
+// interface CMDInteger64ArgBase extends CMDNumberArgBase { }
 
-// type: float
-interface CMDFloatArgBase extends CMDNumberArgBase { }
-interface CMDFloatArg extends CMDFloatArgBase, CMDNumberArg { }
+// // type: float
+// interface CMDFloatArgBase extends CMDNumberArgBase { }
 
-// type: float32
-interface CMDFloat32ArgBase extends CMDNumberArgBase { }
-interface CMDFloat32Arg extends CMDFloat32ArgBase, CMDNumberArg { }
+// // type: float32
+// interface CMDFloat32ArgBase extends CMDNumberArgBase { }
 
-// type: float64
-interface CMDFloat64ArgBase extends CMDNumberArgBase { }
-interface CMDFloat64Arg extends CMDFloat64ArgBase, CMDNumberArg { }
+// // type: float64
+// interface CMDFloat64ArgBase extends CMDNumberArgBase { }
 
-// type: boolean
-interface CMDBooleanArgBase extends CMDArgBaseT<boolean> { }
-interface CMDBooleanArg extends CMDBooleanArgBase, CMDArgT<boolean> { }
+// // type: boolean
+// interface CMDBooleanArgBase extends CMDArgBaseT<boolean> { }
 
 // type: object
 interface CMDObjectArgBase extends CMDArgBase {
@@ -1941,7 +1921,7 @@ function decodeArgEnumItem<T>(response: any): CMDArgEnumItem<T> {
 }
 
 function decodeArgEnum<T>(response: any): CMDArgEnum<T> {
-    let argEnum: CMDArgEnum<T> = {
+    const argEnum: CMDArgEnum<T> = {
         items: response.items.map((item: any) => decodeArgEnumItem<T>(item))
     }
     return argEnum;
@@ -2158,7 +2138,7 @@ function decodeArgHelp(response: any): CMDArgHelp {
 }
 
 function decodeArg(response: any): { arg: CMDArg, clsDefineMap: ClsArgDefinitionMap } {
-    let { argBase, clsDefineMap } = decodeArgBase(response);
+    const { argBase, clsDefineMap } = decodeArgBase(response);
     const options = (response.options as string[]).sort((a, b) => a.length - b.length).reverse();
     const help = response.help ? decodeArgHelp(response.help) : undefined;
     const prompt = response.prompt ? decodeArgPromptInput(response.prompt) : undefined;
@@ -2339,10 +2319,11 @@ function convertArgDefaultText(defaultText: string, argType: string): any {
                 default:
                     throw Error(`Not supported default value for boolean type: '${defaultText}'`)
             }
-        case "object":
+        case "object": {
             const de = JSON.parse(defaultText.trim());
             // TODO: verify object
-            return de
+            return de;
+        }
         default:
             if (argType.startsWith("array")) {
                 const de = JSON.parse(defaultText.trim());

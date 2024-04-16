@@ -1,9 +1,8 @@
 import * as React from 'react';
-import { Box, Dialog, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, Paper, TextField, Alert, InputLabel, IconButton, Input, Typography, TypographyProps, Tabs, Tab } from '@mui/material';
+import { styled, Box, Dialog, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, Paper, TextField, Alert, InputLabel, IconButton, Input, Typography, TypographyProps, Tabs, Tab } from '@mui/material';
 import axios from 'axios';
 import DoDisturbOnRoundedIcon from '@mui/icons-material/DoDisturbOnRounded';
 import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
-import { styled } from '@mui/system';
 import { Plane, Resource } from './WSEditorCommandContent';
 import { SwaggerItemSelector } from './WSEditorSwaggerPicker';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
@@ -77,7 +76,7 @@ const TemplateSuffixTypography = styled(Typography)<TypographyProps>(({ theme })
     fontWeight: 500,
 }));
 
-const MiddlePadding = styled(Box)(({ theme }) => ({
+const MiddlePadding = styled(Box)(() => ({
     height: '1.5vh'
 }));
 
@@ -144,7 +143,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                 updating: true
             });
 
-            let res = await axios.get(`/AAZ/Specs/Planes`);
+            const res = await axios.get(`/AAZ/Specs/Planes`);
             const planes: Plane[] = res.data.map((v: any) => {
                 return {
                     name: v.name,
@@ -172,8 +171,8 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
     }
 
     onPlaneSelectorUpdate = async (planeDisplayName: string | null) => {
-        let plane = this.state.planes.find((v) => v.displayName === planeDisplayName) ?? null;
-        if (this.state.selectedPlane !== plane?.displayName ?? null) {
+        const plane = this.state.planes.find((v) => v.displayName === planeDisplayName) ?? null;
+        if (this.state.selectedPlane !== (plane?.displayName ?? null)) {
             if (!plane) {
                 return
             }
@@ -201,11 +200,11 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                     this.setState({
                         updating: true
                     });
-                    let res = await axios.get(`/Swagger/Specs/${plane!.name}`);
+                    const res = await axios.get(`/Swagger/Specs/${plane!.name}`);
                     const options: string[] = res.data.map((v: any) => (v.url));
                     this.setState(preState => {
-                        let planes = preState.planes;
-                        let index = planes.findIndex((v) => v.name === plane!.name);
+                        const planes = preState.planes;
+                        const index = planes.findIndex((v) => v.name === plane!.name);
                         planes[index].moduleOptions = options;
                         return {
                             ...preState,
@@ -256,9 +255,9 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                 this.setState({
                     updating: true
                 });
-                let res = await axios.get(`${moduleUrl}/ResourceProviders`);
+                const res = await axios.get(`${moduleUrl}/ResourceProviders`);
                 const options: string[] = res.data.map((v: any) => (v.url));
-                let selectedResourceProvider = options.length === 1 ? options[0] : null;
+                const selectedResourceProvider = options.length === 1 ? options[0] : null;
                 this.setState({
                     updating: false,
                     resourceProviderOptions: options,
@@ -304,14 +303,14 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                 updating: true,
             })
             try {
-                let res = await axios.get(`${resourceProviderUrl}/Resources`);
+                const res = await axios.get(`${resourceProviderUrl}/Resources`);
                 const versionResourceIdMap: SwaggerVersionResourceIdMap = {}
                 const versionOptions: string[] = []
                 const resourceIdList: string[] = []
                 res.data.forEach((resource: any) => {
                     resourceIdList.push(resource.id);
                     const resourceVersions = resource.versions.filter((v: ResourceVersion) => {
-                        for (let key in v.operations) {
+                        for (const key in v.operations) {
                             if (v.operations[key].toUpperCase() === 'GET') {
                                 return true;
                             }
@@ -381,7 +380,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
     loadWorkspaceClientConfig = async () => {
         this.setState({ updating: true });
         try {
-            let res = await axios.get(`${this.props.workspaceUrl}/ClientConfig`);
+            const res = await axios.get(`${this.props.workspaceUrl}/ClientConfig`);
             const clientConfig: ClientConfig = {
                 version: res.data.version,
                 auth: res.data.auth,
@@ -416,9 +415,9 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                 cloudMetadataPrefixTemplate = clientConfig.endpointCloudMetadata?.prefixTemplate ?? "";
             } else if (res.data.endpoints.type === "http-operation") {
                 clientConfig.endpointResource = res.data.endpoints.resource;
-                let rpUrl: string = clientConfig.endpointResource!.swagger.split('/Paths/')[0];
-                let moduleUrl: string = rpUrl.split('/ResourceProviders/')[0];
-                let planeUrl: string = moduleUrl.split('/')[0];
+                const rpUrl: string = clientConfig.endpointResource!.swagger.split('/Paths/')[0];
+                const moduleUrl: string = rpUrl.split('/ResourceProviders/')[0];
+                const planeUrl: string = moduleUrl.split('/')[0];
                 selectedResourceProvider = `/Swagger/Specs/${rpUrl}`
                 selectedModule = `/Swagger/Specs/${moduleUrl}`
                 selectedPlane = `/Swagger/Specs/${planeUrl}`
@@ -468,7 +467,8 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
     }
 
     handleUpdate = async () => {
-        let { aadAuthScopes, endpointType } = this.state
+        let { aadAuthScopes} = this.state
+        const { endpointType } = this.state
         let templates: ClientEndpointTemplate[] | undefined = undefined;
         let resource: ClientEndpointResource | undefined = undefined;
         let cloudMetadata: ClientEndpointCloudMetadata | undefined = undefined;
@@ -554,8 +554,8 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
             }
 
         } else if (endpointType === "http-operation") {
-
-            let { selectedPlane, selectedModule, selectedResourceProvider, selectedVersion, selectedResourceId, subresource, moduleOptionsCommonPrefix } = this.state;
+            let { subresource } = this.state;
+            const { selectedPlane, selectedModule, selectedResourceProvider, selectedVersion, selectedResourceId, moduleOptionsCommonPrefix } = this.state;
             if (!selectedPlane) {
                 this.setState({
                     invalidText: "Plane is required."
@@ -611,7 +611,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
             return;
         }
 
-        let auth = {
+        const auth = {
             aad: {
                 scopes: aadAuthScopes,
             }
@@ -654,7 +654,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
 
     onRemoveAadScope = (idx: number) => {
         this.setState(preState => {
-            let aadAuthScopes: string[] = [...preState.aadAuthScopes.slice(0, idx), ...preState.aadAuthScopes.slice(idx + 1)];
+            const aadAuthScopes: string[] = [...preState.aadAuthScopes.slice(0, idx), ...preState.aadAuthScopes.slice(idx + 1)];
             if (aadAuthScopes.length === 0) {
                 aadAuthScopes.push("");
             }
@@ -733,7 +733,7 @@ class WSEditorClientConfigDialog extends React.Component<WSEditorClientConfigDia
                                 value={endpointType}
                                 textColor="secondary"
                                 indicatorColor="secondary"
-                                onChange={(event: any, newValue: any) => {
+                                onChange={(_event: any, newValue: any) => {
                                     this.setState({
                                         endpointType: newValue,
                                     })

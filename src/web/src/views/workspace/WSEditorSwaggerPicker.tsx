@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { Typography, Box, AppBar, Toolbar, IconButton, Button, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText, FormControlLabel, Alert, Card, CardContent, AlertTitle, Paper, InputBase, Select, MenuItem, FormControl, InputLabel, FormHelperText } from '@mui/material';
+import { Typography, Box, AppBar, Toolbar, IconButton, Button, Autocomplete, TextField, Backdrop, CircularProgress, List, ListSubheader, ListItem, ListItemButton, ListItemIcon, Checkbox, ListItemText, Alert, Paper, InputBase, Select, MenuItem, FormControl, InputLabel, FormHelperText } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import EditorPageLayout from '../../components/EditorPageLayout';
 import { styled } from '@mui/material/styles';
-// import SortIcon from '@mui/icons-material/Sort';
 
 
 interface WSEditorSwaggerPickerProps {
@@ -85,11 +84,11 @@ type ResourceMap = {
     [id: string]: Resource
 }
 
-const MiddlePadding = styled(Box)(({ theme }) => ({
+const MiddlePadding = styled(Box)(() => ({
     height: '2vh'
 }));
 
-const MiddlePadding2 = styled(Box)(({ theme }) => ({
+const MiddlePadding2 = styled(Box)(() => ({
     height: '8vh'
 }));
 
@@ -134,12 +133,12 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         this.loadWorkspaceResources().then(async () => {
             await this.loadSwaggerModules(this.props.plane);
             try {
-                let res = await axios.get(`/AAZ/Editor/Workspaces/${this.props.workspaceName}/SwaggerDefault`);
+                const res = await axios.get(`/AAZ/Editor/Workspaces/${this.props.workspaceName}/SwaggerDefault`);
                 // default module name
                 if (res.data.modNames === null || res.data.modNames.length == 0) {
                     return;
                 }
-                let moduleValueUrl = `/Swagger/Specs/${this.props.plane}/` + res.data.modNames.join('/');
+                const moduleValueUrl = `/Swagger/Specs/${this.props.plane}/` + res.data.modNames.join('/');
                 if (this.state.moduleOptions.findIndex(v => v === moduleValueUrl) == -1) {
                     return
                 }
@@ -179,7 +178,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
 
     loadSwaggerModules = async (plane: string) => {
         try {
-            let res = await axios.get(`/Swagger/Specs/${plane}`);
+            const res = await axios.get(`/Swagger/Specs/${plane}`);
             const options: string[] = res.data.map((v: any) => (v.url));
             this.setState(preState => {
                 return {
@@ -202,13 +201,13 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
 
     loadResourceProviders = async (moduleUrl: string | null, preferredRP: string | null) => {
         if (moduleUrl != null) {
-            let defaultSource = this.state.defaultSource;
+            const defaultSource = this.state.defaultSource;
             try {
                 let url = `${moduleUrl}/ResourceProviders`
                 if (defaultSource !== null) {
                     url += `?type=${defaultSource}`;
                 }
-                let res = await axios.get(url);
+                const res = await axios.get(url);
                 let options: string[] = res.data.map((v: any) => (v.url));
                 let selectedResourceProvider = options.length === 1 ? options[0] : null;
                 let defaultResourceProvider = null;
@@ -242,7 +241,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
 
     loadWorkspaceResources = async () => {
         try {
-            let res = await axios.get(`/AAZ/Editor/Workspaces/${this.props.workspaceName}/CommandTree/Nodes/aaz/Resources`);
+            const res = await axios.get(`/AAZ/Editor/Workspaces/${this.props.workspaceName}/CommandTree/Nodes/aaz/Resources`);
             const existingResources = new Set<string>();
             if (res.data && Array.isArray(res.data) && res.data.length > 0) {
                 res.data.forEach(resource => {
@@ -290,7 +289,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                         resourceIdList.push(resource.id);
                         resourceMap[resource.id] = resource;
                         resourceMap[resource.id].aazVersions = null;
-    
+
                         const resourceVersions = resource.versions.map((v) => v.version)
                         // resourceIdVersionMap[resource.id] = versions;
                         resourceVersions.forEach((v) => {
@@ -306,17 +305,17 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
                     if (versionOptions.length > 0) {
                         selectVersion = versionOptions[0];
                     }
-    
+
                     const filterBody = {
                         resources: resourceIdList
                     };
-    
+
                     res = await axios.post(`/AAZ/Specs/Resources/${this.props.plane}/Filter`, filterBody);
                     res.data.resources.forEach((aazResource: AAZResource) => {
                         if (aazResource.versions) {
                             resourceMap[aazResource.id].aazVersions = aazResource.versions;
                         }
-    
+
                     })
                     this.setState({
                         loading: false,
@@ -384,7 +383,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         });
 
         axios.post(`/AAZ/Editor/Workspaces/${this.props.workspaceName}/CommandTree/Nodes/aaz/AddSwagger`, requestBody)
-            .then(res => {
+            .then(() => {
                 this.setState({
                     loading: false
                 });
@@ -472,7 +471,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         return () => {
             this.setState(preState => {
                 const selectedResources = new Set(preState.selectedResources);
-                let selectedResourceInheritanceAAZVersionMap = { ...preState.selectedResourceInheritanceAAZVersionMap };
+                const selectedResourceInheritanceAAZVersionMap = { ...preState.selectedResourceInheritanceAAZVersionMap };
                 if (selectedResources.has(resourceId)) {
                     selectedResources.delete(resourceId);
                     delete selectedResourceInheritanceAAZVersionMap[resourceId];
@@ -531,7 +530,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
 
     onResourceInheritanceAAZVersionUpdate = (resourceId: string, aazVersion: string | null) => {
         this.setState(preState => {
-            let selectedResourceInheritanceAAZVersionMap = { ...preState.selectedResourceInheritanceAAZVersionMap };
+            const selectedResourceInheritanceAAZVersionMap = { ...preState.selectedResourceInheritanceAAZVersionMap };
             selectedResourceInheritanceAAZVersionMap[resourceId] = aazVersion;
             let preferredAAZVersion = preState.preferredAAZVersion;
             if (aazVersion !== null) {
@@ -798,7 +797,7 @@ class SwaggerItemSelector extends React.Component<SwaggerItemsSelectorProps> {
                 id={name}
                 value={value}
                 options={options}
-                onChange={(event, newValue: any) => {
+                onChange={(_event, newValue: any) => {
                     this.props.onValueUpdate(newValue);
                 }}
                 getOptionLabel={(option) => {

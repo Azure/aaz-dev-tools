@@ -40,10 +40,10 @@ const SelectionTypography = styled(Typography)<TypographyProps>(({ theme }) => (
     fontWeight: 400,
 }))
 
-const RegisteredTypography = styled(SelectionTypography)<TypographyProps>(({ theme }) => ({
+const RegisteredTypography = styled(SelectionTypography)<TypographyProps>(() => ({
 }))
 
-const UnregisteredTypography = styled(SelectionTypography)<TypographyProps>(({ theme }) => ({
+const UnregisteredTypography = styled(SelectionTypography)<TypographyProps>(() => ({
     color: '#d9c136',
 }))
 
@@ -58,22 +58,22 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
     }
 
     onSelectCommandGroup = (commandGroupId: string, selected: boolean) => {
-        let newTree = updateProfileCommandTree(this.props.profileCommandTree, commandGroupId, selected);
+        const newTree = updateProfileCommandTree(this.props.profileCommandTree, commandGroupId, selected);
         this.props.onChange(newTree);
     }
 
     onSelectCommand = (commandId: string, selected: boolean) => {
-        let newTree = updateProfileCommandTree(this.props.profileCommandTree, commandId, selected);
+        const newTree = updateProfileCommandTree(this.props.profileCommandTree, commandId, selected);
         this.props.onChange(newTree);
     }
 
     onSelectCommandVersion = (commandId: string, version: string) => {
-        let newTree = updateProfileCommandTree(this.props.profileCommandTree, commandId, true, version);
+        const newTree = updateProfileCommandTree(this.props.profileCommandTree, commandId, true, version);
         this.props.onChange(newTree);
     }
 
     onSelectCommandRegistered = (commandId: string, registered: boolean) => {
-        let newTree = updateProfileCommandTree(this.props.profileCommandTree, commandId, true, undefined, registered);
+        const newTree = updateProfileCommandTree(this.props.profileCommandTree, commandId, true, undefined, registered);
         this.props.onChange(newTree);
     }
 
@@ -119,7 +119,7 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
                             justifyContent: "center",
                         }}>
                             {!command.modified && command.selectedVersion !== undefined && <IconButton
-                                onClick={(event) => {
+                                onClick={() => {
                                     this.onSelectCommand(command.id, true);
                                 }}
                             >
@@ -237,7 +237,7 @@ class CLIModGeneratorProfileCommandTree extends React.Component<CLIModGeneratorP
 interface ProfileCommandTree {
     name: string;
     commandGroups: ProfileCTCommandGroup[];
-};
+}
 
 interface ProfileCTCommandGroup {
     id: string;
@@ -250,7 +250,7 @@ interface ProfileCTCommandGroup {
 
     totalCommands: number;
     selectedCommands: number;
-};
+}
 
 interface ProfileCTCommand {
     id: string;
@@ -262,12 +262,12 @@ interface ProfileCTCommand {
     selectedVersion?: string;
     registered?: boolean;
     modified: boolean;
-};
+}
 
 interface ProfileCTCommandVersion {
     name: string;
     stage: string;
-};
+}
 
 function decodeProfileCTCommandVersion(response: any): ProfileCTCommandVersion {
     return {
@@ -278,7 +278,7 @@ function decodeProfileCTCommandVersion(response: any): ProfileCTCommandVersion {
 
 
 function decodeProfileCTCommand(response: any): ProfileCTCommand {
-    let versions = response.versions.map((value: any) => decodeProfileCTCommandVersion(value));
+    const versions = response.versions.map((value: any) => decodeProfileCTCommandVersion(value));
     return {
         id: response.names.join('/'),
         names: [...response.names],
@@ -289,8 +289,8 @@ function decodeProfileCTCommand(response: any): ProfileCTCommand {
 }
 
 function decodeProfileCTCommandGroup(response: any): ProfileCTCommandGroup {
-    let commands = response.commands !== undefined ? Object.keys(response.commands).map((name: string) => decodeProfileCTCommand(response.commands[name])) : undefined;
-    let commandGroups = response.commandGroups !== undefined ? Object.keys(response.commandGroups).map((name: string) => decodeProfileCTCommandGroup(response.commandGroups[name])) : undefined;
+    const commands = response.commands !== undefined ? Object.keys(response.commands).map((name: string) => decodeProfileCTCommand(response.commands[name])) : undefined;
+    const commandGroups = response.commandGroups !== undefined ? Object.keys(response.commandGroups).map((name: string) => decodeProfileCTCommandGroup(response.commandGroups[name])) : undefined;
     let totalCommands = commands?.length ?? 0;
     totalCommands = commandGroups?.reduce((previousValue, value) => previousValue + value.totalCommands, totalCommands) ?? totalCommands;
     return {
@@ -305,7 +305,7 @@ function decodeProfileCTCommandGroup(response: any): ProfileCTCommandGroup {
 }
 
 function BuildProfileCommandTree(profileName: string, response: any): ProfileCommandTree {
-    let commandGroups: ProfileCTCommandGroup[] = response.commandGroups !== undefined ? Object.keys(response.commandGroups).map((name: string) => decodeProfileCTCommandGroup(response.commandGroups[name])) : [];
+    const commandGroups: ProfileCTCommandGroup[] = response.commandGroups !== undefined ? Object.keys(response.commandGroups).map((name: string) => decodeProfileCTCommandGroup(response.commandGroups[name])) : [];
     return {
         name: profileName,
         commandGroups: commandGroups,
@@ -313,14 +313,14 @@ function BuildProfileCommandTree(profileName: string, response: any): ProfileCom
 }
 
 function getDefaultExpandedOfCommandGroup(commandGroup: ProfileCTCommandGroup): string[] {
-    let expandedIds = commandGroup.commandGroups?.flatMap(value => [value.id, ...getDefaultExpandedOfCommandGroup(value)]) ?? [];
+    const expandedIds = commandGroup.commandGroups?.flatMap(value => [value.id, ...getDefaultExpandedOfCommandGroup(value)]) ?? [];
     return expandedIds;
 }
 
 
 function GetDefaultExpanded(tree: ProfileCommandTree): string[] {
     return tree.commandGroups.flatMap(value => {
-        let ids = getDefaultExpandedOfCommandGroup(value);
+        const ids = getDefaultExpandedOfCommandGroup(value);
         if (value.selectedCommands > 0) {
             ids.push(value.id);
         }
@@ -334,8 +334,8 @@ function updateCommand(command: ProfileCTCommand, commandId: string, selected: b
     }
 
     if (selected) {
-        let selectedVersion = version ?? command.selectedVersion ?? command.versions[0].name;
-        let registerCommand = registered ?? command.registered ?? true;
+        const selectedVersion = version ?? command.selectedVersion ?? command.versions[0].name;
+        const registerCommand = registered ?? command.registered ?? true;
         return {
             ...command,
             selectedVersion: selectedVersion,
@@ -380,7 +380,7 @@ function updateCommandGroup(commandGroup: ProfileCTCommandGroup, id: string, sel
 }
 
 function updateProfileCommandTree(tree: ProfileCommandTree, id: string, selected: boolean, version: string | undefined = undefined, registered: boolean | undefined = undefined): ProfileCommandTree {
-    let commandGroups = tree.commandGroups.map((value) => updateCommandGroup(value, id, selected, version, registered));
+    const commandGroups = tree.commandGroups.map((value) => updateCommandGroup(value, id, selected, version, registered));
     return {
         ...tree,
         commandGroups: commandGroups
@@ -404,7 +404,7 @@ function updateCommandGroupByModView(commandGroup: ProfileCTCommandGroup, view: 
     }
     let commands = commandGroup.commands;
     if (view.commands !== undefined) {
-        let keys = new Set(Object.keys(view.commands!));
+        const keys = new Set(Object.keys(view.commands!));
         commands = commandGroup.commands?.map((value) => {
             if (keys.has(value.names[value.names.length - 1])) {
                 keys.delete(value.names[value.names.length - 1])
@@ -414,7 +414,7 @@ function updateCommandGroupByModView(commandGroup: ProfileCTCommandGroup, view: 
             }
         })
         if (keys.size > 0) {
-            let commandNames: string[] = [];
+            const commandNames: string[] = [];
             keys.forEach(key => {
                 commandNames.push('`az ' + view.commands![key].names.join(" ") + '`')
             })
@@ -424,7 +424,7 @@ function updateCommandGroupByModView(commandGroup: ProfileCTCommandGroup, view: 
 
     let commandGroups = commandGroup.commandGroups;
     if (view.commandGroups !== undefined) {
-        let keys = new Set(Object.keys(view.commandGroups!));
+        const keys = new Set(Object.keys(view.commandGroups!));
         commandGroups = commandGroup.commandGroups?.map((value) => {
             if (keys.has(value.names[value.names.length - 1])) {
                 keys.delete(value.names[value.names.length - 1])
@@ -434,7 +434,7 @@ function updateCommandGroupByModView(commandGroup: ProfileCTCommandGroup, view: 
             }
         })
         if (keys.size > 0) {
-            let commandGroupNames: string[] = [];
+            const commandGroupNames: string[] = [];
             keys.forEach(key => {
                 commandGroupNames.push('`az ' + view.commandGroups![key].names.join(" ") + '`')
             })
@@ -456,7 +456,7 @@ function updateCommandGroupByModView(commandGroup: ProfileCTCommandGroup, view: 
 function UpdateProfileCommandTreeByModView(tree: ProfileCommandTree, view: CLIModViewProfile): ProfileCommandTree {
     let commandGroups = tree.commandGroups;
     if (view.commandGroups !== undefined) {
-        let keys = new Set(Object.keys(view.commandGroups));
+        const keys = new Set(Object.keys(view.commandGroups));
         commandGroups = tree.commandGroups.map((value) => {
             if (keys.has(value.names[value.names.length - 1])) {
                 keys.delete(value.names[value.names.length - 1])
@@ -466,7 +466,7 @@ function UpdateProfileCommandTreeByModView(tree: ProfileCommandTree, view: CLIMo
             }
         })
         if (keys.size > 0) {
-            let commandGroupNames: string[] = [];
+            const commandGroupNames: string[] = [];
             keys.forEach(key => {
                 commandGroupNames.push('`az ' + view.commandGroups![key].names.join(" ") + '`')
             })
@@ -503,7 +503,7 @@ function ExportModViewCommandGroup(commandGroup: ProfileCTCommandGroup): CLIModV
         commands = {}
 
         commandGroup.commands!.forEach(value => {
-            let view = ExportModViewCommand(value);
+            const view = ExportModViewCommand(value);
             if (view !== undefined) {
                 commands![value.names[value.names.length - 1]] = view;
             }
@@ -515,7 +515,7 @@ function ExportModViewCommandGroup(commandGroup: ProfileCTCommandGroup): CLIModV
         commandGroups = {}
 
         commandGroup.commandGroups!.forEach(value => {
-            let view = ExportModViewCommandGroup(value);
+            const view = ExportModViewCommandGroup(value);
             if (view !== undefined) {
                 commandGroups![value.names[value.names.length - 1]] = view;
             }
@@ -531,10 +531,10 @@ function ExportModViewCommandGroup(commandGroup: ProfileCTCommandGroup): CLIModV
 
 
 function ExportModViewProfile(tree: ProfileCommandTree): CLIModViewProfile {
-    let commandGroups: CLIModViewCommandGroups = {};
+    const commandGroups: CLIModViewCommandGroups = {};
 
     tree.commandGroups.forEach(value => {
-        let view = ExportModViewCommandGroup(value);
+        const view = ExportModViewCommandGroup(value);
         if (view !== undefined) {
             commandGroups[value.names[value.names.length - 1]] = view;
         }
