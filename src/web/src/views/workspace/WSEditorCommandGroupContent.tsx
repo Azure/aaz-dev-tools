@@ -277,8 +277,9 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
     }
 
     handleModify = () => {
-        let { name, stage, shortHelp, longHelp } = this.state
-        let { workspaceUrl, commandGroup } = this.props
+        let { name, shortHelp, longHelp } = this.state
+        const { stage } = this.state
+        const { workspaceUrl, commandGroup } = this.props
 
         name = name.trim();
         shortHelp = shortHelp.trim();
