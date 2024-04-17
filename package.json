@@ -1,0 +1,33 @@
+{
+    "name": "aaz-dev-tools",
+    "version": "0.1.0",
+    "private": true,
+    "packageManager": "pnpm@8.13.1",
+    "scripts": {
+      "run-all": "pnpm -r --filter=!./typescript/",
+      "build": "pnpm run-all --workspace-concurrency=Infinity --aggregate-output --reporter=append-only build ",
+      "clean": "pnpm run-all run clean",
+      "lint": "pnpm run-all  --parallel --aggregate-output --reporter=append-only run lint",
+      "preinstall": "npx only-allow pnpm",
+      "purge": "rimraf --glob \"src/**/node_modules/\"",
+      "watch": "tsc --build ./tsconfig.ws.json --watch"
+    },
+    "devDependencies": {
+      "@pnpm/find-workspace-packages": "^6.0.9",
+      "@pnpm/logger": "^5.0.0",
+      "rimraf": "~5.0.5"
+    },
+    "syncpack": {
+      "dependencyTypes": [
+        "dev",
+        "overrides",
+        "peer",
+        "pnpmOverrides",
+        "prod",
+        "resolutions"
+      ]
+    },
+    "dependencies": {
+      "picocolors": "~1.0.0"
+    }
+}

@@ -1,0 +1,3 @@
+{
+    "extends": "./src/typespec/core/tsconfig.base.json"
+}

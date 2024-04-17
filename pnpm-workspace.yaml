@@ -1,0 +1,5 @@
+packages:
+  - src/web/
+  - src/typespec/packages/*
+  - src/typespec/core/ # Install core workspace dependencies too. Needed for prettier plugins
+  - src/typespec/core/packages/*
