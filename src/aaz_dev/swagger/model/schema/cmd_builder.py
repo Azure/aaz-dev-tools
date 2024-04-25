@@ -340,6 +340,8 @@ class CMDBuilder:
                 item.value = v
                 enum.items.append(item)
 
+        if schema.x_ms_enum and schema.x_ms_enum.model_as_string:
+            enum.support_extension = True
         model.enum = enum
 
     def setup_fmt(self, model, schema):
