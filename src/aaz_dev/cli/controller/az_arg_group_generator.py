@@ -191,7 +191,12 @@ def parse_arg_enum(enum):
         if item.hide:
             continue
         e[item.name] = item.value
-    return e
+    kwargs = {
+        "enum": e
+    }
+    if enum.support_extension:
+        kwargs["enum_support_extension"] = True
+    return kwargs
 
 
 def parse_arg_name(arg):
@@ -288,9 +293,9 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
 
     if isinstance(arg, CMDStringArgBase):
         arg_type = "AAZStrArg"
-        enum = parse_arg_enum(arg.enum)
-        if enum:
-            arg_kwargs['enum'] = enum
+        enum_kwargs = parse_arg_enum(arg.enum)
+        if enum_kwargs:
+            arg_kwargs.update(enum_kwargs)
 
         if arg.fmt and isinstance(arg.fmt, CMDStringFormat):
             arg_kwargs['fmt'] = fmt = {
@@ -358,9 +363,9 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
 
     elif isinstance(arg, CMDIntegerArgBase):
         arg_type = "AAZIntArg"
-        enum = parse_arg_enum(arg.enum)
-        if enum:
-            arg_kwargs['enum'] = enum
+        enum_kwargs = parse_arg_enum(arg.enum)
+        if enum_kwargs:
+            arg_kwargs.update(enum_kwargs)
 
         if arg.fmt and isinstance(arg.fmt, CMDIntegerFormat):
             arg_kwargs['fmt'] = fmt = {
@@ -392,9 +397,9 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
 
     elif isinstance(arg, CMDFloatArgBase):
         arg_type = "AAZFloatArg"
-        enum = parse_arg_enum(arg.enum)
-        if enum:
-            arg_kwargs['enum'] = enum
+        enum_kwargs = parse_arg_enum(arg.enum)
+        if enum_kwargs:
+            arg_kwargs.update(enum_kwargs)
 
         if arg.fmt and isinstance(arg.fmt, CMDFloatFormat):
             arg_kwargs['fmt'] = fmt = {
