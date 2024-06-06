@@ -1,35 +1,35 @@
 {
-    "name": "aaz-dev-tools",
-    "version": "0.1.0",
-    "private": true,
-    "packageManager": "pnpm@9.0.5",
-    "scripts": {
-      "run-all": "pnpm -r ",
-      "build:typespec": "pnpm -r --filter=\"!./src/web/\" --workspace-concurrency=Infinity --aggregate-output --reporter=append-only build ",
-      "build:web": "pnpm -r --filter=\"./src/web/\" --workspace-concurrency=Infinity --aggregate-output --reporter=append-only build ",
-      "bundle": "node ./eng/scripts/bundle_dists.js",
-      "clean": "pnpm run-all run clean",
-      "lint": "pnpm run-all --parallel --aggregate-output --reporter=append-only run lint",
-      "preinstall": "npx only-allow pnpm",
-      "purge": "rimraf --glob \"src/**/node_modules/\"",
-      "watch": "tsc --build ./tsconfig.ws.json --watch"
-    },
-    "devDependencies": {
-      "@pnpm/find-workspace-packages": "^6.0.9",
-      "@pnpm/logger": "^5.0.0",
-      "rimraf": "~5.0.5"
-    },
-    "syncpack": {
-      "dependencyTypes": [
-        "dev",
-        "overrides",
-        "peer",
-        "pnpmOverrides",
-        "prod",
-        "resolutions"
-      ]
-    },
-    "dependencies": {
-      "picocolors": "~1.0.0"
-    }
+  "name": "aaz-dev-tools",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@8.13.1",
+  "scripts": {
+    "run-all": "pnpm -r ",
+    "build:typespec": "pnpm -r --filter=\"!./src/web/\" --filter=\"!./src/typespec/core/\" --workspace-concurrency=Infinity --aggregate-output --reporter=append-only build ",
+    "build:web": "pnpm -r --filter=\"./src/web/\" --workspace-concurrency=Infinity --aggregate-output --reporter=append-only build ",
+    "bundle": "node ./eng/scripts/bundle_dists.js",
+    "clean": "pnpm run-all run clean",
+    "lint": "pnpm run-all --parallel --aggregate-output --reporter=append-only run lint",
+    "preinstall": "npx only-allow pnpm",
+    "purge": "rimraf --glob \"src/**/node_modules/\"",
+    "watch": "tsc --build ./tsconfig.ws.json --watch"
+  },
+  "devDependencies": {
+    "@pnpm/find-workspace-packages": "^6.0.9",
+    "@pnpm/logger": "^5.0.0",
+    "rimraf": "~5.0.5"
+  },
+  "syncpack": {
+    "dependencyTypes": [
+      "dev",
+      "overrides",
+      "peer",
+      "pnpmOverrides",
+      "prod",
+      "resolutions"
+    ]
+  },
+  "dependencies": {
+    "picocolors": "~1.0.0"
+  }
 }
