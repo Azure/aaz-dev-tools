@@ -16,8 +16,6 @@
     },
     "devDependencies": {
       "@pnpm/find-workspace-packages": "^6.0.9",
-      "prettier-plugin-organize-imports": "^3.2.4",
-      "@chronus/chronus": "^0.10.2",
       "@pnpm/logger": "^5.0.0",
       "rimraf": "~5.0.5"
     },
