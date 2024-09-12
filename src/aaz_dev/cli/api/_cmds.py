@@ -237,3 +237,51 @@ def _build_profile(profile_name, commands_map):
             group_names = parent_group_names
 
     return profile
+
+
+@bp.cli.command("generate-powershell", short_help="Generate powershell code based on selected azure cli module.")
+@click.option(
+    "--aaz-path", '-a',
+    type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
+    default=Config.AAZ_PATH,
+    required=not Config.AAZ_PATH,
+    callback=Config.validate_and_setup_aaz_path,
+    expose_value=False,
+    help="The local path of aaz repo."
+)
+@click.option(
+    "--cli-path", '-c',
+    type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
+    callback=Config.validate_and_setup_cli_path,
+    help="The local path of azure-cli repo. Only required when generate code to azure-cli repo."
+)
+@click.option(
+    "--cli-extension-path", '-e',
+    type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
+    callback=Config.validate_and_setup_cli_extension_path,
+    help="The local path of azure-cli-extension repo. Only required when generate code to azure-cli-extension repo."
+)
+@click.option(
+    "--extension-or-module-name", '--name',
+    required=True,
+    help="Name of the module in azure-cli or the extension in azure-cli-extensions"
+)
+@click.option(
+    "--swagger-module-path", "--sm",
+    type=click.Path(file_okay=False, dir_okay=True, readable=True, resolve_path=True),
+    default=Config.SWAGGER_MODULE_PATH,
+    required=not Config.SWAGGER_MODULE_PATH,
+    callback=Config.validate_and_setup_swagger_module_path,
+    expose_value=False,
+    help="The local path of swagger module."
+)
+@click.option(
+    "--resource-provider", "--rp",
+    default=Config.DEFAULT_RESOURCE_PROVIDER,
+    required=not Config.DEFAULT_RESOURCE_PROVIDER,
+    callback=Config.validate_and_setup_default_resource_provider,
+    expose_value=False,
+    help="The resource provider name."
+)
+def generate_powershell(extension_or_module_name, cli_path=None, cli_extension_path=None):
+    pass
