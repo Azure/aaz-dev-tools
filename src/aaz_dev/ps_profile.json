@@ -1,0 +1,346 @@
+{
+    "AutonomousDatabase": {
+        "operations": {
+            "AutonomousDatabases_ListBySubscription": {
+                "delete": false,
+                "method": "get"
+            },
+            "AutonomousDatabases_ListByResourceGroup": {
+                "delete": false,
+                "method": "get"
+            },
+            "AutonomousDatabases_CreateOrUpdate": {
+                "delete": false,
+                "method": "put"
+            },
+            "AutonomousDatabases_Delete": {
+                "delete": false,
+                "method": "delete"
+            },
+            "AutonomousDatabases_Get": {
+                "delete": false,
+                "method": "get"
+            },
+            "AutonomousDatabases_Update": {
+                "delete": false,
+                "method": "patch"
+            },
+            "AutonomousDatabases_Failover": {
+                "delete": false,
+                "method": "post"
+            },
+            "AutonomousDatabases_GenerateWallet": {
+                "delete": true,
+                "method": "post"
+            },
+            "AutonomousDatabases_Restore": {
+                "delete": false,
+                "method": "post"
+            },
+            "AutonomousDatabases_Shrink": {
+                "delete": true,
+                "method": "post"
+            },
+            "AutonomousDatabases_Switchover": {
+                "delete": false,
+                "method": "post"
+            }
+        },
+        "delete": false
+    },
+    "CloudExadataInfrastructure": {
+        "operations": {
+            "CloudExadataInfrastructures_ListBySubscription": {
+                "delete": false,
+                "method": "get"
+            },
+            "CloudExadataInfrastructures_ListByResourceGroup": {
+                "delete": false,
+                "method": "get"
+            },
+            "CloudExadataInfrastructures_CreateOrUpdate": {
+                "delete": false,
+                "method": "put"
+            },
+            "CloudExadataInfrastructures_Delete": {
+                "delete": false,
+                "method": "delete"
+            },
+            "CloudExadataInfrastructures_Get": {
+                "delete": false,
+                "method": "get"
+            },
+            "CloudExadataInfrastructures_Update": {
+                "delete": false,
+                "method": "patch"
+            },
+            "CloudExadataInfrastructures_AddStorageCapacity": {
+                "delete": true,
+                "method": "post"
+            }
+        },
+        "delete": false
+    },
+    "CloudVmCluster": {
+        "operations": {
+            "CloudVmClusters_ListBySubscription": {
+                "delete": false,
+                "method": "get"
+            },
+            "CloudVmClusters_ListByResourceGroup": {
+                "delete": false,
+                "method": "get"
+            },
+            "CloudVmClusters_CreateOrUpdate": {
+                "delete": false,
+                "method": "put"
+            },
+            "CloudVmClusters_Delete": {
+                "delete": false,
+                "method": "delete"
+            },
+            "CloudVmClusters_Get": {
+                "delete": false,
+                "method": "get"
+            },
+            "CloudVmClusters_Update": {
+                "delete": false,
+                "method": "patch"
+            },
+            "CloudVmClusters_AddVms": {
+                "delete": false,
+                "method": "post"
+            },
+            "CloudVmClusters_ListPrivateIpAddresses": {
+                "delete": true,
+                "method": "post"
+            },
+            "CloudVmClusters_RemoveVms": {
+                "delete": false,
+                "method": "post"
+            }
+        },
+        "delete": false
+    },
+    "AutonomousDatabaseCharacterSet": {
+        "operations": {
+            "AutonomousDatabaseCharacterSets_ListByLocation": {
+                "delete": false,
+                "method": "get"
+            },
+            "AutonomousDatabaseCharacterSets_Get": {
+                "delete": true,
+                "method": "get"
+            }
+        },
+        "delete": false
+    },
+    "AutonomousDatabaseNationalCharacterSet": {
+        "operations": {
+            "AutonomousDatabaseNationalCharacterSets_ListByLocation": {
+                "delete": false,
+                "method": "get"
+            },
+            "AutonomousDatabaseNationalCharacterSets_Get": {
+                "delete": true,
+                "method": "get"
+            }
+        },
+        "delete": false
+    },
+    "AutonomousDatabaseVersion": {
+        "operations": {
+            "AutonomousDatabaseVersions_ListByLocation": {
+                "delete": false,
+                "method": "get"
+            },
+            "AutonomousDatabaseVersions_Get": {
+                "delete": true,
+                "method": "get"
+            }
+        },
+        "delete": false
+    },
+    "DbSystemShape": {
+        "operations": {
+            "DbSystemShapes_ListByLocation": {
+                "delete": false,
+                "method": "get"
+            },
+            "DbSystemShapes_Get": {
+                "delete": true,
+                "method": "get"
+            }
+        },
+        "delete": false
+    },
+    "DnsPrivateView": {
+        "operations": {
+            "DnsPrivateViews_ListByLocation": {
+                "delete": false,
+                "method": "get"
+            },
+            "DnsPrivateViews_Get": {
+                "delete": true,
+                "method": "get"
+            }
+        },
+        "delete": false
+    },
+    "DnsPrivateZone": {
+        "operations": {
+            "DnsPrivateZones_ListByLocation": {
+                "delete": false,
+                "method": "get"
+            },
+            "DnsPrivateZones_Get": {
+                "delete": true,
+                "method": "get"
+            }
+        },
+        "delete": false
+    },
+    "GiVersion": {
+        "operations": {
+            "GiVersions_ListByLocation": {
+                "delete": false,
+                "method": "get"
+            },
+            "GiVersions_Get": {
+                "delete": true,
+                "method": "get"
+            }
+        },
+        "delete": false
+    },
+    "SystemVersion": {
+        "operations": {
+            "SystemVersions_ListByLocation": {
+                "delete": true,
+                "method": "get"
+            },
+            "SystemVersions_Get": {
+                "delete": true,
+                "method": "get"
+            }
+        },
+        "delete": true
+    },
+    "OracleSubscription": {
+        "operations": {
+            "OracleSubscriptions_ListBySubscription": {
+                "delete": true,
+                "method": "get"
+            },
+            "OracleSubscriptions_Get": {
+                "delete": true,
+                "method": "get"
+            },
+            "OracleSubscriptions_CreateOrUpdate": {
+                "delete": true,
+                "method": "put"
+            },
+            "OracleSubscriptions_Update": {
+                "delete": true,
+                "method": "patch"
+            },
+            "OracleSubscriptions_Delete": {
+                "delete": true,
+                "method": "delete"
+            },
+            "OracleSubscriptions_AddAzureSubscriptions": {
+                "delete": true,
+                "method": "post"
+            },
+            "OracleSubscriptions_ListActivationLinks": {
+                "delete": true,
+                "method": "post"
+            },
+            "OracleSubscriptions_ListCloudAccountDetails": {
+                "delete": true,
+                "method": "post"
+            },
+            "OracleSubscriptions_ListSaasSubscriptionDetails": {
+                "delete": true,
+                "method": "post"
+            }
+        },
+        "delete": true
+    },
+    "AutonomousDatabaseBackup": {
+        "operations": {
+            "AutonomousDatabaseBackups_ListByAutonomousDatabase": {
+                "delete": false,
+                "method": "get"
+            },
+            "AutonomousDatabaseBackups_CreateOrUpdate": {
+                "delete": false,
+                "method": "put"
+            },
+            "AutonomousDatabaseBackups_Delete": {
+                "delete": false,
+                "method": "delete"
+            },
+            "AutonomousDatabaseBackups_Get": {
+                "delete": false,
+                "method": "get"
+            },
+            "AutonomousDatabaseBackups_Update": {
+                "delete": false,
+                "method": "patch"
+            }
+        },
+        "delete": false
+    },
+    "DbServer": {
+        "operations": {
+            "DbServers_ListByCloudExadataInfrastructure": {
+                "delete": false,
+                "method": "get"
+            },
+            "DbServers_Get": {
+                "delete": true,
+                "method": "get"
+            }
+        },
+        "delete": false
+    },
+    "DbNode": {
+        "operations": {
+            "DbNodes_ListByCloudVmCluster": {
+                "delete": false,
+                "method": "get"
+            },
+            "DbNodes_Get": {
+                "delete": true,
+                "method": "get"
+            },
+            "DbNodes_Action": {
+                "delete": false,
+                "method": "post"
+            }
+        },
+        "delete": false
+    },
+    "VirtualNetworkAddress": {
+        "operations": {
+            "VirtualNetworkAddresses_ListByCloudVmCluster": {
+                "delete": true,
+                "method": "get"
+            },
+            "VirtualNetworkAddresses_Get": {
+                "delete": true,
+                "method": "get"
+            },
+            "VirtualNetworkAddresses_CreateOrUpdate": {
+                "delete": true,
+                "method": "put"
+            },
+            "VirtualNetworkAddresses_Delete": {
+                "delete": true,
+                "method": "delete"
+            }
+        },
+        "delete": true
+    }
+}

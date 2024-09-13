@@ -1,0 +1,24 @@
+
+
+directive:
+  # Remove the set-* cmdlet
+  - where:
+      verb: Set
+    remove: true
+
+  # Remove variants
+  - where:
+      variant: ^(Create|Update)(?!.*?(Expanded|JsonFilePath|JsonString))
+    remove: true
+  - where:
+      variant: ^CreateViaIdentity.*$
+    remove: true
+
+  # TODO: Remove variants with post verb
+
+  # Remove APIs
+
+
+  # TODO: Rename parameter
+
+  # TODO: Model complex objects

@@ -253,13 +253,13 @@ def _build_profile(profile_name, commands_map):
     "--cli-path", '-c',
     type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
     callback=Config.validate_and_setup_cli_path,
-    help="The local path of azure-cli repo. Only required when generate code to azure-cli repo."
+    help="The local path of azure-cli repo. Only required when generate from azure-cli module."
 )
 @click.option(
     "--cli-extension-path", '-e',
     type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
     callback=Config.validate_and_setup_cli_extension_path,
-    help="The local path of azure-cli-extension repo. Only required when generate code to azure-cli-extension repo."
+    help="The local path of azure-cli-extension repo. Only required when generate from azure-cli extension."
 )
 @click.option(
     "--extension-or-module-name", '--name',
@@ -267,21 +267,29 @@ def _build_profile(profile_name, commands_map):
     help="Name of the module in azure-cli or the extension in azure-cli-extensions"
 )
 @click.option(
-    "--swagger-module-path", "--sm",
+    "--swagger-path", '-s',
     type=click.Path(file_okay=False, dir_okay=True, readable=True, resolve_path=True),
-    default=Config.SWAGGER_MODULE_PATH,
-    required=not Config.SWAGGER_MODULE_PATH,
-    callback=Config.validate_and_setup_swagger_module_path,
+    default=Config.SWAGGER_PATH,
+    required=not Config.SWAGGER_PATH,
+    callback=Config.validate_and_setup_swagger_path,
     expose_value=False,
-    help="The local path of swagger module."
-)
-@click.option(
-    "--resource-provider", "--rp",
-    default=Config.DEFAULT_RESOURCE_PROVIDER,
-    required=not Config.DEFAULT_RESOURCE_PROVIDER,
-    callback=Config.validate_and_setup_default_resource_provider,
-    expose_value=False,
-    help="The resource provider name."
+    help="The local path of azure-rest-api-specs repo. Official repo is https://github.com/Azure/azure-rest-api-specs"
 )
 def generate_powershell(extension_or_module_name, cli_path=None, cli_extension_path=None):
-    pass
+    from cli.controller.ps_config_generator import PSAutoRestConfigurationGenerator
+    from cli.controller.az_module_manager import AzMainManager, AzExtensionManager
+
+    if cli_path is not None:
+        assert Config.CLI_PATH is not None
+        manager = AzMainManager()
+    else:
+        assert cli_extension_path is not None
+        assert Config.CLI_EXTENSION_PATH is not None
+        manager = AzExtensionManager()
+
+    if not manager.has_module(extension_or_module_name):
+        logger.error(f"Cannot find module or extension `{extension_or_module_name}`")
+        sys.exit(1)
+    
+    ps_generator = PSAutoRestConfigurationGenerator(manager, extension_or_module_name)
+    ps_generator.generate_config()

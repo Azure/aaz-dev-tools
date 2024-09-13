@@ -60,5 +60,8 @@ def get_templates():
                     }
                 }
             },
+            'powershell': {
+                "configuration": env.get_template("powershell/configuration.yaml.j2")
+            },
         }
     return _templates
