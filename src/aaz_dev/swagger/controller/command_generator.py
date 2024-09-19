@@ -1,7 +1,7 @@
 import logging
 import re
 
-import inflect
+from pluralizer import Pluralizer
 from abc import abstractmethod, ABC
 
 from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, \
@@ -25,7 +25,7 @@ logger = logging.getLogger('backend')
 
 class _CommandGenerator(ABC):
 
-    _inflect_engine = inflect.engine()
+    _pluralizer = Pluralizer()
 
     @staticmethod
     def generate_command_version(resource):
@@ -161,7 +161,7 @@ class _CommandGenerator(ABC):
             part = re.sub(r"\{[^{}]*}", '', part)
             part = re.sub(r"[^a-zA-Z0-9\-._]", '', part)
             name = camel_case_to_snake_case(part, '-')
-            singular_name = cls._inflect_engine.singular_noun(name) or name
+            singular_name = cls._pluralizer.singular(name) or name
             names.append(singular_name)
         return " ".join([name for name in names if name])
 

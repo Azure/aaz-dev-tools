@@ -1,10 +1,44 @@
+### AutoRest Configuration
+> see https://aka.ms/autorest
 
+```yaml
+commit: {{ cfg.commit }}
+require:
+  - $(this-folder)/../../readme.azure.noprofile.md
+  - $(repo)/{{ cfg.readme_file }}
+
+try-require:
+  - $(repo)/{{ cfg.readme_file }}
+
+module-version: {{ cfg.version }}
+title: {{ cfg.module_name }}
+subject-prefix: $(service-name)
+
+inlining-threshold: 100
+resourcegroup-append: true
+nested-object-to-string: true
+identity-correction-for-post: true
 
 directive:
+  # Model complex objects
+
   # Remove the set-* cmdlet
   - where:
       verb: Set
     remove: true
+
+  # Remove APIs
+  {%- if cfg.removed_subjects|length %}
+  - where:
+      subject: {{ cfg.removed_subjects | join("|") }}
+    remove: true}
+  {%- endif %}
+  {%- for subject, verb in cfg.removed_verbs %}
+  - where:
+      subject: {{ subject }}
+      verb: {{ verb }}
+    remove: true
+  {%- endfor %}
 
   # Remove variants
   - where:
@@ -14,11 +48,6 @@ directive:
       variant: ^CreateViaIdentity.*$
     remove: true
 
-  # TODO: Remove variants with post verb
+  # Rename parameter
 
-  # Remove APIs
-
-
-  # TODO: Rename parameter
-
-  # TODO: Model complex objects
+```

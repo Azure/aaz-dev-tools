@@ -278,7 +278,7 @@ def _build_profile(profile_name, commands_map):
 def generate_powershell(extension_or_module_name, cli_path=None, cli_extension_path=None):
     from cli.controller.ps_config_generator import PSAutoRestConfigurationGenerator
     from cli.controller.az_module_manager import AzMainManager, AzExtensionManager
-
+    from cli.templates import get_templates
     if cli_path is not None:
         assert Config.CLI_PATH is not None
         manager = AzMainManager()
@@ -292,4 +292,8 @@ def generate_powershell(extension_or_module_name, cli_path=None, cli_extension_p
         sys.exit(1)
     
     ps_generator = PSAutoRestConfigurationGenerator(manager, extension_or_module_name)
-    ps_generator.generate_config()
+    ps_cfg = ps_generator.generate_config()
+
+    tmpl = get_templates()['powershell']['configuration']
+    data = tmpl.render(cfg=ps_cfg)
+    

@@ -1,6 +1,6 @@
 import re
 
-import inflect
+from pluralizer import Pluralizer
 from utils.case import to_camel_case
 
 from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgDefault, CMDBooleanArgBase, \
@@ -14,7 +14,7 @@ from ..configuration._schema import CMDIdentityObjectSchema, CMDIdentityObjectSc
 
 
 class CMDArgBuilder:
-    _inflect_engine = inflect.engine()
+    _pluralizer = Pluralizer()
 
     @classmethod
     def new_builder(cls, schema, parent=None, var_prefix=None, ref_args=None, ref_arg=None, is_update_action=False):
@@ -364,7 +364,7 @@ class CMDArgBuilder:
             if name == "[Index]" or name == "{Key}":
                 assert self._arg_var.endswith(name)
                 prefix = self._arg_var[:-len(name)].split('.')[-1]
-                prefix = self._inflect_engine.singular_noun(prefix)
+                prefix = self._pluralizer.singular(prefix)
                 if name == "[Index]":
                     name = f'{prefix}-index'
                 elif name == "{Key}":
@@ -372,7 +372,7 @@ class CMDArgBuilder:
             elif name.startswith('[].') or name.startswith('{}.'):
                 assert self._arg_var.endswith(name)
                 prefix = self._arg_var[:-len(name)].split('.')[-1]
-                prefix = self._inflect_engine.singular_noun(prefix)
+                prefix = self._pluralizer.singular(prefix)
                 name = prefix + name[2:]
             name = name.replace('.', '-')
             opt_name = self._build_option_name(name)  # some schema name may contain $
@@ -392,7 +392,7 @@ class CMDArgBuilder:
         # Disable singular options by default
         # if isinstance(self.schema, CMDArraySchema):
         #     opt_name = self._build_option_name(self.schema.name.replace('$', ''))  # some schema name may contain $
-        #     singular_opt_name = self._inflect_engine.singular_noun(opt_name) or opt_name
+        #     singular_opt_name = self._pluralizer.singular(opt_name) or opt_name
         #     if singular_opt_name != opt_name:
         #         return [singular_opt_name, ]
         return None

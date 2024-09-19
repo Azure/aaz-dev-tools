@@ -2,48 +2,116 @@
     "AutonomousDatabase": {
         "operations": {
             "AutonomousDatabases_ListBySubscription": {
+                "tag": "AutonomousDatabases_ListBySubscription",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/autonomousdatabases",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabase",
+                        "verb": "Get",
+                        "variant": "BySubscription",
+                        "action": "List"
+                    }
+                ]
             },
             "AutonomousDatabases_ListByResourceGroup": {
+                "tag": "AutonomousDatabases_ListByResourceGroup",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabase",
+                        "verb": "Get",
+                        "variant": "ByResourceGroup",
+                        "action": "List"
+                    }
+                ]
             },
             "AutonomousDatabases_CreateOrUpdate": {
+                "tag": "AutonomousDatabases_CreateOrUpdate",
                 "delete": false,
-                "method": "put"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}",
+                "method": "put",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabase",
+                        "verb": "New",
+                        "variant": "",
+                        "action": "Create"
+                    }
+                ]
             },
             "AutonomousDatabases_Delete": {
+                "tag": "AutonomousDatabases_Delete",
                 "delete": false,
-                "method": "delete"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}",
+                "method": "delete",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabase",
+                        "verb": "Remove",
+                        "variant": "",
+                        "action": "Delete"
+                    }
+                ]
             },
             "AutonomousDatabases_Get": {
+                "tag": "AutonomousDatabases_Get",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabase",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             },
             "AutonomousDatabases_Update": {
+                "tag": "AutonomousDatabases_Update",
                 "delete": false,
-                "method": "patch"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}",
+                "method": "patch",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabase",
+                        "verb": "Update",
+                        "variant": "",
+                        "action": "Update"
+                    }
+                ]
             },
             "AutonomousDatabases_Failover": {
+                "tag": "AutonomousDatabases_Failover",
                 "delete": false,
-                "method": "post"
-            },
-            "AutonomousDatabases_GenerateWallet": {
-                "delete": true,
-                "method": "post"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}/failover",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabase",
+                        "verb": "Set",
+                        "variant": "",
+                        "action": "Failover"
+                    }
+                ]
             },
             "AutonomousDatabases_Restore": {
+                "tag": "AutonomousDatabases_Restore",
                 "delete": false,
-                "method": "post"
-            },
-            "AutonomousDatabases_Shrink": {
-                "delete": true,
-                "method": "post"
-            },
-            "AutonomousDatabases_Switchover": {
-                "delete": false,
-                "method": "post"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}/restore",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabase",
+                        "verb": "Restore",
+                        "variant": "",
+                        "action": "Restore"
+                    }
+                ]
             }
         },
         "delete": false
@@ -51,32 +119,88 @@
     "CloudExadataInfrastructure": {
         "operations": {
             "CloudExadataInfrastructures_ListBySubscription": {
+                "tag": "CloudExadataInfrastructures_ListBySubscription",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/cloudexadatainfrastructures",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "CloudExadataInfrastructure",
+                        "verb": "Get",
+                        "variant": "BySubscription",
+                        "action": "List"
+                    }
+                ]
             },
             "CloudExadataInfrastructures_ListByResourceGroup": {
+                "tag": "CloudExadataInfrastructures_ListByResourceGroup",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudexadatainfrastructures",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "CloudExadataInfrastructure",
+                        "verb": "Get",
+                        "variant": "ByResourceGroup",
+                        "action": "List"
+                    }
+                ]
             },
             "CloudExadataInfrastructures_CreateOrUpdate": {
+                "tag": "CloudExadataInfrastructures_CreateOrUpdate",
                 "delete": false,
-                "method": "put"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudexadatainfrastructures/{}",
+                "method": "put",
+                "variants": [
+                    {
+                        "subject": "CloudExadataInfrastructure",
+                        "verb": "New",
+                        "variant": "",
+                        "action": "Create"
+                    }
+                ]
             },
             "CloudExadataInfrastructures_Delete": {
+                "tag": "CloudExadataInfrastructures_Delete",
                 "delete": false,
-                "method": "delete"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudexadatainfrastructures/{}",
+                "method": "delete",
+                "variants": [
+                    {
+                        "subject": "CloudExadataInfrastructure",
+                        "verb": "Remove",
+                        "variant": "",
+                        "action": "Delete"
+                    }
+                ]
             },
             "CloudExadataInfrastructures_Get": {
+                "tag": "CloudExadataInfrastructures_Get",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudexadatainfrastructures/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "CloudExadataInfrastructure",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             },
             "CloudExadataInfrastructures_Update": {
+                "tag": "CloudExadataInfrastructures_Update",
                 "delete": false,
-                "method": "patch"
-            },
-            "CloudExadataInfrastructures_AddStorageCapacity": {
-                "delete": true,
-                "method": "post"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudexadatainfrastructures/{}",
+                "method": "patch",
+                "variants": [
+                    {
+                        "subject": "CloudExadataInfrastructure",
+                        "verb": "Update",
+                        "variant": "",
+                        "action": "Update"
+                    }
+                ]
             }
         },
         "delete": false
@@ -84,40 +208,88 @@
     "CloudVmCluster": {
         "operations": {
             "CloudVmClusters_ListBySubscription": {
+                "tag": "CloudVmClusters_ListBySubscription",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/cloudvmclusters",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "CloudVmCluster",
+                        "verb": "Get",
+                        "variant": "BySubscription",
+                        "action": "List"
+                    }
+                ]
             },
             "CloudVmClusters_ListByResourceGroup": {
+                "tag": "CloudVmClusters_ListByResourceGroup",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "CloudVmCluster",
+                        "verb": "Get",
+                        "variant": "ByResourceGroup",
+                        "action": "List"
+                    }
+                ]
             },
             "CloudVmClusters_CreateOrUpdate": {
+                "tag": "CloudVmClusters_CreateOrUpdate",
                 "delete": false,
-                "method": "put"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}",
+                "method": "put",
+                "variants": [
+                    {
+                        "subject": "CloudVmCluster",
+                        "verb": "New",
+                        "variant": "",
+                        "action": "Create"
+                    }
+                ]
             },
             "CloudVmClusters_Delete": {
+                "tag": "CloudVmClusters_Delete",
                 "delete": false,
-                "method": "delete"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}",
+                "method": "delete",
+                "variants": [
+                    {
+                        "subject": "CloudVmCluster",
+                        "verb": "Remove",
+                        "variant": "",
+                        "action": "Delete"
+                    }
+                ]
             },
             "CloudVmClusters_Get": {
+                "tag": "CloudVmClusters_Get",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "CloudVmCluster",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             },
             "CloudVmClusters_Update": {
+                "tag": "CloudVmClusters_Update",
                 "delete": false,
-                "method": "patch"
-            },
-            "CloudVmClusters_AddVms": {
-                "delete": false,
-                "method": "post"
-            },
-            "CloudVmClusters_ListPrivateIpAddresses": {
-                "delete": true,
-                "method": "post"
-            },
-            "CloudVmClusters_RemoveVms": {
-                "delete": false,
-                "method": "post"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}",
+                "method": "patch",
+                "variants": [
+                    {
+                        "subject": "CloudVmCluster",
+                        "verb": "Update",
+                        "variant": "",
+                        "action": "Update"
+                    }
+                ]
             }
         },
         "delete": false
@@ -125,12 +297,32 @@
     "AutonomousDatabaseCharacterSet": {
         "operations": {
             "AutonomousDatabaseCharacterSets_ListByLocation": {
+                "tag": "AutonomousDatabaseCharacterSets_ListByLocation",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/autonomousdatabasecharactersets",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabaseCharacterSet",
+                        "verb": "Get",
+                        "variant": "ByLocation",
+                        "action": "List"
+                    }
+                ]
             },
             "AutonomousDatabaseCharacterSets_Get": {
+                "tag": "AutonomousDatabaseCharacterSets_Get",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/autonomousdatabasecharactersets/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabaseCharacterSet",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             }
         },
         "delete": false
@@ -138,12 +330,32 @@
     "AutonomousDatabaseNationalCharacterSet": {
         "operations": {
             "AutonomousDatabaseNationalCharacterSets_ListByLocation": {
+                "tag": "AutonomousDatabaseNationalCharacterSets_ListByLocation",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/autonomousdatabasenationalcharactersets",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabaseNationalCharacterSet",
+                        "verb": "Get",
+                        "variant": "ByLocation",
+                        "action": "List"
+                    }
+                ]
             },
             "AutonomousDatabaseNationalCharacterSets_Get": {
+                "tag": "AutonomousDatabaseNationalCharacterSets_Get",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/autonomousdatabasenationalcharactersets/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabaseNationalCharacterSet",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             }
         },
         "delete": false
@@ -151,12 +363,32 @@
     "AutonomousDatabaseVersion": {
         "operations": {
             "AutonomousDatabaseVersions_ListByLocation": {
+                "tag": "AutonomousDatabaseVersions_ListByLocation",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/autonomousdbversions",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabaseVersion",
+                        "verb": "Get",
+                        "variant": "ByLocation",
+                        "action": "List"
+                    }
+                ]
             },
             "AutonomousDatabaseVersions_Get": {
+                "tag": "AutonomousDatabaseVersions_Get",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/autonomousdbversions/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabaseVersion",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             }
         },
         "delete": false
@@ -164,12 +396,32 @@
     "DbSystemShape": {
         "operations": {
             "DbSystemShapes_ListByLocation": {
+                "tag": "DbSystemShapes_ListByLocation",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/dbsystemshapes",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "DbSystemShape",
+                        "verb": "Get",
+                        "variant": "ByLocation",
+                        "action": "List"
+                    }
+                ]
             },
             "DbSystemShapes_Get": {
+                "tag": "DbSystemShapes_Get",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/dbsystemshapes/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "DbSystemShape",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             }
         },
         "delete": false
@@ -177,12 +429,32 @@
     "DnsPrivateView": {
         "operations": {
             "DnsPrivateViews_ListByLocation": {
+                "tag": "DnsPrivateViews_ListByLocation",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/dnsprivateviews",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "DnsPrivateView",
+                        "verb": "Get",
+                        "variant": "ByLocation",
+                        "action": "List"
+                    }
+                ]
             },
             "DnsPrivateViews_Get": {
+                "tag": "DnsPrivateViews_Get",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/dnsprivateviews/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "DnsPrivateView",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             }
         },
         "delete": false
@@ -190,12 +462,32 @@
     "DnsPrivateZone": {
         "operations": {
             "DnsPrivateZones_ListByLocation": {
+                "tag": "DnsPrivateZones_ListByLocation",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/dnsprivatezones",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "DnsPrivateZone",
+                        "verb": "Get",
+                        "variant": "ByLocation",
+                        "action": "List"
+                    }
+                ]
             },
             "DnsPrivateZones_Get": {
+                "tag": "DnsPrivateZones_Get",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/dnsprivatezones/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "DnsPrivateZone",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             }
         },
         "delete": false
@@ -203,12 +495,32 @@
     "GiVersion": {
         "operations": {
             "GiVersions_ListByLocation": {
+                "tag": "GiVersions_ListByLocation",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/giversions",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "GiVersion",
+                        "verb": "Get",
+                        "variant": "ByLocation",
+                        "action": "List"
+                    }
+                ]
             },
             "GiVersions_Get": {
+                "tag": "GiVersions_Get",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/giversions/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "GiVersion",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             }
         },
         "delete": false
@@ -216,12 +528,32 @@
     "SystemVersion": {
         "operations": {
             "SystemVersions_ListByLocation": {
+                "tag": "SystemVersions_ListByLocation",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/systemversions",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "SystemVersion",
+                        "verb": "Get",
+                        "variant": "ByLocation",
+                        "action": "List"
+                    }
+                ]
             },
             "SystemVersions_Get": {
+                "tag": "SystemVersions_Get",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/locations/{}/systemversions/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "SystemVersion",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             }
         },
         "delete": true
@@ -229,40 +561,156 @@
     "OracleSubscription": {
         "operations": {
             "OracleSubscriptions_ListBySubscription": {
+                "tag": "OracleSubscriptions_ListBySubscription",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/oraclesubscriptions",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "OracleSubscription",
+                        "verb": "Get",
+                        "variant": "BySubscription",
+                        "action": "List"
+                    }
+                ]
             },
             "OracleSubscriptions_Get": {
+                "tag": "OracleSubscriptions_Get",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/oraclesubscriptions/default",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "OracleSubscription",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             },
             "OracleSubscriptions_CreateOrUpdate": {
+                "tag": "OracleSubscriptions_CreateOrUpdate",
                 "delete": true,
-                "method": "put"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/oraclesubscriptions/default",
+                "method": "put",
+                "variants": [
+                    {
+                        "subject": "OracleSubscription",
+                        "verb": "New",
+                        "variant": "",
+                        "action": "Create"
+                    },
+                    {
+                        "subject": "OracleSubscription",
+                        "verb": "Update",
+                        "variant": "",
+                        "action": "Update"
+                    }
+                ]
             },
             "OracleSubscriptions_Update": {
+                "tag": "OracleSubscriptions_Update",
                 "delete": true,
-                "method": "patch"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/oraclesubscriptions/default",
+                "method": "patch",
+                "variants": [
+                    {
+                        "subject": "OracleSubscription",
+                        "verb": "Update",
+                        "variant": "",
+                        "action": "Update"
+                    }
+                ]
             },
             "OracleSubscriptions_Delete": {
+                "tag": "OracleSubscriptions_Delete",
                 "delete": true,
-                "method": "delete"
-            },
+                "resource_id": "/subscriptions/{}/providers/oracle.database/oraclesubscriptions/default",
+                "method": "delete",
+                "variants": [
+                    {
+                        "subject": "OracleSubscription",
+                        "verb": "Remove",
+                        "variant": "",
+                        "action": "Delete"
+                    }
+                ]
+            }
+        },
+        "delete": true
+    },
+    "OracleSubscriptionAzureSubscription": {
+        "operations": {
             "OracleSubscriptions_AddAzureSubscriptions": {
+                "tag": "OracleSubscriptions_AddAzureSubscriptions",
                 "delete": true,
-                "method": "post"
-            },
+                "resource_id": "/subscriptions/{}/providers/oracle.database/oraclesubscriptions/default/addazuresubscriptions",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "OracleSubscriptionAzureSubscription",
+                        "verb": "Add",
+                        "variant": "",
+                        "action": "Add"
+                    }
+                ]
+            }
+        },
+        "delete": true
+    },
+    "OracleSubscriptionActivationLink": {
+        "operations": {
             "OracleSubscriptions_ListActivationLinks": {
+                "tag": "OracleSubscriptions_ListActivationLinks",
                 "delete": true,
-                "method": "post"
-            },
+                "resource_id": "/subscriptions/{}/providers/oracle.database/oraclesubscriptions/default/listactivationlinks",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "OracleSubscriptionActivationLink",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "List"
+                    }
+                ]
+            }
+        },
+        "delete": true
+    },
+    "OracleSubscriptionCloudAccountDetail": {
+        "operations": {
             "OracleSubscriptions_ListCloudAccountDetails": {
+                "tag": "OracleSubscriptions_ListCloudAccountDetails",
                 "delete": true,
-                "method": "post"
-            },
+                "resource_id": "/subscriptions/{}/providers/oracle.database/oraclesubscriptions/default/listcloudaccountdetails",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "OracleSubscriptionCloudAccountDetail",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "List"
+                    }
+                ]
+            }
+        },
+        "delete": true
+    },
+    "OracleSubscriptionSaaSubscriptionDetail": {
+        "operations": {
             "OracleSubscriptions_ListSaasSubscriptionDetails": {
+                "tag": "OracleSubscriptions_ListSaasSubscriptionDetails",
                 "delete": true,
-                "method": "post"
+                "resource_id": "/subscriptions/{}/providers/oracle.database/oraclesubscriptions/default/listsaassubscriptiondetails",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "OracleSubscriptionSaaSubscriptionDetail",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "List"
+                    }
+                ]
             }
         },
         "delete": true
@@ -270,37 +718,216 @@
     "AutonomousDatabaseBackup": {
         "operations": {
             "AutonomousDatabaseBackups_ListByAutonomousDatabase": {
+                "tag": "AutonomousDatabaseBackups_ListByAutonomousDatabase",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}/autonomousdatabasebackups",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabaseBackup",
+                        "verb": "Get",
+                        "variant": "ByAutonomousDatabase",
+                        "action": "List"
+                    }
+                ]
             },
             "AutonomousDatabaseBackups_CreateOrUpdate": {
+                "tag": "AutonomousDatabaseBackups_CreateOrUpdate",
                 "delete": false,
-                "method": "put"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}/autonomousdatabasebackups/{}",
+                "method": "put",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabaseBackup",
+                        "verb": "New",
+                        "variant": "",
+                        "action": "Create"
+                    }
+                ]
             },
             "AutonomousDatabaseBackups_Delete": {
+                "tag": "AutonomousDatabaseBackups_Delete",
                 "delete": false,
-                "method": "delete"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}/autonomousdatabasebackups/{}",
+                "method": "delete",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabaseBackup",
+                        "verb": "Remove",
+                        "variant": "",
+                        "action": "Delete"
+                    }
+                ]
             },
             "AutonomousDatabaseBackups_Get": {
+                "tag": "AutonomousDatabaseBackups_Get",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}/autonomousdatabasebackups/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabaseBackup",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             },
             "AutonomousDatabaseBackups_Update": {
+                "tag": "AutonomousDatabaseBackups_Update",
                 "delete": false,
-                "method": "patch"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}/autonomousdatabasebackups/{}",
+                "method": "patch",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabaseBackup",
+                        "verb": "Update",
+                        "variant": "",
+                        "action": "Update"
+                    }
+                ]
             }
         },
         "delete": false
     },
+    "AutonomousDatabaseWallet": {
+        "operations": {
+            "AutonomousDatabases_GenerateWallet": {
+                "tag": "AutonomousDatabases_GenerateWallet",
+                "delete": true,
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}/generatewallet",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "AutonomousDatabaseWallet",
+                        "verb": "New",
+                        "variant": "",
+                        "action": "Generate"
+                    }
+                ]
+            }
+        },
+        "delete": true
+    },
+    "ShrinkAutonomousDatabase": {
+        "operations": {
+            "AutonomousDatabases_Shrink": {
+                "tag": "AutonomousDatabases_Shrink",
+                "delete": true,
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}/shrink",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "ShrinkAutonomousDatabase",
+                        "verb": "Invoke",
+                        "variant": "",
+                        "action": "Shrink"
+                    }
+                ]
+            }
+        },
+        "delete": true
+    },
+    "SwitchoverAutonomousDatabase": {
+        "operations": {
+            "AutonomousDatabases_Switchover": {
+                "tag": "AutonomousDatabases_Switchover",
+                "delete": false,
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/autonomousdatabases/{}/switchover",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "SwitchoverAutonomousDatabase",
+                        "verb": "Invoke",
+                        "variant": "",
+                        "action": "Switchover"
+                    }
+                ]
+            }
+        },
+        "delete": false
+    },
+    "CloudExadataInfrastructureStorageCapacity": {
+        "operations": {
+            "CloudExadataInfrastructures_AddStorageCapacity": {
+                "tag": "CloudExadataInfrastructures_AddStorageCapacity",
+                "delete": true,
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudexadatainfrastructures/{}/addstoragecapacity",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "CloudExadataInfrastructureStorageCapacity",
+                        "verb": "Add",
+                        "variant": "",
+                        "action": "Add"
+                    }
+                ]
+            }
+        },
+        "delete": true
+    },
     "DbServer": {
         "operations": {
             "DbServers_ListByCloudExadataInfrastructure": {
+                "tag": "DbServers_ListByCloudExadataInfrastructure",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudexadatainfrastructures/{}/dbservers",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "DbServer",
+                        "verb": "Get",
+                        "variant": "ByCloudExadataInfrastructure",
+                        "action": "List"
+                    }
+                ]
             },
             "DbServers_Get": {
+                "tag": "DbServers_Get",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudexadatainfrastructures/{}/dbservers/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "DbServer",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
+            }
+        },
+        "delete": false
+    },
+    "CloudVmClusterVm": {
+        "operations": {
+            "CloudVmClusters_AddVms": {
+                "tag": "CloudVmClusters_AddVms",
+                "delete": false,
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}/addvms",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "CloudVmClusterVm",
+                        "verb": "Add",
+                        "variant": "",
+                        "action": "Add"
+                    }
+                ]
+            },
+            "CloudVmClusters_RemoveVms": {
+                "tag": "CloudVmClusters_RemoveVms",
+                "delete": false,
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}/removevms",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "CloudVmClusterVm",
+                        "verb": "Remove",
+                        "variant": "",
+                        "action": "Remove"
+                    }
+                ]
             }
         },
         "delete": false
@@ -308,37 +935,137 @@
     "DbNode": {
         "operations": {
             "DbNodes_ListByCloudVmCluster": {
+                "tag": "DbNodes_ListByCloudVmCluster",
                 "delete": false,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}/dbnodes",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "DbNode",
+                        "verb": "Get",
+                        "variant": "ByCloudVmCluster",
+                        "action": "List"
+                    }
+                ]
             },
             "DbNodes_Get": {
+                "tag": "DbNodes_Get",
                 "delete": true,
-                "method": "get"
-            },
-            "DbNodes_Action": {
-                "delete": false,
-                "method": "post"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}/dbnodes/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "DbNode",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             }
         },
         "delete": false
     },
+    "ActionDbNode": {
+        "operations": {
+            "DbNodes_Action": {
+                "tag": "DbNodes_Action",
+                "delete": false,
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}/dbnodes/{}/action",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "ActionDbNode",
+                        "verb": "Invoke",
+                        "variant": "",
+                        "action": "Action"
+                    }
+                ]
+            }
+        },
+        "delete": false
+    },
+    "CloudVmClusterPrivateIpAddress": {
+        "operations": {
+            "CloudVmClusters_ListPrivateIpAddresses": {
+                "tag": "CloudVmClusters_ListPrivateIpAddresses",
+                "delete": true,
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}/listprivateipaddresses",
+                "method": "post",
+                "variants": [
+                    {
+                        "subject": "CloudVmClusterPrivateIpAddress",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "List"
+                    }
+                ]
+            }
+        },
+        "delete": true
+    },
     "VirtualNetworkAddress": {
         "operations": {
             "VirtualNetworkAddresses_ListByCloudVmCluster": {
+                "tag": "VirtualNetworkAddresses_ListByCloudVmCluster",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}/virtualnetworkaddresses",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "VirtualNetworkAddress",
+                        "verb": "Get",
+                        "variant": "ByCloudVmCluster",
+                        "action": "List"
+                    }
+                ]
             },
             "VirtualNetworkAddresses_Get": {
+                "tag": "VirtualNetworkAddresses_Get",
                 "delete": true,
-                "method": "get"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}/virtualnetworkaddresses/{}",
+                "method": "get",
+                "variants": [
+                    {
+                        "subject": "VirtualNetworkAddress",
+                        "verb": "Get",
+                        "variant": "",
+                        "action": "Get"
+                    }
+                ]
             },
             "VirtualNetworkAddresses_CreateOrUpdate": {
+                "tag": "VirtualNetworkAddresses_CreateOrUpdate",
                 "delete": true,
-                "method": "put"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}/virtualnetworkaddresses/{}",
+                "method": "put",
+                "variants": [
+                    {
+                        "subject": "VirtualNetworkAddress",
+                        "verb": "New",
+                        "variant": "",
+                        "action": "Create"
+                    },
+                    {
+                        "subject": "VirtualNetworkAddress",
+                        "verb": "Update",
+                        "variant": "",
+                        "action": "Update"
+                    }
+                ]
             },
             "VirtualNetworkAddresses_Delete": {
+                "tag": "VirtualNetworkAddresses_Delete",
                 "delete": true,
-                "method": "delete"
+                "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/oracle.database/cloudvmclusters/{}/virtualnetworkaddresses/{}",
+                "method": "delete",
+                "variants": [
+                    {
+                        "subject": "VirtualNetworkAddress",
+                        "verb": "Remove",
+                        "variant": "",
+                        "action": "Delete"
+                    }
+                ]
             }
         },
         "delete": true

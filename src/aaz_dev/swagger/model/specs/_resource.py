@@ -4,7 +4,7 @@ import logging
 import os
 import re
 
-import inflect
+from pluralizer import Pluralizer
 from fuzzywuzzy import fuzz
 
 from command.model.configuration import CMDResource
@@ -17,7 +17,7 @@ logger = logging.getLogger('backend')
 
 class Resource:
     _CAMEL_CASE_PATTERN = re.compile(r"^([a-zA-Z][a-z0-9]+)(([A-Z][a-z0-9]*)+)$")
-    _inflect_engine = inflect.engine()
+    _pluralizer = Pluralizer()
 
     def __init__(self, resource_id, path, version, file_path, resource_provider, body):
         self.path = path
@@ -98,22 +98,22 @@ class Resource:
         words = []
         for part in self.id.split('?')[0].split('/'):
             if part == '{}' and len(words):
-                singular = self._inflect_engine.singular_noun(words[-1])
+                singular = self._pluralizer.singular(words[-1])
                 if singular:
                     words[-1] = singular
             else:
                 words.append(part.replace('_', ""))
-        op_group_singular = self._inflect_engine.singular_noun(op_group_name) or op_group_name
+        op_group_singular = self._pluralizer.singular(op_group_name) or op_group_name
         words.reverse()  # search from tail
         for word in words:
-            word_singular = self._inflect_engine.singular_noun(word) or word
+            word_singular = self._pluralizer.singular(word) or word
             if len(word_singular) > 1 and op_group_singular.lower().endswith(word_singular.lower()):
                 if word == word_singular:
                     # use singular
                     op_group_name = op_group_singular
                 elif word != word_singular:
                     # use plural
-                    op_group_plural = self._inflect_engine.plural_noun(op_group_singular)
+                    op_group_plural = self._pluralizer.singular(op_group_singular)
                     if op_group_plural is not False:
                         op_group_name = op_group_plural
                 break
