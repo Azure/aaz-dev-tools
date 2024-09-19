@@ -111,6 +111,7 @@ class PSAutoRestConfigurationGenerator:
         ps_cfg.readme_file = '/'.join(readme_parts[readme_parts.index("specification"):])
         ps_cfg.version = "0.1.0"
         ps_cfg.module_name = mod_names.split("/")[0]
+        ps_cfg.module_name = ps_cfg.module_name[0].upper() + ps_cfg.module_name[1:]
 
         ps_profile = {}
         
