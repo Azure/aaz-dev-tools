@@ -31,7 +31,7 @@ directive:
   {%- if cfg.removed_subjects|length %}
   - where:
       subject: {{ cfg.removed_subjects | join("|") }}
-    remove: true}
+    remove: true
   {%- endif %}
   {%- for subject, verb in cfg.removed_verbs %}
   - where:
