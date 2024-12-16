@@ -10,5 +10,8 @@ def get_templates():
         env = Environment(loader=FileSystemLoader(searchpath=os.path.dirname(os.path.abspath(__file__))))
         env.filters.update(custom_filters)
         _templates = {
+            "autorest": {
+                "configuration": env.get_template("autorest/configuration.yaml.j2"),
+            }
         }
     return _templates
