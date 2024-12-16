@@ -81,6 +81,29 @@ class OpenAPIResourceProvider:
         return None
 
     @property
+    def default_tag(self):
+        if self._readme_path is None:
+            return None
+
+        with open(self._readme_path, 'r', encoding='utf-8') as f:
+            readme = f.read()
+        lines = readme.split('\n')
+        for i in range(len(lines)):
+            line = lines[i]
+            if line.startswith('### Basic Information'):
+                lines = lines[i+1:]
+                break
+        latest_tag = None
+        for i in range(len(lines)):
+            line = lines[i]
+            if line.startswith('##'):
+                break
+            if line.startswith('tag:'):
+                latest_tag = line.split(':')[-1].strip()
+                break
+        return latest_tag
+
+    @property
     def tags(self):
         if self._tags is None:
             self._tags = self._parse_readme_input_file_tags()
