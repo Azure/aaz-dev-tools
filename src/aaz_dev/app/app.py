@@ -46,6 +46,10 @@ def create_app():
     from cli.api import register_blueprints
     register_blueprints(app)
 
+    # register routes of ps module
+    from ps.api import register_blueprints
+    register_blueprints(app)
+
     return app
 
 
