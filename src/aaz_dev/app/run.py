@@ -86,6 +86,14 @@ def is_port_in_use(host, port):
     help="The local path of azure-cli-extension repo. Official repo is https://github.com/Azure/azure-cli-extensions"
 )
 @click.option(
+    "--powershell-path", '--ps',
+    type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
+    default=Config.POWERSHELL_PATH,
+    callback=Config.validate_and_setup_powershell_path,
+    expose_value=False,
+    help="The local path of azure-powershell repo."
+)
+@click.option(
     "--workspaces-path", '-w',
     type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
     default=Config.AAZ_DEV_WORKSPACE_FOLDER,

@@ -36,9 +36,9 @@ bp.cli.short_help = "Manage powershell commands."
     help="The local path of azure-cli-extension repo. Only required when generate from azure-cli extension."
 )
 @click.option(
-    "--powershell-path", '-p',
+    "--powershell-path", '--ps',
     type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
-    required=True,
+    callback=Config.validate_and_setup_powershell_path,
     help="The local path of azure-powershell repo."
 )
 @click.option(
