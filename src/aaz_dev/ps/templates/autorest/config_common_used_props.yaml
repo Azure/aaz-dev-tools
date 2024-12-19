@@ -1,0 +1,67 @@
+metadata:  # display to the users
+  dict:
+    authors: Microsoft Corporation
+    companyName: Microsoft Corporation
+    copyright: Microsoft Corporation. All rights reserved.
+    description: 'Microsoft Azure PowerShell: Portal Dashboard cmdlets'
+    licenseUri: https://aka.ms/azps-license
+    owners: Microsoft Corporation
+    projectUri: https://github.com/Azure/azure-powershell
+    releaseNotes: Initial release of Portal Dashboard cmdlets.
+    requireLicenseAcceptance: true
+    scriptsToProcess:
+    - ./custom/Helpers.ps1
+    tags: Azure ResourceManager ARM PSModule Portal Dashboard
+prefix:  # the variable
+  basic:
+  - Az  # the default value
+service-name:  # by default it's calculated
+  basic:
+  - ADDomainServices
+  - CostManagement
+module-name:
+  basic:
+  - $(prefix).$(service-name)  # the default value
+  - Az.SignalR
+root-module-name: # used for sub module to generate the code in root module if there are multiple sub modules
+  basic:
+  - $(prefix).AlertsManagement
+  - $(prefix).AppConfiguration
+namespace:  # used for sub module to define the powershell class namespace
+  basic:
+  - Microsoft.Azure.PowerShell.Cmdlets.$(service-name)  # the default value
+  - Microsoft.Azure.PowerShell.Cmdlets.Metric
+subject-prefix: # the subject prefix is used in the commandlet name, which will be added after {action}-AZ{subprefix}
+  basic:
+  - '' # no subject prefix included
+  - $(service-name)  # the default value
+  - $Informatica
+  - $elastic
+  - AD
+repo:  # the variable, used to find the required files, it's used for input-files
+  basic:
+  - https://github.com/Azure/azure-rest-api-specs/tree/$(commit)  # the default value, and also support for other repos
+require:  # required readme.md files for autorest consume
+  list:
+  - $(this-folder)/../../readme.azure.noprofile.md  # always needed
+  - $(repo)/specification/appcomplianceautomation/resource-manager/readme.md
+  - $(repo)/specification/azurefleet/resource-manager/readme.md
+  - $(this-folder)/../../helpers/KeyVault/readme.noprofile.md
+  - $(this-folder)/../../helpers/ManagedIdentity/readme.noprofile.md
+endpoint-resource-id-key-name: # data-plane used, the resource id key name should be registered in azure powershell account before. It will control the client endpoint and auth.
+inlining-threshold: # flatten threshold, 40, which used to control the max allowed flatten properties into outer layer
+sanitize-names:  # TODO: need code for detail how to check the sanitize rules for the argument names
+  basic:
+  - true  # the default value
+support-json-input: # default value is true
+tag:  # used to filter out the input apis, the tag should be in the swagger readme.md file
+  basic:
+  - package-2022-10-12-preview
+  - package-2023-01-01
+try-require:  # using the directive configuration if it exists as prefix
+  list:
+  - $(repo)/specification/azurefleet/resource-manager/readme.powershell.md
+  - $(repo)/specification/containerregistry/resource-manager/readme.powershell.md
+use-extension:
+  dict:
+    '@autorest/powershell': 3.x  # always this value
