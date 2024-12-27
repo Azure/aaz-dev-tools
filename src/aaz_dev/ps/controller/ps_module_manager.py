@@ -4,9 +4,9 @@ import os
 from utils.config import Config
 from utils.plane import PlaneEnum
 from utils.readme_helper import parse_readme_file
+from utils.exceptions import InvalidAPIUsage, VerificationError
 from ps.model import PSModuleConfig
 from swagger.controller.specs_manager import SwaggerSpecsManager
-from swagger.model.specs import SwaggerModule
 from command.controller.specs_manager import AAZSpecsManager
 from swagger.model.specs import OpenAPIResourceProvider
 from swagger.utils.tools import resolve_path_to_uri
@@ -36,10 +36,10 @@ class PSModuleManager:
     def _find_module_folder(self):
         powershell_folder = Config.POWERSHELL_PATH
         if not os.path.exists(powershell_folder) or not os.path.isdir(powershell_folder):
-            raise ValueError(f"Invalid PowerShell folder: '{powershell_folder}'")
+            raise VerificationError(f"Invalid PowerShell folder: '{powershell_folder}'")
         module_folder = os.path.join(powershell_folder, "src")
         if not os.path.exists(module_folder):
-            raise ValueError(f"Invalid PowerShell folder: cannot find modules in: '{module_folder}'")
+            raise VerificationError(f"Invalid PowerShell folder: cannot find modules in: '{module_folder}'")
         return module_folder
 
     def list_modules(self):
@@ -67,7 +67,7 @@ class PSModuleManager:
             module_names = module_names.split('/')
         folder = os.path.join(self.folder, *module_names)
         if not os.path.exists(folder):
-            raise ValueError(f"Module folder not found: '{folder}'")
+            raise VerificationError(f"Module folder not found: '{folder}'")
         config = self.load_module_config(module_names)
         return config
 
@@ -77,7 +77,7 @@ class PSModuleManager:
         folder = os.path.join(self.folder, *module_names)
         readme_file = os.path.join(folder, "README.md")
         if not os.path.exists(readme_file):
-            raise ValueError(f"README.md not found in: '{readme_file}'")
+            raise VerificationError(f"README.md not found in: '{readme_file}'")
         content = parse_readme_file(readme_file)
         return content['config'], content['title']
 
@@ -92,7 +92,7 @@ class PSModuleManager:
         config.name = "/".join(module_names)
         config.folder = self.folder
         if not autorest_config:
-            raise ValueError(f"autorest config not found in README.md for module: {config.name}")
+            raise VerificationError(f"autorest config not found in README.md for module: {config.name}")
 
         # config.swagger = autorest_config
         repo = autorest_config.get('repo', "https://github.com/Azure/azure-rest-api-specs/blob/$(commit)")
@@ -100,7 +100,7 @@ class PSModuleManager:
             repo = repo.replace("$(commit)", commit)
         if "$(commit)" in repo:
             # make sure the repo is valid https link or valid folder path
-            raise ValueError(f"commit is not defined in autorest config for module: {config.name}")
+            raise VerificationError(f"commit is not defined in autorest config for module: {config.name}")
         config.repo = repo
 
         readme_file = None
@@ -124,7 +124,7 @@ class PSModuleManager:
                         readme_file = resolve_path_to_uri(readme_file)
                         break
         if not readme_file:
-            raise ValueError(f"swagger readme.md not defined in autorest config for module: {config.name}")
+            raise VerificationError(f"swagger readme.md not defined in autorest config for module: {config.name}")
         
         # use the local swagger specs to find the resource provider even the repo is in remote
         # we can always suppose the local swagger specs will always be newer than the used commit in submitted azure.powershell code
@@ -144,7 +144,7 @@ class PSModuleManager:
                 if rp:
                     break
         if not rp:
-            raise ValueError(f"Resource provider not found in autorest config for module: {config.name}")
+            raise VerificationError(f"Resource provider not found in autorest config for module: {config.name}")
         config.rp = rp
         config.swagger = str(rp)
 
@@ -153,11 +153,22 @@ class PSModuleManager:
         if input_files := autorest_config.get('input-file'):
             config.input_files = []
             for input_file in input_files:
-                if input_file.startswith('$(repo)/'):
-                    input_file = input_file.replace('$(repo)/', '')
-                config.input_files.append(input_file)
+                if '/specification/' in input_file:
+                    file_path = input_file.split('/specification/')[1]
+                    file_path = os.path.join(self.swagger_specs.specs.spec_folder_path, *file_path.split('/'))
+                    if not os.path.exists(file_path):
+                        raise VerificationError(f"Input file not found for module: {config.name}, input file: {file_path}")
+                    config.input_files.append(file_path)
         if not config.input_files and not config.tag:
+            # using the tag from swagger readme config
             config.tag = readme_config.get('tag', None)
+        if config.tag and config.tag not in rp.tags:
+            raise VerificationError(f"Tag not found in resource provider for module: {config.name} with tag: {config.tag}")
+        if not config.input_files and config.tag:
+            config.input_files = list(rp.tags[config.tag])
+        
+        if not config.input_files:
+            raise VerificationError(f"Input file not found in autorest config for module: {config.name}")
 
         if readme_title.startswith("Az."):
             config.service_name = readme_title.split(".")[1]
@@ -168,6 +179,7 @@ class PSModuleManager:
             config.title = readme_config.get('title', None)
         
         if not config.title:
-            raise ValueError(f"Title not found in autorest config or swagger readme for module: {config.name}")
+            # TODO: get title from swagger json file
+            raise VerificationError(f"Title not found in autorest config or swagger readme for module: {config.name}")
 
         return config
