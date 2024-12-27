@@ -19,7 +19,6 @@ class APIPowerShellTest(CommandTestCase):
             data = rv.get_json()
             self.assertTrue(len(data) > 100)
             self.assertTrue(all(module["name"].endswith(".Autorest") for module in data))
-            # start = None
             for module in data:
                 if module["name"] in [
                     "Communication/EmailServicedata.Autorest", # cannot figure out the resource provider name for the data plane in this module
@@ -27,13 +26,8 @@ class APIPowerShellTest(CommandTestCase):
                     "MySql/MySql.Autorest", # swagger folder structure changed 
                     "VoiceServices/VoiceServices.Autorest", # No title provided in the autorest config
                     "Resources/MSGraph.Autorest", # swagger not in the azure-rest-api-specs repo
-                    "Migrate/Migrate.Autorest" # input files which contains multiple resource providers
                 ]:
                     continue
-                # if module["name"] == "MachineLearningServices/MachineLearningServices.Autorest":
-                #     start = True
-                # if not start:
-                #     continue
                 request_url = module["url"]
                 rv = c.get(request_url)
                 self.assertTrue(rv.status_code == 200)

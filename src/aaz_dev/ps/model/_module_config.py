@@ -8,7 +8,7 @@ class PSModuleConfig(Model):
     name = StringType(required=True)
     folder = StringType(required=True)
     repo = StringType(required=True)    # swagger repo path, https://github.com/Azure/<repo_name>/tree/<commit> or $(this-folder)/../../../<repo_name>
-    swagger = StringType(required=True) # swagger resource provider, <plane>/<path:mod_names>/ResourceProviders/<rp_name>
+    # swagger = StringType(required=True) # swagger resource provider, <plane>/<path:mod_names>/ResourceProviders/<rp_name>
 
     # use tag or input files to select the swagger apis
     tag = StringType() # if the tag selected, the input_files will be ignored
@@ -55,7 +55,7 @@ class PSModuleConfig(Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.rp = None
+        self.rps = []
 
     @property
     def repo_name(self):
@@ -68,14 +68,14 @@ class PSModuleConfig(Model):
             return parts[1].split('/')[0]
         return None
     
-    @property
-    def plane(self):
-        return self.swagger.split('/')[0]
+    # @property
+    # def plane(self):
+    #     return self.swagger.split('/')[0]
 
-    @property
-    def mod_names(self):
-        return self.swagger.split("/ResourceProviders/")[0].split('/')[1:]
+    # @property
+    # def mod_names(self):
+    #     return self.swagger.split("/ResourceProviders/")[0].split('/')[1:]
 
-    @property
-    def rp_name(self):
-        return self.swagger.split("/ResourceProviders/")[1].split('/')[0]
+    # @property
+    # def rp_name(self):
+    #     return self.swagger.split("/ResourceProviders/")[1].split('/')[0]
