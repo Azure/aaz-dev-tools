@@ -54,8 +54,8 @@ def powershell_modules():
 def powershell_module(module_names):
     manager = PSModuleManager()
     if request.method == "GET":
-        result = manager.load_module(module_names)
-        # result = module.to_primitive()
+        module = manager.load_module(module_names)
+        result = module.to_primitive()
         result['url'] = url_for('powershell.powershell_module', module_names=result['name'])
     elif request.method == "PUT":
         raise NotImplementedError()

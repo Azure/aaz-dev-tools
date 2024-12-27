@@ -14,11 +14,12 @@ interface CLIModGeneratorToolBarProps {
   moduleName: string;
   onHomePage: () => void;
   onGenerate: () => void;
+  onDraftPowerShell: () => void;
 }
 
 class CLIModGeneratorToolBar extends React.Component<CLIModGeneratorToolBarProps> {
   render() {
-    const { moduleName, onHomePage, onGenerate } = this.props;
+    const { moduleName, onHomePage, onGenerate, onDraftPowerShell } = this.props;
     return (
       <React.Fragment>
         <AppBar
@@ -54,9 +55,16 @@ class CLIModGeneratorToolBar extends React.Component<CLIModGeneratorToolBarProps
             </Typography>
 
             <Box sx={{ flexGrow: 1 }} />
+            <Box sx={{ flexShrink: 0, mr: 2 }}>
+              <Tooltip title="Create a draft for PowerShell generation based on the current CLI module">
+                <Button variant="outlined" color="inherit" onClick={onDraftPowerShell}>
+                  Draft PowerShell
+                </Button>
+              </Tooltip>
+            </Box>
             <Box sx={{ flexShrink: 0 }}>
               <Tooltip title="Generate CLI Commands">
-                <Button variant="outlined" color="inherit" onClick={onGenerate}>
+                <Button variant="contained" color="secondary" onClick={onGenerate}>
                   Generate
                 </Button>
               </Tooltip>

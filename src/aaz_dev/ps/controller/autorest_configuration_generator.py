@@ -106,7 +106,8 @@ class PSAutoRestConfigurationGenerator:
         if not swagger_resources:
             raise ResourceNotFind("Resources not find in Swagger")
 
-        readme_parts= rp._readme_path.split(os.sep)
+        # TODO: use the correct readme file
+        readme_parts= rp._readme_paths[0].split(os.sep)
         ps_cfg.readme_file = '/'.join(readme_parts[readme_parts.index("specification"):])
         ps_cfg.version = "0.1.0"
         ps_cfg.module_name = mod_names.split("/")[0]

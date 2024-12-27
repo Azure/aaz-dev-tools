@@ -79,11 +79,7 @@ class WSEditorToolBar extends React.Component<WSEditorToolBarProps> {
                         <Box sx={{ flexGrow: 1 }} />
                         <Box sx={{ flexShrink: 0 }} >
                             <Tooltip title='Export Command Models'>
-                                <Button
-                                    variant="outlined"
-                                    color='inherit'
-                                    onClick={onGenerate}
-                                >
+                                <Button variant="contained" color="secondary" onClick={onGenerate}>
                                     Export
                                 </Button>
                             </Tooltip>
