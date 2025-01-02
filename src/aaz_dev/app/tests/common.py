@@ -11,8 +11,10 @@ class ApiTestCase(TestCase):
 
     def __init__(self, *args, **kwargs):
         self.cleanup_dev_folder()
-        Config.AAZ_PATH = self.AAZ_FOLDER
-        Config.AAZ_DEV_FOLDER = self.AAZ_DEV_FOLDER
+        if self.AAZ_FOLDER is not None:
+            Config.AAZ_PATH = self.AAZ_FOLDER
+        if self.AAZ_DEV_FOLDER is not None:
+            Config.AAZ_DEV_FOLDER = self.AAZ_DEV_FOLDER
         Config.AAZ_DEV_WORKSPACE_FOLDER = os.path.join(self.AAZ_DEV_FOLDER, 'workspaces')
         super().__init__(*args, **kwargs)
         self.app = create_app()
@@ -22,9 +24,12 @@ class ApiTestCase(TestCase):
     def cleanup_dev_folder(self):
         if os.path.exists(self.AAZ_DEV_FOLDER):
             shutil.rmtree(self.AAZ_DEV_FOLDER)
-        if os.path.exists(self.AAZ_FOLDER):
+        if self.AAZ_FOLDER is not None and os.path.exists(self.AAZ_FOLDER):
             shutil.rmtree(self.AAZ_FOLDER)
 
     def setUp(self):
-        os.makedirs(self.AAZ_FOLDER, exist_ok=True)
+        if self.AAZ_FOLDER is not None:
+            os.makedirs(self.AAZ_FOLDER, exist_ok=True)
+        if self.AAZ_DEV_FOLDER is not None:
+            os.makedirs(self.AAZ_DEV_FOLDER, exist_ok=True)
 

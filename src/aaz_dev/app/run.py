@@ -103,6 +103,15 @@ def is_port_in_use(host, port):
     help="The folder to load and save workspaces."
 )
 @click.option(
+    "--sketch-path", '-k',
+    type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
+    default=Config.AAZ_DEV_SKETCH_FOLDER,
+    required=not Config.AAZ_DEV_SKETCH_FOLDER,
+    callback=Config.validate_and_setup_aaz_dev_sketch_folder,
+    expose_value=False,
+    help="The folder to load and save sketches for PowerShell generation."
+)
+@click.option(
     "--reload/--no-reload",
     default=None,
     help="Enable or disable the reloader. By default the reloader "

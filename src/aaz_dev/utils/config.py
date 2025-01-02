@@ -25,6 +25,9 @@ class Config:
     AAZ_DEV_WORKSPACE_FOLDER = os.path.expanduser(
         os.environ.get("AAZ_DEV_WORKSPACE_FOLDER", os.path.join(AAZ_DEV_FOLDER, "workspaces"))
     )
+    AAZ_DEV_SKETCH_FOLDER = os.path.expanduser(
+        os.environ.get("AAZ_DEV_SKETCH_FOLDER", os.path.join(AAZ_DEV_FOLDER, "sketches"))
+    )
 
     # Flask configurations
     HOST = os.environ.get("AAZ_HOST", '127.0.0.1')
@@ -128,6 +131,15 @@ class Config:
                 raise ValueError(f"Path '{cls.AAZ_DEV_WORKSPACE_FOLDER}' is not a folder.")
         return cls.AAZ_DEV_WORKSPACE_FOLDER
     
+    @classmethod
+    def validate_and_setup_aaz_dev_sketch_folder(cls, ctx, param, value):
+        # TODO: verify folder
+        if value != cls.AAZ_DEV_SKETCH_FOLDER:
+            cls.AAZ_DEV_SKETCH_FOLDER = os.path.expanduser(value)
+            if os.path.exists(cls.AAZ_DEV_SKETCH_FOLDER) and not os.path.isdir(cls.AAZ_DEV_SKETCH_FOLDER):
+                raise ValueError(f"Path '{cls.AAZ_DEV_SKETCH_FOLDER}' is not a folder.")
+        return cls.AAZ_DEV_SKETCH_FOLDER
+
     @classmethod
     def get_swagger_root(cls):
         if cls.SWAGGER_PATH:

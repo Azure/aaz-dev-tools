@@ -50,17 +50,20 @@ def powershell_modules():
     return jsonify(result)
 
 
-@bp.route("/Modules/<PSNamesPath:module_names>", methods=("GET", "PUT", "PATCH"))
+@bp.route("/Modules/<PSNamesPath:module_names>", methods=("GET",))
 def powershell_module(module_names):
     manager = PSModuleManager()
     if request.method == "GET":
         module = manager.load_module(module_names)
         result = module.to_primitive()
         result['url'] = url_for('powershell.powershell_module', module_names=result['name'])
-    elif request.method == "PUT":
-        raise NotImplementedError()
-    elif request.method == "PATCH":
-        raise NotImplementedError()
     else:
         raise NotImplementedError()
     return jsonify(result)
+
+
+@bp.route("/Modules/<PSNamesPath:module_names>/Generate", methods=("POST", ))
+def powershell_module_generate(module_names):
+    manager = PSModuleManager()
+    manager.generate_module(module_names)
+    return jsonify({"message": "Module generated successfully"})
