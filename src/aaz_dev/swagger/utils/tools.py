@@ -4,6 +4,8 @@
 # license information.
 # -----------------------------------------------------------------------------
 import re
+import os
+from utils.config import Config
 
 URL_PARAMETER_PLACEHOLDER = "{}"
 
@@ -39,3 +41,14 @@ def swagger_resource_path_to_resource_id(path):
         idx += 1
     path_parts[0] = "/".join(url_parts).lower()
     return "?".join(path_parts)
+
+
+def resolve_path_to_uri(path):
+    relative_path = os.path.relpath(path, start=Config.get_swagger_root()).replace(os.sep, '/')
+    if relative_path.startswith('../'):
+        raise ValueError(f"Invalid path: {path}")
+    if relative_path.startswith('./'):
+        relative_path = relative_path[2:]
+    if relative_path.startswith('/'):
+        relative_path = relative_path[1:]
+    return relative_path

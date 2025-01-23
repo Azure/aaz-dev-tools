@@ -1,7 +1,8 @@
 import os
+import glob
 
 from utils.plane import PlaneEnum
-from utils.config import Config
+from swagger.utils.tools import resolve_path_to_uri
 from ._resource_provider import OpenAPIResourceProvider, TypeSpecResourceProvider
 from ._typespec_helper import TypeSpecHelper
 
@@ -36,17 +37,6 @@ class SwaggerModule:
             return [self.name]
         else:
             return [*self._parent.names, self.name]
-    
-    @staticmethod
-    def resolve_path_to_uri(path):
-        relative_path = os.path.relpath(path, start=Config.get_swagger_root()).replace(os.sep, '/')
-        if relative_path.startswith('../'):
-            raise ValueError(f"Invalid path: {path}")
-        if relative_path.startswith('./'):
-            relative_path = relative_path[2:]
-        if relative_path.startswith('/'):
-            relative_path = relative_path[1:]
-        return relative_path
 
 
 class MgmtPlaneModule(SwaggerModule):
@@ -77,8 +67,8 @@ class MgmtPlaneModule(SwaggerModule):
             if os.path.isdir(path):
                 name_parts = name.split('.')
                 if len(name_parts) >= 2:
-                    readme_path = _search_readme_md_path(path, search_parent=True)
-                    rp.append(OpenAPIResourceProvider(name, path, readme_path, swagger_module=self))
+                    readme_paths = [*_search_readme_md_paths(path, search_parent=True)]
+                    rp.append(OpenAPIResourceProvider(name, path, readme_paths, swagger_module=self))
                 elif name.lower() != 'common':
                     # azsadmin module only
                     sub_module = MgmtPlaneModule(plane=self.plane, name=name, folder_path=path, parent=self)
@@ -91,7 +81,7 @@ class MgmtPlaneModule(SwaggerModule):
             return rp
 
         for namespace, ts_path, cfg_path in TypeSpecHelper.find_mgmt_plane_entry_files(self.folder_path):
-            entry_file = self.resolve_path_to_uri(ts_path)
+            entry_file = resolve_path_to_uri(ts_path)
             if namespace in rp:
                 rp[namespace].entry_files.append(entry_file)
             else:
@@ -133,8 +123,8 @@ class DataPlaneModule(SwaggerModule):
                     continue
                 name_parts = name.split('.')
                 if len(name_parts) >= 2:
-                    readme_path = _search_readme_md_path(path, search_parent=True)
-                    rp.append(OpenAPIResourceProvider(name, path, readme_path, swagger_module=self))
+                    readme_paths = [*_search_readme_md_paths(path, search_parent=True)]
+                    rp.append(OpenAPIResourceProvider(name, path, readme_paths, swagger_module=self))
                 elif name.lower() != 'common':
                     sub_module = DataPlaneModule(plane=self.plane, name=name, folder_path=path, parent=self)
                     rp.extend(sub_module.get_resource_providers())
@@ -146,7 +136,7 @@ class DataPlaneModule(SwaggerModule):
             return rp
 
         for namespace, ts_path, cfg_path in TypeSpecHelper.find_data_plane_entry_files(self.folder_path):
-            entry_file = self.resolve_path_to_uri(ts_path)
+            entry_file = resolve_path_to_uri(ts_path)
             if namespace in rp:
                 rp[namespace].entry_files.append(entry_file)
             else:
@@ -155,21 +145,13 @@ class DataPlaneModule(SwaggerModule):
         return [*rp.values()]
 
 
-def _search_readme_md_path(path, search_parent=False):
+def _search_readme_md_paths(path, search_parent=False):
+    # Check parent directory first if requested
     if search_parent:
-        readme_path = os.path.join(os.path.dirname(path), 'readme.md')
-        if os.path.exists(readme_path):
-            return readme_path
+        parent_readme = os.path.join(os.path.dirname(path), 'readme.md')
+        if os.path.isfile(parent_readme):
+            yield parent_readme
 
-    readme_path = os.path.join(path, 'readme.md')
-    if os.path.exists(readme_path):
-        return readme_path
-
-    # find in sub directory
-    for name in os.listdir(path):
-        sub_path = os.path.join(path, name)
-        if os.path.isdir(sub_path):
-            readme_path = _search_readme_md_path(sub_path)
-            if readme_path is not None:
-                return readme_path
-    return None
+    # Use glob to recursively find all readme.md files
+    pattern = os.path.join(path, '**', 'readme.md')
+    yield from glob.iglob(pattern, recursive=True)

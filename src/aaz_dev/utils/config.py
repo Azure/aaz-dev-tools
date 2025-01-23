@@ -17,12 +17,16 @@ class Config:
 
     CLI_PATH = os.environ.get("AAZ_CLI_PATH", None)
     CLI_EXTENSION_PATH = os.environ.get("AAZ_CLI_EXTENSION_PATH", None)
+    POWERSHELL_PATH = os.environ.get("AAZ_POWERSHELL_PATH", None)
 
     AAZ_DEV_FOLDER = os.path.expanduser(
         os.environ.get("AAZ_DEV_FOLDER", os.path.join("~", ".aaz_dev"))
     )
     AAZ_DEV_WORKSPACE_FOLDER = os.path.expanduser(
         os.environ.get("AAZ_DEV_WORKSPACE_FOLDER", os.path.join(AAZ_DEV_FOLDER, "workspaces"))
+    )
+    AAZ_DEV_SKETCH_FOLDER = os.path.expanduser(
+        os.environ.get("AAZ_DEV_SKETCH_FOLDER", os.path.join(AAZ_DEV_FOLDER, "sketches"))
     )
 
     # Flask configurations
@@ -107,6 +111,18 @@ class Config:
         return cls.CLI_EXTENSION_PATH
 
     @classmethod
+    def validate_and_setup_powershell_path(cls, ctx, param, value):
+        # TODO: verify folder structure
+        if value != cls.POWERSHELL_PATH:
+            cls.POWERSHELL_PATH = os.path.expanduser(value)
+            if not os.path.exists(cls.POWERSHELL_PATH):
+                raise ValueError(f"Path '{cls.POWERSHELL_PATH}' does not exist.")
+        # verify the src/readme.azure.noprofile.md file exists
+        if not os.path.exists(os.path.join(cls.POWERSHELL_PATH, "src", "readme.azure.noprofile.md")):
+            raise ValueError(f"Path '{cls.POWERSHELL_PATH}' does not contain the required file 'src/readme.azure.noprofile.md', please make sure the code is based on the `generation` branch (https://github.com/Azure/azure-powershell/tree/generation).")
+        return cls.POWERSHELL_PATH
+
+    @classmethod
     def validate_and_setup_aaz_dev_workspace_folder(cls, ctx, param, value):
         # TODO: verify folder
         if value != cls.AAZ_DEV_WORKSPACE_FOLDER:
@@ -115,6 +131,15 @@ class Config:
                 raise ValueError(f"Path '{cls.AAZ_DEV_WORKSPACE_FOLDER}' is not a folder.")
         return cls.AAZ_DEV_WORKSPACE_FOLDER
     
+    @classmethod
+    def validate_and_setup_aaz_dev_sketch_folder(cls, ctx, param, value):
+        # TODO: verify folder
+        if value != cls.AAZ_DEV_SKETCH_FOLDER:
+            cls.AAZ_DEV_SKETCH_FOLDER = os.path.expanduser(value)
+            if os.path.exists(cls.AAZ_DEV_SKETCH_FOLDER) and not os.path.isdir(cls.AAZ_DEV_SKETCH_FOLDER):
+                raise ValueError(f"Path '{cls.AAZ_DEV_SKETCH_FOLDER}' is not a folder.")
+        return cls.AAZ_DEV_SKETCH_FOLDER
+
     @classmethod
     def get_swagger_root(cls):
         if cls.SWAGGER_PATH:

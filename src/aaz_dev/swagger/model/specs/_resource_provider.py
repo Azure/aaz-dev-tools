@@ -7,22 +7,22 @@ from collections import OrderedDict
 
 import yaml
 
-from swagger.utils.tools import swagger_resource_path_to_resource_id
+from swagger.utils.tools import swagger_resource_path_to_resource_id, resolve_path_to_uri
 from ._resource import Resource, ResourceVersion
 from ._utils import map_path_2_repo
-
+from utils.readme_helper import parse_readme_file
 logger = logging.getLogger('backend')
 
 
 class OpenAPIResourceProvider:
 
-    def __init__(self, name, folder_path, readme_path, swagger_module):
+    def __init__(self, name, folder_path, readme_paths, swagger_module):
         self.name = name
         self.folder_path = folder_path
-        self._readme_path = readme_path
+        self._readme_paths = readme_paths
         self.swagger_module = swagger_module
 
-        if readme_path is None:
+        if not readme_paths:
             logger.warning(f"MissReadmeFile: {self} : {map_path_2_repo(folder_path)}")
         self._tags = None
         self._resource_map = None
@@ -74,6 +74,12 @@ class OpenAPIResourceProvider:
                     resource_map[resource.id][resource.version] = resource
         return resource_map
 
+    def load_readme_config(self, readme_file):
+        for readme_path in self._readme_paths:
+            if resolve_path_to_uri(readme_path) == readme_file:
+                return parse_readme_file(readme_path)['config']
+        return None
+
     @property
     def tags(self):
         if self._tags is None:
@@ -82,44 +88,45 @@ class OpenAPIResourceProvider:
 
     def _parse_readme_input_file_tags(self):
         tags = {}
-        if self._readme_path is None:
+        if not self._readme_paths:
             return tags
 
-        with open(self._readme_path, 'r', encoding='utf-8') as f:
-            readme = f.read()
+        for readme_path in self._readme_paths:
+            with open(readme_path, 'r', encoding='utf-8') as f:
+                readme = f.read()
 
-        re_yaml = re.compile(
-            r'```\s*yaml\s*(.*\$\(\s*tag\s*\)\s*==\s*[\'"]\s*(.*)\s*[\'"].*)?\n((((?!```).)*\n)*)```\s*\n',
-            flags=re.MULTILINE)
-        for piece in re_yaml.finditer(readme):
-            flags = piece[1]
-            yaml_body = piece[3]
-            if 'input-file' not in yaml_body:
-                continue
-
-            try:
-                body = yaml.safe_load(yaml_body)
-            except yaml.YAMLError as err:
-                logger.error(f'ParseYamlFailed: {self} : {self._readme_path} {flags}: {err}')
-                continue
-
-            files = []
-            for file_path in body['input-file']:
-                file_path = file_path.replace('$(this-folder)/', '')
-                file_path = os.path.join(os.path.dirname(self._readme_path), *file_path.split('/'))
-                if not os.path.isfile(file_path):
-                    logger.warning(f'FileNotExist: {self} : {file_path}')
+            re_yaml = re.compile(
+                r'```\s*yaml\s*(.*\$\(\s*tag\s*\)\s*==\s*[\'"]\s*(.*)\s*[\'"].*)?\n((((?!```).)*\n)*)\s*```\s*\n',
+                flags=re.MULTILINE)
+            for piece in re_yaml.finditer(readme):
+                flags = piece[1]
+                yaml_body = piece[3]
+                if 'input-file' not in yaml_body:
                     continue
-                files.append(file_path)
 
-            if len(files):
-                tag = piece[2]
-                if tag is None:
-                    tag = ''
-                tag = OpenAPIResourceProviderTag(tag.strip(), self)
-                if tag not in tags:
-                    tags[tag] = set()
-                tags[tag] = tags[tag].union(files)
+                try:
+                    body = yaml.safe_load(yaml_body)
+                except yaml.YAMLError as err:
+                    logger.error(f'ParseYamlFailed: {self} : {readme_path} {flags}: {err}')
+                    continue
+
+                files = []
+                for file_path in body['input-file']:
+                    file_path = file_path.replace('$(this-folder)/', '')
+                    file_path = os.path.join(os.path.dirname(readme_path), *file_path.split('/'))
+                    if not os.path.isfile(file_path):
+                        logger.warning(f'FileNotExist: {self} : {file_path}')
+                        continue
+                    files.append(file_path)
+
+                if len(files):
+                    tag = piece[2]
+                    if tag is None:
+                        tag = ''
+                    tag = OpenAPIResourceProviderTag(tag.strip(), self)
+                    if tag not in tags:
+                        tags[tag] = set()
+                    tags[tag] = tags[tag].union(files)
 
         tags = [*tags.items()]
         tags.sort(key=lambda item: item[0].date, reverse=True)

@@ -32,7 +32,6 @@ class NamesPathConverter(BaseConverter):
             return super(NamesPathConverter, self).to_url(values)
         return '/'.join(super(NamesPathConverter, self).to_url(value) for value in values)
 
-
 class ListPathConvertor(PathConverter):
 
     def to_python(self, value):
@@ -43,5 +42,17 @@ class ListPathConvertor(PathConverter):
             return super(ListPathConvertor, self).to_url(values)
         return '/'.join(super(ListPathConvertor, self).to_url(value) for value in values)
 
+class PSNamesPathConverter(PathConverter):
+    regex = r"([A-Z][a-zA-Z0-9]*)/([A-Z][a-zA-Z0-9]*\.Autorest)"
+    weight = 200
 
-__all__ = ["Base64Converter", "NameConverter", "NamesPathConverter", "ListPathConvertor"]
+    def to_python(self, value):
+        return value.split('/')
+
+    def to_url(self, values):
+        if isinstance(values, str):
+            return super(PSNamesPathConverter, self).to_url(values)
+        return '/'.join(super(PSNamesPathConverter, self).to_url(value) for value in values)
+
+
+__all__ = ["Base64Converter", "NameConverter", "NamesPathConverter", "ListPathConvertor", "PSNamesPathConverter"]

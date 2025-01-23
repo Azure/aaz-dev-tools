@@ -27,12 +27,13 @@ def create_app():
         return jsonify(e.to_dict()), e.status_code
 
     # register url converters
-    from .url_converters import Base64Converter, NameConverter, NameWithCapitalConverter, NamesPathConverter, ListPathConvertor
+    from .url_converters import Base64Converter, NameConverter, NameWithCapitalConverter, NamesPathConverter, ListPathConvertor, PSNamesPathConverter
     app.url_map.converters['base64'] = Base64Converter
     app.url_map.converters['name'] = NameConverter
     app.url_map.converters['Name'] = NameWithCapitalConverter
     app.url_map.converters['names_path'] = NamesPathConverter
     app.url_map.converters['list_path'] = ListPathConvertor
+    app.url_map.converters['PSNamesPath'] = PSNamesPathConverter
 
     # register routes of swagger module
     from swagger.api import register_blueprints
@@ -44,6 +45,10 @@ def create_app():
 
     # register routes of cli module
     from cli.api import register_blueprints
+    register_blueprints(app)
+
+    # register routes of ps module
+    from ps.api import register_blueprints
     register_blueprints(app)
 
     return app

@@ -167,40 +167,75 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
     help="Path of `aaz` repository."
 )
 def verify():
-    def verify_command(file_path, node):
+    def verify_resource(model, path):
+        if "commandGroups" not in model:
+            return
+
+        for grp in model["commandGroups"]:
+            base_path = os.path.join(path, *grp["name"].split())
+            if not os.path.exists(base_path):
+                raise FileNotFoundError(base_path)
+
+            for cmd in grp.get("commands", []):
+                file_path = os.path.join(base_path, f"_{cmd['name']}.md")
+                if not os.path.isfile(file_path):
+                    raise FileNotFoundError(file_path)
+
+            verify_resource(grp, base_path)
+
+    def verify_command(file_path):
         with open(file_path, "r", encoding="utf-8") as fp:
             content = fp.read()
+
+        base_path = os.path.dirname(file_path)
+        curr_grp = " ".join(os.path.relpath(base_path, aaz.commands_folder).split(os.sep))
+        curr_cmd = os.path.splitext(os.path.basename(file_path))[0][1:]
 
         paths = re.findall(r"]\(([^)]+)\)", content)
         for path in paths:
             json_path = os.path.join(Config.AAZ_PATH, os.path.splitext(path)[0][1:] + ".json")
             json_path = os.path.normpath(json_path)
+
+            if json_path in model_set:
+                continue
+
             if not os.path.exists(json_path):
                 raise Exception(f"{json_path} defined in {file_path} is missing.")
 
             with open(json_path, "r", encoding="utf-8", errors="ignore") as fp:
                 model = json.load(fp)
-            group, command = " ".join(node.names[:-1]), node.names[-1]
-            for g in model["commandGroups"]:
-                if g["name"] == group:
-                    if not any(cmd["name"] == command for cmd in g["commands"]):
-                        raise Exception(f"There is no {command} command info in {json_path}.")
 
-                    break
+            try:
+                verify_resource(model, aaz.commands_folder)
+
+            except FileNotFoundError as e:
+                raise Exception(f"Cannot find {e} defined in {json_path}.")
+
+            target = curr_grp
+            while target:
+                try:
+                    for grp in model["commandGroups"]:
+                        if target.startswith(grp["name"]):
+                            target = target[len(grp["name"]):].strip()
+                            model = grp
+
+                            break
+
+                except KeyError:
+                    raise Exception(f"{curr_grp} has no corresponding definition in {json_path}.")
+
+            commands = model["commands"]
+            if not any(cmd["name"] == curr_cmd for cmd in commands):
+                raise Exception(f"There is no {curr_cmd} command info in {json_path}.")
 
             model_set.add(json_path)
 
-        tmpl = get_templates()["command"]
-        if not tmpl.render(command=node) == content:
-            raise Exception(f"{file_path} cannot be rendered correctly.")
-
     model_set = set()
     aaz = AAZSpecsManager()
-    stack = [(aaz.commands_folder, aaz.tree.root)]  # root nodes
+    stack = [aaz.commands_folder]
 
     while stack:
-        curr_path, curr_node = stack.pop()
-        logger.info(f"Checking {curr_path}")
+        curr_path = stack.pop()
         if os.path.isdir(curr_path):
             readme_path = os.path.join(curr_path, "readme.md")
             if not os.path.exists(readme_path):
@@ -227,13 +262,9 @@ def verify():
                         diff = cmd_set - items or items - cmd_set
                         raise Exception(f"Command info {diff} doesn't match in {readme_path}.")
 
-                    groups = set(curr_node.commands.keys())
-                    if groups != items:
-                        diff = groups - items or items - groups
-                        raise Exception(f"Command info {diff} in tree.json doesn't match in {readme_path}.")
-
                     for file in files:
-                        verify_command(os.path.join(curr_path, file), curr_node.commands[file[1:-3]])
+                        verify_command(os.path.join(curr_path, file))
+
                 else:
                     if len(items) != len(set(items)):
                         raise Exception(f"{readme_path} has duplicate command group names.")
@@ -245,15 +276,10 @@ def verify():
                         diff = folders - items or items - folders
                         raise Exception(f"Command group info {diff} doesn't match in {readme_path}.")
 
-                    groups = set(curr_node.command_groups.keys())
-                    if groups != set(items):
-                        diff = groups - items or items - groups
-                        raise Exception(f"Command group info {diff} in tree.json doesn't match in {readme_path}.")
-
                     for folder in folders:
-                        stack.append((os.path.join(curr_path, folder), curr_node.command_groups[folder]))
+                        stack.append(os.path.join(curr_path, folder))
 
-    for root, dirs, files in os.walk(aaz.resources_folder):
+    for root, _, files in os.walk(aaz.resources_folder):
         for file in files:
             if not file.endswith(".json") or file.startswith("client"):  # support data-plane
                 continue
