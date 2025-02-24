@@ -625,20 +625,6 @@ def editor_workspace_tree_node_add_swagger_resources(name, node_names):
         version=version,
         resources=resources,
     )
-    # provide default short summary
-    for node in manager.iter_command_tree_nodes():
-        if not node.help:
-            node.help = CMDHelp()
-        if not node.help.short:
-            node.help.short = f"Manage {node.names[-1]}"
-
-    for leaf in manager.iter_command_tree_leaves():
-        if not leaf.help:
-            leaf.help = CMDHelp()
-        if not leaf.help.short:
-            n = leaf.names[-1]
-            n = n[0].upper() + n[1:]
-            leaf.help.short = f"{n} {leaf.names[-2]}"
     manager.save()
     return "", 200
 

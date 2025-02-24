@@ -305,6 +305,9 @@ class WorkspaceManager:
                 else:
                     new_node = CMDCommandTreeNode({
                         "names": node_names[:idx + 1],
+                        "help": {
+                            "short": f"Manage {name}"
+                        }
                     })
                 node.command_groups[name] = new_node
             node = node.command_groups[name]
@@ -370,7 +373,7 @@ class WorkspaceManager:
                     "names": [*cmd_names],
                     "stage": node.stage,
                     "help": {
-                        "short": command.description or ""
+                        "short": command.description or (name[0].upper() + name[1:] + " " + cmd_names[-2])
                     },
                 })
             new_cmd.version = command.version
