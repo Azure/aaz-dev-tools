@@ -6,7 +6,6 @@ from command.controller.workspace_manager import WorkspaceManager
 from utils import exceptions
 from utils.config import Config
 from command.model.configuration._utils import CMDArgBuildPrefix
-from command.model.configuration import CMDHelp
 
 bp = Blueprint('editor', __name__, url_prefix='/AAZ/Editor')
 
