@@ -304,11 +304,9 @@ class WorkspaceManager:
                     })
                 else:
                     new_node = CMDCommandTreeNode({
-                        "names": node_names[:idx + 1],
-                        "help": {
-                            "short": f"Manage {name}"
-                        }
+                        "names": node_names[:idx + 1]
                     })
+                    self.generate_command_group_help(new_node, node_names[:idx + 1])
                 node.command_groups[name] = new_node
             node = node.command_groups[name]
             idx += 1
@@ -371,11 +369,9 @@ class WorkspaceManager:
             else:
                 new_cmd = CMDCommandTreeLeaf({
                     "names": [*cmd_names],
-                    "stage": node.stage,
-                    "help": {
-                        "short": command.description or (name[0].upper() + name[1:] + " " + cmd_names[-2])
-                    },
+                    "stage": node.stage
                 })
+                self.generate_command_help(new_cmd, command.description, cmd_names)
             new_cmd.version = command.version
             new_cmd.resources = [CMDResource(
                 r.to_primitive()) for r in command.resources]
@@ -540,6 +536,18 @@ class WorkspaceManager:
         )
 
         return examples
+    
+    def generate_command_group_help(self, command_group_node, command_group_names):
+        default_help = {
+            "short": "Manage " + command_group_names[-1]
+        }
+        command_group_node.help = CMDHelp(default_help)
+
+    def generate_command_help(self, command_node, cmd_description, cmd_names):
+        default_help = {
+            "short": cmd_description or (cmd_names[-1][0].upper() + cmd_names[-1][1:] + " " + cmd_names[-2])
+        }
+        command_node.help = CMDHelp(default_help)
 
     def rename_command_tree_node(self, *node_names, new_node_names):
         new_name = ' '.join(new_node_names)
