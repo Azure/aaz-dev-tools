@@ -539,14 +539,17 @@ class WorkspaceManager:
     
     def generate_command_group_help(self, command_group_node, command_group_names):
         default_help = {
-            "short": "Manage " + command_group_names[-1]
+            "short": "Manage " + command_group_names[-1].replace("-", " ")
         }
         command_group_node.help = CMDHelp(default_help)
 
     def generate_command_help(self, command_node, cmd_description, cmd_names):
-        default_help = {
-            "short": cmd_description or (cmd_names[-1][0].upper() + cmd_names[-1][1:] + " " + cmd_names[-2])
-        }
+        if cmd_description:
+            default_help = {"short": cmd_description}
+        else:
+            default_help = {
+                "short": cmd_names[-1][0].upper() + cmd_names[-1][1:] + " " + cmd_names[-2].replace("-", " ")
+            }
         command_node.help = CMDHelp(default_help)
 
     def rename_command_tree_node(self, *node_names, new_node_names):
