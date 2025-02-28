@@ -18,3 +18,9 @@ def to_snake_case(name, separator='_'):
 
 def to_singular(name):
     return _pluralizer.singular(name)
+
+def to_camel_resource(name):
+    assert isinstance(name, str)
+    parts = name.replace('-', ' ').replace('_', ' ').split()
+    parts = [p[0].upper() + p[1:] for p in parts if p]
+    return " ".join(parts)

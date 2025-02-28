@@ -15,6 +15,7 @@ from utils import exceptions
 from utils.config import Config
 from utils.plane import PlaneEnum
 from utils.base64 import b64encode_str
+from utils.case import to_camel_resource
 from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor, build_endpoint_selector_for_client_config
 from .workspace_client_cfg_editor import WorkspaceClientCfgEditor
@@ -539,7 +540,7 @@ class WorkspaceManager:
     
     def generate_command_group_help(self, command_group_node, command_group_names):
         default_help = {
-            "short": "Manage " + command_group_names[-1].replace("-", " ")
+            "short": "Manage " + to_camel_resource(command_group_names[-1])
         }
         command_group_node.help = CMDHelp(default_help)
 
@@ -548,7 +549,7 @@ class WorkspaceManager:
             default_help = {"short": cmd_description}
         else:
             default_help = {
-                "short": cmd_names[-1][0].upper() + cmd_names[-1][1:] + " " + cmd_names[-2].replace("-", " ")
+                "short": to_camel_resource(cmd_names[-1] +  " " + cmd_names[-2])
             }
         command_node.help = CMDHelp(default_help)
 
