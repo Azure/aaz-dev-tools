@@ -747,7 +747,7 @@ class CfgReader:
     @classmethod
     def find_identity_schema_in_command(cls, command):
         for operation in command.operations:
-            if isinstance(operation, CMDInstanceUpdateOperation):
+            if isinstance(operation, CMDInstanceUpdateOperation) or isinstance(operation, CMDHttpOperation):
                 for match in cls.iter_schema_in_update_operation_by_identity(operation):
                     return operation, *match
 
@@ -759,11 +759,17 @@ class CfgReader:
                 return (_parent, _schema, _schema_idx), False
             return None, False
 
-        for parent, schema, schema_idx in cls._iter_schema_in_json(
-                operation.instance_update.json, schema_filter=schema_filter):
-            if schema:
-                schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Update, *schema_idx]
-                yield parent, schema, schema_idx
+        if isinstance(operation, CMDInstanceUpdateOperation):
+            for parent, schema, schema_idx in cls._iter_schema_in_json(operation.instance_update.json, schema_filter=schema_filter):
+                if schema:
+                    schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Update, *schema_idx]
+                    yield parent, schema, schema_idx
+
+        else:
+            for parent, schema, schema_idx in cls._iter_schema_in_request(operation.http.request, schema_filter=schema_filter):
+                if schema:
+                    schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Update, *schema_idx]
+                    yield parent, schema, schema_idx
 
     @classmethod
     def iter_schema_in_command_by_arg_var(cls, command, arg_var):

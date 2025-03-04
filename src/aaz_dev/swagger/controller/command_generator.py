@@ -514,7 +514,7 @@ class _CommandGenerator(ABC):
                 if 'patch' not in methods:
                     raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: '{resource}': 'patch' not in methods: '{methods}'")
 
-                if 'get' in methods:  # get + patch
+                if kwargs.get('is_identity', False) is True:
                     cmd_builder = CMDBuilder(path=resource.path, parameterized_host=parameterized_host)
                     get_op = self.generate_operation(cmd_builder, path_item, instance_var, method='get', mutability=MutabilityEnum.Read)
                     patch_op = self.generate_operation(cmd_builder, path_item, instance_var, method='patch', mutability=MutabilityEnum.Update)
