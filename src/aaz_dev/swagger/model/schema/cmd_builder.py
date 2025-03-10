@@ -594,7 +594,7 @@ class CMDBuilder:
             # append 204 No Content response at the end of success response
             success_responses.append(success_204_response)
 
-        success_codes = reduce(lambda x, y: x | y, [codes for codes, _ in success_responses])
+        success_codes = reduce(lambda x, y: x | y, [codes for codes, _ in success_responses], set())
         if schema.x_ms_long_running_operation and not success_codes & {200, 201}:
             if lro_schema := schema.x_ms_lro_final_state_schema:
                 lro_response = Response()

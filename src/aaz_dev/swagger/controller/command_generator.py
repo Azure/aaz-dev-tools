@@ -11,7 +11,7 @@ from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
 from swagger.model.schema.x_ms_parameterized_host import XmsParameterizedHost
-from swagger.model.specs import SwaggerLoader
+from swagger.model.specs import SwaggerLoader, Resource
 from swagger.model.specs._utils import operation_id_separate, camel_case_to_snake_case, get_url_path_valid_parts
 from swagger.model.schema.typespec.path_item import TypeSpecPathItem
 from utils import exceptions
@@ -182,7 +182,8 @@ class _CommandGenerator(ABC):
                     #     f"Command Name For Get set to 'list' by nexLink: {resource.path} :"
                     #     f" {path_item.get.operation_id} : {path_item.traces}"
                     # )
-                elif sub_url_path in resource.resource_provider.get_resource_map():
+                elif isinstance(resource, Resource) and sub_url_path in resource.resource_provider.get_resource_map():
+                    # CMDResource for typespec does not have resource_map for its resource_provider
                     command_name = f"{group_name} list"
                     # logger.debug(
                     #     f"Command Name For Get set to 'list' by sub_url_path: {resource.path} :"

@@ -245,6 +245,9 @@ function extractHttpRequest(context: AAZOperationEmitterContext, operation: Http
     }
     // sort by param name
     for (const name of Object.keys(paramModels["header"]).sort()) {
+      if (name === clientRequestIdName) {
+        continue;
+      }
       request.header.params!.push(paramModels["header"][name]);
     }
     if (clientRequestIdName) {
@@ -1442,6 +1445,12 @@ function applySchemaFormat(
             format: emitStringFormat(context, type, (schema as CMDStringSchemaBase).format),
           } as CMDStringSchemaBase;
       }
+      break;
+    case "uuid":
+      schema = {
+        ...schema,
+        format: emitStringFormat(context, type, (schema as CMDStringSchemaBase).format),
+      } as CMDUuidSchemaBase;
       break;
     // case "date":
     // case "time":
