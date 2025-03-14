@@ -184,6 +184,7 @@ class _CommandGenerator(ABC):
                     # )
                 elif isinstance(resource, Resource) and sub_url_path in resource.resource_provider.get_resource_map():
                     # CMDResource for typespec does not have resource_map for its resource_provider
+                    # For those resourceid who does not have pageable result, resource from tsp cannot apply this branch
                     command_name = f"{group_name} list"
                     # logger.debug(
                     #     f"Command Name For Get set to 'list' by sub_url_path: {resource.path} :"
