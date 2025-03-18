@@ -6,11 +6,11 @@ import { AAZEmitterContext, AAZOperationEmitterContext, AAZSchemaEmitterContext 
 import { resolveOperationId } from "./utils.js";
 import { TypeSpecPathItem } from "./model/path_item.js";
 import { CMDHttpOperation } from "./model/operation.js";
-import { DiagnosticTarget, Enum, EnumMember, Model, ModelProperty, Namespace, Program, Scalar, TwoLevelMap, Type, Union, Value, getDiscriminator, getDoc, getEncode, getFormat, getMaxItems, getMaxLength, getMaxValue, getMaxValueExclusive, getMinItems, getMinLength, getMinValue, getMinValueExclusive, getPattern, getProjectedName, getProperty, isArrayModelType, isNeverType, isNullType, isRecordModelType, isService, isTemplateDeclaration, isVoidType, resolveEncodedName } from "@typespec/compiler";
+import { DiagnosticTarget, Enum, EnumMember, Model, ModelProperty, Namespace, Program, Scalar, TwoLevelMap, Type, Union, Value, getDiscriminator, getDoc, getEncode, getFormat, getMaxItems, getMaxLength, getMaxValue, getMaxValueExclusive, getMinItems, getMinLength, getMinValue, getMinValueExclusive, getPattern, getProjectedName, getProperty, isArrayModelType, isNeverType, isNullType, isRecordModelType, isService, isTemplateDeclaration, isVoidType, resolveEncodedName, IntrinsicType } from "@typespec/compiler";
 import { LroMetadata, PagedResultMetadata, UnionEnum, getArmResourceIdentifierConfig, getLroMetadata, getPagedResult, getUnionAsEnum } from "@azure-tools/typespec-azure-core";
 import { XmsPageable } from "./model/x_ms_pageable.js";
 import { CMDHttpRequest, CMDHttpResponse } from "./model/http.js";
-import { CMDArraySchemaBase, CMDClsSchema, CMDClsSchemaBase, CMDObjectSchema, CMDObjectSchemaBase, CMDSchema, CMDSchemaBase, CMDStringSchema, CMDStringSchemaBase, CMDIntegerSchemaBase, Ref, ClsType, ArrayType, CMDObjectSchemaDiscriminator, CMDByteSchemaBase, CMDInteger32SchemaBase, CMDInteger64SchemaBase, CMDFloatSchemaBase, CMDFloat64SchemaBase, CMDFloat32SchemaBase, CMDUuidSchemaBase, CMDPasswordSchemaBase, CMDResourceIdSchemaBase, CMDDateSchemaBase, CMDDateTimeSchemaBase, CMDDurationSchemaBase, CMDResourceLocationSchema, CMDIdentityObjectSchemaBase, CMDBooleanSchemaBase} from "./model/schema.js";
+import { CMDArraySchemaBase, CMDClsSchema, CMDClsSchemaBase, CMDObjectSchema, CMDObjectSchemaBase, CMDSchema, CMDSchemaBase, CMDStringSchema, CMDStringSchemaBase, CMDIntegerSchemaBase, Ref, ClsType, ArrayType, CMDObjectSchemaDiscriminator, CMDByteSchemaBase, CMDInteger32SchemaBase, CMDInteger64SchemaBase, CMDFloatSchemaBase, CMDFloat64SchemaBase, CMDFloat32SchemaBase, CMDUuidSchemaBase, CMDPasswordSchemaBase, CMDResourceIdSchemaBase, CMDDateSchemaBase, CMDDateTimeSchemaBase, CMDDurationSchemaBase, CMDResourceLocationSchema, CMDIdentityObjectSchemaBase, CMDBooleanSchemaBase, CMDAnyTypeSchemaBase } from "./model/schema.js";
 import { reportDiagnostic } from "./lib.js";
 import {
   getExtensions,
@@ -514,7 +514,7 @@ function convert2CMDSchema(context: AAZSchemaEmitterContext, param: ModelPropert
   let schema;
   switch (param.type.kind) {
     case "Intrinsic":
-      schema = undefined;
+      schema = convert2CMDSchemaBase(context, param.type);
       break;
     case "Model":
       schema = convert2CMDSchemaBase(context, param.type as Model);
@@ -578,7 +578,7 @@ function convert2CMDSchemaBase(context: AAZSchemaEmitterContext, type: Type): CM
   let schema;
   switch (type.kind) {
     case "Intrinsic":
-      schema = undefined;
+      schema = convertIntrinsic2CMDSchemaBase(context, type);
       break;
     case "Scalar":
       schema = convertScalar2CMDSchemaBase(context, type as Scalar);
@@ -1107,6 +1107,16 @@ function convertUnion2CMDSchemaBase(context: AAZSchemaEmitterContext, union: Uni
         target: union,
       });
     }
+  }
+  return schema;
+}
+
+function convertIntrinsic2CMDSchemaBase(context: AAZSchemaEmitterContext, type: IntrinsicType): CMDAnyTypeSchemaBase | undefined {
+  let schema;
+  if (type.name === "unknown") {
+    schema = {
+      type: "any"
+    } as CMDAnyTypeSchemaBase
   }
   return schema;
 }
