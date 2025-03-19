@@ -284,6 +284,15 @@ export interface CMDFloat64Schema extends CMDFloat64SchemaBase, CMDFloatSchema {
   type: "float64";
 }
 
+// type: any
+export interface CMDAnyTypeSchemaBase extends CMDSchemaBase {
+  type: "any"
+}
+
+export interface CMDAnyTypeSchema extends CMDAnyTypeSchemaBase, CMDSchema {
+  type: "any"
+}
+
 // object
 
 // discriminator
