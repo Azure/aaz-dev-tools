@@ -55,6 +55,7 @@ import {
   isVoidType,
   resolveEncodedName,
   IntrinsicType,
+  serializeValueAsJson,
 } from "@typespec/compiler";
 import { TwoLevelMap } from "@typespec/compiler/utils";
 import {
@@ -699,7 +700,7 @@ function convert2CMDSchema(
 
     if (param.defaultValue) {
       schema.default = {
-        value: getDefaultValue(context, param.defaultValue),
+        value: getDefaultValue(context, param.defaultValue, param),
       };
     }
   }
@@ -707,6 +708,10 @@ function convert2CMDSchema(
     schema = {
       ...schema,
       ...applySchemaFormat(context, param, schema as CMDSchemaBase),
+    };
+    schema = {
+      ...schema,
+      ...applyEncoding(context, param, schema),
     };
     schema = {
       ...schema,
@@ -759,6 +764,7 @@ function convert2CMDSchemaBase(context: AAZSchemaEmitterContext, type: Type): CM
   }
   if (schema) {
     schema = applySchemaFormat(context, type, schema);
+    schema = applyEncoding(context, type, schema);
     schema = applyExtensionsDecorators(context, type, schema);
   }
 
@@ -1898,6 +1904,20 @@ function emitArrayFormat(
 
 // TODO: add emitResourceIdFormat
 
+function applyEncoding(context: AAZSchemaEmitterContext, type: Type, schema: CMDSchemaBase): CMDSchemaBase {
+  if (type.kind !== "Scalar" && type.kind !== "ModelProperty") {
+    return schema;
+  }
+  const encodeData = getEncode(context.program, type);
+  if (encodeData !== undefined) {
+    schema = {
+      ...schema,
+      ...convertScalar2CMDSchemaBase(context, encodeData.type),
+    };
+  }
+  return schema;
+}
+
 // apply extension decorators
 function applyExtensionsDecorators(context: AAZSchemaEmitterContext, type: Type, schema: CMDSchemaBase): CMDSchemaBase {
   const extensions = getExtensions(context.program, type);
@@ -2124,25 +2144,6 @@ function getClsDefinitionModel(schema: CMDClsSchemaBase): CMDObjectSchemaBase | 
   return schema.type.pendingSchema.schema!;
 }
 
-function getDefaultValue(content: AAZSchemaEmitterContext, defaultType: Value): unknown {
-  switch (defaultType.valueKind) {
-    case "StringValue":
-      return defaultType.value;
-    case "NumericValue":
-      return defaultType.value.asNumber() ?? undefined;
-    case "BooleanValue":
-      return defaultType.value;
-    case "ArrayValue":
-      return defaultType.values.map((x) => getDefaultValue(content, x));
-    case "NullValue":
-      return null;
-    case "EnumValue":
-      return defaultType.value.value ?? defaultType.value.name;
-    default:
-      reportDiagnostic(content.program, {
-        code: "invalid-default",
-        format: { type: defaultType.valueKind },
-        target: defaultType,
-      });
-  }
+function getDefaultValue(context: AAZSchemaEmitterContext, defaultType: Value, modelProperty: ModelProperty): any {
+  return serializeValueAsJson(context.program, defaultType, modelProperty);
 }

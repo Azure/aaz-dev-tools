@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "props": [
+    {
+      "type": "integer32",
+      "name": "errorRateTimeWindowInSeconds",
+      "default": {
+        "value": 60
+      }
+    }
+  ],
+  "name": "targetValue",
+  "required": true
+}
