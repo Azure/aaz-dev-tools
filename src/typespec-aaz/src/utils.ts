@@ -116,3 +116,15 @@ function pascalCaseForOperationId(name: string) {
     .map((s) => pascalCase(s))
     .join("_");
 }
+
+
+export function toCamelCase(name: string, delimiters: string = ''): string {
+  const parts = name.replace(/[-_]/g, ' ').split(' ');
+  const camelCasedParts = parts.map((part) => {
+      if (part) {
+          return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+      }
+      return '';
+  });
+  return camelCasedParts.join(delimiters);
+}
