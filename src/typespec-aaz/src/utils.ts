@@ -1,4 +1,4 @@
-import { Program, Type, getProjectedName, isGlobalNamespace, isService } from "@typespec/compiler";
+import { Program, Type, isGlobalNamespace, isService } from "@typespec/compiler";
 import { HttpOperation, isSharedRoute } from "@typespec/http";
 import { getOperationId } from "@typespec/openapi";
 import { pascalCase } from "change-case";
@@ -59,9 +59,8 @@ export function getResourcePath(program: Program, operation: HttpOperation) {
 }
 
 function getAutorestClientName(context: AAZEmitterContext, type: Type & { name: string }) {
-  const viaProjection = getProjectedName(context.program, type, "client");
-  const clientName = getClientNameOverride(context.sdkContext, type);
-  return clientName ?? viaProjection ?? type.name;
+  const clientName = getClientNameOverride(context.tcgcContext, type);
+  return clientName ?? type.name;
 }
 
 /**

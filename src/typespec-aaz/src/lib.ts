@@ -56,6 +56,12 @@ const libDef = {
         default: "Missing status codes",
       }
     },
+    "invalid-program-versions": {
+      severity: "error",
+      messages: {
+        default: "Invalid service versions from program",
+      }
+    },
     "duplicate-body-types": {
       severity: "error",
       messages: {

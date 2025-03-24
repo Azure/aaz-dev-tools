@@ -1,4 +1,4 @@
-import { HttpOperation, HttpOperationBody, HttpOperationMultipartBody, HttpOperationResponse, HttpStatusCodeRange, HttpStatusCodesEntry, Visibility, createMetadataInfo, getHeaderFieldOptions, getQueryParamOptions, getServers, getStatusCodeDescription, getVisibilitySuffix, isContentTypeHeader, resolveRequestVisibility } from "@typespec/http";
+import { HttpOperation, HttpOperationBody, HttpOperationMultipartBody, HttpOperationResponse, HttpStatusCodeRange, HttpStatusCodesEntry, Visibility, createMetadataInfo, getHeaderFieldOptions, getQueryParamOptions, getServers, getStatusCodeDescription, getVisibilitySuffix, resolveRequestVisibility, HttpProperty, } from "@typespec/http";
 import {
   isAzureResource,
 } from "@azure-tools/typespec-azure-resource-manager";
@@ -6,7 +6,8 @@ import { AAZEmitterContext, AAZOperationEmitterContext, AAZSchemaEmitterContext 
 import { resolveOperationId, toCamelCase } from "./utils.js";
 import { TypeSpecPathItem } from "./model/path_item.js";
 import { CMDHttpOperation } from "./model/operation.js";
-import { DiagnosticTarget, Enum, EnumMember, Model, ModelProperty, Namespace, Program, Scalar, TwoLevelMap, Type, Union, Value, getDiscriminator, getDoc, getEncode, getFormat, getMaxItems, getMaxLength, getMaxValue, getMaxValueExclusive, getMinItems, getMinLength, getMinValue, getMinValueExclusive, getPattern, getProjectedName, getProperty, isArrayModelType, isNeverType, isNullType, isRecordModelType, isService, isTemplateDeclaration, isVoidType, resolveEncodedName, IntrinsicType } from "@typespec/compiler";
+import { DiagnosticTarget, Enum, EnumMember, Model, ModelProperty, Namespace, Program, Scalar, Type, Union, Value, getDiscriminator, getDoc, getEncode, getFormat, getMaxItems, getMaxLength, getMaxValue, getMaxValueExclusive, getMinItems, getMinLength, getMinValue, getMinValueExclusive, getPattern, getProperty, isArrayModelType, isNeverType, isNullType, isRecordModelType, isService, isTemplateDeclaration, isVoidType, resolveEncodedName, IntrinsicType } from "@typespec/compiler";
+import { TwoLevelMap } from "@typespec/compiler/utils";
 import { LroMetadata, PagedResultMetadata, UnionEnum, getArmResourceIdentifierConfig, getLroMetadata, getPagedResult, getUnionAsEnum } from "@azure-tools/typespec-azure-core";
 import { XmsPageable } from "./model/x_ms_pageable.js";
 import { CMDHttpRequest, CMDHttpResponse } from "./model/http.js";
@@ -191,30 +192,24 @@ function extractHttpRequest(context: AAZOperationEmitterContext, operation: Http
   }
 
   let clientRequestIdName;
-  for (const httpOpParam of methodParams.parameters) {
-    if (httpOpParam.type === "header" && isContentTypeHeader(context.program, httpOpParam.param)) {
-      continue;
-    }
-    if (isNeverType(httpOpParam.param.type)) {
-      continue;
-    }
-    schemaContext = buildSchemaEmitterContext(context, httpOpParam.param, httpOpParam.type);
+  for (const httpProperty of methodParams.properties) {
+    schemaContext = buildSchemaEmitterContext(context, httpProperty);
     const schema = convert2CMDSchema(
       schemaContext,
-      httpOpParam.param,
-      httpOpParam.name
+      httpProperty.property,
+      // httpProperty.options.name,
     );
     if (!schema) {
       continue;
     }
 
-    schema.required = !httpOpParam.param.optional;
+    schema.required = !httpProperty.property.optional;
 
-    if (paramModels[httpOpParam.type] === undefined) {
-      paramModels[httpOpParam.type] = {};
+    if (paramModels[httpProperty.kind] === undefined) {
+      paramModels[httpProperty.kind] = {};
     }
-    paramModels[httpOpParam.type][schema.name] = schema;
-    if (httpOpParam.type === "header" && schema.name === "x-ms-client-request-id") {
+    paramModels[httpProperty.kind][schema.name] = schema;
+    if (httpProperty.kind === "header" && schema.name === "x-ms-client-request-id") {
       clientRequestIdName = schema.name;
     }
   }
@@ -277,18 +272,24 @@ function extractHttpRequest(context: AAZOperationEmitterContext, operation: Http
     let schema: CMDSchema | undefined;
     if (body.property) {
       context.tracer.trace("RetrieveBody", context.visibility.toString());
-      schemaContext = buildSchemaEmitterContext(context, body.property, "body");
       schema = convert2CMDSchema(
-        schemaContext,
+        {
+          ...context,
+          supportClsSchema: true,
+          visibility: Visibility.Read,
+        },
         body.property,
         getJsonName(context, body.property)
       )!;
       schema.required = !body.property.optional;
     } else {
-      schemaContext = buildSchemaEmitterContext(context, body.type, "body");
       schema = {
         ...convert2CMDSchemaBase(
-          schemaContext,
+          {
+            ...context,
+            supportClsSchema: true,
+            visibility: Visibility.Read,
+          },
           body.type
         )!,
         name: "body",
@@ -468,7 +469,8 @@ function convert2CMDHttpResponse(context: AAZOperationEmitterContext, response: 
     } else {
       schema = convert2CMDSchemaBase(
         {
-          ...buildSchemaEmitterContext(context, body.type, "body"),
+          ...context,
+          supportClsSchema: true,
           visibility: Visibility.Read,
         },
         body.type
@@ -489,12 +491,36 @@ function convert2CMDHttpResponse(context: AAZOperationEmitterContext, response: 
 
 // Schema functions
 
-function buildSchemaEmitterContext(context: AAZOperationEmitterContext, param: Type, type: "header" | "query" | "path" | "body" | "cookie"): AAZSchemaEmitterContext {
+function getCollectionFormat(
+  context: AAZOperationEmitterContext,
+  type: ModelProperty,
+  explode?: boolean,
+): "csv" | "ssv" | "pipes" | "multi" | undefined {
+    if (explode) {
+      return "multi";
+    }
+    const encode = getEncode(context.program, type);
+    if (encode) {
+      if (encode?.encoding === "ArrayEncoding.pipeDelimited") {
+        return "pipes";
+      }
+      if (encode?.encoding === "ArrayEncoding.spaceDelimited") {
+        return "ssv";
+      }
+    }
+    return "csv";
+}
+
+function buildSchemaEmitterContext(
+  context: AAZOperationEmitterContext, 
+  httpProperty: HttpProperty,
+): AAZSchemaEmitterContext {
   let collectionFormat;
-  if (type === "query") {
-    collectionFormat = getQueryParamOptions(context.program, param).format;
-  } else if (type === "header") {
-    collectionFormat = getHeaderFieldOptions(context.program, param).format;
+  if (httpProperty.kind === "query") {
+    collectionFormat = getCollectionFormat(context, httpProperty.property, httpProperty.options.explode);
+  } else if (httpProperty.kind === "header") {
+    const headerOptions = getHeaderFieldOptions(context.program, httpProperty.property);
+    collectionFormat = getCollectionFormat(context, httpProperty.property, headerOptions.explode);
   }
   if (collectionFormat === "csv") {
     collectionFormat = undefined;
@@ -1194,7 +1220,7 @@ function convertEnum2CMDSchemaBase(context: AAZSchemaEmitterContext, e: Enum): C
 }
 
 function shouldClientFlatten(context: AAZSchemaEmitterContext, target: ModelProperty): boolean {
-  return !!(shouldFlattenProperty(context.sdkContext, target) || getExtensions(context.program, target).get("x-ms-client-flatten"));
+  return !!(shouldFlattenProperty(context.tcgcContext, target) || getExtensions(context.program, target).get("x-ms-client-flatten"));
 }
 
 function includeDerivedModel(model: Model): boolean {
@@ -1705,11 +1731,8 @@ function applyExtensionsDecorators(
 // Utils functions
 
 function getJsonName(context: AAZOperationEmitterContext, type: Type & { name: string }): string {
-  const viaProjection = getProjectedName(context.program, type, "json");
   const encodedName = resolveEncodedName(context.program, type, "application/json");
-  // Pick the value set via `encodedName` or default back to the legacy projection otherwise.
-  // `resolveEncodedName` will return the original name if no @encodedName so we have to do that check
-  return encodedName === type.name ? viaProjection ?? type.name : encodedName;
+  return encodedName === type.name ? type.name : encodedName;
 }
 
 function getPathWithoutQuery(path: string): string {

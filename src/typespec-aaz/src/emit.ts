@@ -13,8 +13,8 @@ import { getVersioningMutators } from "@typespec/versioning";
 import { HttpService, getHttpService, reportIfNoRoutes } from "@typespec/http";
 import { getResourcePath, swaggerResourcePathToResourceId, } from "./utils.js";
 import { AAZResourceSchema } from "./types.js";
-import { AAZEmitterOptions, getTracer } from "./lib.js";
-import { createSdkContext } from "@azure-tools/typespec-client-generator-core";
+import { AAZEmitterOptions, getTracer, reportDiagnostic } from "./lib.js";
+import { createTCGCContext } from "@azure-tools/typespec-client-generator-core";
 import { AAZEmitterContext } from "./context.js";
 import { retrieveAAZOperation } from "./convertor.js";
 
@@ -86,10 +86,10 @@ function createListResourceEmitter(context: EmitContext<AAZEmitterOptions>) {
 }
 
 async function createGetResourceOperationEmitter(context: EmitContext<AAZEmitterOptions>) {
-  const sdkContext = await createSdkContext(context, "@azure-tools/typespec-aaz");
+  const tcgcContext = createTCGCContext(context.program, "@azure-tools/typespec-aaz");
   const tracer = getTracer(context.program);
   tracer.trace("options", JSON.stringify(context.options, null, 2));
-  const apiVersion = sdkContext.apiVersion!;
+  const apiVersion = context.options["api-version"]!;
   tracer.trace("apiVersion", apiVersion);
 
   const resOps: Record<string, AAZResourceSchema> = {};
@@ -110,6 +110,10 @@ async function createGetResourceOperationEmitter(context: EmitContext<AAZEmitter
       // currentService = service;
       const versions = getVersioningMutators(context.program, service.type);
       if (versions === undefined || versions.kind === "transient") {
+        reportDiagnostic(context.program, {
+          code: "invalid-program-versions",
+          target: service.type,
+        });
         continue;
       }
       const filteredVersions = versions.snapshots.filter((v) => apiVersion === v.version?.value);
@@ -119,7 +123,7 @@ async function createGetResourceOperationEmitter(context: EmitContext<AAZEmitter
         const aazContext: AAZEmitterContext = {
           program: context.program,
           service: getService(context.program, subgraph.type) || service,
-          sdkContext: sdkContext,
+          tcgcContext: tcgcContext,
           apiVersion: apiVersion,
           tracer,
         };
