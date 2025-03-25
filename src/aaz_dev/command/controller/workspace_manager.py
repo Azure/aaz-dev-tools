@@ -1038,25 +1038,8 @@ class WorkspaceManager:
 
     def _add_command_tree_leaf(self, parent, leaf, name):
         cfg_editor = self.load_cfg_editor_by_command(leaf)
+        self.remove_cfg(cfg_editor)
 
-        # when it's conflict with command group name, generate a unique name
-        if parent.command_groups and name in parent.command_groups:
-            new_name = self.generate_unique_name(*parent.names, name=name)
-            logger.warning(f"Command name conflict with Command Group name: '{' '.join([*parent.names, name])}' : "
-                           f"Use '{' '.join([*parent.names, new_name])}' instead")
-            name = new_name
-
-        if parent.commands and name in parent.commands:
-            assert leaf != parent.commands[name]
-            new_name = self.generate_unique_name(*parent.names, name=name)
-            logger.warning(f"Command name conflict with another Command's: '{' '.join([*parent.names, name])}' : "
-                           f"Use '{' '.join([*parent.names, new_name])}' instead")
-            name = new_name
-
-        if not parent.commands:
-            parent.commands = {}
-        assert name not in parent.commands
-        parent.commands[name] = leaf
         old_names = leaf.names
         if parent != self.ws.command_tree:
             new_cmd_names = [*parent.names, name]
@@ -1064,6 +1047,8 @@ class WorkspaceManager:
             new_cmd_names = [name]
         leaf.names = [*new_cmd_names]
         cfg_editor.rename_command(*old_names, new_cmd_names=new_cmd_names)
+
+        self._add_cfg_editors([cfg_editor])
         return leaf
 
     def generate_to_aaz(self):
