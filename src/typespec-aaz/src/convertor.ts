@@ -193,11 +193,14 @@ function extractHttpRequest(context: AAZOperationEmitterContext, operation: Http
 
   let clientRequestIdName;
   for (const httpProperty of methodParams.properties) {
+    if (!["header", "query", "path"].includes(httpProperty.kind)) {
+      continue;
+    }
     schemaContext = buildSchemaEmitterContext(context, httpProperty);
     const schema = convert2CMDSchema(
       schemaContext,
       httpProperty.property,
-      // httpProperty.options.name,
+      "options" in httpProperty ? httpProperty.options.name : ""
     );
     if (!schema) {
       continue;
@@ -276,7 +279,6 @@ function extractHttpRequest(context: AAZOperationEmitterContext, operation: Http
         {
           ...context,
           supportClsSchema: true,
-          visibility: Visibility.Read,
         },
         body.property,
         getJsonName(context, body.property)
@@ -288,7 +290,6 @@ function extractHttpRequest(context: AAZOperationEmitterContext, operation: Http
           {
             ...context,
             supportClsSchema: true,
-            visibility: Visibility.Read,
           },
           body.type
         )!,
