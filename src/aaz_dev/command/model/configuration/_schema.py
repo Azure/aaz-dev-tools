@@ -972,6 +972,11 @@ class CMDIdentityObjectSchemaBase(CMDObjectSchemaBase):
     TYPE_VALUE = "IdentityObject"
     ARG_TYPE = CMDObjectArgBase
 
+    ignore_specific_args = CMDBooleanField(
+        serialized_name="ignoreSpecificArgs",
+        deserialize_from="ignoreSpecificArgs"
+    )
+
     user_assigned = CMDSchemaField(
         serialized_name="userAssigned",
         deserialize_from="userAssigned"

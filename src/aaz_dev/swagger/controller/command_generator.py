@@ -102,6 +102,7 @@ class _CommandGenerator(ABC):
         command.name = f"{group_name} update"
         return command
 
+    @classmethod
     def generate_specific_update_command(cls, path_item, resource, instance_var, cmd_builder, get_op, patch_op):
         command = CMDCommand()
         command.version = cls.generate_command_version(resource)
@@ -130,7 +131,7 @@ class _CommandGenerator(ABC):
         cls._filter_generic_update_parameters(get_op, patch_op)
 
         command.description = patch_op.description
-        json_update_op = cls._generate_instance_update_operation(patch_op, instance_var)
+        json_update_op = cls._generate_instance_patch_operation(patch_op, instance_var)
         command.operations = [
             get_op,
             json_update_op,
@@ -295,6 +296,17 @@ class _CommandGenerator(ABC):
 
         put_op.http.request.body.json.ref = instance_var
         put_op.http.request.body.json.schema = None
+        return json_update_op
+
+    @staticmethod
+    def _generate_instance_patch_operation(patch_op, instance_var):
+        json_update_op = CMDInstanceUpdateOperation()
+        json_update_op.instance_update = CMDJsonInstanceUpdateAction()
+        json_update_op.instance_update.ref = instance_var
+        json_update_op.instance_update.json = CMDRequestJson()
+        json_update_op.instance_update.json.schema = patch_op.http.request.body.json.schema
+
+        patch_op.http.request.body.json.schema_only = True
         return json_update_op
 
     @staticmethod

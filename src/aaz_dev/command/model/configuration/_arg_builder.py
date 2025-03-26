@@ -197,7 +197,7 @@ class CMDArgBuilder:
                 sub_args.extend(sub_builder.get_args())
 
             self.schema.props = [prop for prop in self.schema.props if prop not in removed]
-            if isinstance(self.schema, CMDIdentityObjectSchema) and (not self._is_update_action or self.schema.action):
+            if isinstance(self.schema, CMDIdentityObjectSchema) and (not self._is_update_action or self.schema.action) and not self.schema.ignore_specific_args:
                 self.add_identity_args(sub_args, sub_ref_args)
 
         if not sub_args:

@@ -745,6 +745,58 @@ class CfgReader:
         return None
 
     @classmethod
+    def trim_schema_by_idx(cls, schema, idx):
+        assert isinstance(idx, list)
+        if not schema or not idx:
+            return
+
+        next_schema = None
+        current_idx = idx[0]
+        remain_idx = idx[1:]
+        if isinstance(schema, CMDObjectSchemaBase):
+            if current_idx == '{}':
+                if schema.additional_props and schema.additional_props.item:
+                    next_schema = schema.additional_props.item
+            elif schema.props:
+                new_props = []
+                for prop in schema.props:
+                    if current_idx == prop.name:
+                        new_props.append(prop)
+                        next_schema = prop
+                schema.props = new_props
+
+            elif schema.discriminators:
+                new_discriminators = []
+                for disc in schema.discriminators:
+                    if current_idx == disc.get_safe_value():
+                        new_discriminators.append(disc)
+                        next_schema = disc
+                schema.discriminators = new_discriminators
+
+        elif isinstance(schema, CMDObjectSchemaDiscriminator):
+            if schema.props:
+                new_props = []
+                for prop in schema.props:
+                    if current_idx == prop.name:
+                        new_props.append(prop)
+                        next_schema = prop
+                schema.props = new_props
+
+            elif schema.discriminators:
+                new_discriminators = []
+                for disc in schema.discriminators:
+                    if current_idx == disc.get_safe_value():
+                        new_discriminators.append(disc)
+                        next_schema = disc
+                schema.discriminators = new_discriminators
+
+        elif isinstance(schema, CMDArraySchemaBase):
+            if current_idx == '[]':
+                next_schema = schema.item
+
+        return cls.trim_schema_by_idx(next_schema, remain_idx)
+
+    @classmethod
     def find_identity_schema_in_command(cls, command):
         for operation in command.operations:
             if isinstance(operation, CMDInstanceUpdateOperation) or isinstance(operation, CMDHttpOperation):

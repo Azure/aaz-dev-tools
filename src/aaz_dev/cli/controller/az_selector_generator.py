@@ -6,7 +6,7 @@ from utils.case import to_camel_case
 
 class AzJsonSelectorGenerator:
 
-    def __init__(self, cmd_ctx, selector):
+    def __init__(self, cmd_ctx, selector, has_patch=False):
         assert isinstance(selector, CMDJsonSubresourceSelector)
         self._cmd_ctx = cmd_ctx
         self._selector = selector
@@ -16,6 +16,7 @@ class AzJsonSelectorGenerator:
         assert not is_selector_variant
 
         self._json = self._selector.json
+        self.has_patch = has_patch
 
     @property
     def cls_name(self):
@@ -27,6 +28,12 @@ class AzJsonSelectorGenerator:
 
     def iter_scopes_for_set(self):
         for scope in self._iter_scopes(is_set=True):
+            yield scope
+
+    def iter_scopes_for_set_json(self):
+        scope_name = 'target'
+        scope_define = "json"
+        for scope in _iter_selector_scopes_by_index_base(self._json, scope_name, scope_define, [], None, self._cmd_ctx, False):
             yield scope
 
     def _iter_scopes(self, is_set=False):

@@ -492,7 +492,7 @@ class AzHttpRequestContentGenerator:
         if not self._json.schema or not isinstance(self._json.schema, (CMDObjectSchema, CMDArraySchema)):
             return
 
-        for scopes in _iter_request_scopes_by_schema_base(self._json.schema, self.BUILDER_NAME, None, self.arg_key, self._cmd_ctx):
+        for scopes in _iter_request_scopes_by_schema_base(self._json.schema, self.BUILDER_NAME, None, self.arg_key, self._cmd_ctx, schema_only=self._json.schema_only):
             yield scopes
 
 
@@ -642,7 +642,7 @@ class AzResponseClsGenerator:
             yield scopes
 
 
-def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd_ctx):
+def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd_ctx, schema_only=False):
     rendered_schemas = []
     search_schemas = {}
     discriminators = []
@@ -653,7 +653,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
             discriminators.extend(schema.discriminators)
 
         props = schema.props or []
-        if isinstance(schema, CMDIdentityObjectSchemaBase) and schema.user_assigned and schema.system_assigned:
+        if isinstance(schema, CMDIdentityObjectSchemaBase) and schema.user_assigned and schema.system_assigned and not schema.ignore_specific_args:
             props += [schema.user_assigned, schema.system_assigned]
 
         if props and schema.additional_props:
@@ -671,7 +671,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
             for s in props:
                 s_name = s.name
                 s_typ, s_typ_kwargs, cls_builder_name = render_schema(s, cmd_ctx.update_clses, s_name)
-                if s.arg:
+                if s.arg and not schema_only:
                     # current schema linked with argument
                     s_arg_key, hide = cmd_ctx.get_argument(s.arg)
                     if hide:
@@ -684,7 +684,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
                 has_enum_argument = False
                 if hasattr(s, "enum") and isinstance(s.enum, CMDSchemaEnum):
                     for item in s.enum.items:
-                        if item.arg:
+                        if item.arg and not schema_only:
                             # enum item linked with argument
                             item_arg_key, hide = cmd_ctx.get_argument(item.arg)
                             if hide:
@@ -699,7 +699,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
                                 (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
                             )
 
-                if not has_enum_argument:
+                if not has_enum_argument or schema_only:
                     r_key = s_arg_key.replace(arg_key, '')
                     if not r_key:
                         r_key = '.' if s.required else None  # which means if the parent exist, fill it
@@ -751,7 +751,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
             for s in schema.props:
                 s_name = s.name
                 s_typ, s_typ_kwargs, cls_builder_name = render_schema(s, cmd_ctx.update_clses, s_name)
-                if s.arg:
+                if s.arg and not schema_only:
                     # current schema linked with argument
                     s_arg_key, hide = cmd_ctx.get_argument(s.arg)
                     if hide:
@@ -764,7 +764,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
                 has_enum_argument = False
                 if hasattr(s, "enum") and isinstance(s.enum, CMDSchemaEnum):
                     for item in s.enum.items:
-                        if item.arg:
+                        if item.arg and not schema_only:
                             # enum item linked with argument
                             item_arg_key, hide = cmd_ctx.get_argument(item.arg)
                             if hide:
@@ -779,7 +779,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
                                 (s_name, s_typ, is_const, const_value, r_key, s_typ_kwargs, cls_builder_name)
                             )
 
-                if not has_enum_argument:
+                if not has_enum_argument or schema_only:
                     r_key = s_arg_key.replace(arg_key, '')
                     if not r_key:
                         r_key = '.' if s.required else None
@@ -831,7 +831,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
             s_name = '_elements'
         else:
             s_scope_define = f"{scope_define}.{s_name}"
-        for scopes in _iter_request_scopes_by_schema_base(s, to_snake_case(s_name), s_scope_define, s_arg_key, cmd_ctx):
+        for scopes in _iter_request_scopes_by_schema_base(s, to_snake_case(s_name), s_scope_define, s_arg_key, cmd_ctx, schema_only):
             yield scopes
 
     for disc in discriminators:
@@ -841,7 +841,7 @@ def _iter_request_scopes_by_schema_base(schema, name, scope_define, arg_key, cmd
 
         disc_scope_define = scope_define + "{" + key_name + ":" + key_value + "}"
         disc_arg_key = arg_key
-        for scopes in _iter_request_scopes_by_schema_base(disc, disc_name, disc_scope_define, disc_arg_key, cmd_ctx):
+        for scopes in _iter_request_scopes_by_schema_base(disc, disc_name, disc_scope_define, disc_arg_key, cmd_ctx, schema_only):
             yield scopes
 
 
