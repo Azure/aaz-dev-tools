@@ -3,17 +3,18 @@ import {
   emitFile,
   ignoreDiagnostics,
   listServices,
-  projectProgram,
   Program,
   resolvePath,
+  compilerAssert,
+  getService,
 } from "@typespec/compiler";
-
-import { buildVersionProjections } from "@typespec/versioning";
-import { HttpService, getAllHttpServices, reportIfNoRoutes } from "@typespec/http";
+import { unsafe_mutateSubgraphWithNamespace, } from "@typespec/compiler/experimental";
+import { getVersioningMutators } from "@typespec/versioning";
+import { HttpService, getHttpService, reportIfNoRoutes } from "@typespec/http";
 import { getResourcePath, swaggerResourcePathToResourceId, } from "./utils.js";
 import { AAZResourceSchema } from "./types.js";
-import { AAZEmitterOptions, getTracer } from "./lib.js";
-import { createSdkContext } from "@azure-tools/typespec-client-generator-core";
+import { AAZEmitterOptions, getTracer, reportDiagnostic } from "./lib.js";
+import { createTCGCContext } from "@azure-tools/typespec-client-generator-core";
 import { AAZEmitterContext } from "./context.js";
 import { retrieveAAZOperation } from "./convertor.js";
 
@@ -46,14 +47,15 @@ function createListResourceEmitter(context: EmitContext<AAZEmitterOptions>) {
       services.push({ type: context.program.getGlobalNamespaceType() });
     }
     for (const service of services) {
-      const versions = buildVersionProjections(context.program, service.type);
-      for (const record of versions) {
-        let program = context.program;
-        if (record.projections.length > 0) {
-          program = projectProgram(context.program, record.projections);
-        }
-        const httpService = ignoreDiagnostics(getAllHttpServices(program))[0]
-        emitService(httpService, program, record.version!);
+      const versions = getVersioningMutators(context.program, service.type);
+      if (versions === undefined || versions.kind === "transient") {
+        continue;
+      }
+      for (const record of versions.snapshots) {
+        const subgraph = unsafe_mutateSubgraphWithNamespace(context.program, [record.mutator], service.type);
+        compilerAssert(subgraph.type.kind === "Namespace", "Should not have mutated to another type");
+        const httpService = ignoreDiagnostics(getHttpService(context.program, (getService(context.program, subgraph.type) || service).type));
+        emitService(httpService, context.program, record.version?.value);
       }
     }
 
@@ -84,13 +86,12 @@ function createListResourceEmitter(context: EmitContext<AAZEmitterOptions>) {
 }
 
 async function createGetResourceOperationEmitter(context: EmitContext<AAZEmitterOptions>) {
-  const sdkContext = await createSdkContext(context, "@azure-tools/typespec-aaz");
+  const tcgcContext = createTCGCContext(context.program, "@azure-tools/typespec-aaz");
   const tracer = getTracer(context.program);
   tracer.trace("options", JSON.stringify(context.options, null, 2));
-  const apiVersion = sdkContext.apiVersion!;
+  const apiVersion = context.options["api-version"]!;
   tracer.trace("apiVersion", apiVersion);
 
-  let projectedProgram: Program;
   const resOps: Record<string, AAZResourceSchema> = {};
   context.options?.resources?.forEach((id) => {
     resOps[id] = {
@@ -102,20 +103,27 @@ async function createGetResourceOperationEmitter(context: EmitContext<AAZEmitter
 
   async function getResourcesOperations() {
     const services = listServices(context.program);
+    if (services.length === 0) {
+      services.push({ type: context.program.getGlobalNamespaceType() });
+    }
     for (const service of services) {
       // currentService = service;
-      const versions = buildVersionProjections(context.program, service.type).filter(
-        (v) => apiVersion === v.version
-      );
-      for (const record of versions) {
-        projectedProgram = context.program;
-        if (record.projections.length > 0) {
-          projectedProgram = projectProgram(context.program, record.projections);
-        }
+      const versions = getVersioningMutators(context.program, service.type);
+      if (versions === undefined || versions.kind === "transient") {
+        reportDiagnostic(context.program, {
+          code: "invalid-program-versions",
+          target: service.type,
+        });
+        continue;
+      }
+      const filteredVersions = versions.snapshots.filter((v) => apiVersion === v.version?.value);
+      for (const record of filteredVersions) {
+        const subgraph = unsafe_mutateSubgraphWithNamespace(context.program, [record.mutator], service.type);
+        compilerAssert(subgraph.type.kind === "Namespace", "Should not have mutated to another type");
         const aazContext: AAZEmitterContext = {
-          program: projectedProgram,
-          service: service,
-          sdkContext: sdkContext,
+          program: context.program,
+          service: getService(context.program, subgraph.type) || service,
+          tcgcContext: tcgcContext,
           apiVersion: apiVersion,
           tracer,
         };
@@ -135,11 +143,11 @@ async function createGetResourceOperationEmitter(context: EmitContext<AAZEmitter
   return { getResourcesOperations };
 
   function emitResourceOps(context: AAZEmitterContext) {
-    const services = ignoreDiagnostics(getAllHttpServices(context.program));
-    const operations = services[0].operations;
-    reportIfNoRoutes(projectedProgram, operations);
+    const httpService = ignoreDiagnostics(getHttpService(context.program, context.service.type));
+    const routes = httpService.operations;
+    reportIfNoRoutes(context.program, routes);
 
-    operations.forEach((op) => {
+    routes.forEach((op) => {
       const resourcePath = getResourcePath(context.program, op);
       const resourceId = swaggerResourcePathToResourceId(resourcePath);
       if (resourceId in resOps) {
