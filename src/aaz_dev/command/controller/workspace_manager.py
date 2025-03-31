@@ -333,7 +333,7 @@ class WorkspaceManager:
                     return True
         return False
 
-    def add_cfg(self, cfg_editor, aaz_ref=None):
+    def _set_cfg_editor(self, cfg_editor, aaz_ref=None):
         cfg_editor.deleted = False
         for resource in cfg_editor.resources:
             self._cfg_editors[resource.id] = cfg_editor
@@ -351,7 +351,7 @@ class WorkspaceManager:
                             or self._build_command_tree_leaf_from_aaz_ref(node, name, aaz_ref)
             self._unchecked_add_command_tree_leaf(node, name, command, existed_leaf=reusable_leaf)
 
-    def remove_cfg(self, cfg_editor):
+    def _unset_cfg_editor(self, cfg_editor):
         cfg_editor.deleted = True
         for resource in cfg_editor.resources:
             self._cfg_editors[resource.id] = cfg_editor
@@ -694,11 +694,11 @@ class WorkspaceManager:
             cfg_editor.rename_command_group(*cg_names, new_cg_names=new_cg_names)
         # command rename
         for cmd_names, command in cfg_editor.iter_commands():
-            cmd_names, merged_cfg_editor = self._check_and_handle_command_tree_leaf_conflict(*cmd_names, cfg_editor=cfg_editor)
+            cmd_names, merged_cfg_editor = self._check_and_handle_leaf_name_conflict(*cmd_names, cfg_editor=cfg_editor)
             if merged_cfg_editor:
-                self.add_cfg(merged_cfg_editor, aaz_ref=aaz_ref)
+                self._set_cfg_editor(merged_cfg_editor, aaz_ref=aaz_ref)
                 return merged_cfg_editor
-        self.add_cfg(cfg_editor, aaz_ref=aaz_ref)
+        self._set_cfg_editor(cfg_editor, aaz_ref=aaz_ref)
         return cfg_editor
 
     def reload_resources_by_swagger(self, resources):
@@ -805,7 +805,7 @@ class WorkspaceManager:
         # remove old cfg editor
         for resource_id, reload_resource in reload_resource_map.items():
             cfg_editor = reload_resource['cfg_editor']
-            self.remove_cfg(cfg_editor)
+            self._unset_cfg_editor(cfg_editor)
 
         # add cfg_editors
         self._add_cfg_editors(new_cfg_editors)
@@ -878,7 +878,7 @@ class WorkspaceManager:
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
         if not cfg_editor:
             return False
-        self.remove_cfg(cfg_editor)
+        self._unset_cfg_editor(cfg_editor)
         return True
 
     def list_commands_by_resource(self, resource_id, version):
@@ -899,9 +899,9 @@ class WorkspaceManager:
             plus_resource_id, plus_resource_version)
         merged_cfg_editor = main_cfg_editor.merge(plus_cfg_editor)
         if merged_cfg_editor:
-            self.remove_cfg(plus_cfg_editor)
-            self.remove_cfg(main_cfg_editor)
-            self.add_cfg(merged_cfg_editor)
+            self._unset_cfg_editor(plus_cfg_editor)
+            self._unset_cfg_editor(main_cfg_editor)
+            self._set_cfg_editor(merged_cfg_editor)
             return True
         return False
 
@@ -912,10 +912,10 @@ class WorkspaceManager:
             raise exceptions.InvalidAPIUsage(
                 f"Resource not exist: resource_id={resource_id} version={version}")
 
-        self.remove_cfg(cfg_editor)
+        self._unset_cfg_editor(cfg_editor)
         cfg_editor.build_subresource_commands_by_arg_var(
             resource_id, arg_var, cg_names, ref_args_options)
-        self.add_cfg(cfg_editor)
+        self._set_cfg_editor(cfg_editor)
 
     def remove_subresource(self, resource_id, version, subresource):
         cfg_editor = self.load_cfg_editor_by_resource(resource_id, version)
@@ -925,10 +925,10 @@ class WorkspaceManager:
             raise exceptions.InvalidAPIUsage(
                 f"Invalid subresource: '{subresource}'")
 
-        self.remove_cfg(cfg_editor)
+        self._unset_cfg_editor(cfg_editor)
         removed_commands = cfg_editor.remove_subresource_commands(
             resource_id, version, subresource)
-        self.add_cfg(cfg_editor)
+        self._set_cfg_editor(cfg_editor)
         return len(removed_commands) > 0
 
     def list_commands_by_subresource(self, resource_id, version, subresource):
@@ -1024,18 +1024,18 @@ class WorkspaceManager:
         return node
 
     def _add_command_tree_leaf(self, parent, name, cfg_editor, existed_leaf=None):
-        names, new_cfg_editor = self._check_and_handle_command_tree_leaf_conflict(*parent.names, name, cfg_editor=cfg_editor)
+        names, new_cfg_editor = self._check_and_handle_leaf_name_conflict(*parent.names, name, cfg_editor=cfg_editor)
         if new_cfg_editor:
             # Merge Successfully
-            self.remove_cfg(cfg_editor)
-            self.add_cfg(new_cfg_editor)
+            self._unset_cfg_editor(cfg_editor)
+            self._set_cfg_editor(new_cfg_editor)
             return self.find_command_tree_leaf(*parent.names, name)
         command = cfg_editor.find_command(*names)
         assert command is not None
 
         return self._unchecked_add_command_tree_leaf(parent, names[-1], command, existed_leaf=existed_leaf)
 
-    def _check_and_handle_command_tree_leaf_conflict(self, *names, cfg_editor):
+    def _check_and_handle_leaf_name_conflict(self, *names, cfg_editor):
         if self.find_command_tree_node(*names):
             # command name conflicted with existing command group name
             new_name = self.generate_unique_name(*names[:-1], name=names[-1])
@@ -1050,7 +1050,7 @@ class WorkspaceManager:
                 main_cfg_editor = self.load_cfg_editor_by_command(cur_cmd)
                 merged_cfg_editor = main_cfg_editor.merge(cfg_editor)
                 if merged_cfg_editor:
-                    self.remove_cfg(main_cfg_editor)
+                    self._unset_cfg_editor(main_cfg_editor)
                     return names, merged_cfg_editor
             new_name = self.generate_unique_name(*names[:-1], name=names[-1])
             new_names = [*names[:-1], new_name]
@@ -1169,8 +1169,8 @@ class WorkspaceManager:
                 updated_cfgs = [(editor, aaz_ref)]
 
         for editor, aaz_ref in updated_cfgs:
-            self.remove_cfg(editor)
-            self.add_cfg(editor, aaz_ref)
+            self._unset_cfg_editor(editor)
+            self._set_cfg_editor(editor, aaz_ref)
 
     def find_similar_args(self, *cmd_names, arg):
         assert isinstance(arg, CMDArg)
