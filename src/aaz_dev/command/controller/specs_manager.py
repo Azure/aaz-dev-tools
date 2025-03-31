@@ -390,7 +390,7 @@ class AAZSpecsManager:
 
     @staticmethod
     def render_command_tree_readme(tree):
-        assert isinstance(tree, CMDSpecsCommandTree | CMDSpecsPartialCommandTree)
+        assert isinstance(tree, (CMDSpecsCommandTree, CMDSpecsPartialCommandTree))
         tmpl = get_templates()['tree']
         return tmpl.render(tree=tree)
 
