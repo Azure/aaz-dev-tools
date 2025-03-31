@@ -593,16 +593,13 @@ class WorkspaceManager:
         if leaf.names == new_leaf_names:
             return
 
-        parent = self.find_command_tree_node(*leaf.names[:-1])
-        name = leaf.names[-1]
-        if not parent or not parent.commands or name not in parent.commands or leaf != parent.commands[name]:
-            raise exceptions.ResourceConflict(
-                f"Command Tree leaf not exist: '{' '.join(leaf.names)}")
-
-        self._pop_command_tree_leaf(parent, name)
-
         parent = self.create_command_tree_nodes(*new_leaf_names[:-1])
-        return self._add_command_tree_leaf(parent, leaf, new_leaf_names[-1])
+        new_leaf_name = new_leaf_names[-1]
+
+        leaf = self._checked_pop_command_tree_leaf(*leaf_names)
+        cfg_editor = self.load_cfg_editor_by_command(leaf)
+        cfg_editor.rename_command(*leaf_names, new_cmd_names=new_leaf_names)
+        return self._add_command_tree_leaf(parent, new_leaf_name, cfg_editor, existed_leaf=leaf)
 
     def generate_unique_name(self, *node_names, name):
         node = self.find_command_tree_node(*node_names)
@@ -987,6 +984,14 @@ class WorkspaceManager:
                     commands.append(leaf)
         return commands
 
+    def _checked_pop_command_tree_leaf(self, *leaf_names):
+        parent = self.find_command_tree_node(*leaf_names[:-1])
+        name = leaf_names[-1]
+        if not parent or not parent.commands or name not in parent.commands:
+            raise exceptions.ResourceConflict(
+                f"Command Tree leaf not exist: '{' '.join(leaf_names)}")
+        return parent.commands.pop(name)
+
     @staticmethod
     def _pop_command_tree_node(parent, name):
         if not parent.command_groups or name not in parent.command_groups:
@@ -1033,22 +1038,55 @@ class WorkspaceManager:
                 self._add_command_tree_node(node, sub_node, sub_name)
         if commands:
             for sub_name, sub_leaf in commands.items():
-                self._add_command_tree_leaf(node, sub_leaf, sub_name)
+                cfg_editor = self.load_cfg_editor_by_command(sub_leaf)
+                cfg_editor.rename_command(*sub_leaf.names, new_cmd_names=[*node.names, sub_name])
+                self._add_command_tree_leaf(node, sub_name, cfg_editor, existed_leaf=sub_leaf)
         return node
 
-    def _add_command_tree_leaf(self, parent, leaf, name):
-        cfg_editor = self.load_cfg_editor_by_command(leaf)
-        self.remove_cfg(cfg_editor)
+    def _add_command_tree_leaf(self, parent, name, cfg_editor, existed_leaf=None):
+        cmd_names = [*parent.names, name]
+        command = cfg_editor.find_command(*cmd_names)
+        assert command is not None
 
-        old_names = leaf.names
-        if parent != self.ws.command_tree:
-            new_cmd_names = [*parent.names, name]
+        if self.find_command_tree_node(*cmd_names):
+            # command name conflicted with existing command group name
+            new_name = self.generate_unique_name(
+                *parent.names, name=name)
+            cmd_names = [*parent.names, new_name]
+            cfg_editor.rename_command(*parent.names, name, new_cmd_names=cmd_names)
+        elif cur_cmd := self.find_command_tree_leaf(*cmd_names):
+            # command name conflict with existing one's
+            if existed_leaf and cur_cmd.version == existed_leaf.version:
+                main_cfg_editor = self.load_cfg_editor_by_command(cur_cmd)
+                merged_cfg_editor = main_cfg_editor.merge(cfg_editor)
+                if merged_cfg_editor:
+                    self.remove_cfg(cfg_editor)
+                    self.remove_cfg(main_cfg_editor)
+                    self.add_cfg(merged_cfg_editor)
+                    return self.find_command_tree_leaf(*cur_cmd.names)
+            new_name = self.generate_unique_name(
+                *parent.names, name=name)
+            cmd_names = [*parent.names, new_name]
+            cfg_editor.rename_command(*parent.names, name, new_cmd_names=cmd_names)
+
+        name = cmd_names[-1]
+        if existed_leaf:
+            existed_leaf.names = cmd_names
+            leaf = existed_leaf
         else:
-            new_cmd_names = [name]
-        leaf.names = [*new_cmd_names]
-        cfg_editor.rename_command(*old_names, new_cmd_names=new_cmd_names)
+            leaf = CMDCommandTreeLeaf({
+                "names": [*cmd_names],
+                "stage": parent.stage
+            })
+            self.generate_command_help(leaf, command.description, cmd_names)
+            leaf.version = command.version
+            leaf.resources = [CMDResource(
+                r.to_primitive()) for r in command.resources]
 
-        self._add_cfg_editors([cfg_editor])
+        if not parent.commands:
+            parent.commands = {}
+        assert name not in parent.commands
+        parent.commands[name] = leaf
         return leaf
 
     def generate_to_aaz(self):
