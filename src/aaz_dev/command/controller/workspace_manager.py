@@ -349,7 +349,7 @@ class WorkspaceManager:
                 assert name not in node.command_groups
             reusable_leaf = self._reusable_leaves.pop(tuple(cmd_names), None) \
                             or self._build_command_tree_leaf_from_aaz_ref(node, name, aaz_ref)
-            self._add_command_tree_leaf_inner(node, name, command, existed_leaf=reusable_leaf)
+            self._unchecked_add_command_tree_leaf(node, name, command, existed_leaf=reusable_leaf)
 
     def remove_cfg(self, cfg_editor):
         cfg_editor.deleted = True
@@ -1026,18 +1026,20 @@ class WorkspaceManager:
     def _add_command_tree_leaf(self, parent, name, cfg_editor, existed_leaf=None):
         names, new_cfg_editor = self._check_and_handle_command_tree_leaf_conflict(*parent.names, name, cfg_editor=cfg_editor)
         if new_cfg_editor:
+            # Merge Successfully
             self.remove_cfg(cfg_editor)
             self.add_cfg(new_cfg_editor)
-        command = new_cfg_editor.find_command(*names)
+            return self.find_command_tree_leaf(*parent.names, name)
+        command = cfg_editor.find_command(*names)
         assert command is not None
 
-        return self._add_command_tree_leaf_inner(parent, names[-1], command, existed_leaf=existed_leaf)
+        return self._unchecked_add_command_tree_leaf(parent, names[-1], command, existed_leaf=existed_leaf)
 
     def _check_and_handle_command_tree_leaf_conflict(self, *names, cfg_editor):
         if self.find_command_tree_node(*names):
             # command name conflicted with existing command group name
             new_name = self.generate_unique_name(*names[:-1], name=names[-1])
-            new_names = [names[:-1], new_name]
+            new_names = [*names[:-1], new_name]
             cfg_editor.rename_command(*names, new_cmd_names=new_names)
             return new_names, None
         elif cur_cmd := self.find_command_tree_leaf(*names):
@@ -1051,12 +1053,12 @@ class WorkspaceManager:
                     self.remove_cfg(main_cfg_editor)
                     return names, merged_cfg_editor
             new_name = self.generate_unique_name(*names[:-1], name=names[-1])
-            new_names = [names[:-1], new_name]
+            new_names = [*names[:-1], new_name]
             cfg_editor.rename_command(*names, new_cmd_names=new_names)
             return new_names, None
         return names, None
 
-    def _add_command_tree_leaf_inner(self, parent, name, command, *, existed_leaf=None):
+    def _unchecked_add_command_tree_leaf(self, parent, name, command, *, existed_leaf=None):
         cmd_names = [*parent.names, name]
         if existed_leaf:
             existed_leaf.names = cmd_names
