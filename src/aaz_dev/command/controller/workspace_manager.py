@@ -347,36 +347,9 @@ class WorkspaceManager:
             assert name not in node.commands
             if node.command_groups:
                 assert name not in node.command_groups
-            reusable_leaf = self._reusable_leaves.pop(tuple(cmd_names), None)
-            if reusable_leaf:
-                new_cmd = reusable_leaf
-            elif aaz_ref and (ref_v_name := aaz_ref.get(' '.join(cmd_names), None)) and (aaz_leaf := self.aaz_specs.find_command(*cmd_names)):
-                # reference from aaz specs
-                ref_v = None
-                for v in aaz_leaf.versions:
-                    if v.name == ref_v_name:
-                        ref_v = v
-                        break
-                new_cmd = CMDCommandTreeLeaf({
-                    "names": [*cmd_names],
-                    "stage": ref_v.stage if ref_v else node.stage,
-                    "help": aaz_leaf.help.to_primitive(),
-                })
-                if ref_v and ref_v.examples:
-                    new_cmd.examples = []
-                    for example in ref_v.examples:
-                        new_cmd.examples.append(
-                            CMDCommandExample(example.to_primitive()))
-            else:
-                new_cmd = CMDCommandTreeLeaf({
-                    "names": [*cmd_names],
-                    "stage": node.stage
-                })
-                self.generate_command_help(new_cmd, command.description, cmd_names)
-            new_cmd.version = command.version
-            new_cmd.resources = [CMDResource(
-                r.to_primitive()) for r in command.resources]
-            node.commands[name] = new_cmd
+            reusable_leaf = self._reusable_leaves.pop(tuple(cmd_names), None) \
+                            or self._get_leaf_from_aaz_ref(node, name, aaz_ref)
+            self._add_command_tree_leaf_inner(node, name, command, existed_leaf=reusable_leaf)
 
     def remove_cfg(self, cfg_editor):
         cfg_editor.deleted = True
@@ -1056,7 +1029,7 @@ class WorkspaceManager:
             cfg_editor.rename_command(*parent.names, name, new_cmd_names=cmd_names)
         elif cur_cmd := self.find_command_tree_leaf(*cmd_names):
             # command name conflict with existing one's
-            if existed_leaf and cur_cmd.version == existed_leaf.version:
+            if cur_cmd.version == command.version:
                 main_cfg_editor = self.load_cfg_editor_by_command(cur_cmd)
                 merged_cfg_editor = main_cfg_editor.merge(cfg_editor)
                 if merged_cfg_editor:
@@ -1069,7 +1042,33 @@ class WorkspaceManager:
             cmd_names = [*parent.names, new_name]
             cfg_editor.rename_command(*parent.names, name, new_cmd_names=cmd_names)
 
-        name = cmd_names[-1]
+        return self._add_command_tree_leaf_inner(parent, cmd_names[-1], command, existed_leaf=existed_leaf)
+
+    def _get_leaf_from_aaz_ref(self, parent, name, aaz_ref):
+        cmd_names = [*parent.names, name]
+        if (ref_v_name := aaz_ref.get(' '.join(cmd_names), None)) \
+                and (aaz_leaf := self.aaz_specs.find_command(*cmd_names)):
+            # reference from aaz specs
+            ref_v = None
+            for v in aaz_leaf.versions:
+                if v.name == ref_v_name:
+                    ref_v = v
+                    break
+            leaf = CMDCommandTreeLeaf({
+                "names": [*cmd_names],
+                "stage": ref_v.stage if ref_v else parent.stage,
+                "help": aaz_leaf.help.to_primitive(),
+            })
+            if ref_v and ref_v.examples:
+                leaf.examples = []
+                for example in ref_v.examples:
+                    leaf.examples.append(
+                        CMDCommandExample(example.to_primitive()))
+            return leaf
+        return None
+
+    def _add_command_tree_leaf_inner(self, parent, name, command, *, existed_leaf=None):
+        cmd_names = [*parent.names, name]
         if existed_leaf:
             existed_leaf.names = cmd_names
             leaf = existed_leaf
@@ -1079,13 +1078,16 @@ class WorkspaceManager:
                 "stage": parent.stage
             })
             self.generate_command_help(leaf, command.description, cmd_names)
-            leaf.version = command.version
-            leaf.resources = [CMDResource(
-                r.to_primitive()) for r in command.resources]
+
+        leaf.version = command.version
+        leaf.resources = [CMDResource(
+            r.to_primitive()) for r in command.resources]
 
         if not parent.commands:
             parent.commands = {}
         assert name not in parent.commands
+        if parent.command_groups:
+            assert name not in parent.command_groups
         parent.commands[name] = leaf
         return leaf
 
