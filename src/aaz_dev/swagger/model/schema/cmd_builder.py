@@ -97,13 +97,8 @@ class CMDBuilder:
         return False
 
     def build_schema(self, schema):
-        schema_type = getattr(schema, 'type', None)  # according to the swagger spec, the type is any if not defined
-        if schema_type is None and not getattr(schema, "properties", None):
-            if self.in_base:
-                model = CMDAnyTypeSchemaBase()
-            else:
-                model = CMDAnyTypeSchema()
-        elif schema_type == "string":
+        schema_type = getattr(schema, 'type', None)
+        if schema_type == "string":
             if schema.format is None or schema.format == "uri":
                 if self.in_base:
                     model = CMDStringSchemaBase()
@@ -228,6 +223,11 @@ class CMDBuilder:
             model = self.build_schema(schema.all_of[0])
         elif getattr(schema, "ref_instance", None) is not None:
             model = self.build_schema(schema.ref_instance)
+        elif schema_type is None:  # according to the swagger spec, the type is any if not defined
+            if self.in_base:
+                model = CMDAnyTypeSchemaBase()
+            else:
+                model = CMDAnyTypeSchema()
         else:
             raise exceptions.InvalidSwaggerValueError(
                 f"type is not supported", key=getattr(schema, "traces", None), value=[schema_type])
