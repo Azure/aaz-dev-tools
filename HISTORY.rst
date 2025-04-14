@@ -4,7 +4,7 @@ Release History
 ===============
 4.2.0
 ++++++
-* Fix issue caused by `or` operation in `isinstance`` (#475)
+* Fix issue caused by `or` operation in `isinstance` (#475)
 * Fix issue caused by properties of not any type (#477)
 * Support merge when renaming a command (#474)
 * Add auto-gen aaz cmds documentation (#478)
