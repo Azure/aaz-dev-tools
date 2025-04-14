@@ -134,9 +134,9 @@ aaz-dev run --cli-path {path to azure-cli} --cli-extension-path {path to azure-c
 
 ![start with swagger module path](../../assets/images/setup_and_run/swagger_module_start.png)
 
-## Generate `aaz` model and code using cmds
+## Generate `aaz` model and commands in scripts
 
-### 1. Generate `aaz` command model
+### 1. Generate `aaz` model
 
 The following cmd can be used to generate `aaz` command model directly in cmd shell.
 
