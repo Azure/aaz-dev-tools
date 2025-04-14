@@ -2,6 +2,17 @@
 
 Release History
 ===============
+4.2.0
+++++++
+* Fix issue caused by `or` operation in `isinstance` (#475)
+* Fix issue caused by properties of not any type (#477)
+* Support merge when renaming a command (#474)
+* Add auto-gen aaz cmds documentation (#478)
+* typespec: update tsp compiler to 0.67.0 (#468)
+* typespec: fix clientRequestIdName in header param and add uuid format parsing (#467)
+* typespec: add support for `any` type of cmd schema (#469)
+* typespec: adjust ref class name to camel case (#472)
+
 4.1.0
 ++++++
 * Fix tag parse and aaz model saving for `aaz-dev command-model generate-from-swagger` and `aaz-dev cli generate-by-swagger-tag` (#444)
