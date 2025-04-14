@@ -133,3 +133,37 @@ aaz-dev run --cli-path {path to azure-cli} --cli-extension-path {path to azure-c
 ```
 
 ![start with swagger module path](../../assets/images/setup_and_run/swagger_module_start.png)
+
+## Generate `aaz` model and code using cmds
+
+### 1. Generate `aaz` command model
+
+The following cmd can be used to generate `aaz` command model directly in cmd shell.
+
+```bash
+ aaz-dev command-model generate-from-swagger -a {path to aaz} --sm {path to swagger module} -m {swagger module name} --rp {resource provider name} --swagger-tag {swagger tag with input files specified}
+```
+
+for example, generating `aaz` command model for liftrpinecone under tag `package-2024-10-22-preview`:
+
+```bash
+aaz-dev command-model generate-from-swagger -a ./aaz --sm ./azure-rest-api-specs/specification/liftrpinecone -m liftrpinecone --rp Pinecone.VectorDb --swagger-tag package-2024-10-22-preview
+```
+
+And developers can check `aaz` folder to see the newly generated command models for `liftrpinecone`.
+
+### 2. Generate `aaz` commands
+
+Based on the `aaz` model generated in last step, the following cmd can be used to generate `aaz` commands into cli extension directly in cmd shell.
+
+```bash
+aaz-dev cli generate-by-swagger-tag -a {path to aaz} -e {path to azure-cli-extensions} --name {target extension module name} --sm {path to swagger module} --rp {resource provider name} --tag {swagger tag with input files specified} --profile {chosen cmd profile}
+```
+
+For example, generate `aaz` command under cli extension module `myliftrpinecone` for swagger module liftrpinecone under tag `package-2024-10-22-preview` and the `latest` profile:
+
+```bash
+aaz-dev cli generate-by-swagger-tag -a ./aaz -e ./azure-cli-extensions --name myliftrpinecone --sm ./azure-rest-api-specs/specification/liftrpinecone --rp Pinecone.VectorDb --tag package-2024-10-22-preview --profile latest
+```
+
+And developers can check `azure-cli-extensions` folder to see the newly generated commands for swagger module liftrpinecone under cli extension module `myliftrpinecone`.
