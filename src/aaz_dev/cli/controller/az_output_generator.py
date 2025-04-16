@@ -3,16 +3,17 @@ from command.model.configuration._output import CMDObjectOutput, CMDArrayOutput,
 
 class AzOutputGenerator:
 
-    def __init__(self, output, cmd_ctx):
+    def __init__(self, output, cmd_ctx, is_show_command):
         self._output = output
         self._cmd_ctx = cmd_ctx
+        self._is_show_command = is_show_command
 
     @property
     def ref(self):
         if isinstance(self._output, (CMDObjectOutput, CMDArrayOutput, CMDStringOutput)) and self._output.ref:
             ref, is_selector = self._cmd_ctx.get_variant(self._output.ref)
             if is_selector:
-                return f'{ref}.get()'
+                return f'{ref}.required()' if self._is_show_command else f'{ref}.get()'
             else:
                 return ref
         return None

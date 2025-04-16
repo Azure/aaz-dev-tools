@@ -207,7 +207,8 @@ class AzCommandGenerator:
         self.paging = False
         if self.cmd.cfg.outputs:
             for output in self.cmd.cfg.outputs:
-                output_generator = AzOutputGenerator(output, self.cmd_ctx)
+                is_show_command = True if self.cmd.names[-1] == "show" else False
+                output_generator = AzOutputGenerator(output, self.cmd_ctx, is_show_command)
                 self.outputs.append(output_generator)
                 if output_generator.next_link:
                     self.paging = True
