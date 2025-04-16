@@ -12,7 +12,7 @@ class AzOutputGenerator:
         if isinstance(self._output, (CMDObjectOutput, CMDArrayOutput, CMDStringOutput)) and self._output.ref:
             ref, is_selector = self._cmd_ctx.get_variant(self._output.ref)
             if is_selector:
-                return f'{ref}.required()'
+                return f'{ref}.get()'
             else:
                 return ref
         return None
