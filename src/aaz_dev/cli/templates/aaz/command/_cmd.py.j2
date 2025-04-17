@@ -212,7 +212,7 @@ class {{ leaf.cls_name }}(
         {%- for op in leaf.operations %}
         {%- if op.name in ("pre_instance_update", "post_instance_update", "post_instance_create")  %}
         {%- if op.is_selector_variant %}
-        self.{{ op.name }}({{ op.variant_key }}.required())
+        self.{{ op.name }}({{ op.variant_key }}.get())
         {%- else %}
         self.{{ op.name }}({{ op.variant_key }})
         {%- endif %}
@@ -635,7 +635,7 @@ class {{ leaf.cls_name }}(
 
         def __call__(self, *args, **kwargs):
             {%- if op.is_selector_variant %}
-            self.{{ op.HANDLER_NAME }}({{ op.variant_key }}.required())
+            self.{{ op.HANDLER_NAME }}({{ op.variant_key }}.get())
             {%- else %}
             self.{{ op.HANDLER_NAME }}({{ op.variant_key }})
             {%- endif %}
@@ -725,7 +725,7 @@ class {{ leaf.cls_name }}(
         def __call__(self, *args, **kwargs):
             self._update_instance_by_generic(
                 {%- if op.is_selector_variant %}
-                {{ op.variant_key }}.required(),
+                {{ op.variant_key }}.get(),
                 {%- else %}
                 {{ op.variant_key }},
                 {%- endif %}
