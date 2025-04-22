@@ -1,0 +1,12 @@
+{
+  "type": "string",
+  "enum": {
+    "items": [
+      {
+        "value": "AzureVM"
+      }
+    ]
+  },
+  "name": "targetProp",
+  "required": true
+}

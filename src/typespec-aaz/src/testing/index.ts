@@ -1,8 +1,10 @@
-import { resolvePath } from "@typespec/compiler";
-import { createTestLibrary, TypeSpecTestLibrary } from "@typespec/compiler/testing";
-import { fileURLToPath } from "url";
+import {
+  createTestLibrary,
+  findTestPackageRoot,
+  TypeSpecTestLibrary,
+} from "@typespec/compiler/testing";
 
 export const TypespecAazTestLibrary: TypeSpecTestLibrary = createTestLibrary({
   name: "@azure-tools/typespec-aaz",
-  packageRoot: resolvePath(fileURLToPath(import.meta.url), "../../../../"),
+  packageRoot: await findTestPackageRoot(import.meta.url),
 });

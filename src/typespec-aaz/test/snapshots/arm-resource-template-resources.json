@@ -1,0 +1,264 @@
+[
+  {
+    "statusCode": [
+      200
+    ],
+    "description": "Azure operation completed successfully.",
+    "body": {
+      "json": {
+        "schema": {
+          "type": "object",
+          "props": [
+            {
+              "type": "string",
+              "name": "id",
+              "description": "Fully qualified resource ID for the resource. Ex - /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceProviderNamespace}/{resourceType}/{resourceName}",
+              "readOnly": true
+            },
+            {
+              "type": "string",
+              "name": "name",
+              "description": "The name of the resource",
+              "readOnly": true
+            },
+            {
+              "type": "string",
+              "name": "type",
+              "description": "The type of the resource. E.g. \"Microsoft.Compute/virtualMachines\" or \"Microsoft.Storage/storageAccounts\"",
+              "readOnly": true
+            },
+            {
+              "type": "object",
+              "props": [
+                {
+                  "type": "string",
+                  "name": "createdBy",
+                  "description": "The identity that created the resource."
+                },
+                {
+                  "type": "string",
+                  "enum": {
+                    "items": [
+                      {
+                        "value": "User"
+                      },
+                      {
+                        "value": "Application"
+                      },
+                      {
+                        "value": "ManagedIdentity"
+                      },
+                      {
+                        "value": "Key"
+                      }
+                    ]
+                  },
+                  "name": "createdByType",
+                  "description": "The type of identity that created the resource."
+                },
+                {
+                  "type": "dateTime",
+                  "name": "createdAt",
+                  "description": "The timestamp of resource creation (UTC)."
+                },
+                {
+                  "type": "string",
+                  "name": "lastModifiedBy",
+                  "description": "The identity that last modified the resource."
+                },
+                {
+                  "type": "string",
+                  "enum": {
+                    "items": [
+                      {
+                        "value": "User"
+                      },
+                      {
+                        "value": "Application"
+                      },
+                      {
+                        "value": "ManagedIdentity"
+                      },
+                      {
+                        "value": "Key"
+                      }
+                    ]
+                  },
+                  "name": "lastModifiedByType",
+                  "description": "The type of identity that last modified the resource."
+                },
+                {
+                  "type": "dateTime",
+                  "name": "lastModifiedAt",
+                  "description": "The timestamp of resource last modification (UTC)"
+                }
+              ],
+              "name": "systemData",
+              "description": "Azure Resource Manager metadata containing createdBy and modifiedBy information.",
+              "readOnly": true
+            },
+            {
+              "type": "object",
+              "additionalProps": {
+                "item": {
+                  "type": "string"
+                }
+              },
+              "name": "tags",
+              "description": "Resource tags."
+            },
+            {
+              "type": "ResourceLocation",
+              "name": "location",
+              "description": "The geo-location where the resource lives",
+              "required": true
+            },
+            {
+              "type": "object",
+              "props": [
+                {
+                  "type": "string",
+                  "name": "portalName",
+                  "description": "The portal name (website name) of the mock instance",
+                  "required": true
+                },
+                {
+                  "type": "object",
+                  "props": [
+                    {
+                      "type": "string",
+                      "name": "identityType",
+                      "description": "The identity type of the mock Resource",
+                      "required": true
+                    },
+                    {
+                      "type": "boolean",
+                      "name": "teamsEnabled",
+                      "description": "To indicate whether the mock Resource has Teams enabled",
+                      "default": {
+                        "value": false
+                      }
+                    },
+                    {
+                      "type": "string",
+                      "name": "b2cAuthenticationPolicy",
+                      "description": "The name of the authentication policy registered in ADB2C for the mock Resource"
+                    }
+                  ],
+                  "name": "identityConfiguration",
+                  "description": "The identity configuration of the mock resource",
+                  "required": true
+                },
+                {
+                  "type": "boolean",
+                  "name": "zoneRedundancyEnabled",
+                  "description": "To indicate whether the mock instance has Zone Redundancy enabled",
+                  "required": true
+                },
+                {
+                  "type": "boolean",
+                  "name": "disasterRecoveryEnabled",
+                  "description": "To indicate whether the mock instance has Disaster Recovery enabled",
+                  "required": true
+                },
+                {
+                  "type": "string",
+                  "enum": {
+                    "items": [
+                      {
+                        "value": "Succeeded"
+                      },
+                      {
+                        "value": "Failed"
+                      },
+                      {
+                        "value": "Canceled"
+                      },
+                      {
+                        "value": "Provisioning"
+                      },
+                      {
+                        "value": "Updating"
+                      },
+                      {
+                        "value": "Deleting"
+                      },
+                      {
+                        "value": "Accepted"
+                      }
+                    ]
+                  },
+                  "name": "provisioningState",
+                  "description": "The status of the last operation.",
+                  "readOnly": true
+                }
+              ],
+              "name": "properties",
+              "description": "The resource-specific properties for this resource."
+            },
+            {
+              "type": "object",
+              "props": [
+                {
+                  "type": "string",
+                  "name": "name",
+                  "description": "The name of the SKU. Ex - P3. It is typically a letter+number code",
+                  "required": true
+                },
+                {
+                  "type": "string",
+                  "enum": {
+                    "items": [
+                      {
+                        "value": "Free"
+                      },
+                      {
+                        "value": "Basic"
+                      },
+                      {
+                        "value": "Standard"
+                      },
+                      {
+                        "value": "Premium"
+                      }
+                    ]
+                  },
+                  "name": "tier",
+                  "description": "This field is required to be implemented by the Resource Provider if the service has more than one tier, but is not required on a PUT."
+                },
+                {
+                  "type": "string",
+                  "name": "size",
+                  "description": "The SKU size. When the name field is the combination of tier and some other value, this would be the standalone code."
+                },
+                {
+                  "type": "string",
+                  "name": "family",
+                  "description": "If the service has different generations of hardware, for the same SKU, then that can be captured here."
+                },
+                {
+                  "type": "integer32",
+                  "name": "capacity",
+                  "description": "If the SKU supports scale out/in then the capacity integer should be included. If scale out/in is not possible for the resource this may be omitted."
+                }
+              ],
+              "name": "sku",
+              "description": "The SKU (Stock Keeping Unit) assigned to this resource."
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "isError": true,
+    "body": {
+      "json": {
+        "schema": {
+          "readOnly": true,
+          "type": "@MgmtErrorFormat"
+        }
+      }
+    }
+  }
+]

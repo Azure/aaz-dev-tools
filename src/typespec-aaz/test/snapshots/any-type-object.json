@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "additionalProps": {
+    "item": {
+      "type": "any"
+    }
+  },
+  "name": "targetValue",
+  "required": true
+}

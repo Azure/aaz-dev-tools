@@ -1,9 +1,5 @@
 import { Diagnostic, resolvePath } from "@typespec/compiler";
-import {
-  createTestHost,
-  createTestWrapper,
-  expectDiagnosticEmpty,
-} from "@typespec/compiler/testing";
+import { createTestHost, createTestWrapper, expectDiagnosticEmpty } from "@typespec/compiler/testing";
 import { TypespecAazTestLibrary } from "../src/testing/index.js";
 
 export async function createTypespecAazTestHost() {
@@ -23,9 +19,7 @@ export async function createTypespecAazTestRunner() {
   });
 }
 
-export async function emitWithDiagnostics(
-  code: string
-): Promise<[Record<string, string>, readonly Diagnostic[]]> {
+export async function emitWithDiagnostics(code: string): Promise<[Record<string, string>, readonly Diagnostic[]]> {
   const runner = await createTypespecAazTestRunner();
   await runner.compileAndDiagnose(code, {
     outputDir: "tsp-output",

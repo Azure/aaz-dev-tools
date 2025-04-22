@@ -1,0 +1,27 @@
+{
+  "method": "get",
+  "body": {
+    "json": {
+      "schema": {
+        "type": "object",
+        "props": [
+          {
+            "type": "object",
+            "props": [
+              {
+                "type": "string",
+                "name": "p",
+                "required": true
+              }
+            ],
+            "name": "p",
+            "required": true
+          }
+        ],
+        "name": "body",
+        "required": true,
+        "clientFlatten": true
+      }
+    }
+  }
+}

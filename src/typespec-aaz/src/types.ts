@@ -2,12 +2,11 @@ import { Program } from "@typespec/compiler";
 import { TypeSpecPathItem } from "./model/path_item.js";
 
 export interface AAZListResourcesContext {
-    program: Program;
-
+  program: Program;
 }
 
 export interface AAZRetrieveOperationContext {
-    program: Program;
+  program: Program;
 }
 
 export type HttpMethod = "get" | "put" | "post" | "delete" | "head" | "patch" | "options";

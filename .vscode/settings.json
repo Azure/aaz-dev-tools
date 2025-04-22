@@ -1,6 +1,7 @@
 {
     "files.eol": "\n",
     "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
     "search.exclude": {
       "**/dist/**": true,
       "**/dist-dev/**": true,
@@ -32,6 +33,7 @@
       "editor.insertSpaces": true,
       "editor.tabSize": 2,
       "editor.detectIndentation": false,
+      "files.insertFinalNewline": false,
       "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[csharp]": {
@@ -53,7 +55,6 @@
     },
     "typescript.tsdk": "${workspaceRoot}/src/typespec/core/packages/compiler/node_modules/typescript/lib",
     "git.ignoreLimitWarning": true,
-    "prettier.configPath": ".prettierrc.json",
     "prettier.ignorePath": ".prettierignore",
     "prettier.documentSelectors": ["**/*.tsp"],
     "testExplorer.errorDecoration": false,

@@ -8,6 +8,7 @@
     "build:typespec": "pnpm install -C src/typespec/ && pnpm -r --filter=\"!./src/web/\" --filter=\"!./src/typespec/core/\" --workspace-concurrency=Infinity --aggregate-output --reporter=append-only build ",
     "build:web": "pnpm -r --filter=\"./src/web/\" --workspace-concurrency=Infinity --aggregate-output --reporter=append-only build ",
     "bundle": "node ./eng/scripts/bundle_dists.js",
+    "test-aaz-emitter": "cd ./src/typespec-aaz && pnpm test-aaz",
     "clean": "pnpm run-all run clean",
     "lint": "pnpm run-all --parallel --aggregate-output --reporter=append-only run lint",
     "preinstall": "npx only-allow pnpm",

@@ -8,7 +8,7 @@ export type CMDHttpAction = {
   path: string;
   request?: CMDHttpRequest;
   responses?: CMDHttpResponse[];
-}
+};
 
 export type CMDHttpRequest = {
   method: HttpMethod;
@@ -16,7 +16,7 @@ export type CMDHttpRequest = {
   query?: CMDHttpRequestQuery;
   header?: CMDHttpRequestHeader;
   body?: CMDHttpRequestBody;
-}
+};
 
 export type CMDHttpResponse = {
   statusCode?: number[];
@@ -24,7 +24,7 @@ export type CMDHttpResponse = {
   description?: string;
   header?: CMDHttpResponseHeader;
   body?: CMDHttpResponseBody;
-}
+};
 
 type CMDHttpRequestArgs = {
   params?: CMDSchema[];
@@ -40,10 +40,10 @@ export type CMDHttpRequestHeader = CMDHttpRequestArgs & {
 };
 
 export type CMDHttpResponseHeader = {
-  items: CMDHttpResponseHeaderItem[]
-}
+  items: CMDHttpResponseHeaderItem[];
+};
 
 export type CMDHttpResponseHeaderItem = {
   name: string;
   var?: CMDVariantField;
-}
+};

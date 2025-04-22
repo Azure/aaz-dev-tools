@@ -1,0 +1,12 @@
+{
+  "type": "integer",
+  "enum": {
+    "items": [
+      {
+        "value": 12
+      }
+    ]
+  },
+  "name": "targetProp",
+  "required": true
+}
