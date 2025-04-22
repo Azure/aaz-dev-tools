@@ -1,8 +1,14 @@
 import { Type } from "@typespec/compiler";
-import { CMDVariantField } from "./fields.js"
-import { CMDArrayFormat, CMDFloatFormat, CMDIntegerFormat, CMDObjectFormat, CMDResourceIdFormat, CMDStringFormat } from "./format.js";
+import { CMDVariantField } from "./fields.js";
+import {
+  CMDArrayFormat,
+  CMDFloatFormat,
+  CMDIntegerFormat,
+  CMDObjectFormat,
+  CMDResourceIdFormat,
+  CMDStringFormat,
+} from "./format.js";
 import { Visibility } from "@typespec/http";
-
 
 export interface PendingSchema {
   /** The TYPESPEC type for the schema */
@@ -34,11 +40,11 @@ export class Ref {
 
 export class ClsType {
   pendingSchema: PendingSchema;
-  
+
   constructor(pendingSchema: PendingSchema) {
     this.pendingSchema = pendingSchema;
   }
-  
+
   toJSON() {
     return "@" + this.pendingSchema.ref.toJSON()!;
   }
@@ -46,11 +52,11 @@ export class ClsType {
 
 export class ArrayType {
   itemType: string | ClsType | ArrayType;
-  
+
   constructor(itemType: string | ClsType | ArrayType) {
     this.itemType = itemType;
   }
-  
+
   toJSON() {
     return `array<${JSON.parse(JSON.stringify(this.itemType))}>`;
   }
@@ -58,22 +64,22 @@ export class ArrayType {
 
 export type CMDSchemaDefault<T> = {
   value: T | null;
-}
+};
 
 export type CMDSchemaEnumItem<T> = {
   value: T;
   arg?: CMDVariantField;
-}
+};
 
 export type CMDSchemaEnum<T> = {
   items: CMDSchemaEnumItem<T>[];
-}
+};
 
 export interface CMDSchemaBase {
   type: string | ClsType | ArrayType;
 
   readOnly?: boolean;
-  frozen?: boolean;   // python set?
+  frozen?: boolean; // python set?
   const?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   default?: CMDSchemaDefault<any>;
@@ -106,8 +112,18 @@ export interface CMDClsSchema extends CMDClsSchemaBase, CMDSchema {
   clientFlatten?: boolean;
 }
 
-
-export type CMDStringSchemaTypeValues = "string" | "byte" | "binary" | "duration" | "date" | "date-time" | "time" | "uuid" | "password" | "ResourceLocation" | "ResourceId";
+export type CMDStringSchemaTypeValues =
+  | "string"
+  | "byte"
+  | "binary"
+  | "duration"
+  | "date"
+  | "date-time"
+  | "time"
+  | "uuid"
+  | "password"
+  | "ResourceLocation"
+  | "ResourceId";
 
 export interface CMDStringSchemaBase extends CMDSchemaBaseT<string> {
   type: CMDStringSchemaTypeValues;
@@ -173,7 +189,7 @@ export interface CMDTimeSchema extends CMDTimeSchemaBase, CMDStringSchema {
   type: "time";
 }
 
-// type: uuid 
+// type: uuid
 export interface CMDUuidSchemaBase extends CMDStringSchemaBase {
   type: "uuid";
 }
@@ -251,9 +267,7 @@ export interface CMDBooleanSchema extends CMDBooleanSchemaBase, CMDSchemaT<boole
   type: "boolean";
 }
 
-
 type CMDFloatSchemaTypeValues = "float" | "float32" | "float64";
-
 
 // type: float
 export interface CMDFloatSchemaBase extends CMDSchemaBaseT<number> {
@@ -286,11 +300,11 @@ export interface CMDFloat64Schema extends CMDFloat64SchemaBase, CMDFloatSchema {
 
 // type: any
 export interface CMDAnyTypeSchemaBase extends CMDSchemaBase {
-  type: "any"
+  type: "any";
 }
 
 export interface CMDAnyTypeSchema extends CMDAnyTypeSchemaBase, CMDSchema {
-  type: "any"
+  type: "any";
 }
 
 // object
@@ -298,23 +312,23 @@ export interface CMDAnyTypeSchema extends CMDAnyTypeSchemaBase, CMDSchema {
 // discriminator
 
 export type CMDObjectSchemaDiscriminator = {
-  property: string,
-  value: string,
-  frozen?: boolean,
+  property: string;
+  value: string;
+  frozen?: boolean;
 
-  props?: CMDSchema[],
-  discriminators?: CMDObjectSchemaDiscriminator[],
+  props?: CMDSchema[];
+  discriminators?: CMDObjectSchemaDiscriminator[];
 };
 
 // additionalProperties
 
 export type CMDObjectSchemaAdditionalProperties = {
-  readOnly?: boolean,
-  frozen?: boolean,
+  readOnly?: boolean;
+  frozen?: boolean;
 
-  item?: CMDSchemaBase,
-  anyType?: boolean,
-}
+  item?: CMDSchemaBase;
+  anyType?: boolean;
+};
 
 type CMDObjectSchemaTypeValues = "object" | "IdentityObject";
 
@@ -331,7 +345,6 @@ export interface CMDObjectSchema extends CMDObjectSchemaBase, CMDSchema {
   type: CMDObjectSchemaTypeValues;
   clientFlatten?: boolean;
 }
-
 
 // type: IdentityObject
 export interface CMDIdentityObjectSchemaBase extends CMDObjectSchemaBase {

@@ -1,4 +1,3 @@
-
 export enum CMDBuildInVariants {
   Instance = "$Instance",
   EndpointInstance = "$EndpointInstance",

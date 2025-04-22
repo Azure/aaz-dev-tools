@@ -1,0 +1,12 @@
+{
+  "type": "float",
+  "enum": {
+    "items": [
+      {
+        "value": 12.5
+      }
+    ]
+  },
+  "name": "targetProp",
+  "required": true
+}

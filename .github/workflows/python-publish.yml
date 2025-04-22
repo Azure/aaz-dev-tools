@@ -143,6 +143,9 @@ jobs:
           pnpm bundle
         env:
           CI: false
+      - name: Test Typespec-aaz Emitter
+        run: |
+            pnpm test-aaz-emitter
 
       - name: ${{ matrix.task.name }}
         run: |

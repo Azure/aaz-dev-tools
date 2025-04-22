@@ -1,13 +1,5 @@
 import * as React from "react";
-import {
-  AppBar,
-  Button,
-  IconButton,
-  Toolbar,
-  Typography,
-  Tooltip,
-  Box,
-} from "@mui/material";
+import { AppBar, Button, IconButton, Toolbar, Typography, Tooltip, Box } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 
 interface CLIModGeneratorToolBarProps {
@@ -21,9 +13,7 @@ class CLIModGeneratorToolBar extends React.Component<CLIModGeneratorToolBarProps
     const { moduleName, onHomePage, onGenerate } = this.props;
     return (
       <React.Fragment>
-        <AppBar
-          sx={{ position: "fixed", zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        >
+        <AppBar sx={{ position: "fixed", zIndex: (theme) => theme.zIndex.drawer + 1 }}>
           <Toolbar
             sx={{
               display: "flex",
@@ -32,19 +22,9 @@ class CLIModGeneratorToolBar extends React.Component<CLIModGeneratorToolBarProps
               height: 64,
             }}
           >
-            <IconButton
-              color="inherit"
-              onClick={onHomePage}
-              aria-label="home"
-              sx={{ mr: 2, flexShrink: 0 }}
-            >
+            <IconButton color="inherit" onClick={onHomePage} aria-label="home" sx={{ mr: 2, flexShrink: 0 }}>
               <HomeIcon sx={{ mr: 2 }} />
-              <Typography
-                variant="h6"
-                component="div"
-                color="inherit"
-                sx={{ mr: 2 }}
-              >
+              <Typography variant="h6" component="div" color="inherit" sx={{ mr: 2 }}>
                 GENERATION
               </Typography>
             </IconButton>

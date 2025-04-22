@@ -5,13 +5,10 @@ import { pascalCase } from "change-case";
 import { AAZEmitterContext } from "./context.js";
 import { getClientNameOverride } from "@azure-tools/typespec-client-generator-core";
 
-
-
 function getPathWithoutQuery(path: string): string {
   // strip everything from the key including and after the ?
   return path.replace(/\/?\?.*/, "");
 }
-
 
 const URL_PARAMETER_PLACEHOLDER = "{}";
 
@@ -82,9 +79,7 @@ export function resolveOperationId(context: AAZEmitterContext, operation: HttpOp
 
   const operationName = getAutorestClientName(context, op);
   if (op.interface) {
-    return pascalCaseForOperationId(
-      `${getAutorestClientName(context, op.interface)}_${operationName}`
-    );
+    return pascalCaseForOperationId(`${getAutorestClientName(context, op.interface)}_${operationName}`);
   }
   const namespace = op.namespace;
   if (
@@ -98,7 +93,6 @@ export function resolveOperationId(context: AAZEmitterContext, operation: HttpOp
   return pascalCaseForOperationId(`${namespace.name}_${operationName}`);
 }
 
-
 // export function getResourceID(program: Program, operation: HttpOperation): string {
 //     const { operation: op } = operation;
 //     let { path: fullPath } = operation;
@@ -108,7 +102,6 @@ export function resolveOperationId(context: AAZEmitterContext, operation: HttpOp
 //     return swaggerResourcePathToResourceId(fullPath);
 // }
 
-
 function pascalCaseForOperationId(name: string) {
   return name
     .split("_")
@@ -116,14 +109,13 @@ function pascalCaseForOperationId(name: string) {
     .join("_");
 }
 
-
-export function toCamelCase(name: string, delimiters: string = ''): string {
-  const parts = name.replace(/[-_]/g, ' ').split(' ');
+export function toCamelCase(name: string, delimiters: string = ""): string {
+  const parts = name.replace(/[-_]/g, " ").split(" ");
   const camelCasedParts = parts.map((part) => {
-      if (part) {
-          return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
-      }
-      return '';
+    if (part) {
+      return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+    }
+    return "";
   });
   return camelCasedParts.join(delimiters);
 }

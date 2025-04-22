@@ -1,12 +1,11 @@
-
 /**
  * Create the browser host from the list of libraries.
- * 
+ *
  */
 import { createSourceFile, getSourceFileKindFromExt, resolvePath } from "@typespec/compiler";
 import { LibraryImportOptions, importLibrary, importTypeSpecCompiler } from "./core";
 import { BrowserHost, TspLibrary } from "./types";
-import axios from 'axios';
+import axios from "axios";
 
 const rootPath = "/aaz-host";
 
@@ -16,7 +15,7 @@ export function resolveVirtualPath(path: string, ...paths: string[]) {
 
 export async function createBrowserHost(
   libsToLoad: readonly string[],
-  importOptions: LibraryImportOptions = {}
+  importOptions: LibraryImportOptions = {},
 ): Promise<BrowserHost> {
   const virtualFs = new Map<string, string>();
   const jsImports = new Map<string, Promise<any>>();
@@ -32,19 +31,17 @@ export async function createBrowserHost(
       linter: $linter,
     };
     for (const [key, value] of Object.entries<any>(_TypeSpecLibrary_.typespecSourceFiles)) {
-      virtualFs.set(resolveVirtualPath('node_modules', libName, key), value);
+      virtualFs.set(resolveVirtualPath("node_modules", libName, key), value);
     }
     for (const [key, value] of Object.entries<any>(_TypeSpecLibrary_.jsSourceFiles)) {
-      addJsImport(resolveVirtualPath('node_modules', libName, key), value);
+      addJsImport(resolveVirtualPath("node_modules", libName, key), value);
     }
     virtualFs.set(
-      resolveVirtualPath('package.json'),
+      resolveVirtualPath("package.json"),
       JSON.stringify({
         name: "aaz-host",
-        dependencies: Object.fromEntries(
-          Object.values(libraries).map((x) => [x.name, x.packageJson.version])
-        ),
-      })
+        dependencies: Object.fromEntries(Object.values(libraries).map((x) => [x.name, x.packageJson.version])),
+      }),
     );
   }
 
@@ -103,9 +100,7 @@ export async function createBrowserHost(
     },
 
     getLibDirs() {
-      if (
-        virtualFs.has(resolveVirtualPath("node_modules/@typespec/compiler/lib/std/main.tsp"))
-      ) {
+      if (virtualFs.has(resolveVirtualPath("node_modules/@typespec/compiler/lib/std/main.tsp"))) {
         return [resolveVirtualPath("node_modules/@typespec/compiler/lib/std")];
       } else {
         // To load older version of the compiler < 0.55.0
@@ -173,8 +168,8 @@ export async function createBrowserHost(
           },
           isFile() {
             return res.data.isFile;
-          }
-        }
+          },
+        };
       }
       const e = new Error(`File ${path} not found.`);
       (e as any).code = "ENOENT";
@@ -200,5 +195,5 @@ export async function createBrowserHost(
     pathToFileURL(path) {
       return "inmemory:/" + resolveVirtualPath(path);
     },
-  }
+  };
 }

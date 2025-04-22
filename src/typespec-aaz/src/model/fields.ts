@@ -1,4 +1,3 @@
-
 export type CMDVariantField = string;
 
 // export enum MutabilityEnum {

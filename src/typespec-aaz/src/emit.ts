@@ -8,10 +8,10 @@ import {
   compilerAssert,
   getService,
 } from "@typespec/compiler";
-import { unsafe_mutateSubgraphWithNamespace, } from "@typespec/compiler/experimental";
+import { unsafe_mutateSubgraphWithNamespace } from "@typespec/compiler/experimental";
 import { getVersioningMutators } from "@typespec/versioning";
 import { HttpService, getHttpService, reportIfNoRoutes } from "@typespec/http";
-import { getResourcePath, swaggerResourcePathToResourceId, } from "./utils.js";
+import { getResourcePath, swaggerResourcePathToResourceId } from "./utils.js";
 import { AAZResourceSchema } from "./types.js";
 import { AAZEmitterOptions, getTracer, reportDiagnostic } from "./lib.js";
 import { createTCGCContext } from "@azure-tools/typespec-client-generator-core";
@@ -54,7 +54,9 @@ function createListResourceEmitter(context: EmitContext<AAZEmitterOptions>) {
       for (const record of versions.snapshots) {
         const subgraph = unsafe_mutateSubgraphWithNamespace(context.program, [record.mutator], service.type);
         compilerAssert(subgraph.type.kind === "Namespace", "Should not have mutated to another type");
-        const httpService = ignoreDiagnostics(getHttpService(context.program, (getService(context.program, subgraph.type) || service).type));
+        const httpService = ignoreDiagnostics(
+          getHttpService(context.program, (getService(context.program, subgraph.type) || service).type),
+        );
         emitService(httpService, context.program, record.version?.value);
       }
     }
@@ -62,7 +64,10 @@ function createListResourceEmitter(context: EmitContext<AAZEmitterOptions>) {
     // const tracer = getTracer(context.program);
     // tracer.trace("Resources", JSON.stringify(_resources, null, 2));
 
-    const result = Object.entries(resourceVersions).map(([id, versions]) => ({ id, versions: Object.entries(versions).map(([version, path]) => ({ version, path, id })) }));
+    const result = Object.entries(resourceVersions).map(([id, versions]) => ({
+      id,
+      versions: Object.entries(versions).map(([version, path]) => ({ version, path, id })),
+    }));
     return result;
   }
 
@@ -81,7 +86,7 @@ function createListResourceEmitter(context: EmitContext<AAZEmitterOptions>) {
         _resources[resourcePath] = [];
       }
       _resources[resourcePath].push(`${op.verb}:${version}`);
-    })
+    });
   }
 }
 
@@ -97,7 +102,7 @@ async function createGetResourceOperationEmitter(context: EmitContext<AAZEmitter
     resOps[id] = {
       id: id,
       path: "",
-      version: apiVersion
+      version: apiVersion,
     };
   });
 
@@ -130,8 +135,8 @@ async function createGetResourceOperationEmitter(context: EmitContext<AAZEmitter
         emitResourceOps(aazContext);
       }
     }
-    const results = [];     
-    
+    const results = [];
+
     for (const id in resOps) {
       if (resOps[id].pathItem) {
         results.push(resOps[id]);

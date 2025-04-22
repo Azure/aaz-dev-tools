@@ -1,0 +1,46 @@
+{
+  "method": "get",
+  "path": {
+    "params": [
+      {
+        "type": "string",
+        "format": {
+          "pattern": "^[a-zA-Z0-9-]{3,24}$"
+        },
+        "name": "mockName",
+        "description": "The name of the Mock Resource",
+        "required": true
+      },
+      {
+        "type": "string",
+        "format": {
+          "pattern": "^[-\\w\\._\\(\\)]+$",
+          "maxLength": 90,
+          "minLength": 1
+        },
+        "name": "resourceGroupName",
+        "description": "The name of the resource group. The name is case insensitive.",
+        "required": true
+      },
+      {
+        "type": "string",
+        "name": "subscriptionId",
+        "description": "The ID of the target subscription. The value must be an UUID.",
+        "required": true
+      }
+    ]
+  },
+  "query": {
+    "params": [
+      {
+        "type": "string",
+        "format": {
+          "minLength": 1
+        },
+        "name": "api-version",
+        "description": "The API version to use for this operation.",
+        "required": true
+      }
+    ]
+  }
+}
