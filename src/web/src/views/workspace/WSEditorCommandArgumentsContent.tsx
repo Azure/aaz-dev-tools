@@ -39,10 +39,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
 import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
 import AddIcon from "@mui/icons-material/Add";
-import WSECArgumentSimilarPicker, {
-  ArgSimilarTree,
-  BuildArgSimilarTree,
-} from "./argument/WSECArgumentSimilarPicker";
+import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./argument/WSECArgumentSimilarPicker";
 import pluralize from "pluralize";
 
 function WSEditorCommandArgumentsContent(props: {
@@ -50,20 +47,13 @@ function WSEditorCommandArgumentsContent(props: {
   args: CMDArg[];
   clsArgDefineMap: ClsArgDefinitionMap;
   onReloadArgs: () => Promise<void>;
-  onAddSubCommand: (
-    argVar: string,
-    subArgOptions: { var: string; options: string }[],
-    argStackNames: string[]
-  ) => void;
+  onAddSubCommand: (argVar: string, subArgOptions: { var: string; options: string }[], argStackNames: string[]) => void;
 }) {
-  const [displayArgumentDialog, setDisplayArgumentDialog] =
-    useState<boolean>(false);
+  const [displayArgumentDialog, setDisplayArgumentDialog] = useState<boolean>(false);
   const [editArg, setEditArg] = useState<CMDArg | undefined>(undefined);
   const [, setEditArgIdxStack] = useState<ArgIdx[] | undefined>(undefined);
-  const [displayFlattenDialog, setDisplayFlattenDialog] =
-    useState<boolean>(false);
-  const [displayUnwrapClsDialog, setDisplayUnwrapClsDialog] =
-    useState<boolean>(false);
+  const [displayFlattenDialog, setDisplayFlattenDialog] = useState<boolean>(false);
+  const [displayUnwrapClsDialog, setDisplayUnwrapClsDialog] = useState<boolean>(false);
 
   const handleArgumentDialogClose = async (updated: boolean) => {
     if (updated) {
@@ -171,9 +161,7 @@ function WSEditorCommandArgumentsContent(props: {
             alignItems: "center",
           }}
         >
-          <CardTitleTypography sx={{ flexShrink: 0 }}>
-            [ ARGUMENT ]
-          </CardTitleTypography>
+          <CardTitleTypography sx={{ flexShrink: 0 }}>[ ARGUMENT ]</CardTitleTypography>
         </Box>
         <ArgumentNavigation
           commandUrl={props.commandUrl}
@@ -233,13 +221,10 @@ function ArgumentNavigation(props: {
   const [argIdxStack, setArgIdxStack] = useState<ArgIdx[]>([]);
 
   const getArgProps = (
-    selectedArgBase: CMDArgBase
-  ):
-    | { title: string; props: CMDArg[]; flattenArgVar: string | undefined }
-    | undefined => {
+    selectedArgBase: CMDArgBase,
+  ): { title: string; props: CMDArg[]; flattenArgVar: string | undefined } | undefined => {
     if (selectedArgBase.type.startsWith("@")) {
-      const clsArgDefine =
-        props.clsArgDefineMap[(selectedArgBase as CMDClsArgBase).clsName];
+      const clsArgDefine = props.clsArgDefineMap[(selectedArgBase as CMDClsArgBase).clsName];
       const clsArgProps = getArgProps(clsArgDefine);
       if (clsArgProps !== undefined && clsArgDefine.type === "object") {
         clsArgProps!.flattenArgVar = (selectedArgBase as CMDClsArg).var;
@@ -371,23 +356,10 @@ function ArgumentNavigation(props: {
             justifyContent: "flex-start",
           }}
         >
-          <ArgNavBar
-            argIdxStack={argIdxStack}
-            onChangeArgIdStack={handleChangeArgIdStack}
-          />
-          {stage === "Stable" && (
-            <StableTypography sx={{ flexShrink: 0 }}>{stage}</StableTypography>
-          )}
-          {stage === "Preview" && (
-            <PreviewTypography sx={{ flexShrink: 0 }}>
-              {stage}
-            </PreviewTypography>
-          )}
-          {stage === "Experimental" && (
-            <ExperimentalTypography sx={{ flexShrink: 0 }}>
-              {stage}
-            </ExperimentalTypography>
-          )}
+          <ArgNavBar argIdxStack={argIdxStack} onChangeArgIdStack={handleChangeArgIdStack} />
+          {stage === "Stable" && <StableTypography sx={{ flexShrink: 0 }}>{stage}</StableTypography>}
+          {stage === "Preview" && <PreviewTypography sx={{ flexShrink: 0 }}>{stage}</PreviewTypography>}
+          {stage === "Experimental" && <ExperimentalTypography sx={{ flexShrink: 0 }}>{stage}</ExperimentalTypography>}
         </Box>
         <ArgumentReviewer
           arg={selectedArg}
@@ -452,33 +424,24 @@ function ArgumentNavigation(props: {
 
   return (
     <React.Fragment>
-      {argIdxStack.length > 0 && (
-        <React.Fragment>{buildArgumentReviewer()}</React.Fragment>
-      )}
+      {argIdxStack.length > 0 && <React.Fragment>{buildArgumentReviewer()}</React.Fragment>}
       <React.Fragment>{buildArgumentPropsReviewer()}</React.Fragment>
     </React.Fragment>
   );
 }
 
-const NavBarItemTypography = styled(Typography)<TypographyProps>(
-  ({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Work Sans', sans-serif",
-    fontSize: 14,
-    fontWeight: 400,
-  })
-);
+const NavBarItemTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontFamily: "'Work Sans', sans-serif",
+  fontSize: 14,
+  fontWeight: 400,
+}));
 
-const NavBarItemHightLightedTypography = styled(
-  NavBarItemTypography
-)<TypographyProps>(() => ({
+const NavBarItemHightLightedTypography = styled(NavBarItemTypography)<TypographyProps>(() => ({
   color: "#5d64cf",
 }));
 
-function ArgNavBar(props: {
-  argIdxStack: ArgIdx[];
-  onChangeArgIdStack: (end: number) => void;
-}) {
+function ArgNavBar(props: { argIdxStack: ArgIdx[]; onChangeArgIdStack: (end: number) => void }) {
   return (
     <React.Fragment>
       <Box
@@ -608,21 +571,14 @@ const ArgEditTypography = styled(Typography)<TypographyProps>(() => ({
   fontWeight: 400,
 }));
 
-const ArgChoicesTypography = styled(Typography)<TypographyProps>(
-  ({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Roboto Condensed', sans-serif",
-    fontSize: 14,
-    fontWeight: 700,
-  })
-);
+const ArgChoicesTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontFamily: "'Roboto Condensed', sans-serif",
+  fontSize: 14,
+  fontWeight: 700,
+}));
 
-function ArgumentReviewer(props: {
-  arg: CMDArg;
-  depth: number;
-  onEdit: () => void;
-  onUnwrap: () => void;
-}) {
+function ArgumentReviewer(props: { arg: CMDArg; depth: number; onEdit: () => void; onUnwrap: () => void }) {
   const [choices, setChoices] = useState<string[]>([]);
 
   const buildArgOptionsString = () => {
@@ -735,9 +691,7 @@ function ArgumentReviewer(props: {
           {getUnwrapKeywords() !== null && (
             <Button
               sx={{ flexShrink: 0, ml: 1 }}
-              startIcon={
-                <ImportExportIcon color="secondary" fontSize="small" />
-              }
+              startIcon={<ImportExportIcon color="secondary" fontSize="small" />}
               onClick={() => {
                 props.onUnwrap();
               }}
@@ -746,13 +700,9 @@ function ArgumentReviewer(props: {
             </Button>
           )}
           <Box sx={{ flexGrow: 1 }} />
-          {props.arg.required && (
-            <ArgRequiredTypography>[Required]</ArgRequiredTypography>
-          )}
+          {props.arg.required && <ArgRequiredTypography>[Required]</ArgRequiredTypography>}
         </Box>
-        {(props.arg.default !== undefined ||
-          choices.length > 0 ||
-          props.arg.configurationKey !== undefined) && (
+        {(props.arg.default !== undefined || choices.length > 0 || props.arg.configurationKey !== undefined) && (
           <Box
             sx={{
               ml: 5,
@@ -763,14 +713,10 @@ function ArgumentReviewer(props: {
             }}
           >
             {choices.length > 0 && (
-              <ArgChoicesTypography sx={{ ml: 1 }}>
-                {`Choices: ` + choices.join(", ")}
-              </ArgChoicesTypography>
+              <ArgChoicesTypography sx={{ ml: 1 }}>{`Choices: ` + choices.join(", ")}</ArgChoicesTypography>
             )}
             {props.arg.default !== undefined && (
-              <ArgChoicesTypography sx={{ ml: 1 }}>
-                {`Default: ${getDefaultValueToString()}`}
-              </ArgChoicesTypography>
+              <ArgChoicesTypography sx={{ ml: 1 }}>{`Default: ${getDefaultValueToString()}`}</ArgChoicesTypography>
             )}
             {props.arg.configurationKey !== undefined && (
               <ArgChoicesTypography sx={{ ml: 1 }}>
@@ -780,10 +726,7 @@ function ArgumentReviewer(props: {
           </Box>
         )}
         {props.arg.help?.short && (
-          <ShortHelpTypography sx={{ ml: 6, mt: 1.5 }}>
-            {" "}
-            {props.arg.help?.short}{" "}
-          </ShortHelpTypography>
+          <ShortHelpTypography sx={{ ml: 6, mt: 1.5 }}> {props.arg.help?.short} </ShortHelpTypography>
         )}
         {!props.arg.help?.short && (
           <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>
@@ -813,31 +756,21 @@ function ArgumentDialog(props: {
   const [stage, setStage] = useState<string>("");
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [options, setOptions] = useState<string>("");
-  const [singularOptions, setSingularOptions] = useState<string | undefined>(
-    undefined
-  );
+  const [singularOptions, setSingularOptions] = useState<string | undefined>(undefined);
   const [group, setGroup] = useState<string>("");
   const [hide, setHide] = useState<boolean>(false);
-  const [supportEnumExtension, setSupportEnumExtension] =
-    useState<boolean>(false);
+  const [supportEnumExtension, setSupportEnumExtension] = useState<boolean>(false);
   const [shortHelp, setShortHelp] = useState<string>("");
   const [longHelp, setLongHelp] = useState<string>("");
-  const [argSimilarTree, setArgSimilarTree] = useState<
-    ArgSimilarTree | undefined
-  >(undefined);
-  const [argSimilarTreeExpandedIds, setArgSimilarTreeExpandedIds] = useState<
-    string[]
-  >([]);
-  const [argSimilarTreeArgIdsUpdated, setArgSimilarTreeArgIdsUpdated] =
-    useState<string[]>([]);
+  const [argSimilarTree, setArgSimilarTree] = useState<ArgSimilarTree | undefined>(undefined);
+  const [argSimilarTreeExpandedIds, setArgSimilarTreeExpandedIds] = useState<string[]>([]);
+  const [argSimilarTreeArgIdsUpdated, setArgSimilarTreeArgIdsUpdated] = useState<string[]>([]);
   const [hasDefault, setHasDefault] = useState<boolean | undefined>(false);
   const [defaultValue, setDefaultValue] = useState<any | undefined>(undefined);
   const [defaultValueInJson, setDefaultValueInJson] = useState<boolean>(false);
   const [hasPrompt, setHasPrompt] = useState<boolean | undefined>(false);
   const [promptMsg, setPromptMsg] = useState<string | undefined>(undefined);
-  const [promptConfirm, setPromptConfirm] = useState<boolean | undefined>(
-    undefined
-  );
+  const [promptConfirm, setPromptConfirm] = useState<boolean | undefined>(undefined);
   const [configurationKey, setConfigurationKey] = useState<string>("");
   const [isClientArg, setIsClientArg] = useState<boolean>(false);
 
@@ -866,9 +799,7 @@ function ArgumentDialog(props: {
     for (const idx in names) {
       const piece = names[idx];
       if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(piece)) {
-        setInvalidText(
-          `Invalid 'Option name': '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `
-        );
+        setInvalidText(`Invalid 'Option name': '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `);
         return undefined;
       }
     }
@@ -878,7 +809,7 @@ function ArgumentDialog(props: {
         const piece = sNames[idx];
         if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(piece)) {
           setInvalidText(
-            `Invalid 'Singular option name': '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `
+            `Invalid 'Singular option name': '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `,
           );
           return undefined;
         }
@@ -918,8 +849,7 @@ function ArgumentDialog(props: {
         try {
           let argType = props.arg.type;
           if (argType.startsWith("@")) {
-            argType =
-              props.clsArgDefineMap[(props.arg as CMDClsArg).clsName].type;
+            argType = props.clsArgDefineMap[(props.arg as CMDClsArg).clsName].type;
           }
           argDefault = {
             value: convertArgDefaultText(defaultValue!, argType),
@@ -928,10 +858,7 @@ function ArgumentDialog(props: {
           setInvalidText(`Field 'Default Value' is invalid: ${err.message}.`);
           return undefined;
         }
-        if (
-          props.arg.default !== undefined &&
-          props.arg.default.value === argDefault.value
-        ) {
+        if (props.arg.default !== undefined && props.arg.default.value === argDefault.value) {
           argDefault = undefined;
         }
       }
@@ -1000,9 +927,7 @@ function ArgumentDialog(props: {
       console.error(err);
       if (err.response?.data?.message) {
         const data = err.response!.data!;
-        setInvalidText(
-          `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
-        );
+        setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
       }
       setUpdating(false);
     }
@@ -1029,9 +954,7 @@ function ArgumentDialog(props: {
         console.error(err);
         if (err.response?.data?.message) {
           const data = err.response!.data!;
-          setInvalidText(
-            `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
-          );
+          setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
         }
         setUpdating(false);
       });
@@ -1094,10 +1017,7 @@ function ArgumentDialog(props: {
     setOptions(arg.options.join(" "));
     if (arg.type.startsWith("array")) {
       setSingularOptions((arg as CMDArrayArg).singularOptions?.join(" ") ?? "");
-    } else if (
-      arg.type.startsWith("@") &&
-      clsArgDefineMap[(arg as CMDClsArg).clsName].type.startsWith("array")
-    ) {
+    } else if (arg.type.startsWith("@") && clsArgDefineMap[(arg as CMDClsArg).clsName].type.startsWith("array")) {
       setSingularOptions((arg as CMDClsArg).singularOptions?.join(" ") ?? "");
     } else {
       setSingularOptions(undefined);
@@ -1158,16 +1078,10 @@ function ArgumentDialog(props: {
   }, [props.arg]);
 
   return (
-    <Dialog
-      disableEscapeKeyDown
-      open={props.open}
-      sx={{ "& .MuiDialog-paper": { width: "80%" } }}
-    >
+    <Dialog disableEscapeKeyDown open={props.open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
       {!argSimilarTree && (
         <>
-          <DialogTitle>
-            {isClientArg ? "Modify Client Argument" : "Modify Argument"}
-          </DialogTitle>
+          <DialogTitle>{isClientArg ? "Modify Client Argument" : "Modify Argument"}</DialogTitle>
           <DialogContent dividers={true}>
             {invalidText && (
               <Alert variant="filled" severity="error">
@@ -1228,24 +1142,9 @@ function ArgumentDialog(props: {
                     setStage(event.target.value);
                   }}
                 >
-                  <FormControlLabel
-                    value="Stable"
-                    control={<Radio />}
-                    label="Stable"
-                    sx={{ ml: 4 }}
-                  />
-                  <FormControlLabel
-                    value="Preview"
-                    control={<Radio />}
-                    label="Preview"
-                    sx={{ ml: 4 }}
-                  />
-                  <FormControlLabel
-                    value="Experimental"
-                    control={<Radio />}
-                    label="Experimental"
-                    sx={{ ml: 4 }}
-                  />
+                  <FormControlLabel value="Stable" control={<Radio />} label="Stable" sx={{ ml: 4 }} />
+                  <FormControlLabel value="Preview" control={<Radio />} label="Preview" sx={{ ml: 4 }} />
+                  <FormControlLabel value="Experimental" control={<Radio />} label="Experimental" sx={{ ml: 4 }} />
                 </RadioGroup>
 
                 {!props.arg.required && (
@@ -1312,11 +1211,7 @@ function ArgumentDialog(props: {
                     onChange={(event: any) => {
                       setDefaultValue(event.target.value);
                     }}
-                    placeholder={
-                      defaultValueInJson
-                        ? "Default Value in json format"
-                        : "Default Value"
-                    }
+                    placeholder={defaultValueInJson ? "Default Value in json format" : "Default Value"}
                     margin="normal"
                     aria-controls=""
                     required
@@ -1470,23 +1365,16 @@ function ArgumentDialog(props: {
             <Button onClick={handleClose}>Cancel</Button>
             {/* cls argument should flatten similar. Customer should unwrap cls argument before to modify it*/}
             {!props.arg.var.startsWith("@") && (
-              <Button onClick={handleModify}>
-                {isClientArg ? "Update Global" : "Update"}
-              </Button>
+              <Button onClick={handleModify}>{isClientArg ? "Update Global" : "Update"}</Button>
             )}
             {/* TODO: support unwrap and update */}
-            {!isClientArg && (
-              <Button onClick={handleDisplaySimilar}>Update Similar</Button>
-            )}
+            {!isClientArg && <Button onClick={handleDisplaySimilar}>Update Similar</Button>}
           </>
         )}
         {!updating && argSimilarTree && (
           <>
             <Button onClick={handleDisableSimilar}>Back</Button>
-            <Button
-              onClick={handleModifySimilar}
-              disabled={argSimilarTree.selectedArgIds.length === 0}
-            >
+            <Button onClick={handleModifySimilar} disabled={argSimilarTree.selectedArgIds.length === 0}>
               Update
             </Button>
           </>
@@ -1505,17 +1393,10 @@ function FlattenDialog(props: {
 }) {
   const [updating, setUpdating] = useState<boolean>(false);
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
-  const [subArgOptions, setSubArgOptions] = useState<
-    { var: string; options: string }[]
-  >([]);
-  const [argSimilarTree, setArgSimilarTree] = useState<
-    ArgSimilarTree | undefined
-  >(undefined);
-  const [argSimilarTreeExpandedIds, setArgSimilarTreeExpandedIds] = useState<
-    string[]
-  >([]);
-  const [argSimilarTreeArgIdsUpdated, setArgSimilarTreeArgIdsUpdated] =
-    useState<string[]>([]);
+  const [subArgOptions, setSubArgOptions] = useState<{ var: string; options: string }[]>([]);
+  const [argSimilarTree, setArgSimilarTree] = useState<ArgSimilarTree | undefined>(undefined);
+  const [argSimilarTreeExpandedIds, setArgSimilarTreeExpandedIds] = useState<string[]>([]);
+  const [argSimilarTreeArgIdsUpdated, setArgSimilarTreeArgIdsUpdated] = useState<string[]>([]);
 
   useEffect(() => {
     const { arg, clsArgDefineMap } = props;
@@ -1594,9 +1475,7 @@ function FlattenDialog(props: {
       console.error(err);
       if (err.response?.data?.message) {
         const data = err.response!.data!;
-        setInvalidText(
-          `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
-        );
+        setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
       }
       setUpdating(false);
     }
@@ -1623,9 +1502,7 @@ function FlattenDialog(props: {
         console.error(err);
         if (err.response?.data?.message) {
           const data = err.response!.data!;
-          setInvalidText(
-            `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
-          );
+          setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
         }
         setUpdating(false);
       });
@@ -1681,20 +1558,13 @@ function FlattenDialog(props: {
     }
   };
 
-  const buildSubArgText = (
-    arg: { var: string; options: string },
-    idx: number
-  ) => {
+  const buildSubArgText = (arg: { var: string; options: string }, idx: number) => {
     return (
       <TextField
         id={`subArg-${arg.var}`}
         key={arg.var}
         label={`Prop ${idx + 1}`}
-        helperText={
-          idx === 0
-            ? "You can input multiple names separated by a space character"
-            : undefined
-        }
+        helperText={idx === 0 ? "You can input multiple names separated by a space character" : undefined}
         type="text"
         fullWidth
         variant="standard"
@@ -1719,11 +1589,7 @@ function FlattenDialog(props: {
   };
 
   return (
-    <Dialog
-      disableEscapeKeyDown
-      open={props.open}
-      sx={{ "& .MuiDialog-paper": { width: "80%" } }}
-    >
+    <Dialog disableEscapeKeyDown open={props.open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
       {!argSimilarTree && (
         <>
           <DialogTitle>Flatten Props</DialogTitle>
@@ -1768,22 +1634,15 @@ function FlattenDialog(props: {
         {!updating && !argSimilarTree && (
           <>
             <Button onClick={handleClose}>Cancel</Button>
-            {!props.arg.type.startsWith("@") && (
-              <Button onClick={handleFlatten}>Flatten</Button>
-            )}
-            {props.arg.type.startsWith("@") && (
-              <Button onClick={handleFlatten}>Unwrap & Flatten</Button>
-            )}
+            {!props.arg.type.startsWith("@") && <Button onClick={handleFlatten}>Flatten</Button>}
+            {props.arg.type.startsWith("@") && <Button onClick={handleFlatten}>Unwrap & Flatten</Button>}
             <Button onClick={handleDisplaySimilar}>Flatten Similar</Button>
           </>
         )}
         {!updating && argSimilarTree && (
           <>
             <Button onClick={handleDisableSimilar}>Back</Button>
-            <Button
-              onClick={handleFlattenSimilar}
-              disabled={argSimilarTree.selectedArgIds.length === 0}
-            >
+            <Button onClick={handleFlattenSimilar} disabled={argSimilarTree.selectedArgIds.length === 0}>
               Update
             </Button>
           </>
@@ -1831,20 +1690,14 @@ function UnwrapClsDialog(props: {
       console.error(err);
       if (err.response?.data?.message) {
         const data = err.response!.data!;
-        setInvalidText(
-          `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
-        );
+        setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
       }
       setUpdating(false);
     }
   };
 
   return (
-    <Dialog
-      disableEscapeKeyDown
-      open={props.open}
-      sx={{ "& .MuiDialog-paper": { width: "80%" } }}
-    >
+    <Dialog disableEscapeKeyDown open={props.open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
       <DialogTitle>Unwrap Class Type </DialogTitle>
       <DialogContent dividers={true}>
         {invalidText && (
@@ -1872,14 +1725,12 @@ function UnwrapClsDialog(props: {
   );
 }
 
-const PropArgTypeTypography = styled(Typography)<TypographyProps>(
-  ({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Work Sans', sans-serif",
-    fontSize: 10,
-    fontWeight: 400,
-  })
-);
+const PropArgTypeTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontFamily: "'Work Sans', sans-serif",
+  fontSize: 10,
+  fontWeight: 400,
+}));
 
 const PropRequiredTypography = styled(Typography)<TypographyProps>(() => ({
   color: "#dba339",
@@ -1902,33 +1753,27 @@ const ArgGroupTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
   fontWeight: 200,
 }));
 
-const PropArgOptionTypography = styled(Typography)<TypographyProps>(
-  ({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Roboto Condensed', sans-serif",
-    fontSize: 16,
-    fontWeight: 700,
-  })
-);
+const PropArgOptionTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontFamily: "'Roboto Condensed', sans-serif",
+  fontSize: 16,
+  fontWeight: 700,
+}));
 
-const PropHiddenArgOptionTypography = styled(Typography)<TypographyProps>(
-  () => ({
-    color: "#8888C3",
-    fontFamily: "'Roboto Condensed', sans-serif",
-    fontSize: 16,
-    fontWeight: 700,
-  })
-);
+const PropHiddenArgOptionTypography = styled(Typography)<TypographyProps>(() => ({
+  color: "#8888C3",
+  fontFamily: "'Roboto Condensed', sans-serif",
+  fontSize: 16,
+  fontWeight: 700,
+}));
 
-const PropArgShortSummaryTypography = styled(Typography)<TypographyProps>(
-  ({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Roboto Condensed', sans-serif",
-    fontSize: 14,
-    fontStyle: "italic",
-    fontWeight: 400,
-  })
-);
+const PropArgShortSummaryTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontFamily: "'Roboto Condensed', sans-serif",
+  fontSize: 14,
+  fontStyle: "italic",
+  fontWeight: 400,
+}));
 
 function ArgumentPropsReviewer(props: {
   title: string;
@@ -2001,27 +1846,17 @@ function ArgumentPropsReviewer(props: {
               props.onSelectSubArg(arg.var);
             }}
           >
-            {!arg.hide && (
-              <PropArgOptionTypography sx={{ flexShrink: 0 }}>
-                {argOptionsString}
-              </PropArgOptionTypography>
-            )}
+            {!arg.hide && <PropArgOptionTypography sx={{ flexShrink: 0 }}>{argOptionsString}</PropArgOptionTypography>}
             {arg.hide && (
-              <PropHiddenArgOptionTypography sx={{ flexShrink: 0 }}>
-                {argOptionsString}
-              </PropHiddenArgOptionTypography>
+              <PropHiddenArgOptionTypography sx={{ flexShrink: 0 }}>{argOptionsString}</PropHiddenArgOptionTypography>
             )}
           </ButtonBase>
           <Box sx={{ flexGrow: 1 }} />
           {arg.stage === "Preview" && (
-            <SmallPreviewTypography sx={{ flexShrink: 0 }}>
-              {arg.stage}
-            </SmallPreviewTypography>
+            <SmallPreviewTypography sx={{ flexShrink: 0 }}>{arg.stage}</SmallPreviewTypography>
           )}
           {arg.stage === "Experimental" && (
-            <SmallExperimentalTypography sx={{ flexShrink: 0 }}>
-              {arg.stage}
-            </SmallExperimentalTypography>
+            <SmallExperimentalTypography sx={{ flexShrink: 0 }}>{arg.stage}</SmallExperimentalTypography>
           )}
         </Box>
         <Box
@@ -2047,9 +1882,7 @@ function ArgumentPropsReviewer(props: {
               }}
             >{`/${arg.type}/`}</PropArgTypeTypography>
             <Box sx={{ flexGrow: 1 }} />
-            {arg.required && (
-              <PropRequiredTypography>[Required]</PropRequiredTypography>
-            )}
+            {arg.required && <PropRequiredTypography>[Required]</PropRequiredTypography>}
             {arg.hide && <PropHiddenTypography>[Hidden]</PropHiddenTypography>}
           </Box>
           {arg.help && (
@@ -2058,9 +1891,7 @@ function ArgumentPropsReviewer(props: {
                 ml: 4,
               }}
             >
-              <PropArgShortSummaryTypography>
-                {arg.help.short}
-              </PropArgShortSummaryTypography>
+              <PropArgShortSummaryTypography>{arg.help.short}</PropArgShortSummaryTypography>
             </Box>
           )}
         </Box>
@@ -2122,9 +1953,7 @@ function ArgumentPropsReviewer(props: {
         {props.onFlatten !== undefined && (
           <Button
             sx={{ flexShrink: 0, ml: 3 }}
-            startIcon={
-              <CallSplitSharpIcon color="secondary" fontSize="small" />
-            }
+            startIcon={<CallSplitSharpIcon color="secondary" fontSize="small" />}
             onClick={props.onFlatten}
           >
             <ArgEditTypography>Flatten</ArgEditTypography>
@@ -2348,9 +2177,7 @@ function decodeArgEnum<T>(response: any): CMDArgEnum<T> {
   return argEnum;
 }
 
-function decodeArgBlank<T>(
-  response: any | undefined
-): CMDArgBlank<T> | undefined {
+function decodeArgBlank<T>(response: any | undefined): CMDArgBlank<T> | undefined {
   if (response === undefined || response === null) {
     return undefined;
   }
@@ -2360,9 +2187,7 @@ function decodeArgBlank<T>(
   };
 }
 
-function decodeArgDefault<T>(
-  response: any | undefined
-): CMDArgDefault<T> | undefined {
+function decodeArgDefault<T>(response: any | undefined): CMDArgDefault<T> | undefined {
   if (response === undefined || response === null) {
     return undefined;
   }
@@ -2382,9 +2207,7 @@ function decodeArgPromptInput(response: any): CMDArgPromptInput | undefined {
   };
 }
 
-function decodePasswordArgPromptInput(
-  response: any
-): CMDPasswordArgPromptInput | undefined {
+function decodePasswordArgPromptInput(response: any): CMDPasswordArgPromptInput | undefined {
   if (response === undefined || response === null) {
     return undefined;
   }
@@ -2482,11 +2305,7 @@ function decodeArgBase(response: any): {
       }
       break;
     case "object":
-      if (
-        response.args &&
-        Array.isArray(response.args) &&
-        response.args.length > 0
-      ) {
+      if (response.args && Array.isArray(response.args) && response.args.length > 0) {
         const args: CMDArg[] = response.args.map((resSubArg: any) => {
           const subArgParse = decodeArg(resSubArg);
           clsDefineMap = {
@@ -2584,37 +2403,24 @@ function decodeArg(response: any): {
   clsDefineMap: ClsArgDefinitionMap;
 } {
   const { argBase, clsDefineMap } = decodeArgBase(response);
-  const options = (response.options as string[])
-    .sort((a, b) => a.length - b.length)
-    .reverse();
+  const options = (response.options as string[]).sort((a, b) => a.length - b.length).reverse();
   const help = response.help ? decodeArgHelp(response.help) : undefined;
-  const prompt = response.prompt
-    ? decodeArgPromptInput(response.prompt)
-    : undefined;
+  const prompt = response.prompt ? decodeArgPromptInput(response.prompt) : undefined;
 
   let arg: any = {
     ...argBase,
     var: response.var as string,
     options: options,
     required: (response.required ?? false) as boolean,
-    stage: (response.stage ?? "Stable") as
-      | "Stable"
-      | "Preview"
-      | "Experimental",
+    stage: (response.stage ?? "Stable") as "Stable" | "Preview" | "Experimental",
     hide: (response.hide ?? false) as boolean,
     group: (response.group ?? "") as string,
     help: help,
     idPart: response.idPart,
     prompt: prompt,
     configurationKey: response.configurationKey,
-    supportEnumExtension:
-      response.enum?.supportExtension ||
-      response.item?.enum?.supportExtension ||
-      false,
-    hasEnum:
-      response.enum?.items?.length > 0 ||
-      response.item?.enum?.items?.length > 0 ||
-      false,
+    supportEnumExtension: response.enum?.supportExtension || response.item?.enum?.supportExtension || false,
+    hasEnum: response.enum?.items?.length > 0 || response.item?.enum?.items?.length > 0 || false,
   };
 
   switch (argBase.type) {
@@ -2766,18 +2572,14 @@ function convertArgDefaultText(defaultText: string, argType: string): any {
     case "integer64":
     case "integer":
       if (Number.isNaN(parseInt(defaultText.trim()))) {
-        throw Error(
-          `Not supported default value for integer type: '${defaultText}'`
-        );
+        throw Error(`Not supported default value for integer type: '${defaultText}'`);
       }
       return parseInt(defaultText.trim());
     case "float32":
     case "float64":
     case "float":
       if (Number.isNaN(parseFloat(defaultText.trim()))) {
-        throw Error(
-          `Not supported default value for float type: '${defaultText}'`
-        );
+        throw Error(`Not supported default value for float type: '${defaultText}'`);
       }
       return parseFloat(defaultText.trim());
     case "boolean":
@@ -2789,9 +2591,7 @@ function convertArgDefaultText(defaultText: string, argType: string): any {
         case "no":
           return false;
         default:
-          throw Error(
-            `Not supported default value for boolean type: '${defaultText}'`
-          );
+          throw Error(`Not supported default value for boolean type: '${defaultText}'`);
       }
     case "any":
       let trimmed = defaultText.trim().toLowerCase();
@@ -2832,9 +2632,7 @@ function convertArgDefaultText(defaultText: string, argType: string): any {
   }
 }
 
-const DecodeArgs = (
-  argGroups: any[]
-): { args: CMDArg[]; clsArgDefineMap: ClsArgDefinitionMap } => {
+const DecodeArgs = (argGroups: any[]): { args: CMDArg[]; clsArgDefineMap: ClsArgDefinitionMap } => {
   let clsDefineMap: ClsArgDefinitionMap = {};
   const args: CMDArg[] = [];
   argGroups.forEach((argGroup: any) => {
@@ -2846,7 +2644,7 @@ const DecodeArgs = (
           ...argDecode.clsDefineMap,
         };
         return argDecode.arg;
-      })
+      }),
     );
   });
   return {

@@ -1,1 +1,9 @@
-singleQuote: true
+tabWidth: 2
+useTabs: false
+printWidth: 120
+singleQuote: false
+trailingComma: "all"
+semi: true
+quoteProps: "consistent"
+endOfLine: lf
+arrowParens: always

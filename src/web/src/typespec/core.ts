@@ -2,15 +2,15 @@
  * Options for importing libraries.
  */
 export interface LibraryImportOptions {
-    /**
-     * Should use es-module-shim importmap-shim instead of built-in import and importmap system.
-     * @see https://github.com/guybedford/es-module-shims
-     */
-    useShim?: boolean;
+  /**
+   * Should use es-module-shim importmap-shim instead of built-in import and importmap system.
+   * @see https://github.com/guybedford/es-module-shims
+   */
+  useShim?: boolean;
 }
 
 export async function importTypeSpecCompiler(config: any): Promise<typeof import("@typespec/compiler")> {
-    return (await importLibrary("@typespec/compiler", config)) as any;
+  return (await importLibrary("@typespec/compiler", config)) as any;
 }
 
 /**
@@ -18,9 +18,7 @@ export async function importTypeSpecCompiler(config: any): Promise<typeof import
  * @returns Promise with the loaded module.
  */
 export async function importLibrary(name: string, config: LibraryImportOptions): Promise<unknown> {
-    return config.useShim
-        ? importShim(name)
-        : import(/* @vite-ignore */ /* webpackIgnore: true */ name);
+  return config.useShim ? importShim(name) : import(/* @vite-ignore */ /* webpackIgnore: true */ name);
 }
 
 /**
@@ -33,5 +31,5 @@ export async function importLibrary(name: string, config: LibraryImportOptions):
  * @returns Promise with the loaded module.
  */
 async function importShim(name: string): Promise<unknown> {
-    return (window as any).importShim(name);
+  return (window as any).importShim(name);
 }

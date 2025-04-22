@@ -175,23 +175,19 @@ interface WSEditorCommandContentState {
 
 const commandPrefix = "az ";
 
-const ExampleCommandHeaderTypography = styled(Typography)<TypographyProps>(
-  ({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Work Sans', sans-serif",
-    fontSize: 14,
-    fontWeight: 400,
-  })
-);
+const ExampleCommandHeaderTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontFamily: "'Work Sans', sans-serif",
+  fontSize: 14,
+  fontWeight: 400,
+}));
 
-const ExampleCommandBodyTypography = styled(Typography)<TypographyProps>(
-  ({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Work Sans', sans-serif",
-    fontSize: 14,
-    fontWeight: 400,
-  })
-);
+const ExampleCommandBodyTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontFamily: "'Work Sans', sans-serif",
+  fontSize: 14,
+  fontWeight: 400,
+}));
 
 const ExampleEditTypography = styled(Typography)<TypographyProps>(() => ({
   color: "#5d64cf",
@@ -201,34 +197,27 @@ const ExampleEditTypography = styled(Typography)<TypographyProps>(() => ({
 }));
 
 const ExampleAccordionSummary = styled((props: AccordionSummaryProps) => (
-  <MuiAccordionSummary
-    expandIcon={<LabelIcon fontSize="small" color="primary" />}
-    {...props}
-  />
+  <MuiAccordionSummary expandIcon={<LabelIcon fontSize="small" color="primary" />} {...props} />
 ))(() => ({
-  flexDirection: "row-reverse",
+  "flexDirection": "row-reverse",
   "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
     transform: "rotate(0deg)",
   },
 }));
 
-const OutputTypeTypography = styled(Typography)<TypographyProps>(
-  ({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Work Sans', sans-serif",
-    fontSize: 10,
-    fontWeight: 400,
-  })
-);
+const OutputTypeTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontFamily: "'Work Sans', sans-serif",
+  fontSize: 10,
+  fontWeight: 400,
+}));
 
-const OutputRefTypography = styled(Typography)<TypographyProps>(
-  ({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Roboto Condensed', sans-serif",
-    fontSize: 16,
-    fontWeight: 700,
-  })
-);
+const OutputRefTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontFamily: "'Roboto Condensed', sans-serif",
+  fontSize: 16,
+  fontWeight: 700,
+}));
 
 const OutputFlagTypography = styled(Typography)<TypographyProps>(() => ({
   color: "#8888C3",
@@ -248,19 +237,14 @@ const OutputDialogLabel = styled(FormLabel)<FormLabelProps>(() => ({
   fontSize: 12,
 }));
 
-const OutputDialogMainTypography = styled(Typography)<TypographyProps>(
-  ({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Work Sans', sans-serif",
-    fontSize: 18,
-    fontWeight: 400,
-  })
-);
+const OutputDialogMainTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontFamily: "'Work Sans', sans-serif",
+  fontSize: 18,
+  fontWeight: 400,
+}));
 
-class WSEditorCommandContent extends React.Component<
-  WSEditorCommandContentProps,
-  WSEditorCommandContentState
-> {
+class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps, WSEditorCommandContentState> {
   constructor(props: WSEditorCommandContentProps) {
     super(props);
     this.state = {
@@ -381,16 +365,13 @@ class WSEditorCommandContent extends React.Component<
   onAddSubcommandDialogDisplay = (
     argVar: string,
     subArgOptions: { var: string; options: string }[],
-    argStackNames: string[]
+    argStackNames: string[],
   ) => {
     this.setState({
       displayAddSubcommandDialog: true,
       subcommandArgVar: argVar,
       subcommandSubArgOptions: subArgOptions,
-      subcommandDefaultGroupNames: [
-        ...this.props.previewCommand.names.slice(0, -1),
-        ...argStackNames,
-      ],
+      subcommandDefaultGroupNames: [...this.props.previewCommand.names.slice(0, -1), ...argStackNames],
     });
   };
 
@@ -450,9 +431,7 @@ class WSEditorCommandContent extends React.Component<
               }}
             >
               <KeyboardDoubleArrowRightIcon fontSize="small" />
-              <ExampleCommandHeaderTypography sx={{ flexShrink: 0 }}>
-                {commandPrefix}
-              </ExampleCommandHeaderTypography>
+              <ExampleCommandHeaderTypography sx={{ flexShrink: 0 }}>{commandPrefix}</ExampleCommandHeaderTypography>
             </Box>
             <Box
               component="span"
@@ -460,9 +439,7 @@ class WSEditorCommandContent extends React.Component<
                 ml: 0.8,
               }}
             >
-              <ExampleCommandBodyTypography>
-                {exampleCommand}
-              </ExampleCommandBodyTypography>
+              <ExampleCommandBodyTypography>{exampleCommand}</ExampleCommandBodyTypography>
             </Box>
           </Box>
         );
@@ -486,9 +463,7 @@ class WSEditorCommandContent extends React.Component<
                 alignItems: "center",
               }}
             >
-              <SubtitleTypography sx={{ flexShrink: 0 }}>
-                {example.name}
-              </SubtitleTypography>
+              <SubtitleTypography sx={{ flexShrink: 0 }}>{example.name}</SubtitleTypography>
               {/* <Box sx={{ flexGrow: 1 }} /> */}
               <Button
                 sx={{ flexShrink: 0, ml: 3 }}
@@ -552,34 +527,17 @@ class WSEditorCommandContent extends React.Component<
                 alignItems: "center",
               }}
             >
-              <CardTitleTypography sx={{ flexShrink: 0 }}>
-                [ COMMAND ]
-              </CardTitleTypography>
+              <CardTitleTypography sx={{ flexShrink: 0 }}>[ COMMAND ]</CardTitleTypography>
               <Box sx={{ flexGrow: 1 }} />
-              {stage === "Stable" && (
-                <StableTypography sx={{ flexShrink: 0 }}>
-                  {`v${version}`}
-                </StableTypography>
-              )}
-              {stage === "Preview" && (
-                <PreviewTypography sx={{ flexShrink: 0 }}>
-                  {`v${version}`}
-                </PreviewTypography>
-              )}
+              {stage === "Stable" && <StableTypography sx={{ flexShrink: 0 }}>{`v${version}`}</StableTypography>}
+              {stage === "Preview" && <PreviewTypography sx={{ flexShrink: 0 }}>{`v${version}`}</PreviewTypography>}
               {stage === "Experimental" && (
-                <ExperimentalTypography sx={{ flexShrink: 0 }}>
-                  {`v${version}`}
-                </ExperimentalTypography>
+                <ExperimentalTypography sx={{ flexShrink: 0 }}>{`v${version}`}</ExperimentalTypography>
               )}
             </Box>
 
             <NameTypography sx={{ mt: 1 }}>{name}</NameTypography>
-            {shortHelp && (
-              <ShortHelpTypography sx={{ ml: 6, mt: 2 }}>
-                {" "}
-                {shortHelp}{" "}
-              </ShortHelpTypography>
-            )}
+            {shortHelp && <ShortHelpTypography sx={{ ml: 6, mt: 2 }}> {shortHelp} </ShortHelpTypography>}
             {!shortHelp && (
               <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>
                 Please add command short summary!
@@ -695,9 +653,7 @@ class WSEditorCommandContent extends React.Component<
                 alignItems: "center",
               }}
             >
-              <CardTitleTypography sx={{ flexShrink: 0 }}>
-                [ EXAMPLE ]
-              </CardTitleTypography>
+              <CardTitleTypography sx={{ flexShrink: 0 }}>[ EXAMPLE ]</CardTitleTypography>
             </Box>
             {examples.length > 0 && <Box>{examples.map(buildExampleView)}</Box>}
           </CardContent>
@@ -732,15 +688,10 @@ class WSEditorCommandContent extends React.Component<
           }}
         >
           {buildCommandCard()}
-          {command !== undefined &&
-            command.args !== undefined &&
-            buildArgumentsCard()}
+          {command !== undefined && command.args !== undefined && buildArgumentsCard()}
           {command !== undefined && buildExampleCard()}
           {command !== undefined && command.outputs !== undefined && (
-            <OutputCard
-              command={command}
-              onOutputDialogDisplay={this.onOutputDialogDisplay}
-            />
+            <OutputCard command={command} onOutputDialogDisplay={this.onOutputDialogDisplay} />
           )}
         </Box>
         {command !== undefined && displayCommandDialog && (
@@ -820,9 +771,7 @@ function CommandDeleteDialog(props: {
         //     subresource2 = btoa(resource.subresource + '{}');
         //     urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource2}`)
         // }
-        urls.push(
-          `${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource}`
-        );
+        urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource}`);
       } else {
         urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}`);
       }
@@ -882,10 +831,7 @@ function CommandDeleteDialog(props: {
       <DialogTitle>Delete Commands</DialogTitle>
       <DialogContent dividers={true}>
         {relatedCommands.map((command, idx) => (
-          <Typography
-            key={`command-${idx}`}
-            variant="body2"
-          >{`${commandPrefix}${command}`}</Typography>
+          <Typography key={`command-${idx}`} variant="body2">{`${commandPrefix}${command}`}</Typography>
         ))}
       </DialogContent>
       <DialogActions>
@@ -922,10 +868,7 @@ interface CommandDialogState {
   updating: boolean;
 }
 
-class CommandDialog extends React.Component<
-  CommandDialogProps,
-  CommandDialogState
-> {
+class CommandDialog extends React.Component<CommandDialogProps, CommandDialogState> {
   constructor(props: CommandDialogProps) {
     super(props);
     this.state = {
@@ -1048,21 +991,9 @@ class CommandDialog extends React.Component<
   };
 
   render() {
-    const {
-      name,
-      shortHelp,
-      longHelp,
-      invalidText,
-      updating,
-      stage,
-      confirmation,
-    } = this.state;
+    const { name, shortHelp, longHelp, invalidText, updating, stage, confirmation } = this.state;
     return (
-      <Dialog
-        disableEscapeKeyDown
-        open={this.props.open}
-        sx={{ "& .MuiDialog-paper": { width: "80%" } }}
-      >
+      <Dialog disableEscapeKeyDown open={this.props.open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
         <DialogTitle>Command</DialogTitle>
         <DialogContent dividers={true}>
           {invalidText && (
@@ -1084,24 +1015,9 @@ class CommandDialog extends React.Component<
               });
             }}
           >
-            <FormControlLabel
-              value="Stable"
-              control={<Radio />}
-              label="Stable"
-              sx={{ ml: 4 }}
-            />
-            <FormControlLabel
-              value="Preview"
-              control={<Radio />}
-              label="Preview"
-              sx={{ ml: 4 }}
-            />
-            <FormControlLabel
-              value="Experimental"
-              control={<Radio />}
-              label="Experimental"
-              sx={{ ml: 4 }}
-            />
+            <FormControlLabel value="Stable" control={<Radio />} label="Stable" sx={{ ml: 4 }} />
+            <FormControlLabel value="Preview" control={<Radio />} label="Preview" sx={{ ml: 4 }} />
+            <FormControlLabel value="Experimental" control={<Radio />} label="Experimental" sx={{ ml: 4 }} />
           </RadioGroup>
 
           <TextField
@@ -1205,19 +1121,14 @@ interface ExampleDialogState {
   exampleOptions: Example[];
 }
 
-const ExampleCommandTypography = styled(Typography)<TypographyProps>(
-  ({ theme }) => ({
-    color: theme.palette.primary.main,
-    fontFamily: "'Roboto Condensed', sans-serif",
-    fontSize: 16,
-    fontWeight: 400,
-  })
-);
+const ExampleCommandTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontFamily: "'Roboto Condensed', sans-serif",
+  fontSize: 16,
+  fontWeight: 400,
+}));
 
-class ExampleDialog extends React.Component<
-  ExampleDialogProps,
-  ExampleDialogState
-> {
+class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogState> {
   constructor(props: ExampleDialogProps) {
     super(props);
     const examples: Example[] = this.props.command.examples ?? [];
@@ -1326,11 +1237,7 @@ class ExampleDialog extends React.Component<
       commands: exampleCommands,
     };
 
-    examples = [
-      ...examples.slice(0, idx),
-      newExample,
-      ...examples.slice(idx + 1),
-    ];
+    examples = [...examples.slice(0, idx), newExample, ...examples.slice(idx + 1)];
 
     this.onUpdateExamples(examples);
   };
@@ -1385,11 +1292,7 @@ class ExampleDialog extends React.Component<
     this.setState((preState) => {
       return {
         ...preState,
-        exampleCommands: [
-          ...preState.exampleCommands.slice(0, idx),
-          cmd,
-          ...preState.exampleCommands.slice(idx + 1),
-        ],
+        exampleCommands: [...preState.exampleCommands.slice(0, idx), cmd, ...preState.exampleCommands.slice(idx + 1)],
       };
     });
   };
@@ -1464,9 +1367,7 @@ class ExampleDialog extends React.Component<
   };
 
   onExampleSelectorUpdate = (exampleDisplayName: string | null) => {
-    let example =
-      this.state.exampleOptions.find((v) => v.name === exampleDisplayName) ??
-      undefined;
+    let example = this.state.exampleOptions.find((v) => v.name === exampleDisplayName) ?? undefined;
 
     if (example === undefined) {
       this.setState({
@@ -1481,15 +1382,7 @@ class ExampleDialog extends React.Component<
   };
 
   render() {
-    const {
-      name,
-      exampleCommands,
-      isAdd,
-      invalidText,
-      updating,
-      source,
-      exampleOptions,
-    } = this.state;
+    const { name, exampleCommands, isAdd, invalidText, updating, source, exampleOptions } = this.state;
 
     const selectedName = name;
 
@@ -1505,12 +1398,7 @@ class ExampleDialog extends React.Component<
             ml: 1,
           }}
         >
-          <IconButton
-            edge="start"
-            color="inherit"
-            onClick={() => this.onRemoveExampleCommand(idx)}
-            aria-label="remove"
-          >
+          <IconButton edge="start" color="inherit" onClick={() => this.onRemoveExampleCommand(idx)} aria-label="remove">
             <DoDisturbOnRoundedIcon fontSize="small" />
           </IconButton>
           <Input
@@ -1524,9 +1412,7 @@ class ExampleDialog extends React.Component<
             placeholder="Input a command here."
             startAdornment={
               <InputAdornment position="start">
-                <ExampleCommandTypography>
-                  {commandPrefix}
-                </ExampleCommandTypography>
+                <ExampleCommandTypography>{commandPrefix}</ExampleCommandTypography>
               </InputAdornment>
             }
           />
@@ -1535,11 +1421,7 @@ class ExampleDialog extends React.Component<
     };
 
     return (
-      <Dialog
-        disableEscapeKeyDown
-        open={this.props.open}
-        sx={{ "& .MuiDialog-paper": { width: "80%" } }}
-      >
+      <Dialog disableEscapeKeyDown open={this.props.open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
         <DialogTitle>
           {isAdd ? "Add Example" : "Modify Example"}
           <IconButton
@@ -1564,9 +1446,7 @@ class ExampleDialog extends React.Component<
                   this.loadSwaggerExamples();
                 }}
               >
-                <Typography variant="body2">
-                  By OpenAPI Specification
-                </Typography>
+                <Typography variant="body2">By OpenAPI Specification</Typography>
               </Button>
               {/* <Button variant='outlined' size="large" color='secondary' sx={{ fontSize: '20px', padding: '10px 20px' }} disabled>
                                 <Typography variant='body2'>By Testing Record</Typography>
@@ -1627,18 +1507,10 @@ class ExampleDialog extends React.Component<
                   ml: 1,
                 }}
               >
-                <IconButton
-                  edge="start"
-                  color="inherit"
-                  onClick={this.onAddExampleCommand}
-                  aria-label="add"
-                >
+                <IconButton edge="start" color="inherit" onClick={this.onAddExampleCommand} aria-label="add">
                   <AddCircleRoundedIcon fontSize="small" />
                 </IconButton>
-                <ExampleCommandTypography sx={{ flexShrink: 0 }}>
-                  {" "}
-                  One more command
-                </ExampleCommandTypography>
+                <ExampleCommandTypography sx={{ flexShrink: 0 }}> One more command</ExampleCommandTypography>
               </Box>
             </React.Fragment>
           )}
@@ -1680,9 +1552,7 @@ function AddSubcommandDialog(props: {
   const [updating, setUpdating] = useState<boolean>(false);
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [commandGroupName, setCommandGroupName] = useState<string>("");
-  const [refArgsOptions, setRefArgsOptions] = useState<
-    { var: string; options: string }[]
-  >([]);
+  const [refArgsOptions, setRefArgsOptions] = useState<{ var: string; options: string }[]>([]);
 
   useEffect(() => {
     setCommandGroupName(props.defaultGroupNames.join(" "));
@@ -1740,9 +1610,7 @@ function AddSubcommandDialog(props: {
     });
 
     if (urls.length !== 1) {
-      setInvalidText(
-        `Cannot create subcommands, command contains ${props.command.resources.length} resources`
-      );
+      setInvalidText(`Cannot create subcommands, command contains ${props.command.resources.length} resources`);
       return;
     }
 
@@ -1763,28 +1631,19 @@ function AddSubcommandDialog(props: {
       console.error(err);
       if (err.response?.data?.message) {
         const data = err.response!.data!;
-        setInvalidText(
-          `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
-        );
+        setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
       }
       setUpdating(false);
     }
   };
 
-  const buildRefArgText = (
-    arg: { var: string; options: string },
-    idx: number
-  ) => {
+  const buildRefArgText = (arg: { var: string; options: string }, idx: number) => {
     return (
       <TextField
         id={`subArg-${arg.var}`}
         key={arg.var}
         label={`${arg.var}`}
-        helperText={
-          idx === 0
-            ? "You can input multiple names separated by a space character"
-            : undefined
-        }
+        helperText={idx === 0 ? "You can input multiple names separated by a space character" : undefined}
         type="text"
         fullWidth
         variant="standard"
@@ -1809,11 +1668,7 @@ function AddSubcommandDialog(props: {
   };
 
   return (
-    <Dialog
-      disableEscapeKeyDown
-      open={props.open}
-      sx={{ "& .MuiDialog-paper": { width: "80%" } }}
-    >
+    <Dialog disableEscapeKeyDown open={props.open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
       <DialogTitle>Add Subcommands</DialogTitle>
       <DialogContent dividers={true}>
         {invalidText && (
@@ -1861,10 +1716,7 @@ function AddSubcommandDialog(props: {
   );
 }
 
-function OutputCard(props: {
-  command: Command;
-  onOutputDialogDisplay: (idx: number) => void;
-}) {
+function OutputCard(props: { command: Command; onOutputDialogDisplay: (idx: number) => void }) {
   const outputs = props.command!.outputs!;
 
   const buildBaseOutputView = (
@@ -1872,7 +1724,7 @@ function OutputCard(props: {
     refName: string,
     type: string,
     flags: string[],
-    onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined
+    onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined,
   ) => {
     return (
       <Box sx={{ my: 1 }}>
@@ -1934,11 +1786,7 @@ function OutputCard(props: {
               >{`/${type}/`}</OutputTypeTypography>
               <Box sx={{ flexGrow: 1 }} />
               {flags.map((flag, idx) => {
-                return (
-                  <OutputFlagTypography
-                    key={`output-flag-${idx}`}
-                  >{`[${flag}]`}</OutputFlagTypography>
-                );
+                return <OutputFlagTypography key={`output-flag-${idx}`}>{`[${flag}]`}</OutputFlagTypography>;
               })}
             </Box>
           </Box>
@@ -1950,35 +1798,35 @@ function OutputCard(props: {
   const buildObjectOutputView = (
     output: ObjectOutput,
     idx: number,
-    onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined
+    onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined,
   ) => {
     return buildBaseOutputView(
       idx,
       output.ref,
       output.type,
       output.clientFlatten ? ["Flattened"] : ["Unflattened"],
-      onClick
+      onClick,
     );
   };
 
   const buildArrayOutputView = (
     output: ArrayOutput,
     idx: number,
-    onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined
+    onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined,
   ) => {
     return buildBaseOutputView(
       idx,
       output.ref,
       output.type,
       output.clientFlatten ? ["Flattened"] : ["Unflattened"],
-      onClick
+      onClick,
     );
   };
 
   const buildStringOutputView = (
     output: StringOutput,
     idx: number,
-    onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined
+    onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined,
   ) => {
     const title = output.ref ? output.ref : output.value;
     return buildBaseOutputView(idx, title, output.type, [], onClick);
@@ -2025,9 +1873,7 @@ function OutputCard(props: {
             alignItems: "center",
           }}
         >
-          <CardTitleTypography sx={{ flexShrink: 0 }}>
-            [ OUTPUT ]
-          </CardTitleTypography>
+          <CardTitleTypography sx={{ flexShrink: 0 }}>[ OUTPUT ]</CardTitleTypography>
         </Box>
         {outputs.length > 0 && outputs.map(buildOutputView)}
       </CardContent>
@@ -2046,9 +1892,7 @@ function OutputDialog(props: {
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const outputs = props.command.outputs ?? [];
   const output = outputs[props.idx!];
-  const [flatten, setFlatten] = useState<boolean>(
-    output.type !== "string" ? output.clientFlatten : false
-  );
+  const [flatten, setFlatten] = useState<boolean>(output.type !== "string" ? output.clientFlatten : false);
   const flattenLabelContent = flatten ? "Flattened" : "Unflattened";
 
   const handleClose = () => {
@@ -2086,9 +1930,7 @@ function OutputDialog(props: {
           console.error(err.response);
           if (err.response?.data?.message) {
             const data = err.response!.data!;
-            setInvalidText(
-              `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`
-            );
+            setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
           }
           setUpdating(false);
         });
@@ -2099,11 +1941,7 @@ function OutputDialog(props: {
   };
 
   return (
-    <Dialog
-      disableEscapeKeyDown
-      open={props.open}
-      sx={{ "& .MuiDialog-paper": { width: "80%" } }}
-    >
+    <Dialog disableEscapeKeyDown open={props.open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
       <DialogTitle>JSON Format Output</DialogTitle>
       <DialogContent dividers={true}>
         {invalidText && (
@@ -2115,25 +1953,19 @@ function OutputDialog(props: {
         {(output.type !== "string" || output.ref !== undefined) && (
           <React.Fragment>
             <OutputDialogLabel>Output Reference</OutputDialogLabel>
-            <OutputDialogMainTypography sx={{ my: 1 }}>
-              {output.ref}
-            </OutputDialogMainTypography>
+            <OutputDialogMainTypography sx={{ my: 1 }}>{output.ref}</OutputDialogMainTypography>
           </React.Fragment>
         )}
         {output.type == "string" && output.ref == undefined && (
           <React.Fragment>
             <OutputDialogLabel>Output Value</OutputDialogLabel>
-            <OutputDialogMainTypography sx={{ my: 1 }}>
-              {output.value}
-            </OutputDialogMainTypography>
+            <OutputDialogMainTypography sx={{ my: 1 }}>{output.value}</OutputDialogMainTypography>
           </React.Fragment>
         )}
         {output.type == "array" && output.nextLink !== undefined && (
           <React.Fragment>
             <OutputDialogLabel>Next Link Reference</OutputDialogLabel>
-            <OutputDialogMainTypography sx={{ my: 1 }}>
-              {output.nextLink}
-            </OutputDialogMainTypography>
+            <OutputDialogMainTypography sx={{ my: 1 }}>{output.nextLink}</OutputDialogMainTypography>
           </React.Fragment>
         )}
         {(output.type !== "string" || output.ref !== undefined) && (
@@ -2150,11 +1982,7 @@ function OutputDialog(props: {
                     }}
                   />
                 }
-                label={
-                  <OutputDialogMainTypography sx={{ mx: 2 }}>
-                    {flattenLabelContent}
-                  </OutputDialogMainTypography>
-                }
+                label={<OutputDialogMainTypography sx={{ mx: 2 }}>{flattenLabelContent}</OutputDialogMainTypography>}
                 labelPlacement="end"
               />
             </Box>
@@ -2204,11 +2032,4 @@ export default WSEditorCommandContent;
 
 export { DecodeResponseCommand };
 
-export type {
-  Plane,
-  Command,
-  Resource,
-  ResponseCommand,
-  ResponseCommands,
-  Example,
-};
+export type { Plane, Command, Resource, ResponseCommand, ResponseCommands, Example };
