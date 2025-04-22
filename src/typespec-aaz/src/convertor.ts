@@ -895,8 +895,6 @@ function convertModel2CMDObjectSchemaBase(
       properties[propertyName] = discriminatorProperty;
     }
 
-    const discProperty = properties[propertyName] as CMDStringSchema;
-
     const derivedModels = payloadModel.derivedModels.filter(includeDerivedModel);
     for (const child of derivedModels) {
       const childDiscriminatorValue = getDiscriminatorInfo(context, child);
@@ -905,12 +903,6 @@ function convertModel2CMDObjectSchemaBase(
         if (disc) {
           object.discriminators ??= [];
           object.discriminators.push(disc);
-          discProperty.enum ??= {
-            items: [],
-          };
-          discProperty.enum.items.push({
-            value: childDiscriminatorValue.value,
-          });
         }
       }
     }
@@ -1008,6 +1000,10 @@ function convertModel2CMDObjectDiscriminator(
     }
 
     const jsonName = getJsonName(context, prop);
+    if (jsonName === discriminatorInfo.propertyName) {
+      // if this property is a discriminator property, remove it as autorest
+      continue;
+    }
     let schema = convert2CMDSchema(
       {
         ...context,
@@ -1016,6 +1012,7 @@ function convertModel2CMDObjectDiscriminator(
       prop,
       jsonName,
     );
+
     if (schema) {
       if (isReadonlyProperty(context.program, prop)) {
         schema.readOnly = true;
