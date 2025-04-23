@@ -100,6 +100,7 @@ import {
   CMDIdentityObjectSchemaBase,
   CMDBooleanSchemaBase,
   CMDAnyTypeSchemaBase,
+  CMDBinarySchema,
 } from "./model/schema.js";
 import { reportDiagnostic } from "./lib.js";
 import { getExtensions, getOpenAPITypeName, isReadonlyProperty } from "@typespec/openapi";
@@ -373,9 +374,6 @@ function extractHttpRequest(
     if (body.bodyKind === "multipart") {
       throw new Error("NotImplementedError: Multipart form data payloads are not supported.");
     }
-    if (isBinaryPayload(body.type, consumes)) {
-      throw new Error("NotImplementedError: Binary payloads are not supported.");
-    }
     if (consumes.includes("multipart/form-data")) {
       throw new Error("NotImplementedError: Multipart form data payloads are not supported.");
     }
@@ -412,6 +410,12 @@ function extractHttpRequest(
           ...schema,
           clientFlatten: true,
         } as CMDObjectSchema;
+      }
+      if (isBinaryPayload(body.type, consumes)) {
+        schema = {
+          ...schema,
+          type: "binary",
+        } as CMDBinarySchema;
       }
       request.body = {
         json: {
