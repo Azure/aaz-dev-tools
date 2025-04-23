@@ -56,7 +56,6 @@ describe("discriminator parsing", () => {
     expect(Array.isArray(resultObj)).toBe(true);
     expect(resultObj.length).toBe(1);
     const targetObj = findObjectsWithKey(resultObj[0].pathItem.get.read.http.responses, "targetValue");
-    const anyTypeObj = JSON.stringify(targetObj, null, 2);
-    await expect(anyTypeObj).toMatchFileSnapshot("./snapshots/discriminator-prop.json");
+    await expect(JSON.stringify(targetObj, null, 2)).toMatchFileSnapshot("./snapshots/discriminator-prop.json");
   });
 });
