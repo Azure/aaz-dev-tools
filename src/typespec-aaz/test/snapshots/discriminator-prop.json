@@ -1,0 +1,47 @@
+{
+  "type": "object",
+  "discriminators": [
+    {
+      "property": "kind",
+      "value": "FunctionsFlexConsumption",
+      "props": [
+        {
+          "type": "object",
+          "additionalProps": {
+            "item": {
+              "type": "object",
+              "props": [
+                {
+                  "type": "integer64",
+                  "name": "instanceMemoryMB",
+                  "required": true
+                },
+                {
+                  "type": "integer64",
+                  "name": "httpConcurrency"
+                }
+              ]
+            }
+          },
+          "name": "configurations"
+        }
+      ]
+    }
+  ],
+  "props": [
+    {
+      "type": "string",
+      "enum": {
+        "items": [
+          {
+            "value": "FunctionsFlexConsumption"
+          }
+        ]
+      },
+      "name": "kind",
+      "required": true
+    }
+  ],
+  "name": "targetValue",
+  "required": true
+}
