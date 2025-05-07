@@ -33,6 +33,8 @@ class TypeSpecHelper:
     @classmethod
     def find_data_plane_entry_files(cls, folder):
         files = []
+        if not os.path.isdir(folder):
+            return files
         for ts_path, cfg_path in cls._iter_entry_files(folder):
             namespace, is_mgmt_plane = cls._parse_main_tsp(ts_path)
             if not namespace:
