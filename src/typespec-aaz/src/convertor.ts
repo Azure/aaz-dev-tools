@@ -1,14 +1,12 @@
 import {
   HttpOperation,
-  HttpOperationBody,
-  HttpOperationMultipartBody,
+  HttpPayloadBody,
   HttpOperationResponse,
   HttpStatusCodeRange,
   HttpStatusCodesEntry,
   Visibility,
   createMetadataInfo,
   getHeaderFieldOptions,
-  getQueryParamOptions,
   getServers,
   getStatusCodeDescription,
   getVisibilitySuffix,
@@ -545,7 +543,7 @@ function convert2CMDHttpResponse(
   };
 
   const contentTypes: string[] = [];
-  let body: HttpOperationBody | HttpOperationMultipartBody | undefined;
+  let body: HttpPayloadBody | undefined;
   for (const data of response.responses) {
     if (data.headers && Object.keys(data.headers).length > 0) {
       res.header ??= {
