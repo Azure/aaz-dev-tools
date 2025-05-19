@@ -357,6 +357,13 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
             arg_type = "AAZDateArg"
         elif isinstance(arg, CMDDateTimeArgBase):
             arg_type = "AAZDateTimeArg"
+            if arg.is_rfc:
+                arg_kwargs['fmt'] = {
+                    "cls": "AAZDateTimeFormat",
+                    "kwargs": {
+                        "protocol": "rfc"
+                    }
+                }
         elif isinstance(arg, CMDTimeArgBase):
             arg_type = "AAZTimeArg"
         elif isinstance(arg, CMDUuidArgBase):

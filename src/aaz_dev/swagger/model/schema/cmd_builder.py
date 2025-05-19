@@ -119,11 +119,13 @@ class CMDBuilder:
                     model = CMDDateSchemaBase()
                 else:
                     model = CMDDateSchema()
-            elif schema.format == "date-time":
+            elif schema.format == "date-time" or schema.format == "date-time-rfc1123":
                 if self.in_base:
                     model = CMDDateTimeSchemaBase()
                 else:
                     model = CMDDateTimeSchema()
+                if schema.format == "date-time-rfc1123":
+                    model.is_rfc = True
             elif schema.format == "time":
                 if self.in_base:
                     model = CMDTimeSchemaBase()

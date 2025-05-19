@@ -532,6 +532,7 @@ class CMDDateSchema(CMDDateSchemaBase, CMDStringSchema):
 class CMDDateTimeSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "dateTime"
     ARG_TYPE = CMDDateTimeArgBase
+    is_rfc = CMDBooleanField()
 
 
 class CMDDateTimeSchema(CMDDateTimeSchemaBase, CMDStringSchema):

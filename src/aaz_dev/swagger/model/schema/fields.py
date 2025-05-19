@@ -6,6 +6,7 @@ class DataTypeFormatEnum(StringType):
         "int32", "int64",
         "float", "double",
         "byte", "binary", "date", "date-time", "time", "password",
+        "date-time-rfc1123",
         # additional formats
         "duration", "uuid",
         "file", "uri",
