@@ -1,5 +1,3 @@
-import json
-
 from command.model.configuration import (
     CMDHttpOperation, CMDHttpRequestJsonBody, CMDArraySchema, CMDInstanceUpdateOperation, CMDRequestJson,
     CMDHttpResponseJsonBody, CMDObjectSchema, CMDSchema, CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase,
@@ -505,29 +503,41 @@ class AzHttpRequestContentGenerator:
 class AzHttpRequestPatchContentGenerator(AzHttpRequestContentGenerator):
     @property
     def data(self):
-        return json.dumps(self._build_value(self._json.schema)).replace('"PLACEHOLDER"', 'subresource')
+        return self._build_value(self._json.schema)
 
     def _build_value(self, schema):
-        data = "PLACEHOLDER"
+        data = 'subresource'
         if isinstance(schema, CMDObjectSchemaBase):
             if schema.additional_props and schema.additional_props.item:
-                data = {schema.additional_props.item.name: self._build_value(schema.additional_props.item)}
+                data = f'{{"{schema.additional_props.item.name}": {self._build_value(schema.additional_props.item)}}}'
 
             elif schema.props:
-                data = {prop.name: self._build_value(prop) for prop in schema.props}
+                data = ''
+                for prop in schema.props:
+                    data = data + '"' + prop.name + '": ' + self._build_value(prop) + ', '
+                data = '{' + data + '}'
 
             elif schema.discriminators:
-                data = {disc.name: self._build_value(disc) for disc in schema.discriminators}
+                data = ''
+                for disc in schema.discriminators:
+                    data = data + '"' + disc.name + '": ' + self._build_value(disc) + ', '
+                data = '{' + data + '}'
 
         elif isinstance(schema, CMDObjectSchemaDiscriminator):
             if schema.props:
-                data = {prop.name: self._build_value(prop) for prop in schema.props}
+                data = ''
+                for prop in schema.props:
+                    data = data + '"' + prop.name + '": ' + self._build_value(prop) + ', '
+                data = '{' + data + '}'
 
             elif schema.discriminators:
-                data = {disc.name: self._build_value(disc) for disc in schema.discriminators}
+                data = ''
+                for disc in schema.discriminators:
+                    data = data + '"' + disc.name + '": ' + self._build_value(disc) + ', '
+                data = '{' + data + '}'
 
         elif isinstance(schema, CMDArraySchemaBase):
-            data = [self._build_value(schema.item)]
+            data = f'[{self._build_value(schema.item)}]'
 
         return data
 
