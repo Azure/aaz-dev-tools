@@ -489,7 +489,7 @@ class {{ leaf.cls_name }}(
 
         @property
         def content(self):
-            {%- if op.content.patch_content is not none -%}
+            {%- if op.patch_content is not none -%}
 
             {%- if op.method == "PATCH" %}
             {%- set valid_ops = leaf.operations | selectattr("is_selector_variant") | list %}

@@ -124,8 +124,8 @@ class AzHttpOperationGenerator(AzOperationGenerator):
             else:
                 raise NotImplementedError()
 
-        if self.ref is not None and self._json.schema is not None:
-            self.patch_content = AzHttpRequestPatchContentGenerator(self._cmd_ctx, body)
+            if self.content.ref is not None and self.content._json.schema is not None:
+                self.patch_content = AzHttpRequestPatchContentGenerator(self._cmd_ctx, body)
 
     @property
     def url(self):
