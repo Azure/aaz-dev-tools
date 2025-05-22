@@ -347,42 +347,6 @@ class {{ leaf.cls_name }}(
 
             {%- endfor %}
 
-        {%- if selector.patch_json is not none %}
-
-        def _set_json(self, json, value):
-            {%- for scope, scope_define, idx_lines, filter_builder, filters, is_end in selector.iter_scopes_for_set_json() %}
-
-            {%- if is_end %}
-            {%- for line in idx_lines %}
-            {{line}}
-            {%- endfor %}
-            {{ scope_define|avoid_conflict }} = value
-
-            {%- else %}
-            {%- for line in idx_lines %}
-            {{line}}
-            {%- endfor %}
-            {{ scope|avoid_conflict }} = {{ scope_define|avoid_conflict }}
-
-            {%- if filter_builder is not none %}
-            filters = {{ filter_builder }}
-            {%- for key, value, is_constant in filters %}
-            filters = filter(
-                {%- if is_constant %}
-                lambda e: e{{key}} == {{ value|constant_convert }},
-                {%- else %}
-                lambda e: e{{key}} == {{ value }},
-                {%- endif %}
-                filters
-            )
-            {%- endfor %}
-            {%- endif %}
-
-            {%- endif %}
-
-            {%- endfor %}
-
-        {%- endif %}
     {%- endfor %}
 
     {%- for op in leaf.http_operations %}
@@ -525,6 +489,18 @@ class {{ leaf.cls_name }}(
 
         @property
         def content(self):
+            {%- if op.content.patch_content is not none -%}
+
+            {%- if op.method == "PATCH" %}
+            {%- set valid_ops = leaf.operations | selectattr("is_selector_variant") | list %}
+            {%- if valid_ops %}
+            {%- set temp_op = valid_ops[0] %}
+            subresource = self.serialize_content({{ temp_op.variant_key }}.required())
+            return {{ op.patch_content.data }}
+            {%- endif %}
+            {%- endif %}
+
+            {%- else %}
             {{ op.content.VALUE_NAME}}, {{ op.content.BUILDER_NAME }} = self.new_content_builder(
                 {{ op.content.arg_key }},
                 {%- if op.content.ref is not none %}
@@ -581,17 +557,8 @@ class {{ leaf.cls_name }}(
             {%- endfor %}
             {%- endif %}
 
-            {%- if op.method == "PATCH" %}
-            {%- set valid_ops = leaf.operations | selectattr("is_selector_variant") | list %}
-            {%- if valid_ops %}
-            {%- set temp_op = valid_ops[0] %}
-
-            subresource = self.serialize_content({{ temp_op.variant_key }}.required())
-            {{ temp_op.variant_key }}._set_json({{ op.content.VALUE_NAME }}, subresource)
-            {%- endif %}
-            {%- endif %}
-
             return self.serialize_content({{ op.content.VALUE_NAME }})
+            {%- endif %}
         {%- endif %}
 
         {%- if op.form_content is not none %}

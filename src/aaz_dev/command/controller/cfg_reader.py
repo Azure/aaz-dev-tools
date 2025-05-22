@@ -745,56 +745,67 @@ class CfgReader:
         return None
 
     @classmethod
-    def trim_schema_by_idx(cls, schema, idx):
+    def trim_schema_by_idx(cls, schema, idx):  # only keep identity and its parents
         assert isinstance(idx, list)
-        if not schema or not idx:
+        if not schema:
             return
 
-        next_schema = None
-        current_idx = idx[0]
-        remain_idx = idx[1:]
+        current_idx = idx[0] if idx else None
+        remain_idx = idx[1:] if idx else None
         if isinstance(schema, CMDObjectSchemaBase):
             if current_idx == '{}':
                 if schema.additional_props and schema.additional_props.item:
-                    next_schema = schema.additional_props.item
+                    schema.additional_props.item = cls.trim_schema_by_idx(schema.additional_props.item, remain_idx)
+
             elif schema.props:
-                new_props = []
-                for prop in schema.props:
-                    if current_idx == prop.name:
-                        new_props.append(prop)
-                        next_schema = prop
-                schema.props = new_props
+                if current_idx:
+                    new_props = []
+                    for prop in schema.props:
+                        if current_idx == prop.name:
+                            new_props.append(cls.trim_schema_by_idx(prop, remain_idx))
+                    schema.props = new_props
+                else:
+                    schema.props = None
+                    if isinstance(schema, CMDIdentityObjectSchema):
+                        schema.system_assigned = None
+                        schema.user_assigned = None
 
             elif schema.discriminators:
-                new_discriminators = []
-                for disc in schema.discriminators:
-                    if current_idx == disc.get_safe_value():
-                        new_discriminators.append(disc)
-                        next_schema = disc
-                schema.discriminators = new_discriminators
+                if current_idx:
+                    new_discriminators = []
+                    for disc in schema.discriminators:
+                        if current_idx == disc.get_safe_value():
+                            new_discriminators.append(cls.trim_schema_by_idx(disc, remain_idx))
+                    schema.discriminators = new_discriminators
+                else:
+                    schema.discriminators = None
 
         elif isinstance(schema, CMDObjectSchemaDiscriminator):
             if schema.props:
-                new_props = []
-                for prop in schema.props:
-                    if current_idx == prop.name:
-                        new_props.append(prop)
-                        next_schema = prop
-                schema.props = new_props
+                if current_idx:
+                    new_props = []
+                    for prop in schema.props:
+                        if current_idx == prop.name:
+                            new_props.append(cls.trim_schema_by_idx(prop, remain_idx))
+                    schema.props = new_props
+                else:
+                    schema.props = None
 
             elif schema.discriminators:
-                new_discriminators = []
-                for disc in schema.discriminators:
-                    if current_idx == disc.get_safe_value():
-                        new_discriminators.append(disc)
-                        next_schema = disc
-                schema.discriminators = new_discriminators
+                if current_idx:
+                    new_discriminators = []
+                    for disc in schema.discriminators:
+                        if current_idx == disc.get_safe_value():
+                            new_discriminators.append(cls.trim_schema_by_idx(disc, remain_idx))
+                    schema.discriminators = new_discriminators
+                else:
+                    schema.discriminators = None
 
         elif isinstance(schema, CMDArraySchemaBase):
             if current_idx == '[]':
-                next_schema = schema.item
+                schema.item = cls.trim_schema_by_idx(schema.item, remain_idx)
 
-        return cls.trim_schema_by_idx(next_schema, remain_idx)
+        return schema
 
     @classmethod
     def find_identity_schema_in_command(cls, command):

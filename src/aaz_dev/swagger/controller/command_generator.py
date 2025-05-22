@@ -306,7 +306,7 @@ class _CommandGenerator(ABC):
         json_update_op.instance_update.json = CMDRequestJson()
         json_update_op.instance_update.json.schema = patch_op.http.request.body.json.schema
 
-        patch_op.http.request.body.json.schema_only = True
+        patch_op.http.request.body.json.ref = instance_var
         return json_update_op
 
     @staticmethod

@@ -1,5 +1,5 @@
 from schematics.models import Model
-from schematics.types import PolyModelType, BooleanType
+from schematics.types import PolyModelType
 
 from ._arg_builder import CMDArgBuilder
 from ._fields import CMDVariantField
@@ -16,10 +16,6 @@ class CMDRequestJson(Model):
 
     # properties as nodes
     schema = PolyModelType(CMDSchema, allow_subclasses=True)
-    schema_only = BooleanType(
-         serialized_name="schemaOnly",
-         deserialize_from="schemaOnly"
-     )
 
     class Options:
         serialize_when_none = False

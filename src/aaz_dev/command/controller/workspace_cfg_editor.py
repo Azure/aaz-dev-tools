@@ -1168,8 +1168,6 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
             assert isinstance(arg, CMDObjectArg)
             ref_args.extend(arg.args)
 
-        schema.ignore_specific_args = True
-
         # assign command
         assign_command = cls._build_subresource_update_command(
             update_cmd=update_cmd,
@@ -1516,7 +1514,6 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
 
         if isinstance(_instance_op_schema, CMDIdentityObjectSchemaBase):
             _instance_op_schema.action = action
-            _instance_op_schema.ignore_specific_args = False
 
         # _subresource_idx does not contains update_json.schema.name
         _instance_op_schema.name = cls.idx_to_str([update_json.schema.name, *subresource_idx])
@@ -1524,7 +1521,7 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
         _instance_op.instance_update.json.schema = _instance_op_schema
 
         new_update_op = update_op.__class__(raw_data=update_op.to_native())
-        cls.trim_schema_by_idx(new_update_op.http.request.body.json.schema, subresource_idx)
+        new_update_op.http.request.body.json.schema = cls.trim_schema_by_idx(new_update_op.http.request.body.json.schema, subresource_idx)
 
         _sub_command.operations = [
             get_op.__class__(raw_data=get_op.to_native()),

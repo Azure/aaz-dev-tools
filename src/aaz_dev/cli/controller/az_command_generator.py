@@ -55,14 +55,8 @@ class AzCommandGenerator:
             # disable id part for subresource command
             self.cmd_ctx.support_id_part = False
 
-            has_patch = False
-            for operation in self.cmd.cfg.operations:
-                # subresource + patch
-                if isinstance(operation, CMDHttpOperation) and operation.http.request.method == "patch":
-                    has_patch = True
-
             if isinstance(self.cmd.cfg.subresource_selector, CMDJsonSubresourceSelector):
-                selector = AzJsonSelectorGenerator(self.cmd_ctx, self.cmd.cfg.subresource_selector, has_patch)
+                selector = AzJsonSelectorGenerator(self.cmd_ctx, self.cmd.cfg.subresource_selector)
                 self.selectors.append(selector)
             else:
                 raise NotImplementedError()
