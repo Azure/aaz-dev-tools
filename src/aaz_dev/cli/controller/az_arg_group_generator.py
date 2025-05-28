@@ -356,12 +356,6 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
                     "cls": "AAZFileBytesArgFormat",
                     "kwargs": {}
                 }
-                if arg.fmt.pattern is not None:
-                    fmt['kwargs']["pattern"] = arg.fmt.pattern
-                if arg.fmt.max_length is not None:
-                    fmt['kwargs']["max_length"] = arg.fmt.max_length
-                if arg.fmt.min_length is not None:
-                    fmt['kwargs']["min_length"] = arg.fmt.min_length
         elif isinstance(arg, CMDDurationArgBase):
             arg_type = "AAZDurationArg"
         elif isinstance(arg, CMDDateArgBase):

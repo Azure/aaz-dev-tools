@@ -489,22 +489,32 @@ class CMDStringSchema(CMDStringSchemaBase, CMDSchema):
 
 
 # byte: base64 encoded characters
-class CMDByteSchemaBase(CMDStringSchemaBase):
+class CMDByteSchemaBase(CMDSchemaBase):
     TYPE_VALUE = "byte"
     ARG_TYPE = CMDByteArgBase
 
 
-class CMDByteSchema(CMDByteSchemaBase, CMDStringSchema):
+class CMDByteSchema(CMDByteSchemaBase, CMDSchema):
     ARG_TYPE = CMDByteArg
 
 
 # binary: any sequence of octets
-class CMDBinarySchemaBase(CMDStringSchemaBase):
+class CMDBinarySchemaBase(CMDSchemaBase):
     TYPE_VALUE = "binary"
     ARG_TYPE = CMDBinaryArgBase
+    name = StringType(required=True)
+    arg = CMDVariantField()
+    required = CMDBooleanField()
 
+    description = CMDDescriptionField()
 
-class CMDBinarySchema(CMDBinarySchemaBase, CMDStringSchema):
+    fmt = ModelType(
+        CMDStringFormat,
+        serialized_name='format',
+        deserialize_from='format'
+    )
+
+class CMDBinarySchema(CMDBinarySchemaBase, CMDSchema):
     ARG_TYPE = CMDBinaryArg
 
 

@@ -384,20 +384,20 @@ class CMDStringArg(CMDStringArgBase, CMDArg):
 
 
 # byte: base64 encoded characters
-class CMDByteArgBase(CMDStringArgBase):
+class CMDByteArgBase(CMDArg):
     TYPE_VALUE = "byte"
 
 
-class CMDByteArg(CMDByteArgBase, CMDStringArg):
+class CMDByteArg(CMDByteArgBase):
     pass
 
 
 # binary: any sequence of octets
-class CMDBinaryArgBase(CMDStringArgBase):
+class CMDBinaryArgBase(CMDArgBase):
     TYPE_VALUE = "binary"
 
 
-class CMDBinaryArg(CMDBinaryArgBase, CMDStringArg):
+class CMDBinaryArg(CMDBinaryArgBase, CMDArg):
     pass
 
 

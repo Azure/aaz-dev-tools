@@ -7,7 +7,7 @@ from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgDefault
 from ._format import CMDFormat
 from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
     CMDArraySchemaBase, CMDArraySchema, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema, \
-    CMDResourceLocationSchemaBase, CMDPasswordSchema, CMDBooleanSchemaBase
+    CMDResourceLocationSchemaBase, CMDPasswordSchema, CMDBooleanSchemaBase, CMDBinarySchema
 from ..configuration._schema import CMDIdentityObjectSchema, CMDStringSchemaBase, \
     CMDStringSchema
 
@@ -197,7 +197,8 @@ class CMDArgBuilder:
                             item.arg = discriminator_mapping[prop.name][item.value]
                     continue
                 sub_builder = self.get_sub_builder(schema=prop, ref_args=sub_ref_args)
-                sub_args.extend(sub_builder.get_args())
+                sub_arg = sub_builder.get_args()
+                sub_args.extend(sub_arg)
 
             self.schema.props = [prop for prop in self.schema.props if prop not in removed]
             if isinstance(self.schema, CMDIdentityObjectSchema) and (not self._is_update_action or self.schema.action):
@@ -381,6 +382,8 @@ class CMDArgBuilder:
 
             if self.schema.action is not None and self.schema.name in ["userAssigned", "systemAssigned"]:
                 return [opt_name, "mi-" + opt_name]
+            if isinstance(self.schema, CMDBinarySchema):
+                return [opt_name, "body-file", "body-file-path"]
         else:
             raise NotImplementedError()
         return [opt_name, ]

@@ -2,7 +2,7 @@ from command.model.configuration import (
     CMDHttpOperation, CMDHttpRequestJsonBody, CMDArraySchema, CMDInstanceUpdateOperation, CMDRequestJson,
     CMDHttpResponseJsonBody, CMDObjectSchema, CMDSchema, CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase,
     CMDBooleanSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction,
-    CMDObjectSchemaDiscriminator, CMDSchemaEnum, CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction,
+    CMDObjectSchemaDiscriminator, CMDSchemaEnum, CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction, CMDBinarySchema,
     CMDInstanceCreateOperation, CMDInstanceDeleteOperation, CMDClientEndpointsByTemplate, CMDIdentityObjectSchemaBase, CMDAnyTypeSchemaBase)
 from utils import exceptions
 from utils.case import to_snake_case
@@ -990,6 +990,8 @@ def render_schema_base(schema, cls_map, schema_kwargs=None):
         schema_type = "AAZFloatType"
     elif isinstance(schema, CMDIdentityObjectSchemaBase):
         schema_type = "AAZIdentityObjectType"
+    elif isinstance(schema, CMDBinarySchema):
+        schema_type = "AAZFileBytesType"
     elif isinstance(schema, CMDObjectSchemaBase):
         if schema.props or schema.discriminators:
             schema_type = "AAZObjectType"

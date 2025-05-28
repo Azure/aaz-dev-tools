@@ -1,7 +1,7 @@
 from schematics.models import Model
 from schematics.types import ModelType
 
-from ._content import CMDRequestJson
+from ._content import CMDRequestJson, CMDRequestBytes
 
 
 class CMDHttpRequestBody(Model):
@@ -50,3 +50,22 @@ class CMDHttpRequestJsonBody(CMDHttpRequestBody):
 
     def register_cls(self, **kwargs):
         self.json.register_cls(**kwargs)
+
+class CMDHttpRequestBytesBody(CMDHttpRequestBody):
+    POLYMORPHIC_KEY = "bytes"
+
+    bytes = ModelType(CMDRequestBytes, required=True)
+
+    def generate_args(self, ref_args, var_prefix=None):
+        return self.bytes.generate_args(ref_args=ref_args, var_prefix=var_prefix)
+
+    def diff(self, old, level):
+        if not isinstance(old, self.__class__):
+            return f"Response type changed: '{type(old)}' != '{self.__class__}'"
+        return self.bytes.diff(old.bytes, level)
+
+    def reformat(self, **kwargs):
+        self.bytes.reformat(**kwargs)
+
+    def register_cls(self, **kwargs):
+        self.bytes.register_cls(**kwargs)

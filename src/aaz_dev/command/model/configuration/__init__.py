@@ -35,7 +35,7 @@ from ._condition import CMDConditionOperator, \
     CMDConditionAndOperator, CMDConditionOrOperator, CMDConditionNotOperator, CMDConditionHasValueOperator, \
     CMDCondition
 from ._configuration import CMDConfiguration
-from ._content import CMDRequestJson, CMDResponseJson
+from ._content import CMDRequestJson, CMDResponseJson, CMDRequestBytes
 from ._example import CMDCommandExample
 from ._fields import CMDBooleanField, CMDStageField, CMDVariantField, CMDClassField, \
     CMDPrimitiveField, CMDRegularExpressionField, CMDVersionField, CMDResourceIdField, CMDCommandNameField, \
@@ -47,7 +47,7 @@ from ._http import CMDHttpRequestArgs, CMDHttpRequestPath, CMDHttpRequestQuery, 
     CMDHttpRequest, \
     CMDHttpResponseHeaderItem, CMDHttpResponseHeader, CMDHttpResponse, \
     CMDHttpAction
-from ._http_request_body import CMDHttpRequestBody, CMDHttpRequestJsonBody
+from ._http_request_body import CMDHttpRequestBody, CMDHttpRequestJsonBody, CMDHttpRequestBytesBody
 from ._http_response_body import CMDHttpResponseBody, CMDHttpResponseJsonBody
 from ._instance_create import CMDInstanceCreateAction, CMDJsonInstanceCreateAction
 from ._instance_delete import CMDInstanceDeleteAction, CMDJsonInstanceDeleteAction

@@ -4,7 +4,7 @@ from schematics.types import PolyModelType
 from ._arg_builder import CMDArgBuilder
 from ._fields import CMDVariantField
 from ._schema import CMDSchemaBaseField, CMDSchema, CMDClsSchema, CMDClsSchemaBase, \
-    CMDObjectSchemaBase, CMDArraySchemaBase, CMDObjectSchemaDiscriminator
+    CMDObjectSchemaBase, CMDArraySchemaBase, CMDObjectSchemaDiscriminator, CMDBinarySchema
 from ._utils import CMDDiffLevelEnum
 
 
@@ -63,6 +63,58 @@ class CMDRequestJson(Model):
     def register_cls(self, cls_register_map, **kwargs):
         _iter_over_schema_for_cls_register(self.schema, cls_register_map)
 
+class CMDRequestBytes(Model):
+    """Used for Request Bytes Body"""
+
+    ref = CMDVariantField()
+
+    schema = PolyModelType(CMDBinarySchema, allow_subclasses=False)
+
+    class Options:
+        serialize_when_none = False
+
+    def generate_args(self, ref_args, var_prefix=None, is_update_action=False):
+        if not self.schema:
+            return []
+        assert isinstance(self.schema, CMDBinarySchema)
+        builder = CMDArgBuilder.new_builder(
+            schema=self.schema,
+            ref_args=ref_args,
+            var_prefix=var_prefix,
+            is_update_action=is_update_action
+        )
+        args = builder.get_args()
+        return args
+
+    def diff(self, old, level):
+        diff = {}
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if (self.ref is not None) != (old.ref is not None):
+                diff["ref"] = f"{old.ref} != {self.ref}"
+            schema_diff = self.schema.diff(old.schema, level)
+            if schema_diff:
+                diff["schema"] = schema_diff
+
+        if level >= CMDDiffLevelEnum.Associate:
+            if self.ref != old.ref:
+                diff["ref"] = f"{old.ref} != {self.ref}"
+        return diff
+
+    def reformat(self, schema_cls_map, **kwargs):
+        if self.schema:
+            if getattr(self.schema, 'cls', None):
+                if not schema_cls_map.get(self.schema.cls, None):
+                    schema_cls_map[self.schema.cls] = self.schema
+                else:
+                    # replace by CMDClsSchema
+                    self.schema = CMDClsSchema.build_from_schema(self.schema, schema_cls_map[self.schema.cls])
+
+            _iter_over_schema(self.schema, schema_cls_map)
+
+            self.schema.reformat(**kwargs)
+
+    def register_cls(self, cls_register_map, **kwargs):
+        _iter_over_schema_for_cls_register(self.schema, cls_register_map)
 
 class CMDResponseJson(Model):
     # properties as tags
