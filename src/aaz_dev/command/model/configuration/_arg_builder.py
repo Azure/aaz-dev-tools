@@ -197,8 +197,7 @@ class CMDArgBuilder:
                             item.arg = discriminator_mapping[prop.name][item.value]
                     continue
                 sub_builder = self.get_sub_builder(schema=prop, ref_args=sub_ref_args)
-                sub_arg = sub_builder.get_args()
-                sub_args.extend(sub_arg)
+                sub_args.extend(sub_builder.get_args())
 
             self.schema.props = [prop for prop in self.schema.props if prop not in removed]
             if isinstance(self.schema, CMDIdentityObjectSchema) and (not self._is_update_action or self.schema.action):

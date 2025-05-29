@@ -63,8 +63,8 @@ class CMDRequestJson(Model):
     def register_cls(self, cls_register_map, **kwargs):
         _iter_over_schema_for_cls_register(self.schema, cls_register_map)
 
-class CMDRequestBytes(Model):
-    """Used for Request Bytes Body"""
+class CMDRequestBinary(Model):
+    """Used for Request Binary Body"""
 
     ref = CMDVariantField()
 

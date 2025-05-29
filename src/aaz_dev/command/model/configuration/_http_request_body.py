@@ -1,7 +1,7 @@
 from schematics.models import Model
 from schematics.types import ModelType
 
-from ._content import CMDRequestJson, CMDRequestBytes
+from ._content import CMDRequestJson, CMDRequestBinary
 
 
 class CMDHttpRequestBody(Model):
@@ -51,10 +51,10 @@ class CMDHttpRequestJsonBody(CMDHttpRequestBody):
     def register_cls(self, **kwargs):
         self.json.register_cls(**kwargs)
 
-class CMDHttpRequestBytesBody(CMDHttpRequestBody):
+class CMDHttpRequestBinaryBody(CMDHttpRequestBody):
     POLYMORPHIC_KEY = "bytes"
 
-    bytes = ModelType(CMDRequestBytes, required=True)
+    bytes = ModelType(CMDRequestBinary, required=True)
 
     def generate_args(self, ref_args, var_prefix=None):
         return self.bytes.generate_args(ref_args=ref_args, var_prefix=var_prefix)

@@ -297,7 +297,7 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
     elif isinstance(arg, CMDByteArgBase):
         raise NotImplementedError()
     elif isinstance(arg, CMDBinaryArgBase):
-        arg_type = "AAZFileBytesArg"
+        arg_type = "AAZFileUploadArg"
     elif isinstance(arg, CMDStringArgBase):
         arg_type = "AAZStrArg"
         enum_kwargs = parse_arg_enum(arg.enum)
