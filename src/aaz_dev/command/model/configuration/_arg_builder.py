@@ -348,11 +348,6 @@ class CMDArgBuilder:
     def get_var(self):
         return self._arg_var
 
-    def get_is_rfc(self):
-        if getattr(self.schema, "is_rfc", False):
-            return True
-        return False
-
     @staticmethod
     def _build_option_name(name):
         name = name.replace('_', '-')
