@@ -489,14 +489,14 @@ class {{ leaf.cls_name }}(
 
         @property
         def content(self):
-            {%- if op.patch_content is not none -%}
+            {%- if op.content.ref is not none and op.content._json.schema is not none -%}
 
             {%- if op.method == "PATCH" %}
             {%- set valid_ops = leaf.operations | selectattr("is_selector_variant") | list %}
             {%- if valid_ops %}
             {%- set temp_op = valid_ops[0] %}
-            subresource = self.serialize_content({{ temp_op.variant_key }}.required())
-            return {{ op.patch_content.data }}
+            identity = self.serialize_content({{ temp_op.variant_key }}.required())
+            return {"identity": identity}
             {%- endif %}
             {%- endif %}
 

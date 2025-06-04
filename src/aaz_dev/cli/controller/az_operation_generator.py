@@ -113,7 +113,6 @@ class AzHttpOperationGenerator(AzOperationGenerator):
         # specify content
         self.content = None
         self.form_content = None
-        self.patch_content = None
         self.stream_content = None
         if self._operation.http.request.body:
             body = self._operation.http.request.body
@@ -121,9 +120,6 @@ class AzHttpOperationGenerator(AzOperationGenerator):
                 self.content = AzHttpRequestContentGenerator(self._cmd_ctx, body)
             else:
                 raise NotImplementedError()
-
-            if self.content.ref is not None and self.content._json.schema is not None:
-                self.patch_content = AzHttpRequestPatchContentGenerator(self._cmd_ctx, body)
 
     @property
     def url(self):
@@ -498,48 +494,6 @@ class AzHttpRequestContentGenerator:
 
         for scopes in _iter_request_scopes_by_schema_base(self._json.schema, self.BUILDER_NAME, None, self.arg_key, self._cmd_ctx):
             yield scopes
-
-
-class AzHttpRequestPatchContentGenerator(AzHttpRequestContentGenerator):
-    @property
-    def data(self):
-        return self._build_value(self._json.schema)
-
-    def _build_value(self, schema):
-        data = 'subresource'
-        if isinstance(schema, CMDObjectSchemaBase):
-            if schema.additional_props and schema.additional_props.item:
-                data = f'{{"{schema.additional_props.item.name}": {self._build_value(schema.additional_props.item)}}}'
-
-            elif schema.props:
-                data = ''
-                for prop in schema.props:
-                    data = data + '"' + prop.name + '": ' + self._build_value(prop) + ', '
-                data = '{' + data + '}'
-
-            elif schema.discriminators:
-                data = ''
-                for disc in schema.discriminators:
-                    data = data + '"' + disc.name + '": ' + self._build_value(disc) + ', '
-                data = '{' + data + '}'
-
-        elif isinstance(schema, CMDObjectSchemaDiscriminator):
-            if schema.props:
-                data = ''
-                for prop in schema.props:
-                    data = data + '"' + prop.name + '": ' + self._build_value(prop) + ', '
-                data = '{' + data + '}'
-
-            elif schema.discriminators:
-                data = ''
-                for disc in schema.discriminators:
-                    data = data + '"' + disc.name + '": ' + self._build_value(disc) + ', '
-                data = '{' + data + '}'
-
-        elif isinstance(schema, CMDArraySchemaBase):
-            data = f'[{self._build_value(schema.item)}]'
-
-        return data
 
 
 class AzRequestClsGenerator:
