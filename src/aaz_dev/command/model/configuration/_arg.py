@@ -4,7 +4,7 @@ from schematics.types.serializable import serializable
 
 from ._fields import CMDStageField, CMDVariantField, CMDPrimitiveField, CMDBooleanField, CMDClassField
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, \
-    CMDResourceIdFormat
+    CMDResourceIdFormat, CMDDateTimeFormat
 from ._help import CMDArgumentHelp
 from utils import exceptions
 
@@ -422,15 +422,12 @@ class CMDDateArg(CMDDateArgBase, CMDStringArg):
 # date-time: As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
 class CMDDateTimeArgBase(CMDStringArgBase):
     TYPE_VALUE = "dateTime"
-    # date-time-rfc1123: https://www.apimatic.io/openapi/string-type-format
-    is_rfc = CMDBooleanField()
 
-    @classmethod
-    def build_arg_base(cls, builder):
-        arg = super().build_arg_base(builder)
-        assert isinstance(arg, CMDDateTimeArgBase)
-        arg.is_rfc = builder.get_is_rfc()
-        return arg
+    fmt = ModelType(
+        CMDDateTimeFormat,
+        serialized_name='format',
+        deserialize_from='format'
+    )
 
 
 class CMDDateTimeArg(CMDDateTimeArgBase, CMDStringArg):

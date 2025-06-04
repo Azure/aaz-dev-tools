@@ -5,7 +5,7 @@ from command.model.configuration import CMDStringArgBase, CMDByteArgBase, CMDBin
     CMDSubscriptionIdArg, CMDArg
 from command.model.configuration import CMDArgGroup, CMDArgumentHelp
 from command.model.configuration import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, \
-    CMDArrayFormat
+    CMDArrayFormat, CMDDateTimeFormat
 from utils.case import to_camel_case, to_snake_case
 from utils import exceptions
 from utils.stage import AAZStageEnum
@@ -357,11 +357,11 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
             arg_type = "AAZDateArg"
         elif isinstance(arg, CMDDateTimeArgBase):
             arg_type = "AAZDateTimeArg"
-            if arg.is_rfc:
+            if arg.fmt and isinstance(arg.fmt, CMDDateTimeFormat):
                 arg_kwargs['fmt'] = {
                     "cls": "AAZDateTimeFormat",
                     "kwargs": {
-                        "protocol": "rfc"
+                        "protocol": arg.fmt.protocol
                     }
                 }
         elif isinstance(arg, CMDTimeArgBase):
