@@ -196,11 +196,8 @@ class CMDDateTimeFormat(CMDFormat):
 
         if level >= CMDDiffLevelEnum.BreakingChange:
             if self.protocol and self.protocol != old.protocol:
-                diff["protocol"] = f"from {old.protocol} to {self.protocol}"
-
-        if level >= CMDDiffLevelEnum.Structure:
-            if self.protocol and self.protocol != old.protocol:
                 diff["protocol"] = f"{old.protocol} != {self.protocol}"
+
         return diff
 
 
