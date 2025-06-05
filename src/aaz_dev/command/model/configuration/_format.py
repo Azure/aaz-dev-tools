@@ -174,6 +174,33 @@ class CMDFloatFormat(CMDFormat):
         return diff
 
 
+# datetime format
+class CMDDateTimeFormat(CMDFormat):
+    protocol = StringType(
+        choices=(
+            'iso', # date-time: default to be iso format
+            'rfc', # date-time-rfc1123: https://www.apimatic.io/openapi/string-type-format
+        ),
+        default='iso',
+    )
+
+    def build_arg_fmt(self, builder, ref_fmt):
+        fmt = CMDDateTimeFormat()
+        fmt.protocol = self.protocol
+        return fmt
+
+    def diff(self, old, level):
+        if type(self) is not type(old):
+            return f"Type: {type(old)} != {type(self)}"
+        diff = {}
+
+        if level >= CMDDiffLevelEnum.BreakingChange:
+            if self.protocol and self.protocol != old.protocol:
+                diff["protocol"] = f"{old.protocol} != {self.protocol}"
+
+        return diff
+
+
 # object
 class CMDObjectFormat(CMDFormat):
     max_properties = IntType(

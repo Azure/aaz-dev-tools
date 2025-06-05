@@ -41,7 +41,7 @@ from ._fields import CMDBooleanField, CMDStageField, CMDVariantField, CMDClassFi
     CMDPrimitiveField, CMDRegularExpressionField, CMDVersionField, CMDResourceIdField, CMDCommandNameField, \
     CMDCommandGroupNameField, CMDURLPathField, CMDConfirmation
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, \
-    CMDResourceIdFormat
+    CMDResourceIdFormat, CMDDateTimeFormat
 from ._help import CMDHelp, CMDArgumentHelp
 from ._http import CMDHttpRequestArgs, CMDHttpRequestPath, CMDHttpRequestQuery, CMDHttpRequestHeader, \
     CMDHttpRequest, \

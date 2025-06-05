@@ -1,5 +1,5 @@
 from command.model.configuration import CMDIntegerFormat, CMDStringFormat, CMDFloatFormat, CMDArrayFormat, \
-    CMDObjectFormat, CMDSchemaEnum, CMDSchemaEnumItem
+    CMDObjectFormat, CMDSchemaEnum, CMDSchemaEnumItem, CMDDateTimeFormat
 
 from command.model.configuration import CMDSchemaDefault, \
     CMDStringSchema, CMDStringSchemaBase, \
@@ -119,7 +119,7 @@ class CMDBuilder:
                     model = CMDDateSchemaBase()
                 else:
                     model = CMDDateSchema()
-            elif schema.format == "date-time":
+            elif schema.format == "date-time" or schema.format == "date-time-rfc1123":
                 if self.in_base:
                     model = CMDDateTimeSchemaBase()
                 else:
@@ -354,7 +354,10 @@ class CMDBuilder:
         if not hasattr(model, 'fmt'):
             return
         fmt = None
-        if isinstance(model, CMDStringSchemaBase):
+        if isinstance(model, CMDDateTimeSchemaBase):
+            # CMDDateTimeSchemaBase is subclass of CMDStringSchemaBase, it needs to be added before following string fmt
+            fmt = self.build_cmd_datetime_format(schema)
+        elif isinstance(model, CMDStringSchemaBase):
             fmt = self.build_cmd_string_format(schema)
         elif isinstance(model, CMDIntegerSchemaBase):
             fmt = self.build_cmd_integer_format(schema)
@@ -423,6 +426,13 @@ class CMDBuilder:
 
         if not fmt_assigned:
             return None
+        return fmt
+
+    @staticmethod
+    def build_cmd_datetime_format(schema):
+        fmt = CMDDateTimeFormat()
+        if schema.format == "date-time-rfc1123":
+            fmt.protocol = "rfc"
         return fmt
 
     @staticmethod

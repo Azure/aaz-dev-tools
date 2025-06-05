@@ -29,7 +29,7 @@ from ._arg import CMDStringArg, CMDStringArgBase, \
     CMDClsArg, CMDClsArgBase, CMDAnyTypeArg, CMDAnyTypeArgBase
 from ._fields import CMDVariantField, StringType, CMDClassField, CMDBooleanField, CMDPrimitiveField, CMDDescriptionField
 from ._format import CMDStringFormat, CMDIntegerFormat, CMDFloatFormat, CMDObjectFormat, CMDArrayFormat, \
-    CMDResourceIdFormat
+    CMDResourceIdFormat, CMDDateTimeFormat
 from ._utils import CMDDiffLevelEnum
 from utils import exceptions
 
@@ -532,7 +532,11 @@ class CMDDateSchema(CMDDateSchemaBase, CMDStringSchema):
 class CMDDateTimeSchemaBase(CMDStringSchemaBase):
     TYPE_VALUE = "dateTime"
     ARG_TYPE = CMDDateTimeArgBase
-
+    fmt = ModelType(
+        CMDDateTimeFormat,
+        serialized_name='format',
+        deserialize_from='format'
+    )
 
 class CMDDateTimeSchema(CMDDateTimeSchemaBase, CMDStringSchema):
     ARG_TYPE = CMDDateTimeArg
