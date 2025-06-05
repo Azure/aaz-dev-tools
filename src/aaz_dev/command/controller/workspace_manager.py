@@ -820,12 +820,12 @@ class WorkspaceManager:
                 options['methods'] = methods
             update_cmd_info = cfg_editor.get_update_cmd(resource_id)
             if update_cmd_info:
-                _, _, update_by = update_cmd_info
+                _, command, update_by = update_cmd_info
                 options['update_by'] = update_by
             new_cfg_editor = self._build_draft_cfg_editor(command_generator, resource, options)
             new_cfg_editor.inherit_modification(cfg_editor)
             temp_update_cmd = None
-            if update_cmd_info and update_by == "PatchOnly" and cfg_editor.find_identity_schema_in_command(update_cmd_info[1]):
+            if update_cmd_info and update_by == "PatchOnly" and cfg_editor.find_identity_schema_in_command(command):
                 temp_cfg_editor = self._build_draft_cfg_editor(command_generator, resource, {"update_by": "PatchOnly", "methods": ('get', 'patch'), "is_identity": True})
                 temp_update_cmd_info = temp_cfg_editor.get_update_cmd(resource_id)
                 if temp_update_cmd_info:
