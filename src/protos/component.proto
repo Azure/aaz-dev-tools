@@ -1,0 +1,16 @@
+syntax = "proto3";
+package component;
+
+import "protos/command.proto";
+
+message CrsPluginComponent {
+    ComponentMetadata metadata = 1;
+    command.CrsInterface interface = 2;
+}
+
+message ComponentMetadata {
+    string name = 1;  // the component name for installation and identification
+    string version = 2; // the release version of the component, for built-in component, the version is the version of the core
+    string uri = 3;  // the unique uri for the component, this uri should be the crs uri which starts with `crs://azure/` and the following segments are composed by the top level command group name for the component. The uri should be unique across all the components.
+    command.CrsHelp help = 4;  // the help information of the component
+}

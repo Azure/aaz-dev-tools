@@ -1,0 +1,16 @@
+syntax = "proto3";
+package plugin;
+
+import "protos/plugin/resource.proto";
+import "protos/plugin/condition.proto";
+import "protos/plugin/selector.proto";
+import "protos/plugin/operation.proto";
+import "protos/plugin/output.proto";
+
+message CrsPluginModelCommand {
+    repeated CrsRestResource resources = 1;  // the rest api resource info
+    repeated CrsCondition conditions = 2;
+    optional CrsSubresourceSelector subresource_selector = 3;
+    repeated CrsOperation operations = 4;
+    repeated CrsOutput outputs = 5;
+}

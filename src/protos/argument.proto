@@ -1,0 +1,264 @@
+syntax = "proto3";
+package command;
+
+message CrsArg {
+  string var_name = 1;         // the variable name of the argument
+  string name = 2;             // the formal name of the argument in the struct
+  repeated string options = 3; // the options value of the argument
+  string group = 4;            // the group name of the argument
+  bool internal = 5; // whether is internal argument only which will not be
+                     // exposed in command line interface
+  bool required = 6; // whether the argument is required
+  bool nullable = 7; // whether can accept null value or not.
+  // blank value is used when argument don't have any value
+  CrsArgBlank blank = 8;
+  CrsArgDefault default = 9;     // default value of the argument
+  CrsArgHelp help = 10;          // help message of the argument
+  CrsArgPromptInput prompt = 11; // prompt input of the argument
+  oneof arg_type {
+    CrsClsArg cls = 31;
+    CrsStringArg string = 32;
+    CrsNumberArg number = 33;
+    CrsBooleanArg boolean = 34;
+    CrsObjectArg object = 35;
+    CrsArrayArg array = 36;
+    CrsAnyTypeArg any_type = 37;
+    // TODO: add blob arg
+  }
+}
+
+// The argument value if an argument is assigned empty
+message CrsArgBlank {
+  // json formatted string, support null
+  string value = 1;
+}
+
+// The default value of the argument
+message CrsArgDefault {
+  // json formatted string, support null
+  string value = 1;
+}
+
+message CrsArgHelp {
+  string short = 1;         // short description of the argument
+  optional string long = 2; // long description of the argument
+}
+
+// The prompt input of the argument
+message CrsArgPromptInput {
+  string prompt = 1; // The prompt string, if given, is printed to standard
+                     // output without a trailing newline before reading input.
+  bool secret = 2;   // Whether to hide the input value as a password
+  bool confirm = 3;  // Whether need user to input value twice for confirmation
+}
+
+message CrsArgEnum {
+  repeated CrsArgEnumItem items = 1; // the items of the enum
+  // whether value outside of the enum items is allowed
+  bool support_extension = 2;
+  bool case_sensitive = 3; // whether the enum is case sensitive
+}
+
+message CrsArgEnumItem {
+  string name = 1;   // the name of the enum item
+  string value = 2;  // json formatted string, support null
+  bool internal = 3; // whether is internal enum item only which will not be
+                     // exposed in command line interface
+}
+
+// Cls Argument is used to defined a pattern as class so that it can be used
+// internally to avoid reference cycle
+message CrsClsArg {
+  string cls_type = 1; // the class name of the argument
+}
+
+// String Argument
+message CrsStringArg {
+  CrsArgEnum enum = 1; // the enum of the string
+  oneof format {
+    // The binary file should not be handled when arg
+    // parse, they should be handled by command.
+    // reference
+    // https://swagger.io/docs/specification/v3_0/describing-request-body/file-upload/
+    // for file upload.
+    CrsBinaryFormat binary = 8;
+    CrsByteFormat byte = 9; // base64 encoded characters
+    CrsStringFormat string = 10;
+    CrsDurationFormat duration = 11;
+    CrsDateFormat date = 12;
+    CrsDateTimeFormat date_time = 13;
+    CrsTimeFormat time = 14;
+    CrsUuidFormat uuid = 15;
+    CrsPasswordFormat password = 16;
+    CrsSubscriptionIdFormat subscription_id = 17;
+    CrsResourceGroupNameFormat resource_group_name = 18;
+    CrsResourceIdFormat resource_id = 19;
+    CrsResourceLocationFormat resource_location = 20;
+  }
+}
+
+message CrsByteFormat {}
+
+message CrsBinaryFormat {}
+
+message CrsStringFormat {
+  optional string pattern = 1; // the regular expression pattern of the string
+  optional uint32 max_length = 2; // the maximum length of the string
+  optional uint32 min_length = 3; // the minimum length of the string
+}
+
+message CrsDurationFormat {
+  enum Protocol {
+    ISO8601 = 0; // PnYnMnDTnHnMnS
+  }
+  Protocol protocol = 1; // the protocol of the duration
+}
+
+message CrsDateFormat {
+  enum Protocol {
+    ISO8601 = 0; // yyyy-mm-dd
+  }
+  Protocol protocol = 1; // the protocol of the date
+}
+
+message CrsTimeFormat {
+  enum Protocol {
+    ISO8601 = 0; // hh:mm:ss.xxx
+  }
+  Protocol protocol = 1; // the protocol of the time
+  // the length of the milliseconds precision of the time, default is 3
+  optional uint32 ms_length = 2;
+}
+
+message CrsDateTimeFormat {
+  enum Protocol {
+    ISO8601 = 0; // 2024-03-19T08:30:00.123+00:00
+    RFC1123 = 1; // Tue, 19 Mar 2024 08:30:00 GMT
+  }
+  Protocol protocol = 1; // the protocol of the date time
+  // the length of the milliseconds precision of the time, default is 3
+  optional uint32 ms_length = 2;
+}
+
+message CrsUuidFormat {
+  enum Case {
+    LOWER = 0;
+    UPPER = 1;
+  }
+  Case case = 1;        // the case of the uuid
+  bool no_hyphen = 2;   // whether to not use hyphen in the uuid
+  bool with_braces = 3; // whether to use braces in the uuid
+}
+
+// CrsPasswordFormat indicates the string should be treated as a password
+// This is an empty message used only for type discrimination
+message CrsPasswordFormat {}
+
+// CrsSubscriptionIdFormat indicates the string should be treated as an Azure
+// subscription ID This is an empty message used only for type discrimination
+message CrsSubscriptionIdFormat {}
+
+// CrsResourceGroupNameFormat indicates the string should be treated as an Azure
+// resource group name This is an empty message used only for type
+// discrimination
+message CrsResourceGroupNameFormat {}
+
+message CrsResourceIdFormat {
+  repeated string templates = 1; // the supported templates of the resource id
+}
+
+message CrsResourceLocationFormat {
+  bool no_rg_default = 1; // whether to not use the location value of resource
+                          // group as default value
+}
+
+message CrsNumberArg {
+  CrsArgEnum enum = 1; // the enum of the number
+  oneof format {
+    CrsInt32Format int32 = 10;
+    CrsInt64Format int64 = 11;
+    CrsUint32Format uint32 = 20;
+    CrsUint64Format uint64 = 21;
+    CrsFloatFormat float = 30;
+    CrsDoubleFormat double = 31;
+  }
+}
+
+message CrsInt32Format {
+  optional int32 minimum = 1;     // the minimum value of the integer
+  optional int32 maximum = 2;     // the maximum value of the integer
+  optional int32 multiple_of = 3; // the multiple of the integer
+}
+
+message CrsInt64Format {
+  optional int64 minimum = 1;     // the minimum value of the integer
+  optional int64 maximum = 2;     // the maximum value of the integer
+  optional int64 multiple_of = 3; // the multiple of the integer
+}
+
+message CrsUint32Format {
+  optional uint32 minimum = 1;     // the minimum value of the integer
+  optional uint32 maximum = 2;     // the maximum value of the integer
+  optional uint32 multiple_of = 3; // the multiple of the integer
+}
+
+message CrsUint64Format {
+  optional uint64 minimum = 1;     // the minimum value of the integer
+  optional uint64 maximum = 2;     // the maximum value of the integer
+  optional uint64 multiple_of = 3; // the multiple of the integer
+}
+
+message CrsFloatFormat {
+  optional float minimum = 1;     // the minimum value of the float
+  optional float maximum = 2;     // the maximum value of the float
+  bool exclusive_minimum = 3;     // whether the minimum value is exclusive
+  bool exclusive_maximum = 4;     // whether the maximum value is exclusive
+  optional float multiple_of = 5; // the multiple of the float
+}
+
+message CrsDoubleFormat {
+  optional double minimum = 1;     // the minimum value of the float
+  optional double maximum = 2;     // the maximum value of the float
+  bool exclusive_minimum = 3;      // whether the minimum value is exclusive
+  bool exclusive_maximum = 4;      // whether the maximum value is exclusive
+  optional double multiple_of = 5; // the multiple of the float
+}
+
+message CrsBooleanArg {
+  // the reverse flag of the boolean
+  repeated string reverse_options = 1;
+}
+
+// CrsAnyTypeArg can accept any data type, such as numbers, strings, objects,
+// and so on. This is an empty message used only for type discrimination
+message CrsAnyTypeArg {}
+
+message CrsObjectArg {
+  optional string cls_type = 1; // the class implementation
+  bool ps_flatten = 2; // whether this object is flattened for PowerShell Cmdlet
+  CrsObjectFormat format = 3; // the format of the object
+  repeated CrsArg props = 4;  // the property arguments of the object
+  // the additional properties of the object
+  CrsObjectArgAdditionalProperties additional_props = 5;
+}
+
+message CrsObjectArgAdditionalProperties {
+  CrsArg item = 1; // the item argument of the additional properties
+}
+
+message CrsObjectFormat {
+  optional uint32 min_length = 1; // the minimum length of the object
+  optional uint32 max_length = 2; // the maximum length of the object
+}
+
+message CrsArrayArg {
+  optional string cls_type = 1; // the class implementation
+  CrsArg item = 2;              // the item argument of the array
+  CrsArrayFormat format = 3;    // the format of the array
+}
+
+message CrsArrayFormat {
+  bool unique = 1;                // whether the array should be unique
+  optional uint32 min_length = 2; // the minimum length of the array
+  optional uint32 max_length = 3; // the maximum length of the array
+}

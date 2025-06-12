@@ -1,0 +1,81 @@
+syntax = "proto3";
+package plugin;
+
+import "protos/plugin/schema.proto";
+
+message CrsHttpAction {
+  string path = 1;
+  CrsHttpRequest request = 2;
+  repeated CrsHttpResponse responses = 3;
+}
+
+message CrsHttpRequest {
+  enum Method {
+    GET = 0;
+    PUT = 1;
+    POST = 2;
+    DELETE = 3;
+    OPTIONS = 4;
+    HEAD = 5;
+    PATCH = 6;
+  }
+  Method method = 1;
+  optional CrsHttpRequestPath path = 2;
+  optional CrsHttpRequestQuery query = 3;
+  optional CrsHttpRequestHeader header = 4;
+  oneof body {
+    CrsHttpRequestJsonBody json = 5;
+  }
+}
+
+message CrsHttpRequestPath {
+  repeated CrsSchema params = 1;
+  repeated CrsSchema consts = 2;
+}
+
+message CrsHttpRequestQuery {
+  repeated CrsSchema params = 1;
+  repeated CrsSchema consts = 2;
+}
+
+message CrsHttpRequestHeader {
+  repeated CrsSchema params = 1;
+  repeated CrsSchema consts = 2;
+  optional string client_request_id = 3;
+}
+
+message CrsHttpRequestJsonBody {
+  CrsRequestJson json = 1;
+}
+
+message CrsHttpResponse {
+  repeated int32 status_codes = 1;
+  bool is_error = 2;
+  optional CrsHttpResponseHeader header = 3;
+  oneof body {
+    CrsHttpResponseJsonBody json = 10;
+  }
+}
+
+message CrsHttpResponseHeader {
+  repeated CrsHttpResponseHeaderItem items = 1;
+}
+
+message CrsHttpResponseHeaderItem {
+  string name = 1;
+  optional string var = 2;
+}
+
+message CrsHttpResponseJsonBody {
+  CrsResponseJson json = 1;
+}
+
+message CrsRequestJson {
+  optional string ref = 1;
+  optional CrsSchema schema = 2;
+}
+
+message CrsResponseJson {
+  optional string var = 1;
+  CrsSchema schema = 2;
+}

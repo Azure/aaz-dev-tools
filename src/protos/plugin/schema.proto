@@ -1,0 +1,66 @@
+syntax = "proto3";
+package plugin;
+
+message CrsSchemaInfo {
+  string name = 1;
+  optional string arg = 2;
+  bool required = 3;
+  // used in the path and query parameters
+  bool skip_url_encoding = 4;
+  bool secret = 5;
+}
+
+message CrsSchema {
+  bool read_only = 1;
+  bool const = 2;
+  bool nullable = 3;
+  // string action = 4;
+  optional CrsSchemaInfo info = 10;
+  oneof type {
+    CrsClsSchema cls = 21;
+    CrsStringSchema string = 22;
+    CrsIntegerSchema integer = 23;
+    CrsFloatSchema float = 24;
+    CrsBooleanSchema boolean = 25;
+    CrsObjectSchema object = 26;
+    CrsArraySchema array = 27;
+    CrsAnyTypeSchema any_type = 28;
+    // TODO: add binary schema
+  }
+}
+
+message CrsClsSchema {
+  string cls_type = 1;
+  bool client_flatten = 2;
+}
+
+message CrsStringSchema {}
+message CrsIntegerSchema {}
+message CrsFloatSchema {}
+message CrsBooleanSchema {}
+message CrsAnyTypeSchema {}
+
+message CrsObjectSchemaDiscriminator {
+  string property = 1;
+  string value = 2;
+  repeated CrsSchema props = 3;
+  repeated CrsObjectSchemaDiscriminator discriminators = 4;
+}
+
+message CrsObjectSchemaAdditionalProperties {
+  bool read_only = 1;
+  CrsSchema item = 2;
+}
+
+message CrsObjectSchema {
+  optional string cls = 1;
+  bool client_flatten = 2;
+  repeated CrsSchema props = 3;
+  repeated CrsObjectSchemaDiscriminator discriminators = 4;
+  optional CrsObjectSchemaAdditionalProperties additional_props = 5;
+}
+
+message CrsArraySchema {
+  optional string cls = 1;
+  CrsSchema item = 2;
+}

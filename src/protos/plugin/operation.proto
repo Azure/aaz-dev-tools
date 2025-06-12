@@ -1,0 +1,63 @@
+syntax = "proto3";
+package plugin;
+
+import "protos/plugin/http.proto";
+
+message CrsOperation {
+  repeated string conditions = 1;  // the `when` property in the aaz model
+  oneof type {
+    CrsHttpOperation http = 2;
+    CrsInstanceCreateOperation instance_create = 3;
+    CrsInstanceUpdateOperation instance_update = 4;
+    CrsInstanceDeleteOperation instance_delete = 5;
+  }
+}
+
+message CrsHttpOperation {
+  string operation_id = 1;
+  CrsHttpAction action = 2;
+  optional CrsHttpOperationLongRunning long_running = 3;
+}
+
+message CrsHttpOperationLongRunning {
+  enum StateVia {
+    azureAsyncOperation = 0;  // (default if not specified) poll until terminal state, the final response will be available at the uri pointed to by the header Azure-AsyncOperation
+    location = 1;  // poll until terminal state, the final response will be available at the uri pointed to by the header Location
+    originalUri = 2;  // poll until terminal state, the final response will be available via GET at the original resource URI. Very common for PUT operations.
+  }
+  StateVia final_state_via = 1;
+}
+
+message CrsInstanceCreateOperation {
+  CrsInstanceCreateAction instance_create = 1;
+}
+
+message CrsInstanceUpdateOperation {
+  CrsInstanceUpdateAction instance_update = 1;
+}
+
+message CrsInstanceDeleteOperation {
+  CrsInstanceDeleteAction instance_delete = 1;
+}
+
+
+message CrsInstanceCreateAction {
+  string ref = 1;
+  oneof type {
+      CrsRequestJson json = 2;
+  }
+}
+
+message CrsInstanceUpdateAction {
+  string ref = 1;
+  oneof type {
+      CrsRequestJson json = 2;
+  }
+}
+
+message CrsInstanceDeleteAction {
+  string ref = 1;
+  oneof type {
+      CrsRequestJson json = 2;
+  }
+}

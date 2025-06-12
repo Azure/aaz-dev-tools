@@ -1,0 +1,49 @@
+syntax = "proto3";
+package plugin;
+
+import "protos/plugin/schema.proto";
+
+message CrsSubresourceSelector {
+  string var = 1;
+  string ref = 2;
+  oneof type { CrsSelectorIndex json = 3; }
+}
+
+
+message CrsSelectorIndexInfo {
+  string name = 1;
+}
+
+message CrsSelectorIndex {
+  optional CrsSelectorIndexInfo info = 1;
+  oneof type {
+    CrsObjectIndex object = 2;
+    CrsArrayIndex array = 3;
+    CrsSimpleIndex simple = 4;
+  }
+}
+
+message CrsObjectIndexDiscriminator {
+  string property = 1;
+  string value = 2;
+  optional CrsSelectorIndex prop = 3;
+  optional CrsObjectIndexDiscriminator discriminator = 4;
+}
+
+message CrsObjectIndexAdditionalProperties {
+  CrsSelectorIndex item = 1;
+  repeated CrsSchema identifiers = 2;
+}
+
+message CrsObjectIndex {
+  optional CrsSelectorIndex prop = 1;
+  optional CrsObjectIndexDiscriminator discriminator = 2;
+  optional CrsObjectIndexAdditionalProperties additional_props = 3;
+}
+
+message CrsArrayIndex {
+  optional CrsSelectorIndex item = 1;
+  repeated CrsSchema identifiers = 2;
+}
+
+message CrsSimpleIndex {}

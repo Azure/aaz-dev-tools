@@ -1,0 +1,32 @@
+syntax = "proto3";
+package plugin;
+
+message CrsCondition {
+  string var = 1;
+  CrsConditionOperator operator = 2;
+}
+
+message CrsConditionOperator {
+    oneof type {
+      CrsConditionAndOperator and = 1;
+      CrsConditionOrOperator or = 2;
+      CrsConditionNotOperator not = 3;
+      CrsConditionHasValueOperator has_value = 4;
+    }
+}
+
+message CrsConditionAndOperator {
+  repeated CrsConditionOperator operators = 1;
+}
+
+message CrsConditionOrOperator {
+  repeated CrsConditionOperator operators = 1;
+}
+
+message CrsConditionNotOperator {
+  CrsConditionOperator operator = 1;
+}
+
+message CrsConditionHasValueOperator {
+  string arg = 1;
+}

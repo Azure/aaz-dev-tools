@@ -1,0 +1,28 @@
+syntax = "proto3";
+package plugin;
+
+message CrsOutput {
+  oneof type {
+    CrsObjectOutput object = 1;
+    CrsArrayOutput array = 2;
+    CrsStringOutput string = 3;
+  }
+}
+
+message CrsObjectOutput {
+  string ref = 1;
+  bool client_flatten = 2;
+}
+
+message CrsArrayOutput {
+  string ref = 1;
+  bool client_flatten = 2;
+  optional string next_link = 3;
+}
+
+message CrsStringOutput {
+  oneof type {
+    string ref = 1;  // get value from the content
+    string value = 2; // the placeholder string as output
+  }
+}

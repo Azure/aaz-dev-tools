@@ -1,0 +1,9 @@
+syntax = "proto3";
+package plugin;
+
+message CrsRestResource {
+  string id = 1;
+  string version = 2;
+  optional string subresource = 3;
+  string plane = 4; // a part of the swagger string in aaz CMDResource
+}
