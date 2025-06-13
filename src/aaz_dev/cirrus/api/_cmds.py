@@ -3,7 +3,7 @@ import logging
 from flask import Blueprint
 import sys
 
-from aaz_dev.cirrus.protos import command_pb2
+from aaz_dev import protos
 
 from utils.config import Config
 
