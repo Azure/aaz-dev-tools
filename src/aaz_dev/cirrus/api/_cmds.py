@@ -2,9 +2,13 @@ import click
 import logging
 from flask import Blueprint
 import sys
+import os
+import json
 
-from aaz_dev import protos
-
+from protos import component_pb2, command_pb2, argument_pb2
+from protos.plugin import model_pb2, resource_pb2, operation_pb2, output_pb2, selector_pb2, condition_pb2, http_pb2, schema_pb2
+from google.protobuf.json_format import ParseDict, MessageToJson
+from command.controller.specs_manager import AAZSpecsManager
 from utils.config import Config
 
 logger = logging.getLogger('backend')
@@ -32,72 +36,74 @@ bp.cli.short_help = "Generate aaz models as cirrus components."
     required=True,
     help="Name of the component"
 )
-@click.option(
-    "--component-uri",
-    required=True,
-    help="URI of the component"
-)
-def export_component(component_name, component_uri, output_path):
-    print(f"Exporting component: {component_name} with URI: {component_uri}")
+def export_component(component_name, output_path):
     print(f"Using AAZ path: {Config.AAZ_PATH}")    
-    
-
-    import json
-    import os
-    from aaz_dev.command.controller.specs_manager import AAZSpecsManager
     
     specs_manager = AAZSpecsManager()
     module_name = component_name.lower()
-    module_commands = {
-        "componentName": component_name,
-        "componentUri": component_uri,
-        "commands": []
-    }
+    component_uri = f"crs://azure/{module_name}/"
     
+    print(f"Exporting component: {component_name} with URI: {component_uri}")
 
-    print(f"Looking for commands in module: {module_name}")
-    count = 0
-    
-    for command in specs_manager.iter_commands():
-        # Check if the command belongs to the specified module
-        # For commands like 'az network vnet create', the module is 'network'
-        if len(command.names) >= 2 and command.names[0] == module_name:
-            print(f"Found command: {' '.join(command.names)}")
-            count += 1
-            
-            # Sort versions by name and pick the latest
-            if not command.versions:
-                print(f"Warning: No versions for command {' '.join(command.names)}")
-                continue
-            latest_version = sorted(command.versions, key=lambda v: v.name, reverse=True)[0]
-            
-            cfg_reader = specs_manager.load_resource_cfg_reader_by_command_with_version(command, latest_version)
-            if not cfg_reader:
-                print(f"Warning: Could not load configuration for command {' '.join(command.names)} version {latest_version.name}")
-                continue
-            
-            command_info = {
-                "name": " ".join(command.names),
-                "version": latest_version.name,
-                "resources": [
-                    {
-                        "plane": res.plane,
-                        "id": res.id,
-                        "version": res.version
-                    } for res in latest_version.resources
-                ],
-                "configuration": cfg_reader.cfg.to_primitive()
+    def process_in_tree_format(root_module):
+        def process_node(node):
+            node_data = {
+                "name": node.names[-1] if node.names else "unknown",
+                "full_name": " ".join(node.names) if node.names else "",
+                "help": node.help.short if node.help and node.help.short else None,
+                "type": "command_group"
             }
             
-            module_commands["commands"].append(command_info)
-    
-    print(f"Found {count} commands for module {module_name}")
-    
-    output_file = f"{output_path}/{component_name}.json"
-    os.makedirs(output_path, exist_ok=True)
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(module_commands, f, indent=2)
-    
-    print(f"Component exported to {output_file}")
-    
-    return module_commands
+            if hasattr(node, 'command_groups') and node.command_groups:
+                node_data["command_groups"] = {}
+                for group_name, group in sorted(node.command_groups.items()):
+                    node_data["command_groups"][group_name] = process_node(group)
+            
+            if hasattr(node, 'commands') and node.commands:
+                node_data["commands"] = {}
+                for cmd_name, command in sorted(node.commands.items()):
+                    command_data = {
+                        "name": cmd_name,
+                        "full_name": " ".join(command.names) if command.names else "",
+                        "help": command.help.short if command.help and command.help.short else None,
+                        "type": "command",
+                        "latest_version": None
+                    }
+                    
+                    if command.versions:
+                        sorted_versions = sorted(command.versions, key=lambda v: v.name, reverse=True)
+                        latest_version = sorted_versions[0]
+                        
+                        version_data = {
+                            "name": latest_version.name,
+                            "stage": getattr(latest_version, 'stage', None),
+                            "resources": []
+                        }
+                        if hasattr(latest_version, 'resources') and latest_version.resources:
+                            for resource in latest_version.resources:
+                                resource_data = {
+                                    "id": getattr(resource, 'id', None),
+                                    "version": getattr(resource, 'version', None),
+                                    "plane": getattr(resource, 'plane', None),
+                                    "subresource": getattr(resource, 'subresource', None)
+                                }
+                                version_data["resources"].append(resource_data)
+                        command_data["latest_version"] = version_data
+                    
+                    node_data["commands"][cmd_name] = command_data
+            
+            return node_data
+        
+        return process_node(root_module)
+
+    root_module = specs_manager.find_command_group(module_name)
+    if root_module:
+        tree_json = process_in_tree_format(root_module)
+        tree_json["module"] = module_name
+        output_file = os.path.join(output_path, f"{module_name}_command_tree.json")
+        os.makedirs(output_path, exist_ok=True)
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(tree_json, f, indent=2, ensure_ascii=False)
+        print(f"Command tree JSON saved to: {output_file}")
+        print(f"Found {len(tree_json.get('command_groups', {}))} command groups and {len(tree_json.get('commands', {}))} commands")
+     
