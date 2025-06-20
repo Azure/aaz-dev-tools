@@ -745,9 +745,73 @@ class CfgReader:
         return None
 
     @classmethod
+    def trim_identity_schema_by_idx(cls, schema, idx):  # only keep identity and its parents
+        if not schema:
+            return
+
+        current_idx = idx[0] if idx else None
+        remain_idx = idx[1:] if idx else None
+
+        identity_schema = schema.__class__(raw_data=schema.to_native())
+        if isinstance(identity_schema, CMDObjectSchemaBase):
+            if current_idx == '{}':
+                if identity_schema.additional_props and identity_schema.additional_props.item:
+                    identity_schema.additional_props.item = cls.trim_identity_schema_by_idx(identity_schema.additional_props.item, remain_idx)
+
+            elif identity_schema.props:
+                if current_idx:
+                    props = []
+                    for prop in identity_schema.props:
+                        if current_idx == prop.name:
+                            props.append(cls.trim_identity_schema_by_idx(prop, remain_idx))
+                    identity_schema.props = props
+                else:
+                    identity_schema.props = None
+                    if isinstance(identity_schema, CMDIdentityObjectSchema):
+                        identity_schema.system_assigned = None
+                        identity_schema.user_assigned = None
+
+            elif identity_schema.discriminators:
+                if current_idx:
+                    discriminators = []
+                    for disc in identity_schema.discriminators:
+                        if current_idx == disc.get_safe_value():
+                            discriminators.append(cls.trim_identity_schema_by_idx(disc, remain_idx))
+                    identity_schema.discriminators = discriminators
+                else:
+                    identity_schema.discriminators = None
+
+        elif isinstance(identity_schema, CMDObjectSchemaDiscriminator):
+            if identity_schema.props:
+                if current_idx:
+                    props = []
+                    for prop in identity_schema.props:
+                        if current_idx == prop.name:
+                            props.append(cls.trim_identity_schema_by_idx(prop, remain_idx))
+                    identity_schema.props = props
+                else:
+                    identity_schema.props = None
+
+            elif identity_schema.discriminators:
+                if current_idx:
+                    discriminators = []
+                    for disc in identity_schema.discriminators:
+                        if current_idx == disc.get_safe_value():
+                            discriminators.append(cls.trim_identity_schema_by_idx(disc, remain_idx))
+                    identity_schema.discriminators = discriminators
+                else:
+                    identity_schema.discriminators = None
+
+        elif isinstance(identity_schema, CMDArraySchemaBase):
+            if current_idx == '[]':
+                identity_schema.item = cls.trim_identity_schema_by_idx(identity_schema.item, remain_idx)
+
+        return identity_schema
+
+    @classmethod
     def find_identity_schema_in_command(cls, command):
         for operation in command.operations:
-            if isinstance(operation, CMDInstanceUpdateOperation):
+            if isinstance(operation, CMDInstanceUpdateOperation) or isinstance(operation, CMDHttpOperation):
                 for match in cls.iter_schema_in_update_operation_by_identity(operation):
                     return operation, *match
 
@@ -759,11 +823,17 @@ class CfgReader:
                 return (_parent, _schema, _schema_idx), False
             return None, False
 
-        for parent, schema, schema_idx in cls._iter_schema_in_json(
-                operation.instance_update.json, schema_filter=schema_filter):
-            if schema:
-                schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Update, *schema_idx]
-                yield parent, schema, schema_idx
+        if isinstance(operation, CMDInstanceUpdateOperation):
+            for parent, schema, schema_idx in cls._iter_schema_in_json(operation.instance_update.json, schema_filter=schema_filter):
+                if schema:
+                    schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Update, *schema_idx]
+                    yield parent, schema, schema_idx
+
+        else:
+            for parent, schema, schema_idx in cls._iter_schema_in_request(operation.http.request, schema_filter=schema_filter):
+                if schema:
+                    schema_idx = [_SchemaIdxEnum.Instance, _SchemaIdxEnum.Update, *schema_idx]
+                    yield parent, schema, schema_idx
 
     @classmethod
     def iter_schema_in_command_by_arg_var(cls, command, arg_var):

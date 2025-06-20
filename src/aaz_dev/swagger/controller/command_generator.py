@@ -102,6 +102,52 @@ class _CommandGenerator(ABC):
         command.name = f"{group_name} update"
         return command
 
+    @classmethod
+    def generate_specific_update_command(cls, path_item, resource, instance_var, cmd_builder, get_op, patch_op):
+        command = CMDCommand()
+        command.version = cls.generate_command_version(resource)
+        command.resources = [
+            resource.to_cmd() if not isinstance(resource, CMDResource) else resource
+        ]
+        assert path_item.get is not None
+        assert path_item.patch is not None
+
+        cmd_builder.apply_cls_definitions(get_op, patch_op)
+
+        if patch_op.http.request.body is None:
+            return None
+
+        if not cls._set_api_version_parameter(get_op.http.request, api_version=resource.version):
+            logger.warning(f"Cannot Find api version parameter: {resource.path}, 'get' : {path_item.traces}")
+        if not cls._set_api_version_parameter(patch_op.http.request, api_version=resource.version):
+            logger.warning(f"Cannot Find api version parameter: {resource.path}, 'patch' : {path_item.traces}")
+
+        if not command.build_output_by_operation(get_op):
+            return None
+
+        if not command.build_output_by_operation(patch_op):
+            return None
+
+        cls._filter_generic_update_parameters(get_op, patch_op)
+
+        command.description = patch_op.description
+        json_update_op = cls._generate_instance_patch_operation(patch_op, instance_var)
+        command.operations = [
+            get_op,
+            json_update_op,
+            patch_op
+        ]
+
+        command.generate_args()
+        command.generate_outputs()
+
+        assert command.outputs
+
+        group_name = cls.generate_command_group_name_by_resource(
+            resource_path=resource.path, rp_name=resource.rp_name)
+        command.name = f"{group_name} update"
+        return command
+
     @staticmethod
     def _set_api_version_parameter(request, api_version):
         assert isinstance(request, CMDHttpRequest)
@@ -252,6 +298,17 @@ class _CommandGenerator(ABC):
 
         put_op.http.request.body.json.ref = instance_var
         put_op.http.request.body.json.schema = None
+        return json_update_op
+
+    @staticmethod
+    def _generate_instance_patch_operation(patch_op, instance_var):
+        json_update_op = CMDInstanceUpdateOperation()
+        json_update_op.instance_update = CMDJsonInstanceUpdateAction()
+        json_update_op.instance_update.ref = instance_var
+        json_update_op.instance_update.json = CMDRequestJson()
+        json_update_op.instance_update.json.schema = patch_op.http.request.body.json.schema
+
+        patch_op.http.request.body.json.ref = instance_var
         return json_update_op
 
     @staticmethod
@@ -470,11 +527,24 @@ class _CommandGenerator(ABC):
                     raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: resource needs to have 'patch' operation: '{resource}'")
                 if 'patch' not in methods:
                     raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: '{resource}': 'patch' not in methods: '{methods}'")
-                cmd_builder = CMDBuilder(path=resource.path, method='patch', mutability=MutabilityEnum.Update,
-                                         parameterized_host=parameterized_host)
-                op = self.generate_operation(cmd_builder, path_item, instance_var)
-                patch_update_command = self.generate_command(path_item, resource, instance_var, cmd_builder, op)
-                command_group.commands.append(patch_update_command)
+
+                if kwargs.get('is_identity', False) is True:
+                    cmd_builder = CMDBuilder(path=resource.path, parameterized_host=parameterized_host)
+                    get_op = self.generate_operation(cmd_builder, path_item, instance_var, method='get', mutability=MutabilityEnum.Read)
+                    patch_op = self.generate_operation(cmd_builder, path_item, instance_var, method='patch', mutability=MutabilityEnum.Update)
+                    specific_update_command = self.generate_specific_update_command(path_item, resource, instance_var, cmd_builder, get_op, patch_op)
+
+                    if specific_update_command is None:
+                        raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: failed to generate specific update: '{resource}'")
+
+                    command_group.commands.append(specific_update_command)
+
+                else:
+                    cmd_builder = CMDBuilder(path=resource.path, method='patch', mutability=MutabilityEnum.Update,
+                                             parameterized_host=parameterized_host)
+                    op = self.generate_operation(cmd_builder, path_item, instance_var)
+                    patch_update_command = self.generate_command(path_item, resource, instance_var, cmd_builder, op)
+                    command_group.commands.append(patch_update_command)
             # elif update_by == 'GenericAndPatch':
             #     # TODO: add support for generic and patch merge
             #     if path_item.get is None or path_item.put is None or path_item.patch is None:

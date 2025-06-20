@@ -489,6 +489,18 @@ class {{ leaf.cls_name }}(
 
         @property
         def content(self):
+            {%- if op.content.ref is not none and op.content._json.schema is not none -%}
+
+            {%- if op.method == "PATCH" %}
+            {%- set valid_ops = leaf.operations | selectattr("is_selector_variant") | list %}
+            {%- if valid_ops %}
+            {%- set temp_op = valid_ops[0] %}
+            identity = self.serialize_content({{ temp_op.variant_key }}.required())
+            return {"identity": identity}
+            {%- endif %}
+            {%- endif %}
+
+            {%- else %}
             {{ op.content.VALUE_NAME}}, {{ op.content.BUILDER_NAME }} = self.new_content_builder(
                 {{ op.content.arg_key }},
                 {%- if op.content.ref is not none %}
@@ -546,6 +558,7 @@ class {{ leaf.cls_name }}(
             {%- endif %}
 
             return self.serialize_content({{ op.content.VALUE_NAME }})
+            {%- endif %}
         {%- endif %}
 
         {%- if op.form_content is not none %}

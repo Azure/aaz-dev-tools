@@ -666,13 +666,13 @@ class WorkspaceManager:
                     aaz_ref[' '.join(cmd_names)] = aaz_version
 
             update_cmd_info = cfg_editor.get_update_cmd(resource.id)
-            temp_generic_update_cmd = None
-            if update_cmd_info and options.get('update_by', None) == "PatchOnly":
-                temp_cfg_editor = self._build_draft_cfg_editor(command_generator, resource, {"update_by": "GenericOnly", "methods": ('get', 'put')})
+            temp_update_cmd = None
+            if update_cmd_info and options.get('update_by', None) == "PatchOnly" and cfg_editor.find_identity_schema_in_command(update_cmd_info[1]):
+                temp_cfg_editor = self._build_draft_cfg_editor(command_generator, resource, {"update_by": "PatchOnly", "methods": ('get', 'patch'), "is_identity": True})
                 temp_update_cmd_info = temp_cfg_editor.get_update_cmd(resource.id)
                 if temp_update_cmd_info:
-                    _, temp_generic_update_cmd, _ = temp_update_cmd_info
-            cfg_editor.build_identity_subresource(resource.id, temp_generic_update_cmd)
+                    _, temp_update_cmd, _ = temp_update_cmd_info
+            cfg_editor.build_identity_subresource(resource.id, temp_update_cmd)
             cfg_editors.append(cfg_editor)
 
         # add cfg_editors
@@ -789,17 +789,18 @@ class WorkspaceManager:
                 options['methods'] = methods
             update_cmd_info = cfg_editor.get_update_cmd(resource_id)
             if update_cmd_info:
-                _, _, update_by = update_cmd_info
+                _, command, update_by = update_cmd_info
                 options['update_by'] = update_by
             new_cfg_editor = self._build_draft_cfg_editor(command_generator, resource, options)
             new_cfg_editor.inherit_modification(cfg_editor)
-            temp_generic_update_cmd = None
-            if update_cmd_info and update_by == "PatchOnly":
-                temp_cfg_editor = self._build_draft_cfg_editor(command_generator, resource, {"update_by": "GenericOnly", "methods": ('get', 'put')})
+            temp_update_cmd = None
+            if update_cmd_info and update_by == "PatchOnly" and cfg_editor.find_identity_schema_in_command(command):
+                temp_cfg_editor = self._build_draft_cfg_editor(command_generator, resource, {"update_by": "PatchOnly", "methods": ('get', 'patch'), "is_identity": True})
                 temp_update_cmd_info = temp_cfg_editor.get_update_cmd(resource_id)
                 if temp_update_cmd_info:
-                    _, temp_generic_update_cmd, _ = temp_update_cmd_info
-            new_cfg_editor.build_identity_subresource(resource_id, temp_generic_update_cmd)
+                    _, temp_update_cmd, _ = temp_update_cmd_info
+
+            new_cfg_editor.build_identity_subresource(resource_id, temp_update_cmd)
             new_cfg_editors.append(new_cfg_editor)
 
         # remove old cfg editor
