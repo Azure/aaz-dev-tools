@@ -190,15 +190,15 @@ def convert_aaz_command_to_proto(aaz_command, component_version):
             if cmd_cfg:
                 result = cmd_cfg.to_primitive()
                 
-                # Debug: save the complete command 
-                cfg_file = f"{'_'.join(aaz_command.names)}_cmd.json"
-                cfg_dir = os.path.dirname('C:\\Users\\shiyingchen\\aaz-cirrus\\devcenter\\')
-                if not os.path.exists(cfg_dir):
-                    os.makedirs(cfg_dir)
-                cfg_file = os.path.join(cfg_dir, cfg_file)
-                with open(cfg_file, 'w', encoding='utf-8') as f:
-                    json.dump(result, f, indent=2, ensure_ascii=False)
-                print(f"Command configuration saved to: {cfg_file}")
+                # # Debug: save the complete command 
+                # cfg_file = f"{'_'.join(aaz_command.names)}_cmd.json"
+                # cfg_dir = os.path.dirname('C:\\Users\\shiyingchen\\aaz-cirrus\\devcenter\\')
+                # if not os.path.exists(cfg_dir):
+                #     os.makedirs(cfg_dir)
+                # cfg_file = os.path.join(cfg_dir, cfg_file)
+                # with open(cfg_file, 'w', encoding='utf-8') as f:
+                #     json.dump(result, f, indent=2, ensure_ascii=False)
+                # print(f"Command configuration saved to: {cfg_file}")
                 
                 
                 if result.get('help'):
@@ -293,10 +293,11 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
         proto_arg.help.CopyFrom(convert_aaz_arg_help_to_proto(aaz_arg['help']))
     
     if aaz_arg.get('blank'):
-        proto_arg.blank.value = str(aaz_arg['blank']) if aaz_arg['blank'] is not None else ""
+        proto_arg.blank.value = aaz_arg['blank']
     
     if aaz_arg.get('default'):
-        proto_arg.default.value = str(aaz_arg['default']) if aaz_arg['default'] is not None else ""    
+        proto_arg.default.value = aaz_arg['default']
+
     if aaz_arg.get('prompt'):
         proto_arg.prompt.prompt = aaz_arg['prompt']['msg']
 
@@ -307,219 +308,220 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
     #     proto_arg.prompt.confirm = aaz_arg['prompt']['confirmation']
     
     arg_type = aaz_arg.get('type', None)
-    arg_type_set = False
-    
+
     if arg_type == 'string':
         string_arg = argument_pb2.CrsStringArg()
-        string_arg.enum.CopyFrom(argument_pb2.CrsArgEnum())
-        
+
         format_type = aaz_arg.get('format', None)
         if format_type:
-            if format_type == 'binary':
-                string_arg.binary.CopyFrom(argument_pb2.CrsBinaryFormat())
-            elif format_type == 'byte':
-                string_arg.byte.CopyFrom(argument_pb2.CrsByteFormat())
-            elif format_type == 'duration':
-                duration_format = argument_pb2.CrsDurationFormat()
-                duration_format.protocol = argument_pb2.CrsDurationFormat.Protocol.ISO8601
-                string_arg.duration.CopyFrom(duration_format)
-            elif format_type == 'date':
-                date_format = argument_pb2.CrsDateFormat()
-                date_format.protocol = argument_pb2.CrsDateFormat.Protocol.ISO8601
-                string_arg.date.CopyFrom(date_format)
-            elif format_type == 'date-time':
-                datetime_format = argument_pb2.CrsDateTimeFormat()
-                datetime_format.protocol = argument_pb2.CrsDateTimeFormat.Protocol.ISO8601
-                string_arg.date_time.CopyFrom(datetime_format)
-            elif format_type == 'time':
-                time_format = argument_pb2.CrsTimeFormat()
-                time_format.protocol = argument_pb2.CrsTimeFormat.Protocol.ISO8601
-                string_arg.time.CopyFrom(time_format)
-            elif format_type == 'uuid':
-                uuid_format = argument_pb2.CrsUuidFormat()
-                uuid_format.case = argument_pb2.CrsUuidFormat.Case.LOWER
-                string_arg.uuid.CopyFrom(uuid_format)
-            elif format_type == 'password':
-                string_arg.password.CopyFrom(argument_pb2.CrsPasswordFormat())
-            elif format_type == 'subscription-id':
-                string_arg.subscription_id.CopyFrom(argument_pb2.CrsSubscriptionIdFormat())
-            elif format_type == 'resource-group-name':
-                string_arg.resource_group_name.CopyFrom(argument_pb2.CrsResourceGroupNameFormat())
-            elif format_type == 'resource-id':
-                resource_id_format = argument_pb2.CrsResourceIdFormat()
-                if aaz_arg.get('template'):
-                    templates = aaz_arg.get('template')
-                    if isinstance(templates, list):
-                        resource_id_format.templates.extend(templates)
-                    else:
-                        resource_id_format.templates.append(templates)
-                string_arg.resource_id.CopyFrom(resource_id_format)
-            elif format_type == 'resource-location':
-                location_format = argument_pb2.CrsResourceLocationFormat()
-                location_format.no_rg_default = aaz_arg.get('no_rg_default', False)
-                string_arg.resource_location.CopyFrom(location_format)
-            else:
-                str_format = argument_pb2.CrsStringFormat()
-                if aaz_arg.get('pattern'):
-                    str_format.pattern = aaz_arg.get('pattern')
-                if aaz_arg.get('max_length') is not None:
-                    str_format.max_length = aaz_arg.get('max_length')
-                if aaz_arg.get('min_length') is not None:
-                    str_format.min_length = aaz_arg.get('min_length')
-                string_arg.string.CopyFrom(str_format)
+            str_format = argument_pb2.CrsStringFormat()
+            if aaz_arg.get('pattern'):
+                str_format.pattern = aaz_arg.get('pattern')
+            if aaz_arg.get('max_length') is not None:
+                str_format.max_length = aaz_arg.get('maxLength')
+            if aaz_arg.get('min_length') is not None:
+                str_format.min_length = aaz_arg.get('minLength')
+            string_arg.string.format.string.CopyFrom(str_format)
         
-        # Handle enum if available
         if aaz_arg.get('enum'):
             enum_items = aaz_arg.get('enum')
             if isinstance(enum_items, list):
                 for item in enum_items:
                     enum_item = string_arg.enum.items.add()
                     enum_item.name = item.get('name', '')
-                    enum_item.value = str(item.get('value', ''))
+                    enum_item.value = item.get('value', '')
                     enum_item.internal = item.get('internal', False)
             
-            # Handle additional enum properties
-            string_arg.enum.support_extension = aaz_arg.get('enum_support_extension', False)
-            string_arg.enum.case_sensitive = aaz_arg.get('enum_case_sensitive', False)
+            string_arg.enum.support_extension = aaz_arg.get('supportExtension', False)
+            # Not found 'caseSensitive' in aaz
+            string_arg.enum.case_sensitive = aaz_arg.get('caseSensitive', False)
         
         proto_arg.string.CopyFrom(string_arg)
-        arg_type_set = True
+
+    elif arg_type == 'binary':
+        string_arg = argument_pb2.CrsStringArg()
+        binary_format = argument_pb2.CrsBinaryFormat()
+        string_arg.binary.CopyFrom(binary_format)
+        proto_arg.string.CopyFrom(string_arg)
+
+    elif arg_type == 'byte':
+        string_arg = argument_pb2.CrsStringArg()
+        byte_format = argument_pb2.CrsByteFormat()
+        string_arg.byte.CopyFrom(byte_format)
+        proto_arg.string.CopyFrom(string_arg)
+
+    elif arg_type == 'duration':
+        string_arg = argument_pb2.CrsStringArg()
+        duration_format = argument_pb2.CrsDurationFormat()
+        if aaz_arg.get('protocol'):
+            duration_format.protocol = aaz_arg['protocol']
+        string_arg.duration.CopyFrom(duration_format)
+        proto_arg.string.CopyFrom(string_arg)
+
+    elif arg_type == 'date':
+        string_arg = argument_pb2.CrsStringArg()
+        date_format = argument_pb2.CrsDateFormat()
+        if aaz_arg.get('protocol'):
+            date_format.protocol = aaz_arg['protocol']
+        string_arg.date.CopyFrom(date_format)
+        proto_arg.string.CopyFrom(string_arg)
+
+    elif arg_type == 'dateTime':
+        string_arg = argument_pb2.CrsStringArg()
+        datetime_format = argument_pb2.CrsDateTimeFormat()
+        if aaz_arg.get('protocol'):
+            datetime_format.protocol = aaz_arg['protocol']
+        string_arg.date_time.CopyFrom(datetime_format)
+        proto_arg.string.CopyFrom(string_arg)
+
+    elif arg_type == 'time':
+        string_arg = argument_pb2.CrsStringArg()
+        time_format = argument_pb2.CrsTimeFormat()
+        if aaz_arg.get('protocol'):
+            time_format.protocol = aaz_arg['protocol']
+        string_arg.time.CopyFrom(time_format)
+        proto_arg.string.CopyFrom(string_arg)
+
+    elif arg_type == 'uuid':
+        string_arg = argument_pb2.CrsStringArg()
+        uuid_format = argument_pb2.CrsUuidFormat()
+        string_arg.uuid.CopyFrom(uuid_format)
+        proto_arg.string.CopyFrom(string_arg)
+
+    elif arg_type == 'password':
+        string_arg = argument_pb2.CrsStringArg()
+        string_arg.password.CopyFrom(argument_pb2.CrsPasswordFormat())
+        proto_arg.string.CopyFrom(string_arg)
+
+    elif arg_type == 'SubscriptionId':
+        string_arg = argument_pb2.CrsStringArg()
+        string_arg.subscription_id.CopyFrom(argument_pb2.CrsSubscriptionIdFormat())
+        proto_arg.string.CopyFrom(string_arg)
+
+    elif arg_type == 'ResourceGroupName':
+        string_arg = argument_pb2.CrsStringArg()
+        string_arg.resource_group_name.CopyFrom(argument_pb2.CrsResourceGroupNameFormat())
+        proto_arg.string.CopyFrom(string_arg)
+
+    elif arg_type == 'ResourceId':
+        string_arg = argument_pb2.CrsStringArg()
+        resource_id_format = argument_pb2.CrsResourceIdFormat()
+        if aaz_arg.get('template'):
+            templates = aaz_arg.get('template')
+            if isinstance(templates, list):
+                resource_id_format.templates.extend(templates)
+            else:
+                resource_id_format.templates.append(templates)
+        string_arg.resource_id.CopyFrom(resource_id_format)
+        proto_arg.string.CopyFrom(string_arg)
+
+    elif arg_type == 'ResourceLocation':
+        string_arg = argument_pb2.CrsStringArg()
+        location_format = argument_pb2.CrsResourceLocationFormat()
+        # Not found 'noRgDefault' in aaz
+        location_format.no_rg_default = aaz_arg.get('noRgDefault', False) 
+        string_arg.resource_location.CopyFrom(location_format)
+        proto_arg.string.CopyFrom(string_arg)
         
     elif arg_type == 'boolean':
         boolean_arg = argument_pb2.CrsBooleanArg()
-        if aaz_arg.get('reverse_options'):
-            boolean_arg.reverse_options.extend(aaz_arg.get('reverse_options'))
+        # Not found 'reverse_options' in aaz
+        if aaz_arg.get('reverseOptions'):
+            boolean_arg.reverse_options.extend(aaz_arg.get('reverseOptions'))
         proto_arg.boolean.CopyFrom(boolean_arg)
-        arg_type_set = True
         
-    elif arg_type in ['number', 'integer', 'float']:
+    elif arg_type in ['integer', 'integer32', 'integer64', 'float', 'float32', 'float64', 'double']:
         number_arg = argument_pb2.CrsNumberArg()
-        
-        # Initialize enum with empty value even if not used
         number_arg.enum.CopyFrom(argument_pb2.CrsArgEnum())
-        
-        # Handle number format
-        if arg_type == 'integer':
-            if aaz_arg.get('unsigned', False):
-                # Handle unsigned integer (uint32 or uint64)
-                if aaz_arg.get('format') == 'int64':
-                    uint_format = argument_pb2.CrsUint64Format()
-                    if aaz_arg.get('minimum') is not None:
-                        uint_format.minimum = aaz_arg.get('minimum')
-                    if aaz_arg.get('maximum') is not None:
-                        uint_format.maximum = aaz_arg.get('maximum')
-                    if aaz_arg.get('multiple_of') is not None:
-                        uint_format.multiple_of = aaz_arg.get('multiple_of')
-                    number_arg.uint64.CopyFrom(uint_format)
-                else:
-                    uint_format = argument_pb2.CrsUint32Format()
-                    if aaz_arg.get('minimum') is not None:
-                        uint_format.minimum = aaz_arg.get('minimum')
-                    if aaz_arg.get('maximum') is not None:
-                        uint_format.maximum = aaz_arg.get('maximum')
-                    if aaz_arg.get('multiple_of') is not None:
-                        uint_format.multiple_of = aaz_arg.get('multiple_of')
-                    number_arg.uint32.CopyFrom(uint_format)
-            else:
-                # Handle signed integer (int32 or int64)
-                if aaz_arg.get('format') == 'int64':
-                    int_format = argument_pb2.CrsInt64Format()
-                    if aaz_arg.get('minimum') is not None:
-                        int_format.minimum = aaz_arg.get('minimum')
-                    if aaz_arg.get('maximum') is not None:
-                        int_format.maximum = aaz_arg.get('maximum')
-                    if aaz_arg.get('multiple_of') is not None:
-                        int_format.multiple_of = aaz_arg.get('multiple_of')
-                    number_arg.int64.CopyFrom(int_format)
-                else:
-                    int_format = argument_pb2.CrsInt32Format()
-                    if aaz_arg.get('minimum') is not None:
-                        int_format.minimum = aaz_arg.get('minimum')
-                    if aaz_arg.get('maximum') is not None:
-                        int_format.maximum = aaz_arg.get('maximum')
-                    if aaz_arg.get('multiple_of') is not None:
-                        int_format.multiple_of = aaz_arg.get('multiple_of')
-                    number_arg.int32.CopyFrom(int_format)
-        else:
-            # Handle floating-point number (float or double)
-            if aaz_arg.get('format') == 'double':
-                double_format = argument_pb2.CrsDoubleFormat()
-                if aaz_arg.get('minimum') is not None:
-                    double_format.minimum = aaz_arg.get('minimum')
-                if aaz_arg.get('maximum') is not None:
-                    double_format.maximum = aaz_arg.get('maximum')
-                double_format.exclusive_minimum = aaz_arg.get('exclusive_minimum', False)
-                double_format.exclusive_maximum = aaz_arg.get('exclusive_maximum', False)
-                if aaz_arg.get('multiple_of') is not None:
-                    double_format.multiple_of = aaz_arg.get('multiple_of')
-                number_arg.double.CopyFrom(double_format)
-            else:
-                float_format = argument_pb2.CrsFloatFormat()
-                if aaz_arg.get('minimum') is not None:
-                    float_format.minimum = aaz_arg.get('minimum')
-                if aaz_arg.get('maximum') is not None:
-                    float_format.maximum = aaz_arg.get('maximum')
-                float_format.exclusive_minimum = aaz_arg.get('exclusive_minimum', False)
-                float_format.exclusive_maximum = aaz_arg.get('exclusive_maximum', False)
-                if aaz_arg.get('multiple_of') is not None:
-                    float_format.multiple_of = aaz_arg.get('multiple_of')
-                number_arg.float.CopyFrom(float_format)
-        
-        # Handle enum if available
         if aaz_arg.get('enum'):
             enum_items = aaz_arg.get('enum')
             if isinstance(enum_items, list):
                 for item in enum_items:
                     enum_item = number_arg.enum.items.add()
                     enum_item.name = item.get('name', '')
-                    enum_item.value = str(item.get('value', ''))
+                    enum_item.value = item.get('value', '')
                     enum_item.internal = item.get('internal', False)
+            number_arg.enum.support_extension = aaz_arg.get('supportExtension', False)
+            number_arg.enum.case_sensitive = aaz_arg.get('caseSensitive', False)
+        
+        if arg_type == 'integer' or arg_type == 'integer32': 
+            number_arg.format.CopyFrom(argument_pb2.CrsInt32Format())
+            if aaz_arg.get('minimum'):
+                number_arg.format.minimum = aaz_arg.get('minimum')
+            if aaz_arg.get('maximum'):
+                number_arg.format.maximum = aaz_arg.get('maximum')
+            if aaz_arg.get('multipleOf'):
+                number_arg.format.multiple_of = aaz_arg.get('multipleOf')
             
-            # Handle additional enum properties
-            number_arg.enum.support_extension = aaz_arg.get('enum_support_extension', False)
-            number_arg.enum.case_sensitive = aaz_arg.get('enum_case_sensitive', False)
+        elif  arg_type == 'integer64':
+            number_arg.format.CopyFrom(argument_pb2.CrsInt64Format())
+            if aaz_arg.get('minimum'):
+                number_arg.format.minimum = aaz_arg.get('minimum')
+            if aaz_arg.get('maximum'):
+                number_arg.format.maximum = aaz_arg.get('maximum')
+            if aaz_arg.get('multipleOf'):
+                number_arg.format.multiple_of = aaz_arg.get('multipleOf')
+
+        elif arg_type == 'float' or arg_type == 'float32':
+            number_arg.format.CopyFrom(argument_pb2.CrsFloatFormat())
+            if aaz_arg.get('minimum'):
+                number_arg.format.minimum = aaz_arg.get('minimum')
+            if aaz_arg.get('maximum'):
+                number_arg.format.maximum = aaz_arg.get('maximum')
+            if aaz_arg.get('multipleOf'):
+                number_arg.format.multiple_of = aaz_arg.get('multipleOf')
+            if aaz_arg.get('exclusiveMinimum'):
+                number_arg.format.exclusive_minimum = aaz_arg.get('exclusiveMinimum')
+            if aaz_arg.get('exclusiveMaximum'):
+                number_arg.format.exclusive_maximum = aaz_arg.get('exclusiveMaximum')
+        
+        elif arg_type == 'float64' or arg_type == 'double':
+            number_arg.format.CopyFrom(argument_pb2.CrsDoubleFormat())
+            if aaz_arg.get('minimum'):
+                number_arg.format.minimum = aaz_arg.get('minimum')
+            if aaz_arg.get('maximum'):
+                number_arg.format.maximum = aaz_arg.get('maximum')
+            if aaz_arg.get('multipleOf'):
+                number_arg.format.multiple_of = aaz_arg.get('multipleOf')
+            if aaz_arg.get('exclusiveMinimum'):
+                number_arg.format.exclusive_minimum = aaz_arg.get('exclusiveMinimum')
+            if aaz_arg.get('exclusiveMaximum'):
+                number_arg.format.exclusive_maximum = aaz_arg.get('exclusiveMaximum')
             
+
         proto_arg.number.CopyFrom(number_arg)
-        arg_type_set = True
+
         
     elif arg_type == 'object':
         object_arg = argument_pb2.CrsObjectArg()
         
-        # Set class type if available
         if aaz_arg.get('cls_type'):
             object_arg.cls_type = aaz_arg.get('cls_type')
         
-        # Set PS flatten if available
-        object_arg.ps_flatten = aaz_arg.get('ps_flatten', False)
-        
-        # Set format if available
         object_format = argument_pb2.CrsObjectFormat()
-        if aaz_arg.get('min_length') is not None:
-            object_format.min_length = aaz_arg.get('min_length')
-        if aaz_arg.get('max_length') is not None:
-            object_format.max_length = aaz_arg.get('max_length')
+        if aaz_arg.get('minLength') is not None:
+            object_format.min_length = aaz_arg.get('minLength')
+        if aaz_arg.get('maxLength') is not None:
+            object_format.max_length = aaz_arg.get('maxLength')
         object_arg.format.CopyFrom(object_format)
         
-        # Set properties if available
-        if aaz_arg.get('properties'):
-            props = aaz_arg.get('properties')
-            for prop_name, prop_value in props.items():
+        if aaz_arg.get('props'):
+            props = aaz_arg.get('props')
+            for prop in props:
                 prop = object_arg.props.add()
-                # Create a property argument with appropriate group name
-                prop_group_name = f"{aaz_arg_group_name}.{prop_name}" if aaz_arg_group_name else prop_name
-                prop.CopyFrom(convert_aaz_arg_to_proto(prop_value, prop_group_name))
+                prop.CopyFrom(convert_aaz_arg_to_proto(aaz_arg_group_name, prop))
         
-        # Set additional properties if available
-        if aaz_arg.get('additional_properties'):
+        if aaz_arg.get('additionalProps'):
+            aaz_additional_props  = aaz_arg.get('additionalProps')
             additional_props = argument_pb2.CrsObjectArgAdditionalProperties()
+
             additional_props.item.CopyFrom(convert_aaz_arg_to_proto(
                 aaz_arg.get('additional_properties'), 
-                f"{aaz_arg_group_name}.additionalProperties" if aaz_arg_group_name else "additionalProperties"
+                aaz_additional_props.get('item')
             ))
             object_arg.additional_props.CopyFrom(additional_props)
         
         proto_arg.object.CopyFrom(object_arg)
-        arg_type_set = True
         
     elif arg_type == 'array':
         array_arg = argument_pb2.CrsArrayArg()
@@ -543,21 +545,13 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
             array_arg.item.CopyFrom(convert_aaz_arg_to_proto(aaz_arg.get('item'), item_group_name))
         
         proto_arg.array.CopyFrom(array_arg)
-        arg_type_set = True
         
     elif arg_type == 'cls':
         cls_arg = argument_pb2.CrsClsArg()
         cls_arg.cls_type = aaz_arg.get('cls_type', '')
         proto_arg.cls.CopyFrom(cls_arg)
-        arg_type_set = True
         
     else:
-        # Default to any type for unrecognized types
-        proto_arg.any_type.CopyFrom(argument_pb2.CrsAnyTypeArg())
-        arg_type_set = True
-    
-    # Final fallback to any type
-    if not arg_type_set:
         proto_arg.any_type.CopyFrom(argument_pb2.CrsAnyTypeArg())
     
     return proto_arg
