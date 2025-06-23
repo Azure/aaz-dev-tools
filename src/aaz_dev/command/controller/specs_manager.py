@@ -154,8 +154,14 @@ class AAZSpecsManager:
             # Not recommend to use xml, because there are some issues in XMLSerializer
             if not os.path.isfile(xml_path):
                 raise ValueError(f"Invalid file path: {xml_path}")
-            with open(xml_path, 'r', encoding="utf-8") as f:
-                cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
+            
+            try:
+                with open(xml_path, 'r', encoding="utf-8") as f:
+                    cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
+            except UnicodeDecodeError:
+                with open(xml_path, 'r', encoding="latin-1") as f:
+                    cfg = XMLSerializer.from_xml(CMDConfiguration, f.read())
+            
             data = self.render_resource_cfg_to_json(cfg)
             with open(json_path, 'w', encoding="utf-8") as f:
                 f.write(data)
@@ -166,9 +172,19 @@ class AAZSpecsManager:
         if not os.path.isfile(json_path):
             raise ValueError(f"Invalid file path: {json_path}")
 
-        with open(json_path, 'r', encoding="utf-8") as f:
-            #print(json_path)
-            data = json.load(f)
+        try:
+            with open(json_path, 'r', encoding="utf-8") as f:
+                #print(json_path)
+                data = json.load(f)
+        except UnicodeDecodeError:
+            try:
+                with open(json_path, 'r', encoding="latin-1") as f:
+                    data = json.load(f)
+            except Exception as e:
+                with open(json_path, 'rb') as f:
+                    content = f.read()
+                    content_str = content.decode('utf-8', errors='replace')
+                    data = json.loads(content_str)
         cfg = CMDConfiguration(data)
 
         return CfgReader(cfg)
@@ -270,8 +286,14 @@ class AAZSpecsManager:
             # Not recommend to use xml, because there are some issues in XMLSerializer
             if not os.path.isfile(xml_path):
                 raise ValueError(f"Invalid file path: {xml_path}")
-            with open(xml_path, 'r') as f:
-                cfg = XMLSerializer.from_xml(CMDClientConfig, f.read())
+            
+            try:
+                with open(xml_path, 'r', encoding="utf-8") as f:
+                    cfg = XMLSerializer.from_xml(CMDClientConfig, f.read())
+            except UnicodeDecodeError:
+                with open(xml_path, 'r', encoding="latin-1") as f:
+                    cfg = XMLSerializer.from_xml(CMDClientConfig, f.read())
+            
             data = self.render_resource_cfg_to_json(cfg)
             with open(json_path, 'w') as f:
                 f.write(data)
@@ -282,8 +304,21 @@ class AAZSpecsManager:
         if not os.path.isfile(json_path):
             raise ValueError(f"Invalid file path: {json_path}")
         
-        with open(json_path, 'r') as f:
-            data = json.load(f)
+        try:
+            with open(json_path, 'r', encoding="utf-8") as f:
+                data = json.load(f)
+        except UnicodeDecodeError:
+            # Try with a different encoding if UTF-8 fails
+            try:
+                with open(json_path, 'r', encoding="latin-1") as f:
+                    data = json.load(f)
+            except Exception as e:
+                # If latin-1 also fails, try binary mode with explicit decoding
+                with open(json_path, 'rb') as f:
+                    content = f.read()
+                    # Replace or skip invalid characters
+                    content_str = content.decode('utf-8', errors='replace')
+                    data = json.loads(content_str)
         cfg = CMDClientConfig(data)
         return ClientCfgReader(cfg)
 

@@ -1,9 +1,10 @@
 import click
 import logging
 from flask import Blueprint
-import sys
 import os
 import json
+import base64
+import warnings
 
 from protos import component_pb2, command_pb2, argument_pb2
 from protos.plugin import model_pb2, resource_pb2, operation_pb2, output_pb2, selector_pb2, condition_pb2, http_pb2, schema_pb2
@@ -46,14 +47,14 @@ def export_component(component_name, output_path):
 
     root_module = specs_manager.find_command_group(module_name)
     if root_module:
-        # root_primitive = root_module.to_primitive()
-        # os.makedirs(output_path, exist_ok=True)
-        # root_module_file = os.path.join(output_path, f"{module_name}_root_module.json")
-        # with open(root_module_file, 'w', encoding='utf-8') as f:
-        #     json.dump(root_primitive, f, indent=2, ensure_ascii=False)
-        # print(f"\nRoot module JSON saved to: {root_module_file}")
+        root_primitive = root_module.to_primitive()
+        os.makedirs(output_path, exist_ok=True)
+        root_module_file = os.path.join(output_path, f"{module_name}_root_module.json")
+        with open(root_module_file, 'w', encoding='utf-8') as f:
+            json.dump(root_primitive, f, indent=2, ensure_ascii=False)
+        print(f"\nRoot module JSON saved to: {root_module_file}")
 
-        proto_component = create_component_proto(root_module, component_name)
+        proto_component = create_component_proto(module_name)
       
         os.makedirs(output_path, exist_ok=True)
         binary_file = os.path.join(output_path, f"{module_name}_1.pb")
@@ -76,44 +77,32 @@ def export_component(component_name, output_path):
         print(f"Module '{module_name}' not found in AAZ repository")
 
 
-def get_latest_version_from_module(specs_manager, root_module):
-    all_versions = set()
-    
-    if hasattr(root_module, 'names') and root_module.names:
-        names = root_module.names[1:] if root_module.names[0] == 'aaz' else root_module.names
-    else:
-        names = []
-    
-    for command in specs_manager.iter_commands(*names):
-        if hasattr(command, 'versions') and command.versions:
-            for version in command.versions:
-                all_versions.add(version.name)
-    
-    if not all_versions:
-        return None
-    
-    class MockVersion:
-        def __init__(self, name):
-            self.name = name
-    
-    sorted_versions = sorted(all_versions, reverse=True)
-    return MockVersion(sorted_versions[0])
-
-
-def create_component_proto(root_module, component_name):
+def create_component_proto(module_name):
     specs_manager = AAZSpecsManager()
-    component_version = get_latest_version_from_module(specs_manager, root_module)
-    version_str = component_version.name if component_version else "1.0.0"
-
+    root_module = specs_manager.find_command_group(module_name)
+    component_version = "0.0.1" # Hardcoded for now, can be replaced with dynamic versioning logic if needed
     proto_component = component_pb2.CrsPluginComponent()
-    proto_component.metadata.name = component_name
-    component_uri = f"crs://azure/{component_name}"
-    proto_component.metadata.version = version_str
+    proto_component.metadata.name = module_name
+    component_uri = f"crs://azure/{module_name}"
+    proto_component.metadata.version = component_version
     proto_component.metadata.uri = component_uri
     if root_module.help:
         proto_component.metadata.help.CopyFrom(convert_aaz_help_to_proto(root_module.help))
+        
+    resource_latest_versions_map_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'latest_versions.json')
+    try:
+        with open(resource_latest_versions_map_file_path, 'r', encoding='utf-8') as file:
+            resource_latest_versions_map = json.load(file)
+        print(f"Loaded latest versions map from: {resource_latest_versions_map_file_path}")
+    except FileNotFoundError:
+        logging.warning(f"Warning: latest_versions.json not found at {resource_latest_versions_map_file_path}")
+        resource_latest_versions_map = {}
+    except json.JSONDecodeError:
+        logging.warning(f"Warning: latest_versions.json contains invalid JSON")
+        resource_latest_versions_map = {}
     
-    proto_group = convert_aaz_command_group_to_proto(root_module, component_version)
+    print(f"\nFiltering commands to include only those using the latest resource API versions...")
+    proto_group = convert_aaz_command_group_to_proto(root_module, resource_latest_versions_map)
     proto_component.interface.command_group.CopyFrom(proto_group)
     
     return proto_component
@@ -134,7 +123,7 @@ def convert_aaz_arg_help_to_proto(aaz_help):
         proto_help.long = "\n".join(aaz_help.get('lines'))
     return proto_help
 
-def convert_aaz_command_group_to_proto(aaz_group, component_version):
+def convert_aaz_command_group_to_proto(aaz_group, resouce_latest_versions_map):
     proto_group = command_pb2.CrsCommandGroup()
     proto_group.name = " ".join(aaz_group.names) if aaz_group.names else ""
     proto_group.uri = f"crs://azure/{'/'.join(aaz_group.names)}" if aaz_group.names else "crs://azure/"
@@ -144,15 +133,14 @@ def convert_aaz_command_group_to_proto(aaz_group, component_version):
     
     if hasattr(aaz_group, 'command_groups') and aaz_group.command_groups:
         for group_name, subgroup in aaz_group.command_groups.items():
-            if has_version_in_group(subgroup, component_version):
-                proto_subgroup = convert_aaz_command_group_to_proto(subgroup, component_version)
+                proto_subgroup = convert_aaz_command_group_to_proto(subgroup, resouce_latest_versions_map)
                 proto_group.groups.append(proto_subgroup)
     
     if hasattr(aaz_group, 'commands') and aaz_group.commands:
         for cmd_name, command in aaz_group.commands.items():
-            if has_command_version(command, component_version):
-                proto_command = convert_aaz_command_to_proto(command, component_version)
-                proto_group.commands.append(proto_command)
+                proto_command = convert_aaz_command_to_proto(command, resouce_latest_versions_map)
+                if proto_command:
+                    proto_group.commands.append(proto_command)
     
     return proto_group
 
@@ -165,115 +153,166 @@ def convert_aaz_resource_to_proto(aaz_resource):
         proto_resource.subresource = aaz_resource.subresource
     return proto_resource
 
-def convert_aaz_command_to_proto(aaz_command, component_version):
+def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
+    """Convert AAZ command to CRS protobuf command with all properties."""
     proto_command = command_pb2.CrsCommand()
     proto_command.name = " ".join(aaz_command.names) if aaz_command.names else ""
     proto_command.uri = f"crs://azure/{'/'.join(aaz_command.names)}" if aaz_command.names else "crs://azure/"
     
-    target_version = None
-    if aaz_command.versions:
-        for version in aaz_command.versions:
-            if version.name == component_version.name:
-                target_version = version
-                break
-    
-    if target_version:
-        proto_command.version = target_version.name
+    print(f"Processing command: {proto_command.name} with URI: {proto_command.uri}")
 
-        specs_manager = AAZSpecsManager()
-        cfg_reader = specs_manager.load_resource_cfg_reader_by_command_with_version(
-            aaz_command, version=target_version)
-        
-        if cfg_reader:
-            cmd_cfg = cfg_reader.find_command(*aaz_command.names)
-            
-            if cmd_cfg:
-                result = cmd_cfg.to_primitive()
-                
-                # # Debug: save the complete command 
-                # cfg_file = f"{'_'.join(aaz_command.names)}_cmd.json"
-                # cfg_dir = os.path.dirname('C:\\Users\\shiyingchen\\aaz-cirrus\\devcenter\\')
-                # if not os.path.exists(cfg_dir):
-                #     os.makedirs(cfg_dir)
-                # cfg_file = os.path.join(cfg_dir, cfg_file)
-                # with open(cfg_file, 'w', encoding='utf-8') as f:
-                #     json.dump(result, f, indent=2, ensure_ascii=False)
-                # print(f"Command configuration saved to: {cfg_file}")
-                
-                
-                if result.get('help'):
-                    help_data = result['help']
-                    proto_command.help.CopyFrom(convert_aaz_help_to_proto(help_data))
-                
-                if result.get('confirmation'):
-                    proto_command.confirmation = result['confirmation']
-                
-                if result.get('argGroups'):
-                    for aaz_arggrp in result['argGroups']:
-                        arg_group_name = aaz_arggrp.get('name', '')
-                        if aaz_arggrp.get('args'):
-                            for aaz_arg in aaz_arggrp['args']:
-                                    proto_arg = convert_aaz_arg_to_proto(arg_group_name, aaz_arg)
-                                    proto_command.args.append(proto_arg)
-                
-                # Convert positional args
-                if result.get('positional_args'):
-                    proto_command.positional_args.extend(result['positional_args'])
-                
-                # Create plugin model command
-                plugin_model = model_pb2.CrsPluginModelCommand()
-                
-                # Add resources from the target_version (not from result)
-                if hasattr(target_version, 'resources') and target_version.resources:
-                    for aaz_resource in target_version.resources:
-                        proto_resource = convert_aaz_resource_to_proto(aaz_resource)
-                        plugin_model.resources.append(proto_resource)
-                
-                # Add operations from result
-                if result.get('operations'):
-                    for aaz_operation_data in result['operations']:
-                        proto_operation = convert_aaz_operation_to_proto(aaz_operation_data)
-                        plugin_model.operations.append(proto_operation)
-                
-                # Add outputs from result
-                if result.get('outputs'):
-                    for aaz_output_data in result['outputs']:
-                        proto_output = convert_aaz_output_to_proto(aaz_output_data)
-                        plugin_model.outputs.append(proto_output)
-                
-                # Add conditions from result
-                if result.get('conditions'):
-                    for aaz_condition_data in result['conditions']:
-                        proto_condition = convert_aaz_condition_to_proto(aaz_condition_data)
-                        plugin_model.conditions.append(proto_condition)
-                
-                # Add selector from result
-                if result.get('selector'):
-                    proto_selector = convert_aaz_selector_to_proto(result['selector'])
-                    plugin_model.subresource_selector.CopyFrom(proto_selector)
-                
-                proto_command.model.CopyFrom(plugin_model)
+    command_latest_version = aaz_command.versions[-1] if aaz_command.versions and hasattr(aaz_command, 'versions') else None
+    if not command_latest_version:
+        raise ValueError(f"Command {proto_command.name} does not have any versions defined.")
     
+    if not hasattr(command_latest_version, 'resources') or not command_latest_version.resources or not hasattr(command_latest_version.resources[0], 'id'):
+        raise ValueError(f"Command {command_latest_version.name} does not have valid resources or resource IDs.")
+    
+    resource_id = command_latest_version.resources[0].id
+        
+    resource_id_bytes = resource_id.encode('utf-8')
+    resource_id_base_64 = base64.b64encode(resource_id_bytes).decode('utf-8')
+    latest_version_for_resource = resource_latest_versions_map.get(resource_id_base_64)
+
+    print(f"Latest version for resource ID '{resource_id}': {latest_version_for_resource}")
+    print(f"resource ID Base64: {resource_id_base_64}")
+
+    if not latest_version_for_resource or command_latest_version.name != latest_version_for_resource:
+        logging.warning(f"Command {command_latest_version.name} is not using the latest resource version: {latest_version_for_resource}")
+        command_name = '/'.join(aaz_command.names) if aaz_command.names else "unknown"
+        outdated_version_tracker.record_outdated_command(
+            command_name=command_name,
+            command_version=command_latest_version.name,
+            latest_version=latest_version_for_resource,                resource_id=resource_id
+        )
+
+    print(f"Command {command_latest_version.name} is using the latest resource version: {latest_version_for_resource}")
+    proto_command.version = command_latest_version.name
+    specs_manager = AAZSpecsManager()
+    cfg_reader = specs_manager.load_resource_cfg_reader_by_command_with_version(
+        aaz_command, version=command_latest_version.name)    
+    if not cfg_reader:
+        logging.warning(f"No configuration reader found for command {command_latest_version.name}")
+        return
+    cmd_cfg = cfg_reader.find_command(*aaz_command.names)
+    if not cmd_cfg:
+        raise ValueError(f"No command configuration found for {'/'.join(aaz_command.names)}")
+
+    result = cmd_cfg.to_primitive()
+        
+    # Debug: save the complete command to a proper location 
+    cfg_dir = 'C:\\Users\\shiyingchen\\aaz-cirrus\\debug'
+    if not os.path.exists(cfg_dir):
+        os.makedirs(cfg_dir)
+    cfg_file = os.path.join(cfg_dir, f"{'_'.join(aaz_command.names)}.json")
+    with open(cfg_file, 'w', encoding='utf-8') as f:
+        json.dump(result, f, indent=2, ensure_ascii=False)
+    print(f"Command configuration saved to: {cfg_file}")
+
+    # if result.get('help'):
+    #     help_data = result['help']
+    #     proto_command.help.CopyFrom(convert_aaz_help_to_proto(help_data))
+    
+    # if result.get('confirmation'):
+    #     proto_command.confirmation = result['confirmation']
+    
+    # if result.get('argGroups'):
+    #     for aaz_arggrp in result['argGroups']:
+    #         arg_group_name = aaz_arggrp.get('name', '')
+    #         if aaz_arggrp.get('args'):
+    #             for aaz_arg in aaz_arggrp['args']:
+    #                 proto_arg = convert_aaz_arg_to_proto(arg_group_name, aaz_arg)
+    #                 proto_command.args.append(proto_arg)
+    
+    # # Convert positional args
+    # if result.get('positional_args'):
+    #     proto_command.positional_args.extend(result['positional_args'])
+    
+    # # Create plugin model command
+    # plugin_model = model_pb2.CrsPluginModelCommand()
+    
+    # # Add resources from the target_version (not from result)
+    # if hasattr(target_version, 'resources') and target_version.resources:
+    #     for aaz_resource in target_version.resources:
+    #         proto_resource = convert_aaz_resource_to_proto(aaz_resource)
+    #         plugin_model.resources.append(proto_resource)
+    
+    # # Add operations from result
+    # if result.get('operations'):
+    #     for aaz_operation_data in result['operations']:
+    #         proto_operation = convert_aaz_operation_to_proto(aaz_operation_data)
+    #         plugin_model.operations.append(proto_operation)
+    
+    # # Add outputs from result
+    # if result.get('outputs'):
+    #     for aaz_output_data in result['outputs']:
+    #         proto_output = convert_aaz_output_to_proto(aaz_output_data)
+    #         plugin_model.outputs.append(proto_output)
+    
+    # # Add conditions from result
+    # if result.get('conditions'):
+    #     for aaz_condition_data in result['conditions']:
+    #         proto_condition = convert_aaz_condition_to_proto(aaz_condition_data)
+    #         plugin_model.conditions.append(proto_condition)
+    
+    # # Add selector from result
+    # if result.get('selector'):
+    #     proto_selector = convert_aaz_selector_to_proto(result['selector'])
+    #     plugin_model.subresource_selector.CopyFrom(proto_selector)
+    
+    # proto_command.model.CopyFrom(plugin_model)
+    #     proto_command.help.CopyFrom(convert_aaz_help_to_proto(help_data))
+    
+    # if result.get('confirmation'):
+    #     proto_command.confirmation = result['confirmation']
+    
+    # if result.get('argGroups'):
+    #     for aaz_arggrp in result['argGroups']:
+    #         arg_group_name = aaz_arggrp.get('name', '')
+    #         if aaz_arggrp.get('args'):
+    #             for aaz_arg in aaz_arggrp['args']:
+    #                     proto_arg = convert_aaz_arg_to_proto(arg_group_name, aaz_arg)
+    #                     proto_command.args.append(proto_arg)
+    
+    # # Convert positional args
+    # if result.get('positional_args'):
+    #     proto_command.positional_args.extend(result['positional_args'])
+    
+    # # Create plugin model command
+    # plugin_model = model_pb2.CrsPluginModelCommand()
+    
+    # # Add resources from the target_version (not from result)
+    # if hasattr(target_version, 'resources') and target_version.resources:
+    #     for aaz_resource in target_version.resources:
+    #         proto_resource = convert_aaz_resource_to_proto(aaz_resource)
+    #         plugin_model.resources.append(proto_resource)
+    
+    # # Add operations from result
+    # if result.get('operations'):
+    #     for aaz_operation_data in result['operations']:
+    #         proto_operation = convert_aaz_operation_to_proto(aaz_operation_data)
+    #         plugin_model.operations.append(proto_operation)
+    
+    # # Add outputs from result
+    # if result.get('outputs'):
+    #     for aaz_output_data in result['outputs']:
+    #         proto_output = convert_aaz_output_to_proto(aaz_output_data)
+    #         plugin_model.outputs.append(proto_output)
+    
+    # # Add conditions from result
+    # if result.get('conditions'):
+    #     for aaz_condition_data in result['conditions']:
+    #         proto_condition = convert_aaz_condition_to_proto(aaz_condition_data)
+    #         plugin_model.conditions.append(proto_condition)
+    
+    # # Add selector from result
+    # if result.get('selector'):
+    #     proto_selector = convert_aaz_selector_to_proto(result['selector'])
+    #     plugin_model.subresource_selector.CopyFrom(proto_selector)
+    
+    # proto_command.model.CopyFrom(plugin_model)
     return proto_command
 
-def has_command_version(command, target_version):
-    target_version_name = target_version.name if hasattr(target_version, 'name') else target_version
-    if hasattr(command, 'versions') and command.versions:
-        for version in command.versions:
-            if version.name == target_version_name:
-                return True
-    return False
-
-def has_version_in_group(group, target_version):
-    if hasattr(group, 'commands') and group.commands:
-        for cmd_name, command in group.commands.items():
-            if has_command_version(command, target_version):
-                return True
-    if hasattr(group, 'command_groups') and group.command_groups:
-        for group_name, subgroup in group.command_groups.items():
-            if has_version_in_group(subgroup, target_version):
-                return True
-    return False
 
 def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
     proto_arg = argument_pb2.CrsArg()
@@ -301,11 +340,11 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
     if aaz_arg.get('prompt'):
         proto_arg.prompt.prompt = aaz_arg['prompt']['msg']
 
-    # # Seems like no secret or confirm in AAZ args, commented out for now
-    # if aaz_arg.get('secret'):
-    #     proto_arg.prompt.secret = aaz_arg['prompt']['secret']
-    # if aaz_arg.get('confirm'):
-    #     proto_arg.prompt.confirm = aaz_arg['prompt']['confirmation']
+    # Not found 'secret' for 'prompt' in aaz
+    if aaz_arg.get('secret'):
+        proto_arg.prompt.secret = aaz_arg['prompt']['secret']
+    if aaz_arg.get('confirm'):
+        proto_arg.prompt.confirm = aaz_arg['prompt']['confirm']
     
     arg_type = aaz_arg.get('type', None)
 
@@ -332,18 +371,21 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
                     enum_item.value = item.get('value', '')
                     enum_item.internal = item.get('internal', False)
             
+            # Not found 'supportExtension' in aaz
             string_arg.enum.support_extension = aaz_arg.get('supportExtension', False)
             # Not found 'caseSensitive' in aaz
             string_arg.enum.case_sensitive = aaz_arg.get('caseSensitive', False)
         
         proto_arg.string.CopyFrom(string_arg)
 
+    # Not found 'binary' type in aaz
     elif arg_type == 'binary':
         string_arg = argument_pb2.CrsStringArg()
         binary_format = argument_pb2.CrsBinaryFormat()
         string_arg.binary.CopyFrom(binary_format)
         proto_arg.string.CopyFrom(string_arg)
 
+    # Not found 'byte' type in aaz
     elif arg_type == 'byte':
         string_arg = argument_pb2.CrsStringArg()
         byte_format = argument_pb2.CrsByteFormat()
@@ -374,6 +416,7 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
         string_arg.date_time.CopyFrom(datetime_format)
         proto_arg.string.CopyFrom(string_arg)
 
+    # Not found 'time' type in aaz
     elif arg_type == 'time':
         string_arg = argument_pb2.CrsStringArg()
         time_format = argument_pb2.CrsTimeFormat()
@@ -385,6 +428,13 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
     elif arg_type == 'uuid':
         string_arg = argument_pb2.CrsStringArg()
         uuid_format = argument_pb2.CrsUuidFormat()
+        # Not found 'case', 'noHypen', 'withBraces' in aaz
+        if aaz_arg.get('case'):
+            uuid_format.case = aaz_arg['case']
+        if aaz_arg.get('noHyphen'):
+            uuid_format.no_hyphen = aaz_arg['noHyphen']
+        if aaz_arg.get('withBraces'):
+            uuid_format.no_braces = aaz_arg['withBraces']
         string_arg.uuid.CopyFrom(uuid_format)
         proto_arg.string.CopyFrom(string_arg)
 
@@ -487,7 +537,6 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
                 number_arg.format.exclusive_minimum = aaz_arg.get('exclusiveMinimum')
             if aaz_arg.get('exclusiveMaximum'):
                 number_arg.format.exclusive_maximum = aaz_arg.get('exclusiveMaximum')
-            
 
         proto_arg.number.CopyFrom(number_arg)
 
@@ -830,3 +879,127 @@ def convert_aaz_selector_to_proto(aaz_selector_data):
         proto_selector.json.CopyFrom(selector_index)
     
     return proto_selector
+
+class OutdatedVersionTracker:
+    """
+    Singleton class to track and record commands that are not using the latest resource version.
+    """
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(OutdatedVersionTracker, cls).__new__(cls)
+            cls._instance.outdated_commands = {}
+        return cls._instance
+    
+    def record_outdated_command(self, command_name, command_version, latest_version, resource_id):
+        """
+        Record a command that's not using the latest resource version.
+        """
+        self.outdated_commands[command_name] = {
+            "command_name": command_name,
+            "command_version": command_version,
+            "latest_version": latest_version,
+            "resource_id": resource_id
+        }
+    
+    def save_to_file(self, output_path=None):
+        """
+        Save the outdated commands to a JSON file.
+        """
+        if not self.outdated_commands:
+            print("All commands are using their latest resource versions.")
+            return
+            
+        if output_path is None:
+            output_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'not_using_latest_version.json')
+            
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(self.outdated_commands, f, indent=2, ensure_ascii=False)
+        
+        print(f"Recorded {len(self.outdated_commands)} commands not using latest versions to {output_path}")
+
+# Initialize the singleton tracker
+outdated_version_tracker = OutdatedVersionTracker()
+
+@bp.cli.command("export-all-modules", short_help="Export all AAZ modules and their command configurations.")
+@click.option(
+    "--aaz-path", '-a',
+    type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
+    default=Config.AAZ_PATH,
+    required=not Config.AAZ_PATH,
+    callback=Config.validate_and_setup_aaz_path,
+    expose_value=False,
+    help="The local path of aaz repo."
+)
+@click.option(
+    "--output-path", '-o',
+    required=True,
+    help="The output path where the command configurations will be exported."
+)
+def export_all_modules(output_path):
+    print(f"Using AAZ path: {Config.AAZ_PATH}")
+    
+    specs_manager = AAZSpecsManager()
+    
+    os.makedirs(output_path, exist_ok=True)
+    
+    root_module = specs_manager.tree.root
+    if not root_module:
+        print("Root module not found!")
+        return
+    for module_name, module in root_module.command_groups.items():
+        command_group = specs_manager.find_command_group(module_name)
+        if command_group:
+            print(f"Found module: {module_name}")
+            root_primitive = command_group.to_primitive()
+            os.makedirs(output_path, exist_ok=True)
+            command_group_file = os.path.join(output_path, f"{module_name}_root_module.json")
+            with open(command_group_file, 'w', encoding='utf-8') as f:
+                json.dump(root_primitive, f, indent=2, ensure_ascii=False)
+            print(f"\nRoot module JSON saved to: {command_group_file}")
+            proto_component = create_component_proto(module_name)
+    
+    outdated_version_tracker.save_to_file(output_path)
+    
+    print(f"\nExported command configurations to {output_path}")
+
+
+class OutdatedVersionTracker:
+    """
+    Singleton class to track and record commands that are not using the latest resource version.
+    """
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(OutdatedVersionTracker, cls).__new__(cls)
+            cls._instance.outdated_commands = {}
+        return cls._instance
+    
+    def record_outdated_command(self, command_name, command_version, latest_version, resource_id):
+        """
+        Record a command that's not using the latest resource version.
+        """
+        self.outdated_commands[command_name] = {
+            "command_name": command_name,
+            "command_version": command_version,
+            "latest_version": latest_version,
+            "resource_id": resource_id
+        }
+    
+    def save_to_file(self, output_path=None):
+        """
+        Save the outdated commands to a JSON file.
+        """
+        if not self.outdated_commands:
+            print("All commands are using their latest resource versions.")
+            return
+            
+        if output_path is None:
+            output_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'not_using_latest_version.json')
+            
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(self.outdated_commands, f, indent=2, ensure_ascii=False)
+        
+        print(f"Recorded {len(self.outdated_commands)} commands not using latest versions to {output_path}")
