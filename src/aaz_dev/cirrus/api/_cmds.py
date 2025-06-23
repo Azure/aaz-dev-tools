@@ -186,28 +186,28 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
             latest_version=latest_version_for_resource,                resource_id=resource_id
         )
 
-    print(f"Command {command_latest_version.name} is using the latest resource version: {latest_version_for_resource}")
-    proto_command.version = command_latest_version.name
-    specs_manager = AAZSpecsManager()
-    cfg_reader = specs_manager.load_resource_cfg_reader_by_command_with_version(
-        aaz_command, version=command_latest_version.name)    
-    if not cfg_reader:
-        logging.warning(f"No configuration reader found for command {command_latest_version.name}")
-        return
-    cmd_cfg = cfg_reader.find_command(*aaz_command.names)
-    if not cmd_cfg:
-        raise ValueError(f"No command configuration found for {'/'.join(aaz_command.names)}")
+    # print(f"Command {command_latest_version.name} is using the latest resource version: {latest_version_for_resource}")
+    # proto_command.version = command_latest_version.name
+    # specs_manager = AAZSpecsManager()
+    # cfg_reader = specs_manager.load_resource_cfg_reader_by_command_with_version(
+    #     aaz_command, version=command_latest_version.name)    
+    # if not cfg_reader:
+    #     logging.warning(f"No configuration reader found for command {command_latest_version.name}")
+    #     return
+    # cmd_cfg = cfg_reader.find_command(*aaz_command.names)
+    # if not cmd_cfg:
+    #     raise ValueError(f"No command configuration found for {'/'.join(aaz_command.names)}")
 
-    result = cmd_cfg.to_primitive()
+    # result = cmd_cfg.to_primitive()
         
-    # Debug: save the complete command to a proper location 
-    cfg_dir = 'C:\\Users\\shiyingchen\\aaz-cirrus\\debug'
-    if not os.path.exists(cfg_dir):
-        os.makedirs(cfg_dir)
-    cfg_file = os.path.join(cfg_dir, f"{'_'.join(aaz_command.names)}.json")
-    with open(cfg_file, 'w', encoding='utf-8') as f:
-        json.dump(result, f, indent=2, ensure_ascii=False)
-    print(f"Command configuration saved to: {cfg_file}")
+    # # Debug: save the complete command to a proper location 
+    # cfg_dir = 'C:\\Users\\shiyingchen\\aaz-cirrus\\debug'
+    # if not os.path.exists(cfg_dir):
+    #     os.makedirs(cfg_dir)
+    # cfg_file = os.path.join(cfg_dir, f"{'_'.join(aaz_command.names)}.json")
+    # with open(cfg_file, 'w', encoding='utf-8') as f:
+    #     json.dump(result, f, indent=2, ensure_ascii=False)
+    # print(f"Command configuration saved to: {cfg_file}")
 
     # if result.get('help'):
     #     help_data = result['help']
@@ -913,11 +913,21 @@ class OutdatedVersionTracker:
             
         if output_path is None:
             output_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'not_using_latest_version.json')
+        
+        # Print a summary of outdated commands
+        print("\nOutdated Commands Summary:")
+        print("=" * 80)
+        for cmd_name, cmd_info in self.outdated_commands.items():
+            print(f"Command: {cmd_name}")
+            print(f"  Current Version: {cmd_info['command_version']}")
+            print(f"  Latest Version: {cmd_info['latest_version']}")
+            print(f"  Resource ID: {cmd_info['resource_id']}")
+            print("-" * 80)
             
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(self.outdated_commands, f, indent=2, ensure_ascii=False)
         
-        print(f"Recorded {len(self.outdated_commands)} commands not using latest versions to {output_path}")
+        print(f"\nRecorded {len(self.outdated_commands)} commands not using latest versions to {output_path}")
 
 # Initialize the singleton tracker
 outdated_version_tracker = OutdatedVersionTracker()
@@ -960,7 +970,7 @@ def export_all_modules(output_path):
             print(f"\nRoot module JSON saved to: {command_group_file}")
             proto_component = create_component_proto(module_name)
     
-    outdated_version_tracker.save_to_file(output_path)
+    outdated_version_tracker.save_to_file()
     
     print(f"\nExported command configurations to {output_path}")
 
