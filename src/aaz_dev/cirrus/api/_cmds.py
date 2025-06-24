@@ -174,9 +174,6 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
     resource_id_base_64 = base64.b64encode(resource_id_bytes).decode('utf-8')
     latest_version_for_resource = resource_latest_versions_map.get(resource_id_base_64)
 
-    print(f"Latest version for resource ID '{resource_id}': {latest_version_for_resource}")
-    print(f"resource ID Base64: {resource_id_base_64}")
-
     if not latest_version_for_resource or command_latest_version.name != latest_version_for_resource:
         logging.warning(f"Command {command_latest_version.name} is not using the latest resource version: {latest_version_for_resource}")
         command_name = '/'.join(aaz_command.names) if aaz_command.names else "unknown"
@@ -187,7 +184,6 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
             resource_id=resource_id
         )
 
-    print(f"Command {command_latest_version.name} is using the latest resource version: {latest_version_for_resource}")
     proto_command.version = command_latest_version.name
     specs_manager = AAZSpecsManager()
     cfg_reader = specs_manager.load_resource_cfg_reader_by_command_with_version(
@@ -250,8 +246,7 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
     if result.get('conditions'):
         for aaz_condition_data in result['conditions']:
             proto_condition = convert_aaz_condition_to_proto(aaz_condition_data)
-            plugin_model.conditions.append(proto_condition)
-    
+            plugin_model.conditions.append(proto_condition)    
     if result.get('subresourceSelector'):
         proto_selector = convert_aaz_selector_to_proto(result['subresourceSelector'])
         plugin_model.subresource_selector.CopyFrom(proto_selector)
@@ -265,7 +260,7 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
     proto_arg = argument_pb2.CrsArg()
     
     proto_arg.var_name = aaz_arg.get('var', '')
-    proto_arg.name = aaz_arg.get('idPart', '')
+    proto_arg.name = aaz_arg.get('name', '')
     
     if aaz_arg.get('options'):
         proto_arg.options.extend(aaz_arg['options'])
@@ -279,17 +274,17 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
         proto_arg.help.CopyFrom(convert_aaz_arg_help_to_proto(aaz_arg['help']))
     
     if aaz_arg.get('blank'):
-        proto_arg.blank.value = aaz_arg['blank']
+        proto_arg.blank.value = json.dumps(aaz_arg['blank'])
     
     if aaz_arg.get('default'):
-        proto_arg.default.value = aaz_arg['default']
-
+        proto_arg.default.value = json.dumps(aaz_arg['default'])
+    
     if aaz_arg.get('prompt'):
-        proto_arg.prompt.prompt = aaz_arg['prompt']['msg']
-    if aaz_arg.get('secret'):
-        proto_arg.prompt.secret = aaz_arg['prompt']['secret']
-    if aaz_arg.get('confirm'):
-        proto_arg.prompt.confirm = aaz_arg['prompt']['confirm']    
+        prompt_data = aaz_arg['prompt']
+        proto_arg.prompt.prompt = prompt_data.get('msg', '')
+        proto_arg.prompt.secret = prompt_data.get('secret', False)
+        proto_arg.prompt.confirm = prompt_data.get('confirm', False)
+    
     arg_type = aaz_arg.get('type', None)
     
     if arg_type == 'string':
@@ -304,7 +299,7 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
                 str_format.max_length = aaz_arg.get('maxLength')
             if aaz_arg.get('min_length') is not None:
                 str_format.min_length = aaz_arg.get('minLength')
-            string_arg.string.format.string.CopyFrom(str_format)
+            string_arg.string.CopyFrom(str_format)
         
         if aaz_arg.get('enum'):
             enum_items = aaz_arg.get('enum')
@@ -543,7 +538,7 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
 
 def convert_aaz_operation_to_proto(aaz_operation_data):
     proto_operation = operation_pb2.CrsOperation()
-    aaz_operation_id = aaz_operation_data.get('operation_id', '')
+    
     if aaz_operation_data.get('when'):
         conditions = aaz_operation_data['when']
         if isinstance(conditions, list):
@@ -554,25 +549,85 @@ def convert_aaz_operation_to_proto(aaz_operation_data):
     if aaz_operation_data.get('http'):
         http_op = operation_pb2.CrsHttpOperation()
         http_data = aaz_operation_data['http']
+        aaz_operation_id = aaz_operation_data.get('operationId', '')
         http_op.operation_id = aaz_operation_id
         http_action = convert_aaz_http_action_to_proto(http_data)
         http_op.action.CopyFrom(http_action)
+        
+        if http_data.get('longRunning'):
+            long_running = operation_pb2.CrsHttpOperationLongRunning()
+            lr_data = http_data['longRunning']
+            final_state_via = lr_data.get('finalStateVia', 'azureAsyncOperation')
+            
+            if final_state_via == 'azureAsyncOperation':
+                long_running.final_state_via = operation_pb2.CrsHttpOperationLongRunning.azureAsyncOperation
+            elif final_state_via == 'location':
+                long_running.final_state_via = operation_pb2.CrsHttpOperationLongRunning.location
+            elif final_state_via == 'originalUri':
+                long_running.final_state_via = operation_pb2.CrsHttpOperationLongRunning.originalUri
+            else:
+                long_running.final_state_via = operation_pb2.CrsHttpOperationLongRunning.azureAsyncOperation
+                
+            http_op.long_running.CopyFrom(long_running)
+        
         proto_operation.http.CopyFrom(http_op)
-    elif aaz_operation_data.get('instance_create'):
-        # Handle instance create operations
-        instance_op = operation_pb2.CrsInstanceOperation()
-        instance_op.type = operation_pb2.CrsInstanceOperation.CREATE
-        proto_operation.instance.CopyFrom(instance_op)
-    elif aaz_operation_data.get('instance_update'):
-        # Handle instance update operations
-        instance_op = operation_pb2.CrsInstanceOperation()
-        instance_op.type = operation_pb2.CrsInstanceOperation.UPDATE
-        proto_operation.instance.CopyFrom(instance_op)
-    elif aaz_operation_data.get('instance_delete'):
-        # Handle instance delete operations
-        instance_op = operation_pb2.CrsInstanceOperation()
-        instance_op.type = operation_pb2.CrsInstanceOperation.DELETE
-        proto_operation.instance.CopyFrom(instance_op)
+        
+    elif aaz_operation_data.get('instanceCreate'):
+        instance_create_op = operation_pb2.CrsInstanceCreateOperation()
+        instance_create_data = aaz_operation_data['instanceCreate']
+        
+        create_action = operation_pb2.CrsInstanceCreateAction()
+        create_action.ref = instance_create_data.get('ref', '')
+        
+        if instance_create_data.get('json'):
+            request_json = http_pb2.CrsRequestJson()
+            json_data = instance_create_data['json']
+            if json_data.get('ref'):
+                request_json.ref = json_data['ref']
+            if json_data.get('schema'):
+                request_json.schema.CopyFrom(convert_aaz_schema_to_proto(json_data['schema']))
+            create_action.json.CopyFrom(request_json)
+        
+        instance_create_op.instance_create.CopyFrom(create_action)
+        proto_operation.instance_create.CopyFrom(instance_create_op)
+        
+    elif aaz_operation_data.get('instanceUpdate'):
+        instance_update_op = operation_pb2.CrsInstanceUpdateOperation()
+        instance_update_data = aaz_operation_data['instanceUpdate']
+        
+        update_action = operation_pb2.CrsInstanceUpdateAction()
+        update_action.ref = instance_update_data.get('ref', '')
+        
+        if instance_update_data.get('json'):
+            request_json = http_pb2.CrsRequestJson()
+            json_data = instance_update_data['json']
+            if json_data.get('ref'):
+                request_json.ref = json_data['ref']
+            if json_data.get('schema'):
+                request_json.schema.CopyFrom(convert_aaz_schema_to_proto(json_data['schema']))
+            update_action.json.CopyFrom(request_json)
+        
+        instance_update_op.instance_update.CopyFrom(update_action)
+        proto_operation.instance_update.CopyFrom(instance_update_op)
+        
+    elif aaz_operation_data.get('instanceDelete'):
+        instance_delete_op = operation_pb2.CrsInstanceDeleteOperation()
+        instance_delete_data = aaz_operation_data['instanceDelete']
+        
+        delete_action = operation_pb2.CrsInstanceDeleteAction()
+        delete_action.ref = instance_delete_data.get('ref', '')
+        
+        if instance_delete_data.get('json'):
+            request_json = http_pb2.CrsRequestJson()
+            json_data = instance_delete_data['json']
+            if json_data.get('ref'):
+                request_json.ref = json_data['ref']
+            if json_data.get('schema'):
+                request_json.schema.CopyFrom(convert_aaz_schema_to_proto(json_data['schema']))
+            delete_action.json.CopyFrom(request_json)
+        
+        instance_delete_op.instance_delete.CopyFrom(delete_action)
+        proto_operation.instance_delete.CopyFrom(instance_delete_op)
     
     return proto_operation
 
@@ -955,7 +1010,6 @@ def convert_aaz_object_discriminator_to_proto(aaz_discriminator_data):
     return proto_discriminator
 
 def convert_aaz_selector_to_proto(aaz_selector_data):
-    """Convert AAZ selector from primitive data to CRS protobuf selector"""
     proto_selector = selector_pb2.CrsSubresourceSelector()
     
     proto_selector.var = aaz_selector_data.get('var', '')
