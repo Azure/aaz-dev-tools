@@ -242,21 +242,18 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
             proto_operation = convert_aaz_operation_to_proto(aaz_operation_data)
             plugin_model.operations.append(proto_operation)
     
-    # Add outputs from result
     if result.get('outputs'):
         for aaz_output_data in result['outputs']:
             proto_output = convert_aaz_output_to_proto(aaz_output_data)
             plugin_model.outputs.append(proto_output)
     
-    # Add conditions from result
     if result.get('conditions'):
         for aaz_condition_data in result['conditions']:
             proto_condition = convert_aaz_condition_to_proto(aaz_condition_data)
             plugin_model.conditions.append(proto_condition)
     
-    # Add selector from result
-    if result.get('selector'):
-        proto_selector = convert_aaz_selector_to_proto(result['selector'])
+    if result.get('subresourceSelector'):
+        proto_selector = convert_aaz_selector_to_proto(result['subresourceSelector'])
         plugin_model.subresource_selector.CopyFrom(proto_selector)
     
     
@@ -594,6 +591,81 @@ def convert_aaz_http_action_to_proto(aaz_action_data):
     
     return proto_action
 
+def convert_aaz_schema_to_proto(aaz_schema_data):
+    proto_schema = schema_pb2.CrsSchema()
+    
+    proto_schema.read_only = aaz_schema_data.get('readOnly', False)
+    proto_schema.const = aaz_schema_data.get('const', False)
+    proto_schema.nullable = aaz_schema_data.get('nullable', False)
+    
+    if aaz_schema_data.get('name') or aaz_schema_data.get('arg') or aaz_schema_data.get('required') is not None:
+        info = schema_pb2.CrsSchemaInfo()
+        info.name = aaz_schema_data.get('name', '')
+        if aaz_schema_data.get('arg'):
+            info.arg = aaz_schema_data['arg']
+        info.required = aaz_schema_data.get('required', False)
+        info.skip_url_encoding = aaz_schema_data.get('skipUrlEncoding', False)
+        info.secret = aaz_schema_data.get('secret', False)
+        proto_schema.info.CopyFrom(info)
+    
+    schema_type = aaz_schema_data.get('type', 'string')
+    
+    if schema_type == 'cls' or aaz_schema_data.get('cls'):
+        cls_schema = schema_pb2.CrsClsSchema()
+        cls_schema.cls_type = aaz_schema_data.get('cls', '')
+        cls_schema.client_flatten = aaz_schema_data.get('clientFlatten', False)
+        proto_schema.cls.CopyFrom(cls_schema)
+    elif schema_type == 'string':
+        proto_schema.string.CopyFrom(schema_pb2.CrsStringSchema())
+    elif schema_type in ['integer', 'int', 'int32', 'int64']:
+        proto_schema.integer.CopyFrom(schema_pb2.CrsIntegerSchema())
+    elif schema_type in ['float', 'double', 'number']:
+        proto_schema.float.CopyFrom(schema_pb2.CrsFloatSchema())
+    elif schema_type == 'boolean':
+        proto_schema.boolean.CopyFrom(schema_pb2.CrsBooleanSchema())
+    elif schema_type == 'object':
+        obj_schema = schema_pb2.CrsObjectSchema()
+        if aaz_schema_data.get('cls'):
+            obj_schema.cls = aaz_schema_data['cls']
+        obj_schema.client_flatten = aaz_schema_data.get('clientFlatten', False)
+        
+        if aaz_schema_data.get('props'):
+            for prop_data in aaz_schema_data['props']:
+                prop_schema = convert_aaz_schema_to_proto(prop_data)
+                obj_schema.props.append(prop_schema)
+        
+        if aaz_schema_data.get('discriminators'):
+            for disc_data in aaz_schema_data['discriminators']:
+                discriminator = schema_pb2.CrsObjectSchemaDiscriminator()
+                discriminator.property = disc_data.get('property', '')
+                discriminator.value = disc_data.get('value', '')
+                if disc_data.get('props'):
+                    for prop_data in disc_data['props']:
+                        prop_schema = convert_aaz_schema_to_proto(prop_data)
+                        discriminator.props.append(prop_schema)
+                obj_schema.discriminators.append(discriminator)
+        
+        if aaz_schema_data.get('additionalProps'):
+            add_props = schema_pb2.CrsObjectSchemaAdditionalProperties()
+            add_props_data = aaz_schema_data['additionalProps']
+            add_props.read_only = add_props_data.get('readOnly', False)
+            if add_props_data.get('item'):
+                add_props.item.CopyFrom(convert_aaz_schema_to_proto(add_props_data['item']))
+            obj_schema.additional_props.CopyFrom(add_props)
+        proto_schema.object.CopyFrom(obj_schema)
+
+    elif schema_type == 'array':
+        array_schema = schema_pb2.CrsArraySchema()
+        if aaz_schema_data.get('cls'):
+            array_schema.cls = aaz_schema_data['cls']
+        if aaz_schema_data.get('item'):
+            array_schema.item.CopyFrom(convert_aaz_schema_to_proto(aaz_schema_data['item']))
+        proto_schema.array.CopyFrom(array_schema)
+    else:
+        proto_schema.any_type.CopyFrom(schema_pb2.CrsAnyTypeSchema())
+    
+    return proto_schema
+
 def convert_aaz_http_request_to_proto(aaz_request_data):
     proto_request = http_pb2.CrsHttpRequest()
     
@@ -611,193 +683,276 @@ def convert_aaz_http_request_to_proto(aaz_request_data):
     proto_request.method = method_map.get(method.upper(), http_pb2.CrsHttpRequest.GET)
     
     if aaz_request_data.get('path'):
-        if aaz_request_data['path'].get('params'):
-            proto_request.path.params = aaz_request_data['path']['params']
-        if aaz_request_data['path'].get('consts'):
-            proto_request.path.consts = aaz_request_data['path']['consts']
+        path_data = aaz_request_data['path']
+        path_proto = http_pb2.CrsHttpRequestPath()
+        
+        if path_data.get('params'):
+            for param_data in path_data['params']:
+                param_schema = convert_aaz_schema_to_proto(param_data)
+                path_proto.params.append(param_schema)
+        
+        if path_data.get('consts'):
+            for const_data in path_data['consts']:
+                const_schema = convert_aaz_schema_to_proto(const_data)
+                path_proto.consts.append(const_schema)
+        
+        proto_request.path.CopyFrom(path_proto)
 
     if aaz_request_data.get('query'):
-        if aaz_request_data['query'].get('params'):
-            proto_request.query.params = aaz_request_data['query']['params']
-        if aaz_request_data['query'].get('consts'):
-            proto_request.query.consts = aaz_request_data['query']['consts']
+        query_data = aaz_request_data['query']
+        query_proto = http_pb2.CrsHttpRequestQuery()
+        
+        if query_data.get('params'):
+            for param_data in query_data['params']:
+                param_schema = convert_aaz_schema_to_proto(param_data)
+                query_proto.params.append(param_schema)
+        
+        if query_data.get('consts'):
+            for const_data in query_data['consts']:
+                const_schema = convert_aaz_schema_to_proto(const_data)
+                query_proto.consts.append(const_schema)
+        
+        proto_request.query.CopyFrom(query_proto)
+
 
     if aaz_request_data.get('header'):
-        if aaz_request_data['header'].get('params'):
-            proto_request.header.params = aaz_request_data['header']['params']
-        if aaz_request_data['header'].get('consts'):
-            proto_request.header.consts = aaz_request_data['header']['consts']
-        if aaz_request_data['header'].get('clientRequestId'):
-            proto_request.header.client_request_id = aaz_request_data['header']['clientRequestId']
+        header_data = aaz_request_data['header']
+        header_proto = http_pb2.CrsHttpRequestHeader()
         
+        if header_data.get('params'):
+            for param_data in header_data['params']:
+                param_schema = convert_aaz_schema_to_proto(param_data)
+                header_proto.params.append(param_schema)
+        
+        if header_data.get('consts'):
+            for const_data in header_data['consts']:
+                const_schema = convert_aaz_schema_to_proto(const_data)
+                header_proto.consts.append(const_schema)
+        
+        if header_data.get('clientRequestId'):
+            header_proto.client_request_id = header_data['clientRequestId']
+        
+        proto_request.header.CopyFrom(header_proto)
     
     if aaz_request_data.get('body'):
-        if aaz_request_data['body'].get('json'):
-            proto_request.body.json = aaz_request_data['body']['json']
+        body_data = aaz_request_data['body']
+        if body_data.get('json'):
+            json_body = http_pb2.CrsHttpRequestJsonBody()
+            request_json = http_pb2.CrsRequestJson()
+            
+            json_data = body_data['json']
+            if json_data.get('ref'):
+                request_json.ref = json_data['ref']
+            if json_data.get('schema'):
+                request_json.schema.CopyFrom(convert_aaz_schema_to_proto(json_data['schema']))
+            
+            json_body.json.CopyFrom(request_json)
+            proto_request.json.CopyFrom(json_body)
     
     return proto_request
 
 def convert_aaz_http_response_to_proto(aaz_response_data):
-    """Convert AAZ HTTP response from primitive data to CRS protobuf HTTP response"""
     proto_response = http_pb2.CrsHttpResponse()
     
-    if aaz_response_data.get('status_codes'):
-        status_codes = aaz_response_data['status_codes']
+    if aaz_response_data.get('statusCodes'):
+        status_codes = aaz_response_data['statusCodes']
         if isinstance(status_codes, list):
             proto_response.status_codes.extend(status_codes)
         elif isinstance(status_codes, (int, str)):
             proto_response.status_codes.append(int(status_codes))
     
-    proto_response.is_error = aaz_response_data.get('is_error', False)
-    
-    # Handle additional response properties if they exist
-    if aaz_response_data.get('description'):
-        # Store description if supported by protobuf schema
-        pass
+    proto_response.is_error = aaz_response_data.get('isError', False)
     
     if aaz_response_data.get('headers'):
-        # Handle response headers if supported
-        pass
+        header_data = aaz_response_data['headers']
+        response_header = http_pb2.CrsHttpResponseHeader()
+        
+        if isinstance(header_data, list):
+            for header_item_data in header_data:
+                header_item = http_pb2.CrsHttpResponseHeaderItem()
+                header_item.name = header_item_data.get('name', '')
+                if header_item_data.get('var'):
+                    header_item.var = header_item_data['var']
+                response_header.items.append(header_item)
+        elif isinstance(header_data, dict):
+            for name, var in header_data.items():
+                header_item = http_pb2.CrsHttpResponseHeaderItem()
+                header_item.name = name
+                if var:
+                    header_item.var = var
+                response_header.items.append(header_item)
+        
+        proto_response.header.CopyFrom(response_header)
     
     if aaz_response_data.get('body'):
-        # Handle response body schema if supported
-        pass
+        body_data = aaz_response_data['body']
+        if body_data.get('json'):
+            json_body = http_pb2.CrsHttpResponseJsonBody()
+            response_json = http_pb2.CrsResponseJson()
+            
+            json_data = body_data['json']
+            if json_data.get('var'):
+                response_json.var = json_data['var']
+            if json_data.get('schema'):
+                response_json.schema.CopyFrom(convert_aaz_schema_to_proto(json_data['schema']))
+            
+            json_body.json.CopyFrom(response_json)
+            proto_response.json.CopyFrom(json_body)
     
     return proto_response
 
 def convert_aaz_output_to_proto(aaz_output_data):
-    """Convert AAZ output from primitive data to CRS protobuf output"""
     proto_output = output_pb2.CrsOutput()
-    
-    if aaz_output_data.get('object'):
-        obj_data = aaz_output_data['object']
+
+    aaz_output_type = aaz_output_data.get('type')
+
+    if aaz_output_type == 'object':
         obj_output = output_pb2.CrsObjectOutput()
-        obj_output.ref = obj_data.get('ref', '')
-        obj_output.client_flatten = obj_data.get('client_flatten', False)
+        obj_output.ref = aaz_output_data.get('ref', '')
+        obj_output.client_flatten = aaz_output_data.get('clientFlatten', aaz_output_data.get('client_flatten', False))
         proto_output.object.CopyFrom(obj_output)
-    elif aaz_output_data.get('array'):
-        array_data = aaz_output_data['array']
+
+    elif aaz_output_type == 'array':
         array_output = output_pb2.CrsArrayOutput()
-        array_output.ref = array_data.get('ref', '')
-        array_output.client_flatten = array_data.get('client_flatten', False)
-        if array_data.get('next_link'):
-            array_output.next_link = array_data['next_link']
+        array_output.ref = aaz_output_data.get('ref', '')
+        array_output.client_flatten = aaz_output_data.get('clientFlatten', aaz_output_data.get('client_flatten', False))
+        if aaz_output_data.get('next_link') or aaz_output_data.get('nextLink'):
+            array_output.next_link = aaz_output_data.get('next_link', aaz_output_data.get('nextLink', ''))
         proto_output.array.CopyFrom(array_output)
-    elif aaz_output_data.get('string'):
-        string_data = aaz_output_data['string']
+
+    elif aaz_output_type == 'string':
         string_output = output_pb2.CrsStringOutput()
-        if string_data.get('ref'):
-            string_output.ref = string_data['ref']
-        elif string_data.get('value'):
-            string_output.value = string_data['value']
+
+        if aaz_output_data.get('ref'):
+            string_output.ref = aaz_output_data['ref']
+        elif aaz_output_data.get('value'):
+            string_output.value = aaz_output_data['value']
+
         proto_output.string.CopyFrom(string_output)
-    elif aaz_output_data.get('number') or aaz_output_data.get('integer') or aaz_output_data.get('float'):
-        # Handle number outputs
-        number_data = aaz_output_data.get('number') or aaz_output_data.get('integer') or aaz_output_data.get('float')
-        number_output = output_pb2.CrsNumberOutput()
-        if isinstance(number_data, dict):
-            if number_data.get('ref'):
-                number_output.ref = number_data['ref']
-            elif number_data.get('value') is not None:
-                number_output.value = str(number_data['value'])
-        proto_output.number.CopyFrom(number_output)
-    elif aaz_output_data.get('boolean'):
-        # Handle boolean outputs
-        bool_data = aaz_output_data['boolean']
-        bool_output = output_pb2.CrsBooleanOutput()
-        if isinstance(bool_data, dict):
-            if bool_data.get('ref'):
-                bool_output.ref = bool_data['ref']
-            elif bool_data.get('value') is not None:
-                bool_output.value = bool(bool_data['value'])
-        proto_output.boolean.CopyFrom(bool_output)
-    else:
-        # Try to determine type from type field
-        output_type = aaz_output_data.get('type', 'object')
-        if output_type == 'object':
-            obj_output = output_pb2.CrsObjectOutput()
-            obj_output.ref = aaz_output_data.get('ref', '')
-            obj_output.client_flatten = aaz_output_data.get('client_flatten', False)
-            proto_output.object.CopyFrom(obj_output)
-        elif output_type == 'array':
-            array_output = output_pb2.CrsArrayOutput()
-            array_output.ref = aaz_output_data.get('ref', '')
-            array_output.client_flatten = aaz_output_data.get('client_flatten', False)
-            if aaz_output_data.get('next_link'):
-                array_output.next_link = aaz_output_data['next_link']
-            proto_output.array.CopyFrom(array_output)
-        elif output_type == 'string':
-            string_output = output_pb2.CrsStringOutput()
-            string_output.ref = aaz_output_data.get('ref', '')
-            proto_output.string.CopyFrom(string_output)
-        else:
-            # Default to object output
-            obj_output = output_pb2.CrsObjectOutput()
-            obj_output.ref = aaz_output_data.get('ref', '')
-            obj_output.client_flatten = aaz_output_data.get('client_flatten', False)
-            proto_output.object.CopyFrom(obj_output)
     
     return proto_output
 
+def convert_aaz_condition_operator_to_proto(aaz_operator_data):
+    proto_operator = condition_pb2.CrsConditionOperator()
+    
+    operator_type = aaz_operator_data.get('type')
+    
+    if operator_type == 'hasValue':
+        has_value_op = condition_pb2.CrsConditionHasValueOperator()
+        has_value_op.arg = aaz_operator_data.get('arg', '')
+        proto_operator.has_value.CopyFrom(has_value_op)
+    
+    elif operator_type == 'and':
+        and_op = condition_pb2.CrsConditionAndOperator()
+        operators_data = aaz_operator_data.get('operators', [])
+        for nested_operator_data in operators_data:
+            nested_operator = convert_aaz_condition_operator_to_proto(nested_operator_data)
+            and_op.operators.append(nested_operator)
+        getattr(proto_operator, 'and').CopyFrom(and_op)
+    
+    elif operator_type == 'or':
+        or_op = condition_pb2.CrsConditionOrOperator()
+        operators_data = aaz_operator_data.get('operators', [])
+        for nested_operator_data in operators_data:
+            nested_operator = convert_aaz_condition_operator_to_proto(nested_operator_data)
+            or_op.operators.append(nested_operator)
+        getattr(proto_operator, 'or').CopyFrom(or_op)
+    
+    elif operator_type == 'not':
+        not_op = condition_pb2.CrsConditionNotOperator()
+        nested_operator_data = aaz_operator_data.get('operator')
+        if nested_operator_data:
+            nested_operator = convert_aaz_condition_operator_to_proto(nested_operator_data)
+            not_op.operator.CopyFrom(nested_operator)
+        getattr(proto_operator, 'not').CopyFrom(not_op)
+    
+    return proto_operator
+
 def convert_aaz_condition_to_proto(aaz_condition_data):
-    """Convert AAZ condition from primitive data to CRS protobuf condition"""
     proto_condition = condition_pb2.CrsCondition()
     
     proto_condition.var = aaz_condition_data.get('var', '')
     
-    # Handle condition operators based on the actual structure
-    if aaz_condition_data.get('has_value'):
-        has_value_data = aaz_condition_data['has_value']
-        has_value_op = condition_pb2.CrsConditionHasValueOperator()
-        if isinstance(has_value_data, dict):
-            has_value_op.arg = has_value_data.get('arg', '')
-        elif isinstance(has_value_data, str):
-            has_value_op.arg = has_value_data
-        proto_condition.operator.has_value.CopyFrom(has_value_op)
-    elif aaz_condition_data.get('equals'):
-        equals_data = aaz_condition_data['equals']
-        equals_op = condition_pb2.CrsConditionEqualsOperator()
-        if isinstance(equals_data, dict):
-            equals_op.arg = equals_data.get('arg', '')
-            equals_op.value = str(equals_data.get('value', ''))
-        proto_condition.operator.equals.CopyFrom(equals_op)
-    elif aaz_condition_data.get('not'):
-        # Handle NOT conditions
-        not_data = aaz_condition_data['not']
-        not_op = condition_pb2.CrsConditionNotOperator()
-        if isinstance(not_data, dict):
-            # Recursively convert the nested condition
-            nested_condition = convert_aaz_condition_to_proto(not_data)
-            not_op.condition.CopyFrom(nested_condition)
-        # Use getattr to avoid Python keyword conflict
-        getattr(proto_condition.operator, 'not').CopyFrom(not_op)
-    elif aaz_condition_data.get('and'):
-        # Handle AND conditions
-        and_data = aaz_condition_data['and']
-        and_op = condition_pb2.CrsConditionAndOperator()
-        if isinstance(and_data, list):
-            for sub_condition_data in and_data:
-                sub_condition = convert_aaz_condition_to_proto(sub_condition_data)
-                and_op.conditions.append(sub_condition)
-        # Use getattr to avoid Python keyword conflict
-        getattr(proto_condition.operator, 'and').CopyFrom(and_op)
-    elif aaz_condition_data.get('or'):
-        # Handle OR conditions
-        or_data = aaz_condition_data['or']
-        or_op = condition_pb2.CrsConditionOrOperator()
-        if isinstance(or_data, list):
-            for sub_condition_data in or_data:
-                sub_condition = convert_aaz_condition_to_proto(sub_condition_data)
-                or_op.conditions.append(sub_condition)
-        # Use getattr to avoid Python keyword conflict
-        getattr(proto_condition.operator, 'or').CopyFrom(or_op)
-    else:
-        # Default to has_value if no specific operator is found
-        has_value_op = condition_pb2.CrsConditionHasValueOperator()
-        has_value_op.arg = aaz_condition_data.get('arg', '')
-        proto_condition.operator.has_value.CopyFrom(has_value_op)
+    aaz_operator_data = aaz_condition_data.get('operator')
+    if aaz_operator_data:
+        proto_operator = convert_aaz_condition_operator_to_proto(aaz_operator_data)
+        proto_condition.operator.CopyFrom(proto_operator)
     
     return proto_condition
+
+def convert_aaz_selector_index_to_proto(aaz_index_data):
+    proto_index = selector_pb2.CrsSelectorIndex()
+    
+    if aaz_index_data.get('name'):
+        info = selector_pb2.CrsSelectorIndexInfo()
+        info.name = aaz_index_data.get('name', '')
+        proto_index.info.CopyFrom(info)
+    
+    index_type = aaz_index_data.get('type', 'simple')
+    
+    if index_type == 'object':
+        object_index = selector_pb2.CrsObjectIndex()
+        
+        if aaz_index_data.get('prop'):
+            prop_index = convert_aaz_selector_index_to_proto(aaz_index_data['prop'])
+            object_index.prop.CopyFrom(prop_index)
+        
+        if aaz_index_data.get('discriminator'):
+            discriminator = convert_aaz_object_discriminator_to_proto(aaz_index_data['discriminator'])
+            object_index.discriminator.CopyFrom(discriminator)
+        
+        if aaz_index_data.get('additional_props') or aaz_index_data.get('additionalProps'):
+            add_props_data = aaz_index_data.get('additional_props', aaz_index_data.get('additionalProps'))
+            add_props = selector_pb2.CrsObjectIndexAdditionalProperties()
+            
+            if add_props_data.get('item'):
+                item_index = convert_aaz_selector_index_to_proto(add_props_data['item'])
+                add_props.item.CopyFrom(item_index)
+            
+            if add_props_data.get('identifiers'):
+                for identifier_data in add_props_data['identifiers']:
+                    identifier_schema = convert_aaz_schema_to_proto(identifier_data)
+                    add_props.identifiers.append(identifier_schema)
+            
+            object_index.additional_props.CopyFrom(add_props)
+        
+        proto_index.object.CopyFrom(object_index)
+    
+    elif index_type == 'array':
+        array_index = selector_pb2.CrsArrayIndex()
+        
+        if aaz_index_data.get('item'):
+            item_index = convert_aaz_selector_index_to_proto(aaz_index_data['item'])
+            array_index.item.CopyFrom(item_index)
+        
+        if aaz_index_data.get('identifiers'):
+            for identifier_data in aaz_index_data['identifiers']:
+                identifier_schema = convert_aaz_schema_to_proto(identifier_data)
+                array_index.identifiers.append(identifier_schema)
+        
+        proto_index.array.CopyFrom(array_index)
+    
+    else:
+        simple_index = selector_pb2.CrsSimpleIndex()
+        proto_index.simple.CopyFrom(simple_index)
+    
+    return proto_index
+
+def convert_aaz_object_discriminator_to_proto(aaz_discriminator_data):
+    proto_discriminator = selector_pb2.CrsObjectIndexDiscriminator()
+    
+    proto_discriminator.property = aaz_discriminator_data.get('property', '')
+    proto_discriminator.value = aaz_discriminator_data.get('value', '')
+    
+    if aaz_discriminator_data.get('prop'):
+        prop_index = convert_aaz_selector_index_to_proto(aaz_discriminator_data['prop'])
+        proto_discriminator.prop.CopyFrom(prop_index)
+    
+    if aaz_discriminator_data.get('discriminator'):
+        nested_discriminator = convert_aaz_object_discriminator_to_proto(aaz_discriminator_data['discriminator'])
+        proto_discriminator.discriminator.CopyFrom(nested_discriminator)
+    
+    return proto_discriminator
 
 def convert_aaz_selector_to_proto(aaz_selector_data):
     """Convert AAZ selector from primitive data to CRS protobuf selector"""
@@ -806,10 +961,9 @@ def convert_aaz_selector_to_proto(aaz_selector_data):
     proto_selector.var = aaz_selector_data.get('var', '')
     proto_selector.ref = aaz_selector_data.get('ref', '')
     
-    # Handle selector index - simplified version
     if aaz_selector_data.get('json'):
-        selector_index = selector_pb2.CrsSelectorIndex()
-        # Add appropriate conversion logic here based on your needs
+        json_data = aaz_selector_data['json']
+        selector_index = convert_aaz_selector_index_to_proto(json_data)
         proto_selector.json.CopyFrom(selector_index)
     
     return proto_selector
@@ -899,5 +1053,3 @@ def export_all_modules(output_path):
     outdated_version_tracker.save_to_file()
     
     print(f"\nExported command configurations to {output_path}")
-
-
