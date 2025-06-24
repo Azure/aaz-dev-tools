@@ -8,7 +8,7 @@ import warnings
 
 from protos import component_pb2, command_pb2, argument_pb2
 from protos.plugin import model_pb2, resource_pb2, operation_pb2, output_pb2, selector_pb2, condition_pb2, http_pb2, schema_pb2
-from google.protobuf.json_format import ParseDict, MessageToJson
+from google.protobuf.json_format import MessageToJson
 from command.controller.specs_manager import AAZSpecsManager
 from utils.config import Config
 
@@ -49,19 +49,23 @@ def export_component(component_name, output_path):
     if root_module:
         root_primitive = root_module.to_primitive()
         os.makedirs(output_path, exist_ok=True)
-        root_module_file = os.path.join(output_path, f"{module_name}_root_module.json")
-        with open(root_module_file, 'w', encoding='utf-8') as f:
+        os.makedirs(os.path.join(output_path, 'root_module'), exist_ok=True)
+        command_group_file = os.path.join(output_path, 'root_module', f"{module_name}_root_module.json")
+        with open(command_group_file, 'w', encoding='utf-8') as f:
             json.dump(root_primitive, f, indent=2, ensure_ascii=False)
-        print(f"\nRoot module JSON saved to: {root_module_file}")
-
+        print(f"\nRoot module JSON saved to: {command_group_file}")
         proto_component = create_component_proto(module_name)
-      
+    
         os.makedirs(output_path, exist_ok=True)
-        binary_file = os.path.join(output_path, f"{module_name}.pb")
+        os.makedirs(os.path.join(output_path, 'binary'), exist_ok=True)
+        binary_file = os.path.join(output_path, 'binary', f"{module_name}.pb")
         with open(binary_file, 'wb') as f:
             f.write(proto_component.SerializeToString())
-        # Just for debugging, save as JSON
-        json_file = os.path.join(output_path, f"{module_name}.json")
+        print(f"Component protobuf saved to: {binary_file}")
+
+        # Just for debugging, save the protobuf as JSON
+        os.makedirs(os.path.join(output_path, 'json'), exist_ok=True)
+        json_file = os.path.join(output_path, 'json', f"{module_name}.json")
         with open(json_file, 'w', encoding='utf-8') as f:
             json_data = MessageToJson(
                 proto_component, 
@@ -146,9 +150,9 @@ def convert_aaz_command_group_to_proto(aaz_group, resouce_latest_versions_map):
 
 def convert_aaz_resource_to_proto(aaz_resource):
     proto_resource = resource_pb2.CrsRestResource()
-    proto_resource.id = getattr(aaz_resource, 'id', '')
-    proto_resource.version = getattr(aaz_resource, 'version', '')
-    proto_resource.plane = getattr(aaz_resource, 'plane', '')
+    proto_resource.id = getattr(aaz_resource, 'id', 'unknown')
+    proto_resource.version = getattr(aaz_resource, 'version', 'unknown')
+    proto_resource.plane = getattr(aaz_resource, 'plane', 'unknown')
     if hasattr(aaz_resource, 'subresource') and aaz_resource.subresource:
         proto_resource.subresource = aaz_resource.subresource
     return proto_resource
@@ -225,10 +229,8 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
     if result.get('positionalArgs'):
         proto_command.positional_args.extend(result['positionalArgs'])
     
-
     plugin_model = model_pb2.CrsPluginModelCommand()
     
-
     for aaz_resource in command_latest_version.resources:
         proto_resource = convert_aaz_resource_to_proto(aaz_resource)
         plugin_model.resources.append(proto_resource)
@@ -247,6 +249,7 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
         for aaz_condition_data in result['conditions']:
             proto_condition = convert_aaz_condition_to_proto(aaz_condition_data)
             plugin_model.conditions.append(proto_condition)    
+
     if result.get('subresourceSelector'):
         proto_selector = convert_aaz_selector_to_proto(result['subresourceSelector'])
         plugin_model.subresource_selector.CopyFrom(proto_selector)
@@ -290,28 +293,28 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
     if arg_type == 'string':
         string_arg = argument_pb2.CrsStringArg()
 
-        format_type = aaz_arg.get('format', None)
-        if format_type:
+        format_data = aaz_arg.get('format', None)
+        if format_data:
             str_format = argument_pb2.CrsStringFormat()
-            if aaz_arg.get('pattern'):
-                str_format.pattern = aaz_arg.get('pattern')
-            if aaz_arg.get('max_length') is not None:
-                str_format.max_length = aaz_arg.get('maxLength')
-            if aaz_arg.get('min_length') is not None:
-                str_format.min_length = aaz_arg.get('minLength')
+            if format_data.get('pattern'):
+                str_format.pattern = format_data.get('pattern')
+            if format_data.get('maxLength') is not None:
+                str_format.max_length = format_data.get('maxLength')
+            if format_data.get('minLength') is not None:
+                str_format.min_length = format_data.get('minLength')
             string_arg.string.CopyFrom(str_format)
         
         if aaz_arg.get('enum'):
-            enum_items = aaz_arg.get('enum')
-            if isinstance(enum_items, list):
-                for item in enum_items:
+            enum_data = aaz_arg.get('enum')
+            if enum_data.get('items') and isinstance(enum_data['items'], list):
+                for item in enum_data['items']:
                     enum_item = string_arg.enum.items.add()
                     enum_item.name = item.get('name', '')
                     enum_item.value = item.get('value', '')
                     enum_item.internal = item.get('internal', False)
             
-            string_arg.enum.support_extension = aaz_arg.get('supportExtension', False)
-            string_arg.enum.case_sensitive = aaz_arg.get('caseSensitive', False)
+            string_arg.enum.support_extension = enum_data.get('supportExtension', False)
+            string_arg.enum.case_sensitive = enum_data.get('caseSensitive', False)
         
         proto_arg.string.CopyFrom(string_arg)
 
@@ -375,7 +378,7 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
         string_arg = argument_pb2.CrsStringArg()
         string_arg.password.CopyFrom(argument_pb2.CrsPasswordFormat())
         proto_arg.string.CopyFrom(string_arg)
-
+    
     elif arg_type == 'SubscriptionId':
         string_arg = argument_pb2.CrsStringArg()
         string_arg.subscription_id.CopyFrom(argument_pb2.CrsSubscriptionIdFormat())
@@ -411,77 +414,108 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
             boolean_arg.reverse_options.extend(aaz_arg.get('reverseOptions'))
         proto_arg.boolean.CopyFrom(boolean_arg)
         
-    elif arg_type in ['integer', 'integer32', 'integer64', 'float', 'float32', 'float64', 'double']:
+    elif arg_type in ['integer', 'integer32', 'integer64', 'uint32', 'uint64', 'float', 'float32', 'float64', 'double']:
         number_arg = argument_pb2.CrsNumberArg()
-        number_arg.enum.CopyFrom(argument_pb2.CrsArgEnum())
         if aaz_arg.get('enum'):
-            enum_items = aaz_arg.get('enum')
-            if isinstance(enum_items, list):
-                for item in enum_items:
+            enum_data = aaz_arg.get('enum')
+            if enum_data.get('items') and isinstance(enum_data['items'], list):
+                for item in enum_data['items']:
                     enum_item = number_arg.enum.items.add()
                     enum_item.name = item.get('name', '')
                     enum_item.value = item.get('value', '')
                     enum_item.internal = item.get('internal', False)
-            number_arg.enum.support_extension = aaz_arg.get('supportExtension', False)
-            number_arg.enum.case_sensitive = aaz_arg.get('caseSensitive', False)
+            number_arg.enum.support_extension = enum_data.get('supportExtension', False)
+            number_arg.enum.case_sensitive = enum_data.get('caseSensitive', False)
+        
+        format_data = aaz_arg.get('format', {})
         
         if arg_type == 'integer' or arg_type == 'integer32': 
-            number_arg.format.CopyFrom(argument_pb2.CrsInt32Format())
-            if aaz_arg.get('minimum'):
-                number_arg.format.minimum = aaz_arg.get('minimum')
-            if aaz_arg.get('maximum'):
-                number_arg.format.maximum = aaz_arg.get('maximum')
-            if aaz_arg.get('multipleOf'):
-                number_arg.format.multiple_of = aaz_arg.get('multipleOf')
+            int32_format = argument_pb2.CrsInt32Format()
+            if format_data.get('minimum') is not None:
+                int32_format.minimum = format_data.get('minimum')
+            if format_data.get('maximum') is not None:
+                int32_format.maximum = format_data.get('maximum')
+            if format_data.get('multipleOf') is not None:
+                int32_format.multiple_of = format_data.get('multipleOf')
+            number_arg.int32.CopyFrom(int32_format)
             
-        elif  arg_type == 'integer64':
-            number_arg.format.CopyFrom(argument_pb2.CrsInt64Format())
-            if aaz_arg.get('minimum'):
-                number_arg.format.minimum = aaz_arg.get('minimum')
-            if aaz_arg.get('maximum'):
-                number_arg.format.maximum = aaz_arg.get('maximum')
-            if aaz_arg.get('multipleOf'):
-                number_arg.format.multiple_of = aaz_arg.get('multipleOf')
+        elif arg_type == 'integer64':
+            int64_format = argument_pb2.CrsInt64Format()
+            if format_data.get('minimum') is not None:
+                int64_format.minimum = format_data.get('minimum')
+            if format_data.get('maximum') is not None:
+                int64_format.maximum = format_data.get('maximum')
+            if format_data.get('multipleOf') is not None:
+                int64_format.multiple_of = format_data.get('multipleOf')
+            number_arg.int64.CopyFrom(int64_format)
+
+        elif arg_type == 'uint32':
+            uint32_format = argument_pb2.CrsUint32Format()
+            if format_data.get('minimum') is not None:
+                uint32_format.minimum = format_data.get('minimum')
+            if format_data.get('maximum') is not None:
+                uint32_format.maximum = format_data.get('maximum')
+            if format_data.get('multipleOf') is not None:
+                uint32_format.multiple_of = format_data.get('multipleOf')
+            number_arg.uint32.CopyFrom(uint32_format)
+
+        elif arg_type == 'uint64':
+            uint64_format = argument_pb2.CrsUint64Format()
+            if format_data.get('minimum') is not None:
+                uint64_format.minimum = format_data.get('minimum')
+            if format_data.get('maximum') is not None:
+                uint64_format.maximum = format_data.get('maximum')
+            if format_data.get('multipleOf') is not None:
+                uint64_format.multiple_of = format_data.get('multipleOf')
+            number_arg.uint64.CopyFrom(uint64_format)
 
         elif arg_type == 'float' or arg_type == 'float32':
-            number_arg.format.CopyFrom(argument_pb2.CrsFloatFormat())
-            if aaz_arg.get('minimum'):
-                number_arg.format.minimum = aaz_arg.get('minimum')
-            if aaz_arg.get('maximum'):
-                number_arg.format.maximum = aaz_arg.get('maximum')
-            if aaz_arg.get('multipleOf'):
-                number_arg.format.multiple_of = aaz_arg.get('multipleOf')
-            if aaz_arg.get('exclusiveMinimum'):
-                number_arg.format.exclusive_minimum = aaz_arg.get('exclusiveMinimum')
-            if aaz_arg.get('exclusiveMaximum'):
-                number_arg.format.exclusive_maximum = aaz_arg.get('exclusiveMaximum')
+            float_format = argument_pb2.CrsFloatFormat()
+            if format_data.get('minimum') is not None:
+                float_format.minimum = format_data.get('minimum')
+            if format_data.get('maximum') is not None:
+                float_format.maximum = format_data.get('maximum')
+            if format_data.get('multipleOf') is not None:
+                float_format.multiple_of = format_data.get('multipleOf')
+            if format_data.get('exclusiveMinimum') is not None:
+                float_format.exclusive_minimum = format_data.get('exclusiveMinimum')
+            if format_data.get('exclusiveMaximum') is not None:
+                float_format.exclusive_maximum = format_data.get('exclusiveMaximum')
+            number_arg.float.CopyFrom(float_format)
         
         elif arg_type == 'float64' or arg_type == 'double':
-            number_arg.format.CopyFrom(argument_pb2.CrsDoubleFormat())
-            if aaz_arg.get('minimum'):
-                number_arg.format.minimum = aaz_arg.get('minimum')
-            if aaz_arg.get('maximum'):
-                number_arg.format.maximum = aaz_arg.get('maximum')
-            if aaz_arg.get('multipleOf'):
-                number_arg.format.multiple_of = aaz_arg.get('multipleOf')
-            if aaz_arg.get('exclusiveMinimum'):
-                number_arg.format.exclusive_minimum = aaz_arg.get('exclusiveMinimum')
-            if aaz_arg.get('exclusiveMaximum'):
-                number_arg.format.exclusive_maximum = aaz_arg.get('exclusiveMaximum')
+            double_format = argument_pb2.CrsDoubleFormat()
+            if format_data.get('minimum') is not None:
+                double_format.minimum = format_data.get('minimum')
+            if format_data.get('maximum') is not None:
+                double_format.maximum = format_data.get('maximum')
+            if format_data.get('multipleOf') is not None:
+                double_format.multiple_of = format_data.get('multipleOf')
+            if format_data.get('exclusiveMinimum') is not None:
+                double_format.exclusive_minimum = format_data.get('exclusiveMinimum')
+            if format_data.get('exclusiveMaximum') is not None:
+                double_format.exclusive_maximum = format_data.get('exclusiveMaximum')
+            number_arg.double.CopyFrom(double_format)
 
         proto_arg.number.CopyFrom(number_arg)
 
-        
     elif arg_type == 'object':
         object_arg = argument_pb2.CrsObjectArg()
         
         if aaz_arg.get('cls'):
             object_arg.cls_type = aaz_arg.get('cls')
+
+        object_arg.ps_flatten = aaz_arg.get('psFlatten', False)
         
+        format_data = aaz_arg.get('format', {})
         object_format = argument_pb2.CrsObjectFormat()
-        if aaz_arg.get('minLength') is not None:
+        if format_data.get('minLength') is not None:
+            object_format.min_length = format_data.get('minLength')
+        elif aaz_arg.get('minLength') is not None:
             object_format.min_length = aaz_arg.get('minLength')
-        if aaz_arg.get('maxLength') is not None:
+        if format_data.get('maxLength') is not None:
+            object_format.max_length = format_data.get('maxLength')
+        elif aaz_arg.get('maxLength') is not None:
             object_format.max_length = aaz_arg.get('maxLength')
         object_arg.format.CopyFrom(object_format)
         
@@ -503,17 +537,21 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
         
         proto_arg.object.CopyFrom(object_arg)
         
-    elif arg_type.startswith('array<') and arg_type.endswith('>'):
+    elif arg_type and arg_type.startswith('array<') and arg_type.endswith('>'):
         array_item_type = arg_type[6:-1]
         array_arg = argument_pb2.CrsArrayArg()
         if aaz_arg.get('cls'):
-            array_arg.cls_type = aaz_arg.get('cls')
-        
+            array_arg.cls_type = aaz_arg.get('cls')        
+        format_data = aaz_arg.get('format', {})
         array_format = argument_pb2.CrsArrayFormat()
         array_format.unique = aaz_arg.get('unique', False)
-        if aaz_arg.get('minLength') is not None:
+        if format_data.get('minLength') is not None:
+            array_format.min_length = format_data.get('minLength')
+        elif aaz_arg.get('minLength') is not None:
             array_format.min_length = aaz_arg.get('minLength')
-        if aaz_arg.get('maxLength') is not None:
+        if format_data.get('maxLength') is not None:
+            array_format.max_length = format_data.get('maxLength')
+        elif aaz_arg.get('maxLength') is not None:
             array_format.max_length = aaz_arg.get('maxLength')
         array_arg.format.CopyFrom(array_format)
         
@@ -554,23 +592,23 @@ def convert_aaz_operation_to_proto(aaz_operation_data):
         http_action = convert_aaz_http_action_to_proto(http_data)
         http_op.action.CopyFrom(http_action)
         
-        if http_data.get('longRunning'):
+        if aaz_operation_data.get('longRunning'):
             long_running = operation_pb2.CrsHttpOperationLongRunning()
-            lr_data = http_data['longRunning']
-            final_state_via = lr_data.get('finalStateVia', 'azureAsyncOperation')
-            
-            if final_state_via == 'azureAsyncOperation':
-                long_running.final_state_via = operation_pb2.CrsHttpOperationLongRunning.azureAsyncOperation
+            lr_data = aaz_operation_data['longRunning']
+            final_state_via = lr_data.get('finalStateVia', 'azure-async-operation')
+
+            if final_state_via == 'azure-async-operation':
+                long_running.final_state_via = long_running.StateVia.azureAsyncOperation
             elif final_state_via == 'location':
-                long_running.final_state_via = operation_pb2.CrsHttpOperationLongRunning.location
-            elif final_state_via == 'originalUri':
-                long_running.final_state_via = operation_pb2.CrsHttpOperationLongRunning.originalUri
+                long_running.final_state_via = long_running.StateVia.location
+            elif final_state_via == 'original-uri':
+                long_running.final_state_via = long_running.StateVia.originalUri
             else:
-                long_running.final_state_via = operation_pb2.CrsHttpOperationLongRunning.azureAsyncOperation
-                
+                long_running.final_state_via = long_running.StateVia.azureAsyncOperation
+
             http_op.long_running.CopyFrom(long_running)
-        
-        proto_operation.http.CopyFrom(http_op)
+            
+            proto_operation.http.CopyFrom(http_op)
         
     elif aaz_operation_data.get('instanceCreate'):
         instance_create_op = operation_pb2.CrsInstanceCreateOperation()
@@ -670,15 +708,15 @@ def convert_aaz_schema_to_proto(aaz_schema_data):
         cls_schema.cls_type = aaz_schema_data.get('cls', '')
         cls_schema.client_flatten = aaz_schema_data.get('clientFlatten', False)
         proto_schema.cls.CopyFrom(cls_schema)
-    elif schema_type == 'string':
+    elif schema_type in ['string', 'binary', 'byte', 'duration', 'date', 'dateTime', 'time', 'uuid', 'password', 'SubscriptionId', 'ResourceGroupName', 'ResourceId', 'ResourceLocation']:
         proto_schema.string.CopyFrom(schema_pb2.CrsStringSchema())
-    elif schema_type in ['integer', 'int', 'int32', 'int64']:
+    elif schema_type in ['integer','integer32', 'integer64']:
         proto_schema.integer.CopyFrom(schema_pb2.CrsIntegerSchema())
-    elif schema_type in ['float', 'double', 'number']:
+    elif schema_type in ['float', 'float32', 'float64']:
         proto_schema.float.CopyFrom(schema_pb2.CrsFloatSchema())
     elif schema_type == 'boolean':
         proto_schema.boolean.CopyFrom(schema_pb2.CrsBooleanSchema())
-    elif schema_type == 'object':
+    elif schema_type in ['object', 'IdentityObject']:
         obj_schema = schema_pb2.CrsObjectSchema()
         if aaz_schema_data.get('cls'):
             obj_schema.cls = aaz_schema_data['cls']
@@ -809,10 +847,14 @@ def convert_aaz_http_request_to_proto(aaz_request_data):
 def convert_aaz_http_response_to_proto(aaz_response_data):
     proto_response = http_pb2.CrsHttpResponse()
     
-    if aaz_response_data.get('statusCodes'):
-        status_codes = aaz_response_data['statusCodes']
+    status_codes = aaz_response_data.get('statusCode') or aaz_response_data.get('statusCodes')
+    if status_codes:
         if isinstance(status_codes, list):
-            proto_response.status_codes.extend(status_codes)
+            for code in status_codes:
+                if isinstance(code, list):
+                    proto_response.status_codes.extend([int(c) for c in code])
+                else:
+                    proto_response.status_codes.append(int(code))
         elif isinstance(status_codes, (int, str)):
             proto_response.status_codes.append(int(status_codes))
     
@@ -864,13 +906,13 @@ def convert_aaz_output_to_proto(aaz_output_data):
     if aaz_output_type == 'object':
         obj_output = output_pb2.CrsObjectOutput()
         obj_output.ref = aaz_output_data.get('ref', '')
-        obj_output.client_flatten = aaz_output_data.get('clientFlatten', aaz_output_data.get('client_flatten', False))
+        obj_output.client_flatten = aaz_output_data.get('clientFlatten', False)
         proto_output.object.CopyFrom(obj_output)
 
     elif aaz_output_type == 'array':
         array_output = output_pb2.CrsArrayOutput()
         array_output.ref = aaz_output_data.get('ref', '')
-        array_output.client_flatten = aaz_output_data.get('clientFlatten', aaz_output_data.get('client_flatten', False))
+        array_output.client_flatten = aaz_output_data.get('clientFlatten', False)
         if aaz_output_data.get('next_link') or aaz_output_data.get('nextLink'):
             array_output.next_link = aaz_output_data.get('next_link', aaz_output_data.get('nextLink', ''))
         proto_output.array.CopyFrom(array_output)
@@ -1098,11 +1140,34 @@ def export_all_modules(output_path):
             print(f"Found module: {module_name}")
             root_primitive = command_group.to_primitive()
             os.makedirs(output_path, exist_ok=True)
-            command_group_file = os.path.join(output_path, f"{module_name}_root_module.json")
+            os.makedirs(os.path.join(output_path, 'root_module'), exist_ok=True)
+            command_group_file = os.path.join(output_path, 'root_module', f"{module_name}_root_module.json")
             with open(command_group_file, 'w', encoding='utf-8') as f:
                 json.dump(root_primitive, f, indent=2, ensure_ascii=False)
             print(f"\nRoot module JSON saved to: {command_group_file}")
             proto_component = create_component_proto(module_name)
+      
+            os.makedirs(output_path, exist_ok=True)
+            os.makedirs(os.path.join(output_path, 'binary'), exist_ok=True)
+            binary_file = os.path.join(output_path, 'binary', f"{module_name}.pb")
+            with open(binary_file, 'wb') as f:
+                f.write(proto_component.SerializeToString())
+            print(f"Component protobuf saved to: {binary_file}")
+
+            # Just for debugging, save the protobuf as JSON
+            os.makedirs(os.path.join(output_path, 'json'), exist_ok=True)
+            json_file = os.path.join(output_path, 'json', f"{module_name}.json")
+            with open(json_file, 'w', encoding='utf-8') as f:
+                json_data = MessageToJson(
+                    proto_component, 
+                    preserving_proto_field_name=True,
+                    sort_keys=True,
+                    indent=2
+                )
+                f.write(json_data)
+    
+    print(f"Component protobuf saved to: {binary_file}")
+    print(f"Component JSON saved to: {json_file}")
     
     outdated_version_tracker.save_to_file()
     
