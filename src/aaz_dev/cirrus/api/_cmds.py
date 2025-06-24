@@ -57,11 +57,11 @@ def export_component(component_name, output_path):
         proto_component = create_component_proto(module_name)
       
         os.makedirs(output_path, exist_ok=True)
-        binary_file = os.path.join(output_path, f"{module_name}_1.pb")
+        binary_file = os.path.join(output_path, f"{module_name}.pb")
         with open(binary_file, 'wb') as f:
             f.write(proto_component.SerializeToString())
         # Just for debugging, save as JSON
-        json_file = os.path.join(output_path, f"{module_name}_1.json")
+        json_file = os.path.join(output_path, f"{module_name}.json")
         with open(json_file, 'w', encoding='utf-8') as f:
             json_data = MessageToJson(
                 proto_component, 
@@ -183,22 +183,23 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
         outdated_version_tracker.record_outdated_command(
             command_name=command_name,
             command_version=command_latest_version.name,
-            latest_version=latest_version_for_resource,                resource_id=resource_id
+            latest_version=latest_version_for_resource,
+            resource_id=resource_id
         )
 
-    # print(f"Command {command_latest_version.name} is using the latest resource version: {latest_version_for_resource}")
-    # proto_command.version = command_latest_version.name
-    # specs_manager = AAZSpecsManager()
-    # cfg_reader = specs_manager.load_resource_cfg_reader_by_command_with_version(
-    #     aaz_command, version=command_latest_version.name)    
-    # if not cfg_reader:
-    #     logging.warning(f"No configuration reader found for command {command_latest_version.name}")
-    #     return
-    # cmd_cfg = cfg_reader.find_command(*aaz_command.names)
-    # if not cmd_cfg:
-    #     raise ValueError(f"No command configuration found for {'/'.join(aaz_command.names)}")
+    print(f"Command {command_latest_version.name} is using the latest resource version: {latest_version_for_resource}")
+    proto_command.version = command_latest_version.name
+    specs_manager = AAZSpecsManager()
+    cfg_reader = specs_manager.load_resource_cfg_reader_by_command_with_version(
+        aaz_command, version=command_latest_version.name)    
+    if not cfg_reader:
+        logging.warning(f"No configuration reader found for command {command_latest_version.name}")
+        return
+    cmd_cfg = cfg_reader.find_command(*aaz_command.names)
+    if not cmd_cfg:
+        raise ValueError(f"No command configuration found for {'/'.join(aaz_command.names)}")
 
-    # result = cmd_cfg.to_primitive()
+    result = cmd_cfg.to_primitive()
         
     # # Debug: save the complete command to a proper location 
     # cfg_dir = 'C:\\Users\\shiyingchen\\aaz-cirrus\\debug'
@@ -209,108 +210,57 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
     #     json.dump(result, f, indent=2, ensure_ascii=False)
     # print(f"Command configuration saved to: {cfg_file}")
 
-    # if result.get('help'):
-    #     help_data = result['help']
-    #     proto_command.help.CopyFrom(convert_aaz_help_to_proto(help_data))
+    if result.get('help'):
+        help_data = result['help']
+        proto_command.help.CopyFrom(convert_aaz_help_to_proto(help_data))
     
-    # if result.get('confirmation'):
-    #     proto_command.confirmation = result['confirmation']
+    if result.get('confirmation'):
+        proto_command.confirmation = result['confirmation']
     
-    # if result.get('argGroups'):
-    #     for aaz_arggrp in result['argGroups']:
-    #         arg_group_name = aaz_arggrp.get('name', '')
-    #         if aaz_arggrp.get('args'):
-    #             for aaz_arg in aaz_arggrp['args']:
-    #                 proto_arg = convert_aaz_arg_to_proto(arg_group_name, aaz_arg)
-    #                 proto_command.args.append(proto_arg)
+    if result.get('argGroups'):
+        for aaz_arggrp in result['argGroups']:
+            arg_group_name = aaz_arggrp.get('name', '')
+            if aaz_arggrp.get('args'):
+                for aaz_arg in aaz_arggrp['args']:
+                    proto_arg = convert_aaz_arg_to_proto(arg_group_name, aaz_arg)
+                    proto_command.args.append(proto_arg)
     
-    # # Convert positional args
-    # if result.get('positional_args'):
-    #     proto_command.positional_args.extend(result['positional_args'])
+
+    if result.get('positionalArgs'):
+        proto_command.positional_args.extend(result['positionalArgs'])
     
-    # # Create plugin model command
-    # plugin_model = model_pb2.CrsPluginModelCommand()
+
+    plugin_model = model_pb2.CrsPluginModelCommand()
     
-    # # Add resources from the target_version (not from result)
-    # if hasattr(target_version, 'resources') and target_version.resources:
-    #     for aaz_resource in target_version.resources:
-    #         proto_resource = convert_aaz_resource_to_proto(aaz_resource)
-    #         plugin_model.resources.append(proto_resource)
+
+    for aaz_resource in command_latest_version.resources:
+        proto_resource = convert_aaz_resource_to_proto(aaz_resource)
+        plugin_model.resources.append(proto_resource)
     
-    # # Add operations from result
-    # if result.get('operations'):
-    #     for aaz_operation_data in result['operations']:
-    #         proto_operation = convert_aaz_operation_to_proto(aaz_operation_data)
-    #         plugin_model.operations.append(proto_operation)
+    if result.get('operations'):
+        for aaz_operation_data in result['operations']:
+            proto_operation = convert_aaz_operation_to_proto(aaz_operation_data)
+            plugin_model.operations.append(proto_operation)
     
-    # # Add outputs from result
-    # if result.get('outputs'):
-    #     for aaz_output_data in result['outputs']:
-    #         proto_output = convert_aaz_output_to_proto(aaz_output_data)
-    #         plugin_model.outputs.append(proto_output)
+    # Add outputs from result
+    if result.get('outputs'):
+        for aaz_output_data in result['outputs']:
+            proto_output = convert_aaz_output_to_proto(aaz_output_data)
+            plugin_model.outputs.append(proto_output)
     
-    # # Add conditions from result
-    # if result.get('conditions'):
-    #     for aaz_condition_data in result['conditions']:
-    #         proto_condition = convert_aaz_condition_to_proto(aaz_condition_data)
-    #         plugin_model.conditions.append(proto_condition)
+    # Add conditions from result
+    if result.get('conditions'):
+        for aaz_condition_data in result['conditions']:
+            proto_condition = convert_aaz_condition_to_proto(aaz_condition_data)
+            plugin_model.conditions.append(proto_condition)
     
-    # # Add selector from result
-    # if result.get('selector'):
-    #     proto_selector = convert_aaz_selector_to_proto(result['selector'])
-    #     plugin_model.subresource_selector.CopyFrom(proto_selector)
+    # Add selector from result
+    if result.get('selector'):
+        proto_selector = convert_aaz_selector_to_proto(result['selector'])
+        plugin_model.subresource_selector.CopyFrom(proto_selector)
     
-    # proto_command.model.CopyFrom(plugin_model)
-    #     proto_command.help.CopyFrom(convert_aaz_help_to_proto(help_data))
     
-    # if result.get('confirmation'):
-    #     proto_command.confirmation = result['confirmation']
-    
-    # if result.get('argGroups'):
-    #     for aaz_arggrp in result['argGroups']:
-    #         arg_group_name = aaz_arggrp.get('name', '')
-    #         if aaz_arggrp.get('args'):
-    #             for aaz_arg in aaz_arggrp['args']:
-    #                     proto_arg = convert_aaz_arg_to_proto(arg_group_name, aaz_arg)
-    #                     proto_command.args.append(proto_arg)
-    
-    # # Convert positional args
-    # if result.get('positional_args'):
-    #     proto_command.positional_args.extend(result['positional_args'])
-    
-    # # Create plugin model command
-    # plugin_model = model_pb2.CrsPluginModelCommand()
-    
-    # # Add resources from the target_version (not from result)
-    # if hasattr(target_version, 'resources') and target_version.resources:
-    #     for aaz_resource in target_version.resources:
-    #         proto_resource = convert_aaz_resource_to_proto(aaz_resource)
-    #         plugin_model.resources.append(proto_resource)
-    
-    # # Add operations from result
-    # if result.get('operations'):
-    #     for aaz_operation_data in result['operations']:
-    #         proto_operation = convert_aaz_operation_to_proto(aaz_operation_data)
-    #         plugin_model.operations.append(proto_operation)
-    
-    # # Add outputs from result
-    # if result.get('outputs'):
-    #     for aaz_output_data in result['outputs']:
-    #         proto_output = convert_aaz_output_to_proto(aaz_output_data)
-    #         plugin_model.outputs.append(proto_output)
-    
-    # # Add conditions from result
-    # if result.get('conditions'):
-    #     for aaz_condition_data in result['conditions']:
-    #         proto_condition = convert_aaz_condition_to_proto(aaz_condition_data)
-    #         plugin_model.conditions.append(proto_condition)
-    
-    # # Add selector from result
-    # if result.get('selector'):
-    #     proto_selector = convert_aaz_selector_to_proto(result['selector'])
-    #     plugin_model.subresource_selector.CopyFrom(proto_selector)
-    
-    # proto_command.model.CopyFrom(plugin_model)
+    proto_command.model.CopyFrom(plugin_model)
     return proto_command
 
 
@@ -339,15 +289,12 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
 
     if aaz_arg.get('prompt'):
         proto_arg.prompt.prompt = aaz_arg['prompt']['msg']
-
-    # Not found 'secret' for 'prompt' in aaz
     if aaz_arg.get('secret'):
         proto_arg.prompt.secret = aaz_arg['prompt']['secret']
     if aaz_arg.get('confirm'):
-        proto_arg.prompt.confirm = aaz_arg['prompt']['confirm']
-    
+        proto_arg.prompt.confirm = aaz_arg['prompt']['confirm']    
     arg_type = aaz_arg.get('type', None)
-
+    
     if arg_type == 'string':
         string_arg = argument_pb2.CrsStringArg()
 
@@ -371,21 +318,17 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
                     enum_item.value = item.get('value', '')
                     enum_item.internal = item.get('internal', False)
             
-            # Not found 'supportExtension' in aaz
             string_arg.enum.support_extension = aaz_arg.get('supportExtension', False)
-            # Not found 'caseSensitive' in aaz
             string_arg.enum.case_sensitive = aaz_arg.get('caseSensitive', False)
         
         proto_arg.string.CopyFrom(string_arg)
 
-    # Not found 'binary' type in aaz
     elif arg_type == 'binary':
         string_arg = argument_pb2.CrsStringArg()
         binary_format = argument_pb2.CrsBinaryFormat()
         string_arg.binary.CopyFrom(binary_format)
         proto_arg.string.CopyFrom(string_arg)
 
-    # Not found 'byte' type in aaz
     elif arg_type == 'byte':
         string_arg = argument_pb2.CrsStringArg()
         byte_format = argument_pb2.CrsByteFormat()
@@ -416,7 +359,6 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
         string_arg.date_time.CopyFrom(datetime_format)
         proto_arg.string.CopyFrom(string_arg)
 
-    # Not found 'time' type in aaz
     elif arg_type == 'time':
         string_arg = argument_pb2.CrsStringArg()
         time_format = argument_pb2.CrsTimeFormat()
@@ -428,7 +370,6 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
     elif arg_type == 'uuid':
         string_arg = argument_pb2.CrsStringArg()
         uuid_format = argument_pb2.CrsUuidFormat()
-        # Not found 'case', 'noHypen', 'withBraces' in aaz
         if aaz_arg.get('case'):
             uuid_format.case = aaz_arg['case']
         if aaz_arg.get('noHyphen'):
@@ -468,14 +409,12 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
     elif arg_type == 'ResourceLocation':
         string_arg = argument_pb2.CrsStringArg()
         location_format = argument_pb2.CrsResourceLocationFormat()
-        # Not found 'noRgDefault' in aaz
         location_format.no_rg_default = aaz_arg.get('noRgDefault', False) 
         string_arg.resource_location.CopyFrom(location_format)
         proto_arg.string.CopyFrom(string_arg)
         
     elif arg_type == 'boolean':
         boolean_arg = argument_pb2.CrsBooleanArg()
-        # Not found 'reverse_options' in aaz
         if aaz_arg.get('reverseOptions'):
             boolean_arg.reverse_options.extend(aaz_arg.get('reverseOptions'))
         proto_arg.boolean.CopyFrom(boolean_arg)
@@ -544,8 +483,8 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
     elif arg_type == 'object':
         object_arg = argument_pb2.CrsObjectArg()
         
-        if aaz_arg.get('cls_type'):
-            object_arg.cls_type = aaz_arg.get('cls_type')
+        if aaz_arg.get('cls'):
+            object_arg.cls_type = aaz_arg.get('cls')
         
         object_format = argument_pb2.CrsObjectFormat()
         if aaz_arg.get('minLength') is not None:
@@ -555,49 +494,49 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
         object_arg.format.CopyFrom(object_format)
         
         if aaz_arg.get('props'):
-            props = aaz_arg.get('props')
-            for prop in props:
+            aaz_props = aaz_arg.get('props')
+            for aaz_prop in aaz_props:
                 prop = object_arg.props.add()
-                prop.CopyFrom(convert_aaz_arg_to_proto(aaz_arg_group_name, prop))
+                prop.CopyFrom(convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_prop))
         
         if aaz_arg.get('additionalProps'):
             aaz_additional_props  = aaz_arg.get('additionalProps')
             additional_props = argument_pb2.CrsObjectArgAdditionalProperties()
+            aaz_item = aaz_additional_props.get('item', {})
 
             additional_props.item.CopyFrom(convert_aaz_arg_to_proto(
-                aaz_arg.get('additional_properties'), 
-                aaz_additional_props.get('item')
-            ))
+                aaz_arg_group_name,
+                aaz_item            ))
             object_arg.additional_props.CopyFrom(additional_props)
         
         proto_arg.object.CopyFrom(object_arg)
         
-    elif arg_type == 'array':
+    elif arg_type.startswith('array<') and arg_type.endswith('>'):
+        array_item_type = arg_type[6:-1]
         array_arg = argument_pb2.CrsArrayArg()
+        if aaz_arg.get('cls'):
+            array_arg.cls_type = aaz_arg.get('cls')
         
-        # Set class type if available
-        if aaz_arg.get('cls_type'):
-            array_arg.cls_type = aaz_arg.get('cls_type')
-        
-        # Set format if available
         array_format = argument_pb2.CrsArrayFormat()
         array_format.unique = aaz_arg.get('unique', False)
-        if aaz_arg.get('min_length') is not None:
-            array_format.min_length = aaz_arg.get('min_length')
-        if aaz_arg.get('max_length') is not None:
-            array_format.max_length = aaz_arg.get('max_length')
+        if aaz_arg.get('minLength') is not None:
+            array_format.min_length = aaz_arg.get('minLength')
+        if aaz_arg.get('maxLength') is not None:
+            array_format.max_length = aaz_arg.get('maxLength')
         array_arg.format.CopyFrom(array_format)
         
-        # Set item if available
         if aaz_arg.get('item'):
-            item_group_name = f"{aaz_arg_group_name}.item" if aaz_arg_group_name else "item"
-            array_arg.item.CopyFrom(convert_aaz_arg_to_proto(aaz_arg.get('item'), item_group_name))
+            aaz_item = aaz_arg.get('item')
+            array_arg.item.CopyFrom(convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_item))
+        elif array_item_type:
+            aaz_item = {'type': array_item_type}
+            array_arg.item.CopyFrom(convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_item))
         
         proto_arg.array.CopyFrom(array_arg)
         
     elif arg_type == 'cls':
         cls_arg = argument_pb2.CrsClsArg()
-        cls_arg.cls_type = aaz_arg.get('cls_type', '')
+        cls_arg.cls_type = aaz_arg.get('cls')
         proto_arg.cls.CopyFrom(cls_arg)
         
     else:
@@ -606,10 +545,8 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
     return proto_arg
 
 def convert_aaz_operation_to_proto(aaz_operation_data):
-    """Convert AAZ operation from primitive data to CRS protobuf operation"""
     proto_operation = operation_pb2.CrsOperation()
-    
-    # Add conditions if present
+    aaz_operation_id = aaz_operation_data.get('operation_id', '')
     if aaz_operation_data.get('when'):
         conditions = aaz_operation_data['when']
         if isinstance(conditions, list):
@@ -617,17 +554,12 @@ def convert_aaz_operation_to_proto(aaz_operation_data):
         elif isinstance(conditions, str):
             proto_operation.conditions.append(conditions)
     
-    # Handle different operation types
     if aaz_operation_data.get('http'):
         http_op = operation_pb2.CrsHttpOperation()
         http_data = aaz_operation_data['http']
-        http_op.operation_id = http_data.get('operation_id', '')
-        
-        # Convert HTTP action
-        if http_data.get('action'):
-            http_action = convert_aaz_http_action_to_proto(http_data['action'])
-            http_op.action.CopyFrom(http_action)
-        
+        http_op.operation_id = aaz_operation_id
+        http_action = convert_aaz_http_action_to_proto(http_data)
+        http_op.action.CopyFrom(http_action)
         proto_operation.http.CopyFrom(http_op)
     elif aaz_operation_data.get('instance_create'):
         # Handle instance create operations
@@ -648,17 +580,13 @@ def convert_aaz_operation_to_proto(aaz_operation_data):
     return proto_operation
 
 def convert_aaz_http_action_to_proto(aaz_action_data):
-    """Convert AAZ HTTP action from primitive data to CRS protobuf HTTP action"""
     proto_action = http_pb2.CrsHttpAction()
-    
     proto_action.path = aaz_action_data.get('path', '')
     
-    # Convert request
     if aaz_action_data.get('request'):
         proto_request = convert_aaz_http_request_to_proto(aaz_action_data['request'])
         proto_action.request.CopyFrom(proto_request)
     
-    # Convert responses
     if aaz_action_data.get('responses'):
         for response_data in aaz_action_data['responses']:
             proto_response = convert_aaz_http_response_to_proto(response_data)
@@ -667,10 +595,8 @@ def convert_aaz_http_action_to_proto(aaz_action_data):
     return proto_action
 
 def convert_aaz_http_request_to_proto(aaz_request_data):
-    """Convert AAZ HTTP request from primitive data to CRS protobuf HTTP request"""
     proto_request = http_pb2.CrsHttpRequest()
     
-    # Map method
     method_map = {
         'GET': http_pb2.CrsHttpRequest.GET,
         'POST': http_pb2.CrsHttpRequest.POST,
@@ -684,22 +610,30 @@ def convert_aaz_http_request_to_proto(aaz_request_data):
     method = aaz_request_data.get('method', 'GET')
     proto_request.method = method_map.get(method.upper(), http_pb2.CrsHttpRequest.GET)
     
-    # Handle additional request properties if they exist
     if aaz_request_data.get('path'):
-        # Store path info if needed by the protobuf schema
-        pass
-    
+        if aaz_request_data['path'].get('params'):
+            proto_request.path.params = aaz_request_data['path']['params']
+        if aaz_request_data['path'].get('consts'):
+            proto_request.path.consts = aaz_request_data['path']['consts']
+
     if aaz_request_data.get('query'):
-        # Handle query parameters if supported
-        pass
-    
+        if aaz_request_data['query'].get('params'):
+            proto_request.query.params = aaz_request_data['query']['params']
+        if aaz_request_data['query'].get('consts'):
+            proto_request.query.consts = aaz_request_data['query']['consts']
+
     if aaz_request_data.get('header'):
-        # Handle headers if supported
-        pass
+        if aaz_request_data['header'].get('params'):
+            proto_request.header.params = aaz_request_data['header']['params']
+        if aaz_request_data['header'].get('consts'):
+            proto_request.header.consts = aaz_request_data['header']['consts']
+        if aaz_request_data['header'].get('clientRequestId'):
+            proto_request.header.client_request_id = aaz_request_data['header']['clientRequestId']
+        
     
     if aaz_request_data.get('body'):
-        # Handle request body if supported
-        pass
+        if aaz_request_data['body'].get('json'):
+            proto_request.body.json = aaz_request_data['body']['json']
     
     return proto_request
 
@@ -893,9 +827,6 @@ class OutdatedVersionTracker:
         return cls._instance
     
     def record_outdated_command(self, command_name, command_version, latest_version, resource_id):
-        """
-        Record a command that's not using the latest resource version.
-        """
         self.outdated_commands[command_name] = {
             "command_name": command_name,
             "command_version": command_version,
@@ -904,9 +835,6 @@ class OutdatedVersionTracker:
         }
     
     def save_to_file(self, output_path=None):
-        """
-        Save the outdated commands to a JSON file.
-        """
         if not self.outdated_commands:
             print("All commands are using their latest resource versions.")
             return
@@ -914,7 +842,6 @@ class OutdatedVersionTracker:
         if output_path is None:
             output_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'not_using_latest_version.json')
         
-        # Print a summary of outdated commands
         print("\nOutdated Commands Summary:")
         print("=" * 80)
         for cmd_name, cmd_info in self.outdated_commands.items():
@@ -929,7 +856,6 @@ class OutdatedVersionTracker:
         
         print(f"\nRecorded {len(self.outdated_commands)} commands not using latest versions to {output_path}")
 
-# Initialize the singleton tracker
 outdated_version_tracker = OutdatedVersionTracker()
 
 @bp.cli.command("export-all-modules", short_help="Export all AAZ modules and their command configurations.")
@@ -975,41 +901,3 @@ def export_all_modules(output_path):
     print(f"\nExported command configurations to {output_path}")
 
 
-class OutdatedVersionTracker:
-    """
-    Singleton class to track and record commands that are not using the latest resource version.
-    """
-    _instance = None
-    
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(OutdatedVersionTracker, cls).__new__(cls)
-            cls._instance.outdated_commands = {}
-        return cls._instance
-    
-    def record_outdated_command(self, command_name, command_version, latest_version, resource_id):
-        """
-        Record a command that's not using the latest resource version.
-        """
-        self.outdated_commands[command_name] = {
-            "command_name": command_name,
-            "command_version": command_version,
-            "latest_version": latest_version,
-            "resource_id": resource_id
-        }
-    
-    def save_to_file(self, output_path=None):
-        """
-        Save the outdated commands to a JSON file.
-        """
-        if not self.outdated_commands:
-            print("All commands are using their latest resource versions.")
-            return
-            
-        if output_path is None:
-            output_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'not_using_latest_version.json')
-            
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(self.outdated_commands, f, indent=2, ensure_ascii=False)
-        
-        print(f"Recorded {len(self.outdated_commands)} commands not using latest versions to {output_path}")
