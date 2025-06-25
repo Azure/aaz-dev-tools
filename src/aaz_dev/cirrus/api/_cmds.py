@@ -53,7 +53,7 @@ def export_component(component_name, output_path):
     module_name = component_name.lower()
     print(f"Exporting component: {module_name}")
     proto_component = create_component_proto(module_name)
-    save_component_proto(proto_component, output_path, module_name)
+    save_component_proto(proto_component, output_path, module_name, if_debug=True)
 
 
 class OutdatedVersionTracker:
@@ -261,7 +261,7 @@ def convert_aaz_command_group_to_proto(aaz_group, resouce_latest_versions_map):
     proto_group = command_pb2.CrsCommandGroup()
     proto_group.name = " ".join(aaz_group.names) if aaz_group.names else ""
     proto_group.uri = (
-        f"crs://azure/{'/'.join(aaz_group.names)}"
+        f"crs://azure/{'/'.join(aaz_group.names)}/"
         if aaz_group.names
         else "crs://azure/"
     )
