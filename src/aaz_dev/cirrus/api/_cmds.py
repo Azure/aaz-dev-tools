@@ -93,16 +93,16 @@ def create_component_proto(module_name):
     if root_module.help:
         proto_component.metadata.help.CopyFrom(convert_aaz_help_to_proto(root_module.help))
         
-    resource_latest_versions_map_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'latest_versions.json')
+    resource_latest_versions_map_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'latest_versions_by_resource_id.json')
     try:
         with open(resource_latest_versions_map_file_path, 'r', encoding='utf-8') as file:
             resource_latest_versions_map = json.load(file)
         print(f"Loaded latest versions map from: {resource_latest_versions_map_file_path}")
     except FileNotFoundError:
-        logging.warning(f"Warning: latest_versions.json not found at {resource_latest_versions_map_file_path}")
+        logging.warning(f"Warning: latest_versions_by_resource_id.json not found at {resource_latest_versions_map_file_path}")
         resource_latest_versions_map = {}
     except json.JSONDecodeError:
-        logging.warning(f"Warning: latest_versions.json contains invalid JSON")
+        logging.warning(f"Warning: latest_versions_by_resource_id.json contains invalid JSON")
         resource_latest_versions_map = {}
     
     print(f"\nFiltering commands to include only those using the latest resource API versions...")
@@ -174,13 +174,22 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
     
     resource_id = command_latest_version.resources[0].id
         
-    resource_id_bytes = resource_id.encode('utf-8')
-    resource_id_base_64 = base64.b64encode(resource_id_bytes).decode('utf-8')
-    latest_version_for_resource = resource_latest_versions_map.get(resource_id_base_64)
+    resource_in_map = resource_latest_versions_map.get(resource_id, None)
+    if not resource_in_map:
+        logging.warning(f"Resource ID {resource_id} not found in the latest versions map. Command {command_latest_version.name} may not be using the latest resource version.")
+        command_name = '/'.join(aaz_command.names) if aaz_command.names else "unknown"
+        outdated_version_tracker.record_outdated_command(
+            command_name=command_name,
+            command_version=command_latest_version.name,
+            latest_version="unknown_latest_version",
+            resource_id=resource_id
+        )
+        return None
+    latest_version_for_resource = resource_in_map.get('latest_version', None)
 
     if not latest_version_for_resource or command_latest_version.name != latest_version_for_resource:
         logging.warning(f"Command {command_latest_version.name} is not using the latest resource version: {latest_version_for_resource}")
-        command_name = '/'.join(aaz_command.names) if aaz_command.names else "unknown"
+        command_name = '/'.join(aaz_command.names) if aaz_command.names else "unknown_command"
         outdated_version_tracker.record_outdated_command(
             command_name=command_name,
             command_version=command_latest_version.name,
@@ -310,7 +319,7 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
                 for item in enum_data['items']:
                     enum_item = string_arg.enum.items.add()
                     enum_item.name = item.get('name', '')
-                    enum_item.value = item.get('value', '')
+                    enum_item.value = json.dumps(item.get('value', ''))
                     enum_item.internal = item.get('internal', False)
             
             string_arg.enum.support_extension = enum_data.get('supportExtension', False)
@@ -422,7 +431,7 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
                 for item in enum_data['items']:
                     enum_item = number_arg.enum.items.add()
                     enum_item.name = item.get('name', '')
-                    enum_item.value = item.get('value', '')
+                    enum_item.value = json.dumps(item.get('value', ''))
                     enum_item.internal = item.get('internal', False)
             number_arg.enum.support_extension = enum_data.get('supportExtension', False)
             number_arg.enum.case_sensitive = enum_data.get('caseSensitive', False)
@@ -564,9 +573,12 @@ def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
         
         proto_arg.array.CopyFrom(array_arg)
         
-    elif arg_type == 'cls':
+    elif arg_type == 'cls' or arg_type.startswith('@'):
         cls_arg = argument_pb2.CrsClsArg()
-        cls_arg.cls_type = aaz_arg.get('cls')
+        if aaz_arg.get('cls'):
+            cls_arg.cls_type = aaz_arg.get('cls')
+        elif arg_type.startswith('@'):
+            cls_arg.cls_type = arg_type[1:]
         proto_arg.cls.CopyFrom(cls_arg)
         
     else:
@@ -703,9 +715,12 @@ def convert_aaz_schema_to_proto(aaz_schema_data):
     
     schema_type = aaz_schema_data.get('type', 'string')
     
-    if schema_type == 'cls' or aaz_schema_data.get('cls'):
+    if schema_type == 'cls' or aaz_schema_data.get('cls') or schema_type.startswith('@'):
         cls_schema = schema_pb2.CrsClsSchema()
-        cls_schema.cls_type = aaz_schema_data.get('cls', '')
+        if aaz_schema_data.get('cls'):
+            cls_schema.cls_type = aaz_schema_data['cls']
+        elif schema_type.startswith('@'):
+            cls_schema.cls_type = schema_type[1:]
         cls_schema.client_flatten = aaz_schema_data.get('clientFlatten', False)
         proto_schema.cls.CopyFrom(cls_schema)
     elif schema_type in ['string', 'binary', 'byte', 'duration', 'date', 'dateTime', 'time', 'uuid', 'password', 'SubscriptionId', 'ResourceGroupName', 'ResourceId', 'ResourceLocation']:
@@ -1138,6 +1153,9 @@ def export_all_modules(output_path):
         command_group = specs_manager.find_command_group(module_name)
         if command_group:
             print(f"Found module: {module_name}")
+            if module_name == 'network':
+                print("Skipping 'network' module.")
+                continue
             root_primitive = command_group.to_primitive()
             os.makedirs(output_path, exist_ok=True)
             os.makedirs(os.path.join(output_path, 'root_module'), exist_ok=True)
@@ -1145,11 +1163,13 @@ def export_all_modules(output_path):
             with open(command_group_file, 'w', encoding='utf-8') as f:
                 json.dump(root_primitive, f, indent=2, ensure_ascii=False)
             print(f"\nRoot module JSON saved to: {command_group_file}")
+
             proto_component = create_component_proto(module_name)
       
             os.makedirs(output_path, exist_ok=True)
             os.makedirs(os.path.join(output_path, 'binary'), exist_ok=True)
             binary_file = os.path.join(output_path, 'binary', f"{module_name}.pb")
+            
             with open(binary_file, 'wb') as f:
                 f.write(proto_component.SerializeToString())
             print(f"Component protobuf saved to: {binary_file}")
