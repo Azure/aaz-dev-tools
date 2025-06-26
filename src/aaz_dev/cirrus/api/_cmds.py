@@ -147,9 +147,6 @@ def export_all_modules(output_path):
         command_group = specs_manager.find_command_group(module_name)
         if command_group:
             print(f"Found module: {module_name}")
-            # if module_name == "network":
-            #     print("Skipping 'network' module.")
-            #     continue
             proto_component = create_component_proto(module_name)
             save_component_proto(
                 proto_component, output_path, module_name, if_debug=True
@@ -197,7 +194,7 @@ def create_component_proto(module_name):
     component_version = "0.0.1"  # Hardcoded for now, can be replaced with dynamic versioning logic if needed
     proto_component = component_pb2.CrsPluginComponent()
     proto_component.metadata.name = module_name
-    component_uri = f"crs://azure/{module_name}"
+    component_uri = f"crs://azure/{module_name}/"
     proto_component.metadata.version = component_version
     proto_component.metadata.uri = component_uri
     if root_module.help:
@@ -259,7 +256,7 @@ def convert_aaz_arg_help_to_proto(aaz_help):
 
 def convert_aaz_command_group_to_proto(aaz_group, resouce_latest_versions_map):
     proto_group = command_pb2.CrsCommandGroup()
-    proto_group.name = " ".join(aaz_group.names) if aaz_group.names else ""
+    proto_group.name = aaz_group.names[-1]
     proto_group.uri = (
         f"crs://azure/{'/'.join(aaz_group.names)}/"
         if aaz_group.names
@@ -299,7 +296,7 @@ def convert_aaz_resource_to_proto(aaz_resource):
 
 def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
     proto_command = command_pb2.CrsCommand()
-    proto_command.name = " ".join(aaz_command.names) if aaz_command.names else ""
+    proto_command.name = aaz_command.names[-1]
     proto_command.uri = (
         f"crs://azure/{'/'.join(aaz_command.names)}"
         if aaz_command.names
@@ -362,6 +359,7 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
         )
 
     proto_command.version = command_latest_version.name
+
     specs_manager = AAZSpecsManager()
     cfg_reader = specs_manager.load_resource_cfg_reader_by_command_with_version(
         aaz_command, version=command_latest_version.name
@@ -377,7 +375,7 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
             f"No command configuration found for {'/'.join(aaz_command.names)}"
         )
 
-    result = cmd_cfg.to_primitive()
+    cmd_cfg_json = cmd_cfg.to_primitive()
 
     # # Debug: save the complete command to a proper location
     # cfg_dir = 'C:\\Users\\shiyingchen\\aaz-cirrus\\debug'
@@ -385,44 +383,61 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
     #     os.makedirs(cfg_dir)
     # cfg_file = os.path.join(cfg_dir, f"{'_'.join(aaz_command.names)}.json")
     # with open(cfg_file, 'w', encoding='utf-8') as f:
-    #     json.dump(result, f, indent=2, ensure_ascii=False)
+    #     json.dump(cmd_cfg_json, f, indent=2, ensure_ascii=False)
     # print(f"Command configuration saved to: {cfg_file}")
 
-    if result.get("help"):
-        help_data = result["help"]
+        
+    # # Read cmd_cfg_json from debug folder
+    # cfg_dir = 'C:\\Users\\shiyingchen\\aaz-cirrus\\debug'
+    # cfg_file = os.path.join(cfg_dir, f"{'_'.join(aaz_command.names)}.json")
+    
+    # if os.path.exists(cfg_file):
+    #     try:
+    #         with open(cfg_file, 'r', encoding='utf-8') as f:
+    #             cmd_cfg_json = json.load(f)
+    #         logging.info(f"Loaded command configuration from: {cfg_file}")
+    #     except (json.JSONDecodeError, IOError) as e:
+    #         logging.error(f"Failed to load command configuration from {cfg_file}: {e}")
+    #         return
+    # else:
+    #     logging.error(f"Command configuration file not found: {cfg_file}")
+    #     return
+
+    if cmd_cfg_json.get("help"):
+        help_data = cmd_cfg_json["help"]
         proto_command.help.CopyFrom(convert_aaz_help_to_proto(help_data))
-    if result.get("confirmation"):
-        proto_command.confirmation = result["confirmation"]
-    if result.get("argGroups"):
-        for aaz_arggrp in result["argGroups"]:
+    if cmd_cfg_json.get("confirmation"):
+        proto_command.confirmation = cmd_cfg_json["confirmation"]
+    if cmd_cfg_json.get("argGroups"):
+        for aaz_arggrp in cmd_cfg_json["argGroups"]:
             arg_group_name = aaz_arggrp.get("name", "")
             if aaz_arggrp.get("args"):
                 for aaz_arg in aaz_arggrp["args"]:
                     proto_arg = convert_aaz_arg_to_proto(arg_group_name, aaz_arg)
                     proto_command.args.append(proto_arg)
 
-    if result.get("positionalArgs"):
-        proto_command.positional_args.extend(result["positionalArgs"])
+    if cmd_cfg_json.get("positionalArgs"):
+        proto_command.positional_args.extend(cmd_cfg_json["positionalArgs"])
 
     plugin_model = model_pb2.CrsPluginModelCommand()
 
     for aaz_resource in command_latest_version.resources:
         proto_resource = convert_aaz_resource_to_proto(aaz_resource)
         plugin_model.resources.append(proto_resource)
-    if result.get("operations"):
-        for aaz_operation_data in result["operations"]:
+    if cmd_cfg_json.get("operations"):
+        for aaz_operation_data in cmd_cfg_json["operations"]:
             proto_operation = convert_aaz_operation_to_proto(aaz_operation_data)
             plugin_model.operations.append(proto_operation)
-    if result.get("outputs"):
-        for aaz_output_data in result["outputs"]:
+    if cmd_cfg_json.get("outputs"):
+        for aaz_output_data in cmd_cfg_json["outputs"]:
             proto_output = convert_aaz_output_to_proto(aaz_output_data)
             plugin_model.outputs.append(proto_output)
-    if result.get("conditions"):
-        for aaz_condition_data in result["conditions"]:
+    if cmd_cfg_json.get("conditions"):
+        for aaz_condition_data in cmd_cfg_json["conditions"]:
             proto_condition = convert_aaz_condition_to_proto(aaz_condition_data)
             plugin_model.conditions.append(proto_condition)
-    if result.get("subresourceSelector"):
-        proto_selector = convert_aaz_selector_to_proto(result["subresourceSelector"])
+    if cmd_cfg_json.get("subresourceSelector"):
+        proto_selector = convert_aaz_selector_to_proto(cmd_cfg_json["subresourceSelector"])
         plugin_model.subresource_selector.CopyFrom(proto_selector)
     proto_command.model.CopyFrom(plugin_model)
     return proto_command
@@ -430,8 +445,9 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
 
 def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
     proto_arg = argument_pb2.CrsArg()
-    proto_arg.var_name = aaz_arg.get("var", "")
-    proto_arg.name = aaz_arg.get("name", "")
+    var_name = aaz_arg.get("var", "")
+    proto_arg.var_name = var_name
+    proto_arg.name = var_name.split(".")[-1] if var_name else aaz_arg.get("name", "")
     if aaz_arg.get("options"):
         proto_arg.options.extend(aaz_arg["options"])
     proto_arg.group = aaz_arg_group_name
