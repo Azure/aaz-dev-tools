@@ -108,6 +108,7 @@ class OutdatedVersionTracker:
 
 
 outdated_version_tracker = OutdatedVersionTracker()
+command_num = 0
 
 
 @bp.cli.command(
@@ -153,6 +154,7 @@ def export_all_modules(output_path):
             )
 
     outdated_version_tracker.save_to_file()
+    print(f"\nExported {command_num} commands")
     print(f"\nExported command configurations to {output_path}")
 
 
@@ -255,6 +257,7 @@ def convert_aaz_arg_help_to_proto(aaz_help):
 
 
 def convert_aaz_command_group_to_proto(aaz_group, resouce_latest_versions_map):
+    global command_num
     proto_group = command_pb2.CrsCommandGroup()
     proto_group.name = aaz_group.names[-1]
     proto_group.uri = (
@@ -275,6 +278,7 @@ def convert_aaz_command_group_to_proto(aaz_group, resouce_latest_versions_map):
 
     if hasattr(aaz_group, "commands") and aaz_group.commands:
         for cmd_name, command in aaz_group.commands.items():
+            command_num = command_num + 1
             proto_command = convert_aaz_command_to_proto(
                 command, resouce_latest_versions_map
             )
