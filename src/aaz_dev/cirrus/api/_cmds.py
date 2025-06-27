@@ -112,7 +112,7 @@ command_num = 0
 
 
 @bp.cli.command(
-    "export-all-modules",
+    "export-all-components",
     short_help="Export all AAZ modules and their command configurations.",
 )
 @click.option(
@@ -306,6 +306,8 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
         if aaz_command.names
         else "crs://azure/"
     )
+    if aaz_command.help:
+        proto_command.help.CopyFrom(convert_aaz_help_to_proto(aaz_command.help))
 
     print(f"Processing command: {proto_command.name} with URI: {proto_command.uri}")
 
@@ -364,6 +366,7 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
 
     proto_command.version = command_latest_version.name
 
+    # Comment this if you want to use the debug folder
     specs_manager = AAZSpecsManager()
     cfg_reader = specs_manager.load_resource_cfg_reader_by_command_with_version(
         aaz_command, version=command_latest_version.name
@@ -391,7 +394,7 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
     # print(f"Command configuration saved to: {cfg_file}")
 
         
-    # # Read cmd_cfg_json from debug folder
+    # # Debug: Read cmd_cfg_json from debug folder
     # cfg_dir = 'C:\\Users\\shiyingchen\\aaz-cirrus\\debug'
     # cfg_file = os.path.join(cfg_dir, f"{'_'.join(aaz_command.names)}.json")
     
@@ -407,9 +410,6 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
     #     logging.error(f"Command configuration file not found: {cfg_file}")
     #     return
 
-    if cmd_cfg_json.get("help"):
-        help_data = cmd_cfg_json["help"]
-        proto_command.help.CopyFrom(convert_aaz_help_to_proto(help_data))
     if cmd_cfg_json.get("confirmation"):
         proto_command.confirmation = cmd_cfg_json["confirmation"]
     if cmd_cfg_json.get("argGroups"):
