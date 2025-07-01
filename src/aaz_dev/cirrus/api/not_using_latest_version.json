@@ -749,6 +749,36 @@
     "latest_version": "2022-01-01",
     "resource_id": "/subscriptions/{}/providers/microsoft.network/locations/{}/virtualnetworkavailableendpointservices"
   },
+  "network/vnet/subnet/create": {
+    "command_name": "network/vnet/subnet/create",
+    "command_version": "2024-01-01",
+    "latest_version": "2024-07-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}/subnets/{}"
+  },
+  "network/vnet/subnet/delete": {
+    "command_name": "network/vnet/subnet/delete",
+    "command_version": "2024-01-01",
+    "latest_version": "2024-07-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}/subnets/{}"
+  },
+  "network/vnet/subnet/list": {
+    "command_name": "network/vnet/subnet/list",
+    "command_version": "2024-01-01",
+    "latest_version": "2024-07-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}/subnets"
+  },
+  "network/vnet/subnet/show": {
+    "command_name": "network/vnet/subnet/show",
+    "command_version": "2024-01-01",
+    "latest_version": "2024-07-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}/subnets/{}"
+  },
+  "network/vnet/subnet/update": {
+    "command_name": "network/vnet/subnet/update",
+    "command_version": "2024-01-01",
+    "latest_version": "2024-07-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}/subnets/{}"
+  },
   "network/watcher/connection-monitor/endpoint/add": {
     "command_name": "network/watcher/connection-monitor/endpoint/add",
     "command_version": "2022-01-01",

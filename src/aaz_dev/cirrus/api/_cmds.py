@@ -48,12 +48,29 @@ bp.cli.short_help = "Generate aaz models as cirrus components."
     help="The output path where the component will be exported.",
 )
 @click.option("--component-name", "--name", required=True, help="Name of the component")
-def export_component(component_name, output_path):
+@click.option(
+    "--cfg-dir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True),
+    help="Directory containing command configuration JSON files for debug mode."
+)
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Enable debug mode with additional logging and JSON output."
+)
+@click.option(
+    "--save-to-cfg",
+    is_flag=True,
+    default=False,
+    help="Save command configurations to the cfg-dir for debugging."
+)
+def export_component(component_name, output_path, cfg_dir, debug, save_to_cfg):
     print(f"Using AAZ path: {Config.AAZ_PATH}")
     module_name = component_name.lower()
     print(f"Exporting component: {module_name}")
-    proto_component = create_component_proto(module_name)
-    save_component_proto(proto_component, output_path, module_name, if_debug=True)
+    proto_component = create_component_proto(module_name, cfg_dir, debug, save_to_cfg)
+    save_component_proto(proto_component, output_path, module_name, if_debug=debug)
 
 
 class OutdatedVersionTracker:
@@ -133,7 +150,24 @@ command_num = 0
     required=True,
     help="The output path where the command configurations will be exported.",
 )
-def export_all_modules(output_path):
+@click.option(
+    "--cfg-dir",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True),
+    help="Directory containing command configuration JSON files for debug mode."
+)
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Enable debug mode with additional logging and JSON output."
+)
+@click.option(
+    "--save-to-cfg",
+    is_flag=True,
+    default=False,
+    help="Save command configurations to the cfg-dir for debugging."
+)
+def export_all_modules(output_path, cfg_dir, debug, save_to_cfg):
     print(f"Using AAZ path: {Config.AAZ_PATH}")
 
     specs_manager = AAZSpecsManager()
@@ -148,9 +182,9 @@ def export_all_modules(output_path):
         command_group = specs_manager.find_command_group(module_name)
         if command_group:
             print(f"Found module: {module_name}")
-            proto_component = create_component_proto(module_name)
+            proto_component = create_component_proto(module_name, cfg_dir, debug, save_to_cfg)
             save_component_proto(
-                proto_component, output_path, module_name, if_debug=True
+                proto_component, output_path, module_name, if_debug=debug
             )
 
     outdated_version_tracker.save_to_file()
@@ -190,7 +224,7 @@ def save_component_proto(proto_component, output_path, module_name, if_debug=Fal
         print(f"Component JSON saved to: {json_file}")
 
 
-def create_component_proto(module_name):
+def create_component_proto(module_name, cfg_dir=None, debug=False, save_to_cfg=False):
     specs_manager = AAZSpecsManager()
     root_module = specs_manager.find_command_group(module_name)
     component_version = "0.0.1"  # Hardcoded for now, can be replaced with dynamic versioning logic if needed
@@ -231,7 +265,7 @@ def create_component_proto(module_name):
         f"\nFiltering commands to include only those using the latest resource API versions..."
     )
     proto_group = convert_aaz_command_group_to_proto(
-        root_module, resource_latest_versions_map
+        root_module, resource_latest_versions_map, cfg_dir, debug, save_to_cfg
     )
     proto_component.interface.command_group.CopyFrom(proto_group)
 
@@ -256,8 +290,7 @@ def convert_aaz_arg_help_to_proto(aaz_help):
     return proto_help
 
 
-def convert_aaz_command_group_to_proto(aaz_group, resouce_latest_versions_map):
-    global command_num
+def convert_aaz_command_group_to_proto(aaz_group, resouce_latest_versions_map, cfg_dir=None, debug=False, save_to_cfg=False):
     proto_group = command_pb2.CrsCommandGroup()
     proto_group.name = aaz_group.names[-1]
     proto_group.uri = (
@@ -272,15 +305,14 @@ def convert_aaz_command_group_to_proto(aaz_group, resouce_latest_versions_map):
     if hasattr(aaz_group, "command_groups") and aaz_group.command_groups:
         for group_name, subgroup in aaz_group.command_groups.items():
             proto_subgroup = convert_aaz_command_group_to_proto(
-                subgroup, resouce_latest_versions_map
+                subgroup, resouce_latest_versions_map, cfg_dir, debug, save_to_cfg
             )
             proto_group.groups.append(proto_subgroup)
 
     if hasattr(aaz_group, "commands") and aaz_group.commands:
         for cmd_name, command in aaz_group.commands.items():
-            command_num = command_num + 1
             proto_command = convert_aaz_command_to_proto(
-                command, resouce_latest_versions_map
+                command, resouce_latest_versions_map, cfg_dir, debug, save_to_cfg
             )
             if proto_command:
                 proto_group.commands.append(proto_command)
@@ -298,7 +330,8 @@ def convert_aaz_resource_to_proto(aaz_resource):
     return proto_resource
 
 
-def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
+def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map, cfg_dir=None, debug=False, save_to_cfg=False):
+    global command_num
     proto_command = command_pb2.CrsCommand()
     proto_command.name = aaz_command.names[-1]
     proto_command.uri = (
@@ -366,7 +399,7 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
 
     proto_command.version = command_latest_version.name
 
-    # Comment this if you want to use the debug folder
+    # Get command configuration from specs manager
     specs_manager = AAZSpecsManager()
     cfg_reader = specs_manager.load_resource_cfg_reader_by_command_with_version(
         aaz_command, version=command_latest_version.name
@@ -375,7 +408,7 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
         logging.warning(
             f"No configuration reader found for command {command_latest_version.name}"
         )
-        return
+        return None
     cmd_cfg = cfg_reader.find_command(*aaz_command.names)
     if not cmd_cfg:
         raise ValueError(
@@ -384,31 +417,37 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
 
     cmd_cfg_json = cmd_cfg.to_primitive()
 
-    # # Debug: save the complete command to a proper location
-    # cfg_dir = 'C:\\Users\\shiyingchen\\aaz-cirrus\\debug'
-    # if not os.path.exists(cfg_dir):
-    #     os.makedirs(cfg_dir)
-    # cfg_file = os.path.join(cfg_dir, f"{'_'.join(aaz_command.names)}.json")
-    # with open(cfg_file, 'w', encoding='utf-8') as f:
-    #     json.dump(cmd_cfg_json, f, indent=2, ensure_ascii=False)
-    # print(f"Command configuration saved to: {cfg_file}")
+    # Handle save-to-cfg option
+    if save_to_cfg and cfg_dir:
+        if not os.path.exists(cfg_dir):
+            os.makedirs(cfg_dir)
+        cfg_file = os.path.join(cfg_dir, f"{'_'.join(aaz_command.names)}.json")
+        with open(cfg_file, 'w', encoding='utf-8') as f:
+            json.dump(cmd_cfg_json, f, indent=2, ensure_ascii=False)
+        if debug:
+            print(f"Command configuration saved to: {cfg_file}")
 
+    # Handle loading from cfg-dir if available and not using live configuration
+    if cfg_dir and not save_to_cfg:
+        cfg_file = os.path.join(cfg_dir, f"{'_'.join(aaz_command.names)}.json")
         
-    # # Debug: Read cmd_cfg_json from debug folder
-    # cfg_dir = 'C:\\Users\\shiyingchen\\aaz-cirrus\\debug'
-    # cfg_file = os.path.join(cfg_dir, f"{'_'.join(aaz_command.names)}.json")
-    
-    # if os.path.exists(cfg_file):
-    #     try:
-    #         with open(cfg_file, 'r', encoding='utf-8') as f:
-    #             cmd_cfg_json = json.load(f)
-    #         logging.info(f"Loaded command configuration from: {cfg_file}")
-    #     except (json.JSONDecodeError, IOError) as e:
-    #         logging.error(f"Failed to load command configuration from {cfg_file}: {e}")
-    #         return
-    # else:
-    #     logging.error(f"Command configuration file not found: {cfg_file}")
-    #     return
+        if os.path.exists(cfg_file):
+            try:
+                with open(cfg_file, 'r', encoding='utf-8') as f:
+                    cmd_cfg_json = json.load(f)
+                if debug:
+                    logging.info(f"Loaded command configuration from: {cfg_file}")
+            except (json.JSONDecodeError, IOError) as e:
+                logging.error(f"Failed to load command configuration from {cfg_file}: {e}")
+                return None
+        else:
+            if debug:
+                logging.warning(f"Command configuration file not found: {cfg_file}, using live configuration")
+
+    if debug:
+        print(f"Processing command: {proto_command.name} with URI: {proto_command.uri}")
+
+    command_num = command_num + 1
 
     if cmd_cfg_json.get("confirmation"):
         proto_command.confirmation = cmd_cfg_json["confirmation"]
@@ -449,10 +488,9 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map):
 
 def convert_aaz_arg_to_proto(aaz_arg_group_name, aaz_arg):
     proto_arg = argument_pb2.CrsArg()
-    var_name = aaz_arg.get("var", "")
-    proto_arg.var_name = var_name
-    proto_arg.name = var_name.split(".")[-1] if var_name else aaz_arg.get("name", "")
+    proto_arg.var_name = aaz_arg.get("var", "")
     if aaz_arg.get("options"):
+        proto_arg.name = get_longest_option_camel_case(aaz_arg["options"])
         proto_arg.options.extend(aaz_arg["options"])
     proto_arg.group = aaz_arg_group_name
     proto_arg.internal = aaz_arg.get("internal", False)
@@ -1295,3 +1333,18 @@ def convert_aaz_selector_to_proto(aaz_selector_data):
         proto_selector.json.CopyFrom(selector_index)
 
     return proto_selector
+
+
+def convert_to_camel_case(option_name):
+    clean_name = option_name.lstrip('-')
+    parts = clean_name.split('-')
+    if len(parts) == 1:
+        return parts[0]
+    return parts[0] + ''.join(word.capitalize() for word in parts[1:])
+
+
+def get_longest_option_camel_case(options):
+    if not options:
+        return ""
+    longest_option = max(options, key=lambda x: len(x.lstrip('-')))
+    return convert_to_camel_case(longest_option)
