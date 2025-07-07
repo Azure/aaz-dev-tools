@@ -469,6 +469,7 @@ const CLIModGeneratorProfileCommandTree: React.FC<CLIModGeneratorProfileCommandT
                 unloadedCommand.selected,
                 unloadedCommand.modified,
                 unloadedCommand.registered,
+                unloadedCommand.selectedVersion,
               );
             }) ?? tree
           );
@@ -578,6 +579,7 @@ function decodeProfileCTCommand(
   selected: boolean = false,
   modified: boolean = false,
   registered: boolean | undefined = undefined,
+  selectedVersion: string | undefined = undefined,
 ): ProfileCTCommand {
   const versions = response.versions?.map((value: any) => decodeProfileCTCommandVersion(value));
   const command = {
@@ -591,10 +593,16 @@ function decodeProfileCTCommand(
     registered: registered,
   };
   if (selected) {
-    const selectedVersion = versions ? versions[0].name : undefined;
+    let version: string | undefined;
+    if (selectedVersion !== undefined) {
+      version = selectedVersion;
+    } else {
+      version = versions ? versions[0].name : undefined;
+    }
+
     return {
       ...command,
-      selectedVersion: selectedVersion,
+      selectedVersion: version,
     };
   } else {
     return command;
@@ -607,7 +615,7 @@ function decodeProfileCTCommandGroup(response: CLISpecsCommandGroup, selected: b
       ? Object.fromEntries(
           Object.entries(response.commands).map(([name, command]) => [
             name,
-            decodeProfileCTCommand(command, selected, selected),
+            decodeProfileCTCommand(command, selected, selected, undefined),
           ]),
         )
       : undefined;
