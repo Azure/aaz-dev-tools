@@ -4,6 +4,8 @@ from flask import Blueprint
 import os
 import json
 import zlib
+import re
+import base64
 
 from protos import component_pb2, command_pb2, argument_pb2
 from protos.plugin import (
@@ -194,12 +196,7 @@ def export_all_modules(output_path, cfg_dir, debug, save_to_cfg):
 
 def save_component_proto(proto_component, output_path, module_name, if_debug=False):
     os.makedirs(output_path, exist_ok=True)
-    os.makedirs(os.path.join(output_path, "binary"), exist_ok=True)
-    binary_file = os.path.join(output_path, "binary", f"{module_name}.pb")
     serialized_data = proto_component.SerializeToString()
-    with open(binary_file, "wb") as f:
-        f.write(serialized_data)
-    print(f"Component protobuf saved to: {binary_file}")
 
     compressed_data = zlib.compress(serialized_data)
     os.makedirs(os.path.join(output_path, "binary_zipped"), exist_ok=True)
@@ -211,6 +208,11 @@ def save_component_proto(proto_component, output_path, module_name, if_debug=Fal
     print(f"Component protobuf (zipped) saved to: {binary_zipped_file}")
 
     if if_debug:
+        os.makedirs(os.path.join(output_path, "binary"), exist_ok=True)
+        binary_file = os.path.join(output_path, "binary", f"{module_name}.pb")
+        with open(binary_file, "wb") as f:
+            f.write(serialized_data)
+        print(f"Component protobuf (Binary) saved to: {binary_file}")
         os.makedirs(os.path.join(output_path, "json"), exist_ok=True)
         json_file = os.path.join(output_path, "json", f"{module_name}.json")
         with open(json_file, "w", encoding="utf-8") as f:
@@ -221,7 +223,7 @@ def save_component_proto(proto_component, output_path, module_name, if_debug=Fal
                 indent=2,
             )
             f.write(json_data)
-        print(f"Component JSON saved to: {json_file}")
+        print(f"Component protobuf (JSON & Binary) saved to: {output_path}")
 
 
 def create_component_proto(module_name, cfg_dir=None, debug=False, save_to_cfg=False):
@@ -238,34 +240,8 @@ def create_component_proto(module_name, cfg_dir=None, debug=False, save_to_cfg=F
             convert_aaz_help_to_proto(root_module.help)
         )
 
-    resource_latest_versions_map_file_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "latest_versions_by_resource_id.json",
-    )
-    try:
-        with open(
-            resource_latest_versions_map_file_path, "r", encoding="utf-8"
-        ) as file:
-            resource_latest_versions_map = json.load(file)
-        print(
-            f"Loaded latest versions map from: {resource_latest_versions_map_file_path}"
-        )
-    except FileNotFoundError:
-        logging.warning(
-            f"Warning: latest_versions_by_resource_id.json not found at {resource_latest_versions_map_file_path}"
-        )
-        resource_latest_versions_map = {}
-    except json.JSONDecodeError:
-        logging.warning(
-            f"Warning: latest_versions_by_resource_id.json contains invalid JSON"
-        )
-        resource_latest_versions_map = {}
-
-    print(
-        f"\nFiltering commands to include only those using the latest resource API versions..."
-    )
     proto_group = convert_aaz_command_group_to_proto(
-        root_module, resource_latest_versions_map, cfg_dir, debug, save_to_cfg
+        root_module, cfg_dir, debug, save_to_cfg
     )
     proto_component.interface.command_group.CopyFrom(proto_group)
 
@@ -290,7 +266,7 @@ def convert_aaz_arg_help_to_proto(aaz_help):
     return proto_help
 
 
-def convert_aaz_command_group_to_proto(aaz_group, resouce_latest_versions_map, cfg_dir=None, debug=False, save_to_cfg=False):
+def convert_aaz_command_group_to_proto(aaz_group, cfg_dir=None, debug=False, save_to_cfg=False):
     proto_group = command_pb2.CrsCommandGroup()
     proto_group.name = aaz_group.names[-1]
     proto_group.uri = (
@@ -305,14 +281,14 @@ def convert_aaz_command_group_to_proto(aaz_group, resouce_latest_versions_map, c
     if hasattr(aaz_group, "command_groups") and aaz_group.command_groups:
         for group_name, subgroup in aaz_group.command_groups.items():
             proto_subgroup = convert_aaz_command_group_to_proto(
-                subgroup, resouce_latest_versions_map, cfg_dir, debug, save_to_cfg
+                subgroup, cfg_dir, debug, save_to_cfg
             )
             proto_group.groups.append(proto_subgroup)
 
     if hasattr(aaz_group, "commands") and aaz_group.commands:
         for cmd_name, command in aaz_group.commands.items():
             proto_command = convert_aaz_command_to_proto(
-                command, resouce_latest_versions_map, cfg_dir, debug, save_to_cfg
+                command, cfg_dir, debug, save_to_cfg
             )
             if proto_command:
                 proto_group.commands.append(proto_command)
@@ -330,7 +306,7 @@ def convert_aaz_resource_to_proto(aaz_resource):
     return proto_resource
 
 
-def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map, cfg_dir=None, debug=False, save_to_cfg=False):
+def convert_aaz_command_to_proto(aaz_command, cfg_dir=None, debug=False, save_to_cfg=False):
     global command_num
     proto_command = command_pb2.CrsCommand()
     proto_command.name = aaz_command.names[-1]
@@ -342,7 +318,9 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map, cfg_
     if aaz_command.help:
         proto_command.help.CopyFrom(convert_aaz_help_to_proto(aaz_command.help))
 
-    print(f"Processing command: {proto_command.name} with URI: {proto_command.uri}")
+    command_full_name = "/".join(aaz_command.names)
+
+    print(f"Processing command: {command_full_name} with URI: {proto_command.uri}")
 
     command_latest_version = (
         aaz_command.versions[-1]
@@ -351,7 +329,7 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map, cfg_
     )
     if not command_latest_version:
         raise ValueError(
-            f"Command {proto_command.name} does not have any versions defined."
+            f"Command {command_full_name} does not have any versions defined."
         )
 
     if (
@@ -360,42 +338,24 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map, cfg_
         or not hasattr(command_latest_version.resources[0], "id")
     ):
         raise ValueError(
-            f"Command {command_latest_version.name} does not have valid resources or resource IDs."
+            f"Command {command_full_name} with version {command_latest_version.name} does not have valid resources or resource IDs."
         )
 
     resource_id = command_latest_version.resources[0].id
 
-    resource_in_map = resource_latest_versions_map.get(resource_id, None)
-    if not resource_in_map:
-        logging.warning(
-            f"Resource ID {resource_id} not found in the latest versions map. Command {command_latest_version.name} may not be using the latest resource version."
-        )
-        command_name = "/".join(aaz_command.names) if aaz_command.names else "unknown"
+    resource_id_latest_version = get_latest_version_of_resource_id(resource_id)
+
+    if resource_id_latest_version is None or resource_id_latest_version != command_latest_version.name:
         outdated_version_tracker.record_outdated_command(
-            command_name=command_name,
-            command_version=command_latest_version.name,
-            latest_version="unknown_latest_version",
-            resource_id=resource_id,
+            command_full_name,
+            command_latest_version.name,
+            resource_id_latest_version,
+            resource_id,
+        )
+        logging.warning(
+            f"Command {command_full_name} is not using the latest resource version: {resource_id_latest_version}. Skipping command."
         )
         return None
-    latest_version_for_resource = resource_in_map.get("latest_version", None)
-
-    if (
-        not latest_version_for_resource
-        or command_latest_version.name != latest_version_for_resource
-    ):
-        logging.warning(
-            f"Command {command_latest_version.name} is not using the latest resource version: {latest_version_for_resource}"
-        )
-        command_name = (
-            "/".join(aaz_command.names) if aaz_command.names else "unknown_command"
-        )
-        outdated_version_tracker.record_outdated_command(
-            command_name=command_name,
-            command_version=command_latest_version.name,
-            latest_version=latest_version_for_resource,
-            resource_id=resource_id,
-        )
 
     proto_command.version = command_latest_version.name
 
@@ -406,13 +366,13 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map, cfg_
     )
     if not cfg_reader:
         logging.warning(
-            f"No configuration reader found for command {command_latest_version.name}"
+            f"No configuration reader found for command {command_full_name} with version {command_latest_version.name}"
         )
         return None
     cmd_cfg = cfg_reader.find_command(*aaz_command.names)
     if not cmd_cfg:
         raise ValueError(
-            f"No command configuration found for {'/'.join(aaz_command.names)}"
+            f"No command configuration found for {command_full_name}"
         )
 
     cmd_cfg_json = cmd_cfg.to_primitive()
@@ -443,9 +403,6 @@ def convert_aaz_command_to_proto(aaz_command, resource_latest_versions_map, cfg_
         else:
             if debug:
                 logging.warning(f"Command configuration file not found: {cfg_file}, using live configuration")
-
-    if debug:
-        print(f"Processing command: {proto_command.name} with URI: {proto_command.uri}")
 
     command_num = command_num + 1
 
@@ -1348,3 +1305,54 @@ def get_longest_option_camel_case(options):
         return ""
     longest_option = max(options, key=lambda x: len(x.lstrip('-')))
     return convert_to_camel_case(longest_option)
+
+def get_latest_version_of_resource_id(resource_id):
+    """
+    Return the latest version of the given resource ID. Search in the aaz/Resources/mgmt-plane directory
+    """
+    aaz_dir = Config.AAZ_PATH 
+    resources_dir = os.path.join(aaz_dir, "Resources", "mgmt-plane")
+    
+    if not os.path.exists(resources_dir):
+        return None
+    
+    try:
+        encoded_resource_id = base64.b64encode(resource_id.encode('utf-8')).decode('utf-8')
+    except Exception:
+        return None
+    
+    resource_path = os.path.join(resources_dir, encoded_resource_id)
+    if not os.path.exists(resource_path):
+        return None
+    
+    versions = []
+    try:
+        for filename in os.listdir(resource_path):
+            if filename.endswith('.json'):
+                version = filename.replace('.json', '')
+                versions.append(version)
+    except Exception:
+        return None
+    
+    if not versions:
+        return None
+    
+    versions.sort(key=version_key, reverse=True)
+    latest_version = versions[0] if versions else None
+    
+    return latest_version
+
+def version_key(version_str):
+    """
+    Helper function to compare versions where:
+    - Format is "YYYY-MM-DD" or "YYYY-MM-DD-preview"
+    - Non-preview version is newer than preview version with same date
+    """
+    if not re.match(r'\d{4}-\d{2}-\d{2}(-preview)?', version_str):
+        return ('0000-00-00', 2)
+        
+    is_preview = version_str.endswith('-preview')
+    
+    date_part = version_str.split('-preview')[0]
+    
+    return (date_part, 1 if is_preview else 0)
