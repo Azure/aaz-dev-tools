@@ -347,7 +347,7 @@ def convert_aaz_command_to_proto(aaz_command, cfg_dir=None, debug=False, save_to
 
     if resource_id_latest_version is None or resource_id_latest_version != command_latest_version.name:
         outdated_version_tracker.record_outdated_command(
-            proto_command.name,
+            command_full_name,
             command_latest_version.name,
             resource_id_latest_version,
             resource_id,
