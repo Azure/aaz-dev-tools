@@ -197,11 +197,11 @@ def export_all_modules(output_path, cfg_dir, debug, save_to_cfg):
 def save_component_proto(proto_component, output_path, module_name, if_debug=False):
     os.makedirs(output_path, exist_ok=True)
     serialized_data = proto_component.SerializeToString()
-
     compressed_data = zlib.compress(serialized_data)
+    component_version = proto_component.metadata.version
     os.makedirs(os.path.join(output_path, "binary_zipped"), exist_ok=True)
     binary_zipped_file = os.path.join(
-        output_path, "binary_zipped", f"{module_name}.plugin"
+        output_path, "binary_zipped", f"{module_name}-{component_version}.plugin"
     )
     with open(binary_zipped_file, "wb") as f:
         f.write(compressed_data)
@@ -209,12 +209,12 @@ def save_component_proto(proto_component, output_path, module_name, if_debug=Fal
 
     if if_debug:
         os.makedirs(os.path.join(output_path, "binary"), exist_ok=True)
-        binary_file = os.path.join(output_path, "binary", f"{module_name}.pb")
+        binary_file = os.path.join(output_path, "binary", f"{module_name}-{component_version}.pb")
         with open(binary_file, "wb") as f:
             f.write(serialized_data)
         print(f"Component protobuf (Binary) saved to: {binary_file}")
         os.makedirs(os.path.join(output_path, "json"), exist_ok=True)
-        json_file = os.path.join(output_path, "json", f"{module_name}.json")
+        json_file = os.path.join(output_path, "json", f"{module_name}-{component_version}.json")
         with open(json_file, "w", encoding="utf-8") as f:
             json_data = MessageToJson(
                 proto_component,
