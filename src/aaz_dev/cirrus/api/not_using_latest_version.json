@@ -1,0 +1,1118 @@
+{
+  "apic/api/definition/check-exists": {
+    "command_name": "apic/api/definition/check-exists",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}/workspaces/{}/apis/{}/versions/{}/definitions/{}"
+  },
+  "apic/api/deployment/check-exists": {
+    "command_name": "apic/api/deployment/check-exists",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}/workspaces/{}/apis/{}/deployments/{}"
+  },
+  "apic/api/version/check-exists": {
+    "command_name": "apic/api/version/check-exists",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}/workspaces/{}/apis/{}/versions/{}"
+  },
+  "apic/api/check-exists": {
+    "command_name": "apic/api/check-exists",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}/workspaces/{}/apis/{}"
+  },
+  "apic/environment/check-exists": {
+    "command_name": "apic/environment/check-exists",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}/workspaces/{}/environments/{}"
+  },
+  "apic/metadata/check-exists": {
+    "command_name": "apic/metadata/check-exists",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}/metadataschemas/{}"
+  },
+  "apic/metadata/create": {
+    "command_name": "apic/metadata/create",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}/metadataschemas/{}"
+  },
+  "apic/metadata/delete": {
+    "command_name": "apic/metadata/delete",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}/metadataschemas/{}"
+  },
+  "apic/metadata/export": {
+    "command_name": "apic/metadata/export",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}/exportmetadataschema"
+  },
+  "apic/metadata/list": {
+    "command_name": "apic/metadata/list",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}/metadataschemas"
+  },
+  "apic/metadata/show": {
+    "command_name": "apic/metadata/show",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}/metadataschemas/{}"
+  },
+  "apic/metadata/update": {
+    "command_name": "apic/metadata/update",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}/metadataschemas/{}"
+  },
+  "apic/create": {
+    "command_name": "apic/create",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}"
+  },
+  "apic/delete": {
+    "command_name": "apic/delete",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}"
+  },
+  "apic/import-from-apim": {
+    "command_name": "apic/import-from-apim",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}/importfromapim"
+  },
+  "apic/list": {
+    "command_name": "apic/list",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/providers/microsoft.apicenter/services"
+  },
+  "apic/show": {
+    "command_name": "apic/show",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}"
+  },
+  "apic/update": {
+    "command_name": "apic/update",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-03-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.apicenter/services/{}"
+  },
+  "arc/gateway/create": {
+    "command_name": "arc/gateway/create",
+    "command_version": "2024-05-20-preview",
+    "latest_version": "2024-07-31-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.hybridcompute/gateways/{}"
+  },
+  "arc/gateway/delete": {
+    "command_name": "arc/gateway/delete",
+    "command_version": "2024-05-20-preview",
+    "latest_version": "2024-07-31-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.hybridcompute/gateways/{}"
+  },
+  "arc/gateway/list": {
+    "command_name": "arc/gateway/list",
+    "command_version": "2024-05-20-preview",
+    "latest_version": "2024-07-31-preview",
+    "resource_id": "/subscriptions/{}/providers/microsoft.hybridcompute/gateways"
+  },
+  "arc/gateway/show": {
+    "command_name": "arc/gateway/show",
+    "command_version": "2024-05-20-preview",
+    "latest_version": "2024-07-31-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.hybridcompute/gateways/{}"
+  },
+  "arc/gateway/update": {
+    "command_name": "arc/gateway/update",
+    "command_version": "2024-05-20-preview",
+    "latest_version": "2024-07-31-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.hybridcompute/gateways/{}"
+  },
+  "attestation/policy/reset": {
+    "command_name": "attestation/policy/reset",
+    "command_version": "2022-08-01",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/policies/{}:reset"
+  },
+  "attestation/policy/set": {
+    "command_name": "attestation/policy/set",
+    "command_version": "2022-08-01",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/policies/{}"
+  },
+  "attestation/policy/show": {
+    "command_name": "attestation/policy/show",
+    "command_version": "2022-08-01",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/policies/{}"
+  },
+  "attestation/policy/update": {
+    "command_name": "attestation/policy/update",
+    "command_version": "2022-08-01",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/policies/{}"
+  },
+  "attestation/signer/add": {
+    "command_name": "attestation/signer/add",
+    "command_version": "2022-08-01",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/certificates:add"
+  },
+  "attestation/signer/list": {
+    "command_name": "attestation/signer/list",
+    "command_version": "2022-08-01",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/certificates"
+  },
+  "attestation/signer/remove": {
+    "command_name": "attestation/signer/remove",
+    "command_version": "2022-08-01",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/certificates:remove"
+  },
+  "connectedmachine/setting/create": {
+    "command_name": "connectedmachine/setting/create",
+    "command_version": "2024-05-20-preview",
+    "latest_version": "2024-07-31-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/{}/{}/{}/providers/microsoft.hybridcompute/settings/{}"
+  },
+  "connectedmachine/setting/show": {
+    "command_name": "connectedmachine/setting/show",
+    "command_version": "2024-05-20-preview",
+    "latest_version": "2024-07-31-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/{}/{}/{}/providers/microsoft.hybridcompute/settings/{}"
+  },
+  "connectedmachine/setting/update": {
+    "command_name": "connectedmachine/setting/update",
+    "command_version": "2024-05-20-preview",
+    "latest_version": "2024-07-31-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/{}/{}/{}/providers/microsoft.hybridcompute/settings/{}"
+  },
+  "devcenter/admin/image-verion/list": {
+    "command_name": "devcenter/admin/image-verion/list",
+    "command_version": "2022-11-11-preview",
+    "latest_version": "2024-10-01-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.devcenter/devcenters/{}/galleries/{}/images/{}/versions"
+  },
+  "devcenter/admin/image-verion/show": {
+    "command_name": "devcenter/admin/image-verion/show",
+    "command_version": "2022-11-11-preview",
+    "latest_version": "2024-10-01-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.devcenter/devcenters/{}/galleries/{}/images/{}/versions/{}"
+  },
+  "devcenter/admin/network-connection/list-health-detail": {
+    "command_name": "devcenter/admin/network-connection/list-health-detail",
+    "command_version": "2022-11-11-preview",
+    "latest_version": "2024-10-01-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.devcenter/networkconnections/{}/healthchecks"
+  },
+  "devcenter/admin/network-connection/show-health-detail": {
+    "command_name": "devcenter/admin/network-connection/show-health-detail",
+    "command_version": "2022-11-11-preview",
+    "latest_version": "2024-10-01-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.devcenter/networkconnections/{}/healthchecks/latest"
+  },
+  "devcenter/dev/catalog/list": {
+    "command_name": "devcenter/dev/catalog/list",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/catalogs"
+  },
+  "devcenter/dev/catalog/show": {
+    "command_name": "devcenter/dev/catalog/show",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/catalogs/{}"
+  },
+  "devcenter/dev/customization-group/create": {
+    "command_name": "devcenter/dev/customization-group/create",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/customizationgroups/{}"
+  },
+  "devcenter/dev/customization-group/list": {
+    "command_name": "devcenter/dev/customization-group/list",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/customizationgroups"
+  },
+  "devcenter/dev/customization-group/show": {
+    "command_name": "devcenter/dev/customization-group/show",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/customizationgroups/{}"
+  },
+  "devcenter/dev/customization-task/list": {
+    "command_name": "devcenter/dev/customization-task/list",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/customizationtasks"
+  },
+  "devcenter/dev/customization-task/show": {
+    "command_name": "devcenter/dev/customization-task/show",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/catalogs/{}/customizationtasks/{}"
+  },
+  "devcenter/dev/customization-task/show-logs": {
+    "command_name": "devcenter/dev/customization-task/show-logs",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/customizationgroups/{}/logs/{}"
+  },
+  "devcenter/dev/customization-task/validate": {
+    "command_name": "devcenter/dev/customization-task/validate",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/customizationtasks:validategroup"
+  },
+  "devcenter/dev/dev-box/capture-snapshot": {
+    "command_name": "devcenter/dev/dev-box/capture-snapshot",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}:capturesnapshot"
+  },
+  "devcenter/dev/dev-box/create": {
+    "command_name": "devcenter/dev/dev-box/create",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}"
+  },
+  "devcenter/dev/dev-box/delay-action": {
+    "command_name": "devcenter/dev/dev-box/delay-action",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/actions/{}:delay"
+  },
+  "devcenter/dev/dev-box/delay-all-actions": {
+    "command_name": "devcenter/dev/dev-box/delay-all-actions",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/actions:delay"
+  },
+  "devcenter/dev/dev-box/delete": {
+    "command_name": "devcenter/dev/dev-box/delete",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}"
+  },
+  "devcenter/dev/dev-box/list": {
+    "command_name": "devcenter/dev/dev-box/list",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes"
+  },
+  "devcenter/dev/dev-box/list-action": {
+    "command_name": "devcenter/dev/dev-box/list-action",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/actions"
+  },
+  "devcenter/dev/dev-box/list-all": {
+    "command_name": "devcenter/dev/dev-box/list-all",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/devboxes"
+  },
+  "devcenter/dev/dev-box/list-operation": {
+    "command_name": "devcenter/dev/dev-box/list-operation",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/operations"
+  },
+  "devcenter/dev/dev-box/list-snapshot": {
+    "command_name": "devcenter/dev/dev-box/list-snapshot",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/snapshots"
+  },
+  "devcenter/dev/dev-box/repair": {
+    "command_name": "devcenter/dev/dev-box/repair",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}:repair"
+  },
+  "devcenter/dev/dev-box/restart": {
+    "command_name": "devcenter/dev/dev-box/restart",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}:restart"
+  },
+  "devcenter/dev/dev-box/restore-snapshot": {
+    "command_name": "devcenter/dev/dev-box/restore-snapshot",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}:restoresnapshot"
+  },
+  "devcenter/dev/dev-box/show": {
+    "command_name": "devcenter/dev/dev-box/show",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}"
+  },
+  "devcenter/dev/dev-box/show-action": {
+    "command_name": "devcenter/dev/dev-box/show-action",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/actions/{}"
+  },
+  "devcenter/dev/dev-box/show-operation": {
+    "command_name": "devcenter/dev/dev-box/show-operation",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/operations/{}"
+  },
+  "devcenter/dev/dev-box/show-remote-connection": {
+    "command_name": "devcenter/dev/dev-box/show-remote-connection",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/remoteconnection"
+  },
+  "devcenter/dev/dev-box/show-snapshot": {
+    "command_name": "devcenter/dev/dev-box/show-snapshot",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/snapshots/{}"
+  },
+  "devcenter/dev/dev-box/skip-action": {
+    "command_name": "devcenter/dev/dev-box/skip-action",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}/actions/{}:skip"
+  },
+  "devcenter/dev/dev-box/start": {
+    "command_name": "devcenter/dev/dev-box/start",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}:start"
+  },
+  "devcenter/dev/dev-box/stop": {
+    "command_name": "devcenter/dev/dev-box/stop",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/devboxes/{}:stop"
+  },
+  "devcenter/dev/environment/create": {
+    "command_name": "devcenter/dev/environment/create",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/environments/{}"
+  },
+  "devcenter/dev/environment/delay-action": {
+    "command_name": "devcenter/dev/environment/delay-action",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/environments/{}/actions/{}:delay"
+  },
+  "devcenter/dev/environment/delete": {
+    "command_name": "devcenter/dev/environment/delete",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/environments/{}"
+  },
+  "devcenter/dev/environment/list": {
+    "command_name": "devcenter/dev/environment/list",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/environments"
+  },
+  "devcenter/dev/environment/list-action": {
+    "command_name": "devcenter/dev/environment/list-action",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/environments/{}/actions"
+  },
+  "devcenter/dev/environment/list-operation": {
+    "command_name": "devcenter/dev/environment/list-operation",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/environments/{}/operations"
+  },
+  "devcenter/dev/environment/show": {
+    "command_name": "devcenter/dev/environment/show",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/environments/{}"
+  },
+  "devcenter/dev/environment/show-action": {
+    "command_name": "devcenter/dev/environment/show-action",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/environments/{}/actions/{}"
+  },
+  "devcenter/dev/environment/show-logs-by-operation": {
+    "command_name": "devcenter/dev/environment/show-logs-by-operation",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/environments/{}/operations/{}/logs"
+  },
+  "devcenter/dev/environment/show-operation": {
+    "command_name": "devcenter/dev/environment/show-operation",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/environments/{}/operations/{}"
+  },
+  "devcenter/dev/environment/show-outputs": {
+    "command_name": "devcenter/dev/environment/show-outputs",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/environments/{}/outputs"
+  },
+  "devcenter/dev/environment/skip-action": {
+    "command_name": "devcenter/dev/environment/skip-action",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/environments/{}/actions/{}:skip"
+  },
+  "devcenter/dev/environment/update-expiration-date": {
+    "command_name": "devcenter/dev/environment/update-expiration-date",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/environments/{}"
+  },
+  "devcenter/dev/environment-definition/list": {
+    "command_name": "devcenter/dev/environment-definition/list",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/catalogs/{}/environmentdefinitions"
+  },
+  "devcenter/dev/environment-definition/show": {
+    "command_name": "devcenter/dev/environment-definition/show",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/catalogs/{}/environmentdefinitions/{}"
+  },
+  "devcenter/dev/environment-type/list": {
+    "command_name": "devcenter/dev/environment-type/list",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/environmenttypes"
+  },
+  "devcenter/dev/environment-type/list-abilities": {
+    "command_name": "devcenter/dev/environment-type/list-abilities",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/environmenttypes/{}/users/{}/abilities"
+  },
+  "devcenter/dev/environment-type/show": {
+    "command_name": "devcenter/dev/environment-type/show",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/environmenttypes/{}"
+  },
+  "devcenter/dev/image-build/show-log": {
+    "command_name": "devcenter/dev/image-build/show-log",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/imagebuildlogs/{}"
+  },
+  "devcenter/dev/pool/list": {
+    "command_name": "devcenter/dev/pool/list",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/pools"
+  },
+  "devcenter/dev/pool/show": {
+    "command_name": "devcenter/dev/pool/show",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/pools/{}"
+  },
+  "devcenter/dev/project/list": {
+    "command_name": "devcenter/dev/project/list",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects"
+  },
+  "devcenter/dev/project/list-abilities": {
+    "command_name": "devcenter/dev/project/list-abilities",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/users/{}/abilities"
+  },
+  "devcenter/dev/project/show": {
+    "command_name": "devcenter/dev/project/show",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}"
+  },
+  "devcenter/dev/project/show-operation": {
+    "command_name": "devcenter/dev/project/show-operation",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/operationstatuses/{}"
+  },
+  "devcenter/dev/schedule/list": {
+    "command_name": "devcenter/dev/schedule/list",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/pools/{}/schedules"
+  },
+  "devcenter/dev/schedule/show": {
+    "command_name": "devcenter/dev/schedule/show",
+    "command_version": "2024-10-01-preview",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/projects/{}/pools/{}/schedules/{}"
+  },
+  "monitor/app-insights/events/show": {
+    "command_name": "monitor/app-insights/events/show",
+    "command_version": "v1",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/apps/{}/events/{}"
+  },
+  "monitor/app-insights/metric/get-metadata": {
+    "command_name": "monitor/app-insights/metric/get-metadata",
+    "command_version": "v1",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/apps/{}/metrics/metadata"
+  },
+  "monitor/app-insights/metric/show": {
+    "command_name": "monitor/app-insights/metric/show",
+    "command_version": "v1",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/apps/{}/metrics/{}"
+  },
+  "monitor/app-insights/query-execute": {
+    "command_name": "monitor/app-insights/query-execute",
+    "command_version": "v1",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/apps/{}/query"
+  },
+  "monitor/app-insights/query-show": {
+    "command_name": "monitor/app-insights/query-show",
+    "command_version": "v1",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/apps/{}/query"
+  },
+  "monitor/log-analytics/query": {
+    "command_name": "monitor/log-analytics/query",
+    "command_version": "v1",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/workspaces/{}/query"
+  },
+  "monitor/log-analytics/show": {
+    "command_name": "monitor/log-analytics/show",
+    "command_version": "v1",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/workspaces/{}/query"
+  },
+  "neon/postgres/create": {
+    "command_name": "neon/postgres/create",
+    "command_version": "2024-08-01-preview",
+    "latest_version": "2025-03-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/neon.postgres/organizations/{}"
+  },
+  "netappfiles/volume/populate-availability-zone": {
+    "command_name": "netappfiles/volume/populate-availability-zone",
+    "command_version": "2024-03-01",
+    "latest_version": "2024-07-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.netapp/netappaccounts/{}/capacitypools/{}/volumes/{}/populateavailabilityzone"
+  },
+  "network/cross-connection/peering/create": {
+    "command_name": "network/cross-connection/peering/create",
+    "command_version": "2018-04-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/expressroutecrossconnections/{}/peerings/{}"
+  },
+  "network/cross-connection/peering/delete": {
+    "command_name": "network/cross-connection/peering/delete",
+    "command_version": "2018-04-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/expressroutecrossconnections/{}/peerings/{}"
+  },
+  "network/cross-connection/peering/list": {
+    "command_name": "network/cross-connection/peering/list",
+    "command_version": "2018-04-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/expressroutecrossconnections/{}/peerings"
+  },
+  "network/cross-connection/peering/show": {
+    "command_name": "network/cross-connection/peering/show",
+    "command_version": "2018-04-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/expressroutecrossconnections/{}/peerings/{}"
+  },
+  "network/cross-connection/peering/update": {
+    "command_name": "network/cross-connection/peering/update",
+    "command_version": "2018-04-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/expressroutecrossconnections/{}/peerings/{}"
+  },
+  "network/cross-connection/list-arp-tables": {
+    "command_name": "network/cross-connection/list-arp-tables",
+    "command_version": "2018-04-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/expressroutecrossconnections/{}/peerings/{}/arptables/{}"
+  },
+  "network/cross-connection/list-route-tables": {
+    "command_name": "network/cross-connection/list-route-tables",
+    "command_version": "2018-04-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/expressroutecrossconnections/{}/peerings/{}/routetables/{}"
+  },
+  "network/cross-connection/summarize-route-table": {
+    "command_name": "network/cross-connection/summarize-route-table",
+    "command_version": "2018-04-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/expressroutecrossconnections/{}/peerings/{}/routetablessummary/{}"
+  },
+  "network/firewall/policy/rule-collection-group/collection/create": {
+    "command_name": "network/firewall/policy/rule-collection-group/collection/create",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/firewallpolicies/{}/rulecollectiongroups/{}"
+  },
+  "network/firewall/policy/rule-collection-group/collection/delete": {
+    "command_name": "network/firewall/policy/rule-collection-group/collection/delete",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/firewallpolicies/{}/rulecollectiongroups/{}"
+  },
+  "network/firewall/policy/rule-collection-group/collection/list": {
+    "command_name": "network/firewall/policy/rule-collection-group/collection/list",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/firewallpolicies/{}/rulecollectiongroups/{}"
+  },
+  "network/firewall/policy/rule-collection-group/collection/show": {
+    "command_name": "network/firewall/policy/rule-collection-group/collection/show",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/firewallpolicies/{}/rulecollectiongroups/{}"
+  },
+  "network/firewall/policy/rule-collection-group/collection/update": {
+    "command_name": "network/firewall/policy/rule-collection-group/collection/update",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/firewallpolicies/{}/rulecollectiongroups/{}"
+  },
+  "network/firewall/policy/rule-collection-group/update": {
+    "command_name": "network/firewall/policy/rule-collection-group/update",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/firewallpolicies/{}/rulecollectiongroups/{}"
+  },
+  "network/perimeter/onboarded-resources/list": {
+    "command_name": "network/perimeter/onboarded-resources/list",
+    "command_version": "2023-08-01-preview",
+    "latest_version": "2024-07-01",
+    "resource_id": "/subscriptions/{}/providers/microsoft.network/locations/{}/perimeterassociableresourcetypes"
+  },
+  "network/public-ip/ddos-protection-statu/show": {
+    "command_name": "network/public-ip/ddos-protection-statu/show",
+    "command_version": "2023-06-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/publicipaddresses/{}/ddosprotectionstatus"
+  },
+  "network/routeserver/create": {
+    "command_name": "network/routeserver/create",
+    "command_version": "2022-01-01",
+    "latest_version": "2022-05-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualhubs/{}"
+  },
+  "network/routeserver/delete": {
+    "command_name": "network/routeserver/delete",
+    "command_version": "2022-01-01",
+    "latest_version": "2022-05-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualhubs/{}"
+  },
+  "network/routeserver/list": {
+    "command_name": "network/routeserver/list",
+    "command_version": "2022-01-01",
+    "latest_version": "2022-05-01",
+    "resource_id": "/subscriptions/{}/providers/microsoft.network/virtualhubs"
+  },
+  "network/routeserver/show": {
+    "command_name": "network/routeserver/show",
+    "command_version": "2022-01-01",
+    "latest_version": "2022-05-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualhubs/{}"
+  },
+  "network/routeserver/update": {
+    "command_name": "network/routeserver/update",
+    "command_version": "2022-01-01",
+    "latest_version": "2022-05-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualhubs/{}"
+  },
+  "network/service-endpoint/list": {
+    "command_name": "network/service-endpoint/list",
+    "command_version": "2021-08-01",
+    "latest_version": "2022-01-01",
+    "resource_id": "/subscriptions/{}/providers/microsoft.network/locations/{}/virtualnetworkavailableendpointservices"
+  },
+  "network/vnet/subnet/create": {
+    "command_name": "network/vnet/subnet/create",
+    "command_version": "2024-01-01",
+    "latest_version": "2024-07-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}/subnets/{}"
+  },
+  "network/vnet/subnet/delete": {
+    "command_name": "network/vnet/subnet/delete",
+    "command_version": "2024-01-01",
+    "latest_version": "2024-07-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}/subnets/{}"
+  },
+  "network/vnet/subnet/list": {
+    "command_name": "network/vnet/subnet/list",
+    "command_version": "2024-01-01",
+    "latest_version": "2024-07-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}/subnets"
+  },
+  "network/vnet/subnet/show": {
+    "command_name": "network/vnet/subnet/show",
+    "command_version": "2024-01-01",
+    "latest_version": "2024-07-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}/subnets/{}"
+  },
+  "network/vnet/subnet/update": {
+    "command_name": "network/vnet/subnet/update",
+    "command_version": "2024-01-01",
+    "latest_version": "2024-07-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/virtualnetworks/{}/subnets/{}"
+  },
+  "network/watcher/connection-monitor/endpoint/add": {
+    "command_name": "network/watcher/connection-monitor/endpoint/add",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/endpoint/list": {
+    "command_name": "network/watcher/connection-monitor/endpoint/list",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/endpoint/remove": {
+    "command_name": "network/watcher/connection-monitor/endpoint/remove",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/endpoint/show": {
+    "command_name": "network/watcher/connection-monitor/endpoint/show",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/endpoint/update": {
+    "command_name": "network/watcher/connection-monitor/endpoint/update",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/output/add": {
+    "command_name": "network/watcher/connection-monitor/output/add",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/output/delete": {
+    "command_name": "network/watcher/connection-monitor/output/delete",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/output/list": {
+    "command_name": "network/watcher/connection-monitor/output/list",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/output/show": {
+    "command_name": "network/watcher/connection-monitor/output/show",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/output/update": {
+    "command_name": "network/watcher/connection-monitor/output/update",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/test-configuration/add": {
+    "command_name": "network/watcher/connection-monitor/test-configuration/add",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/test-configuration/list": {
+    "command_name": "network/watcher/connection-monitor/test-configuration/list",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/test-configuration/remove": {
+    "command_name": "network/watcher/connection-monitor/test-configuration/remove",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/test-configuration/show": {
+    "command_name": "network/watcher/connection-monitor/test-configuration/show",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/test-configuration/update": {
+    "command_name": "network/watcher/connection-monitor/test-configuration/update",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/test-group/add": {
+    "command_name": "network/watcher/connection-monitor/test-group/add",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/test-group/list": {
+    "command_name": "network/watcher/connection-monitor/test-group/list",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/test-group/remove": {
+    "command_name": "network/watcher/connection-monitor/test-group/remove",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/test-group/show": {
+    "command_name": "network/watcher/connection-monitor/test-group/show",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/test-group/update": {
+    "command_name": "network/watcher/connection-monitor/test-group/update",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/create": {
+    "command_name": "network/watcher/connection-monitor/create",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/delete": {
+    "command_name": "network/watcher/connection-monitor/delete",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/list": {
+    "command_name": "network/watcher/connection-monitor/list",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors"
+  },
+  "network/watcher/connection-monitor/show": {
+    "command_name": "network/watcher/connection-monitor/show",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/connection-monitor/update": {
+    "command_name": "network/watcher/connection-monitor/update",
+    "command_version": "2022-01-01",
+    "latest_version": "2023-09-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/connectionmonitors/{}"
+  },
+  "network/watcher/packet-capture/create": {
+    "command_name": "network/watcher/packet-capture/create",
+    "command_version": "2022-01-01",
+    "latest_version": "2024-05-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/packetcaptures/{}"
+  },
+  "network/watcher/packet-capture/delete": {
+    "command_name": "network/watcher/packet-capture/delete",
+    "command_version": "2022-01-01",
+    "latest_version": "2024-05-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/packetcaptures/{}"
+  },
+  "network/watcher/packet-capture/list": {
+    "command_name": "network/watcher/packet-capture/list",
+    "command_version": "2022-01-01",
+    "latest_version": "2024-05-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/packetcaptures"
+  },
+  "network/watcher/packet-capture/show": {
+    "command_name": "network/watcher/packet-capture/show",
+    "command_version": "2022-01-01",
+    "latest_version": "2024-05-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/packetcaptures/{}"
+  },
+  "network/watcher/packet-capture/show-status": {
+    "command_name": "network/watcher/packet-capture/show-status",
+    "command_version": "2022-01-01",
+    "latest_version": "2024-05-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/packetcaptures/{}/querystatus"
+  },
+  "network/watcher/packet-capture/stop": {
+    "command_name": "network/watcher/packet-capture/stop",
+    "command_version": "2022-01-01",
+    "latest_version": "2024-05-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/packetcaptures/{}/stop"
+  },
+  "network/watcher/packet-capture/update": {
+    "command_name": "network/watcher/packet-capture/update",
+    "command_version": "2022-01-01",
+    "latest_version": "2024-05-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.network/networkwatchers/{}/packetcaptures/{}"
+  },
+  "networkfabric/l3domain/internal-network/update-bgp-administrative-state": {
+    "command_name": "networkfabric/l3domain/internal-network/update-bgp-administrative-state",
+    "command_version": "2024-02-15-preview",
+    "latest_version": "2024-06-15-preview",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.managednetworkfabric/l3isolationdomains/{}/internalnetworks/{}/updatebgpadministrativestate"
+  },
+  "resource-mover/move-resource/add": {
+    "command_name": "resource-mover/move-resource/add",
+    "command_version": "2023-08-01",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.migrate/movecollections/{}/moveresources/{}"
+  },
+  "resource-mover/move-resource/delete": {
+    "command_name": "resource-mover/move-resource/delete",
+    "command_version": "2023-08-01",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.migrate/movecollections/{}/moveresources/{}"
+  },
+  "resource-mover/move-resource/show": {
+    "command_name": "resource-mover/move-resource/show",
+    "command_version": "2023-08-01",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.migrate/movecollections/{}/moveresources/{}"
+  },
+  "resource-mover/move-resource/update": {
+    "command_name": "resource-mover/move-resource/update",
+    "command_version": "2023-08-01",
+    "latest_version": "unknown_latest_version",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.migrate/movecollections/{}/moveresources/{}"
+  },
+  "service-networking/traffic-controller/association/create": {
+    "command_name": "service-networking/traffic-controller/association/create",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}/associations/{}"
+  },
+  "service-networking/traffic-controller/association/delete": {
+    "command_name": "service-networking/traffic-controller/association/delete",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}/associations/{}"
+  },
+  "service-networking/traffic-controller/association/list": {
+    "command_name": "service-networking/traffic-controller/association/list",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}/associations"
+  },
+  "service-networking/traffic-controller/association/show": {
+    "command_name": "service-networking/traffic-controller/association/show",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}/associations/{}"
+  },
+  "service-networking/traffic-controller/association/update": {
+    "command_name": "service-networking/traffic-controller/association/update",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}/associations/{}"
+  },
+  "service-networking/traffic-controller/frontend/create": {
+    "command_name": "service-networking/traffic-controller/frontend/create",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}/frontends/{}"
+  },
+  "service-networking/traffic-controller/frontend/delete": {
+    "command_name": "service-networking/traffic-controller/frontend/delete",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}/frontends/{}"
+  },
+  "service-networking/traffic-controller/frontend/list": {
+    "command_name": "service-networking/traffic-controller/frontend/list",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}/frontends"
+  },
+  "service-networking/traffic-controller/frontend/show": {
+    "command_name": "service-networking/traffic-controller/frontend/show",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}/frontends/{}"
+  },
+  "service-networking/traffic-controller/frontend/update": {
+    "command_name": "service-networking/traffic-controller/frontend/update",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}/frontends/{}"
+  },
+  "service-networking/traffic-controller/create": {
+    "command_name": "service-networking/traffic-controller/create",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}"
+  },
+  "service-networking/traffic-controller/delete": {
+    "command_name": "service-networking/traffic-controller/delete",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}"
+  },
+  "service-networking/traffic-controller/list": {
+    "command_name": "service-networking/traffic-controller/list",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/providers/microsoft.servicenetworking/trafficcontrollers"
+  },
+  "service-networking/traffic-controller/show": {
+    "command_name": "service-networking/traffic-controller/show",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}"
+  },
+  "service-networking/traffic-controller/update": {
+    "command_name": "service-networking/traffic-controller/update",
+    "command_version": "2022-10-01-preview",
+    "latest_version": "2025-01-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.servicenetworking/trafficcontrollers/{}"
+  },
+  "vm/host/update": {
+    "command_name": "vm/host/update",
+    "command_version": "2022-11-01",
+    "latest_version": "2023-03-01",
+    "resource_id": "/subscriptions/{}/resourcegroups/{}/providers/microsoft.compute/hostgroups/{}/hosts/{}"
+  },
+  "vmss/extension/image/list-names": {
+    "command_name": "vmss/extension/image/list-names",
+    "command_version": "2022-08-01",
+    "latest_version": "2024-11-01",
+    "resource_id": "/subscriptions/{}/providers/microsoft.compute/locations/{}/publishers/{}/artifacttypes/vmextension/types"
+  },
+  "vmss/extension/image/list-versions": {
+    "command_name": "vmss/extension/image/list-versions",
+    "command_version": "2022-08-01",
+    "latest_version": "2024-11-01",
+    "resource_id": "/subscriptions/{}/providers/microsoft.compute/locations/{}/publishers/{}/artifacttypes/vmextension/types/{}/versions"
+  },
+  "vmss/extension/image/show": {
+    "command_name": "vmss/extension/image/show",
+    "command_version": "2022-08-01",
+    "latest_version": "2024-11-01",
+    "resource_id": "/subscriptions/{}/providers/microsoft.compute/locations/{}/publishers/{}/artifacttypes/vmextension/types/{}/versions/{}"
+  }
+}
