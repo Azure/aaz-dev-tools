@@ -404,9 +404,6 @@ def convert_aaz_command_to_proto(aaz_command, cfg_dir=None, debug=False, save_to
             if debug:
                 logging.warning(f"Command configuration file not found: {cfg_file}, using live configuration")
 
-    if debug:
-        print(f"Processing command: {proto_command.name} with URI: {proto_command.uri}")
-
     command_num = command_num + 1
 
     if cmd_cfg_json.get("confirmation"):
