@@ -2,6 +2,19 @@
 
 Release History
 ===============
+4.3.0
+++++++
+* Fix api version mismatch in cli tab (#490)
+* Support get + patch on identity subcommand (#454)
+* Adjust azure-mgmt-core version to fix dep conflict (#487)
+* Add rfc1123 datetime (#485)
+* Update tsp compiler to 1.0.0 (#484)
+* Ignore single file for data plane tsp folder check (#483)
+* Add support for encoding and its default value (#470)
+* Adjust discriminator to reduce duplicated props (#471)
+* Add typespec-aaz emitter test and set prettier config (#481)
+* Fix empty subresource in subcommand (#480)
+
 4.2.0
 ++++++
 * Fix issue caused by `or` operation in `isinstance` (#475)
