@@ -90,8 +90,8 @@ class AzModuleManager:
         module.profiles = profiles
         return module
 
-    _def_load_command_table = re.compile("^(\s+)def\s+load_command_table\(\s*self,\s+(\w+)\s*\):(.*)?$")
-    _def_import_load_aaz = re.compile("\s+(import\s+(\w+.)*load_aaz_command_table)\s*$")
+    _def_load_command_table = re.compile(r"^(\s+)def\s+load_command_table\(\s*self,\s+(\w+)\s*\):(.*)?$")
+    _def_import_load_aaz = re.compile(r"\s+(import\s+(\w+.)*load_aaz_command_table)\s*$")
 
     def _patch_module(self, mod_name):
         """Patch the __init__.py file of module"""
