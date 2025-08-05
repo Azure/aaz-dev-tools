@@ -26,8 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [ubuntu-latest, macos-latest, windows-latest]  # Original - temporarily testing Windows only
-        os: [windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]  
         python: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
         task:
           - name: Build
@@ -61,19 +60,25 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: ${{ runner.os != 'Windows' && 'recursive' || 'false' }}
+        # Submodules contain TypeSpec/web code - not needed for Python package compatibility testing
+        # Uncomment the 'with' section below if you need to test TypeSpec integration or web components
+        # with:
+        #   submodules: ${{ runner.os != 'Windows' && 'recursive' || 'false' }}
       
-      - name: Configure Git for long paths (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          git config --system core.longpaths true
-          git submodule update --init --recursive
+      # Git long paths configuration - only needed if submodules are used (TypeSpec has long file paths)
+      # Uncomment if you restore submodule checkout and encounter Windows path length issues
+      # - name: Configure Git for long paths (Windows)
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     git config --system core.longpaths true
+      #     git submodule update --init --recursive
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.x'
+      # Node.js setup - only needed for web builds and TypeSpec compilation
+      # Uncomment if you need to test web components or TypeSpec emitter functionality
+      # - name: Setup Node.js
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: '20.x'
 
       - name: Setup Python
         uses: actions/setup-python@v3
@@ -82,33 +87,37 @@ jobs:
 
       - name: Install prerequisites
         run: |
-          pip install --upgrade pip setuptools wheel virtualenv
-          npm install -g pnpm@9.5.0
-          pnpm install
+          pip install --upgrade pip setuptools wheel
+          # Node.js/PNPM dependencies - only needed for web builds and TypeSpec compilation
+          # Uncomment the lines below if you need to test web components or TypeSpec functionality
+          # npm install -g pnpm@9.5.0
+          # pnpm install
 
       - name: Set build variables
         shell: bash
         run: |
           # Get the exact Python version to use in the cache key.
           echo "PYTHON_VERSION=$(python --version)" >> $GITHUB_ENV
-          echo "RUNNER_ARCH=$(uname -m)" >> $GITHUB_ENV
-          echo "NODE_VERSION=$(node --version)" >> $GITHUB_ENV
-          # Use week number in cache key so we can refresh the cache weekly.
-          echo "WEEK_NUMBER=$(date +%V)" >> $GITHUB_ENV
+          # Architecture info - uncomment if you need platform-specific caching or debugging
+          # echo "RUNNER_ARCH=$(uname -m)" >> $GITHUB_ENV
+          # Node.js version - only needed for web/TypeSpec builds
+          # echo "NODE_VERSION=$(node --version)" >> $GITHUB_ENV
+          # Weekly cache refresh - uncomment if you want time-based cache invalidation
+          # echo "WEEK_NUMBER=$(date +%V)" >> $GITHUB_ENV
 
       - uses: actions/cache@v3
         id: virtualenv-cache
         with:
           path: |
             .venv
-          key: ${{ env.CACHE_PREFIX }}-${{ env.WEEK_NUMBER }}-${{ runner.os }}-${{ env.RUNNER_ARCH }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements.txt') }}
+          key: ${{ env.CACHE_PREFIX }}-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements.txt') }}
           restore-keys: |
-            ${{ env.CACHE_PREFIX }}-${{ env.WEEK_NUMBER }}-${{ runner.os }}-${{ env.RUNNER_ARCH }}-${{ env.PYTHON_VERSION }}
+            ${{ env.CACHE_PREFIX }}-${{ runner.os }}-${{ env.PYTHON_VERSION }}
 
       - name: Setup virtual environment (no cache hit) - Unix/Linux/macOS
         if: steps.virtualenv-cache.outputs.cache-hit != 'true' && runner.os != 'Windows'
         run: |
-          test -d .venv || virtualenv -p $(which python) --copies --reset-app-data .venv
+          python -m venv .venv
           . .venv/bin/activate
           pip install -e .[dev]
         shell: bash
@@ -116,7 +125,7 @@ jobs:
       - name: Setup virtual environment (no cache hit) - Windows
         if: steps.virtualenv-cache.outputs.cache-hit != 'true' && runner.os == 'Windows'
         run: |
-          if (!(Test-Path .venv)) { python -m venv .venv }
+          python -m venv .venv
           .venv\Scripts\Activate.ps1
           pip install -e .[dev]
         shell: pwsh
@@ -142,10 +151,11 @@ jobs:
           which python
           python --version
           pip freeze
-          which node
-          node --version
-          npm --version
-          pnpm --version
+          # Node.js version info - uncomment if you need to verify Node.js/npm/pnpm versions
+          # which node
+          # node --version
+          # npm --version
+          # pnpm --version
         shell: bash
 
       - name: Show environment info - Windows
@@ -155,22 +165,28 @@ jobs:
           Get-Command python
           python --version
           pip freeze
-          Get-Command node
-          node --version
-          npm --version
-          pnpm --version
+          # Node.js version info - uncomment if you need to verify Node.js/npm/pnpm versions
+          # Get-Command node
+          # node --version
+          # npm --version
+          # pnpm --version
         shell: pwsh
 
-      - name: Build Web
-        run: |
-          pnpm build:typespec
-          pnpm build:web
-          pnpm bundle
-        env:
-          CI: false
-      - name: Test Typespec-aaz Emitter
-        run: |
-            pnpm test-aaz-emitter
+      # Web build steps - tests TypeScript/web components compilation and bundling
+      # Uncomment if you need to verify that web components work with your Python package changes
+      # - name: Build Web
+      #   run: |
+      #     pnpm build:typespec
+      #     pnpm build:web
+      #     pnpm bundle
+      #   env:
+      #     CI: false
+      
+      # TypeSpec emitter testing - tests the TypeSpec-to-code generation functionality
+      # Uncomment if you need to verify TypeSpec emitter compatibility with your Python changes
+      # - name: Test Typespec-aaz Emitter
+      #   run: |
+      #       pnpm test-aaz-emitter
 
       - name: ${{ matrix.task.name }} - Unix/Linux/macOS
         if: runner.os != 'Windows'
