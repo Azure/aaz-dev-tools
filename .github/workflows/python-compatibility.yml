@@ -26,7 +26,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # os: [ubuntu-latest, macos-latest, windows-latest]  # Original - temporarily testing Windows only
+        os: [windows-latest]
         python: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
         task:
           - name: Build
@@ -61,7 +62,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: ${{ runner.os != 'Windows' && 'recursive' || 'false' }}
+      
+      - name: Configure Git for long paths (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          git config --system core.longpaths true
+          git submodule update --init --recursive
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
