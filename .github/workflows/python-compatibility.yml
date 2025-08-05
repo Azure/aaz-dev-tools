@@ -105,34 +105,40 @@ jobs:
           restore-keys: |
             ${{ env.CACHE_PREFIX }}-${{ env.WEEK_NUMBER }}-${{ runner.os }}-${{ env.RUNNER_ARCH }}-${{ env.PYTHON_VERSION }}
 
-      - name: Setup virtual environment (no cache hit)
-        if: steps.virtualenv-cache.outputs.cache-hit != 'true'
+      - name: Setup virtual environment (no cache hit) - Unix/Linux/macOS
+        if: steps.virtualenv-cache.outputs.cache-hit != 'true' && runner.os != 'Windows'
         run: |
           test -d .venv || virtualenv -p $(which python) --copies --reset-app-data .venv
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            .venv\Scripts\Activate.ps1
-          else
-            . .venv/bin/activate
-          fi
+          . .venv/bin/activate
           pip install -e .[dev]
+        shell: bash
 
-      - name: Install editable (cache hit)
-        if: steps.virtualenv-cache.outputs.cache-hit == 'true'
+      - name: Setup virtual environment (no cache hit) - Windows
+        if: steps.virtualenv-cache.outputs.cache-hit != 'true' && runner.os == 'Windows'
         run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            .venv\Scripts\Activate.ps1
-          else
-            . .venv/bin/activate
-          fi
+          if (!(Test-Path .venv)) { python -m venv .venv }
+          .venv\Scripts\Activate.ps1
+          pip install -e .[dev]
+        shell: pwsh
+
+      - name: Install editable (cache hit) - Unix/Linux/macOS
+        if: steps.virtualenv-cache.outputs.cache-hit == 'true' && runner.os != 'Windows'
+        run: |
+          . .venv/bin/activate
           pip install --no-deps -e .[dev]
+        shell: bash
 
-      - name: Show environment info
+      - name: Install editable (cache hit) - Windows
+        if: steps.virtualenv-cache.outputs.cache-hit == 'true' && runner.os == 'Windows'
         run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            .venv\Scripts\Activate.ps1
-          else
-            . .venv/bin/activate
-          fi
+          .venv\Scripts\Activate.ps1
+          pip install --no-deps -e .[dev]
+        shell: pwsh
+
+      - name: Show environment info - Unix/Linux/macOS
+        if: runner.os != 'Windows'
+        run: |
+          . .venv/bin/activate
           which python
           python --version
           pip freeze
@@ -140,6 +146,20 @@ jobs:
           node --version
           npm --version
           pnpm --version
+        shell: bash
+
+      - name: Show environment info - Windows
+        if: runner.os == 'Windows'
+        run: |
+          .venv\Scripts\Activate.ps1
+          Get-Command python
+          python --version
+          pip freeze
+          Get-Command node
+          node --version
+          npm --version
+          pnpm --version
+        shell: pwsh
 
       - name: Build Web
         run: |
@@ -152,21 +172,30 @@ jobs:
         run: |
             pnpm test-aaz-emitter
 
-      - name: ${{ matrix.task.name }}
+      - name: ${{ matrix.task.name }} - Unix/Linux/macOS
+        if: runner.os != 'Windows'
         run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            .venv\Scripts\Activate.ps1
-          else
-            . .venv/bin/activate
-          fi
+          . .venv/bin/activate
           ${{ matrix.task.run }}
+        shell: bash
 
-      - name: Clean up
-        if: always()
+      - name: ${{ matrix.task.name }} - Windows
+        if: runner.os == 'Windows'
         run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            .venv\Scripts\Activate.ps1
-          else
-            . .venv/bin/activate
-          fi
+          .venv\Scripts\Activate.ps1
+          ${{ matrix.task.run }}
+        shell: pwsh
+
+      - name: Clean up - Unix/Linux/macOS
+        if: always() && runner.os != 'Windows'
+        run: |
+          . .venv/bin/activate
           pip uninstall -y my-package
+        shell: bash
+
+      - name: Clean up - Windows
+        if: always() && runner.os == 'Windows'
+        run: |
+          .venv\Scripts\Activate.ps1
+          pip uninstall -y my-package
+        shell: pwsh
