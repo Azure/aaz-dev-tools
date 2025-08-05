@@ -6,6 +6,9 @@ concurrency:
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - resilv/py313
 
 env:
   # Change this to invalidate existing cache.
