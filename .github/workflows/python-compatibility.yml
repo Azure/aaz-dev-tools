@@ -31,7 +31,6 @@ jobs:
         task:
           - name: Build
             run: |
-              set -x
               pip list
               pip install twine
               # update setup related tools
@@ -105,43 +104,31 @@ jobs:
           # Weekly cache refresh - uncomment if you want time-based cache invalidation
           # echo "WEEK_NUMBER=$(date +%V)" >> $GITHUB_ENV
 
-      - uses: actions/cache@v3
-        id: virtualenv-cache
-        with:
-          path: |
-            .venv
-          key: ${{ env.CACHE_PREFIX }}-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ env.CACHE_PREFIX }}-${{ runner.os }}-${{ env.PYTHON_VERSION }}
+      # Caching disabled for Python compatibility testing to ensure clean state every run
+      # Uncomment the section below if you want to enable caching for faster builds
+      # - uses: actions/cache@v3
+      #   id: virtualenv-cache
+      #   with:
+      #     path: |
+      #       .venv
+      #     key: ${{ env.CACHE_PREFIX }}-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements.txt') }}
+      #     restore-keys: |
+      #       ${{ env.CACHE_PREFIX }}-${{ runner.os }}-${{ env.PYTHON_VERSION }}
 
-      - name: Setup virtual environment (no cache hit) - Unix/Linux/macOS
-        if: steps.virtualenv-cache.outputs.cache-hit != 'true' && runner.os != 'Windows'
+      - name: Setup virtual environment - Unix/Linux/macOS
+        if: runner.os != 'Windows'
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install -e .[dev]
         shell: bash
 
-      - name: Setup virtual environment (no cache hit) - Windows
-        if: steps.virtualenv-cache.outputs.cache-hit != 'true' && runner.os == 'Windows'
+      - name: Setup virtual environment - Windows
+        if: runner.os == 'Windows'
         run: |
           python -m venv .venv
           .venv\Scripts\Activate.ps1
           pip install -e .[dev]
-        shell: pwsh
-
-      - name: Install editable (cache hit) - Unix/Linux/macOS
-        if: steps.virtualenv-cache.outputs.cache-hit == 'true' && runner.os != 'Windows'
-        run: |
-          . .venv/bin/activate
-          pip install --no-deps -e .[dev]
-        shell: bash
-
-      - name: Install editable (cache hit) - Windows
-        if: steps.virtualenv-cache.outputs.cache-hit == 'true' && runner.os == 'Windows'
-        run: |
-          .venv\Scripts\Activate.ps1
-          pip install --no-deps -e .[dev]
         shell: pwsh
 
       - name: Show environment info - Unix/Linux/macOS
@@ -206,12 +193,12 @@ jobs:
         if: always() && runner.os != 'Windows'
         run: |
           . .venv/bin/activate
-          pip uninstall -y my-package
+          pip uninstall -y aaz-dev || true
         shell: bash
 
       - name: Clean up - Windows
         if: always() && runner.os == 'Windows'
         run: |
           .venv\Scripts\Activate.ps1
-          pip uninstall -y my-package
+          pip uninstall -y aaz-dev; if ($LASTEXITCODE -ne 0) { Write-Host "Package not found or already uninstalled" }
         shell: pwsh
