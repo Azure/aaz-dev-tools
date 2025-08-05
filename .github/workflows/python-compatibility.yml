@@ -109,18 +109,30 @@ jobs:
         if: steps.virtualenv-cache.outputs.cache-hit != 'true'
         run: |
           test -d .venv || virtualenv -p $(which python) --copies --reset-app-data .venv
-          . .venv/bin/activate
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            .venv\Scripts\Activate.ps1
+          else
+            . .venv/bin/activate
+          fi
           pip install -e .[dev]
 
       - name: Install editable (cache hit)
         if: steps.virtualenv-cache.outputs.cache-hit == 'true'
         run: |
-          . .venv/bin/activate
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            .venv\Scripts\Activate.ps1
+          else
+            . .venv/bin/activate
+          fi
           pip install --no-deps -e .[dev]
 
       - name: Show environment info
         run: |
-          . .venv/bin/activate
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            .venv\Scripts\Activate.ps1
+          else
+            . .venv/bin/activate
+          fi
           which python
           python --version
           pip freeze
@@ -142,11 +154,19 @@ jobs:
 
       - name: ${{ matrix.task.name }}
         run: |
-          . .venv/bin/activate
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            .venv\Scripts\Activate.ps1
+          else
+            . .venv/bin/activate
+          fi
           ${{ matrix.task.run }}
 
       - name: Clean up
         if: always()
         run: |
-          . .venv/bin/activate
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            .venv\Scripts\Activate.ps1
+          else
+            . .venv/bin/activate
+          fi
           pip uninstall -y my-package
