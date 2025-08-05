@@ -86,7 +86,7 @@ jobs:
 
       - name: Install prerequisites
         run: |
-          pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade pip setuptools wheel
           # Node.js/PNPM dependencies - only needed for web builds and TypeSpec compilation
           # Uncomment the lines below if you need to test web components or TypeSpec functionality
           # npm install -g pnpm@9.5.0
