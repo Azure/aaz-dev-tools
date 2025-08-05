@@ -1,3 +1,12 @@
+# Python Compatibility Testing Workflow
+#
+# Tests Python package build compatibility across:
+# - Operating Systems: Ubuntu, macOS, Windows
+# - Python Versions: 3.8, 3.9, 3.10, 3.11, 3.12, 3.13
+#
+# Validates that the package can be built and installed correctly
+# on all supported platforms and Python versions.
+
 name: Python Compatibility Check
 
 concurrency:
@@ -6,9 +15,6 @@ concurrency:
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - resilv/py313
 
 env:
   # Change this to invalidate existing cache.
@@ -33,51 +39,14 @@ jobs:
             run: |
               pip list
               pip install twine
-              # update setup related tools
               pip install --upgrade setuptools wheel
               pip list
               python setup.py check
               python setup.py bdist_wheel sdist
-              # check package metadata
               twine check ./dist/*
-
-#          - name: Test
-#            run: |
-#              pytest -v --color=yes tests/
-
-#          - name: Lint
-#            run: flake8 .
-
-#          - name: Type check
-#            run: mypy .
-
-#          - name: Style
-#            run: black --check .
-
-#          - name: Docs
-#            run: cd docs && make html
 
     steps:
       - uses: actions/checkout@v3
-        # Submodules contain TypeSpec/web code - not needed for Python package compatibility testing
-        # Uncomment the 'with' section below if you need to test TypeSpec integration or web components
-        # with:
-        #   submodules: ${{ runner.os != 'Windows' && 'recursive' || 'false' }}
-      
-      # Git long paths configuration - only needed if submodules are used (TypeSpec has long file paths)
-      # Uncomment if you restore submodule checkout and encounter Windows path length issues
-      # - name: Configure Git for long paths (Windows)
-      #   if: runner.os == 'Windows'
-      #   run: |
-      #     git config --system core.longpaths true
-      #     git submodule update --init --recursive
-
-      # Node.js setup - only needed for web builds and TypeSpec compilation
-      # Uncomment if you need to test web components or TypeSpec emitter functionality
-      # - name: Setup Node.js
-      #   uses: actions/setup-node@v3
-      #   with:
-      #     node-version: '20.x'
 
       - name: Setup Python
         uses: actions/setup-python@v3
@@ -87,33 +56,11 @@ jobs:
       - name: Install prerequisites
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          # Node.js/PNPM dependencies - only needed for web builds and TypeSpec compilation
-          # Uncomment the lines below if you need to test web components or TypeSpec functionality
-          # npm install -g pnpm@9.5.0
-          # pnpm install
 
       - name: Set build variables
         shell: bash
         run: |
-          # Get the exact Python version to use in the cache key.
           echo "PYTHON_VERSION=$(python --version)" >> $GITHUB_ENV
-          # Architecture info - uncomment if you need platform-specific caching or debugging
-          # echo "RUNNER_ARCH=$(uname -m)" >> $GITHUB_ENV
-          # Node.js version - only needed for web/TypeSpec builds
-          # echo "NODE_VERSION=$(node --version)" >> $GITHUB_ENV
-          # Weekly cache refresh - uncomment if you want time-based cache invalidation
-          # echo "WEEK_NUMBER=$(date +%V)" >> $GITHUB_ENV
-
-      # Caching disabled for Python compatibility testing to ensure clean state every run
-      # Uncomment the section below if you want to enable caching for faster builds
-      # - uses: actions/cache@v3
-      #   id: virtualenv-cache
-      #   with:
-      #     path: |
-      #       .venv
-      #     key: ${{ env.CACHE_PREFIX }}-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements.txt') }}
-      #     restore-keys: |
-      #       ${{ env.CACHE_PREFIX }}-${{ runner.os }}-${{ env.PYTHON_VERSION }}
 
       - name: Setup virtual environment - Unix/Linux/macOS
         if: runner.os != 'Windows'
