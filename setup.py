@@ -50,7 +50,6 @@ setup(
         "Environment :: Console",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
@@ -71,7 +70,7 @@ setup(
     ),
     include_package_data=True,
     install_requires=read_requirements("requirements.txt"),
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     entry_points={
         "console_scripts": ["aaz-dev=aaz_dev.app.main:main"]
     },

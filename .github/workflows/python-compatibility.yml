@@ -2,7 +2,7 @@
 #
 # Tests Python package build compatibility across:
 # - Operating Systems: Ubuntu, macOS, Windows
-# - Python Versions: 3.8, 3.9, 3.10, 3.11, 3.12, 3.13
+# - Python Versions: 3.9, 3.10, 3.11, 3.12, 3.13
 #
 # Validates that the package can be built and installed correctly
 # on all supported platforms and Python versions.
@@ -16,8 +16,7 @@ concurrency:
 on:
   workflow_dispatch:
   push:
-    branches:
-      - resilv/py313
+  pull_request:
 
 env:
   # Change this to invalidate existing cache.
@@ -36,7 +35,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]  
-        python: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+        python: ['3.9', '3.10', '3.11', '3.12', '3.13']
         task:
           - name: Build
             run: |
@@ -64,6 +63,26 @@ jobs:
         shell: bash
         run: |
           echo "PYTHON_VERSION=$(python --version)" >> $GITHUB_ENV
+
+      - name: Test dependency wheels availability - Unix/Linux/macOS
+        if: runner.os != 'Windows'
+        run: |
+          python -m venv .venv-deps-test
+          . .venv-deps-test/bin/activate
+          pip install --only-binary=:all: -r requirements.txt
+          deactivate
+          rm -rf .venv-deps-test
+        shell: bash
+
+      - name: Test dependency wheels availability - Windows
+        if: runner.os == 'Windows'
+        run: |
+          python -m venv .venv-deps-test
+          .venv-deps-test\Scripts\Activate.ps1
+          pip install --only-binary=:all: -r requirements.txt
+          deactivate
+          Remove-Item -Recurse -Force .venv-deps-test
+        shell: pwsh
 
       - name: Setup virtual environment - Unix/Linux/macOS
         if: runner.os != 'Windows'
