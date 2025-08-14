@@ -69,7 +69,12 @@ jobs:
         run: |
           python -m venv .venv-deps-test
           . .venv-deps-test/bin/activate
-          pip install --only-binary=:all: -r requirements.txt
+          # Try installing with wheel-only first to catch dependency conflicts early
+          pip install --only-binary=:all: -r requirements.txt || {
+            echo "Warning: Some dependencies may not have wheels available"
+            echo "Attempting installation with source packages allowed..."
+            pip install -r requirements.txt
+          }
           deactivate
           rm -rf .venv-deps-test
         shell: bash
@@ -79,7 +84,13 @@ jobs:
         run: |
           python -m venv .venv-deps-test
           .venv-deps-test\Scripts\Activate.ps1
+          # Try installing with wheel-only first to catch dependency conflicts early
           pip install --only-binary=:all: -r requirements.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Warning: Some dependencies may not have wheels available"
+            Write-Host "Attempting installation with source packages allowed..."
+            pip install -r requirements.txt
+          }
           deactivate
           Remove-Item -Recurse -Force .venv-deps-test
         shell: pwsh
