@@ -14,5 +14,6 @@ click~=8.1.2
 setuptools==70.0.0
 python-Levenshtein
 azure-mgmt-core
-wrapt>=1.14
-azdev==0.2.5
+# wrapt>=1.14
+# azdev==0.2.5
+azdev
