@@ -169,16 +169,3 @@ jobs:
           ${{ matrix.task.run }}
         shell: pwsh
 
-      # - name: Clean up - Unix/Linux/macOS
-      #   if: always() && runner.os != 'Windows'
-      #   run: |
-      #     . .venv/bin/activate
-      #     pip uninstall -y aaz-dev || true
-      #   shell: bash
-
-      # - name: Clean up - Windows
-      #   if: always() && runner.os == 'Windows'
-      #   run: |
-      #     .venv\Scripts\Activate.ps1
-      #     pip uninstall -y aaz-dev; if ($LASTEXITCODE -ne 0) { Write-Host "Package not found or already uninstalled" }
-      #   shell: pwsh
