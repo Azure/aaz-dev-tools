@@ -2,6 +2,11 @@
 
 Release History
 ===============
+
+4.3.1
+++++++
+* Upgraded lxml dependency from >=4.9.0 to >=5.0.0 for Python 3.13 compatibility (#495)
+
 4.3.0
 ++++++
 * Fix api version mismatch in cli tab (#490)
