@@ -481,10 +481,11 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
             margin="normal"
             required
           />
+          {/* @TODO: verify usage in GUI */}
           <TextField
             id="longSummary"
             label="Long Summary"
-            helperText="Please add long summer in lines."
+            helperText="Please add long summary in lines."
             type="text"
             fullWidth
             multiline

@@ -1,11 +1,15 @@
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
+import EditIcon from "@mui/icons-material/Edit";
+import ImportExportIcon from "@mui/icons-material/ImportExport";
 import {
-  styled,
   Alert,
   Box,
   Button,
-  Checkbox,
   ButtonBase,
   CardContent,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
@@ -15,13 +19,16 @@ import {
   LinearProgress,
   Radio,
   RadioGroup,
+  styled,
   Switch,
   TextField,
   Typography,
   TypographyProps,
 } from "@mui/material";
 import axios from "axios";
-import React, { useState, useEffect } from "react";
+import pluralize from "pluralize";
+import React, { useEffect, useState } from "react";
+import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./argument/WSECArgumentSimilarPicker";
 import {
   CardTitleTypography,
   ExperimentalTypography,
@@ -34,13 +41,6 @@ import {
   StableTypography,
   SubtitleTypography,
 } from "./WSEditorTheme";
-import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
-import EditIcon from "@mui/icons-material/Edit";
-import ImportExportIcon from "@mui/icons-material/ImportExport";
-import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
-import AddIcon from "@mui/icons-material/Add";
-import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./argument/WSECArgumentSimilarPicker";
-import pluralize from "pluralize";
 
 function WSEditorCommandArgumentsContent(props: {
   commandUrl: string;
@@ -1316,10 +1316,11 @@ function ArgumentDialog(props: {
               margin="normal"
               required
             />
+            {/* @TODO: verify usage in GUI */}
             <TextField
               id="longSummary"
               label="Long Summary"
-              helperText="Please add long summer in lines."
+              helperText="Please add long summary in lines."
               type="text"
               fullWidth
               multiline
@@ -2655,4 +2656,4 @@ const DecodeArgs = (argGroups: any[]): { args: CMDArg[]; clsArgDefineMap: ClsArg
 
 export default WSEditorCommandArgumentsContent;
 export { DecodeArgs };
-export type { CMDArg, ClsArgDefinitionMap };
+export type { ClsArgDefinitionMap, CMDArg };
