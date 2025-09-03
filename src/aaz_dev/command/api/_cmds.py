@@ -142,6 +142,11 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
                 n = leaf.names[-1]
                 n = n[0].upper() + n[1:]
                 leaf.help.short = f"{n} {leaf.names[-2]}"
+            # generate examples
+            cfg_editor = ws.load_cfg_editor_by_command(leaf)
+            command = cfg_editor.find_command(*leaf.names)
+            examples = ws.generate_examples_by_swagger(leaf, command)
+            leaf.examples = examples
 
         if not ws.is_in_memory:
             ws.save()
