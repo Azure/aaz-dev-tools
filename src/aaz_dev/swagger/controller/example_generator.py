@@ -53,6 +53,14 @@ class ExampleGenerator:
                 )
                 examples = path_item.put.x_ms_examples
 
+            elif path_item.patch is not None and path_item.patch.operation_id in cmd_operation_ids:
+                example_builder = SwaggerExampleBuilder(
+                    command=command,
+                    operation=path_item.patch,
+                    cmd_operation=cmd_operation_ids[path_item.patch.operation_id]
+                )
+                examples = path_item.patch.x_ms_examples
+
             elif path_item.post is not None and path_item.post.operation_id in cmd_operation_ids:
                 example_builder = SwaggerExampleBuilder(
                     command=command,
