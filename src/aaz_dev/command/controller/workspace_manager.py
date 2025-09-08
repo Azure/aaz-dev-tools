@@ -5,7 +5,7 @@ import shutil
 from datetime import datetime
 
 from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand, \
-    CMDBuildInVariants, CMDHttpOperation
+    CMDBuildInVariants, CMDHttpOperation, CMDInstanceUpdateOperation
 from command.model.editor import CMDEditorWorkspace, CMDCommandTreeNode, CMDCommandTreeLeaf
 from swagger.controller.example_generator import ExampleGenerator
 from swagger.controller.command_generator import SwaggerCommandGenerator, TypespecCommandGenerator
@@ -471,12 +471,8 @@ class WorkspaceManager:
             if len(operations) == 1 and isinstance(operations[0], CMDHttpOperation):
                 return False
 
-            # skip when there is more than one operation and not all operations are get requests
-            for op in operations:
-                if not isinstance(op, CMDHttpOperation) or op.http.request.method != "get":
-                    return True
-
-            return False
+            # skip when there is no http operation
+            return all(not isinstance(op, CMDHttpOperation) for op in operations)
 
         if is_ready_to_skip(command.operations):
             return []
@@ -499,7 +495,12 @@ class WorkspaceManager:
             ).get_resource_in_version(resource["id"], resource["version"], resource.rp_name))
 
         # load swagger resource
-        cmd_operation_ids = {op.operation_id: op for op in command.operations}
+        is_generic_update = {op.http.request.method for op in command.operations if isinstance(op, CMDHttpOperation)} == {'get', 'put'}
+        if is_generic_update:
+            cmd_operation_ids = {op.operation_id: op for op in command.operations if isinstance(op, CMDHttpOperation) and op.http.request.method == 'put'}
+        else:
+            cmd_operation_ids = {op.operation_id: op for op in command.operations if isinstance(op, CMDHttpOperation)}
+
         self.swagger_example_generator.load_examples(swagger_resources)
 
         examples = self.swagger_example_generator.create_draft_examples_by_swagger(
