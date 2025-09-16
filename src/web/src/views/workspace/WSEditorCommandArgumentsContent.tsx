@@ -1,8 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
-import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
-import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
-import EditIcon from "@mui/icons-material/Edit";
-import ImportExportIcon from "@mui/icons-material/ImportExport";
 import {
   Alert,
   Box,
@@ -25,6 +20,11 @@ import {
   Typography,
   TypographyProps,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
+import EditIcon from "@mui/icons-material/Edit";
+import ImportExportIcon from "@mui/icons-material/ImportExport";
 import axios from "axios";
 import pluralize from "pluralize";
 import React, { useEffect, useState } from "react";
@@ -1316,7 +1316,6 @@ function ArgumentDialog(props: {
               margin="normal"
               required
             />
-            {/* @TODO: verify usage in GUI */}
             <TextField
               id="longSummary"
               label="Long Summary"
@@ -1324,6 +1323,7 @@ function ArgumentDialog(props: {
               type="text"
               fullWidth
               multiline
+              rows={4}
               variant="standard"
               value={longHelp}
               onChange={(event: any) => {

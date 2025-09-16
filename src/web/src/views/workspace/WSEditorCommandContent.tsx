@@ -1053,7 +1053,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
           <TextField
             id="longSummary"
             label="Long Summary"
-            helperText="Please add long sudmmary in lines."
+            helperText="Please add long summary in lines."
             type="text"
             fullWidth
             multiline

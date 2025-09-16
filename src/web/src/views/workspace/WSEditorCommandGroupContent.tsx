@@ -481,7 +481,6 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
             margin="normal"
             required
           />
-          {/* @TODO: verify usage in GUI */}
           <TextField
             id="longSummary"
             label="Long Summary"
@@ -489,6 +488,7 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
             type="text"
             fullWidth
             multiline
+            rows={4}
             variant="standard"
             value={longHelp}
             onChange={(event: any) => {
