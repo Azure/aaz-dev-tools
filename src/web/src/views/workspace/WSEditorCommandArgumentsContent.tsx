@@ -20,11 +20,13 @@ import {
   Typography,
   TypographyProps,
 } from "@mui/material";
+import { ChevronRight } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
 import EditIcon from "@mui/icons-material/Edit";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
+
 import axios from "axios";
 import pluralize from "pluralize";
 import React, { useEffect, useState } from "react";
@@ -1851,6 +1853,7 @@ function ArgumentPropsReviewer(props: {
             {arg.hide && (
               <PropHiddenArgOptionTypography sx={{ flexShrink: 0 }}>{argOptionsString}</PropHiddenArgOptionTypography>
             )}
+            <ChevronRight />
           </ButtonBase>
           <Box sx={{ flexGrow: 1 }} />
           {arg.stage === "Preview" && (
