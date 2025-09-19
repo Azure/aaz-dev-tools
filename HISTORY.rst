@@ -3,6 +3,15 @@
 Release History
 ===============
 
+4.4.0
+++++++
+* GUI heuristics upgrade. (#498)
+* Add `aaz-dev command-model transform` to transform metadata. (#502)
+* Fix TypeSpec entry cannot be parsed well. (#501)
+* Add example generation for update commands.
+* Add example generation for `aaz-dev command-model generate-from-swagger`. (#499)
+* Add guild for local development. (#497)
+
 4.3.1
 ++++++
 * Upgraded lxml dependency from >=4.9.0 to >=5.0.0 for Python 3.13 compatibility (#495)
