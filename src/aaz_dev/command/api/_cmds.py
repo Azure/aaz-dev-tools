@@ -11,7 +11,6 @@ from command.controller.specs_manager import AAZSpecsManager
 from command.templates import get_templates
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from swagger.utils.source import SourceTypeEnum
-from swagger.model.specs import OpenAPIResourceProvider, TypeSpecResourceProvider
 from utils.config import Config
 
 logger = logging.getLogger('backend')
