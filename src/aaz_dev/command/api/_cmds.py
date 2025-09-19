@@ -4,12 +4,14 @@ import logging
 import os
 import re
 import sys
+from collections import defaultdict
 from flask import Blueprint
 
 from command.controller.specs_manager import AAZSpecsManager
 from command.templates import get_templates
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from swagger.utils.source import SourceTypeEnum
+from swagger.model.specs import OpenAPIResourceProvider, TypeSpecResourceProvider
 from utils.config import Config
 
 logger = logging.getLogger('backend')
@@ -300,3 +302,94 @@ def verify(target):
                 file_path = os.path.join(root, file)
                 if file_path not in model_set:
                     raise Exception(f"{file_path} is redundant.")
+
+
+@bp.cli.command("transform", short_help="Transform into machine-friendly metadata.")
+@click.option(
+    "--aaz-path", "-a",
+    type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
+    default=Config.AAZ_PATH,
+    required=not Config.AAZ_PATH,
+    callback=Config.validate_and_setup_aaz_path,
+    expose_value=False,
+    help="Path of `aaz` repository."
+)
+def transform():
+    def nested_dict():
+        return defaultdict(nested_dict)
+
+    def process_resource(model):
+        resources = []
+        for resource in model["resources"]:
+            resources.append({
+                "id": resource["id"],
+                "plane": model["plane"]
+            })
+
+        return resources
+
+    def export_command(xml_path, file_name):
+        json_path = os.path.normpath(os.path.join(Config.AAZ_PATH, f"{os.path.splitext(xml_path)[0][1:]}.json"))
+        with open(json_path, "r", encoding="utf-8", errors="ignore") as f:
+            model = json.load(f)
+
+        target = file_name.split("_")[-2]  # command name
+
+        data = {"resources": process_resource(model)}
+        for cmd in model["commandGroups"][0].get("commands", []):
+            if cmd["name"] == target:
+                other = {k: v for k, v in cmd.items() if k not in {"name", "version", "resources"}}
+                data = {**data, **other}
+
+                break
+
+        with open(os.path.join("./metadata/commands", file_name), "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+
+    def build_command(path):
+        command = defaultdict(nested_dict)
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        command["help"]["short"] = re.findall(r"# \[Command\].*?\n\n(.*?)\n", content)[0]
+        command["versions"] = []
+
+        matches = re.findall(r"### \[(.*?)\]\((.*?)\)", content)
+        for version, xml_path in matches:
+            command["versions"].insert(0, version)
+
+            *grp, cmd_md = os.path.relpath(path, aaz_commands).split(os.sep)
+            export_command(xml_path, f"{'_'.join(grp)}_{cmd_md[1:-3]}_{version}.json")
+
+        return command
+
+    def build_group(path):
+        group = defaultdict(nested_dict)
+        for item in sorted(os.listdir(path)):
+            curr_path = os.path.join(path, item)
+            if item == "readme.md":
+                with open(curr_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+
+                group["help"]["short"] = re.findall(r"# \[Group\].*?\n\n(.*?)\n", content)[0]
+                continue
+
+            if os.path.isdir(curr_path):
+                group["commandGroups"][item] = build_group(curr_path)
+
+            else:
+                group["commands"][item[1:-3]] = build_command(curr_path)
+
+        return group
+
+    os.makedirs("metadata/commands")
+    index = defaultdict(nested_dict)
+
+    aaz_commands = AAZSpecsManager().commands_folder
+    for item in sorted(os.listdir(aaz_commands)):
+        curr_path = os.path.join(aaz_commands, item)
+        if os.path.isdir(curr_path):
+            index[item] = build_group(curr_path)
+
+    with open(os.path.join("./metadata", "index.json"), "w", encoding="utf-8") as f:
+        json.dump(index, f, ensure_ascii=False, separators=(",", ":"))
