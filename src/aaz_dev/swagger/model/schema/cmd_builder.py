@@ -407,14 +407,6 @@ class CMDBuilder:
         fmt = CMDStringFormat()
 
         if schema.pattern is not None:
-            try:
-                _ = re.compile(schema.pattern)  # verify schema pattern
-            except Exception as err:
-                raise exceptions.InvalidSwaggerValueError(
-                    msg=f"Invalid regex expression",
-                    key=[schema.traces],
-                    value=[schema.pattern]
-                )
             fmt.pattern = schema.pattern
             fmt_assigned = True
         if schema.max_length is not None:

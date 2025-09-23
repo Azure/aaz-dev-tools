@@ -597,7 +597,7 @@ class CMDSpecsPartialCommandTree:
             if not group:
                 details[' '.join(group_names)] = {
                     'type': 'group',
-                    'help': "Miss short summary."
+                    'help': "Group not found."
                 }
             elif not group.help or not group.help.short:
                 details[' '.join(group.names)] = {
@@ -610,7 +610,7 @@ class CMDSpecsPartialCommandTree:
             if not cmd:
                 details[' '.join(cmd_names)] = {
                     'type': 'command',
-                    'help': "Miss short summary."
+                    'help': "Command not found."
                 }
             elif not cmd.help or not cmd.help.short:
                 details[' '.join(cmd.names)] = {
