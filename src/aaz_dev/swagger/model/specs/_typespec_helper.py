@@ -45,11 +45,35 @@ class TypeSpecHelper:
 
     @classmethod
     def _parse_main_tsp(cls, path):
-        with open(path, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
+        def expand(import_path):
+            with open(import_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+
+            base = os.path.dirname(import_path)
+
+            content = []
+            for line in lines:
+                if match := import_pattern.findall(line):
+                    rel_path = match[0]
+                    abs_path = os.path.abspath(os.path.join(base, rel_path))
+
+                    if os.path.isfile(abs_path):  # expand first level only; otherwise, will impact performance
+                        with open(abs_path, "r", encoding="utf-8") as f:
+                            content.append("".join(f.readlines()))
+
+                    else:
+                        content.append(line)
+                else:
+                    content.append(line)
+
+            return "".join(content).split("\n")
+
+        import_pattern = re.compile(r'^import "([^"]+)"')
+
         is_mgmt_plane = False
         namespace = None
-        for line in lines:
+
+        for line in expand(path):
             if line.startswith("@armProviderNamespace"):
                 is_mgmt_plane = True
             if line.startswith("namespace "):

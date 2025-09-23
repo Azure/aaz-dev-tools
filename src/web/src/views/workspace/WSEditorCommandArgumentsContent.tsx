@@ -1,11 +1,10 @@
 import {
-  styled,
   Alert,
   Box,
   Button,
-  Checkbox,
   ButtonBase,
   CardContent,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
@@ -15,13 +14,23 @@ import {
   LinearProgress,
   Radio,
   RadioGroup,
+  styled,
   Switch,
   TextField,
   Typography,
   TypographyProps,
 } from "@mui/material";
+import { ChevronRight } from "@mui/icons-material";
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
+import EditIcon from "@mui/icons-material/Edit";
+import ImportExportIcon from "@mui/icons-material/ImportExport";
+
 import axios from "axios";
-import React, { useState, useEffect } from "react";
+import pluralize from "pluralize";
+import React, { useEffect, useState } from "react";
+import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./argument/WSECArgumentSimilarPicker";
 import {
   CardTitleTypography,
   ExperimentalTypography,
@@ -34,13 +43,6 @@ import {
   StableTypography,
   SubtitleTypography,
 } from "./WSEditorTheme";
-import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
-import EditIcon from "@mui/icons-material/Edit";
-import ImportExportIcon from "@mui/icons-material/ImportExport";
-import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
-import AddIcon from "@mui/icons-material/Add";
-import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./argument/WSECArgumentSimilarPicker";
-import pluralize from "pluralize";
 
 function WSEditorCommandArgumentsContent(props: {
   commandUrl: string;
@@ -1319,10 +1321,11 @@ function ArgumentDialog(props: {
             <TextField
               id="longSummary"
               label="Long Summary"
-              helperText="Please add long summer in lines."
+              helperText="Please add long summary in lines."
               type="text"
               fullWidth
               multiline
+              rows={4}
               variant="standard"
               value={longHelp}
               onChange={(event: any) => {
@@ -1850,6 +1853,7 @@ function ArgumentPropsReviewer(props: {
             {arg.hide && (
               <PropHiddenArgOptionTypography sx={{ flexShrink: 0 }}>{argOptionsString}</PropHiddenArgOptionTypography>
             )}
+            <ChevronRight />
           </ButtonBase>
           <Box sx={{ flexGrow: 1 }} />
           {arg.stage === "Preview" && (
@@ -2655,4 +2659,4 @@ const DecodeArgs = (argGroups: any[]): { args: CMDArg[]; clsArgDefineMap: ClsArg
 
 export default WSEditorCommandArgumentsContent;
 export { DecodeArgs };
-export type { CMDArg, ClsArgDefinitionMap };
+export type { ClsArgDefinitionMap, CMDArg };
