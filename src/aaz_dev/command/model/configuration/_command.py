@@ -324,7 +324,7 @@ class CMDCommand(Model):
 
 
 def handle_duplicated_options(arguments, has_subresource, operation_id):
-    def has_duplicate(arg1, arg2):
+    def can_be_replaced(arg1, arg2):
         # check whether you need to replace argument
         ret = False
         if _can_replace_argument(arg1, arg2, has_subresource):
@@ -357,8 +357,9 @@ def handle_duplicated_options(arguments, has_subresource, operation_id):
         for v in arguments.values():
             if v.var in used_args or v.var in dropped_args or arg.var == v.var or not v.options:
                 continue
+
             if not set(arg.options).isdisjoint(v.options):
-                if has_duplicate(arg, v):
+                if can_be_replaced(arg, v):
                     break
 
     return [arg for var, arg in arguments.items() if var not in dropped_args]
