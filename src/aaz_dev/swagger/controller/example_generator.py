@@ -32,6 +32,7 @@ class ExampleGenerator:
             if path_item.get is not None and path_item.get.operation_id in cmd_operation_ids:
                 example_builder = SwaggerExampleBuilder(
                     command=command,
+                    path_item=path_item,
                     operation=path_item.get,
                     cmd_operation=cmd_operation_ids[path_item.get.operation_id]
                 )
@@ -40,6 +41,7 @@ class ExampleGenerator:
             elif path_item.delete is not None and path_item.delete.operation_id in cmd_operation_ids:
                 example_builder = SwaggerExampleBuilder(
                     command=command,
+                    path_item=path_item,
                     operation=path_item.delete,
                     cmd_operation=cmd_operation_ids[path_item.delete.operation_id]
                 )
@@ -48,6 +50,7 @@ class ExampleGenerator:
             elif path_item.put is not None and path_item.put.operation_id in cmd_operation_ids:
                 example_builder = SwaggerExampleBuilder(
                     command=command,
+                    path_item=path_item,
                     operation=path_item.put,
                     cmd_operation=cmd_operation_ids[path_item.put.operation_id]
                 )
@@ -56,6 +59,7 @@ class ExampleGenerator:
             elif path_item.patch is not None and path_item.patch.operation_id in cmd_operation_ids:
                 example_builder = SwaggerExampleBuilder(
                     command=command,
+                    path_item=path_item,
                     operation=path_item.patch,
                     cmd_operation=cmd_operation_ids[path_item.patch.operation_id]
                 )
@@ -64,6 +68,7 @@ class ExampleGenerator:
             elif path_item.post is not None and path_item.post.operation_id in cmd_operation_ids:
                 example_builder = SwaggerExampleBuilder(
                     command=command,
+                    path_item=path_item,
                     operation=path_item.post,
                     cmd_operation=cmd_operation_ids[path_item.post.operation_id]
                 )
@@ -72,6 +77,7 @@ class ExampleGenerator:
             elif path_item.head is not None and path_item.head.operation_id in cmd_operation_ids:
                 example_builder = SwaggerExampleBuilder(
                     command=command,
+                    path_item=path_item,
                     operation=path_item.head,
                     cmd_operation=cmd_operation_ids[path_item.head.operation_id]
                 )
