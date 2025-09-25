@@ -324,6 +324,28 @@ class CMDCommand(Model):
 
 
 def handle_duplicated_options(arguments, has_subresource, operation_id):
+    def has_duplicate(arg1, arg2):
+        # check whether you need to replace argument
+        ret = False
+        if _can_replace_argument(arg1, arg2, has_subresource):
+            arg2.ref_schema.arg = arg1.var
+            dropped_args.add(arg2.var)
+            ret = False
+
+        elif _can_replace_argument(arg2, arg1, has_subresource):
+            arg1.ref_schema.arg = arg2.var
+            dropped_args.add(arg1.var)
+            ret = True
+
+        else:
+            # warning developer handle duplicated options
+            logger.warning(
+                f"Duplicated Option Value: {set(arg1.options).intersection(arg2.options)} : "
+                f"{arg1.var} with {arg2.var} : {operation_id}"
+            )
+
+        return ret
+
     # check argument with duplicated option names
     dropped_args = set()
     used_args = set()
@@ -331,27 +353,13 @@ def handle_duplicated_options(arguments, has_subresource, operation_id):
         used_args.add(arg.var)
         if arg.var in dropped_args or not arg.options:
             continue
-        r_arg = None
+
         for v in arguments.values():
             if v.var in used_args or v.var in dropped_args or arg.var == v.var or not v.options:
                 continue
             if not set(arg.options).isdisjoint(v.options):
-                r_arg = v
-                break
-        if r_arg:
-            # check whether you need to replace argument
-            if _can_replace_argument(r_arg, arg, has_subresource):
-                arg.ref_schema.arg = r_arg.var
-                dropped_args.add(arg.var)
-            elif _can_replace_argument(arg, r_arg, has_subresource):
-                r_arg.ref_schema.arg = arg.var
-                dropped_args.add(r_arg.var)
-            else:
-                # warning developer handle duplicated options
-                logger.warning(
-                    f"Duplicated Option Value: {set(arg.options).intersection(r_arg.options)} : "
-                    f"{arg.var} with {r_arg.var} : {operation_id}"
-                )
+                if has_duplicate(arg, v):
+                    break
 
     return [arg for var, arg in arguments.items() if var not in dropped_args]
 
