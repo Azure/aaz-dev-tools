@@ -27,7 +27,7 @@ import {
   FormHelperText,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import axios from "axios";
+import { WorkspaceApiService, SpecsApiService, ApiErrorHandler } from "../../services";
 import EditorPageLayout from "../../components/EditorPageLayout";
 import { styled } from "@mui/material/styles";
 import { getTypespecRPResources, getTypespecRPResourcesOperations } from "../../typespec";
@@ -158,37 +158,35 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     this.loadWorkspaceResources().then(async () => {
       await this.loadSwaggerModules(this.props.plane);
       try {
-        const res = await axios.get(`/AAZ/Editor/Workspaces/${this.props.workspaceName}/SwaggerDefault`);
+        const swaggerDefault = await WorkspaceApiService.getSwaggerDefault(this.props.workspaceName);
         // default module name
-        if (res.data.modNames === null || res.data.modNames.length == 0) {
+        if (swaggerDefault.modNames === null || swaggerDefault.modNames.length == 0) {
           return;
         }
-        const moduleValueUrl = `/Swagger/Specs/${this.props.plane}/` + res.data.modNames.join("/");
+        const moduleValueUrl = `/Swagger/Specs/${this.props.plane}/` + swaggerDefault.modNames.join("/");
         if (this.state.moduleOptions.findIndex((v) => v === moduleValueUrl) == -1) {
           return;
         }
         let rpUrl = null;
-        if (res.data.rpName !== null && res.data.rpName.length > 0) {
-          rpUrl = `${moduleValueUrl}/ResourceProviders/${res.data.rpName}`;
-          if (res.data.source === "TypeSpec") {
+        if (swaggerDefault.rpName !== null && swaggerDefault.rpName.length > 0) {
+          rpUrl = `${moduleValueUrl}/ResourceProviders/${swaggerDefault.rpName}`;
+          if (swaggerDefault.source === "TypeSpec") {
             rpUrl += `/TypeSpec`;
           }
         }
         this.setState({
           defaultModule: moduleValueUrl,
-          defaultSource: res.data.source,
+          defaultSource: swaggerDefault.source,
           selectedModule: moduleValueUrl,
           moduleOptions: [moduleValueUrl], // only the default module selectable.
         });
         await this.loadResourceProviders(moduleValueUrl, rpUrl);
       } catch (err: any) {
         console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          this.setState({
-            invalidText: `ResponseError: ${data.message!}`,
-          });
-        }
+        const message = ApiErrorHandler.getErrorMessage(err);
+        this.setState({
+          invalidText: `ResponseError: ${message}`,
+        });
       }
     });
   }
@@ -203,8 +201,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
 
   loadSwaggerModules = async (plane: string) => {
     try {
-      const res = await axios.get(`/Swagger/Specs/${plane}`);
-      const options: string[] = res.data.map((v: any) => v.url);
+      const options = await SpecsApiService.getSwaggerModules(plane);
       this.setState((preState) => {
         return {
           ...preState,
@@ -215,12 +212,10 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
       });
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        this.setState({
-          invalidText: `ResponseError: ${data.message!}`,
-        });
-      }
+      const message = ApiErrorHandler.getErrorMessage(err);
+      this.setState({
+        invalidText: `ResponseError: ${message}`,
+      });
     }
   };
 
@@ -228,12 +223,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     if (moduleUrl != null) {
       const defaultSource = this.state.defaultSource;
       try {
-        let url = `${moduleUrl}/ResourceProviders`;
-        if (defaultSource !== null) {
-          url += `?type=${defaultSource}`;
-        }
-        const res = await axios.get(url);
-        let options: string[] = res.data.map((v: any) => v.url);
+        let options = await SpecsApiService.getResourceProvidersWithType(moduleUrl, defaultSource ?? undefined);
         let selectedResourceProvider = options.length === 1 ? options[0] : null;
         let defaultResourceProvider = null;
         if (preferredRP !== null && options.findIndex((v) => v === preferredRP) >= 0) {
@@ -249,12 +239,10 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         await this.onResourceProviderUpdate(selectedResourceProvider);
       } catch (err: any) {
         console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          this.setState({
-            invalidText: `ResponseError: ${data.message!}`,
-          });
-        }
+        const message = ApiErrorHandler.getErrorMessage(err);
+        this.setState({
+          invalidText: `ResponseError: ${message}`,
+        });
       }
     } else {
       this.setState({
@@ -266,10 +254,10 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
 
   loadWorkspaceResources = async () => {
     try {
-      const res = await axios.get(`/AAZ/Editor/Workspaces/${this.props.workspaceName}/CommandTree/Nodes/aaz/Resources`);
+      const resources = await WorkspaceApiService.getWorkspaceResourcesByName(this.props.workspaceName);
       const existingResources = new Set<string>();
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        res.data.forEach((resource) => {
+      if (resources && Array.isArray(resources) && resources.length > 0) {
+        resources.forEach((resource: any) => {
           existingResources.add(resource.id);
         });
       }
@@ -278,12 +266,10 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
       });
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        this.setState({
-          invalidText: `ResponseError: ${data.message!}`,
-        });
-      }
+      const message = ApiErrorHandler.getErrorMessage(err);
+      this.setState({
+        invalidText: `ResponseError: ${message}`,
+      });
     }
   };
 
@@ -303,16 +289,13 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         // console.log(data);
       } else {
         try {
-          const res = await axios.get(`${resourceProviderUrl}/Resources`);
-          data = res.data;
+          data = await SpecsApiService.getProviderResources(resourceProviderUrl);
         } catch (err: any) {
           console.error(err);
-          if (err.response?.data?.message) {
-            const data = err.response!.data!;
-            this.setState({
-              invalidText: `ResponseError: ${data.message!}`,
-            });
-          }
+          const message = ApiErrorHandler.getErrorMessage(err);
+          this.setState({
+            invalidText: `ResponseError: ${message}`,
+          });
         }
       }
       try {
@@ -344,12 +327,8 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
           selectVersion = versionOptions[0];
         }
 
-        const filterBody = {
-          resources: resourceIdList,
-        };
-
-        const res = await axios.post(`/AAZ/Specs/Resources/${this.props.plane}/Filter`, filterBody);
-        res.data.resources.forEach((aazResource: AAZResource) => {
+        const filterData = await SpecsApiService.filterResourcesByPlane(this.props.plane, resourceIdList);
+        filterData.resources.forEach((aazResource: AAZResource) => {
           if (aazResource.versions) {
             resourceMap[aazResource.id].aazVersions = aazResource.versions;
           }
@@ -378,7 +357,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     }
   };
 
-  addSwagger = () => {
+  addSwagger = async () => {
     const {
       selectedResources,
       selectedVersion,
@@ -451,75 +430,61 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
       const requestEmitterObj = JSON.parse(JSON.stringify(requestBody));
       requestEmitterObj.resourceProviderUrl = defaultResourceProvider;
       console.log("requestEmitterObj: ", requestEmitterObj);
-      getTypespecRPResourcesOperations(requestEmitterObj)
-        .then((res) => {
-          console.log("emitter getTypespecRPResourceOperations res: ", res);
-          console.log("resourceOptionMap: ", resourceOptionMap);
-          const addTypespecData = {
-            version: selectedVersion,
-            resources: res.map((item: { id: string; [key: string]: any }) => {
-              if (item.id in resourceOptionMap) {
-                item.options = resourceOptionMap[item.id];
-              }
-              return item;
-            }),
-          };
-          console.log("addTypespec data: ", addTypespecData);
-          axios
-            .post(
-              `/AAZ/Editor/Workspaces/${this.props.workspaceName}/CommandTree/Nodes/aaz/AddTypespec`,
-              addTypespecData,
-            )
-            .then(() => {
-              this.setState({
-                loading: false,
-              });
-              this.props.onClose(true);
-            })
-            .catch((err) => {
-              console.error(err);
-              this.setState({
-                loading: false,
-              });
-              this.props.onClose(false);
-              if (err.response?.data?.message) {
-                const data = err.response!.data!;
-                this.setState({
-                  invalidText: `ResponseError: ${data.message!}`,
-                });
-              }
-            });
-        })
-        .catch((err: any) => {
+      try {
+        const res = await getTypespecRPResourcesOperations(requestEmitterObj);
+        console.log("emitter getTypespecRPResourceOperations res: ", res);
+        console.log("resourceOptionMap: ", resourceOptionMap);
+        const addTypespecData = {
+          version: selectedVersion,
+          resources: res.map((item: { id: string; [key: string]: any }) => {
+            if (item.id in resourceOptionMap) {
+              item.options = resourceOptionMap[item.id];
+            }
+            return item;
+          }),
+        };
+        console.log("addTypespec data: ", addTypespecData);
+        try {
+          await WorkspaceApiService.addTypespecResources(this.props.workspaceName, addTypespecData);
           this.setState({
             loading: false,
           });
           this.props.onClose(true);
-          if (err.response?.data?.message) {
-            const data = err.response!.data!;
-            this.setState({
-              invalidText: `ResponseError: ${data.message!}`,
-            });
-          }
-        });
-    } else {
-      axios
-        .post(`/AAZ/Editor/Workspaces/${this.props.workspaceName}/CommandTree/Nodes/aaz/AddSwagger`, requestBody)
-        .then(() => {
-          this.setState({
-            loading: false,
-          });
-          this.props.onClose(true);
-        })
-        .catch((err) => {
+        } catch (err: any) {
           console.error(err);
-          if (err.response?.data?.message) {
-            const data = err.response!.data!;
-            this.setState({
-              invalidText: `ResponseError: ${data.message!}`,
-            });
-          }
+          this.setState({
+            loading: false,
+          });
+          this.props.onClose(false);
+          const message = ApiErrorHandler.getErrorMessage(err);
+          this.setState({
+            invalidText: `ResponseError: ${message}`,
+          });
+        }
+      } catch (err: any) {
+        this.setState({
+          loading: false,
         });
+        this.props.onClose(true);
+        const message = ApiErrorHandler.getErrorMessage(err);
+        this.setState({
+          invalidText: `ResponseError: ${message}`,
+        });
+      }
+    } else {
+      try {
+        await WorkspaceApiService.addSwaggerResources(this.props.workspaceName, requestBody);
+        this.setState({
+          loading: false,
+        });
+        this.props.onClose(true);
+      } catch (err: any) {
+        console.error(err);
+        const message = ApiErrorHandler.getErrorMessage(err);
+        this.setState({
+          invalidText: `ResponseError: ${message}`,
+        });
+      }
     }
   };
 

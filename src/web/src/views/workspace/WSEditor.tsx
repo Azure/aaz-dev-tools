@@ -22,7 +22,6 @@ import {
   Alert,
 } from "@mui/material";
 import { useParams } from "react-router";
-import axios from "axios";
 import { TransitionProps } from "@mui/material/transitions";
 import WSEditorSwaggerPicker from "./WSEditorSwaggerPicker";
 import WSEditorToolBar from "./WSEditorToolBar";
@@ -39,8 +38,9 @@ import WSEditorCommandContent, {
   DecodeResponseCommand,
   ResponseCommand,
 } from "./WSEditorCommandContent";
-import WSEditorClientConfigDialog, { ClientConfig } from "./WSEditorClientConfig";
+import WSEditorClientConfigDialog from "./WSEditorClientConfig";
 import { getTypespecRPResourcesOperations } from "../../typespec";
+import { WorkspaceApiService, SpecsApiService, ApiErrorHandler } from "../../services";
 
 interface CommandGroupMap {
   [id: string]: CommandGroup;
@@ -123,11 +123,8 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 
     try {
-      let res = await axios.get(`/AAZ/Specs/Planes`);
-      const planeNames: string[] = res.data.map((v: any) => {
-        return v.name;
-      });
-      res = await axios.get(workspaceUrl);
+      const planeNames = await SpecsApiService.getPlaneNames();
+      const workspaceData = await WorkspaceApiService.getWorkspace(workspaceUrl);
       const reloadTimestamp = Date.now();
       const commandMap: CommandMap = {};
       const commandGroupMap: CommandGroupMap = {};
@@ -186,8 +183,8 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
 
       const commandTree: CommandTreeNode[] = [];
 
-      if (res.data.commandTree.commandGroups) {
-        const cmdGroups: ResponseCommandGroups = res.data.commandTree.commandGroups;
+      if (workspaceData.commandTree.commandGroups) {
+        const cmdGroups: ResponseCommandGroups = workspaceData.commandTree.commandGroups;
         for (const key in cmdGroups) {
           commandTree.push(buildCommandGroup(cmdGroups[key]));
         }
@@ -230,7 +227,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
       }
 
       // when the plane name not included in the built-in planes, it is a client configurable plane
-      const clientConfigurable = !planeNames.includes(res.data.plane);
+      const clientConfigurable = !planeNames.includes(workspaceData.plane);
       this.setState((preState) => {
         const newExpanded = new Set<string>();
 
@@ -250,8 +247,8 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
 
         return {
           ...preState,
-          plane: res.data.plane,
-          source: res.data.source,
+          plane: workspaceData.plane,
+          source: workspaceData.source,
           clientConfigurable: clientConfigurable,
           commandTree: commandTree,
           selected: selected,
@@ -297,30 +294,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
   };
 
   getWorkspaceClientConfig = async (workspaceUrl: string) => {
-    try {
-      const res = await axios.get(`${workspaceUrl}/ClientConfig`);
-      const clientConfig: ClientConfig = {
-        version: res.data.version,
-        endpointTemplates: undefined,
-        endpointResource: undefined,
-        auth: res.data.auth,
-      };
-      if (res.data.endpoints.type === "template") {
-        clientConfig.endpointTemplates = {};
-        res.data.endpoints.templates.forEach((value: any) => {
-          clientConfig.endpointTemplates![value.cloud] = value.template;
-        });
-      } else if (res.data.endpoints.type === "http-operation") {
-        clientConfig.endpointResource = res.data.endpoints.endpointResource;
-      }
-
-      return clientConfig;
-    } catch (err: any) {
-      // catch 404 error
-      if (err.response?.status === 404) {
-        return null;
-      }
-    }
+    return await WorkspaceApiService.getWorkspaceClientConfig(workspaceUrl);
   };
 
   showClientConfigDialog = () => {
@@ -623,14 +597,13 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
   };
 
   verifyClientConfig = async () => {
-    const url = `${this.props.workspaceUrl}/ClientConfig/AAZ/Compare`;
     this.setState({ updating: true });
     try {
-      await axios.post(url);
+      await WorkspaceApiService.verifyClientConfig(this.props.workspaceUrl);
       this.setState({ clientConfigOOD: false, updating: false });
     } catch (err: any) {
       // catch 409 error
-      if (err.response?.status === 409) {
+      if (ApiErrorHandler.isHttpError(err, 409)) {
         this.setState({
           invalidText: `The client config in this workspace is out of date. Please refresh it first.`,
           clientConfigOOD: true,
@@ -639,53 +612,42 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
         return;
       } else {
         console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          this.setState({
-            invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
-          });
-        }
-        this.setState({ updating: false });
+        this.setState({
+          invalidText: ApiErrorHandler.getErrorMessage(err),
+          updating: false,
+        });
       }
     }
   };
 
   inheritClientConfig = async () => {
-    const url = `${this.props.workspaceUrl}/ClientConfig/AAZ/Inherit`;
     this.setState({ updating: true });
     try {
-      await axios.post(url);
+      await WorkspaceApiService.inheritClientConfig(this.props.workspaceUrl);
       this.setState({ clientConfigOOD: false, updating: false });
       this.props.onClose(false, true);
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        this.setState({
-          invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
-        });
-      }
-      this.setState({ updating: false });
+      this.setState({
+        invalidText: ApiErrorHandler.getErrorMessage(err),
+        updating: false,
+      });
     }
   };
 
   handleExport = async () => {
-    const url = `${this.props.workspaceUrl}/Generate`;
     this.setState({ updating: true });
 
     try {
-      await axios.post(url);
+      await WorkspaceApiService.generateWorkspace(this.props.workspaceUrl);
       this.setState({ updating: false });
       this.props.onClose(false, false);
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        this.setState({
-          invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
-        });
-      }
-      this.setState({ updating: false });
+      this.setState({
+        invalidText: ApiErrorHandler.getErrorMessage(err),
+        updating: false,
+      });
     }
   };
 
@@ -732,19 +694,14 @@ function WSEditorDeleteDialog(props: { workspaceName: string; open: boolean; onC
 
   const handleDelete = () => {
     setUpdating(true);
-    const nodeUrl = `/AAZ/Editor/Workspaces/` + props.workspaceName;
-    axios
-      .delete(nodeUrl)
+    WorkspaceApiService.deleteWorkspace(props.workspaceName)
       .then(() => {
         setUpdating(false);
         props.onClose(true);
       })
-      .catch((err) => {
-        console.error(err.response.data);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
-        }
+      .catch((err: any) => {
+        console.error(err);
+        setInvalidText(ApiErrorHandler.getErrorMessage(err));
         setUpdating(false);
       });
   };
@@ -832,8 +789,7 @@ class WSEditorSwaggerReloadDialog extends React.Component<
       updating: true,
     });
     try {
-      const res = await axios.get(`${this.props.workspaceUrl}/CommandTree/Nodes/aaz/Resources`);
-      const resources: Resource[] = res.data;
+      const resources: Resource[] = await WorkspaceApiService.getWorkspaceResources(this.props.workspaceUrl);
       this.setState({
         updating: false,
         resourceOptions: resources,
@@ -841,13 +797,10 @@ class WSEditorSwaggerReloadDialog extends React.Component<
       });
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        this.setState({
-          invalidText: `ResponseError: ${data.message!}`,
-          updating: false,
-        });
-      }
+      this.setState({
+        invalidText: ApiErrorHandler.getErrorMessage(err),
+        updating: false,
+      });
     }
   };
 
@@ -878,15 +831,10 @@ class WSEditorSwaggerReloadDialog extends React.Component<
       updating: true,
     });
 
-    const reloadUrl =
-      this.props.source.toLowerCase() === "typespec"
-        ? `${this.props.workspaceUrl}/Resources/ReloadTypespec`
-        : `${this.props.workspaceUrl}/Resources/ReloadSwagger`;
-
     try {
       if (this.props.source.toLowerCase() === "typespec") {
-        const res = await axios.get(`/AAZ/Editor/Workspaces/${this.props.workspaceName}/SwaggerDefault`);
-        const { modNames, rpName, source } = res.data;
+        const swaggerDefault = await WorkspaceApiService.getWorkspaceSwaggerDefault(this.props.workspaceName);
+        const { modNames, rpName, source } = swaggerDefault;
         if (!modNames || modNames.length === 0 || !rpName || !source || source.toLowerCase() !== "typespec") {
           this.setState({
             invalidText: "Invalid workspace info",
@@ -896,10 +844,10 @@ class WSEditorSwaggerReloadDialog extends React.Component<
         }
         const resourceProviderUrl =
           "/Swagger/Specs/" +
-          res.data.plane +
+          swaggerDefault.plane +
           "/" +
-          res.data.modNames.join("/") +
-          `/ResourceProviders/${res.data.rpName}/TypeSpec`;
+          swaggerDefault.modNames.join("/") +
+          `/ResourceProviders/${swaggerDefault.rpName}/TypeSpec`;
         const requestBody = {
           version: resourceOptions[0].version,
           resources: data.resources,
@@ -916,22 +864,21 @@ class WSEditorSwaggerReloadDialog extends React.Component<
           return;
         }
         data.resources = emitterOptionRes;
-        // console.log("reload typespec data: ", data);
+        await WorkspaceApiService.reloadTypespecResources(this.props.workspaceUrl, data);
+      } else {
+        await WorkspaceApiService.reloadSwaggerResources(this.props.workspaceUrl, data);
       }
-      await axios.post(reloadUrl, data);
+
       this.setState({
         updating: false,
       });
       this.props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        this.setState({
-          invalidText: `ResponseError: ${data.message!}`,
-          updating: false,
-        });
-      }
+      this.setState({
+        invalidText: ApiErrorHandler.getErrorMessage(err),
+        updating: false,
+      });
     }
   };
 
@@ -1133,26 +1080,18 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
       });
       this.props.onClose(null);
     } else {
-      axios
-        .post(`${workspaceUrl}/Rename`, {
-          name: nName,
-        })
-        .then((res) => {
+      WorkspaceApiService.renameWorkspace(workspaceUrl, nName)
+        .then((res: any) => {
           this.setState({
             updating: false,
           });
-          this.props.onClose(res.data.name);
+          this.props.onClose(res.name);
         })
-        .catch((err) => {
+        .catch((err: any) => {
           this.setState({
             updating: false,
+            invalidText: ApiErrorHandler.getErrorMessage(err),
           });
-          if (err.response?.data?.message) {
-            const data = err.response!.data!;
-            this.setState({
-              invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
-            });
-          }
         });
     }
   };
