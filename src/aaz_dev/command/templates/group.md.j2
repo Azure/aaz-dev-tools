@@ -11,7 +11,7 @@
 {%- for _, sub_group in group.command_groups.items()|sort(attribute='0') %}
 
 - [{{ sub_group.names|last }}]({{ sub_group.names|command_group_readme_path }})
-: {{ sub_group.help.short }}
+: {{ sub_group.help.short | replace('\n', '\\n') }}
 {%- endfor %}
 {%- endif %}
 {%- if group.commands is not none and group.commands|length %}
@@ -20,7 +20,7 @@
 {%- for _, command in group.commands.items()|sort(attribute='0') %}
 
 - [{{ command.names|last }}]({{ command.names|command_readme_path }})
-: {{ command.help.short }}
+: {{ command.help.short | replace('\n', '\\n') }}
 {%- endfor %}
 {%- endif %}
 {{ "" }}

@@ -72,13 +72,18 @@ class ExampleBuilder:
 
 
 class SwaggerExampleBuilder(ExampleBuilder):
-    def __init__(self, command=None, operation=None, cmd_operation=None):
+    def __init__(self, command=None, path_item=None, operation=None, cmd_operation=None):
         super().__init__(command=command)
+        self.path_item = path_item
         self.operation = operation
         self.cmd_operation = cmd_operation
 
     def mapping(self, example_dict):
-        for param in self.operation.parameters:
+        parameters = dict()
+        for param in (self.operation.parameters or []) + (self.path_item.parameters or []):  # path level `parameters`
+            parameters[param.name] = param
+
+        for param in parameters.values():
             if param.name not in example_dict:
                 continue
 
