@@ -49,4 +49,3 @@ class WorkspaceInstruction extends React.Component {
 }
 
 export default WorkspaceInstruction;
-

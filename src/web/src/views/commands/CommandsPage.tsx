@@ -16,4 +16,3 @@ class CommandsPage extends React.Component {
 }
 
 export default withRoot(CommandsPage);
-

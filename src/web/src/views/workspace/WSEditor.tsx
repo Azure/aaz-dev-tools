@@ -694,7 +694,8 @@ function WSEditorDeleteDialog(props: { workspaceName: string; open: boolean; onC
 
   const handleDelete = () => {
     setUpdating(true);
-    workspaceApi.deleteWorkspace(props.workspaceName)
+    workspaceApi
+      .deleteWorkspace(props.workspaceName)
       .then(() => {
         setUpdating(false);
         props.onClose(true);
@@ -1080,7 +1081,8 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
       });
       this.props.onClose(null);
     } else {
-      workspaceApi.renameWorkspace(workspaceUrl, nName)
+      workspaceApi
+        .renameWorkspace(workspaceUrl, nName)
         .then((res: any) => {
           this.setState({
             updating: false,

@@ -207,4 +207,3 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps, WSEd
 export default WSEditorCommandTree;
 
 export type { CommandTreeNode, CommandTreeLeaf };
-
