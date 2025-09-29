@@ -956,4 +956,3 @@ class SwaggerItemSelector extends React.Component<SwaggerItemsSelectorProps> {
 export default WSEditorSwaggerPicker;
 export { SwaggerItemSelector };
 
-

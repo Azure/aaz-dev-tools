@@ -1995,4 +1995,3 @@ export { DecodeResponseCommand };
 
 export type { Plane, Command, Resource, ResponseCommand, ResponseCommands, Example };
 
-

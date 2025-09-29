@@ -50,4 +50,3 @@ class CLIModGeneratorToolBar extends React.Component<CLIModGeneratorToolBarProps
 
 export default CLIModGeneratorToolBar;
 
-

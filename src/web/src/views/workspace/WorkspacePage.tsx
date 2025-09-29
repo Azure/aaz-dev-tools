@@ -14,4 +14,3 @@ class WorkspacePage extends React.Component {
 
 export default withRoot(WorkspacePage);
 
-

@@ -1157,4 +1157,3 @@ const WSEditorWrapper = (props: any) => {
 
 export { WSEditorWrapper as WSEditor };
 
-
