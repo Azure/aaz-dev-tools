@@ -110,6 +110,15 @@ export class CommandApiService {
   }
 
   /**
+   * Find similar arguments for a command argument
+   */
+  static async findSimilarArguments(commandUrl: string, argVar: string): Promise<any> {
+    const similarUrl = `${commandUrl}/Arguments/${argVar}/FindSimilar`;
+    const res = await axios.post(similarUrl);
+    return res.data;
+  }
+
+  /**
    * Create a subresource for a command resource
    */
   static async createSubresource(

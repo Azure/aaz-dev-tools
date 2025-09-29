@@ -27,7 +27,7 @@ import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
 import EditIcon from "@mui/icons-material/Edit";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
 
-import axios from "axios";
+import { CommandApiService, ApiErrorHandler } from "../../services";
 import pluralize from "pluralize";
 import React, { useEffect, useState } from "react";
 import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./argument/WSECArgumentSimilarPicker";
@@ -920,46 +920,35 @@ function ArgumentDialog(props: {
     const argumentUrl = `${props.commandUrl}/Arguments/${props.arg.var}`;
 
     try {
-      await axios.patch(argumentUrl, {
-        ...data,
-      });
+      await CommandApiService.updateCommandArgument(argumentUrl, data);
       setUpdating(false);
       await props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
-      }
+      setInvalidText(ApiErrorHandler.getErrorMessage(err));
       setUpdating(false);
     }
   };
 
-  const handleDisplaySimilar = () => {
+  const handleDisplaySimilar = async () => {
     if (verifyModification() === undefined) {
       return;
     }
 
     setUpdating(true);
 
-    const similarUrl = `${props.commandUrl}/Arguments/${props.arg.var}/FindSimilar`;
-    axios
-      .post(similarUrl)
-      .then((res) => {
-        setUpdating(false);
-        const { tree, expandedIds } = BuildArgSimilarTree(res);
-        setArgSimilarTree(tree);
-        setArgSimilarTreeExpandedIds(expandedIds);
-        setArgSimilarTreeArgIdsUpdated([]);
-      })
-      .catch((err) => {
-        console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
-        }
-        setUpdating(false);
-      });
+    try {
+      const res = await CommandApiService.findSimilarArguments(props.commandUrl, props.arg.var);
+      setUpdating(false);
+      const { tree, expandedIds } = BuildArgSimilarTree(res);
+      setArgSimilarTree(tree);
+      setArgSimilarTreeExpandedIds(expandedIds);
+      setArgSimilarTreeArgIdsUpdated([]);
+    } catch (err: any) {
+      console.error(err);
+      setInvalidText(ApiErrorHandler.getErrorMessage(err));
+      setUpdating(false);
+    }
   };
 
   const handleDisableSimilar = () => {
@@ -988,17 +977,12 @@ function ArgumentDialog(props: {
       const argId = argSimilarTree!.selectedArgIds[idx];
       if (updatedIds.indexOf(argId) === -1) {
         try {
-          await axios.patch(argId, {
-            ...data,
-          });
+          await CommandApiService.updateArgumentById(argId, data);
           updatedIds.push(argId);
           setArgSimilarTreeArgIdsUpdated([...updatedIds]);
         } catch (err: any) {
           console.error(err);
-          if (err.response?.data?.message) {
-            const data = err.response!.data!;
-            invalidText += `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`;
-          }
+          invalidText += ApiErrorHandler.getErrorMessage(err);
         }
       }
     }
@@ -1469,46 +1453,35 @@ function FlattenDialog(props: {
     const flattenUrl = `${props.commandUrl}/Arguments/${props.arg.var}/Flatten`;
 
     try {
-      await axios.post(flattenUrl, {
-        ...data,
-      });
+      await CommandApiService.flattenArgument(flattenUrl, data);
       setUpdating(false);
       await props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
-      }
+      setInvalidText(ApiErrorHandler.getErrorMessage(err));
       setUpdating(false);
     }
   };
 
-  const handleDisplaySimilar = () => {
+  const handleDisplaySimilar = async () => {
     if (verifyFlatten() === undefined) {
       return;
     }
 
     setUpdating(true);
 
-    const similarUrl = `${props.commandUrl}/Arguments/${props.arg.var}/FindSimilar`;
-    axios
-      .post(similarUrl)
-      .then((res) => {
-        setUpdating(false);
-        const { tree, expandedIds } = BuildArgSimilarTree(res);
-        setArgSimilarTree(tree);
-        setArgSimilarTreeExpandedIds(expandedIds);
-        setArgSimilarTreeArgIdsUpdated([]);
-      })
-      .catch((err) => {
-        console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
-        }
-        setUpdating(false);
-      });
+    try {
+      const res = await CommandApiService.findSimilarArguments(props.commandUrl, props.arg.var);
+      setUpdating(false);
+      const { tree, expandedIds } = BuildArgSimilarTree(res);
+      setArgSimilarTree(tree);
+      setArgSimilarTreeExpandedIds(expandedIds);
+      setArgSimilarTreeArgIdsUpdated([]);
+    } catch (err: any) {
+      console.error(err);
+      setInvalidText(ApiErrorHandler.getErrorMessage(err));
+      setUpdating(false);
+    }
   };
 
   const handleDisableSimilar = () => {
@@ -1537,17 +1510,12 @@ function FlattenDialog(props: {
       if (updatedIds.indexOf(argId) === -1) {
         const flattenUrl = `${argId}/Flatten`;
         try {
-          await axios.post(flattenUrl, {
-            ...data,
-          });
+          await CommandApiService.flattenArgument(flattenUrl, data);
           updatedIds.push(argId);
           setArgSimilarTreeArgIdsUpdated([...updatedIds]);
         } catch (err: any) {
           console.error(err);
-          if (err.response?.data?.message) {
-            const data = err.response!.data!;
-            invalidText += `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`;
-          }
+          invalidText += ApiErrorHandler.getErrorMessage(err);
         }
       }
     }
@@ -1686,15 +1654,12 @@ function UnwrapClsDialog(props: {
     const flattenUrl = `${props.commandUrl}/Arguments/${argVar}/UnwrapClass`;
 
     try {
-      await axios.post(flattenUrl);
+      await CommandApiService.unwrapClassArgument(flattenUrl);
       setUpdating(false);
       await props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
-      }
+      setInvalidText(ApiErrorHandler.getErrorMessage(err));
       setUpdating(false);
     }
   };
