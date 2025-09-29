@@ -13,6 +13,22 @@ export class CliApiService {
   }
 
   /**
+   * Get CLI modules for a repository
+   */
+  static async getCliModules(repoName: string): Promise<any[]> {
+    const res = await axios.get(`/CLI/Az/${repoName}/Modules`);
+    return res.data;
+  }
+
+  /**
+   * Create a new CLI module
+   */
+  static async createCliModule(repoName: string, moduleName: string): Promise<any> {
+    const res = await axios.post(`/CLI/Az/${repoName}/Modules`, { name: moduleName });
+    return res.data;
+  }
+
+  /**
    * Get CLI module view
    */
   static async getCliModule(repoName: string, moduleName: string): Promise<any> {

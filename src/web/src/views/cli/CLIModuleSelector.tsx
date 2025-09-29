@@ -9,7 +9,7 @@ import {
   TextField,
   Button,
 } from "@mui/material";
-import axios from "axios";
+import { CliApiService, ApiErrorHandler } from "../../services";
 import * as React from "react";
 
 interface CLIModule {
@@ -56,48 +56,43 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
     this.loadModules();
   }
 
-  loadModules = () => {
-    axios
-      .get("/CLI/Az/" + this.props.repo + "/Modules")
-      .then((res) => {
-        const options = res.data.map((option: any) => {
-          return {
-            name: option.name,
-            folder: option.folder,
-            url: option.url,
-          };
-        });
-        this.setState({
-          options: options,
-        });
-      })
-      .catch((err) => console.error(err));
+  loadModules = async () => {
+    try {
+      const data = await CliApiService.getCliModules(this.props.repo);
+      const options = data.map((option: any) => {
+        return {
+          name: option.name,
+          folder: option.folder,
+          url: option.url,
+        };
+      });
+      this.setState({
+        options: options,
+      });
+    } catch (err: any) {
+      console.error(ApiErrorHandler.getErrorMessage(err));
+    }
   };
 
-  handleDialogSubmit = (event: any) => {
+  handleDialogSubmit = async (event: any) => {
     const form = event.currentTarget;
     if (form.checkValidity() === true) {
       const moduleName = this.state.createDialogValue.name;
 
-      axios
-        .post("/CLI/Az/" + this.props.repo + "/Modules", {
-          name: moduleName,
-        })
-        .then((res) => {
-          const module = res.data;
-          const value = {
-            name: module.name,
-            folder: module.folder,
-            url: module.url,
-          };
-          setTimeout(() => {
-            this.onValueUpdated(value);
-          });
-          this.handleDialogClose();
-        })
-        .catch((error) => {
-          console.error(error.response);
+      try {
+        const module = await CliApiService.createCliModule(this.props.repo, moduleName);
+        const value = {
+          name: module.name,
+          folder: module.folder,
+          url: module.url,
+        };
+        setTimeout(() => {
+          this.onValueUpdated(value);
         });
+        this.handleDialogClose();
+      } catch (err: any) {
+        console.error(ApiErrorHandler.getErrorMessage(err));
+      }
     }
   };
 
