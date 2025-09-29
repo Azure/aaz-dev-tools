@@ -43,4 +43,3 @@ export type {
   CLIModViewCommand,
   CLIModViewCommands,
 };
-

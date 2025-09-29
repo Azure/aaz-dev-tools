@@ -67,4 +67,3 @@ class CLIInstruction extends React.Component {
 }
 
 export default CLIInstruction;
-
