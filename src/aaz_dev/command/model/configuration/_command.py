@@ -369,10 +369,10 @@ def _compare_argument(arg, old_arg, has_subresource):
     arg_prefix = arg.var.split('.')[0]
     old_prefix = old_arg.var.split('.')[0]
 
-    if old_prefix == CMDArgBuildPrefix.Query:
+    if old_prefix in (CMDArgBuildPrefix.Query, CMDArgBuildPrefix.Header):
         return True
 
-    if old_prefix in (CMDArgBuildPrefix.Header, CMDArgBuildPrefix.Path):
+    if old_prefix == CMDArgBuildPrefix.Path:
         return False
 
     if arg_prefix in (CMDArgBuildPrefix.Query, CMDArgBuildPrefix.Header):
