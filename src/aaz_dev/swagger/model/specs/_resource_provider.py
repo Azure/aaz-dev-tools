@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+import sys
 from collections import OrderedDict
 
 import yaml
@@ -11,7 +12,7 @@ from swagger.utils.tools import swagger_resource_path_to_resource_id, resolve_pa
 from ._resource import Resource, ResourceVersion
 from ._utils import map_path_2_repo
 from utils.readme_helper import parse_readme_file
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class OpenAPIResourceProvider:
@@ -25,6 +26,7 @@ class OpenAPIResourceProvider:
         if not readme_paths:
             logger.warning(f"MissReadmeFile: {self} : {map_path_2_repo(folder_path)}")
         self._tags = None
+        self._default_tag = None
         self._resource_map = None
         self._ignore_resources = {f'/providers/{self.name}/operations'.lower(), }
 
@@ -85,6 +87,21 @@ class OpenAPIResourceProvider:
         if self._tags is None:
             self._tags = self._parse_readme_input_file_tags()
         return self._tags
+
+    @property
+    def default_tag(self):
+        if self._default_tag is None:
+            with open(self._readme_paths[0], "r", encoding="utf-8") as f:
+                content = f.read()
+
+            try:
+                self._default_tag = re.findall(r"tag:\s*(.+)", content)[0]
+
+            except IndexError:
+                logger.error(f"Cannot find default tag in resource provider: {self.name}.", exc_info=True)
+                raise sys.exit(1)
+
+        return self._default_tag
 
     def _parse_readme_input_file_tags(self):
         tags = {}
