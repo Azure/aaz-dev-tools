@@ -954,7 +954,6 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
         });
         this.props.onClose(cmd);
       } else {
-        // Rename command
         const renamedData = await CommandApiService.renameCommand(leafUrl, name);
         const cmd = DecodeResponseCommand(renamedData);
         this.setState({

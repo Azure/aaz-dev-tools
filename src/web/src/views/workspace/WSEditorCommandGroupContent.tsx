@@ -383,7 +383,6 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
         });
         this.props.onClose(cmdGroup);
       } else {
-        // Rename command Group
         const renameRes = await CommandApiService.renameCommandGroup(nodeUrl, name);
         const cmdGroup = DecodeResponseCommandGroup(renameRes);
         this.setState({
