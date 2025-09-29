@@ -203,13 +203,18 @@ def generate_by_swagger_tag(profile, swagger_tag, extension_or_module_name, cli_
 @click.option(
     "--cli-path", '-c',
     type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
+    default=Config.CLI_PATH,
     callback=Config.validate_and_setup_cli_path,
+    expose_value=False,
     help="The local path of azure-cli repo. Only required when generate code to azure-cli repo."
 )
 @click.option(
     "--cli-extension-path", '-e',
     type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
+    default=Config.CLI_EXTENSION_PATH,
     callback=Config.validate_and_setup_cli_extension_path,
+    expose_value=False,
+    hidden=True,
     help="The local path of azure-cli-extension repo. Only required when generate code to azure-cli-extension repo."
 )
 @click.option(
@@ -218,15 +223,16 @@ def generate_by_swagger_tag(profile, swagger_tag, extension_or_module_name, cli_
     default=Config.SWAGGER_PATH,
     callback=Config.validate_and_setup_swagger_path,
     expose_value=False,
+    hidden=True,
     help="The local path of azure-rest-api-specs repo. Official repo is https://github.com/Azure/azure-rest-api-specs"
 )
 @click.option(
     "--aaz-path", '-a',
     type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
     default=Config.AAZ_PATH,
-    required=not Config.AAZ_PATH,
     callback=Config.validate_and_setup_aaz_path,
     expose_value=False,
+    hidden=True,
     help="The local path of aaz repo."
 )
 @click.option(
@@ -239,7 +245,7 @@ def generate_by_swagger_tag(profile, swagger_tag, extension_or_module_name, cli_
     required=True,
     help="Module name of the CLI extension target."
 )
-def generate(spec, module, cli_path=None, cli_extension_path=None):
+def generate(spec, module, cli_path=None):
     def _collect_resources(spec):
         module_manager = SwaggerSpecsManager().get_module_manager(Config.DEFAULT_PLANE, spec)
         rps = module_manager.get_resource_providers()
@@ -363,19 +369,15 @@ def generate(spec, module, cli_path=None, cli_extension_path=None):
         logger.info(f"Regenerate module `{module}`.")
         manager.update_module(module, ext.profiles)
 
-    if cli_path and cli_extension_path:
-        logger.error("Please provide either `--cli-path` or `--cli-extension-path`.")
-        raise sys.exit(1)
-
     spec_path = os.path.join(Config.SWAGGER_PATH, "specification", spec)
     if not os.path.exists(spec_path) or not os.path.isdir(spec_path):
         raise ValueError(f"Cannot find the specification name under {Config.SWAGGER_PATH}.")
 
     try:
         to_aaz()
-        logger.info("✔  Finished generating AAZ model.")
+        logger.info("✅ Finished generating AAZ model.")
         to_cli()
-        logger.info("✔  Finished generating AAZ codes.")
+        logger.info("✅ Finished generating AAZ codes.")
 
     except (InvalidAPIUsage, ValueError) as err:
         logger.error(err, exc_info=True)
