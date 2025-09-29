@@ -110,6 +110,32 @@ export class CommandApiService {
   }
 
   /**
+   * Delete command group/resource node
+   */
+  static async deleteCommandGroup(nodeUrl: string): Promise<void> {
+    await axios.delete(nodeUrl);
+  }
+
+  /**
+   * Update command group properties
+   */
+  static async updateCommandGroup(
+    nodeUrl: string,
+    data: { help: { short: string; lines: string[] }; stage: string },
+  ): Promise<any> {
+    const res = await axios.patch(nodeUrl, data);
+    return res.data;
+  }
+
+  /**
+   * Rename command group
+   */
+  static async renameCommandGroup(nodeUrl: string, name: string): Promise<any> {
+    const res = await axios.post(`${nodeUrl}/Rename`, { name });
+    return res.data;
+  }
+
+  /**
    * Find similar arguments for a command argument
    */
   static async findSimilarArguments(commandUrl: string, argVar: string): Promise<any> {

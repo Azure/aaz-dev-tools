@@ -342,12 +342,9 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         this.onVersionUpdate(selectVersion);
       } catch (err: any) {
         console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          this.setState({
-            invalidText: `ResponseError: ${data.message!}`,
-          });
-        }
+        this.setState({
+          invalidText: ApiErrorHandler.getErrorMessage(err),
+        });
       }
     } else {
       this.setState({

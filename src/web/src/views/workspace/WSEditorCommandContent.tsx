@@ -1329,13 +1329,10 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
       }
     } catch (err: any) {
       console.error(err.response);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        this.setState({
-          updating: false,
-          invalidText: `ResponseError: ${data.message!}`,
-        });
-      }
+      this.setState({
+        updating: false,
+        invalidText: ApiErrorHandler.getErrorMessage(err),
+      });
     }
   };
 
