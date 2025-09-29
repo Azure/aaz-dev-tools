@@ -40,7 +40,7 @@ import WSEditorCommandContent, {
 } from "./WSEditorCommandContent";
 import WSEditorClientConfigDialog from "./WSEditorClientConfig";
 import { getTypespecRPResourcesOperations } from "../../typespec";
-import { WorkspaceApiService, SpecsApiService, ApiErrorHandler } from "../../services";
+import { workspaceApi, specsApi, apiErrorHandler } from "../../services";
 
 interface CommandGroupMap {
   [id: string]: CommandGroup;
@@ -123,8 +123,8 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
     }
 
     try {
-      const planeNames = await SpecsApiService.getPlaneNames();
-      const workspaceData = await WorkspaceApiService.getWorkspace(workspaceUrl);
+      const planeNames = await specsApi.getPlaneNames();
+      const workspaceData = await workspaceApi.getWorkspace(workspaceUrl);
       const reloadTimestamp = Date.now();
       const commandMap: CommandMap = {};
       const commandGroupMap: CommandGroupMap = {};
@@ -294,7 +294,7 @@ class WSEditor extends React.Component<WSEditorProps, WSEditorState> {
   };
 
   getWorkspaceClientConfig = async (workspaceUrl: string) => {
-    return await WorkspaceApiService.getWorkspaceClientConfig(workspaceUrl);
+    return await workspaceApi.getWorkspaceClientConfig(workspaceUrl);
   };
 
   showClientConfigDialog = () => {
@@ -599,11 +599,11 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
   verifyClientConfig = async () => {
     this.setState({ updating: true });
     try {
-      await WorkspaceApiService.verifyClientConfig(this.props.workspaceUrl);
+      await workspaceApi.verifyClientConfig(this.props.workspaceUrl);
       this.setState({ clientConfigOOD: false, updating: false });
     } catch (err: any) {
       // catch 409 error
-      if (ApiErrorHandler.isHttpError(err, 409)) {
+      if (apiErrorHandler.isHttpError(err, 409)) {
         this.setState({
           invalidText: `The client config in this workspace is out of date. Please refresh it first.`,
           clientConfigOOD: true,
@@ -613,7 +613,7 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
       } else {
         console.error(err);
         this.setState({
-          invalidText: ApiErrorHandler.getErrorMessage(err),
+          invalidText: apiErrorHandler.getErrorMessage(err),
           updating: false,
         });
       }
@@ -623,13 +623,13 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
   inheritClientConfig = async () => {
     this.setState({ updating: true });
     try {
-      await WorkspaceApiService.inheritClientConfig(this.props.workspaceUrl);
+      await workspaceApi.inheritClientConfig(this.props.workspaceUrl);
       this.setState({ clientConfigOOD: false, updating: false });
       this.props.onClose(false, true);
     } catch (err: any) {
       console.error(err);
       this.setState({
-        invalidText: ApiErrorHandler.getErrorMessage(err),
+        invalidText: apiErrorHandler.getErrorMessage(err),
         updating: false,
       });
     }
@@ -639,13 +639,13 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
     this.setState({ updating: true });
 
     try {
-      await WorkspaceApiService.generateWorkspace(this.props.workspaceUrl);
+      await workspaceApi.generateWorkspace(this.props.workspaceUrl);
       this.setState({ updating: false });
       this.props.onClose(false, false);
     } catch (err: any) {
       console.error(err);
       this.setState({
-        invalidText: ApiErrorHandler.getErrorMessage(err),
+        invalidText: apiErrorHandler.getErrorMessage(err),
         updating: false,
       });
     }
@@ -694,14 +694,14 @@ function WSEditorDeleteDialog(props: { workspaceName: string; open: boolean; onC
 
   const handleDelete = () => {
     setUpdating(true);
-    WorkspaceApiService.deleteWorkspace(props.workspaceName)
+    workspaceApi.deleteWorkspace(props.workspaceName)
       .then(() => {
         setUpdating(false);
         props.onClose(true);
       })
       .catch((err: any) => {
         console.error(err);
-        setInvalidText(ApiErrorHandler.getErrorMessage(err));
+        setInvalidText(apiErrorHandler.getErrorMessage(err));
         setUpdating(false);
       });
   };
@@ -789,7 +789,7 @@ class WSEditorSwaggerReloadDialog extends React.Component<
       updating: true,
     });
     try {
-      const resources: Resource[] = await WorkspaceApiService.getWorkspaceResources(this.props.workspaceUrl);
+      const resources: Resource[] = await workspaceApi.getWorkspaceResources(this.props.workspaceUrl);
       this.setState({
         updating: false,
         resourceOptions: resources,
@@ -798,7 +798,7 @@ class WSEditorSwaggerReloadDialog extends React.Component<
     } catch (err: any) {
       console.error(err);
       this.setState({
-        invalidText: ApiErrorHandler.getErrorMessage(err),
+        invalidText: apiErrorHandler.getErrorMessage(err),
         updating: false,
       });
     }
@@ -833,7 +833,7 @@ class WSEditorSwaggerReloadDialog extends React.Component<
 
     try {
       if (this.props.source.toLowerCase() === "typespec") {
-        const swaggerDefault = await WorkspaceApiService.getWorkspaceSwaggerDefault(this.props.workspaceName);
+        const swaggerDefault = await workspaceApi.getWorkspaceSwaggerDefault(this.props.workspaceName);
         const { modNames, rpName, source } = swaggerDefault;
         if (!modNames || modNames.length === 0 || !rpName || !source || source.toLowerCase() !== "typespec") {
           this.setState({
@@ -864,9 +864,9 @@ class WSEditorSwaggerReloadDialog extends React.Component<
           return;
         }
         data.resources = emitterOptionRes;
-        await WorkspaceApiService.reloadTypespecResources(this.props.workspaceUrl, data);
+        await workspaceApi.reloadTypespecResources(this.props.workspaceUrl, data);
       } else {
-        await WorkspaceApiService.reloadSwaggerResources(this.props.workspaceUrl, data);
+        await workspaceApi.reloadSwaggerResources(this.props.workspaceUrl, data);
       }
 
       this.setState({
@@ -876,7 +876,7 @@ class WSEditorSwaggerReloadDialog extends React.Component<
     } catch (err: any) {
       console.error(err);
       this.setState({
-        invalidText: ApiErrorHandler.getErrorMessage(err),
+        invalidText: apiErrorHandler.getErrorMessage(err),
         updating: false,
       });
     }
@@ -1080,7 +1080,7 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
       });
       this.props.onClose(null);
     } else {
-      WorkspaceApiService.renameWorkspace(workspaceUrl, nName)
+      workspaceApi.renameWorkspace(workspaceUrl, nName)
         .then((res: any) => {
           this.setState({
             updating: false,
@@ -1090,7 +1090,7 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
         .catch((err: any) => {
           this.setState({
             updating: false,
-            invalidText: ApiErrorHandler.getErrorMessage(err),
+            invalidText: apiErrorHandler.getErrorMessage(err),
           });
         });
     }
@@ -1156,3 +1156,5 @@ const WSEditorWrapper = (props: any) => {
 };
 
 export { WSEditorWrapper as WSEditor };
+
+

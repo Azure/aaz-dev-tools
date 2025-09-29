@@ -14,7 +14,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useParams } from "react-router";
-import { CliApiService, ApiErrorHandler } from "../../services";
+import { cliApi, apiErrorHandler } from "../../services";
 import CLIModGeneratorToolBar from "./CLIModGeneratorToolBar";
 import CLIModGeneratorProfileCommandTree, {
   ExportModViewProfile,
@@ -92,11 +92,11 @@ interface CLISpecsCommands {
 }
 
 async function retrieveCommand(names: string[]): Promise<CLISpecsCommand> {
-  return await CliApiService.getSpecsCommand(names);
+  return await cliApi.getSpecsCommand(names);
 }
 
 async function retrieveCommands(namesList: string[][]): Promise<CLISpecsCommand[]> {
-  return await CliApiService.retrieveCommands(namesList);
+  return await cliApi.retrieveCommands(namesList);
 }
 
 const useSpecsCommandTree: () => (namesList: string[][]) => Promise<CLISpecsCommand[]> = () => {
@@ -164,9 +164,9 @@ const CLIModuleGenerator: React.FC<CLIModuleGeneratorProps> = ({ params }) => {
   const loadModule = async () => {
     try {
       setLoading(true);
-      const profiles = await CliApiService.getCliProfiles();
-      const modView: CLIModView = await CliApiService.getCliModule(params.repoName, params.moduleName);
-      const simpleTree: CLISpecsSimpleCommandTree = await CliApiService.getSimpleCommandTree();
+      const profiles = await cliApi.getCliProfiles();
+      const modView: CLIModView = await cliApi.getCliModule(params.repoName, params.moduleName);
+      const simpleTree: CLISpecsSimpleCommandTree = await cliApi.getSimpleCommandTree();
 
       Object.keys(modView!.profiles).forEach((profile) => {
         const idx = profiles.findIndex((v) => v === profile);
@@ -188,7 +188,7 @@ const CLIModuleGenerator: React.FC<CLIModuleGeneratorProps> = ({ params }) => {
       setLoading(false);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(ApiErrorHandler.getErrorMessage(err));
+      setInvalidText(apiErrorHandler.getErrorMessage(err));
       setLoading(false);
     }
   };
@@ -324,12 +324,12 @@ function GenerateDialog(props: {
 
     setUpdating(true);
     try {
-      await CliApiService.updateCliModule(props.repoName, props.moduleName, data);
+      await cliApi.updateCliModule(props.repoName, props.moduleName, data);
       setUpdating(false);
       props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(ApiErrorHandler.getErrorMessage(err));
+      setInvalidText(apiErrorHandler.getErrorMessage(err));
       setUpdating(false);
     }
   };
@@ -346,12 +346,12 @@ function GenerateDialog(props: {
 
     setUpdating(true);
     try {
-      await CliApiService.patchCliModule(props.repoName, props.moduleName, data);
+      await cliApi.patchCliModule(props.repoName, props.moduleName, data);
       setUpdating(false);
       props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(ApiErrorHandler.getErrorMessage(err));
+      setInvalidText(apiErrorHandler.getErrorMessage(err));
       setUpdating(false);
     }
   };
@@ -398,3 +398,5 @@ export type {
   CLISpecsSimpleCommand,
 };
 export { CLIModuleGeneratorWrapper as CLIModuleGenerator };
+
+

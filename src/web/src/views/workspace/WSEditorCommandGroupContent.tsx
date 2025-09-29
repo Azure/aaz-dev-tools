@@ -17,7 +17,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { CommandApiService, ApiErrorHandler } from "../../services";
+import { commandApi, apiErrorHandler } from "../../services";
 import * as React from "react";
 import { ResponseCommands } from "./WSEditorCommandContent";
 import {
@@ -257,7 +257,7 @@ function CommandGroupDeleteDialog(props: {
     setUpdating(true);
 
     try {
-      await CommandApiService.deleteCommandGroup(nodeUrl);
+      await commandApi.deleteCommandGroup(nodeUrl);
       setUpdating(false);
       props.onClose(true);
     } catch (err: any) {
@@ -367,7 +367,7 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
     const nodeUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + commandGroup.names.join("/");
 
     try {
-      const res = await CommandApiService.updateCommandGroup(nodeUrl, {
+      const res = await commandApi.updateCommandGroup(nodeUrl, {
         help: {
           short: shortHelp,
           lines: lines,
@@ -383,7 +383,7 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
         });
         this.props.onClose(cmdGroup);
       } else {
-        const renameRes = await CommandApiService.renameCommandGroup(nodeUrl, name);
+        const renameRes = await commandApi.renameCommandGroup(nodeUrl, name);
         const cmdGroup = DecodeResponseCommandGroup(renameRes);
         this.setState({
           updating: false,
@@ -394,7 +394,7 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
       console.error(err);
       this.setState({
         updating: false,
-        invalidText: ApiErrorHandler.getErrorMessage(err),
+        invalidText: apiErrorHandler.getErrorMessage(err),
       });
     }
   };
@@ -517,3 +517,5 @@ export default WSEditorCommandGroupContent;
 
 export { DecodeResponseCommandGroup };
 export type { CommandGroup, ResponseCommandGroup, ResponseCommandGroups };
+
+

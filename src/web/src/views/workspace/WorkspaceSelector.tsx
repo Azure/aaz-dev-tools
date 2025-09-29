@@ -15,7 +15,7 @@ import * as React from "react";
 import { SwaggerItemSelector } from "./WSEditorSwaggerPicker";
 import styled from "@emotion/styled";
 import { Plane } from "./WSEditorCommandContent";
-import { WorkspaceApiService, SpecsApiService, ApiErrorHandler, type Workspace as WorkspaceType } from "../../services";
+import { workspaceApi, specsApi, apiErrorHandler, type Workspace as WorkspaceType } from "../../services";
 
 interface WorkspaceSelectorProps {
   name: string;
@@ -52,7 +52,7 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
 
   loadWorkspaces = async () => {
     try {
-      const options = await WorkspaceApiService.getWorkspaces();
+      const options = await workspaceApi.getWorkspaces();
       this.setState({
         options: options,
       });
@@ -216,7 +216,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
         loading: true,
       });
 
-      const planes = await SpecsApiService.getPlanes();
+      const planes = await specsApi.getPlanes();
       const planeOptions: string[] = planes.map((v) => v.displayName);
       this.setState({
         planes: planes,
@@ -228,7 +228,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
       console.error(err);
       this.setState({
         loading: false,
-        invalidText: ApiErrorHandler.getErrorMessage(err),
+        invalidText: apiErrorHandler.getErrorMessage(err),
       });
     }
   };
@@ -263,7 +263,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
           this.setState({
             loading: true,
           });
-          const options = await SpecsApiService.getModulesForPlane(plane!.name);
+          const options = await specsApi.getModulesForPlane(plane!.name);
           this.setState((preState) => {
             const planes = preState.planes;
             const index = planes.findIndex((v) => v.name === plane!.name);
@@ -281,7 +281,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
           console.error(err);
           this.setState({
             loading: false,
-            invalidText: ApiErrorHandler.getErrorMessage(err),
+            invalidText: apiErrorHandler.getErrorMessage(err),
           });
         }
       }
@@ -313,7 +313,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
         this.setState({
           loading: true,
         });
-        const options = await SpecsApiService.getResourceProviders(moduleUrl);
+        const options = await specsApi.getResourceProviders(moduleUrl);
         const selectedResourceProvider = options.length === 1 ? options[0] : null;
         this.setState({
           loading: false,
@@ -325,7 +325,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
         console.error(err);
         this.setState({
           loading: false,
-          invalidText: ApiErrorHandler.getErrorMessage(err),
+          invalidText: apiErrorHandler.getErrorMessage(err),
         });
       }
     } else {
@@ -399,14 +399,14 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
     }
     this.setState({ loading: true });
     try {
-      const workspace = await WorkspaceApiService.createWorkspace(data);
+      const workspace = await workspaceApi.createWorkspace(data);
       this.setState({ loading: false });
       this.props.onClose(workspace);
     } catch (err: any) {
       console.error(err);
       this.setState({
         loading: false,
-        invalidText: ApiErrorHandler.getErrorMessage(err),
+        invalidText: apiErrorHandler.getErrorMessage(err),
       });
     }
   };
@@ -502,3 +502,5 @@ const MiddlePadding = styled(Box)(() => ({
 }));
 
 export default WorkspaceSelector;
+
+

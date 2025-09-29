@@ -25,8 +25,8 @@ export interface ClientConfig {
   auth: any;
 }
 
-export class WorkspaceApiService {
-  static async getWorkspaces(): Promise<Workspace[]> {
+export const workspaceApi = {
+  getWorkspaces: async (): Promise<Workspace[]> => {
     const res = await axios.get("/AAZ/Editor/Workspaces");
     return res.data.map((option: any) => ({
       name: option.name,
@@ -35,9 +35,9 @@ export class WorkspaceApiService {
       plane: option.plane,
       folder: option.folder,
     }));
-  }
+  },
 
-  static async createWorkspace(data: CreateWorkspaceData): Promise<Workspace> {
+  createWorkspace: async (data: CreateWorkspaceData): Promise<Workspace> => {
     const res = await axios.post("/AAZ/Editor/Workspaces", data);
     const workspace = res.data;
     return {
@@ -49,24 +49,24 @@ export class WorkspaceApiService {
       url: workspace.url,
       folder: workspace.folder,
     };
-  }
+  },
 
-  static async getWorkspace(workspaceUrl: string): Promise<any> {
+  getWorkspace: async (workspaceUrl: string): Promise<any> => {
     const res = await axios.get(workspaceUrl);
     return res.data;
-  }
+  },
 
-  static async deleteWorkspace(workspaceName: string): Promise<void> {
+  deleteWorkspace: async (workspaceName: string): Promise<void> => {
     const nodeUrl = `/AAZ/Editor/Workspaces/${workspaceName}`;
     await axios.delete(nodeUrl);
-  }
+  },
 
-  static async renameWorkspace(workspaceUrl: string, newName: string): Promise<{ name: string }> {
+  renameWorkspace: async (workspaceUrl: string, newName: string): Promise<{ name: string }> => {
     const res = await axios.post(`${workspaceUrl}/Rename`, { name: newName });
     return res.data;
-  }
+  },
 
-  static async getWorkspaceClientConfig(workspaceUrl: string): Promise<ClientConfig | null> {
+  getWorkspaceClientConfig: async (workspaceUrl: string): Promise<ClientConfig | null> => {
     try {
       const res = await axios.get(`${workspaceUrl}/ClientConfig`);
       const clientConfig: ClientConfig = {
@@ -92,67 +92,67 @@ export class WorkspaceApiService {
       }
       throw err;
     }
-  }
+  },
 
-  static async updateClientConfig(workspaceUrl: string, config: any): Promise<void> {
+  updateClientConfig: async (workspaceUrl: string, config: any): Promise<void> => {
     await axios.post(`${workspaceUrl}/ClientConfig`, config);
-  }
+  },
 
-  static async verifyClientConfig(workspaceUrl: string): Promise<void> {
+  verifyClientConfig: async (workspaceUrl: string): Promise<void> => {
     const url = `${workspaceUrl}/ClientConfig/AAZ/Compare`;
     await axios.post(url);
-  }
+  },
 
-  static async inheritClientConfig(workspaceUrl: string): Promise<void> {
+  inheritClientConfig: async (workspaceUrl: string): Promise<void> => {
     const url = `${workspaceUrl}/ClientConfig/AAZ/Inherit`;
     await axios.post(url);
-  }
+  },
 
-  static async generateWorkspace(workspaceUrl: string): Promise<void> {
+  generateWorkspace: async (workspaceUrl: string): Promise<void> => {
     const url = `${workspaceUrl}/Generate`;
     await axios.post(url);
-  }
+  },
 
-  static async getWorkspaceResources(workspaceUrl: string): Promise<any[]> {
+  getWorkspaceResources: async (workspaceUrl: string): Promise<any[]> => {
     const res = await axios.get(`${workspaceUrl}/CommandTree/Nodes/aaz/Resources`);
     return res.data;
-  }
+  },
 
-  static async getWorkspaceSwaggerDefault(workspaceName: string): Promise<any> {
+  getWorkspaceSwaggerDefault: async (workspaceName: string): Promise<any> => {
     const res = await axios.get(`/AAZ/Editor/Workspaces/${workspaceName}/SwaggerDefault`);
     return res.data;
-  }
+  },
 
-  static async reloadSwaggerResources(workspaceUrl: string, data: any): Promise<void> {
+  reloadSwaggerResources: async (workspaceUrl: string, data: any): Promise<void> => {
     const reloadUrl = `${workspaceUrl}/Resources/ReloadSwagger`;
     await axios.post(reloadUrl, data);
-  }
+  },
 
-  static async reloadTypespecResources(workspaceUrl: string, data: any): Promise<void> {
+  reloadTypespecResources: async (workspaceUrl: string, data: any): Promise<void> => {
     const reloadUrl = `${workspaceUrl}/Resources/ReloadTypespec`;
     await axios.post(reloadUrl, data);
-  }
+  },
 
-  static async getSwaggerDefault(workspaceName: string): Promise<any> {
+  getSwaggerDefault: async (workspaceName: string): Promise<any> => {
     const res = await axios.get(`/AAZ/Editor/Workspaces/${workspaceName}/SwaggerDefault`);
     return res.data;
-  }
+  },
 
-  static async getWorkspaceResourcesByName(workspaceName: string): Promise<any[]> {
+  getWorkspaceResourcesByName: async (workspaceName: string): Promise<any[]> => {
     const res = await axios.get(`/AAZ/Editor/Workspaces/${workspaceName}/CommandTree/Nodes/aaz/Resources`);
     return res.data;
-  }
+  },
 
-  static async addSwaggerResources(workspaceName: string, requestBody: any): Promise<void> {
+  addSwaggerResources: async (workspaceName: string, requestBody: any): Promise<void> => {
     await axios.post(`/AAZ/Editor/Workspaces/${workspaceName}/CommandTree/Nodes/aaz/AddSwagger`, requestBody);
-  }
+  },
 
-  static async addTypespecResources(workspaceName: string, requestBody: any): Promise<void> {
+  addTypespecResources: async (workspaceName: string, requestBody: any): Promise<void> => {
     await axios.post(`/AAZ/Editor/Workspaces/${workspaceName}/CommandTree/Nodes/aaz/AddTypespec`, requestBody);
-  }
+  },
 
-  static async getClientConfig(workspaceUrl: string): Promise<any> {
+  getClientConfig: async (workspaceUrl: string): Promise<any> => {
     const res = await axios.get(`${workspaceUrl}/ClientConfig`);
     return res.data;
-  }
-}
+  },
+} as const;

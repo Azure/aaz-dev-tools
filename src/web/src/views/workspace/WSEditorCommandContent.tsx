@@ -47,7 +47,7 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import DataObjectIcon from "@mui/icons-material/DataObject";
 import LabelIcon from "@mui/icons-material/Label";
-import { CommandApiService, ApiErrorHandler } from "../../services";
+import { commandApi, apiErrorHandler } from "../../services";
 import WSEditorCommandArgumentsContent, {
   ClsArgDefinitionMap,
   CMDArg,
@@ -268,7 +268,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
       "/Leaves/" +
       commandNames[commandNames.length - 1];
     try {
-      const commandData = await CommandApiService.getCommand(leafUrl);
+      const commandData = await commandApi.getCommand(leafUrl);
       const command = DecodeResponseCommand(commandData);
       if (command.id === this.props.previewCommand.id) {
         this.setState({
@@ -783,7 +783,7 @@ function CommandDeleteDialog(props: {
     setRelatedCommands([]);
     const urls = getUrls();
     const promisesAll = urls.map(async (url) => {
-      return await CommandApiService.getCommandsForResource(url);
+      return await commandApi.getCommandsForResource(url);
     });
     Promise.all(promisesAll)
       .then((responses) => {
@@ -813,7 +813,7 @@ function CommandDeleteDialog(props: {
     setUpdating(true);
     const urls = getUrls();
     const promisesAll = urls.map(async (url) => {
-      return await CommandApiService.deleteResource(url);
+      return await commandApi.deleteResource(url);
     });
     Promise.all(promisesAll)
       .then(() => {
@@ -937,7 +937,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
       command.names[command.names.length - 1];
 
     try {
-      const commandData = await CommandApiService.updateCommand(leafUrl, {
+      const commandData = await commandApi.updateCommand(leafUrl, {
         help: {
           short: shortHelp,
           lines: lines,
@@ -954,7 +954,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
         });
         this.props.onClose(cmd);
       } else {
-        const renamedData = await CommandApiService.renameCommand(leafUrl, name);
+        const renamedData = await commandApi.renameCommand(leafUrl, name);
         const cmd = DecodeResponseCommand(renamedData);
         this.setState({
           updating: false,
@@ -964,7 +964,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
     } catch (err: any) {
       console.error(err);
       this.setState({
-        invalidText: ApiErrorHandler.getErrorMessage(err),
+        invalidText: apiErrorHandler.getErrorMessage(err),
         updating: false,
       });
     }
@@ -1158,7 +1158,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
     });
 
     try {
-      const responseData = await CommandApiService.updateCommandExamples(leafUrl, examples);
+      const responseData = await commandApi.updateCommandExamples(leafUrl, examples);
       const cmd = DecodeResponseCommand(responseData);
       this.setState({
         updating: false,
@@ -1166,7 +1166,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
       this.props.onClose(cmd);
     } catch (err: any) {
       console.error(err);
-      const message = ApiErrorHandler.getErrorMessage(err);
+      const message = apiErrorHandler.getErrorMessage(err);
       this.setState({
         invalidText: `ResponseError: ${message}`,
         updating: false,
@@ -1318,7 +1318,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
         source: "swagger",
         updating: true,
       });
-      const examples = await CommandApiService.generateSwaggerExamples(leafUrl);
+      const examples = await commandApi.generateSwaggerExamples(leafUrl);
       this.setState({
         exampleOptions: examples,
         updating: false,
@@ -1330,7 +1330,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
       console.error(err.response);
       this.setState({
         updating: false,
-        invalidText: ApiErrorHandler.getErrorMessage(err),
+        invalidText: apiErrorHandler.getErrorMessage(err),
       });
     }
   };
@@ -1591,14 +1591,14 @@ function AddSubcommandDialog(props: {
     setUpdating(true);
 
     try {
-      await CommandApiService.createSubresource(urls[0], {
+      await commandApi.createSubresource(urls[0], {
         ...data,
         arg: props.argVar,
       });
       props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      const message = ApiErrorHandler.getErrorMessage(err);
+      const message = apiErrorHandler.getErrorMessage(err);
       setInvalidText(`ResponseError: ${message}`);
       setUpdating(false);
     }
@@ -1885,13 +1885,13 @@ function OutputDialog(props: {
       console.log(output.clientFlatten);
 
       try {
-        const responseData = await CommandApiService.updateCommandOutputs(leafUrl, outputs);
+        const responseData = await commandApi.updateCommandOutputs(leafUrl, outputs);
         const cmd = DecodeResponseCommand(responseData);
         setUpdating(false);
         props.onClose(cmd);
       } catch (err: any) {
         console.error(err);
-        const message = ApiErrorHandler.getErrorMessage(err);
+        const message = apiErrorHandler.getErrorMessage(err);
         setInvalidText(`ResponseError: ${message}`);
         setUpdating(false);
       }
@@ -1994,3 +1994,5 @@ export default WSEditorCommandContent;
 export { DecodeResponseCommand };
 
 export type { Plane, Command, Resource, ResponseCommand, ResponseCommands, Example };
+
+

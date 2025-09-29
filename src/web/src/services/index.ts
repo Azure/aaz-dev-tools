@@ -1,4 +1,4 @@
-export { WorkspaceApiService, type Workspace, type CreateWorkspaceData, type ClientConfig } from "./workspaceApi";
-export { SpecsApiService, SpecsHelper, type Plane, type Resource } from "./specsApi";
-export { CommandApiService, ApiErrorHandler } from "./commandApi";
-export { CliApiService } from "./cliApi";
+export { workspaceApi, type Workspace, type CreateWorkspaceData, type ClientConfig } from "./workspaceApi";
+export { specsApi, specsHelper, type Plane, type Resource } from "./specsApi";
+export { commandApi, apiErrorHandler } from "./commandApi";
+export { cliApi } from "./cliApi";

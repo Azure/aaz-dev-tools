@@ -19,7 +19,7 @@ import {
   Tabs,
   Tab,
 } from "@mui/material";
-import { WorkspaceApiService, SpecsApiService, ApiErrorHandler } from "../../services";
+import { workspaceApi, specsApi, apiErrorHandler } from "../../services";
 import DoDisturbOnRoundedIcon from "@mui/icons-material/DoDisturbOnRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import { Plane, Resource } from "./WSEditorCommandContent";
@@ -163,7 +163,7 @@ class WSEditorClientConfigDialog extends React.Component<
         updating: true,
       });
 
-      const planes = await SpecsApiService.getPlanes();
+      const planes = await specsApi.getPlanes();
       const planeOptions: string[] = planes.map((v: any) => v.displayName);
       this.setState({
         planes: planes,
@@ -173,7 +173,7 @@ class WSEditorClientConfigDialog extends React.Component<
       await this.onPlaneSelectorUpdate(planeOptions[0]);
     } catch (err: any) {
       console.error(err);
-      const message = ApiErrorHandler.getErrorMessage(err);
+      const message = apiErrorHandler.getErrorMessage(err);
       this.setState({
         updating: false,
         invalidText: `ResponseError: ${message}`,
@@ -211,7 +211,7 @@ class WSEditorClientConfigDialog extends React.Component<
           this.setState({
             updating: true,
           });
-          const options = await SpecsApiService.getSwaggerModules(plane!.name);
+          const options = await specsApi.getSwaggerModules(plane!.name);
           this.setState((preState) => {
             const planes = preState.planes;
             const index = planes.findIndex((v) => v.name === plane!.name);
@@ -227,7 +227,7 @@ class WSEditorClientConfigDialog extends React.Component<
           await this.onModuleSelectionUpdate(null);
         } catch (err: any) {
           console.error(err);
-          const message = ApiErrorHandler.getErrorMessage(err);
+          const message = apiErrorHandler.getErrorMessage(err);
           this.setState({
             updating: false,
             invalidText: `ResponseError: ${message}`,
@@ -262,7 +262,7 @@ class WSEditorClientConfigDialog extends React.Component<
         this.setState({
           updating: true,
         });
-        const options = await SpecsApiService.getResourceProviders(moduleUrl);
+        const options = await specsApi.getResourceProviders(moduleUrl);
         const selectedResourceProvider = options.length === 1 ? options[0] : null;
         this.setState({
           updating: false,
@@ -272,7 +272,7 @@ class WSEditorClientConfigDialog extends React.Component<
         this.onResourceProviderUpdate(selectedResourceProvider);
       } catch (err: any) {
         console.error(err);
-        const message = ApiErrorHandler.getErrorMessage(err);
+        const message = apiErrorHandler.getErrorMessage(err);
         this.setState({
           updating: false,
           invalidText: `ResponseError: ${message}`,
@@ -307,7 +307,7 @@ class WSEditorClientConfigDialog extends React.Component<
         updating: true,
       });
       try {
-        const resources = await SpecsApiService.getProviderResources(resourceProviderUrl);
+        const resources = await specsApi.getProviderResources(resourceProviderUrl);
         const versionResourceIdMap: SwaggerVersionResourceIdMap = {};
         const versionOptions: string[] = [];
         const resourceIdList: string[] = [];
@@ -350,7 +350,7 @@ class WSEditorClientConfigDialog extends React.Component<
         this.onVersionUpdate(selectVersion);
       } catch (err: any) {
         console.error(err);
-        const message = ApiErrorHandler.getErrorMessage(err);
+        const message = apiErrorHandler.getErrorMessage(err);
         this.setState({
           invalidText: `ResponseError: ${message}`,
         });
@@ -388,7 +388,7 @@ class WSEditorClientConfigDialog extends React.Component<
   loadWorkspaceClientConfig = async () => {
     this.setState({ updating: true });
     try {
-      const clientConfigData = await WorkspaceApiService.getClientConfig(this.props.workspaceUrl);
+      const clientConfigData = await workspaceApi.getClientConfig(this.props.workspaceUrl);
       const clientConfig: ClientConfig = {
         version: clientConfigData.version,
         auth: clientConfigData.auth,
@@ -454,13 +454,13 @@ class WSEditorClientConfigDialog extends React.Component<
       });
     } catch (err: any) {
       // catch 404 error
-      if (ApiErrorHandler.isHttpError(err, 404)) {
+      if (apiErrorHandler.isHttpError(err, 404)) {
         this.setState({
           isAdd: true,
         });
       } else {
         console.error(err);
-        const message = ApiErrorHandler.getErrorMessage(err);
+        const message = apiErrorHandler.getErrorMessage(err);
         this.setState({ invalidText: `ResponseError: ${message}` });
       }
     }
@@ -638,7 +638,7 @@ class WSEditorClientConfigDialog extends React.Component<
   ) => {
     this.setState({ updating: true });
     try {
-      await WorkspaceApiService.updateClientConfig(this.props.workspaceUrl, {
+      await workspaceApi.updateClientConfig(this.props.workspaceUrl, {
         templates: templates,
         cloudMetadata: cloudMetadata,
         resource: resource,
@@ -648,7 +648,7 @@ class WSEditorClientConfigDialog extends React.Component<
       this.props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      const message = ApiErrorHandler.getErrorMessage(err);
+      const message = apiErrorHandler.getErrorMessage(err);
       this.setState({ invalidText: `ResponseError: ${message}` });
       this.setState({ updating: false });
     }

@@ -9,7 +9,7 @@ import {
   TextField,
   Button,
 } from "@mui/material";
-import { CliApiService, ApiErrorHandler } from "../../services";
+import { cliApi, apiErrorHandler } from "../../services";
 import * as React from "react";
 
 interface CLIModule {
@@ -58,7 +58,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
 
   loadModules = async () => {
     try {
-      const data = await CliApiService.getCliModules(this.props.repo);
+      const data = await cliApi.getCliModules(this.props.repo);
       const options = data.map((option: any) => {
         return {
           name: option.name,
@@ -70,7 +70,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
         options: options,
       });
     } catch (err: any) {
-      console.error(ApiErrorHandler.getErrorMessage(err));
+      console.error(apiErrorHandler.getErrorMessage(err));
     }
   };
 
@@ -80,7 +80,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
       const moduleName = this.state.createDialogValue.name;
 
       try {
-        const module = await CliApiService.createCliModule(this.props.repo, moduleName);
+        const module = await cliApi.createCliModule(this.props.repo, moduleName);
         const value = {
           name: module.name,
           folder: module.folder,
@@ -91,7 +91,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
         });
         this.handleDialogClose();
       } catch (err: any) {
-        console.error(ApiErrorHandler.getErrorMessage(err));
+        console.error(apiErrorHandler.getErrorMessage(err));
       }
     }
   };
@@ -231,3 +231,5 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
 }
 
 export default CLIModuleSelector;
+
+

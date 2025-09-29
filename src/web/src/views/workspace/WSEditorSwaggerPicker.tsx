@@ -27,7 +27,7 @@ import {
   FormHelperText,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { WorkspaceApiService, SpecsApiService, ApiErrorHandler } from "../../services";
+import { workspaceApi, specsApi, apiErrorHandler } from "../../services";
 import EditorPageLayout from "../../components/EditorPageLayout";
 import { styled } from "@mui/material/styles";
 import { getTypespecRPResources, getTypespecRPResourcesOperations } from "../../typespec";
@@ -158,7 +158,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     this.loadWorkspaceResources().then(async () => {
       await this.loadSwaggerModules(this.props.plane);
       try {
-        const swaggerDefault = await WorkspaceApiService.getSwaggerDefault(this.props.workspaceName);
+        const swaggerDefault = await workspaceApi.getSwaggerDefault(this.props.workspaceName);
         // default module name
         if (swaggerDefault.modNames === null || swaggerDefault.modNames.length == 0) {
           return;
@@ -183,7 +183,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         await this.loadResourceProviders(moduleValueUrl, rpUrl);
       } catch (err: any) {
         console.error(err);
-        const message = ApiErrorHandler.getErrorMessage(err);
+        const message = apiErrorHandler.getErrorMessage(err);
         this.setState({
           invalidText: `ResponseError: ${message}`,
         });
@@ -201,7 +201,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
 
   loadSwaggerModules = async (plane: string) => {
     try {
-      const options = await SpecsApiService.getSwaggerModules(plane);
+      const options = await specsApi.getSwaggerModules(plane);
       this.setState((preState) => {
         return {
           ...preState,
@@ -212,7 +212,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
       });
     } catch (err: any) {
       console.error(err);
-      const message = ApiErrorHandler.getErrorMessage(err);
+      const message = apiErrorHandler.getErrorMessage(err);
       this.setState({
         invalidText: `ResponseError: ${message}`,
       });
@@ -223,7 +223,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
     if (moduleUrl != null) {
       const defaultSource = this.state.defaultSource;
       try {
-        let options = await SpecsApiService.getResourceProvidersWithType(moduleUrl, defaultSource ?? undefined);
+        let options = await specsApi.getResourceProvidersWithType(moduleUrl, defaultSource ?? undefined);
         let selectedResourceProvider = options.length === 1 ? options[0] : null;
         let defaultResourceProvider = null;
         if (preferredRP !== null && options.findIndex((v) => v === preferredRP) >= 0) {
@@ -239,7 +239,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         await this.onResourceProviderUpdate(selectedResourceProvider);
       } catch (err: any) {
         console.error(err);
-        const message = ApiErrorHandler.getErrorMessage(err);
+        const message = apiErrorHandler.getErrorMessage(err);
         this.setState({
           invalidText: `ResponseError: ${message}`,
         });
@@ -254,7 +254,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
 
   loadWorkspaceResources = async () => {
     try {
-      const resources = await WorkspaceApiService.getWorkspaceResourcesByName(this.props.workspaceName);
+      const resources = await workspaceApi.getWorkspaceResourcesByName(this.props.workspaceName);
       const existingResources = new Set<string>();
       if (resources && Array.isArray(resources) && resources.length > 0) {
         resources.forEach((resource: any) => {
@@ -266,7 +266,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
       });
     } catch (err: any) {
       console.error(err);
-      const message = ApiErrorHandler.getErrorMessage(err);
+      const message = apiErrorHandler.getErrorMessage(err);
       this.setState({
         invalidText: `ResponseError: ${message}`,
       });
@@ -289,10 +289,10 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         // console.log(data);
       } else {
         try {
-          data = await SpecsApiService.getProviderResources(resourceProviderUrl);
+          data = await specsApi.getProviderResources(resourceProviderUrl);
         } catch (err: any) {
           console.error(err);
-          const message = ApiErrorHandler.getErrorMessage(err);
+          const message = apiErrorHandler.getErrorMessage(err);
           this.setState({
             invalidText: `ResponseError: ${message}`,
           });
@@ -327,7 +327,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
           selectVersion = versionOptions[0];
         }
 
-        const filterData = await SpecsApiService.filterResourcesByPlane(this.props.plane, resourceIdList);
+        const filterData = await specsApi.filterResourcesByPlane(this.props.plane, resourceIdList);
         filterData.resources.forEach((aazResource: AAZResource) => {
           if (aazResource.versions) {
             resourceMap[aazResource.id].aazVersions = aazResource.versions;
@@ -343,7 +343,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
       } catch (err: any) {
         console.error(err);
         this.setState({
-          invalidText: ApiErrorHandler.getErrorMessage(err),
+          invalidText: apiErrorHandler.getErrorMessage(err),
         });
       }
     } else {
@@ -442,7 +442,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         };
         console.log("addTypespec data: ", addTypespecData);
         try {
-          await WorkspaceApiService.addTypespecResources(this.props.workspaceName, addTypespecData);
+          await workspaceApi.addTypespecResources(this.props.workspaceName, addTypespecData);
           this.setState({
             loading: false,
           });
@@ -453,7 +453,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
             loading: false,
           });
           this.props.onClose(false);
-          const message = ApiErrorHandler.getErrorMessage(err);
+          const message = apiErrorHandler.getErrorMessage(err);
           this.setState({
             invalidText: `ResponseError: ${message}`,
           });
@@ -463,21 +463,21 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
           loading: false,
         });
         this.props.onClose(true);
-        const message = ApiErrorHandler.getErrorMessage(err);
+        const message = apiErrorHandler.getErrorMessage(err);
         this.setState({
           invalidText: `ResponseError: ${message}`,
         });
       }
     } else {
       try {
-        await WorkspaceApiService.addSwaggerResources(this.props.workspaceName, requestBody);
+        await workspaceApi.addSwaggerResources(this.props.workspaceName, requestBody);
         this.setState({
           loading: false,
         });
         this.props.onClose(true);
       } catch (err: any) {
         console.error(err);
-        const message = ApiErrorHandler.getErrorMessage(err);
+        const message = apiErrorHandler.getErrorMessage(err);
         this.setState({
           invalidText: `ResponseError: ${message}`,
         });
@@ -955,3 +955,5 @@ class SwaggerItemSelector extends React.Component<SwaggerItemsSelectorProps> {
 
 export default WSEditorSwaggerPicker;
 export { SwaggerItemSelector };
+
+

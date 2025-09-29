@@ -27,7 +27,7 @@ import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
 import EditIcon from "@mui/icons-material/Edit";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
 
-import { CommandApiService, ApiErrorHandler } from "../../services";
+import { commandApi, apiErrorHandler } from "../../services";
 import pluralize from "pluralize";
 import React, { useEffect, useState } from "react";
 import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./argument/WSECArgumentSimilarPicker";
@@ -920,12 +920,12 @@ function ArgumentDialog(props: {
     const argumentUrl = `${props.commandUrl}/Arguments/${props.arg.var}`;
 
     try {
-      await CommandApiService.updateCommandArgument(argumentUrl, data);
+      await commandApi.updateCommandArgument(argumentUrl, data);
       setUpdating(false);
       await props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(ApiErrorHandler.getErrorMessage(err));
+      setInvalidText(apiErrorHandler.getErrorMessage(err));
       setUpdating(false);
     }
   };
@@ -938,7 +938,7 @@ function ArgumentDialog(props: {
     setUpdating(true);
 
     try {
-      const res = await CommandApiService.findSimilarArguments(props.commandUrl, props.arg.var);
+      const res = await commandApi.findSimilarArguments(props.commandUrl, props.arg.var);
       setUpdating(false);
       const { tree, expandedIds } = BuildArgSimilarTree(res);
       setArgSimilarTree(tree);
@@ -946,7 +946,7 @@ function ArgumentDialog(props: {
       setArgSimilarTreeArgIdsUpdated([]);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(ApiErrorHandler.getErrorMessage(err));
+      setInvalidText(apiErrorHandler.getErrorMessage(err));
       setUpdating(false);
     }
   };
@@ -977,12 +977,12 @@ function ArgumentDialog(props: {
       const argId = argSimilarTree!.selectedArgIds[idx];
       if (updatedIds.indexOf(argId) === -1) {
         try {
-          await CommandApiService.updateArgumentById(argId, data);
+          await commandApi.updateArgumentById(argId, data);
           updatedIds.push(argId);
           setArgSimilarTreeArgIdsUpdated([...updatedIds]);
         } catch (err: any) {
           console.error(err);
-          invalidText += ApiErrorHandler.getErrorMessage(err);
+          invalidText += apiErrorHandler.getErrorMessage(err);
         }
       }
     }
@@ -1453,12 +1453,12 @@ function FlattenDialog(props: {
     const flattenUrl = `${props.commandUrl}/Arguments/${props.arg.var}/Flatten`;
 
     try {
-      await CommandApiService.flattenArgument(flattenUrl, data);
+      await commandApi.flattenArgument(flattenUrl, data);
       setUpdating(false);
       await props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(ApiErrorHandler.getErrorMessage(err));
+      setInvalidText(apiErrorHandler.getErrorMessage(err));
       setUpdating(false);
     }
   };
@@ -1471,7 +1471,7 @@ function FlattenDialog(props: {
     setUpdating(true);
 
     try {
-      const res = await CommandApiService.findSimilarArguments(props.commandUrl, props.arg.var);
+      const res = await commandApi.findSimilarArguments(props.commandUrl, props.arg.var);
       setUpdating(false);
       const { tree, expandedIds } = BuildArgSimilarTree(res);
       setArgSimilarTree(tree);
@@ -1479,7 +1479,7 @@ function FlattenDialog(props: {
       setArgSimilarTreeArgIdsUpdated([]);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(ApiErrorHandler.getErrorMessage(err));
+      setInvalidText(apiErrorHandler.getErrorMessage(err));
       setUpdating(false);
     }
   };
@@ -1510,12 +1510,12 @@ function FlattenDialog(props: {
       if (updatedIds.indexOf(argId) === -1) {
         const flattenUrl = `${argId}/Flatten`;
         try {
-          await CommandApiService.flattenArgument(flattenUrl, data);
+          await commandApi.flattenArgument(flattenUrl, data);
           updatedIds.push(argId);
           setArgSimilarTreeArgIdsUpdated([...updatedIds]);
         } catch (err: any) {
           console.error(err);
-          invalidText += ApiErrorHandler.getErrorMessage(err);
+          invalidText += apiErrorHandler.getErrorMessage(err);
         }
       }
     }
@@ -1654,12 +1654,12 @@ function UnwrapClsDialog(props: {
     const flattenUrl = `${props.commandUrl}/Arguments/${argVar}/UnwrapClass`;
 
     try {
-      await CommandApiService.unwrapClassArgument(flattenUrl);
+      await commandApi.unwrapClassArgument(flattenUrl);
       setUpdating(false);
       await props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(ApiErrorHandler.getErrorMessage(err));
+      setInvalidText(apiErrorHandler.getErrorMessage(err));
       setUpdating(false);
     }
   };
@@ -2625,3 +2625,5 @@ const DecodeArgs = (argGroups: any[]): { args: CMDArg[]; clsArgDefineMap: ClsArg
 export default WSEditorCommandArgumentsContent;
 export { DecodeArgs };
 export type { ClsArgDefinitionMap, CMDArg };
+
+
