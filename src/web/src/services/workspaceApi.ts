@@ -209,4 +209,12 @@ export class WorkspaceApiService {
   static async addTypespecResources(workspaceName: string, requestBody: any): Promise<void> {
     await axios.post(`/AAZ/Editor/Workspaces/${workspaceName}/CommandTree/Nodes/aaz/AddTypespec`, requestBody);
   }
+
+  /**
+   * Get workspace client configuration
+   */
+  static async getClientConfig(workspaceUrl: string): Promise<any> {
+    const res = await axios.get(`${workspaceUrl}/ClientConfig`);
+    return res.data;
+  }
 }
