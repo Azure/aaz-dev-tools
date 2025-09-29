@@ -240,155 +240,128 @@ def generate_by_swagger_tag(profile, swagger_tag, extension_or_module_name, cli_
     help="Module name of the CLI extension target."
 )
 def generate(spec, module, cli_path=None, cli_extension_path=None):
-    def to_aaz():
-        try:
-            module_manager = SwaggerSpecsManager().get_module_manager(Config.DEFAULT_PLANE, spec)
+    def _collect_resources(spec):
+        module_manager = SwaggerSpecsManager().get_module_manager(Config.DEFAULT_PLANE, spec)
+        rps = module_manager.get_resource_providers()
 
-            rps = module_manager.get_resource_providers()
-            for r in rps:
-                if isinstance(r, TypeSpecResourceProvider):
-                    continue
+        results = {}
+        for r in rps:
+            if isinstance(r, TypeSpecResourceProvider):
+                continue
 
-                rp = module_manager.get_openapi_resource_provider(r.name)
-                tag = r.default_tag
+            rp = module_manager.get_openapi_resource_provider(r.name)
+            tag = r.default_tag
 
-                resource_map = rp.get_resource_map_by_tag(tag)
-                if not resource_map:
-                    raise InvalidAPIUsage(f"Tag `{tag}` is not exist")
+            resource_map = rp.get_resource_map_by_tag(tag)
+            if not resource_map:
+                raise InvalidAPIUsage(f"Tag `{tag}` is not exist.")
 
-                version_resource_map = {}
-                for resource_id, version_map in resource_map.items():
-                    v_list = [v for v in version_map]
-                    if len(v_list) > 1:
-                        raise InvalidAPIUsage(
-                            f"Tag `{tag}` contains multiple api versions of one resource.",
-                            payload={
-                                "Resource": resource_id,
-                                "versions": v_list,
-                            }
-                        )
+            results[rp.name] = (resource_map, tag)
 
-                    v = v_list[0]
-                    if v not in version_resource_map:
-                        version_resource_map[v] = []
-                    version_resource_map[v].append({"id": resource_id})
+        return results
 
-                ws = WorkspaceManager.new(
-                    name=spec,
-                    plane=Config.DEFAULT_PLANE,
-                    folder=WorkspaceManager.IN_MEMORY,  # use workspace else use in memory folder
-                    mod_names=spec,
-                    resource_provider=rp.name,
-                    swagger_manager=SwaggerSpecsManager(),
-                    aaz_manager=AAZSpecsManager(),
-                    source=SourceTypeEnum.OpenAPI,
+    def _normalize_resource_map(resource_map, tag):
+        # covert resource_map to {version: [resources]}
+        version_resource_map = {}
+        for resource_id, version_map in resource_map.items():
+            v_list = list(version_map)
+            if len(v_list) > 1:
+                raise InvalidAPIUsage(
+                    f"Tag `{tag}` contains multiple api versions of one resource",
+                    payload={"Resource": resource_id, "versions": v_list},
                 )
-                for version, resources in version_resource_map.items():
-                    ws.add_new_resources_by_swagger(mod_names=spec, version=version, resources=resources)
 
-                # provide default short summary
-                for node in ws.iter_command_tree_nodes():
-                    if not node.help:
-                        node.help = CMDHelp()
-                    if not node.help.short:
-                        node.help.short = f"Manage {node.names[-1]}"
+            v = v_list[0]
+            version_resource_map.setdefault(v, []).append({"id": resource_id})
 
-                for leaf in ws.iter_command_tree_leaves():
-                    if not leaf.help:
-                        leaf.help = CMDHelp()
-                    if not leaf.help.short:
-                        n = leaf.names[-1]
-                        n = n[0].upper() + n[1:]
-                        leaf.help.short = f"{n} {leaf.names[-2]}"
+        return version_resource_map
 
-                    # generate examples
-                    cfg_editor = ws.load_cfg_editor_by_command(leaf)
-                    command = cfg_editor.find_command(*leaf.names)
-                    examples = ws.generate_examples_by_swagger(leaf, command)
-                    leaf.examples = examples
+    def to_aaz():
+        results = _collect_resources(spec)
 
-                if not ws.is_in_memory:
-                    ws.save()
+        for rp_name, (resource_map, tag) in results.items():
+            version_resource_map = _normalize_resource_map(resource_map, tag)
 
-                ws.generate_to_aaz()
+            ws = WorkspaceManager.new(
+                name=spec,
+                plane=Config.DEFAULT_PLANE,
+                folder=WorkspaceManager.IN_MEMORY,
+                mod_names=spec,
+                resource_provider=rp_name,
+                swagger_manager=SwaggerSpecsManager(),
+                aaz_manager=AAZSpecsManager(),
+                source=SourceTypeEnum.OpenAPI,
+            )
+            for version, resources in version_resource_map.items():
+                ws.add_new_resources_by_swagger(mod_names=spec, version=version, resources=resources)
 
-        except InvalidAPIUsage as err:
-            logger.error(err, exc_info=True)
-            raise sys.exit(1)
+            # complete default help
+            for node in ws.iter_command_tree_nodes():
+                node.help = node.help or CMDHelp()
+                if not node.help.short:
+                    node.help.short = f"Manage {node.names[-1]}."
 
-        except ValueError as err:
-            logger.error(err, exc_info=True)
-            raise sys.exit(1)
+            for leaf in ws.iter_command_tree_leaves():
+                leaf.help = leaf.help or CMDHelp()
+                if not leaf.help.short:
+                    n = leaf.names[-1]
+                    leaf.help.short = f"{n.capitalize()} {leaf.names[-2]}"
+
+                cfg_editor = ws.load_cfg_editor_by_command(leaf)
+                command = cfg_editor.find_command(*leaf.names)
+                leaf.examples = ws.generate_examples_by_swagger(leaf, command)
+
+            if not ws.is_in_memory:
+                ws.save()
+
+            ws.generate_to_aaz()
 
     def to_cli():
-        try:
-            module_manager = SwaggerSpecsManager().get_module_manager(Config.DEFAULT_PLANE, spec)
-            rps = module_manager.get_resource_providers()
-            for r in rps:
-                if isinstance(r, TypeSpecResourceProvider):
+        results = _collect_resources(spec)
+
+        commands_map = {}
+        for _, (resource_map, tag) in results.items():
+            for resource_id, version_map in resource_map.items():
+                v_list = list(version_map)
+                if len(v_list) > 1:
+                    raise InvalidAPIUsage(
+                        f"Tag `{tag}` contains multiple api versions of one resource",
+                        payload={"Resource": resource_id, "versions": v_list},
+                    )
+
+                v = v_list[0]
+                cfg_reader = AAZSpecsManager().load_resource_cfg_reader(Config.DEFAULT_PLANE, resource_id, v)
+                if not cfg_reader:
+                    logger.error(f"Command models not exist in aaz for resource: {resource_id} version: {v}.")
                     continue
 
-                rp = module_manager.get_openapi_resource_provider(r.name)
-                tag = r.default_tag
+                for cmd_names, command in cfg_reader.iter_commands():
+                    key = tuple(cmd_names)
+                    if key in commands_map and commands_map[key] != command.version:
+                        raise ValueError(f"Multi version contained for command: {''.join(cmd_names)} versions: {commands_map[key]}, {command.version}")
 
-                resource_map = rp.get_resource_map_by_tag(tag)
-                if not resource_map:
-                    raise InvalidAPIUsage(f"Tag `{tag}` is not exist")
+                    commands_map[key] = command.version
 
-                commands_map = {}
-                for resource_id, version_map in resource_map.items():
-                    v_list = [v for v in version_map]
-                    if len(v_list) > 1:
-                        raise InvalidAPIUsage(
-                            f"Tag `{tag}` contains multiple api versions of one resource",
-                            payload={
-                                "Resource": resource_id,
-                                "versions": v_list,
-                            }
-                        )
+        if cli_path is not None:
+            assert Config.CLI_PATH is not None
+            manager = AzMainManager()
 
-                    v = v_list[0]
-                    cfg_reader = AAZSpecsManager().load_resource_cfg_reader(Config.DEFAULT_PLANE, resource_id, v)
-                    if not cfg_reader:
-                        logger.error(f"Command models not exist in aaz for resource: {resource_id} version: {v}.")
-                        continue
+        else:  # generate ext module by default
+            assert Config.CLI_EXTENSION_PATH is not None
+            manager = AzExtensionManager()
 
-                    for cmd_names, command in cfg_reader.iter_commands():
-                        key = tuple(cmd_names)
-                        if key in commands_map and commands_map[key] != command.version:
-                            raise ValueError(f"Multi version contained for command: {''.join(cmd_names)} versions: {commands_map[key]}, {command.version}")
+        if not manager.has_module(module):
+            logger.info(f"Create cli module `{module}`.")
+            manager.create_new_mod(module)
 
-                        commands_map[key] = command.version
+        logger.info(f"Load cli module `{module}`.")
+        ext = manager.load_module(module)
 
-                if cli_path is not None:
-                    assert Config.CLI_PATH is not None
-                    manager = AzMainManager()
+        profile = _build_profile(Config.CLI_DEFAULT_PROFILE, commands_map)
+        ext.profiles[profile.name] = profile
 
-                else:
-                    assert cli_extension_path is not None
-                    assert Config.CLI_EXTENSION_PATH is not None
-                    manager = AzExtensionManager()
-
-                if not manager.has_module(module):
-                    logger.info(f"Create cli module `{module}`.")
-                    manager.create_new_mod(module)
-
-                logger.info(f"Load cli module `{module}`.")
-                ext = manager.load_module(module)
-
-                profile = _build_profile(Config.CLI_DEFAULT_PROFILE, commands_map)
-
-                ext.profiles[profile.name] = profile
-                logger.info(f"Regenerate module `{module}`.")
-                manager.update_module(module, ext.profiles)
-
-        except InvalidAPIUsage as err:
-            logger.error(err, exc_info=True)
-            raise sys.exit(1)
-
-        except ValueError as err:
-            logger.error(err, exc_info=True)
-            raise sys.exit(1)
+        logger.info(f"Regenerate module `{module}`.")
+        manager.update_module(module, ext.profiles)
 
     if cli_path and cli_extension_path:
         logger.error("Please provide either `--cli-path` or `--cli-extension-path`.")
@@ -396,10 +369,17 @@ def generate(spec, module, cli_path=None, cli_extension_path=None):
 
     spec_path = os.path.join(Config.SWAGGER_PATH, "specification", spec)
     if not os.path.exists(spec_path) or not os.path.isdir(spec_path):
-        raise ValueError("Please provide a valid specification name.")
+        raise ValueError(f"Cannot find the specification name under {Config.SWAGGER_PATH}.")
 
-    to_aaz()
-    to_cli()
+    try:
+        to_aaz()
+        logger.info("✔  Finished generating AAZ model.")
+        to_cli()
+        logger.info("✔  Finished generating AAZ codes.")
+
+    except (InvalidAPIUsage, ValueError) as err:
+        logger.error(err, exc_info=True)
+        raise sys.exit(1)
 
 
 def _build_profile(profile_name, commands_map):

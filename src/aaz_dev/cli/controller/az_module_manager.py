@@ -36,7 +36,7 @@ class AzModuleManager:
         raise NotImplementedError()
 
     def has_module(self, mod_name):
-        mod_file = os.path.join(self.get_mod_path(mod_name), "__init__.py")
+        mod_file = os.path.join(self.get_mod_path(mod_name), "setup.py")
         if not os.path.exists(mod_file):
             return False
         return True
