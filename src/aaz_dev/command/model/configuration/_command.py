@@ -327,12 +327,12 @@ def handle_duplicated_options(arguments, has_subresource, operation_id):
     def can_be_replaced(arg1, arg2):
         # check whether you need to replace argument
         ret = False
-        if _can_replace_argument(arg1, arg2, has_subresource):
+        if _compare_argument(arg1, arg2, has_subresource):
             arg2.ref_schema.arg = arg1.var
             dropped_args.add(arg2.var)
             ret = False
 
-        elif _can_replace_argument(arg2, arg1, has_subresource):
+        elif _compare_argument(arg2, arg1, has_subresource):
             arg1.ref_schema.arg = arg2.var
             dropped_args.add(arg1.var)
             ret = True
@@ -365,12 +365,14 @@ def handle_duplicated_options(arguments, has_subresource, operation_id):
     return [arg for var, arg in arguments.items() if var not in dropped_args]
 
 
-def _can_replace_argument(arg, old_arg, has_subresource):
+def _compare_argument(arg, old_arg, has_subresource):
     arg_prefix = arg.var.split('.')[0]
     old_prefix = old_arg.var.split('.')[0]
 
-    if old_prefix in (CMDArgBuildPrefix.Query, CMDArgBuildPrefix.Header, CMDArgBuildPrefix.Path):
-        # replace argument should only be in body
+    if old_prefix == CMDArgBuildPrefix.Query:
+        return True
+
+    if old_prefix in (CMDArgBuildPrefix.Header, CMDArgBuildPrefix.Path):
         return False
 
     if arg_prefix in (CMDArgBuildPrefix.Query, CMDArgBuildPrefix.Header):
