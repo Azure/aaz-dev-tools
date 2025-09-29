@@ -6,7 +6,7 @@ import json
 
 from utils.config import Config
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 bp = Blueprint('swagger-cmds', __name__, url_prefix='/Swagger/CMDs', cli_group="swagger")
 bp.cli.short_help = "Manage azure-rest-api-specs/azure-rest-api-specs-pr repos."

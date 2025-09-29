@@ -20,7 +20,7 @@ from .specs_manager import AAZSpecsManager
 from .workspace_cfg_editor import WorkspaceCfgEditor, build_endpoint_selector_for_client_config
 from .workspace_client_cfg_editor import WorkspaceClientCfgEditor
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class WorkspaceManager:

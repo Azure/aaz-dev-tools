@@ -14,7 +14,7 @@ from .az_operation_generator import AzHttpOperationGenerator, AzJsonUpdateOperat
 from .az_output_generator import AzOutputGenerator
 from .az_selector_generator import AzJsonSelectorGenerator
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class AzCommandGenerator:

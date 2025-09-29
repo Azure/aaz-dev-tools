@@ -22,7 +22,7 @@ from .reference import ReferenceField, Linkable
 from .x_ms_enum import XmsEnumField
 from .xml import XML
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 def schema_and_reference_schema_claim_function(_, data):

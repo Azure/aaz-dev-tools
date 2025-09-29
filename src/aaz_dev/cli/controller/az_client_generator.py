@@ -11,7 +11,7 @@ from .az_operation_generator import AzHttpOperationGenerator
 from utils.plane import PlaneEnum
 from utils.case import to_camel_case
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class AzClientsGenerator:

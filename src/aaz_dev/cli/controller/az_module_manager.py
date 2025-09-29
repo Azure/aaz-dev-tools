@@ -14,7 +14,7 @@ from utils import exceptions
 from utils.config import Config
 from collections import deque
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class AzModuleManager:

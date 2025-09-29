@@ -9,7 +9,7 @@ from command.model.configuration import (CMDClientConfig, CMDDiffLevelEnum, CMDC
                                          CMDClientEndpointsByHttpOperation, CMDClientEndpoints,
                                          CMDClientEndpointCloudMetadataTemplate)
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class WorkspaceClientCfgEditor(ClientCfgReader, ArgumentUpdateMixin):

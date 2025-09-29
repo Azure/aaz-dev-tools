@@ -36,7 +36,7 @@ from utils import exceptions
 import logging
 import re
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class CMDSchemaEnumItem(Model):
