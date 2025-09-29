@@ -1,5 +1,4 @@
 import axios from "axios";
-import { apiErrorHandler } from "./errorHandler";
 
 export const commandApi = {
   getCommand: async (leafUrl: string): Promise<any> => {
@@ -99,11 +98,7 @@ export const commandApi = {
       arg: string;
     },
   ): Promise<any> => {
-    try {
-      const response = await axios.post(subresourceUrl, data);
-      return response.data;
-    } catch (err: any) {
-      apiErrorHandler.handleApiError(err, "Failed to create subresource");
-    }
+    const response = await axios.post(subresourceUrl, data);
+    return response.data;
   },
 } as const;
