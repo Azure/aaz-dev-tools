@@ -502,4 +502,3 @@ const MiddlePadding = styled(Box)(() => ({
 }));
 
 export default WorkspaceSelector;
-

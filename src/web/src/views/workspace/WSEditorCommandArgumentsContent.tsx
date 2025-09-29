@@ -2625,4 +2625,3 @@ const DecodeArgs = (argGroups: any[]): { args: CMDArg[]; clsArgDefineMap: ClsArg
 export default WSEditorCommandArgumentsContent;
 export { DecodeArgs };
 export type { ClsArgDefinitionMap, CMDArg };
-

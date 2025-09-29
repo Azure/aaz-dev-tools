@@ -398,4 +398,3 @@ export type {
   CLISpecsSimpleCommand,
 };
 export { CLIModuleGeneratorWrapper as CLIModuleGenerator };
-
