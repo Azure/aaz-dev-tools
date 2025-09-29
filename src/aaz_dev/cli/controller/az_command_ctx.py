@@ -6,7 +6,7 @@ from utils.case import to_snake_case
 from .az_arg_group_generator import AzArgClsGenerator
 from .az_operation_generator import AzRequestClsGenerator, AzResponseClsGenerator
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class AzCommandCtx:

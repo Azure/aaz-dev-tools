@@ -12,7 +12,7 @@ from utils.base64 import b64encode_str
 from swagger.utils import exceptions
 from utils.case import to_singular
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class Resource:

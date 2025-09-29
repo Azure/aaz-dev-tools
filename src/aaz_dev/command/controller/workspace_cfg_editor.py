@@ -10,7 +10,7 @@ from utils.case import to_camel_case
 from .cfg_reader import CfgReader
 from .workspace_helper import ArgumentUpdateMixin
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):

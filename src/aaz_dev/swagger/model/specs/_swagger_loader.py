@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 from swagger.utils import exceptions
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class SwaggerLoader:

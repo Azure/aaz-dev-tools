@@ -2,7 +2,7 @@ import os
 import logging
 import re
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 def map_path_2_repo(path):

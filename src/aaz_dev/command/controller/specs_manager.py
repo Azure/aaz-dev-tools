@@ -16,7 +16,7 @@ from .client_cfg_reader import ClientCfgReader
 from .cfg_validator import CfgValidator
 from .command_tree import CMDSpecsPartialCommandTree
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class AAZSpecsManager:

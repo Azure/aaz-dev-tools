@@ -21,7 +21,7 @@ from .x_ms_long_running_operation import XmsLongRunningOperationField, XmsLongRu
 from .x_ms_odata import XmsODataField
 from .x_ms_pageable import XmsPageableField
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class Operation(Model, Linkable):

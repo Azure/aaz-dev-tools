@@ -4,7 +4,7 @@ import json
 import logging
 
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class CMDBooleanField(BooleanType):

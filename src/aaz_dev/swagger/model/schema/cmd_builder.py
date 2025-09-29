@@ -37,7 +37,7 @@ from utils.case import to_camel_case
 import logging
 import re
 
-logger = logging.getLogger("backend")
+logger = logging.getLogger("aaz")
 
 
 class CMDBuilder:

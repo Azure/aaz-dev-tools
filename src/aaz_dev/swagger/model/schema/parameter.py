@@ -16,7 +16,7 @@ from .reference import Reference, Linkable
 from .schema import Schema, ReferenceSchema, schema_and_reference_schema_claim_function
 from .x_ms_parameter_grouping import XmsParameterGroupingField
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class ParameterBase(Model):

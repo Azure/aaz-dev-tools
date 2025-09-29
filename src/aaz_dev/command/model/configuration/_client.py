@@ -19,7 +19,7 @@ from ._command import handle_duplicated_options
 from ._resource import CMDResource
 
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class CMDClientAADAuthConfig(Model):

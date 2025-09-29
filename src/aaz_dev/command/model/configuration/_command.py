@@ -17,7 +17,7 @@ from ._subresource_selector import CMDSubresourceSelector, CMDJsonSubresourceSel
 from ._selector_index import CMDArrayIndexBase, CMDObjectIndexBase, CMDObjectIndexDiscriminator, CMDObjectIndexAdditionalProperties
 from utils import exceptions
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class CMDCommand(Model):

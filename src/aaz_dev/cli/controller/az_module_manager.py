@@ -14,7 +14,7 @@ from utils import exceptions
 from utils.config import Config
 from collections import deque
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class AzModuleManager:
@@ -36,9 +36,8 @@ class AzModuleManager:
         raise NotImplementedError()
 
     def has_module(self, mod_name):
-        mod_folder = self.get_mod_path(mod_name)
-        if not os.path.exists(mod_folder):
-            #print(f"Invalid module folder: cannot find modules in: '{mod_folder}'")
+        mod_file = os.path.join(self.get_mod_path(mod_name), "setup.py")
+        if not os.path.exists(mod_file):
             return False
         return True
 

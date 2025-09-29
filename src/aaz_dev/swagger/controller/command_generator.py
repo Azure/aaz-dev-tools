@@ -21,7 +21,7 @@ from utils.error_format import AAZErrorFormatEnum
 from utils.case import to_singular
 
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class _CommandGenerator(ABC):

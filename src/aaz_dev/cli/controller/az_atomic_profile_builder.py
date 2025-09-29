@@ -17,7 +17,7 @@ from utils.exceptions import ResourceNotFind
 from utils.plane import PlaneEnum
 from utils.case import to_camel_case, to_snake_case
 
-logger = logging.getLogger('backend')
+logger = logging.getLogger('aaz')
 
 
 class AzAtomicProfileBuilder:
@@ -248,8 +248,8 @@ class AzAtomicProfileBuilder:
 
         for rid, value in [*wait_cmd_rids.items()]:
             if "get_op" not in value:
-                logger.error(f'Failed to support wait command for resource: '
-                             f'Get operation with provisioning state property does not exist: {rid}')
+                logger.warning(f'Failed to support wait command for resource: '
+                               f'Get operation with provisioning state property does not exist: {rid}')
                 del wait_cmd_rids[rid]
 
         if not wait_cmd_rids:
