@@ -164,6 +164,7 @@ const CLIModuleGenerator: React.FC<CLIModuleGeneratorProps> = ({ params }) => {
   const loadModule = async () => {
     try {
       setLoading(true);
+      setInvalidText(undefined);
       const profiles = await cliApi.getCliProfiles();
       const modView: CLIModView = await cliApi.getCliModule(params.repoName, params.moduleName);
       const simpleTree: CLISpecsSimpleCommandTree = await cliApi.getSimpleCommandTree();
@@ -189,7 +190,6 @@ const CLIModuleGenerator: React.FC<CLIModuleGeneratorProps> = ({ params }) => {
     } catch (err: any) {
       console.error(err);
       setInvalidText(apiErrorHandler.getErrorMessage(err));
-      setLoading(false);
     }
   };
 
