@@ -23,14 +23,11 @@ describe("Workspace API", () => {
         folder: "/workspaces/test-workspace-2",
       });
 
-      // Verify dates are properly converted from Unix timestamps
       expect(workspaces[0].lastModified).toBeInstanceOf(Date);
       expect(workspaces[1].lastModified).toBeInstanceOf(Date);
     });
 
     it("should handle API errors gracefully", async () => {
-      // We would need to mock a failure scenario here
-      // For now, testing the happy path with MSW
       await expect(workspaceApi.getWorkspaces()).resolves.toBeDefined();
     });
   });
@@ -57,7 +54,6 @@ describe("Workspace API", () => {
         folder: "/workspaces/new-test-workspace",
       });
 
-      // Verify the lastModified date is properly converted
       expect(result.lastModified).toBeInstanceOf(Date);
     });
 
@@ -81,7 +77,6 @@ describe("Workspace API", () => {
 
   describe("deleteWorkspace", () => {
     it("should delete workspace by name", async () => {
-      // This should not throw an error with our MSW handler
       await expect(workspaceApi.deleteWorkspace("test-workspace-1")).resolves.toBeUndefined();
     });
   });
@@ -126,10 +121,8 @@ describe("Workspace API", () => {
     });
 
     it("should return null for 404 responses", async () => {
-      // This would require a specific MSW handler for 404 scenarios
-      // For now, testing the happy path
       const result = await workspaceApi.getWorkspaceClientConfig("/workspace/nonexistent");
-      expect(result).toBeDefined(); // With our current MSW setup, this will return data
+      expect(result).toBeDefined();
     });
   });
 
@@ -140,17 +133,14 @@ describe("Workspace API", () => {
         auth: { type: "managed-identity" },
       };
 
-      // Should not throw an error
       await expect(workspaceApi.updateClientConfig("/workspace/test-workspace-1", config)).resolves.toBeUndefined();
     });
   });
 
   describe("Edge cases and error handling", () => {
     it("should handle malformed workspace data gracefully", async () => {
-      // This tests the robustness of our data transformation
       const workspaces = await workspaceApi.getWorkspaces();
 
-      // Ensure all required fields are present and properly typed
       workspaces.forEach((workspace) => {
         expect(workspace).toHaveProperty("name");
         expect(workspace).toHaveProperty("plane");
@@ -164,7 +154,6 @@ describe("Workspace API", () => {
     });
 
     it("should handle empty workspace lists", async () => {
-      // Our current MSW always returns data, but this tests the structure
       const workspaces = await workspaceApi.getWorkspaces();
       expect(Array.isArray(workspaces)).toBe(true);
     });

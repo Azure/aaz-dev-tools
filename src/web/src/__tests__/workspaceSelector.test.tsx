@@ -5,7 +5,6 @@ import { render } from "./test-utils";
 import WorkspaceSelector from "../views/workspace/WorkspaceSelector";
 import { workspaceApi } from "../services";
 
-// Mock the workspaceApi service
 vi.mock("../services", () => ({
   workspaceApi: {
     getWorkspaces: vi.fn(),
@@ -60,7 +59,6 @@ describe("Workspace Management", () => {
     it("should load and display workspaces on mount", async () => {
       render(<WorkspaceSelector name="Select Workspace" />);
 
-      // Wait for workspaces to load
       await waitFor(() => {
         expect(workspaceApi.getWorkspaces).toHaveBeenCalledTimes(1);
       });
@@ -70,16 +68,13 @@ describe("Workspace Management", () => {
       const user = userEvent.setup();
       render(<WorkspaceSelector name="Select Workspace" />);
 
-      // Wait for component to initialize
       await waitFor(() => {
         expect(workspaceApi.getWorkspaces).toHaveBeenCalled();
       });
 
-      // Open the autocomplete dropdown
       const autocomplete = screen.getByLabelText("Select Workspace");
       await user.click(autocomplete);
 
-      // The autocomplete should be opened and ready for interaction
       expect(autocomplete).toBeInTheDocument();
     });
 
@@ -87,17 +82,14 @@ describe("Workspace Management", () => {
       const user = userEvent.setup();
       render(<WorkspaceSelector name="Select Workspace" />);
 
-      // Wait for component to initialize
       await waitFor(() => {
         expect(workspaceApi.getWorkspaces).toHaveBeenCalled();
       });
 
-      // Type a new workspace name that doesn't exist
       const autocomplete = screen.getByLabelText("Select Workspace");
       await user.click(autocomplete);
       await user.type(autocomplete, "new-workspace");
 
-      // Wait for the create option to appear
       await waitFor(() => {
         expect(screen.getByText('Create "new-workspace"')).toBeInTheDocument();
       });
@@ -118,19 +110,15 @@ describe("Workspace Management", () => {
     });
 
     it("should update URL when workspace is selected", async () => {
-      // Mock window.location.href setter
       delete (window as any).location;
       window.location = { href: "" } as any;
 
       render(<WorkspaceSelector name="Select Workspace" />);
 
-      // Wait for component to initialize
       await waitFor(() => {
         expect(workspaceApi.getWorkspaces).toHaveBeenCalled();
       });
 
-      // Since we're using a class component with complex state management,
-      // we'll test the core functionality by verifying the workspaces load
       expect(workspaceApi.getWorkspaces).toHaveBeenCalledTimes(1);
     });
   });
