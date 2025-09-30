@@ -1,8 +1,8 @@
 import { http, HttpResponse } from "msw";
 
 export const handlers = [
-  // Workspace API handlers - matching actual API endpoints
-  http.get("/AAZ/Editor/Workspaces", () => {
+  // Workspace API handlers - using full URLs to match axios requests
+  http.get("http://localhost:3000/AAZ/Editor/Workspaces", () => {
     return HttpResponse.json([
       {
         name: "test-workspace-1",
@@ -21,7 +21,7 @@ export const handlers = [
     ]);
   }),
 
-  http.post("/AAZ/Editor/Workspaces", async ({ request }) => {
+  http.post("http://localhost:3000/AAZ/Editor/Workspaces", async ({ request }) => {
     const body = (await request.json()) as any;
     return HttpResponse.json(
       {
@@ -37,20 +37,20 @@ export const handlers = [
     );
   }),
 
-  http.delete("/AAZ/Editor/Workspaces/:name", ({ params }) => {
+  http.delete("http://localhost:3000/AAZ/Editor/Workspaces/:name", ({ params }) => {
     return HttpResponse.json({
       message: `Workspace ${params.name} deleted successfully`,
     });
   }),
 
-  http.post("/workspace/:name/Rename", async ({ request }) => {
+  http.post("http://localhost:3000/workspace/:name/Rename", async ({ request }) => {
     const body = (await request.json()) as any;
     return HttpResponse.json({
       name: body.name,
     });
   }),
 
-  http.get("/workspace/:name/ClientConfig", () => {
+  http.get("http://localhost:3000/workspace/:name/ClientConfig", () => {
     return HttpResponse.json({
       version: "1.0.0",
       auth: {
@@ -68,11 +68,11 @@ export const handlers = [
     });
   }),
 
-  http.post("/workspace/:name/ClientConfig", () => {
+  http.post("http://localhost:3000/workspace/:name/ClientConfig", () => {
     return HttpResponse.json({ message: "Client config updated successfully" });
   }),
 
-  http.get("/workspace/:name", ({ params }) => {
+  http.get("http://localhost:3000/workspace/:name", ({ params }) => {
     return HttpResponse.json({
       name: params.name,
       plane: "azure-cli",
@@ -82,7 +82,7 @@ export const handlers = [
   }),
 
   // Specs API handlers
-  http.get("/AAZ/Specs/Planes", () => {
+  http.get("http://localhost:3000/AAZ/Specs/Planes", () => {
     return HttpResponse.json([
       {
         name: "azure-cli",
@@ -97,20 +97,20 @@ export const handlers = [
     ]);
   }),
 
-  http.get("/AAZ/Specs/Planes/:planeName/Modules", ({ params }) => {
+  http.get("http://localhost:3000/AAZ/Specs/Planes/:planeName/Modules", ({ params }) => {
     if (params.planeName === "azure-cli") {
       return HttpResponse.json(["storage", "compute", "network", "keyvault"]);
     }
     return HttpResponse.json(["extensions-module"]);
   }),
 
-  http.get("/Swagger/Specs/:planeName/:moduleName/ResourceProviders", () => {
+  http.get("http://localhost:3000/Swagger/Specs/:planeName/:moduleName/ResourceProviders", () => {
     const resourceProviders = ["Microsoft.Storage", "Microsoft.Compute", "Microsoft.Network", "Microsoft.KeyVault"];
     return HttpResponse.json(resourceProviders);
   }),
 
   // CLI API handlers
-  http.get("/CLI/Az/Modules", () => {
+  http.get("http://localhost:3000/CLI/Az/Modules", () => {
     return HttpResponse.json([
       {
         name: "test-module",
@@ -119,7 +119,7 @@ export const handlers = [
     ]);
   }),
 
-  http.post("/CLI/Az/Modules/:module", async ({ params, request }) => {
+  http.post("http://localhost:3000/CLI/Az/Modules/:module", async ({ params, request }) => {
     const body = (await request.json()) as any;
     return HttpResponse.json({
       message: `Module ${params.module} generated successfully`,
@@ -128,14 +128,14 @@ export const handlers = [
   }),
 
   // Error scenarios for testing
-  http.get("/AAZ/Editor/Workspaces/error", () => {
+  http.get("http://localhost:3000/AAZ/Editor/Workspaces/error", () => {
     return HttpResponse.json(
       { message: "Internal server error", details: "Database connection failed" },
       { status: 500 },
     );
   }),
 
-  http.post("/AAZ/Editor/Workspaces/validation-error", () => {
+  http.post("http://localhost:3000/AAZ/Editor/Workspaces/validation-error", () => {
     return HttpResponse.json({ message: "Validation failed", details: { name: "Name is required" } }, { status: 400 });
   }),
 ];

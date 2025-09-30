@@ -206,7 +206,9 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
 
   componentDidMount(): void {
     this.loadPlanes().then(async () => {
-      await this.onPlaneSelectorUpdate(this.state.planes[0].name);
+      if (this.state.planes.length > 0) {
+        await this.onPlaneSelectorUpdate(this.state.planes[0].name);
+      }
     });
   }
 
@@ -223,7 +225,9 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
         planeOptions: planeOptions,
         loading: false,
       });
-      await this.onPlaneSelectorUpdate(planeOptions[0]);
+      if (planeOptions.length > 0) {
+        await this.onPlaneSelectorUpdate(planeOptions[0]);
+      }
     } catch (err: any) {
       console.error(err);
       this.setState({
