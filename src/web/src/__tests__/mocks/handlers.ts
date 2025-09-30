@@ -1,38 +1,112 @@
 import { http, HttpResponse } from "msw";
 
 export const handlers = [
-  // Workspace API handlers
-  http.get("/AAZ/Workspaces", () => {
+  // Workspace API handlers - matching actual API endpoints
+  http.get("/AAZ/Editor/Workspaces", () => {
     return HttpResponse.json([
       {
         name: "test-workspace-1",
+        plane: "azure-cli",
+        updated: Math.floor(Date.now() / 1000) - 86400, // Yesterday
+        url: "/workspace/test-workspace-1",
         folder: "/workspaces/test-workspace-1",
-        readme: "Test workspace for integration tests",
       },
       {
         name: "test-workspace-2",
+        plane: "azure-cli-extensions",
+        updated: Math.floor(Date.now() / 1000) - 172800, // 2 days ago
+        url: "/workspace/test-workspace-2",
         folder: "/workspaces/test-workspace-2",
-        readme: "Another test workspace",
       },
     ]);
   }),
 
-  http.post("/AAZ/Workspaces", async ({ request }) => {
+  http.post("/AAZ/Editor/Workspaces", async ({ request }) => {
     const body = (await request.json()) as any;
     return HttpResponse.json(
       {
         name: body.name,
+        plane: body.plane,
+        modNames: body.modNames,
+        resourceProvider: body.resourceProvider,
+        updated: Math.floor(Date.now() / 1000),
+        url: `/workspace/${body.name}`,
         folder: `/workspaces/${body.name}`,
-        readme: body.readme || "",
       },
       { status: 201 },
     );
   }),
 
-  http.delete("/AAZ/Workspaces/:name", ({ params }) => {
+  http.delete("/AAZ/Editor/Workspaces/:name", ({ params }) => {
     return HttpResponse.json({
       message: `Workspace ${params.name} deleted successfully`,
     });
+  }),
+
+  http.post("/workspace/:name/Rename", async ({ request }) => {
+    const body = (await request.json()) as any;
+    return HttpResponse.json({
+      name: body.name,
+    });
+  }),
+
+  http.get("/workspace/:name/ClientConfig", () => {
+    return HttpResponse.json({
+      version: "1.0.0",
+      auth: {
+        type: "default",
+      },
+      endpoints: {
+        type: "template",
+        templates: [
+          {
+            cloud: "AzureCloud",
+            template: "https://management.azure.com/",
+          },
+        ],
+      },
+    });
+  }),
+
+  http.post("/workspace/:name/ClientConfig", () => {
+    return HttpResponse.json({ message: "Client config updated successfully" });
+  }),
+
+  http.get("/workspace/:name", ({ params }) => {
+    return HttpResponse.json({
+      name: params.name,
+      plane: "azure-cli",
+      folder: `/workspaces/${params.name}`,
+      commandTree: {},
+    });
+  }),
+
+  // Specs API handlers
+  http.get("/AAZ/Specs/Planes", () => {
+    return HttpResponse.json([
+      {
+        name: "azure-cli",
+        displayName: "Azure CLI",
+        moduleOptions: ["storage", "compute", "network"],
+      },
+      {
+        name: "azure-cli-extensions",
+        displayName: "Azure CLI Extensions",
+        moduleOptions: [],
+      },
+    ]);
+  }),
+
+  http.get("/AAZ/Specs/Planes/:planeName/Modules", ({ params }) => {
+    if (params.planeName === "azure-cli") {
+      return HttpResponse.json(["storage", "compute", "network", "keyvault"]);
+    }
+    return HttpResponse.json(["extensions-module"]);
+  }),
+
+  http.get("/Swagger/Specs/:planeName/:moduleName/ResourceProviders", () => {
+    const resourceProviders = ["Microsoft.Storage", "Microsoft.Compute", "Microsoft.Network", "Microsoft.KeyVault"];
+    return HttpResponse.json(resourceProviders);
   }),
 
   // CLI API handlers
@@ -54,14 +128,14 @@ export const handlers = [
   }),
 
   // Error scenarios for testing
-  http.get("/AAZ/Workspaces/error", () => {
+  http.get("/AAZ/Editor/Workspaces/error", () => {
     return HttpResponse.json(
       { message: "Internal server error", details: "Database connection failed" },
       { status: 500 },
     );
   }),
 
-  http.post("/AAZ/Workspaces/validation-error", () => {
+  http.post("/AAZ/Editor/Workspaces/validation-error", () => {
     return HttpResponse.json({ message: "Validation failed", details: { name: "Name is required" } }, { status: 400 });
   }),
 ];
