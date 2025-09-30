@@ -17,7 +17,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import axios from "axios";
+import { commandApi, errorHandlerApi } from "../../services";
 import * as React from "react";
 import { ResponseCommands } from "./WSEditorCommandContent";
 import {
@@ -252,20 +252,18 @@ function CommandGroupDeleteDialog(props: {
   const handleClose = () => {
     props.onClose(false);
   };
-  const handleDelete = () => {
+  const handleDelete = async () => {
     const nodeUrl = `${props.workspaceUrl}/CommandTree/Nodes/aaz/` + props.commandGroup.names.join("/");
     setUpdating(true);
 
-    axios
-      .delete(nodeUrl)
-      .then(() => {
-        setUpdating(false);
-        props.onClose(true);
-      })
-      .catch((err) => {
-        setUpdating(false);
-        console.error(err.response.data);
-      });
+    try {
+      await commandApi.deleteCommandGroup(nodeUrl);
+      setUpdating(false);
+      props.onClose(true);
+    } catch (err: any) {
+      setUpdating(false);
+      console.error(err);
+    }
   };
 
   return (
@@ -319,7 +317,7 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
     };
   }
 
-  handleModify = () => {
+  handleModify = async () => {
     let { name, shortHelp, longHelp } = this.state;
     const { stage } = this.state;
     const { workspaceUrl, commandGroup } = this.props;
@@ -357,7 +355,7 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
       });
     }
 
-    let lines: string[] | null = null;
+    let lines: string[] = [];
     if (longHelp.length > 1) {
       lines = longHelp.split("\n").filter((l) => l.length > 0);
     }
@@ -368,49 +366,37 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
 
     const nodeUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + commandGroup.names.join("/");
 
-    axios
-      .patch(nodeUrl, {
+    try {
+      const res = await commandApi.updateCommandGroup(nodeUrl, {
         help: {
           short: shortHelp,
           lines: lines,
         },
         stage: stage,
-      })
-      .then((res) => {
-        const name = names.join(" ");
-        if (name === commandGroup.names.join(" ")) {
-          const cmdGroup = DecodeResponseCommandGroup(res.data);
-          this.setState({
-            updating: false,
-          });
-          this.props.onClose(cmdGroup);
-        } else {
-          // Rename command Group
-          axios
-            .post(`${nodeUrl}/Rename`, {
-              name: name,
-            })
-            .then((res) => {
-              const cmdGroup = DecodeResponseCommandGroup(res.data);
-              this.setState({
-                updating: false,
-              });
-              this.props.onClose(cmdGroup);
-            });
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          this.setState({
-            invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
-          });
-        }
+      });
+
+      const name = names.join(" ");
+      if (name === commandGroup.names.join(" ")) {
+        const cmdGroup = DecodeResponseCommandGroup(res);
         this.setState({
           updating: false,
         });
+        this.props.onClose(cmdGroup);
+      } else {
+        const renameRes = await commandApi.renameCommandGroup(nodeUrl, name);
+        const cmdGroup = DecodeResponseCommandGroup(renameRes);
+        this.setState({
+          updating: false,
+        });
+        this.props.onClose(cmdGroup);
+      }
+    } catch (err: any) {
+      console.error(err);
+      this.setState({
+        updating: false,
+        invalidText: errorHandlerApi.getErrorMessage(err),
       });
+    }
   };
 
   handleClose = () => {

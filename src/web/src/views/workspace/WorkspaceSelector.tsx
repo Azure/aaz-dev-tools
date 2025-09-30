@@ -11,22 +11,11 @@ import {
   InputLabel,
   Alert,
 } from "@mui/material";
-import axios from "axios";
 import * as React from "react";
-import { Url } from "url";
 import { SwaggerItemSelector } from "./WSEditorSwaggerPicker";
 import styled from "@emotion/styled";
 import { Plane } from "./WSEditorCommandContent";
-
-interface Workspace {
-  name: string;
-  plane: string | null;
-  modNames: string | null;
-  resourceProvider: string | null;
-  lastModified: Date | null;
-  url: Url | null;
-  folder: string | null;
-}
+import { workspaceApi, specsApi, errorHandlerApi, type Workspace as WorkspaceType } from "../../services";
 
 interface WorkspaceSelectorProps {
   name: string;
@@ -34,7 +23,7 @@ interface WorkspaceSelectorProps {
 
 interface WorkspaceSelectorState {
   options: any[];
-  value: Workspace | null;
+  value: WorkspaceType | null;
   openDialog: boolean;
   newWorkspaceName: string;
 }
@@ -44,7 +33,7 @@ interface InputType {
   title: string;
 }
 
-const filter = createFilterOptions<Workspace | InputType>();
+const filter = createFilterOptions<WorkspaceType | InputType>();
 
 class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, WorkspaceSelectorState> {
   constructor(props: WorkspaceSelectorProps) {
@@ -63,16 +52,7 @@ class WorkspaceSelector extends React.Component<WorkspaceSelectorProps, Workspac
 
   loadWorkspaces = async () => {
     try {
-      const res = await axios.get("/AAZ/Editor/Workspaces");
-      const options = res.data.map((option: any) => {
-        return {
-          name: option.name,
-          lastModified: new Date(option.updated * 1000),
-          url: option.url,
-          plane: option.plane,
-          folder: option.folder,
-        };
-      });
+      const options = await workspaceApi.getWorkspaces();
       this.setState({
         options: options,
       });
@@ -236,15 +216,8 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
         loading: true,
       });
 
-      const res = await axios.get(`/AAZ/Specs/Planes`);
-      const planes: Plane[] = res.data.map((v: any) => {
-        return {
-          name: v.name,
-          displayName: v.displayName,
-          moduleOptions: undefined,
-        };
-      });
-      const planeOptions: string[] = res.data.map((v: any) => v.displayName);
+      const planes = await specsApi.getPlanes();
+      const planeOptions: string[] = planes.map((v) => v.displayName);
       this.setState({
         planes: planes,
         planeOptions: planeOptions,
@@ -253,13 +226,10 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
       await this.onPlaneSelectorUpdate(planeOptions[0]);
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        this.setState({
-          loading: false,
-          invalidText: `ResponseError: ${data.message!}`,
-        });
-      }
+      this.setState({
+        loading: false,
+        invalidText: errorHandlerApi.getErrorMessage(err),
+      });
     }
   };
 
@@ -293,8 +263,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
           this.setState({
             loading: true,
           });
-          const res = await axios.get(`/Swagger/Specs/${plane!.name}`);
-          const options: string[] = res.data.map((v: any) => v.url);
+          const options = await specsApi.getModulesForPlane(plane!.name);
           this.setState((preState) => {
             const planes = preState.planes;
             const index = planes.findIndex((v) => v.name === plane!.name);
@@ -310,13 +279,10 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
           await this.onModuleSelectionUpdate(null);
         } catch (err: any) {
           console.error(err);
-          if (err.response?.data?.message) {
-            const data = err.response!.data!;
-            this.setState({
-              loading: false,
-              invalidText: `ResponseError: ${data.message!}`,
-            });
-          }
+          this.setState({
+            loading: false,
+            invalidText: errorHandlerApi.getErrorMessage(err),
+          });
         }
       }
     } else {
@@ -347,8 +313,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
         this.setState({
           loading: true,
         });
-        const res = await axios.get(`${moduleUrl}/ResourceProviders`);
-        const options: string[] = res.data.map((v: any) => v.url);
+        const options = await specsApi.getResourceProviders(moduleUrl);
         const selectedResourceProvider = options.length === 1 ? options[0] : null;
         this.setState({
           loading: false,
@@ -358,13 +323,10 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
         this.onResourceProviderUpdate(selectedResourceProvider);
       } catch (err: any) {
         console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          this.setState({
-            loading: false,
-            invalidText: `ResponseError: ${data.message!}`,
-          });
-        }
+        this.setState({
+          loading: false,
+          invalidText: errorHandlerApi.getErrorMessage(err),
+        });
       }
     } else {
       this.setState({
@@ -437,28 +399,15 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
     }
     this.setState({ loading: true });
     try {
-      const res = await axios.post("/AAZ/Editor/Workspaces", data);
-      const workspace = res.data;
-      const value = {
-        name: workspace.name,
-        plane: workspace.plane,
-        modNames: workspace.modNames,
-        resourceProvider: workspace.resourceProvider,
-        lastModified: new Date(workspace.updated * 1000),
-        url: workspace.url,
-        folder: workspace.folder,
-      };
+      const workspace = await workspaceApi.createWorkspace(data);
       this.setState({ loading: false });
-      this.props.onClose(value);
+      this.props.onClose(workspace);
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        this.setState({
-          loading: false,
-          invalidText: `ResponseError: ${data.message!}`,
-        });
-      }
+      this.setState({
+        loading: false,
+        invalidText: errorHandlerApi.getErrorMessage(err),
+      });
     }
   };
 

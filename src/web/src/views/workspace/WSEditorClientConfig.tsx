@@ -19,7 +19,7 @@ import {
   Tabs,
   Tab,
 } from "@mui/material";
-import axios from "axios";
+import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 import DoDisturbOnRoundedIcon from "@mui/icons-material/DoDisturbOnRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import { Plane, Resource } from "./WSEditorCommandContent";
@@ -163,15 +163,8 @@ class WSEditorClientConfigDialog extends React.Component<
         updating: true,
       });
 
-      const res = await axios.get(`/AAZ/Specs/Planes`);
-      const planes: Plane[] = res.data.map((v: any) => {
-        return {
-          name: v.name,
-          displayName: v.displayName,
-          moduleOptions: undefined,
-        };
-      });
-      const planeOptions: string[] = res.data.map((v: any) => v.displayName);
+      const planes = await specsApi.getPlanes();
+      const planeOptions: string[] = planes.map((v: any) => v.displayName);
       this.setState({
         planes: planes,
         planeOptions: planeOptions,
@@ -180,13 +173,11 @@ class WSEditorClientConfigDialog extends React.Component<
       await this.onPlaneSelectorUpdate(planeOptions[0]);
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        this.setState({
-          updating: false,
-          invalidText: `ResponseError: ${data.message!}`,
-        });
-      }
+      const message = errorHandlerApi.getErrorMessage(err);
+      this.setState({
+        updating: false,
+        invalidText: `ResponseError: ${message}`,
+      });
     }
   };
 
@@ -220,8 +211,7 @@ class WSEditorClientConfigDialog extends React.Component<
           this.setState({
             updating: true,
           });
-          const res = await axios.get(`/Swagger/Specs/${plane!.name}`);
-          const options: string[] = res.data.map((v: any) => v.url);
+          const options = await specsApi.getSwaggerModules(plane!.name);
           this.setState((preState) => {
             const planes = preState.planes;
             const index = planes.findIndex((v) => v.name === plane!.name);
@@ -237,13 +227,11 @@ class WSEditorClientConfigDialog extends React.Component<
           await this.onModuleSelectionUpdate(null);
         } catch (err: any) {
           console.error(err);
-          if (err.response?.data?.message) {
-            const data = err.response!.data!;
-            this.setState({
-              updating: false,
-              invalidText: `ResponseError: ${data.message!}`,
-            });
-          }
+          const message = errorHandlerApi.getErrorMessage(err);
+          this.setState({
+            updating: false,
+            invalidText: `ResponseError: ${message}`,
+          });
         }
       }
     } else {
@@ -274,8 +262,7 @@ class WSEditorClientConfigDialog extends React.Component<
         this.setState({
           updating: true,
         });
-        const res = await axios.get(`${moduleUrl}/ResourceProviders`);
-        const options: string[] = res.data.map((v: any) => v.url);
+        const options = await specsApi.getResourceProviders(moduleUrl);
         const selectedResourceProvider = options.length === 1 ? options[0] : null;
         this.setState({
           updating: false,
@@ -285,13 +272,11 @@ class WSEditorClientConfigDialog extends React.Component<
         this.onResourceProviderUpdate(selectedResourceProvider);
       } catch (err: any) {
         console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          this.setState({
-            updating: false,
-            invalidText: `ResponseError: ${data.message!}`,
-          });
-        }
+        const message = errorHandlerApi.getErrorMessage(err);
+        this.setState({
+          updating: false,
+          invalidText: `ResponseError: ${message}`,
+        });
       }
     } else {
       this.setState({
@@ -322,11 +307,11 @@ class WSEditorClientConfigDialog extends React.Component<
         updating: true,
       });
       try {
-        const res = await axios.get(`${resourceProviderUrl}/Resources`);
+        const resources = await specsApi.getProviderResources(resourceProviderUrl);
         const versionResourceIdMap: SwaggerVersionResourceIdMap = {};
         const versionOptions: string[] = [];
         const resourceIdList: string[] = [];
-        res.data.forEach((resource: any) => {
+        resources.forEach((resource: any) => {
           resourceIdList.push(resource.id);
           const resourceVersions = resource.versions
             .filter((v: ResourceVersion) => {
@@ -365,12 +350,10 @@ class WSEditorClientConfigDialog extends React.Component<
         this.onVersionUpdate(selectVersion);
       } catch (err: any) {
         console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          this.setState({
-            invalidText: `ResponseError: ${data.message!}`,
-          });
-        }
+        const message = errorHandlerApi.getErrorMessage(err);
+        this.setState({
+          invalidText: `ResponseError: ${message}`,
+        });
       }
     } else {
       this.setState({
@@ -405,10 +388,10 @@ class WSEditorClientConfigDialog extends React.Component<
   loadWorkspaceClientConfig = async () => {
     this.setState({ updating: true });
     try {
-      const res = await axios.get(`${this.props.workspaceUrl}/ClientConfig`);
+      const clientConfigData = await workspaceApi.getClientConfig(this.props.workspaceUrl);
       const clientConfig: ClientConfig = {
-        version: res.data.version,
-        auth: res.data.auth,
+        version: clientConfigData.version,
+        auth: clientConfigData.auth,
       };
       let templateAzureCloud = "";
       let templateAzureChinaCloud = "";
@@ -424,12 +407,12 @@ class WSEditorClientConfigDialog extends React.Component<
       let selectedResourceId: string | null = null;
       let subresource: string = "";
 
-      if (res.data.endpoints.type === "template") {
+      if (clientConfigData.endpoints.type === "template") {
         clientConfig.endpointTemplates = {};
-        res.data.endpoints.templates.forEach((value: any) => {
+        clientConfigData.endpoints.templates.forEach((value: any) => {
           clientConfig.endpointTemplates![value.cloud] = value.template;
         });
-        clientConfig.endpointCloudMetadata = res.data.endpoints.cloudMetadata;
+        clientConfig.endpointCloudMetadata = clientConfigData.endpoints.cloudMetadata;
 
         endpointType = "template";
         templateAzureCloud = clientConfig.endpointTemplates!["AzureCloud"] ?? "";
@@ -438,8 +421,8 @@ class WSEditorClientConfigDialog extends React.Component<
         templateAzureGermanCloud = clientConfig.endpointTemplates!["AzureGermanCloud"] ?? "";
         cloudMetadataSelectorIndex = clientConfig.endpointCloudMetadata?.selectorIndex ?? "";
         cloudMetadataPrefixTemplate = clientConfig.endpointCloudMetadata?.prefixTemplate ?? "";
-      } else if (res.data.endpoints.type === "http-operation") {
-        clientConfig.endpointResource = res.data.endpoints.resource;
+      } else if (clientConfigData.endpoints.type === "http-operation") {
+        clientConfig.endpointResource = clientConfigData.endpoints.resource;
         const rpUrl: string = clientConfig.endpointResource!.swagger.split("/Paths/")[0];
         const moduleUrl: string = rpUrl.split("/ResourceProviders/")[0];
         const planeUrl: string = moduleUrl.split("/")[0];
@@ -471,16 +454,14 @@ class WSEditorClientConfigDialog extends React.Component<
       });
     } catch (err: any) {
       // catch 404 error
-      if (err.response?.status === 404) {
+      if (errorHandlerApi.isHttpError(err, 404)) {
         this.setState({
           isAdd: true,
         });
       } else {
         console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          this.setState({ invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}` });
-        }
+        const message = errorHandlerApi.getErrorMessage(err);
+        this.setState({ invalidText: `ResponseError: ${message}` });
       }
     }
 
@@ -657,7 +638,7 @@ class WSEditorClientConfigDialog extends React.Component<
   ) => {
     this.setState({ updating: true });
     try {
-      await axios.post(`${this.props.workspaceUrl}/ClientConfig`, {
+      await workspaceApi.updateClientConfig(this.props.workspaceUrl, {
         templates: templates,
         cloudMetadata: cloudMetadata,
         resource: resource,
@@ -667,10 +648,8 @@ class WSEditorClientConfigDialog extends React.Component<
       this.props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        this.setState({ invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}` });
-      }
+      const message = errorHandlerApi.getErrorMessage(err);
+      this.setState({ invalidText: `ResponseError: ${message}` });
       this.setState({ updating: false });
     }
   };

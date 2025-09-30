@@ -29,7 +29,6 @@ import {
   ButtonBase,
   FormLabelProps,
 } from "@mui/material";
-import axios from "axios";
 import React, { useState, useEffect } from "react";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import {
@@ -48,6 +47,7 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import DataObjectIcon from "@mui/icons-material/DataObject";
 import LabelIcon from "@mui/icons-material/Label";
+import { commandApi, errorHandlerApi } from "../../services";
 import WSEditorCommandArgumentsContent, {
   ClsArgDefinitionMap,
   CMDArg,
@@ -268,8 +268,8 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
       "/Leaves/" +
       commandNames[commandNames.length - 1];
     try {
-      const res = await axios.get(leafUrl);
-      const command = DecodeResponseCommand(res.data);
+      const commandData = await commandApi.getCommand(leafUrl);
+      const command = DecodeResponseCommand(commandData);
       if (command.id === this.props.previewCommand.id) {
         this.setState({
           loading: false,
@@ -782,14 +782,13 @@ function CommandDeleteDialog(props: {
   React.useEffect(() => {
     setRelatedCommands([]);
     const urls = getUrls();
-    const promisesAll = urls.map((url) => {
-      return axios.get(`${url}/Commands`);
+    const promisesAll = urls.map(async (url) => {
+      return await commandApi.getCommandsForResource(url);
     });
     Promise.all(promisesAll)
       .then((responses) => {
         const commands = new Set<string>();
-        responses.forEach((response: any) => {
-          const responseCommands: ResponseCommand[] = response.data;
+        responses.forEach((responseCommands: ResponseCommand[]) => {
           responseCommands
             .map((responseCommand) => DecodeResponseCommand(responseCommand))
             .forEach((cmd) => {
@@ -813,8 +812,8 @@ function CommandDeleteDialog(props: {
   const handleDelete = () => {
     setUpdating(true);
     const urls = getUrls();
-    const promisesAll = urls.map((url) => {
-      return axios.delete(url);
+    const promisesAll = urls.map(async (url) => {
+      return await commandApi.deleteResource(url);
     });
     Promise.all(promisesAll)
       .then(() => {
@@ -881,7 +880,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
     };
   }
 
-  handleModify = () => {
+  handleModify = async () => {
     let { name, shortHelp, longHelp, confirmation } = this.state;
     const { stage } = this.state;
 
@@ -937,50 +936,38 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
       "/Leaves/" +
       command.names[command.names.length - 1];
 
-    axios
-      .patch(leafUrl, {
+    try {
+      const commandData = await commandApi.updateCommand(leafUrl, {
         help: {
           short: shortHelp,
           lines: lines,
         },
         stage: stage,
         confirmation: confirmation,
-      })
-      .then((res) => {
-        const name = names.join(" ");
-        if (name === command.names.join(" ")) {
-          const cmd = DecodeResponseCommand(res.data);
-          this.setState({
-            updating: false,
-          });
-          this.props.onClose(cmd);
-        } else {
-          // Rename command
-          axios
-            .post(`${leafUrl}/Rename`, {
-              name: name,
-            })
-            .then((res) => {
-              const cmd = DecodeResponseCommand(res.data);
-              this.setState({
-                updating: false,
-              });
-              this.props.onClose(cmd);
-            });
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          this.setState({
-            invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
-          });
-        }
+      });
+
+      const name = names.join(" ");
+      if (name === command.names.join(" ")) {
+        const cmd = DecodeResponseCommand(commandData);
         this.setState({
           updating: false,
         });
+        this.props.onClose(cmd);
+      } else {
+        const renamedData = await commandApi.renameCommand(leafUrl, name);
+        const cmd = DecodeResponseCommand(renamedData);
+        this.setState({
+          updating: false,
+        });
+        this.props.onClose(cmd);
+      }
+    } catch (err: any) {
+      console.error(err);
+      this.setState({
+        invalidText: errorHandlerApi.getErrorMessage(err),
+        updating: false,
       });
+    }
   };
 
   handleClose = () => {
@@ -1157,7 +1144,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
     }
   }
 
-  onUpdateExamples = (examples: Example[]) => {
+  onUpdateExamples = async (examples: Example[]) => {
     const { workspaceUrl, command } = this.props;
 
     const leafUrl =
@@ -1169,29 +1156,22 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
     this.setState({
       updating: true,
     });
-    axios
-      .patch(leafUrl, {
-        examples: examples,
-      })
-      .then((res) => {
-        const cmd = DecodeResponseCommand(res.data);
-        this.setState({
-          updating: false,
-        });
-        this.props.onClose(cmd);
-      })
-      .catch((err) => {
-        console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          this.setState({
-            invalidText: `ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`,
-          });
-        }
-        this.setState({
-          updating: false,
-        });
+
+    try {
+      const responseData = await commandApi.updateCommandExamples(leafUrl, examples);
+      const cmd = DecodeResponseCommand(responseData);
+      this.setState({
+        updating: false,
       });
+      this.props.onClose(cmd);
+    } catch (err: any) {
+      console.error(err);
+      const message = errorHandlerApi.getErrorMessage(err);
+      this.setState({
+        invalidText: `ResponseError: ${message}`,
+        updating: false,
+      });
+    }
   };
 
   handleDelete = () => {
@@ -1338,16 +1318,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
         source: "swagger",
         updating: true,
       });
-      let res = await axios.post(leafUrl, {
-        source: "swagger",
-      });
-
-      const examples: Example[] = res.data.map((v: any) => {
-        return {
-          name: v.name,
-          commands: v.commands,
-        };
-      });
+      const examples = await commandApi.generateSwaggerExamples(leafUrl);
       this.setState({
         exampleOptions: examples,
         updating: false,
@@ -1357,13 +1328,10 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
       }
     } catch (err: any) {
       console.error(err.response);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        this.setState({
-          updating: false,
-          invalidText: `ResponseError: ${data.message!}`,
-        });
-      }
+      this.setState({
+        updating: false,
+        invalidText: errorHandlerApi.getErrorMessage(err),
+      });
     }
   };
 
@@ -1623,17 +1591,15 @@ function AddSubcommandDialog(props: {
     setUpdating(true);
 
     try {
-      await axios.post(urls[0], {
+      await commandApi.createSubresource(urls[0], {
         ...data,
         arg: props.argVar,
       });
       props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
-      }
+      const message = errorHandlerApi.getErrorMessage(err);
+      setInvalidText(`ResponseError: ${message}`);
       setUpdating(false);
     }
   };
@@ -1901,7 +1867,7 @@ function OutputDialog(props: {
     props.onClose();
   };
 
-  const handleUpdateOutput = () => {
+  const handleUpdateOutput = async () => {
     setInvalidText(undefined);
     setUpdating(true);
 
@@ -1918,23 +1884,17 @@ function OutputDialog(props: {
       console.log("New clientFlatten: ");
       console.log(output.clientFlatten);
 
-      axios
-        .patch(leafUrl, {
-          outputs: outputs,
-        })
-        .then((res) => {
-          const cmd = DecodeResponseCommand(res.data);
-          setUpdating(false);
-          props.onClose(cmd);
-        })
-        .catch((err) => {
-          console.error(err.response);
-          if (err.response?.data?.message) {
-            const data = err.response!.data!;
-            setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
-          }
-          setUpdating(false);
-        });
+      try {
+        const responseData = await commandApi.updateCommandOutputs(leafUrl, outputs);
+        const cmd = DecodeResponseCommand(responseData);
+        setUpdating(false);
+        props.onClose(cmd);
+      } catch (err: any) {
+        console.error(err);
+        const message = errorHandlerApi.getErrorMessage(err);
+        setInvalidText(`ResponseError: ${message}`);
+        setUpdating(false);
+      }
     } else {
       console.error(`Invalid output type for flatten switch: ${output.type}`);
       setInvalidText(`Invalid output type for flatten switch: ${output.type}`);

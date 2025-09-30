@@ -14,7 +14,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useParams } from "react-router";
-import axios from "axios";
+import { cliApi, errorHandlerApi } from "../../services";
 import CLIModGeneratorToolBar from "./CLIModGeneratorToolBar";
 import CLIModGeneratorProfileCommandTree, {
   ExportModViewProfile,
@@ -92,14 +92,11 @@ interface CLISpecsCommands {
 }
 
 async function retrieveCommand(names: string[]): Promise<CLISpecsCommand> {
-  return axios
-    .get(`/AAZ/Specs/CommandTree/Nodes/aaz/${names.slice(0, -1).join("/")}/Leaves/${names[names.length - 1]}`)
-    .then((res) => res.data);
+  return await cliApi.getSpecsCommand(names);
 }
 
 async function retrieveCommands(namesList: string[][]): Promise<CLISpecsCommand[]> {
-  const namesListData = namesList.map((names) => ["aaz", ...names]);
-  return axios.post(`/AAZ/Specs/CommandTree/Nodes/Leaves`, namesListData).then((res) => res.data);
+  return await cliApi.retrieveCommands(namesList);
 }
 
 const useSpecsCommandTree: () => (namesList: string[][]) => Promise<CLISpecsCommand[]> = () => {
@@ -167,15 +164,10 @@ const CLIModuleGenerator: React.FC<CLIModuleGeneratorProps> = ({ params }) => {
   const loadModule = async () => {
     try {
       setLoading(true);
-      const profiles: string[] = await axios.get(`/CLI/Az/Profiles`).then((res) => res.data);
-
-      const modView: CLIModView = await axios
-        .get(`/CLI/Az/${params.repoName}/Modules/${params.moduleName}`)
-        .then((res) => res.data);
-
-      const simpleTree: CLISpecsSimpleCommandTree = await axios
-        .get(`/AAZ/Specs/CommandTree/Simple`)
-        .then((res) => res.data);
+      setInvalidText(undefined);
+      const profiles = await cliApi.getCliProfiles();
+      const modView: CLIModView = await cliApi.getCliModule(params.repoName, params.moduleName);
+      const simpleTree: CLISpecsSimpleCommandTree = await cliApi.getSimpleCommandTree();
 
       Object.keys(modView!.profiles).forEach((profile) => {
         const idx = profiles.findIndex((v) => v === profile);
@@ -197,12 +189,7 @@ const CLIModuleGenerator: React.FC<CLIModuleGeneratorProps> = ({ params }) => {
       setLoading(false);
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.message) {
-        const data = err.response!.data!;
-        setInvalidText(`ResponseError: ${data.message!}`);
-      } else {
-        setInvalidText(`Error: ${err}`);
-      }
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
     }
   };
 
@@ -325,7 +312,7 @@ function GenerateDialog(props: {
     props.onClose(false);
   };
 
-  const handleGenerateAll = () => {
+  const handleGenerateAll = async () => {
     const profiles: CLIModViewProfiles = {};
     Object.values(props.profileCommandTrees).forEach((tree) => {
       profiles[tree.name] = ExportModViewProfile(tree);
@@ -336,23 +323,18 @@ function GenerateDialog(props: {
     };
 
     setUpdating(true);
-    axios
-      .put(`/CLI/Az/${props.repoName}/Modules/${props.moduleName}`, data)
-      .then(() => {
-        setUpdating(false);
-        props.onClose(true);
-      })
-      .catch((err) => {
-        console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
-        }
-        setUpdating(false);
-      });
+    try {
+      await cliApi.updateCliModule(props.repoName, props.moduleName, data);
+      setUpdating(false);
+      props.onClose(true);
+    } catch (err: any) {
+      console.error(err);
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
+      setUpdating(false);
+    }
   };
 
-  const handleGenerateModified = () => {
+  const handleGenerateModified = async () => {
     const profiles: CLIModViewProfiles = {};
     Object.values(props.profileCommandTrees).forEach((tree) => {
       profiles[tree.name] = ExportModViewProfile(tree);
@@ -363,20 +345,15 @@ function GenerateDialog(props: {
     };
 
     setUpdating(true);
-    axios
-      .patch(`/CLI/Az/${props.repoName}/Modules/${props.moduleName}`, data)
-      .then(() => {
-        setUpdating(false);
-        props.onClose(true);
-      })
-      .catch((err) => {
-        console.error(err);
-        if (err.response?.data?.message) {
-          const data = err.response!.data!;
-          setInvalidText(`ResponseError: ${data.message!}: ${JSON.stringify(data.details)}`);
-        }
-        setUpdating(false);
-      });
+    try {
+      await cliApi.patchCliModule(props.repoName, props.moduleName, data);
+      setUpdating(false);
+      props.onClose(true);
+    } catch (err: any) {
+      console.error(err);
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
+      setUpdating(false);
+    }
   };
 
   return (
