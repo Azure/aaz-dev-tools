@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import { screen } from "@testing-library/react";
 import { render } from "./test-utils";
 
-// Simple component for testing infrastructure
 function TestComponent() {
   return <div>Hello Testing World!</div>;
 }
