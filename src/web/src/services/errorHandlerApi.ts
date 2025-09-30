@@ -1,4 +1,4 @@
-export const apiErrorHandler = {
+export const errorHandlerApi = {
   getErrorMessage: (err: any): string => {
     console.log("err: ", err);
 

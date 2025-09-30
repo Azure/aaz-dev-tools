@@ -17,7 +17,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { commandApi, apiErrorHandler } from "../../services";
+import { commandApi, errorHandlerApi } from "../../services";
 import * as React from "react";
 import { ResponseCommands } from "./WSEditorCommandContent";
 import {
@@ -394,7 +394,7 @@ class CommandGroupDialog extends React.Component<CommandGroupDialogProps, Comman
       console.error(err);
       this.setState({
         updating: false,
-        invalidText: apiErrorHandler.getErrorMessage(err),
+        invalidText: errorHandlerApi.getErrorMessage(err),
       });
     }
   };

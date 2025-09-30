@@ -15,7 +15,7 @@ import * as React from "react";
 import { SwaggerItemSelector } from "./WSEditorSwaggerPicker";
 import styled from "@emotion/styled";
 import { Plane } from "./WSEditorCommandContent";
-import { workspaceApi, specsApi, apiErrorHandler, type Workspace as WorkspaceType } from "../../services";
+import { workspaceApi, specsApi, errorHandlerApi, type Workspace as WorkspaceType } from "../../services";
 
 interface WorkspaceSelectorProps {
   name: string;
@@ -228,7 +228,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
       console.error(err);
       this.setState({
         loading: false,
-        invalidText: apiErrorHandler.getErrorMessage(err),
+        invalidText: errorHandlerApi.getErrorMessage(err),
       });
     }
   };
@@ -281,7 +281,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
           console.error(err);
           this.setState({
             loading: false,
-            invalidText: apiErrorHandler.getErrorMessage(err),
+            invalidText: errorHandlerApi.getErrorMessage(err),
           });
         }
       }
@@ -325,7 +325,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
         console.error(err);
         this.setState({
           loading: false,
-          invalidText: apiErrorHandler.getErrorMessage(err),
+          invalidText: errorHandlerApi.getErrorMessage(err),
         });
       }
     } else {
@@ -406,7 +406,7 @@ class WorkspaceCreateDialog extends React.Component<WorkspaceCreateDialogProps, 
       console.error(err);
       this.setState({
         loading: false,
-        invalidText: apiErrorHandler.getErrorMessage(err),
+        invalidText: errorHandlerApi.getErrorMessage(err),
       });
     }
   };

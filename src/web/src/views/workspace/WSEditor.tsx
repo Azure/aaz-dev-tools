@@ -40,7 +40,7 @@ import WSEditorCommandContent, {
 } from "./WSEditorCommandContent";
 import WSEditorClientConfigDialog from "./WSEditorClientConfig";
 import { getTypespecRPResourcesOperations } from "../../typespec";
-import { workspaceApi, specsApi, apiErrorHandler } from "../../services";
+import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 
 interface CommandGroupMap {
   [id: string]: CommandGroup;
@@ -603,7 +603,7 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
       this.setState({ clientConfigOOD: false, updating: false });
     } catch (err: any) {
       // catch 409 error
-      if (apiErrorHandler.isHttpError(err, 409)) {
+      if (errorHandlerApi.isHttpError(err, 409)) {
         this.setState({
           invalidText: `The client config in this workspace is out of date. Please refresh it first.`,
           clientConfigOOD: true,
@@ -613,7 +613,7 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
       } else {
         console.error(err);
         this.setState({
-          invalidText: apiErrorHandler.getErrorMessage(err),
+          invalidText: errorHandlerApi.getErrorMessage(err),
           updating: false,
         });
       }
@@ -629,7 +629,7 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
     } catch (err: any) {
       console.error(err);
       this.setState({
-        invalidText: apiErrorHandler.getErrorMessage(err),
+        invalidText: errorHandlerApi.getErrorMessage(err),
         updating: false,
       });
     }
@@ -645,7 +645,7 @@ class WSEditorExportDialog extends React.Component<WSEditorExportDialogProps, WS
     } catch (err: any) {
       console.error(err);
       this.setState({
-        invalidText: apiErrorHandler.getErrorMessage(err),
+        invalidText: errorHandlerApi.getErrorMessage(err),
         updating: false,
       });
     }
@@ -702,7 +702,7 @@ function WSEditorDeleteDialog(props: { workspaceName: string; open: boolean; onC
       })
       .catch((err: any) => {
         console.error(err);
-        setInvalidText(apiErrorHandler.getErrorMessage(err));
+        setInvalidText(errorHandlerApi.getErrorMessage(err));
         setUpdating(false);
       });
   };
@@ -799,7 +799,7 @@ class WSEditorSwaggerReloadDialog extends React.Component<
     } catch (err: any) {
       console.error(err);
       this.setState({
-        invalidText: apiErrorHandler.getErrorMessage(err),
+        invalidText: errorHandlerApi.getErrorMessage(err),
         updating: false,
       });
     }
@@ -877,7 +877,7 @@ class WSEditorSwaggerReloadDialog extends React.Component<
     } catch (err: any) {
       console.error(err);
       this.setState({
-        invalidText: apiErrorHandler.getErrorMessage(err),
+        invalidText: errorHandlerApi.getErrorMessage(err),
         updating: false,
       });
     }
@@ -1092,7 +1092,7 @@ class WSRenameDialog extends React.Component<WSRenameDialogProps, WSRenameDialog
         .catch((err: any) => {
           this.setState({
             updating: false,
-            invalidText: apiErrorHandler.getErrorMessage(err),
+            invalidText: errorHandlerApi.getErrorMessage(err),
           });
         });
     }

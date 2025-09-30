@@ -47,7 +47,7 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import DataObjectIcon from "@mui/icons-material/DataObject";
 import LabelIcon from "@mui/icons-material/Label";
-import { commandApi, apiErrorHandler } from "../../services";
+import { commandApi, errorHandlerApi } from "../../services";
 import WSEditorCommandArgumentsContent, {
   ClsArgDefinitionMap,
   CMDArg,
@@ -964,7 +964,7 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
     } catch (err: any) {
       console.error(err);
       this.setState({
-        invalidText: apiErrorHandler.getErrorMessage(err),
+        invalidText: errorHandlerApi.getErrorMessage(err),
         updating: false,
       });
     }
@@ -1166,7 +1166,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
       this.props.onClose(cmd);
     } catch (err: any) {
       console.error(err);
-      const message = apiErrorHandler.getErrorMessage(err);
+      const message = errorHandlerApi.getErrorMessage(err);
       this.setState({
         invalidText: `ResponseError: ${message}`,
         updating: false,
@@ -1330,7 +1330,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
       console.error(err.response);
       this.setState({
         updating: false,
-        invalidText: apiErrorHandler.getErrorMessage(err),
+        invalidText: errorHandlerApi.getErrorMessage(err),
       });
     }
   };
@@ -1598,7 +1598,7 @@ function AddSubcommandDialog(props: {
       props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      const message = apiErrorHandler.getErrorMessage(err);
+      const message = errorHandlerApi.getErrorMessage(err);
       setInvalidText(`ResponseError: ${message}`);
       setUpdating(false);
     }
@@ -1891,7 +1891,7 @@ function OutputDialog(props: {
         props.onClose(cmd);
       } catch (err: any) {
         console.error(err);
-        const message = apiErrorHandler.getErrorMessage(err);
+        const message = errorHandlerApi.getErrorMessage(err);
         setInvalidText(`ResponseError: ${message}`);
         setUpdating(false);
       }

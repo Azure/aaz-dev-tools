@@ -9,7 +9,7 @@ import {
   TextField,
   Button,
 } from "@mui/material";
-import { cliApi, apiErrorHandler } from "../../services";
+import { cliApi, errorHandlerApi } from "../../services";
 import * as React from "react";
 
 interface CLIModule {
@@ -70,7 +70,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
         options: options,
       });
     } catch (err: any) {
-      console.error(apiErrorHandler.getErrorMessage(err));
+      console.error(errorHandlerApi.getErrorMessage(err));
     }
   };
 
@@ -91,7 +91,7 @@ class CLIModuleSelector extends React.Component<CLIModuleSelectorProps, CLIModul
         });
         this.handleDialogClose();
       } catch (err: any) {
-        console.error(apiErrorHandler.getErrorMessage(err));
+        console.error(errorHandlerApi.getErrorMessage(err));
       }
     }
   };

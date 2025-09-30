@@ -27,7 +27,7 @@ import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
 import EditIcon from "@mui/icons-material/Edit";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
 
-import { commandApi, apiErrorHandler } from "../../services";
+import { commandApi, errorHandlerApi } from "../../services";
 import pluralize from "pluralize";
 import React, { useEffect, useState } from "react";
 import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./argument/WSECArgumentSimilarPicker";
@@ -925,7 +925,7 @@ function ArgumentDialog(props: {
       await props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(apiErrorHandler.getErrorMessage(err));
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
       setUpdating(false);
     }
   };
@@ -946,7 +946,7 @@ function ArgumentDialog(props: {
       setArgSimilarTreeArgIdsUpdated([]);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(apiErrorHandler.getErrorMessage(err));
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
       setUpdating(false);
     }
   };
@@ -982,7 +982,7 @@ function ArgumentDialog(props: {
           setArgSimilarTreeArgIdsUpdated([...updatedIds]);
         } catch (err: any) {
           console.error(err);
-          invalidText += apiErrorHandler.getErrorMessage(err);
+          invalidText += errorHandlerApi.getErrorMessage(err);
         }
       }
     }
@@ -1458,7 +1458,7 @@ function FlattenDialog(props: {
       await props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(apiErrorHandler.getErrorMessage(err));
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
       setUpdating(false);
     }
   };
@@ -1479,7 +1479,7 @@ function FlattenDialog(props: {
       setArgSimilarTreeArgIdsUpdated([]);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(apiErrorHandler.getErrorMessage(err));
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
       setUpdating(false);
     }
   };
@@ -1515,7 +1515,7 @@ function FlattenDialog(props: {
           setArgSimilarTreeArgIdsUpdated([...updatedIds]);
         } catch (err: any) {
           console.error(err);
-          invalidText += apiErrorHandler.getErrorMessage(err);
+          invalidText += errorHandlerApi.getErrorMessage(err);
         }
       }
     }
@@ -1659,7 +1659,7 @@ function UnwrapClsDialog(props: {
       await props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(apiErrorHandler.getErrorMessage(err));
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
       setUpdating(false);
     }
   };

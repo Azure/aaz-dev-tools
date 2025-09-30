@@ -27,7 +27,7 @@ import {
   FormHelperText,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { workspaceApi, specsApi, apiErrorHandler } from "../../services";
+import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 import EditorPageLayout from "../../components/EditorPageLayout";
 import { styled } from "@mui/material/styles";
 import { getTypespecRPResources, getTypespecRPResourcesOperations } from "../../typespec";
@@ -183,7 +183,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         await this.loadResourceProviders(moduleValueUrl, rpUrl);
       } catch (err: any) {
         console.error(err);
-        const message = apiErrorHandler.getErrorMessage(err);
+        const message = errorHandlerApi.getErrorMessage(err);
         this.setState({
           invalidText: `ResponseError: ${message}`,
         });
@@ -212,7 +212,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
       });
     } catch (err: any) {
       console.error(err);
-      const message = apiErrorHandler.getErrorMessage(err);
+      const message = errorHandlerApi.getErrorMessage(err);
       this.setState({
         invalidText: `ResponseError: ${message}`,
       });
@@ -239,7 +239,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         await this.onResourceProviderUpdate(selectedResourceProvider);
       } catch (err: any) {
         console.error(err);
-        const message = apiErrorHandler.getErrorMessage(err);
+        const message = errorHandlerApi.getErrorMessage(err);
         this.setState({
           invalidText: `ResponseError: ${message}`,
         });
@@ -266,7 +266,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
       });
     } catch (err: any) {
       console.error(err);
-      const message = apiErrorHandler.getErrorMessage(err);
+      const message = errorHandlerApi.getErrorMessage(err);
       this.setState({
         invalidText: `ResponseError: ${message}`,
       });
@@ -292,7 +292,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
           data = await specsApi.getProviderResources(resourceProviderUrl);
         } catch (err: any) {
           console.error(err);
-          const message = apiErrorHandler.getErrorMessage(err);
+          const message = errorHandlerApi.getErrorMessage(err);
           this.setState({
             invalidText: `ResponseError: ${message}`,
           });
@@ -343,7 +343,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
       } catch (err: any) {
         console.error(err);
         this.setState({
-          invalidText: apiErrorHandler.getErrorMessage(err),
+          invalidText: errorHandlerApi.getErrorMessage(err),
         });
       }
     } else {
@@ -453,7 +453,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
             loading: false,
           });
           this.props.onClose(false);
-          const message = apiErrorHandler.getErrorMessage(err);
+          const message = errorHandlerApi.getErrorMessage(err);
           this.setState({
             invalidText: `ResponseError: ${message}`,
           });
@@ -463,7 +463,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
           loading: false,
         });
         this.props.onClose(true);
-        const message = apiErrorHandler.getErrorMessage(err);
+        const message = errorHandlerApi.getErrorMessage(err);
         this.setState({
           invalidText: `ResponseError: ${message}`,
         });
@@ -477,7 +477,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         this.props.onClose(true);
       } catch (err: any) {
         console.error(err);
-        const message = apiErrorHandler.getErrorMessage(err);
+        const message = errorHandlerApi.getErrorMessage(err);
         this.setState({
           invalidText: `ResponseError: ${message}`,
         });

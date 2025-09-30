@@ -19,7 +19,7 @@ import {
   Tabs,
   Tab,
 } from "@mui/material";
-import { workspaceApi, specsApi, apiErrorHandler } from "../../services";
+import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 import DoDisturbOnRoundedIcon from "@mui/icons-material/DoDisturbOnRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import { Plane, Resource } from "./WSEditorCommandContent";
@@ -173,7 +173,7 @@ class WSEditorClientConfigDialog extends React.Component<
       await this.onPlaneSelectorUpdate(planeOptions[0]);
     } catch (err: any) {
       console.error(err);
-      const message = apiErrorHandler.getErrorMessage(err);
+      const message = errorHandlerApi.getErrorMessage(err);
       this.setState({
         updating: false,
         invalidText: `ResponseError: ${message}`,
@@ -227,7 +227,7 @@ class WSEditorClientConfigDialog extends React.Component<
           await this.onModuleSelectionUpdate(null);
         } catch (err: any) {
           console.error(err);
-          const message = apiErrorHandler.getErrorMessage(err);
+          const message = errorHandlerApi.getErrorMessage(err);
           this.setState({
             updating: false,
             invalidText: `ResponseError: ${message}`,
@@ -272,7 +272,7 @@ class WSEditorClientConfigDialog extends React.Component<
         this.onResourceProviderUpdate(selectedResourceProvider);
       } catch (err: any) {
         console.error(err);
-        const message = apiErrorHandler.getErrorMessage(err);
+        const message = errorHandlerApi.getErrorMessage(err);
         this.setState({
           updating: false,
           invalidText: `ResponseError: ${message}`,
@@ -350,7 +350,7 @@ class WSEditorClientConfigDialog extends React.Component<
         this.onVersionUpdate(selectVersion);
       } catch (err: any) {
         console.error(err);
-        const message = apiErrorHandler.getErrorMessage(err);
+        const message = errorHandlerApi.getErrorMessage(err);
         this.setState({
           invalidText: `ResponseError: ${message}`,
         });
@@ -454,13 +454,13 @@ class WSEditorClientConfigDialog extends React.Component<
       });
     } catch (err: any) {
       // catch 404 error
-      if (apiErrorHandler.isHttpError(err, 404)) {
+      if (errorHandlerApi.isHttpError(err, 404)) {
         this.setState({
           isAdd: true,
         });
       } else {
         console.error(err);
-        const message = apiErrorHandler.getErrorMessage(err);
+        const message = errorHandlerApi.getErrorMessage(err);
         this.setState({ invalidText: `ResponseError: ${message}` });
       }
     }
@@ -648,7 +648,7 @@ class WSEditorClientConfigDialog extends React.Component<
       this.props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      const message = apiErrorHandler.getErrorMessage(err);
+      const message = errorHandlerApi.getErrorMessage(err);
       this.setState({ invalidText: `ResponseError: ${message}` });
       this.setState({ updating: false });
     }

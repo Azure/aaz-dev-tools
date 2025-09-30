@@ -14,7 +14,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useParams } from "react-router";
-import { cliApi, apiErrorHandler } from "../../services";
+import { cliApi, errorHandlerApi } from "../../services";
 import CLIModGeneratorToolBar from "./CLIModGeneratorToolBar";
 import CLIModGeneratorProfileCommandTree, {
   ExportModViewProfile,
@@ -189,7 +189,7 @@ const CLIModuleGenerator: React.FC<CLIModuleGeneratorProps> = ({ params }) => {
       setLoading(false);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(apiErrorHandler.getErrorMessage(err));
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
     }
   };
 
@@ -329,7 +329,7 @@ function GenerateDialog(props: {
       props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(apiErrorHandler.getErrorMessage(err));
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
       setUpdating(false);
     }
   };
@@ -351,7 +351,7 @@ function GenerateDialog(props: {
       props.onClose(true);
     } catch (err: any) {
       console.error(err);
-      setInvalidText(apiErrorHandler.getErrorMessage(err));
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
       setUpdating(false);
     }
   };
