@@ -71,7 +71,6 @@ describe("WSEditorClientConfigDialog", () => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
       });
 
-      // Wait for loading to complete
       await waitFor(() => {
         expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
       });
@@ -94,7 +93,6 @@ describe("WSEditorClientConfigDialog", () => {
         expect(screen.getByText("Modify Client Config")).toBeInTheDocument();
       });
 
-      // Wait for loading to complete
       await waitFor(() => {
         expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
       });
@@ -122,7 +120,6 @@ describe("WSEditorClientConfigDialog", () => {
         expect(screen.getByText("By templates")).toBeInTheDocument();
       });
 
-      // Wait for loading to complete
       await waitFor(() => {
         expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
       });
@@ -130,7 +127,8 @@ describe("WSEditorClientConfigDialog", () => {
       const resourceTab = screen.getByText("By resource property");
       await user.click(resourceTab);
 
-      expect(screen.getByLabelText("Module")).toBeInTheDocument();
+      const moduleInput = await screen.findByRole("combobox", { name: /Module/i });
+      expect(moduleInput).toBeInTheDocument();
     });
 
     it("should show loading indicator when updating", async () => {
@@ -159,7 +157,6 @@ describe("WSEditorClientConfigDialog", () => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
       });
 
-      // Wait for loading to complete
       await waitFor(() => {
         expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
       });
@@ -176,39 +173,50 @@ describe("WSEditorClientConfigDialog", () => {
       const user = userEvent.setup();
       render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
-      await waitFor(() => {
-        expect(screen.getByLabelText("Azure Cloud")).toBeInTheDocument();
-      });
+      const templatesTab = screen.getByRole("tab", { name: /By templates/i });
+      await user.click(templatesTab);
 
-      const azureCloudInput = screen.getByLabelText("Azure Cloud");
+      const azureCloudInput = await screen.findByLabelText(/Azure Cloud/i);
+
+      await user.clear(azureCloudInput);
       await user.type(azureCloudInput, "invalid-url");
 
       const updateButton = screen.getByText("Update");
       await user.click(updateButton);
 
-      await waitFor(() => {
-        expect(screen.getByText("Azure Cloud Endpoint Template is invalid.")).toBeInTheDocument();
-      });
+      const errorMessage = await screen.findByText(/Azure Cloud Endpoint Template is invalid./i);
+      expect(errorMessage).toBeInTheDocument();
     });
 
-    it("should validate AAD scopes are required", async () => {
+    it("shows error when AAD scopes are empty", async () => {
+      // Use 404 error to trigger new config setup mode
+      (workspaceApi.getClientConfig as any).mockRejectedValue(new Error("404"));
+      (errorHandlerApi.isHttpError as any).mockReturnValue(true);
+
       const user = userEvent.setup();
       render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
-        expect(screen.getByLabelText("Azure Cloud")).toBeInTheDocument();
+        expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
       });
 
+      await waitFor(() => {
+        expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+      });
+
+      // Provide a minimal template to pass template validation
       const azureCloudInput = screen.getByLabelText("Azure Cloud");
-      await user.type(azureCloudInput, "https://{vaultName}.vault.azure.net");
+      await user.type(azureCloudInput, "https://management.azure.com");
 
-      // Clear the default AAD scope
-      const aadScopeInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope/);
-      await user.clear(aadScopeInput);
+      // Clear the AAD scope input (it should be rendered with one empty scope by default)
+      const aadInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope here/i);
+      await user.clear(aadInput);
 
+      // Click Update to trigger validation
       const updateButton = screen.getByText("Update");
       await user.click(updateButton);
 
+      // Should get the AAD scopes validation error
       await waitFor(() => {
         expect(screen.getByText("MS Entra(AAD) Auth Scopes is required.")).toBeInTheDocument();
       });
