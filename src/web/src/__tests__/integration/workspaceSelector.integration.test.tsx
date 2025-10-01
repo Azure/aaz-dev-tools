@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { render } from "./test-utils";
-import WorkspaceSelector from "../views/workspace/WorkspaceSelector";
+import { render } from "../test-utils";
+import WorkspaceSelector from "../../views/workspace/WorkspaceSelector";
 
 // Mock window.location for navigation testing
 const mockLocation = {
@@ -83,12 +83,10 @@ describe("Workspace User Behavior (Integration with MSW)", () => {
       const user = userEvent.setup();
       render(<WorkspaceSelector name="Choose Workspace" />);
 
-      // Wait for initialization
       await waitFor(() => {
         expect(screen.getByLabelText("Choose Workspace")).toBeInTheDocument();
       });
 
-      // Trigger create dialog
       const autocomplete = screen.getByLabelText("Choose Workspace");
       await user.click(autocomplete);
       await user.type(autocomplete, "new-workspace");
@@ -99,7 +97,6 @@ describe("Workspace User Behavior (Integration with MSW)", () => {
 
       await user.click(screen.getByText('Create "new-workspace"'));
 
-      // Verify dialog opens
       await waitFor(() => {
         expect(screen.getByText("Create a new workspace")).toBeInTheDocument();
       });
@@ -120,7 +117,6 @@ describe("Workspace User Behavior (Integration with MSW)", () => {
       const user = userEvent.setup();
       render(<WorkspaceSelector name="Choose Workspace" />);
 
-      // Wait and trigger create dialog
       await waitFor(() => {
         expect(screen.getByLabelText("Choose Workspace")).toBeInTheDocument();
       });
@@ -151,7 +147,6 @@ describe("Workspace User Behavior (Integration with MSW)", () => {
       const user = userEvent.setup();
       render(<WorkspaceSelector name="Choose Workspace" />);
 
-      // Trigger create dialog
       await waitFor(() => {
         expect(screen.getByLabelText("Choose Workspace")).toBeInTheDocument();
       });

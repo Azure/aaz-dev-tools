@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { workspaceApi, type CreateWorkspaceData } from "../services/workspaceApi";
+import { workspaceApi, type CreateWorkspaceData } from "../../services/workspaceApi";
 
 describe("Workspace API", () => {
   describe("getWorkspaces", () => {

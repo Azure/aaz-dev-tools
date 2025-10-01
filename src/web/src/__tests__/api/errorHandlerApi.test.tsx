@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { errorHandlerApi } from "../services/errorHandlerApi";
+import { errorHandlerApi } from "../../services/errorHandlerApi";
 
 describe("errorHandlerApi", () => {
   describe("getErrorMessage", () => {
