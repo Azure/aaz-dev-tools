@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { render } from "./test-utils";
-import WorkspaceSelector from "../views/workspace/WorkspaceSelector";
-import { workspaceApi } from "../services";
+import { render } from "../test-utils";
+import WorkspaceSelector from "../../views/workspace/WorkspaceSelector";
+import { workspaceApi } from "../../services";
 
-vi.mock("../services", () => ({
+vi.mock("../../services", () => ({
   workspaceApi: {
     getWorkspaces: vi.fn(),
     createWorkspace: vi.fn(),
