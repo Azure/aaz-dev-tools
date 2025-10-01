@@ -121,6 +121,113 @@ describe("Workspace Management", () => {
 
       expect(workspaceApi.getWorkspaces).toHaveBeenCalledTimes(1);
     });
+
+    it("should filter workspaces based on input text", async () => {
+      const user = userEvent.setup();
+      render(<WorkspaceSelector name="Select Workspace" />);
+
+      await waitFor(() => {
+        expect(workspaceApi.getWorkspaces).toHaveBeenCalled();
+      });
+
+      const autocomplete = screen.getByLabelText("Select Workspace");
+      await user.click(autocomplete);
+      await user.type(autocomplete, "test-workspace-1");
+
+      await waitFor(() => {
+        expect(screen.getByText("test-workspace-1")).toBeInTheDocument();
+        expect(screen.queryByText("test-workspace-2")).not.toBeInTheDocument();
+      });
+    });
+
+    it("should not show create option for existing workspace names", async () => {
+      const user = userEvent.setup();
+      render(<WorkspaceSelector name="Select Workspace" />);
+
+      await waitFor(() => {
+        expect(workspaceApi.getWorkspaces).toHaveBeenCalled();
+      });
+
+      const autocomplete = screen.getByLabelText("Select Workspace");
+      await user.click(autocomplete);
+      await user.type(autocomplete, "test-workspace-1");
+
+      await waitFor(() => {
+        expect(screen.getByText("test-workspace-1")).toBeInTheDocument();
+        expect(screen.queryByText('Create "test-workspace-1"')).not.toBeInTheDocument();
+      });
+    });
+
+    it("should handle partial matching when filtering workspaces", async () => {
+      const user = userEvent.setup();
+      render(<WorkspaceSelector name="Select Workspace" />);
+
+      await waitFor(() => {
+        expect(workspaceApi.getWorkspaces).toHaveBeenCalled();
+      });
+
+      const autocomplete = screen.getByLabelText("Select Workspace");
+      await user.click(autocomplete);
+      await user.type(autocomplete, "workspace");
+
+      await waitFor(() => {
+        expect(screen.getByText("test-workspace-1")).toBeInTheDocument();
+        expect(screen.getByText("test-workspace-2")).toBeInTheDocument();
+        expect(screen.getByText('Create "workspace"')).toBeInTheDocument();
+      });
+    });
+
+    it("should show all workspaces when dropdown is opened without input", async () => {
+      const user = userEvent.setup();
+      render(<WorkspaceSelector name="Select Workspace" />);
+
+      await waitFor(() => {
+        expect(workspaceApi.getWorkspaces).toHaveBeenCalled();
+      });
+
+      const autocomplete = screen.getByLabelText("Select Workspace");
+      await user.click(autocomplete);
+
+      await waitFor(() => {
+        expect(screen.getByText("test-workspace-1")).toBeInTheDocument();
+        expect(screen.getByText("test-workspace-2")).toBeInTheDocument();
+      });
+    });
+
+    it("should not show create option when input is empty", async () => {
+      const user = userEvent.setup();
+      render(<WorkspaceSelector name="Select Workspace" />);
+
+      await waitFor(() => {
+        expect(workspaceApi.getWorkspaces).toHaveBeenCalled();
+      });
+
+      const autocomplete = screen.getByLabelText("Select Workspace");
+      await user.click(autocomplete);
+
+      await waitFor(() => {
+        expect(screen.queryByText(/Create "/)).not.toBeInTheDocument();
+      });
+    });
+
+    it("should handle case-insensitive filtering correctly", async () => {
+      const user = userEvent.setup();
+      render(<WorkspaceSelector name="Select Workspace" />);
+
+      await waitFor(() => {
+        expect(workspaceApi.getWorkspaces).toHaveBeenCalled();
+      });
+
+      const autocomplete = screen.getByLabelText("Select Workspace");
+      await user.click(autocomplete);
+      await user.type(autocomplete, "TEST-WORKSPACE");
+
+      await waitFor(() => {
+        expect(screen.getByText("test-workspace-1")).toBeInTheDocument();
+        expect(screen.getByText("test-workspace-2")).toBeInTheDocument();
+        expect(screen.getByText('Create "TEST-WORKSPACE"')).toBeInTheDocument();
+      });
+    });
   });
 
   describe("Workspace API Integration", () => {
