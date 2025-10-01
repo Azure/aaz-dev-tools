@@ -53,7 +53,9 @@ export const handlers = [
     return HttpResponse.json({
       version: "1.0.0",
       auth: {
-        type: "default",
+        aad: {
+          scopes: ["https://management.azure.com/.default"],
+        },
       },
       endpoints: {
         type: "template",
@@ -63,6 +65,10 @@ export const handlers = [
             template: "https://management.azure.com/",
           },
         ],
+        cloudMetadata: {
+          selectorIndex: "cloud",
+          prefixTemplate: "https://{cloud}.management.azure.com/",
+        },
       },
     });
   }),

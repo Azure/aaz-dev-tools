@@ -115,7 +115,9 @@ describe("Workspace API", () => {
         },
         endpointResource: undefined,
         auth: {
-          type: "default",
+          aad: {
+            scopes: ["https://management.azure.com/.default"],
+          },
         },
       });
     });
