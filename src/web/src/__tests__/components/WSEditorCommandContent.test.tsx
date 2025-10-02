@@ -136,8 +136,9 @@ describe("WSEditorCommandContent", () => {
       render(<WSEditorCommandContent {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: /delete/i })).toBeInTheDocument();
+        const commandCard = screen.getByText("[ COMMAND ]").closest(".MuiCard-root");
+        expect(within(commandCard as HTMLElement).getByText("Edit")).toBeInTheDocument();
+        expect(within(commandCard as HTMLElement).getByText("Delete")).toBeInTheDocument();
       });
     });
 
@@ -145,7 +146,8 @@ describe("WSEditorCommandContent", () => {
       render(<WSEditorCommandContent {...defaultProps} />);
 
       await waitFor(() => {
-        const editButton = screen.getByRole("button", { name: /edit/i });
+        const commandCard = screen.getByText("[ COMMAND ]").closest(".MuiCard-root");
+        const editButton = within(commandCard as HTMLElement).getByText("Edit");
         fireEvent.click(editButton);
       });
 
@@ -158,7 +160,8 @@ describe("WSEditorCommandContent", () => {
       render(<WSEditorCommandContent {...defaultProps} />);
 
       await waitFor(() => {
-        const deleteButton = screen.getByRole("button", { name: /delete/i });
+        const commandCard = screen.getByText("[ COMMAND ]").closest(".MuiCard-root");
+        const deleteButton = within(commandCard as HTMLElement).getByText("Delete");
         fireEvent.click(deleteButton);
       });
 
@@ -324,7 +327,7 @@ describe("WSEditorCommandContent", () => {
 
       await waitFor(() => {
         const commandCard = screen.getByText("[ COMMAND ]").closest(".MuiCard-root");
-        const editButton = within(commandCard as HTMLElement).getByRole("button", { name: /edit/i });
+        const editButton = within(commandCard as HTMLElement).getByText("Edit");
         fireEvent.click(editButton);
       });
 
@@ -369,7 +372,7 @@ describe("WSEditorCommandContent", () => {
 
       await waitFor(() => {
         const commandCard = screen.getByText("[ COMMAND ]").closest(".MuiCard-root");
-        const deleteButton = within(commandCard as HTMLElement).getByRole("button", { name: /delete/i });
+        const deleteButton = within(commandCard as HTMLElement).getByText("Delete");
         fireEvent.click(deleteButton);
       });
 
