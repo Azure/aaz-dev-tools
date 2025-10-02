@@ -186,105 +186,85 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
     help="The name of swagger module."
 )
 def generate_all():
+    def update_strategy(resource):
+        has_patch = "patch" in resource.operations.values()
+        # has_generic_update = {"get", "put"}.issubset(resource.operations.values())
+        if has_patch:
+            return "PatchOnly"
+        # if has_generic_update:  # fallback to get + put
+        #     return "None"
+        return None
+
+    def normalize_resource_map(resource_map):
+        version_resource_map = defaultdict(list)
+        for resource_id, version_map in resource_map.items():
+            for version in sorted(version_map.keys())[-4:]:  # only care about the latest 4 versions
+                resource = {"id": resource_id}
+                update_by = update_strategy(version_map[version])
+                if update_by:
+                    resource["options"] = {"update_by": update_by}
+
+                version_resource_map[version].append(resource)
+
+        return version_resource_map
+
     def to_aaz(module_name):
-        try:
-            swagger_specs = SwaggerSpecsManager()
-            module_manager = swagger_specs.get_module_manager(Config.DEFAULT_PLANE, module_name)
+        module_manager = SwaggerSpecsManager().get_module_manager(Config.DEFAULT_PLANE, module_name)
+        rps = module_manager.get_resource_providers()
 
-            rps = module_manager.get_resource_providers()
-            for r in rps:
-                if isinstance(r, TypeSpecResourceProvider):
-                    continue
-
-                rp = module_manager.get_openapi_resource_provider(r.name)
-
-                for k in r.tags:
-                    resource_map = rp.get_resource_map_by_tag(k)
-                    if not resource_map:
-                        raise InvalidAPIUsage(f"Tag `{k}` is not exist")
-
-                    version_resource_map = {}
-                    for resource_id, version_map in resource_map.items():
-                        v_list = [v for v in version_map]
-                        if len(v_list) > 1:
-                            raise InvalidAPIUsage(
-                                f"Tag `{k}` contains multiple api versions of one resource",
-                                payload={
-                                    "Resource": resource_id,
-                                    "versions": v_list,
-                                }
-                            )
-
-                        v = v_list[0]
-                        resource = version_map[v]
-                        has_patch = "patch" in resource.operations.values()
-                        has_generic_update = "get" in resource.operations.values() and "put" in resource.operations.values()
-
-                        update_by = "PatchOnly" if has_patch else ("None" if has_generic_update else None)
-
-                        if v not in version_resource_map:
-                            version_resource_map[v] = []
-
-                        new_resource = {"id": resource_id}
-                        if update_by:
-                            new_resource["options"] = {"update_by": update_by}
-                        version_resource_map[v].append(new_resource)
-
-                    mod_names = module_name
-                    ws = WorkspaceManager.new(
-                        name=module_name,
-                        plane=Config.DEFAULT_PLANE,
-                        folder=WorkspaceManager.IN_MEMORY,
-                        mod_names=mod_names,
-                        resource_provider=rp.name,
-                        swagger_manager=swagger_specs,
-                        aaz_manager=AAZSpecsManager(),
-                        source=SourceTypeEnum.OpenAPI,
-                    )
-                    for version, resources in version_resource_map.items():
-                        ws.add_new_resources_by_swagger(
-                            mod_names=mod_names, version=version, resources=resources
-                        )
-
-                    # provide default short summary
-                    for node in ws.iter_command_tree_nodes():
-                        if not node.help:
-                            node.help = CMDHelp()
-                        if not node.help.short:
-                            node.help.short = f"Manage {node.names[-1]}"
-
-                    for leaf in ws.iter_command_tree_leaves():
-                        if not leaf.help:
-                            leaf.help = CMDHelp()
-                        if not leaf.help.short:
-                            n = leaf.names[-1]
-                            n = n[0].upper() + n[1:]
-                            leaf.help.short = f"{n} {leaf.names[-2]}"
-
-                    if not ws.is_in_memory:
-                        ws.save()
-
-                    ws.generate_to_aaz()
-
-        except InvalidAPIUsage as err:
-            logger.error(err, exc_info=True)
-            sys.exit(1)
-
-        except ValueError as err:
-            logger.error(err, exc_info=True)
-            sys.exit(1)
-
-    if Config.DEFAULT_SWAGGER_MODULE:
-        to_aaz(Config.DEFAULT_SWAGGER_MODULE)
-
-    else:
-        spec_path = os.path.join(Config.SWAGGER_PATH, "specification")
-        for item in os.listdir(spec_path):
-            curr_path = os.path.join(spec_path, item)
-            if os.path.isfile(curr_path):
+        for r in rps:
+            if isinstance(r, TypeSpecResourceProvider):
                 continue
 
-            to_aaz(item)
+            rp = module_manager.get_openapi_resource_provider(r.name)
+            version_resource_map = normalize_resource_map(rp.get_resource_map())
+
+            for version, resources in version_resource_map.items():
+                ws = WorkspaceManager.new(
+                    name=module_name,
+                    plane=Config.DEFAULT_PLANE,
+                    folder=WorkspaceManager.IN_MEMORY,
+                    mod_names=module_name,
+                    resource_provider=rp.name,
+                    swagger_manager=SwaggerSpecsManager(),
+                    aaz_manager=AAZSpecsManager(),
+                    source=SourceTypeEnum.OpenAPI,
+                )
+                ws.add_new_resources_by_swagger(mod_names=module_name, version=version, resources=resources)
+
+                # provide default short summary
+                for node in ws.iter_command_tree_nodes():
+                    if not node.help:
+                        node.help = CMDHelp()
+                    if not node.help.short:
+                        node.help.short = f"Manage {node.names[-1]}."
+
+                for leaf in ws.iter_command_tree_leaves():
+                    if not leaf.help:
+                        leaf.help = CMDHelp()
+                    if not leaf.help.short:
+                        n = leaf.names[-1]
+                        n = n[0].upper() + n[1:]
+                        leaf.help.short = f"{n} {leaf.names[-2]}."
+
+                ws.generate_to_aaz()
+
+    try:
+        if Config.DEFAULT_SWAGGER_MODULE:
+            to_aaz(Config.DEFAULT_SWAGGER_MODULE)
+
+        else:
+            spec_path = os.path.join(Config.SWAGGER_PATH, "specification")
+            for item in os.listdir(spec_path):
+                curr_path = os.path.join(spec_path, item)
+                if os.path.isfile(curr_path):
+                    continue
+
+                to_aaz(item)
+
+    except (InvalidAPIUsage, ValueError) as err:
+        logger.error(err, exc_info=True)
+        raise sys.exit(1)
 
 
 @bp.cli.command("verify", short_help="Verify data consistency within `aaz` repository.")
