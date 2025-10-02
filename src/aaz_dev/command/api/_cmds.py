@@ -8,10 +8,15 @@ from collections import defaultdict
 from flask import Blueprint
 
 from command.controller.specs_manager import AAZSpecsManager
-from command.templates import get_templates
-from swagger.utils.tools import swagger_resource_path_to_resource_id
+from command.controller.workspace_manager import WorkspaceManager
+from command.model.configuration import CMDHelp
+from swagger.controller.specs_manager import SwaggerSpecsManager
+from swagger.model.specs import TypeSpecResourceProvider
 from swagger.utils.source import SourceTypeEnum
+from swagger.utils.tools import swagger_resource_path_to_resource_id
+
 from utils.config import Config
+from utils.exceptions import InvalidAPIUsage
 
 logger = logging.getLogger('aaz')
 
@@ -80,13 +85,6 @@ def resource_id_type(value):
     help="The path to export the workspace for modification."
 )
 def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
-    from swagger.controller.specs_manager import SwaggerSpecsManager
-    from command.controller.specs_manager import AAZSpecsManager
-    from command.controller.workspace_manager import WorkspaceManager
-    from utils.config import Config
-    from utils.exceptions import InvalidAPIUsage
-    from command.model.configuration import CMDHelp
-
     try:
         swagger_specs = SwaggerSpecsManager()
         aaz_specs = AAZSpecsManager()
@@ -160,6 +158,113 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
     except ValueError as err:
         logger.error(err)
         sys.exit(1)
+
+
+@bp.cli.command("generate-all", short_help="Fully generate data model from OpenAPI specification, mainly for use in https://github.com/magodo/az-rs.")
+@click.option(
+    "--swagger-path", '-s',
+    type=click.Path(file_okay=False, dir_okay=True, readable=True, resolve_path=True),
+    default=Config.SWAGGER_PATH,
+    callback=Config.validate_and_setup_swagger_path,
+    expose_value=False,
+    help="The local path of azure-rest-api-specs repo. Official repo is https://github.com/Azure/azure-rest-api-specs"
+)
+@click.option(
+    "--aaz-path", '-a',
+    type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
+    default=Config.AAZ_PATH,
+    required=not Config.AAZ_PATH,
+    callback=Config.validate_and_setup_aaz_path,
+    expose_value=False,
+    help="The local path of aaz repo."
+)
+@click.option(
+    "--module", '-m',
+    default=Config.DEFAULT_SWAGGER_MODULE,
+    callback=Config.validate_and_setup_default_swagger_module,
+    expose_value=False,
+    help="The name of swagger module."
+)
+def generate_all():
+    def update_strategy(resource):
+        has_patch = "patch" in resource.operations.values()
+        # has_generic_update = {"get", "put"}.issubset(resource.operations.values())
+        if has_patch:
+            return "PatchOnly"
+        # if has_generic_update:  # fallback to get + put
+        #     return "None"
+        return None
+
+    def normalize_resource_map(resource_map):
+        version_resource_map = defaultdict(list)
+        for resource_id, version_map in resource_map.items():
+            for version in sorted(version_map.keys())[-4:]:  # only care about the latest 4 versions
+                resource = {"id": resource_id}
+                update_by = update_strategy(version_map[version])
+                if update_by:
+                    resource["options"] = {"update_by": update_by}
+
+                version_resource_map[version].append(resource)
+
+        return version_resource_map
+
+    def to_aaz(module_name):
+        module_manager = SwaggerSpecsManager().get_module_manager(Config.DEFAULT_PLANE, module_name)
+        rps = module_manager.get_resource_providers()
+
+        for r in rps:
+            if isinstance(r, TypeSpecResourceProvider):
+                continue
+
+            rp = module_manager.get_openapi_resource_provider(r.name)
+            version_resource_map = normalize_resource_map(rp.get_resource_map())
+
+            for version, resources in version_resource_map.items():
+                ws = WorkspaceManager.new(
+                    name=module_name,
+                    plane=Config.DEFAULT_PLANE,
+                    folder=WorkspaceManager.IN_MEMORY,
+                    mod_names=module_name,
+                    resource_provider=rp.name,
+                    swagger_manager=SwaggerSpecsManager(),
+                    aaz_manager=AAZSpecsManager(),
+                    source=SourceTypeEnum.OpenAPI,
+                )
+                ws.add_new_resources_by_swagger(mod_names=module_name, version=version, resources=resources)
+
+                # provide default short summary
+                for node in ws.iter_command_tree_nodes():
+                    if not node.help:
+                        node.help = CMDHelp()
+                    if not node.help.short:
+                        node.help.short = f"Manage {node.names[-1]}."
+
+                for leaf in ws.iter_command_tree_leaves():
+                    if not leaf.help:
+                        leaf.help = CMDHelp()
+                    if not leaf.help.short:
+                        n = leaf.names[-1]
+                        n = n[0].upper() + n[1:]
+                        leaf.help.short = f"{n} {leaf.names[-2]}."
+
+                ws.generate_to_aaz()
+
+    try:
+        if Config.DEFAULT_SWAGGER_MODULE:
+            to_aaz(Config.DEFAULT_SWAGGER_MODULE)
+
+        else:
+            spec_path = os.path.join(Config.SWAGGER_PATH, "specification")
+            for item in os.listdir(spec_path):
+                curr_path = os.path.join(spec_path, item)
+                if os.path.isfile(curr_path):
+                    continue
+
+                to_aaz(item)
+
+    except (InvalidAPIUsage, ValueError) as err:
+        logger.error(err, exc_info=True)
+        raise sys.exit(1)
 
 
 @bp.cli.command("verify", short_help="Verify data consistency within `aaz` repository.")
