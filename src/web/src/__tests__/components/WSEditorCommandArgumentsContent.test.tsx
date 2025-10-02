@@ -139,11 +139,55 @@ describe("WSEditorCommandArgumentsContent", () => {
       expect(screen.getByText("Edit")).toBeInTheDocument();
     });
 
-    it("supports argument reordering", async () => {
-      render(<WSEditorCommandArgumentsContent {...defaultProps} />);
+    it("displays arguments in correct sorted order", async () => {
+      const mixedArgs = [
+        {
+          var: "zebra_arg",
+          options: ["--zebra", "-z"],
+          type: "string",
+          required: false,
+          stage: "Stable" as const,
+          hide: false,
+          group: "",
+          nullable: false,
+          help: { short: "Zebra argument." },
+        },
+        {
+          var: "alpha_arg",
+          options: ["--alpha", "-a"],
+          type: "string",
+          required: true,
+          stage: "Stable" as const,
+          hide: false,
+          group: "",
+          nullable: false,
+          help: { short: "Alpha argument." },
+        },
+        {
+          var: "beta_arg",
+          options: ["--beta", "-b"],
+          type: "string",
+          required: false,
+          stage: "Stable" as const,
+          hide: false,
+          group: "",
+          nullable: false,
+          help: { short: "Beta argument." },
+        },
+      ];
 
-      expect(screen.getByText("----resource-group ---g")).toBeInTheDocument();
-      expect(screen.getByText("----name ---n")).toBeInTheDocument();
+      const sortedProps = {
+        ...defaultProps,
+        args: mixedArgs,
+      };
+
+      render(<WSEditorCommandArgumentsContent {...sortedProps} />);
+
+      const argumentElements = screen.getAllByText(/----\w+/);
+
+      expect(argumentElements[0]).toHaveTextContent("----alpha ---a");
+      expect(argumentElements[1]).toHaveTextContent("----beta ---b");
+      expect(argumentElements[2]).toHaveTextContent("----zebra ---z");
     });
   });
 
