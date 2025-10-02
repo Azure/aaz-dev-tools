@@ -447,13 +447,15 @@ describe("WSEditorClientConfigDialog", () => {
       render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
-        expect(screen.getByLabelText("Azure Cloud")).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/Endpoint template in Azure Cloud/i)).toBeInTheDocument();
       });
 
-      const azureCloudInput = screen.getByLabelText("Azure Cloud");
-      await user.type(azureCloudInput, "https://{vaultName}.vault.azure.net");
+      const azureCloudInput = screen.getByPlaceholderText(/Endpoint template in Azure Cloud/i);
+      await user.clear(azureCloudInput);
+      await user.type(azureCloudInput, "https://vault123.vault.azure.net");
 
       const aadScopeInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope/);
+      await user.clear(aadScopeInput);
       await user.type(aadScopeInput, "https://management.azure.com/.default");
 
       const updateButton = screen.getByText("Update");
@@ -466,7 +468,7 @@ describe("WSEditorClientConfigDialog", () => {
             templates: expect.arrayContaining([
               expect.objectContaining({
                 cloud: "AzureCloud",
-                template: "https://{vaultName}.vault.azure.net",
+                template: "https://vault123.vault.azure.net",
               }),
             ]),
             auth: expect.objectContaining({
