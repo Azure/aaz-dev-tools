@@ -211,23 +211,32 @@ describe("WSEditorClientConfigDialog", () => {
 
     it("should validate cloud metadata selector index when prefix is provided", async () => {
       const user = userEvent.setup();
+
       render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
-        expect(screen.getByLabelText("Azure Cloud")).toBeInTheDocument();
+        expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
       });
 
-      const azureCloudInput = screen.getByLabelText("Azure Cloud");
-      await user.type(azureCloudInput, "https://{vaultName}.vault.azure.net");
+      const azureInput = screen.getByPlaceholderText(
+        /Endpoint template in Azure Cloud, e.g. https:\/\/\{vaultName\}\.vault\.azure\.net/i,
+      );
+      await user.type(azureInput, "https://management.azure.com");
 
       const prefixInput = screen.getByLabelText("Prefix");
       await user.type(prefixInput, "https://{vaultName}");
+
+      const aadInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope here/i);
+      await user.type(aadInput, "dummy");
+      await user.clear(aadInput);
 
       const updateButton = screen.getByText("Update");
       await user.click(updateButton);
 
       await waitFor(() => {
-        expect(screen.getByText("Cloud Metadata Selector Index is required.")).toBeInTheDocument();
+        expect(
+          screen.getByText((content) => content.includes("Cloud Metadata Selector Index is required.")),
+        ).toBeInTheDocument();
       });
     });
 
