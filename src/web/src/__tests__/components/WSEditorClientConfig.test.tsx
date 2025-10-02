@@ -349,9 +349,11 @@ describe("WSEditorClientConfigDialog", () => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
       });
 
-      expect(screen.getByLabelText("Azure Cloud")).toBeInTheDocument();
+      const azureInput = screen.getByRole("textbox", { name: /Azure Cloud/i });
+      expect(azureInput).toBeInTheDocument();
 
-      expect(screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope/)).toBeInTheDocument();
+      const aadInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope/i);
+      expect(aadInput).toBeInTheDocument();
     });
 
     it("should populate form with existing config data", async () => {
