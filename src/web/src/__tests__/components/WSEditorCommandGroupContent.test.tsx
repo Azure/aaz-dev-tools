@@ -5,7 +5,6 @@ import WSEditorCommandGroupContent from "../../views/workspace/WSEditorCommandGr
 import * as commandApi from "../../services/commandApi";
 import * as errorHandlerApi from "../../services/errorHandlerApi";
 
-// Define the CommandGroup interface as it's defined locally in the component
 interface CommandGroup {
   id: string;
   names: string[];
@@ -17,7 +16,6 @@ interface CommandGroup {
   canDelete: boolean;
 }
 
-// Mock the required modules
 vi.mock("../../services/commandApi");
 vi.mock("../../services/errorHandlerApi");
 
@@ -67,16 +65,12 @@ describe("WSEditorCommandGroupContent", () => {
         />,
       );
 
-      // Check for command group name display (with az prefix)
       expect(screen.getByText("az test-group")).toBeInTheDocument();
 
-      // Check for GROUP label
       expect(screen.getByText("[ GROUP ]")).toBeInTheDocument();
 
-      // Check for stage display
       expect(screen.getByText("Stable")).toBeInTheDocument();
 
-      // Check for help text
       expect(screen.getByText("Test command group help text")).toBeInTheDocument();
     });
 
@@ -140,11 +134,9 @@ describe("WSEditorCommandGroupContent", () => {
         />,
       );
 
-      // Find and click the Edit button
       const editButton = screen.getByRole("button", { name: /edit/i });
       await user.click(editButton);
 
-      // Check if the edit dialog is displayed
       await waitFor(() => {
         expect(screen.getByText("Edit Command Group")).toBeInTheDocument();
         expect(screen.getByDisplayValue("test-group")).toBeInTheDocument();
@@ -163,7 +155,6 @@ describe("WSEditorCommandGroupContent", () => {
         />,
       );
 
-      // Open dialog
       const editButton = screen.getByRole("button", { name: /edit/i });
       await user.click(editButton);
 
@@ -171,7 +162,6 @@ describe("WSEditorCommandGroupContent", () => {
         expect(screen.getByText("Edit Command Group")).toBeInTheDocument();
       });
 
-      // Close dialog
       const cancelButton = screen.getByRole("button", { name: /cancel/i });
       await user.click(cancelButton);
 
@@ -192,7 +182,6 @@ describe("WSEditorCommandGroupContent", () => {
         />,
       );
 
-      // Open dialog
       const editButton = screen.getByRole("button", { name: /edit/i });
       await user.click(editButton);
 
@@ -200,12 +189,10 @@ describe("WSEditorCommandGroupContent", () => {
         expect(screen.getByText("Edit Command Group")).toBeInTheDocument();
       });
 
-      // Modify name
       const nameInput = screen.getByDisplayValue("test-group");
       await user.clear(nameInput);
       await user.type(nameInput, "updated-group");
 
-      // Save changes
       const saveButton = screen.getByRole("button", { name: /save/i });
       await user.click(saveButton);
 
@@ -228,11 +215,9 @@ describe("WSEditorCommandGroupContent", () => {
         />,
       );
 
-      // Find and click the Delete button
       const deleteButton = screen.getByRole("button", { name: /delete/i });
       await user.click(deleteButton);
 
-      // Check if the delete dialog is displayed
       await waitFor(() => {
         expect(screen.getByText("Delete Command Group")).toBeInTheDocument();
         expect(screen.getByText("az test-group")).toBeInTheDocument();
@@ -251,7 +236,6 @@ describe("WSEditorCommandGroupContent", () => {
         />,
       );
 
-      // Open dialog
       const deleteButton = screen.getByRole("button", { name: /delete/i });
       await user.click(deleteButton);
 
@@ -259,7 +243,6 @@ describe("WSEditorCommandGroupContent", () => {
         expect(screen.getByText("Delete Command Group")).toBeInTheDocument();
       });
 
-      // Close dialog
       const cancelButton = screen.getByRole("button", { name: /cancel/i });
       await user.click(cancelButton);
 
@@ -280,7 +263,6 @@ describe("WSEditorCommandGroupContent", () => {
         />,
       );
 
-      // Open dialog
       const deleteButton = screen.getByRole("button", { name: /delete/i });
       await user.click(deleteButton);
 
@@ -288,7 +270,6 @@ describe("WSEditorCommandGroupContent", () => {
         expect(screen.getByText("Delete Command Group")).toBeInTheDocument();
       });
 
-      // Confirm delete - get the second Delete button (the one in the dialog)
       const confirmDeleteButton = screen.getAllByRole("button", { name: /delete/i })[1];
       await user.click(confirmDeleteButton);
 
@@ -315,7 +296,6 @@ describe("WSEditorCommandGroupContent", () => {
         />,
       );
 
-      // Open dialog and try to save
       const editButton = screen.getByRole("button", { name: /edit/i });
       await user.click(editButton);
 
@@ -346,7 +326,6 @@ describe("WSEditorCommandGroupContent", () => {
         />,
       );
 
-      // Open dialog and try to delete
       const deleteButton = screen.getByRole("button", { name: /delete/i });
       await user.click(deleteButton);
 
@@ -372,7 +351,6 @@ describe("WSEditorCommandGroupContent", () => {
         />,
       );
 
-      // Component should still render the command group info
       expect(screen.getByText("az test-group")).toBeInTheDocument();
     });
 
@@ -411,7 +389,6 @@ describe("WSEditorCommandGroupContent", () => {
 
       expect(screen.getByText("az test-group")).toBeInTheDocument();
 
-      // Update with new timestamp
       rerender(
         <WSEditorCommandGroupContent
           workspaceUrl={mockWorkspaceUrl}
