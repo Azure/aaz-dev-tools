@@ -189,35 +189,24 @@ describe("WSEditorClientConfigDialog", () => {
     });
 
     it("shows error when AAD scopes are empty", async () => {
-      // Use 404 error to trigger new config setup mode
       (workspaceApi.getClientConfig as any).mockRejectedValue(new Error("404"));
       (errorHandlerApi.isHttpError as any).mockReturnValue(true);
 
       const user = userEvent.setup();
       render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
-      await waitFor(() => {
-        expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
-      });
+      const azureInput = screen.getByPlaceholderText(
+        /Endpoint template in Azure Cloud, e.g. https:\/\/\{vaultName\}\.vault\.azure\.net/i,
+      );
+      await user.type(azureInput, "https://management.azure.com");
 
-      await waitFor(() => {
-        expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
-      });
-
-      // Provide a minimal template to pass template validation
-      const azureCloudInput = screen.getByLabelText("Azure Cloud");
-      await user.type(azureCloudInput, "https://management.azure.com");
-
-      // Clear the AAD scope input (it should be rendered with one empty scope by default)
       const aadInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope here/i);
       await user.clear(aadInput);
 
       const updateButton = screen.getByText("Update");
       await user.click(updateButton);
 
-      await waitFor(() => {
-        expect(screen.getByText("MS Entra(AAD) Auth Scopes is required.")).toBeInTheDocument();
-      });
+      expect(await screen.findByText("MS Entra(AAD) Auth Scopes is required.")).toBeInTheDocument();
     });
 
     it("should validate cloud metadata selector index when prefix is provided", async () => {
