@@ -4,7 +4,6 @@ import { MemoryRouter } from "react-router-dom";
 import { WSEditor } from "../../views/workspace/WSEditor";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 
-// Mock all the child components
 vi.mock("../../views/workspace/WSEditorToolBar", () => ({
   default: ({ workspaceName, onHomePage, onGenerate, onDelete, onModify }: any) => (
     <div data-testid="ws-editor-toolbar">
@@ -116,7 +115,6 @@ vi.mock("../../views/workspace/WSEditorClientConfig", () => ({
     ) : null,
 }));
 
-// Mock services
 vi.mock("../../services", () => ({
   workspaceApi: {
     getWorkspace: vi.fn(),
@@ -144,7 +142,6 @@ vi.mock("../../typespec", () => ({
   getTypespecRPResourcesOperations: vi.fn(),
 }));
 
-// Mock window methods
 Object.defineProperty(window, "location", {
   value: {
     href: "",
@@ -198,7 +195,6 @@ describe("WSEditor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Setup default successful API responses
     vi.mocked(specsApi.getPlaneNames).mockResolvedValue(mockPlaneNames);
     vi.mocked(workspaceApi.getWorkspace).mockResolvedValue(mockWorkspaceData);
     vi.mocked(workspaceApi.getWorkspaceClientConfig).mockResolvedValue({} as any);
@@ -330,12 +326,10 @@ describe("WSEditor", () => {
     it("should handle selection of preSelectedId for commands", async () => {
       const component = renderWithRouter();
 
-      // Wait for initial load
       await waitFor(() => {
         expect(screen.getByTestId("selected-id")).toHaveTextContent("group:test-group");
       });
 
-      // Trigger reload with command selection
       const instance = component.container.querySelector('[data-testid="ws-editor-toolbar"]');
       expect(instance).toBeInTheDocument();
     });
@@ -407,7 +401,6 @@ describe("WSEditor", () => {
       const toggleButton = screen.getByTestId("toggle-tree");
       fireEvent.click(toggleButton);
 
-      // State change should be reflected
       await waitFor(() => {
         expect(screen.getByTestId("expanded-count")).toHaveTextContent("1");
       });
@@ -430,7 +423,6 @@ describe("WSEditor", () => {
     });
 
     it("should handle command updates", async () => {
-      // First select a command
       const selectButton = screen.getByTestId("select-command");
       fireEvent.click(selectButton);
 
@@ -499,7 +491,6 @@ describe("WSEditor", () => {
     });
 
     it("should open client config dialog when edit config button clicked", async () => {
-      // Setup client configurable workspace
       vi.mocked(workspaceApi.getWorkspace).mockResolvedValue({
         ...mockWorkspaceData,
         plane: "custom-plane",
@@ -532,7 +523,6 @@ describe("WSEditor", () => {
     });
 
     it("should close client config dialog and reload workspace on update", async () => {
-      // Setup client configurable workspace
       vi.mocked(workspaceApi.getWorkspace).mockResolvedValue({
         ...mockWorkspaceData,
         plane: "custom-plane",

@@ -212,11 +212,9 @@ describe("WSEditorClientConfigDialog", () => {
       const aadInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope here/i);
       await user.clear(aadInput);
 
-      // Click Update to trigger validation
       const updateButton = screen.getByText("Update");
       await user.click(updateButton);
 
-      // Should get the AAD scopes validation error
       await waitFor(() => {
         expect(screen.getByText("MS Entra(AAD) Auth Scopes is required.")).toBeInTheDocument();
       });
@@ -293,11 +291,9 @@ describe("WSEditorClientConfigDialog", () => {
         expect(screen.getByLabelText("add")).toBeInTheDocument();
       });
 
-      // Add a second scope first
       const addButton = screen.getByLabelText("add");
       await user.click(addButton);
 
-      // Then remove one
       const removeButtons = screen.getAllByLabelText("remove");
       await user.click(removeButtons[0]);
 
@@ -355,10 +351,8 @@ describe("WSEditorClientConfigDialog", () => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
       });
 
-      // Check default template mode is selected
       expect(screen.getByLabelText("Azure Cloud")).toBeInTheDocument();
 
-      // Check default AAD scope input exists
       expect(screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope/)).toBeInTheDocument();
     });
 
@@ -404,7 +398,6 @@ describe("WSEditorClientConfigDialog", () => {
         expect(screen.getByText("Update")).toBeInTheDocument();
       });
 
-      // Trigger validation error
       const updateButton = screen.getByText("Update");
       await user.click(updateButton);
 
@@ -412,15 +405,12 @@ describe("WSEditorClientConfigDialog", () => {
         expect(screen.getByText("Azure Cloud Endpoint Template is required.")).toBeInTheDocument();
       });
 
-      // Switch to resource tab
       const resourceTab = screen.getByText("By resource property");
       await user.click(resourceTab);
 
-      // Switch back to template tab
       const templateTab = screen.getByText("By templates");
       await user.click(templateTab);
 
-      // Error should still be there since we haven't fixed the validation issue
       expect(screen.getByText("Azure Cloud Endpoint Template is required.")).toBeInTheDocument();
     });
   });
@@ -460,7 +450,6 @@ describe("WSEditorClientConfigDialog", () => {
         expect(screen.getByLabelText("Azure Cloud")).toBeInTheDocument();
       });
 
-      // Fill required fields
       const azureCloudInput = screen.getByLabelText("Azure Cloud");
       await user.type(azureCloudInput, "https://{vaultName}.vault.azure.net");
 

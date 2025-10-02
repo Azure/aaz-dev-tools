@@ -6,10 +6,8 @@ import { http, HttpResponse } from "msw";
 import { render } from "../test-utils";
 import WSEditorClientConfigDialog from "../../views/workspace/WSEditorClientConfig";
 
-// Mock console.error to avoid noise in test output
 const mockConsoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
-// Create MSW server
 const server = setupServer();
 
 beforeAll(() => {
@@ -34,7 +32,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
     {
       name: "azure-cli",
       displayName: "Azure CLI",
-      moduleOptions: null, // Force API call for modules
+      moduleOptions: null,
     },
   ];
 
@@ -78,24 +76,19 @@ describe("WSEditorClientConfigDialog - Integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Setup default MSW handlers
     server.use(
-      // Planes API
       http.get("*/specs/planes", () => {
         return HttpResponse.json(mockPlanes);
       }),
 
-      // Modules API
       http.get("*/specs/planes/azure-cli/modules", () => {
         return HttpResponse.json(mockModules);
       }),
 
-      // Resource Providers API
       http.get("*/specs/planes/*/modules/*/resource-providers", () => {
         return HttpResponse.json(mockResourceProviders);
       }),
 
-      // Provider Resources API
       http.get("*/specs/planes/*/modules/*/resource-providers/*/resources", () => {
         return HttpResponse.json(mockProviderResources);
       }),
@@ -132,7 +125,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByText("Modify Client Config")).toBeInTheDocument();
       });
 
-      // Check that form is populated with existing data
       expect(screen.getByDisplayValue("https://{vaultName}.vault.azure.net")).toBeInTheDocument();
       expect(screen.getByDisplayValue("https://{vaultName}.vault.azure.cn")).toBeInTheDocument();
       expect(screen.getByDisplayValue("suffixes.keyVaultDns")).toBeInTheDocument();
@@ -153,7 +145,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
       });
 
-      // Check that form is in add mode
       expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
       expect(screen.getByText("Update")).toBeInTheDocument();
     });
@@ -172,7 +163,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByText("By resource property")).toBeInTheDocument();
       });
 
-      // Switch to resource mode
       const resourceTab = screen.getByText("By resource property");
       await user.click(resourceTab);
 
@@ -180,13 +170,11 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByLabelText("Module")).toBeInTheDocument();
       });
 
-      // Wait for planes to load and select a module
       await waitFor(() => {
         const moduleSelector = screen.getByLabelText("Module");
         expect(moduleSelector).toBeInTheDocument();
       });
 
-      // Simulate selecting a module (this should trigger resource provider loading)
       const moduleInput = screen.getByLabelText("Module");
       await user.click(moduleInput);
 
@@ -196,13 +184,11 @@ describe("WSEditorClientConfigDialog - Integration", () => {
 
       await user.click(screen.getByText("storage"));
 
-      // Wait for resource providers to load
       await waitFor(() => {
         const rpSelector = screen.getByLabelText("Resource Provider");
         expect(rpSelector).toBeInTheDocument();
       });
 
-      // Select a resource provider
       const rpInput = screen.getByLabelText("Resource Provider");
       await user.click(rpInput);
 
@@ -212,13 +198,11 @@ describe("WSEditorClientConfigDialog - Integration", () => {
 
       await user.click(screen.getByText("Microsoft.Storage"));
 
-      // Wait for versions to load
       await waitFor(() => {
         const versionSelector = screen.getByLabelText("API Version");
         expect(versionSelector).toBeInTheDocument();
       });
 
-      // Check that versions are loaded and sorted (newest first)
       const versionInput = screen.getByLabelText("API Version");
       await user.click(versionInput);
 
@@ -245,11 +229,9 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByText("By resource property")).toBeInTheDocument();
       });
 
-      // Switch to resource mode to trigger module loading
       const resourceTab = screen.getByText("By resource property");
       await user.click(resourceTab);
 
-      // Should show error message
       await waitFor(() => {
         expect(screen.getByText(/ResponseError:/)).toBeInTheDocument();
       });
@@ -291,7 +273,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
       });
 
-      // Fill out template form
       const azureCloudInput = screen.getByLabelText("Azure Cloud");
       await user.type(azureCloudInput, "https://{vaultName}.vault.azure.net");
 
@@ -304,15 +285,12 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       const prefixInput = screen.getByLabelText("Prefix");
       await user.type(prefixInput, "https://{vaultName}");
 
-      // Fill out AAD scope
       const aadScopeInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope/);
       await user.type(aadScopeInput, "https://management.azure.com/.default");
 
-      // Submit form
       const updateButton = screen.getByText("Update");
       await user.click(updateButton);
 
-      // Should call onClose with true on success
       await waitFor(() => {
         expect(mockOnClose).toHaveBeenCalledWith(true);
       });
@@ -352,7 +330,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByText("By resource property")).toBeInTheDocument();
       });
 
-      // Switch to resource mode
       const resourceTab = screen.getByText("By resource property");
       await user.click(resourceTab);
 
@@ -360,7 +337,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByLabelText("Module")).toBeInTheDocument();
       });
 
-      // Select module
       const moduleInput = screen.getByLabelText("Module");
       await user.click(moduleInput);
       await waitFor(() => {
@@ -368,7 +344,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       });
       await user.click(screen.getByText("storage"));
 
-      // Select resource provider
       await waitFor(() => {
         const rpInput = screen.getByLabelText("Resource Provider");
         expect(rpInput).toBeInTheDocument();
@@ -380,7 +355,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       });
       await user.click(screen.getByText("Microsoft.Storage"));
 
-      // Select version
       await waitFor(() => {
         const versionInput = screen.getByLabelText("API Version");
         expect(versionInput).toBeInTheDocument();
@@ -392,7 +366,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       });
       await user.click(screen.getByText("2021-04-01"));
 
-      // Select resource ID
       await waitFor(() => {
         const resourceIdInput = screen.getByLabelText("Resource ID");
         expect(resourceIdInput).toBeInTheDocument();
@@ -404,20 +377,16 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       });
       await user.click(screen.getByText("storageAccounts"));
 
-      // Fill subresource
       const subresourceInput = screen.getByLabelText("Endpoint Property Index");
       await user.type(subresourceInput, "properties.primaryEndpoints.blob");
 
-      // Update AAD scope
       const aadScopeInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope/);
       await user.clear(aadScopeInput);
       await user.type(aadScopeInput, "https://storage.azure.com/.default");
 
-      // Submit form
       const updateButton = screen.getByText("Update");
       await user.click(updateButton);
 
-      // Should call onClose with true on success
       await waitFor(() => {
         expect(mockOnClose).toHaveBeenCalledWith(true);
       });
@@ -440,23 +409,19 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByLabelText("Azure Cloud")).toBeInTheDocument();
       });
 
-      // Fill required fields
       const azureCloudInput = screen.getByLabelText("Azure Cloud");
       await user.type(azureCloudInput, "https://{vaultName}.vault.azure.net");
 
       const aadScopeInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope/);
       await user.type(aadScopeInput, "https://management.azure.com/.default");
 
-      // Submit form
       const updateButton = screen.getByText("Update");
       await user.click(updateButton);
 
-      // Should show error message
       await waitFor(() => {
         expect(screen.getByText(/ResponseError:/)).toBeInTheDocument();
       });
 
-      // Should not call onClose
       expect(mockOnClose).not.toHaveBeenCalled();
     });
 
@@ -477,26 +442,21 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByText("Update")).toBeInTheDocument();
       });
 
-      // Try to submit without required field
       const updateButton = screen.getByText("Update");
       await user.click(updateButton);
 
-      // Should show validation error
       await waitFor(() => {
         expect(screen.getByText("Azure Cloud Endpoint Template is required.")).toBeInTheDocument();
       });
 
-      // Fix the error
       const azureCloudInput = screen.getByLabelText("Azure Cloud");
       await user.type(azureCloudInput, "https://{vaultName}.vault.azure.net");
 
       const aadScopeInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope/);
       await user.type(aadScopeInput, "https://management.azure.com/.default");
 
-      // Retry submission
       await user.click(updateButton);
 
-      // Should succeed
       await waitFor(() => {
         expect(mockOnClose).toHaveBeenCalledWith(true);
       });
@@ -518,7 +478,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByLabelText("Azure Cloud")).toBeInTheDocument();
       });
 
-      // Enter invalid URL
       const azureCloudInput = screen.getByLabelText("Azure Cloud");
       await user.type(azureCloudInput, "invalid-url");
 
@@ -529,7 +488,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByText("Azure Cloud Endpoint Template is invalid.")).toBeInTheDocument();
       });
 
-      // Fix the URL
       await user.clear(azureCloudInput);
       await user.type(azureCloudInput, "https://{vaultName}.vault.azure.net");
 

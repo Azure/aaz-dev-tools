@@ -4,7 +4,6 @@ import WSEditorCommandArgumentsContent from "../../views/workspace/WSEditorComma
 import type { CMDArg, ClsArgDefinitionMap } from "../../views/workspace/WSEditorCommandArgumentsContent";
 import { render } from "../test-utils";
 
-// Mock the API modules
 vi.mock("../../services/commandApi");
 vi.mock("../../services/errorHandlerApi");
 
@@ -83,7 +82,6 @@ describe("WSEditorCommandArgumentsContent", () => {
     it("displays basic argument information", () => {
       render(<WSEditorCommandArgumentsContent {...defaultProps} />);
 
-      // Check for argument options (the component displays options, not variable names directly)
       expect(screen.getByText("----name ---n")).toBeInTheDocument();
       expect(screen.getByText("----resource-group ---g")).toBeInTheDocument();
       expect(screen.getByText("----location ---l")).toBeInTheDocument();
@@ -98,18 +96,15 @@ describe("WSEditorCommandArgumentsContent", () => {
       render(<WSEditorCommandArgumentsContent {...emptyProps} />);
 
       expect(screen.getByText("[ ARGUMENT ]")).toBeInTheDocument();
-      // Should not show any argument options
       expect(screen.queryByText("----name ---n")).not.toBeInTheDocument();
     });
 
     it("displays argument options correctly", () => {
       render(<WSEditorCommandArgumentsContent {...defaultProps} />);
 
-      // Check for argument options in the format the component actually displays
       expect(screen.getByText("----resource-group ---g")).toBeInTheDocument();
       expect(screen.getByText("----name ---n")).toBeInTheDocument();
 
-      // Check for help text
       expect(screen.getByText("Name of resource group.")).toBeInTheDocument();
       expect(screen.getByText("Storage account name.")).toBeInTheDocument();
     });
@@ -117,8 +112,6 @@ describe("WSEditorCommandArgumentsContent", () => {
     it("shows default values when present", () => {
       render(<WSEditorCommandArgumentsContent {...defaultProps} />);
 
-      // The component structure shows the location argument displays,
-      // but default values might not be visible in the current view
       expect(screen.getByText("----location ---l")).toBeInTheDocument();
     });
   });
@@ -127,26 +120,21 @@ describe("WSEditorCommandArgumentsContent", () => {
     it("allows editing argument properties", async () => {
       render(<WSEditorCommandArgumentsContent {...defaultProps} />);
 
-      // This test would require specific UI elements for editing
-      // Implementation depends on actual component structure
       expect(screen.getByText("[ ARGUMENT ]")).toBeInTheDocument();
     });
 
     it("handles argument selection", async () => {
       render(<WSEditorCommandArgumentsContent {...defaultProps} />);
 
-      // Test selecting an argument button
       const argumentButton = screen.getByText("----resource-group ---g");
       fireEvent.click(argumentButton);
 
-      // Verify the button exists and can be clicked
       expect(argumentButton).toBeInTheDocument();
     });
 
     it("supports argument reordering", async () => {
       render(<WSEditorCommandArgumentsContent {...defaultProps} />);
 
-      // Test that multiple arguments are displayed
       expect(screen.getByText("----resource-group ---g")).toBeInTheDocument();
       expect(screen.getByText("----name ---n")).toBeInTheDocument();
     });
@@ -156,22 +144,18 @@ describe("WSEditorCommandArgumentsContent", () => {
     it("opens argument dialog when needed", async () => {
       render(<WSEditorCommandArgumentsContent {...defaultProps} />);
 
-      // Look for dialog trigger buttons or actions
-      // This depends on the actual component implementation
       expect(screen.getByText("[ ARGUMENT ]")).toBeInTheDocument();
     });
 
     it("handles flatten dialog operations", async () => {
       render(<WSEditorCommandArgumentsContent {...defaultProps} />);
 
-      // Test flatten operation if UI is available
       expect(screen.getByText("[ ARGUMENT ]")).toBeInTheDocument();
     });
 
     it("manages unwrap class dialog", async () => {
       render(<WSEditorCommandArgumentsContent {...defaultProps} />);
 
-      // Test unwrap class operations
       expect(screen.getByText("[ ARGUMENT ]")).toBeInTheDocument();
     });
   });
@@ -180,15 +164,14 @@ describe("WSEditorCommandArgumentsContent", () => {
     it("displays errors when API calls fail", async () => {
       render(<WSEditorCommandArgumentsContent {...defaultProps} />);
 
-      // Simulate an error condition
       expect(screen.getByText("[ ARGUMENT ]")).toBeInTheDocument();
     });
 
     it("handles validation errors for argument data", () => {
       const invalidArgs = [
         {
-          var: "", // Invalid empty variable name
-          options: [], // Invalid empty options
+          var: "",
+          options: [],
           type: "string",
           required: true,
           stage: "Stable" as const,
@@ -280,8 +263,6 @@ describe("WSEditorCommandArgumentsContent", () => {
 
       render(<WSEditorCommandArgumentsContent {...props} />);
 
-      // Simulate argument modification
-      // This would depend on the actual UI for modifying arguments
       expect(screen.getByText("[ ARGUMENT ]")).toBeInTheDocument();
     });
 
@@ -294,7 +275,6 @@ describe("WSEditorCommandArgumentsContent", () => {
 
       render(<WSEditorCommandArgumentsContent {...props} />);
 
-      // Simulate sub-command addition
       expect(screen.getByText("[ ARGUMENT ]")).toBeInTheDocument();
     });
   });
@@ -315,7 +295,6 @@ describe("WSEditorCommandArgumentsContent", () => {
     });
 
     it("validates argument structure", () => {
-      // Test with minimal valid argument structure
       expect(() => {
         render(<WSEditorCommandArgumentsContent {...defaultProps} />);
       }).not.toThrow();

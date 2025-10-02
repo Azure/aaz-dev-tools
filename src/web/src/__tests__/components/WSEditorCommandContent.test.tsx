@@ -5,10 +5,8 @@ import type { Command, Example, Resource } from "../../views/workspace/WSEditorC
 import { render } from "../test-utils";
 import { commandApi } from "../../services/commandApi";
 
-// Mock the API modules
 vi.mock("../../services/commandApi");
 
-// Mock WSEditorCommandArgumentsContent since it's a complex component
 vi.mock("../../views/workspace/WSEditorCommandArgumentsContent", () => ({
   default: ({ onReloadArgs, onAddSubCommand }: any) => (
     <div data-testid="command-arguments-content">
@@ -79,7 +77,6 @@ describe("WSEditorCommandContent", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock successful API calls by default
     vi.mocked(commandApi).getCommand.mockResolvedValue(mockCommand);
   });
 
@@ -103,7 +100,6 @@ describe("WSEditorCommandContent", () => {
     it("shows loading state initially", () => {
       render(<WSEditorCommandContent {...defaultProps} />);
 
-      // Should show linear progress during loading
       expect(document.querySelector(".MuiLinearProgress-root")).toBeInTheDocument();
     });
 
@@ -153,7 +149,6 @@ describe("WSEditorCommandContent", () => {
         fireEvent.click(editButton);
       });
 
-      // Command dialog should open
       await waitFor(() => {
         expect(screen.getByText("Command")).toBeInTheDocument();
       });
@@ -167,7 +162,6 @@ describe("WSEditorCommandContent", () => {
         fireEvent.click(deleteButton);
       });
 
-      // Delete dialog should open
       await waitFor(() => {
         expect(screen.getByText("Delete Commands")).toBeInTheDocument();
       });
@@ -219,8 +213,7 @@ describe("WSEditorCommandContent", () => {
         fireEvent.click(reloadButton);
       });
 
-      // Should trigger API call to reload command
-      expect(vi.mocked(commandApi).getCommand).toHaveBeenCalledTimes(2); // Initial load + reload
+      expect(vi.mocked(commandApi).getCommand).toHaveBeenCalledTimes(2);
     });
 
     it("handles add subcommand callback", async () => {
@@ -231,7 +224,6 @@ describe("WSEditorCommandContent", () => {
         fireEvent.click(addSubcommandButton);
       });
 
-      // Should open add subcommand dialog
       await waitFor(() => {
         expect(screen.getByText("Add Subcommands")).toBeInTheDocument();
       });
@@ -261,7 +253,6 @@ describe("WSEditorCommandContent", () => {
       render(<WSEditorCommandContent {...defaultProps} />);
 
       await waitFor(() => {
-        // Find the Add button in the example section
         const exampleCard = screen.getByText("[ EXAMPLE ]").closest(".MuiCard-root");
         const addButton = exampleCard?.querySelector("button");
         if (addButton) {
@@ -332,7 +323,6 @@ describe("WSEditorCommandContent", () => {
       render(<WSEditorCommandContent {...defaultProps} />);
 
       await waitFor(() => {
-        // Find the command card and click its edit button
         const commandCard = screen.getByText("[ COMMAND ]").closest(".MuiCard-root");
         const editButton = within(commandCard as HTMLElement).getByRole("button", { name: /edit/i });
         fireEvent.click(editButton);
@@ -343,7 +333,6 @@ describe("WSEditorCommandContent", () => {
         fireEvent.click(cancelButton);
       });
 
-      // Dialog should close
       await waitFor(() => {
         expect(screen.queryByText("Command")).not.toBeInTheDocument();
       });
@@ -358,14 +347,12 @@ describe("WSEditorCommandContent", () => {
       render(<WSEditorCommandContent {...defaultProps} />);
 
       await waitFor(() => {
-        // Find the first example card and click its edit button
         const exampleCard = screen.getByText("[ EXAMPLE ]").closest(".MuiCard-root");
         const editButton = within(exampleCard as HTMLElement).getByText("Edit");
         fireEvent.click(editButton);
       });
 
       await waitFor(() => {
-        // Simulate saving changes
         const saveButton = screen.getByRole("button", { name: /save/i });
         fireEvent.click(saveButton);
       });
@@ -381,14 +368,12 @@ describe("WSEditorCommandContent", () => {
       render(<WSEditorCommandContent {...defaultProps} />);
 
       await waitFor(() => {
-        // Find the command card and click its delete button
         const commandCard = screen.getByText("[ COMMAND ]").closest(".MuiCard-root");
         const deleteButton = within(commandCard as HTMLElement).getByRole("button", { name: /delete/i });
         fireEvent.click(deleteButton);
       });
 
       await waitFor(() => {
-        // In the delete confirmation dialog, find the confirm button
         const confirmDeleteButton = screen.getByRole("button", { name: /delete/i });
         fireEvent.click(confirmDeleteButton);
       });
@@ -416,7 +401,6 @@ describe("WSEditorCommandContent", () => {
     it("handles API errors gracefully", async () => {
       render(<WSEditorCommandContent {...defaultProps} />);
 
-      // Component should handle errors without crashing
       expect(screen.getByText("[ COMMAND ]")).toBeInTheDocument();
     });
   });
@@ -425,10 +409,8 @@ describe("WSEditorCommandContent", () => {
     it("reloads command when props change", async () => {
       const { rerender } = render(<WSEditorCommandContent {...defaultProps} />);
 
-      // Initial load
       expect(vi.mocked(commandApi).getCommand).toHaveBeenCalledTimes(1);
 
-      // Change props to trigger reload
       const newProps = {
         ...defaultProps,
         reloadTimestamp: Date.now() + 1000,
