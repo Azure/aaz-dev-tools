@@ -160,7 +160,7 @@ def generate_command_models_from_swagger(swagger_tag, workspace_path=None):
         sys.exit(1)
 
 
-@bp.cli.command("generate-all", short_help="Fully generate data model from swagger, mainly used in https://github.com/magodo/aaz-metadata.")
+@bp.cli.command("generate-all", short_help="Fully generate data model from OpenAPI specification, mainly for use in https://github.com/magodo/az-rs.")
 @click.option(
     "--swagger-path", '-s',
     type=click.Path(file_okay=False, dir_okay=True, readable=True, resolve_path=True),
