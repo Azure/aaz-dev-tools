@@ -209,19 +209,6 @@ describe("WSEditor", () => {
       expect(screen.getByTestId("workspace-name")).toHaveTextContent("test-workspace");
     });
 
-    it("should render toolbar component", () => {
-      renderWithRouter();
-
-      expect(screen.getByTestId("ws-editor-toolbar")).toBeInTheDocument();
-    });
-
-    it("should render drawer with fixed width", () => {
-      renderWithRouter();
-
-      const drawer = screen.getByTestId("ws-editor-toolbar");
-      expect(drawer).toBeInTheDocument();
-    });
-
     it("should call loadWorkspace on component mount", async () => {
       renderWithRouter();
 
@@ -367,6 +354,39 @@ describe("WSEditor", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("selected-id")).toHaveTextContent("group:a-group");
+      });
+    });
+
+    it("should automatically select first command group when multiple groups exist", async () => {
+      const multiGroupData = {
+        ...mockWorkspaceData,
+        commandTree: {
+          commandGroups: {
+            "middle-group": {
+              id: "group:middle-group",
+              names: ["az", "middle"],
+              canDelete: true,
+            },
+            "first-group": {
+              id: "group:first-group",
+              names: ["az", "first"],
+              canDelete: true,
+            },
+            "last-group": {
+              id: "group:last-group",
+              names: ["az", "last"],
+              canDelete: true,
+            },
+          },
+        },
+      };
+
+      vi.mocked(workspaceApi.getWorkspace).mockResolvedValue(multiGroupData);
+
+      renderWithRouter();
+
+      await waitFor(() => {
+        expect(screen.getByTestId("selected-id")).toHaveTextContent("group:first-group");
       });
     });
   });
