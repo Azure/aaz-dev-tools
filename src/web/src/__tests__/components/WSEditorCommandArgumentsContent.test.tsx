@@ -129,7 +129,14 @@ describe("WSEditorCommandArgumentsContent", () => {
       const argumentButton = screen.getByText("----resource-group ---g");
       fireEvent.click(argumentButton);
 
-      expect(argumentButton).toBeInTheDocument();
+      expect(screen.getByTestId("ArrowBackIosIcon")).toBeInTheDocument();
+      expect(screen.getByText("----resource-group")).toBeInTheDocument();
+
+      expect(screen.getByText("----resource-group ---g")).toBeInTheDocument();
+      expect(screen.getByText("/string/")).toBeInTheDocument();
+      expect(screen.getByText("[Required]")).toBeInTheDocument();
+      expect(screen.getByText("Name of resource group.")).toBeInTheDocument();
+      expect(screen.getByText("Edit")).toBeInTheDocument();
     });
 
     it("supports argument reordering", async () => {
