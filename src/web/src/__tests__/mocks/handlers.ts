@@ -49,7 +49,12 @@ export const handlers = [
     });
   }),
 
-  http.get("/workspace/:name/ClientConfig", () => {
+  http.get("/workspace/:name/ClientConfig", ({ request }) => {
+    const url = new URL(request.url);
+    if (url.searchParams.get("simulate404") === "true") {
+      return new HttpResponse(null, { status: 404 });
+    }
+
     return HttpResponse.json({
       version: "1.0.0",
       auth: {

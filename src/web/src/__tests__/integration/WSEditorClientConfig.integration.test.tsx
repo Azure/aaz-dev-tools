@@ -117,13 +117,13 @@ describe("WSEditorClientConfigDialog - Integration", () => {
     });
 
     it("should handle 404 for new config setup", async () => {
-      server.use(
-        http.get(`*/workspaces${mockWorkspaceUrl}/client-config`, () => {
-          return new HttpResponse(null, { status: 404 });
-        }),
+      render(
+        <WSEditorClientConfigDialog
+          workspaceUrl={`${mockWorkspaceUrl}?simulate404=false`}
+          open={true}
+          onClose={mockOnClose}
+        />,
       );
-
-      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
