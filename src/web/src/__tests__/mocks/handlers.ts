@@ -82,7 +82,7 @@ export const handlers = [
     });
   }),
 
-  http.post("/workspace/:name/ClientConfig", () => {
+  http.put("/workspace/:name/ClientConfig", () => {
     return HttpResponse.json({ message: "Client config updated successfully" });
   }),
 
@@ -137,6 +137,116 @@ export const handlers = [
       message: `Module ${params.module} generated successfully`,
       profiles: body.profiles || {},
     });
+  }),
+
+  http.get("/workspace/:name/CommandTree/Nodes/aaz/*/Leaves/:commandName", () => {
+    return HttpResponse.json({
+      names: ["storage", "account", "create"],
+      help: {
+        short: "Create a storage account",
+        lines: [
+          "Create a new storage account with specified parameters.",
+          "This command creates a storage account in the specified resource group.",
+        ],
+      },
+      args: [
+        { name: "--name", type: "string", description: "Account name" },
+        { name: "--location", type: "string", description: "Region" },
+      ],
+      stage: "Stable",
+      version: "2.0.0",
+      examples: [
+        {
+          name: "Create a storage account",
+          commands: [
+            "storage account create --name mystorageaccount --resource-group myresourcegroup --location eastus",
+          ],
+        },
+      ],
+      resources: [
+        {
+          id: "Microsoft.Storage/storageAccounts",
+          version: "2021-09-01",
+          swagger: "/swagger/storage/2021-09-01/storage.json",
+        },
+      ],
+      outputs: [
+        {
+          type: "object",
+          ref: "StorageAccount",
+          clientFlatten: false,
+        },
+      ],
+      argGroups: [
+        {
+          name: "",
+          args: [
+            {
+              var: "name",
+              options: ["--name", "-n"],
+              help: "The name of the storage account",
+              required: true,
+              type: "string",
+            },
+            {
+              var: "resource_group",
+              options: ["--resource-group", "-g"],
+              help: "Name of resource group",
+              required: true,
+              type: "string",
+            },
+          ],
+        },
+      ],
+    });
+  }),
+
+  http.get("/workspace/:name/Resources/*/V/*/Commands", () => {
+    return HttpResponse.json([
+      {
+        names: ["storage", "account", "create"],
+        help: {
+          short: "Create a storage account",
+        },
+        stage: "Stable",
+        version: "2.0.0",
+        resources: [
+          {
+            id: "Microsoft.Storage/storageAccounts",
+            version: "2021-09-01",
+            swagger: "/swagger/storage/2021-09-01/storage.json",
+          },
+        ],
+      },
+    ]);
+  }),
+
+  http.get("/workspace/:name/Resources/*/V/*/Subresources/*/Commands", () => {
+    return HttpResponse.json([
+      {
+        names: ["storage", "account", "create"],
+        help: {
+          short: "Create a storage account",
+        },
+        stage: "Stable",
+        version: "2.0.0",
+        resources: [
+          {
+            id: "Microsoft.Storage/storageAccounts",
+            version: "2021-09-01",
+            swagger: "/swagger/storage/2021-09-01/storage.json",
+          },
+        ],
+      },
+    ]);
+  }),
+
+  http.delete("/workspace/:name/Resources/*/V/*", () => {
+    return HttpResponse.json({ message: "Resource deleted successfully" });
+  }),
+
+  http.delete("/workspace/:name/Resources/*/V/*/Subresources/*", () => {
+    return HttpResponse.json({ message: "Subresource deleted successfully" });
   }),
 
   http.get("/AAZ/Editor/Workspaces/error", () => {

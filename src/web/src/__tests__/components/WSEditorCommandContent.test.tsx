@@ -7,18 +7,6 @@ import { commandApi } from "../../services/commandApi";
 
 vi.mock("../../services/commandApi");
 
-vi.mock("../../views/workspace/WSEditorCommandArgumentsContent", () => ({
-  default: ({ onReloadArgs, onAddSubCommand }: any) => (
-    <div data-testid="command-arguments-content">
-      <button onClick={onReloadArgs}>Reload Args</button>
-      <button onClick={() => onAddSubCommand("testVar", [{ var: "test", options: "test" }], ["test"])}>
-        Add Subcommand
-      </button>
-    </div>
-  ),
-  DecodeArgs: vi.fn(() => ({ args: [], clsArgDefineMap: {} })),
-}));
-
 describe("WSEditorCommandContent", () => {
   const mockResource: Resource = {
     id: "resource1",
@@ -78,6 +66,11 @@ describe("WSEditorCommandContent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(commandApi).getCommand.mockResolvedValue(mockCommand);
+    vi.mocked(commandApi).getCommandsForResource.mockResolvedValue([mockCommand]);
+    vi.mocked(commandApi).deleteResource.mockResolvedValue(undefined);
+    vi.mocked(commandApi).updateCommand.mockResolvedValue(mockCommand);
+    vi.mocked(commandApi).updateCommandExamples.mockResolvedValue(mockCommand);
+    vi.mocked(commandApi).updateCommandOutputs.mockResolvedValue(mockCommand);
   });
 
   describe("Core Rendering", () => {
@@ -189,7 +182,12 @@ describe("WSEditorCommandContent", () => {
       render(<WSEditorCommandContent {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByTestId("command-arguments-content")).toBeInTheDocument();
+        expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        const argsCard = screen.getByText("[ COMMAND ]").closest(".MuiCard-root");
+        expect(argsCard).toBeInTheDocument();
       });
     });
 
@@ -208,22 +206,11 @@ describe("WSEditorCommandContent", () => {
       });
     });
 
-    it("handles reload args callback", async () => {
-      render(<WSEditorCommandContent {...defaultProps} />);
-
-      await waitFor(() => {
-        const reloadButton = screen.getByText("Reload Args");
-        fireEvent.click(reloadButton);
-      });
-
-      expect(vi.mocked(commandApi).getCommand).toHaveBeenCalledTimes(2);
-    });
-
     it("handles add subcommand callback", async () => {
       render(<WSEditorCommandContent {...defaultProps} />);
 
       await waitFor(() => {
-        const addSubcommandButton = screen.getByText("Add Subcommand");
+        const addSubcommandButton = screen.getByText("Add Subcommands");
         fireEvent.click(addSubcommandButton);
       });
 
