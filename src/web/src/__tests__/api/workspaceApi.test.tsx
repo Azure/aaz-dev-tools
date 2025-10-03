@@ -111,7 +111,8 @@ describe("Workspace API", () => {
       expect(result).toEqual({
         version: "1.0.0",
         endpointTemplates: {
-          AzureCloud: "https://management.azure.com/",
+          AzureChinaCloud: "https://management.azure.com/AzureCloudChina",
+          AzureCloud: "https://management.azure.com/AzureCloudTemplate",
         },
         endpointResource: undefined,
         auth: {
