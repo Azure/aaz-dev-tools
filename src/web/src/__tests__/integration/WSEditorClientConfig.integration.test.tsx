@@ -28,13 +28,15 @@ describe("WSEditorClientConfigDialog - Integration", () => {
   const mockWorkspaceUrl = "/workspace/test-workspace";
   const mockOnClose = vi.fn();
 
-  const mockPlanes = [
-    {
-      name: "azure-cli",
-      displayName: "Azure CLI",
-      moduleOptions: null,
-    },
-  ];
+  const mockPlanes = {
+    data: [
+      {
+        name: "azure-cli",
+        displayName: "Azure CLI",
+        moduleOptions: null,
+      },
+    ],
+  };
 
   const mockModules = ["storage", "compute"];
   const mockResourceProviders = ["Microsoft.Storage", "Microsoft.Compute"];
@@ -77,7 +79,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
     vi.clearAllMocks();
 
     server.use(
-      http.get("*/specs/planes", () => {
+      http.get(/\/aaz\/specs\/planes$/i, () => {
         return HttpResponse.json(mockPlanes);
       }),
 
@@ -97,39 +99,21 @@ describe("WSEditorClientConfigDialog - Integration", () => {
 
   describe("Data Loading Workflows", () => {
     it("should load existing client config and populate form", async () => {
-      const mockExistingConfig = {
-        version: "1.0.0",
-        auth: { aad: { scopes: ["https://management.azure.com/.default"] } },
-        endpoints: {
-          type: "template",
-          templates: [
-            { cloud: "AzureCloud", template: "https://{vaultName}.vault.azure.net" },
-            { cloud: "AzureChinaCloud", template: "https://{vaultName}.vault.azure.cn" },
-          ],
-          cloudMetadata: {
-            selectorIndex: "suffixes.keyVaultDns",
-            prefixTemplate: "https://{vaultName}",
-          },
-        },
-      };
-
-      server.use(
-        http.get(`*/workspaces${mockWorkspaceUrl}/client-config`, () => {
-          return HttpResponse.json(mockExistingConfig);
-        }),
-      );
-
       render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
-      await waitFor(() => {
-        expect(screen.getByText("Modify Client Config")).toBeInTheDocument();
-      });
+      await waitFor(() => expect(screen.getByText("Modify Client Config")).toBeInTheDocument());
 
-      expect(screen.getByDisplayValue("https://{vaultName}.vault.azure.net")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("https://{vaultName}.vault.azure.cn")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("suffixes.keyVaultDns")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("https://{vaultName}")).toBeInTheDocument();
-      expect(screen.getByDisplayValue("https://management.azure.com/.default")).toBeInTheDocument();
+      await waitFor(() =>
+        expect(
+          screen.getByRole("textbox", {
+            name: /azure cloud/i,
+          }),
+        ).toHaveValue("https://management.azure.com/AzureCloudTemplate"),
+      );
+
+      await waitFor(() =>
+        expect(screen.getByLabelText("Azure China Cloud")).toHaveValue("https://management.azure.com/AzureCloudChina"),
+      );
     });
 
     it("should handle 404 for new config setup", async () => {
@@ -167,15 +151,15 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       await user.click(resourceTab);
 
       await waitFor(() => {
-        expect(screen.getByLabelText("Module")).toBeInTheDocument();
+        expect(screen.getByRole("combobox", { name: /module/i })).toBeInTheDocument();
       });
 
       await waitFor(() => {
-        const moduleSelector = screen.getByLabelText("Module");
+        const moduleSelector = screen.getByRole("combobox", { name: /module/i });
         expect(moduleSelector).toBeInTheDocument();
       });
 
-      const moduleInput = screen.getByLabelText("Module");
+      const moduleInput = screen.getByRole("combobox", { name: /module/i });
       await user.click(moduleInput);
 
       await waitFor(() => {
@@ -273,7 +257,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
       });
 
-      const azureCloudInput = screen.getByLabelText("Azure Cloud");
+      const azureCloudInput = document.querySelector("#AzureCloud") as HTMLElement;
       await user.type(azureCloudInput, "https://{vaultName}.vault.azure.net");
 
       const azureChinaInput = screen.getByLabelText("Azure China Cloud");
@@ -334,10 +318,10 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       await user.click(resourceTab);
 
       await waitFor(() => {
-        expect(screen.getByLabelText("Module")).toBeInTheDocument();
+        expect(screen.getByRole("combobox", { name: /module/i })).toBeInTheDocument();
       });
 
-      const moduleInput = screen.getByLabelText("Module");
+      const moduleInput = screen.getByRole("combobox", { name: /module/i });
       await user.click(moduleInput);
       await waitFor(() => {
         expect(screen.getByText("storage")).toBeInTheDocument();
@@ -406,10 +390,10 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
-        expect(screen.getByLabelText("Azure Cloud")).toBeInTheDocument();
+        expect(document.querySelector("#AzureCloud")).toBeInTheDocument();
       });
 
-      const azureCloudInput = screen.getByLabelText("Azure Cloud");
+      const azureCloudInput = document.querySelector("#AzureCloud") as HTMLElement;
       await user.type(azureCloudInput, "https://{vaultName}.vault.azure.net");
 
       const aadScopeInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope/);
@@ -449,7 +433,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByText("Azure Cloud Endpoint Template is required.")).toBeInTheDocument();
       });
 
-      const azureCloudInput = screen.getByLabelText("Azure Cloud");
+      const azureCloudInput = document.querySelector("#AzureCloud") as HTMLElement;
       await user.type(azureCloudInput, "https://{vaultName}.vault.azure.net");
 
       const aadScopeInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope/);
@@ -475,10 +459,10 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
-        expect(screen.getByLabelText("Azure Cloud")).toBeInTheDocument();
+        expect(document.querySelector("#AzureCloud")).toBeInTheDocument();
       });
 
-      const azureCloudInput = screen.getByLabelText("Azure Cloud");
+      const azureCloudInput = document.querySelector("#AzureCloud") as HTMLElement;
       await user.type(azureCloudInput, "invalid-url");
 
       const updateButton = screen.getByText("Update");

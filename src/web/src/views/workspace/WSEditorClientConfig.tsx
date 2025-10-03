@@ -408,6 +408,7 @@ class WSEditorClientConfigDialog extends React.Component<
       let subresource: string = "";
 
       if (clientConfigData.endpoints.type === "template") {
+        console.log("found template");
         clientConfig.endpointTemplates = {};
         clientConfigData.endpoints.templates.forEach((value: any) => {
           clientConfig.endpointTemplates![value.cloud] = value.template;
@@ -417,6 +418,7 @@ class WSEditorClientConfigDialog extends React.Component<
         endpointType = "template";
         templateAzureCloud = clientConfig.endpointTemplates!["AzureCloud"] ?? "";
         templateAzureChinaCloud = clientConfig.endpointTemplates!["AzureChinaCloud"] ?? "";
+        console.log("templateAzureCloud value:", templateAzureCloud);
         templateAzureUSGovernment = clientConfig.endpointTemplates!["AzureUSGovernment"] ?? "";
         templateAzureGermanCloud = clientConfig.endpointTemplates!["AzureGermanCloud"] ?? "";
         cloudMetadataSelectorIndex = clientConfig.endpointCloudMetadata?.selectorIndex ?? "";

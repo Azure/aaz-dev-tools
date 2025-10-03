@@ -62,7 +62,11 @@ export const handlers = [
         templates: [
           {
             cloud: "AzureCloud",
-            template: "https://management.azure.com/",
+            template: "https://management.azure.com/AzureCloudTemplate",
+          },
+          {
+            cloud: "AzureChinaCloud",
+            template: "https://management.azure.com/AzureCloudChina",
           },
         ],
         cloudMetadata: {
