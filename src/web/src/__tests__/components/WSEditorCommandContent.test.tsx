@@ -486,7 +486,16 @@ describe("WSEditorCommandContent", () => {
       });
 
       await waitFor(() => {
-        expect(defaultProps.onUpdateCommand).toHaveBeenCalledWith(updatedCommand);
+        expect(defaultProps.onUpdateCommand).toHaveBeenCalledWith(
+          expect.objectContaining({
+            version: "2.0",
+            examples: expect.arrayContaining([
+              expect.objectContaining({
+                name: "Create storage account",
+              }),
+            ]),
+          }),
+        );
       });
     });
 
