@@ -25,7 +25,7 @@ afterAll(() => {
 });
 
 describe("WSEditorClientConfigDialog - Integration", () => {
-  const mockWorkspaceUrl = "/workspace/test-workspace";
+  const mockWorkspaceUrl = "/AAZ/Editor/Workspaces/test-workspace";
   const mockOnClose = vi.fn();
 
   const mockPlanes = {

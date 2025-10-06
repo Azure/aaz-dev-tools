@@ -326,23 +326,19 @@ describe("WSEditorCommandContent", () => {
 
       render(<WSEditorCommandContent {...complexCommandProps} />);
 
-      // Wait for the component to load
       await waitFor(() => {
         expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
       });
 
-      // Wait for the command to load
       await waitFor(() => {
         expect(screen.getByText("az network lb address-pool create")).toBeInTheDocument();
       });
 
-      // First click on the complex argument to select it
       await waitFor(() => {
         const backendAddressesButton = screen.getByText(/backend-addresses/);
         fireEvent.click(backendAddressesButton);
       });
 
-      // Now the Subcommands button should appear after selecting the argument
       await waitFor(() => {
         const addSubcommandButton = screen.getByText("Subcommands");
         fireEvent.click(addSubcommandButton);
