@@ -374,15 +374,21 @@ describe("WSEditorCommandContent", () => {
       render(<WSEditorCommandContent {...defaultProps} />);
 
       await waitFor(() => {
-        const exampleCard = screen.getByText("[ EXAMPLE ]").closest(".MuiCard-root");
-        const addButton = exampleCard?.querySelector("button");
-        if (addButton) {
-          fireEvent.click(addButton);
-        }
+        expect(screen.getByText("[ EXAMPLE ]")).toBeInTheDocument();
       });
 
       await waitFor(() => {
-        expect(screen.getByText("Add Example")).toBeInTheDocument();
+        const addButton = screen.getByRole("button", { name: /add/i });
+        fireEvent.click(addButton);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        const dialog = screen.getByRole("dialog");
+        expect(dialog).toHaveTextContent(/Add Example|Example/i);
       });
     });
 
@@ -390,7 +396,8 @@ describe("WSEditorCommandContent", () => {
       render(<WSEditorCommandContent {...defaultProps} />);
 
       await waitFor(() => {
-        const editButton = screen.getByText("Edit");
+        const exampleCard = screen.getByText("[ EXAMPLE ]").closest(".MuiCard-root");
+        const editButton = within(exampleCard as HTMLElement).getByText("Edit");
         fireEvent.click(editButton);
       });
 
