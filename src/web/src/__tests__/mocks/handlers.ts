@@ -82,7 +82,7 @@ export const handlers = [
     });
   }),
 
-  http.put("/workspace/:name/ClientConfig", () => {
+  http.post("/workspace/:name/ClientConfig", () => {
     return HttpResponse.json({ message: "Client config updated successfully" });
   }),
 
