@@ -11,7 +11,7 @@ describe("Workspace API", () => {
         name: "test-workspace-1",
         plane: "azure-cli",
         lastModified: expect.any(Date),
-        url: "/workspace/test-workspace-1",
+        url: "/AAZ/Editor/Workspaces/test-workspace-1",
         folder: "/workspaces/test-workspace-1",
       });
 
@@ -19,7 +19,7 @@ describe("Workspace API", () => {
         name: "test-workspace-2",
         plane: "azure-cli-extensions",
         lastModified: expect.any(Date),
-        url: "/workspace/test-workspace-2",
+        url: "/AAZ/Editor/Workspaces/test-workspace-2",
         folder: "/workspaces/test-workspace-2",
       });
 
@@ -50,7 +50,7 @@ describe("Workspace API", () => {
         modNames: "storage",
         resourceProvider: "Microsoft.Storage",
         lastModified: expect.any(Date),
-        url: "/workspace/new-test-workspace",
+        url: "/AAZ/Editor/Workspaces/new-test-workspace",
         folder: "/workspaces/new-test-workspace",
       });
 
@@ -83,7 +83,7 @@ describe("Workspace API", () => {
 
   describe("renameWorkspace", () => {
     it("should rename workspace and return new name", async () => {
-      const result = await workspaceApi.renameWorkspace("/workspace/test-workspace-1", "renamed-workspace");
+      const result = await workspaceApi.renameWorkspace("/AAZ/Editor/Workspaces/test-workspace-1", "renamed-workspace");
 
       expect(result).toEqual({
         name: "renamed-workspace",
@@ -93,7 +93,7 @@ describe("Workspace API", () => {
 
   describe("getWorkspace", () => {
     it("should fetch individual workspace data", async () => {
-      const result = await workspaceApi.getWorkspace("/workspace/test-workspace-1");
+      const result = await workspaceApi.getWorkspace("/AAZ/Editor/Workspaces/test-workspace-1");
 
       expect(result).toEqual({
         name: "test-workspace-1",
@@ -106,7 +106,7 @@ describe("Workspace API", () => {
 
   describe("getWorkspaceClientConfig", () => {
     it("should fetch client config and transform endpoint data", async () => {
-      const result = await workspaceApi.getWorkspaceClientConfig("/workspace/test-workspace-1");
+      const result = await workspaceApi.getWorkspaceClientConfig("/AAZ/Editor/Workspaces/test-workspace-1");
 
       expect(result).toEqual({
         version: "1.0.0",
@@ -124,7 +124,7 @@ describe("Workspace API", () => {
     });
 
     it("should return null for 404 responses", async () => {
-      const result = await workspaceApi.getWorkspaceClientConfig("/workspace/nonexistent");
+      const result = await workspaceApi.getWorkspaceClientConfig("/AAZ/Editor/Workspaces/nonexistent");
       expect(result).toBeDefined();
     });
   });
@@ -136,7 +136,9 @@ describe("Workspace API", () => {
         auth: { type: "managed-identity" },
       };
 
-      await expect(workspaceApi.updateClientConfig("/workspace/test-workspace-1", config)).resolves.toBeUndefined();
+      await expect(
+        workspaceApi.updateClientConfig("/AAZ/Editor/Workspaces/test-workspace-1", config),
+      ).resolves.toBeUndefined();
     });
   });
 

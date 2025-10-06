@@ -7,14 +7,14 @@ export const handlers = [
         name: "test-workspace-1",
         plane: "azure-cli",
         updated: Math.floor(Date.now() / 1000) - 86400,
-        url: "/workspace/test-workspace-1",
+        url: "/AAZ/Editor/Workspaces/test-workspace-1",
         folder: "/workspaces/test-workspace-1",
       },
       {
         name: "test-workspace-2",
         plane: "azure-cli-extensions",
         updated: Math.floor(Date.now() / 1000) - 172800,
-        url: "/workspace/test-workspace-2",
+        url: "/AAZ/Editor/Workspaces/test-workspace-2",
         folder: "/workspaces/test-workspace-2",
       },
     ]);
@@ -29,7 +29,7 @@ export const handlers = [
         modNames: body.modNames,
         resourceProvider: body.resourceProvider,
         updated: Math.floor(Date.now() / 1000),
-        url: `/workspace/${body.name}`,
+        url: `/AAZ/Editor/Workspaces/${body.name}`,
         folder: `/workspaces/${body.name}`,
       },
       { status: 201 },
@@ -42,14 +42,14 @@ export const handlers = [
     });
   }),
 
-  http.post("/workspace/:name/Rename", async ({ request }) => {
+  http.post("/AAZ/Editor/Workspaces/:name/Rename", async ({ request }) => {
     const body = (await request.json()) as any;
     return HttpResponse.json({
       name: body.name,
     });
   }),
 
-  http.get("/workspace/:name/ClientConfig", ({ request }) => {
+  http.get("/AAZ/Editor/Workspaces/:name/ClientConfig", ({ request }) => {
     const url = new URL(request.url);
     if (url.searchParams.get("simulate404") === "true") {
       return new HttpResponse(null, { status: 404 });
@@ -82,11 +82,11 @@ export const handlers = [
     });
   }),
 
-  http.post("/workspace/:name/ClientConfig", () => {
+  http.post("/AAZ/Editor/Workspaces/:name/ClientConfig", () => {
     return HttpResponse.json({ message: "Client config updated successfully" });
   }),
 
-  http.get("/workspace/:name", ({ params }) => {
+  http.get("/AAZ/Editor/Workspaces/:name", ({ params }) => {
     return HttpResponse.json({
       name: params.name,
       plane: "azure-cli",
