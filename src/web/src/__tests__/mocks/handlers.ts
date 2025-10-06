@@ -139,27 +139,23 @@ export const handlers = [
     });
   }),
 
-  http.get("/workspace/:name/CommandTree/Nodes/aaz/*/Leaves/:commandName", () => {
-    return HttpResponse.json({
-      names: ["storage", "account", "create"],
+  http.get("/AAZ/Editor/Workspaces/:name/CommandTree/Nodes/aaz/*/Leaves/:commandName", () => {
+    const response = {
+      names: ["network", "lb", "address-pool", "create"],
       help: {
-        short: "Create a storage account",
+        short: "Create a load balancer backend address pool",
         lines: [
-          "Create a new storage account with specified parameters.",
-          "This command creates a storage account in the specified resource group.",
+          "Create a new load balancer backend address pool with specified parameters.",
+          "This command creates a backend address pool in the specified load balancer.",
         ],
       },
-      args: [
-        { name: "--name", type: "string", description: "Account name" },
-        { name: "--location", type: "string", description: "Region" },
-      ],
       stage: "Stable",
       version: "2.0.0",
       examples: [
         {
           name: "Create a storage account",
           commands: [
-            "storage account create --name mystorageaccount --resource-group myresourcegroup --location eastus",
+            "network lb address-pool create --name mystorageaccount --resource-group myresourcegroup --location eastus",
           ],
         },
       ],
@@ -179,26 +175,58 @@ export const handlers = [
       ],
       argGroups: [
         {
-          name: "",
+          name: "Properties",
           args: [
             {
-              var: "name",
-              options: ["--name", "-n"],
-              help: "The name of the storage account",
-              required: true,
-              type: "string",
-            },
-            {
-              var: "resource_group",
-              options: ["--resource-group", "-g"],
-              help: "Name of resource group",
-              required: true,
-              type: "string",
+              var: "backend_addresses",
+              options: ["--backend-addresses"],
+              help: {
+                short: "An array of backend addresses.",
+              },
+              required: false,
+              type: "array<object>",
+              stage: "Stable",
+              hide: false,
+              group: "Properties",
+              nullable: false,
+              item: {
+                type: "object",
+                args: [
+                  {
+                    var: "name",
+                    options: ["--name"],
+                    help: {
+                      short: "Name of the backend address.",
+                    },
+                    required: false,
+                    type: "string",
+                    stage: "Stable",
+                    hide: false,
+                    group: "",
+                    nullable: false,
+                  },
+                  {
+                    var: "ip_address",
+                    options: ["--ip-address"],
+                    help: {
+                      short: "IP Address belonging to the referenced virtual network.",
+                    },
+                    required: false,
+                    type: "string",
+                    stage: "Stable",
+                    hide: false,
+                    group: "Properties",
+                    nullable: false,
+                  },
+                ],
+              },
             },
           ],
         },
       ],
-    });
+      clsArgDefineMap: {},
+    };
+    return HttpResponse.json(response);
   }),
 
   http.get("/workspace/:name/Resources/*/V/*/Commands", () => {

@@ -63,6 +63,66 @@ describe("WSEditorCommandContent", () => {
     onUpdateCommand: vi.fn(),
   };
 
+  const complexArg: Command = {
+    id: "command:network/lb/address-pool/create",
+    names: ["network", "lb", "address-pool", "create"],
+    help: {
+      short: "Create a load balancer backend address pool",
+      lines: [
+        "Create a new load balancer backend address pool with specified parameters.",
+        "This command creates a backend address pool in the specified load balancer.",
+      ],
+    },
+    stage: "Stable" as const,
+    version: "2.0.0",
+    examples: [
+      {
+        name: "Create a load balancer address pool",
+        commands: [
+          "network lb address-pool create --name myaddresspool --resource-group myresourcegroup --lb-name mylb",
+        ],
+      },
+    ],
+    resources: [
+      {
+        id: "Microsoft.Network/loadBalancers/backendAddressPools",
+        version: "2021-09-01",
+        swagger: "/swagger/network/2021-09-01/network.json",
+      },
+    ],
+    outputs: [
+      {
+        type: "object" as const,
+        ref: "BackendAddressPool",
+        clientFlatten: false,
+      },
+    ],
+    args: [
+      {
+        var: "backend_addresses",
+        options: ["--backend-addresses"],
+        help: {
+          short: "An array of backend addresses.",
+        },
+        required: false,
+        type: "array<object>",
+        stage: "Stable" as const,
+        hide: false,
+        group: "Properties",
+        nullable: false,
+        singularOptions: ["--backend-address"],
+      } as any, // Use 'as any' to bypass TypeScript for complex array argument
+    ],
+    clsArgDefineMap: {},
+  };
+
+  const complexCommandProps = {
+    workspaceUrl: "https://example.com/workspace",
+    previewCommand: complexArg,
+    reloadTimestamp: Date.now(),
+    onUpdateCommand: vi.fn(),
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(commandApi).getCommand.mockResolvedValue(mockCommand);
@@ -207,15 +267,90 @@ describe("WSEditorCommandContent", () => {
     });
 
     it("handles add subcommand callback", async () => {
-      render(<WSEditorCommandContent {...defaultProps} />);
+      const complexCommandResponse = {
+        names: ["network", "lb", "address-pool", "create"],
+        help: {
+          short: "Create a load balancer backend address pool",
+          lines: [
+            "Create a new load balancer backend address pool with specified parameters.",
+            "This command creates a backend address pool in the specified load balancer.",
+          ],
+        },
+        stage: "Stable",
+        version: "2.0.0",
+        examples: [],
+        outputs: [],
+        resources: [],
+        argGroups: [
+          {
+            name: "Properties",
+            args: [
+              {
+                var: "backend_addresses",
+                options: ["--backend-addresses"],
+                help: {
+                  short: "An array of backend addresses.",
+                },
+                required: false,
+                type: "array<object>",
+                stage: "Stable",
+                hide: false,
+                group: "Properties",
+                nullable: false,
+                item: {
+                  type: "object",
+                  args: [
+                    {
+                      var: "name",
+                      options: ["--name"],
+                      help: {
+                        short: "Name of the backend address.",
+                      },
+                      required: false,
+                      type: "string",
+                      stage: "Stable",
+                      hide: false,
+                      group: "",
+                      nullable: false,
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        clsArgDefineMap: {},
+      };
 
+      vi.mocked(commandApi).getCommand.mockResolvedValue(complexCommandResponse);
+
+      render(<WSEditorCommandContent {...complexCommandProps} />);
+
+      // Wait for the component to load
       await waitFor(() => {
-        const addSubcommandButton = screen.getByText("Add Subcommands");
+        expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+      });
+
+      // Wait for the command to load
+      await waitFor(() => {
+        expect(screen.getByText("az network lb address-pool create")).toBeInTheDocument();
+      });
+
+      // First click on the complex argument to select it
+      await waitFor(() => {
+        const backendAddressesButton = screen.getByText(/backend-addresses/);
+        fireEvent.click(backendAddressesButton);
+      });
+
+      // Now the Subcommands button should appear after selecting the argument
+      await waitFor(() => {
+        const addSubcommandButton = screen.getByText("Subcommands");
         fireEvent.click(addSubcommandButton);
       });
 
       await waitFor(() => {
-        expect(screen.getByText("Add Subcommands")).toBeInTheDocument();
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+        expect(screen.getByRole("dialog")).toHaveTextContent("Add Subcommands");
       });
     });
   });
