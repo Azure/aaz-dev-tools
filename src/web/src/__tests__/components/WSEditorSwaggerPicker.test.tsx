@@ -141,7 +141,7 @@ describe("WSEditorSwaggerPicker", () => {
       render(<WSEditorSwaggerPicker {...defaultProps} />);
 
       await waitFor(() => {
-        const moduleField = screen.getByLabelText("Swagger Module");
+        const moduleField = screen.getByRole("combobox", { name: /swagger module/i });
         expect(moduleField).toBeInTheDocument();
       });
     });
@@ -150,7 +150,7 @@ describe("WSEditorSwaggerPicker", () => {
       render(<WSEditorSwaggerPicker {...defaultProps} />);
 
       await waitFor(() => {
-        const rpField = screen.getByLabelText("Resource Provider");
+        const rpField = screen.getByRole("combobox", { name: /resource provider/i });
         expect(rpField).toBeInTheDocument();
       });
     });
@@ -159,7 +159,7 @@ describe("WSEditorSwaggerPicker", () => {
       render(<WSEditorSwaggerPicker {...defaultProps} />);
 
       await waitFor(() => {
-        const versionField = screen.getByLabelText("API Version");
+        const versionField = screen.getByRole("combobox", { name: /api version/i });
         expect(versionField).toBeInTheDocument();
       });
     });
@@ -168,7 +168,7 @@ describe("WSEditorSwaggerPicker", () => {
       render(<WSEditorSwaggerPicker {...defaultProps} />);
 
       await waitFor(() => {
-        const updateField = screen.getByLabelText("Update Command Mode");
+        const updateField = screen.getByRole("combobox", { name: /update command mode/i });
         expect(updateField).toBeInTheDocument();
       });
     });
