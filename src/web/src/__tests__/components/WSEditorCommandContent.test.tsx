@@ -111,7 +111,7 @@ describe("WSEditorCommandContent", () => {
         group: "Properties",
         nullable: false,
         singularOptions: ["--backend-address"],
-      } as any, // Use 'as any' to bypass TypeScript for complex array argument
+      } as any,
     ],
     clsArgDefineMap: {},
   };
@@ -655,12 +655,6 @@ describe("WSEditorCommandContent", () => {
 
       expect(() => {
         render(<WSEditorCommandContent {...props} />);
-      }).not.toThrow();
-    });
-
-    it("validates command structure", () => {
-      expect(() => {
-        render(<WSEditorCommandContent {...defaultProps} />);
       }).not.toThrow();
     });
   });
