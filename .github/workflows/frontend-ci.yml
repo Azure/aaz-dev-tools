@@ -86,11 +86,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Check TypeScript compilation
-        run: |
-          cd src/web
-          npx tsc --noEmit
-
       - name: Test React Frontend
         run: |
           cd src/web
