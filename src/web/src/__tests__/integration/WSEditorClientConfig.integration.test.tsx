@@ -129,8 +129,11 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
       });
 
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /update/i })).toBeInTheDocument();
+      });
+
       expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
-      expect(screen.getByText("Update")).toBeInTheDocument();
     });
 
     it.skip("should cascade load planes → modules → providers → versions", async () => {
