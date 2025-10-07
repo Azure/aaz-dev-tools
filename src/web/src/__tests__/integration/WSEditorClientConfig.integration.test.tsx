@@ -77,24 +77,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-
-    server.use(
-      http.get(/\/aaz\/specs\/planes$/i, () => {
-        return HttpResponse.json(mockPlanes);
-      }),
-
-      http.get("*/specs/planes/azure-cli/modules", () => {
-        return HttpResponse.json(mockModules);
-      }),
-
-      http.get("*/specs/planes/*/modules/*/resource-providers", () => {
-        return HttpResponse.json(mockResourceProviders);
-      }),
-
-      http.get("*/specs/planes/*/modules/*/resource-providers/*/resources", () => {
-        return HttpResponse.json(mockProviderResources);
-      }),
-    );
   });
 
   describe("Data Loading Workflows", () => {
