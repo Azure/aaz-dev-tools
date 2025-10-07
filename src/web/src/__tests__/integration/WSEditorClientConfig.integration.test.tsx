@@ -28,53 +28,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
   const mockWorkspaceUrl = "/AAZ/Editor/Workspaces/test-workspace";
   const mockOnClose = vi.fn();
 
-  const mockPlanes = {
-    data: [
-      {
-        name: "azure-cli",
-        displayName: "Azure CLI",
-        moduleOptions: null,
-      },
-    ],
-  };
-
-  const mockModules = ["storage", "compute"];
-  const mockResourceProviders = ["Microsoft.Storage", "Microsoft.Compute"];
-
-  const mockProviderResources = [
-    {
-      id: "storageAccounts",
-      versions: [
-        {
-          version: "2021-04-01",
-          operations: { get: "GET", put: "PUT" },
-          file: "test.json",
-          id: "storageAccounts",
-          path: "/test",
-        },
-        {
-          version: "2020-08-01",
-          operations: { get: "GET", list: "LIST" },
-          file: "test2.json",
-          id: "storageAccounts",
-          path: "/test2",
-        },
-      ],
-    },
-    {
-      id: "blobServices",
-      versions: [
-        {
-          version: "2021-04-01",
-          operations: { get: "GET" },
-          file: "test3.json",
-          id: "blobServices",
-          path: "/test3",
-        },
-      ],
-    },
-  ];
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
