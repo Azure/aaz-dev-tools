@@ -125,7 +125,7 @@ describe("Workspace API", () => {
 
     it("should return null for 404 responses", async () => {
       const result = await workspaceApi.getWorkspaceClientConfig("/AAZ/Editor/Workspaces/nonexistent");
-      expect(result).toBeDefined();
+      expect(result).toBeNull();
     });
   });
 

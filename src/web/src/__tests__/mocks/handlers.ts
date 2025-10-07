@@ -49,10 +49,10 @@ export const handlers = [
     });
   }),
 
-  http.get("/AAZ/Editor/Workspaces/:name/ClientConfig", ({ request }) => {
+  http.get("/AAZ/Editor/Workspaces/:name/ClientConfig", ({ request, params }) => {
     const url = new URL(request.url);
-    if (url.searchParams.get("simulate404") === "true") {
-      return new HttpResponse(null, { status: 404 });
+    if (url.searchParams.get("simulate404") === "true" || params.name === "nonexistent") {
+      return HttpResponse.json({ message: "Client config not found" }, { status: 404 });
     }
 
     return HttpResponse.json({
