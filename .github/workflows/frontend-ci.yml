@@ -1,0 +1,111 @@
+# Frontend CI Workflow
+#
+# Tests and builds the React.js frontend application:
+# - React app in src/web/ using Vitest
+# - TypeScript compilation and linting
+#
+# Note: TypeSpec-aaz emitter tests remain in python-publish.yml workflow
+# where they logically belong with the Python package build process.
+
+name: Frontend CI
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+    paths:
+      - "src/web/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "tsconfig*.json"
+      - ".github/workflows/frontend-ci.yml"
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - "src/web/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "tsconfig*.json"
+      - ".github/workflows/frontend-ci.yml"
+
+env:
+  # Change this to invalidate existing cache.
+  CACHE_PREFIX: v0
+  NODE_VERSION: "20.x"
+  PNPM_VERSION: "9.5.0"
+
+permissions:
+  contents: read
+
+jobs:
+  frontend-tests:
+    name: Frontend Tests & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        run: npm install -g pnpm@${{ env.PNPM_VERSION }}
+
+      - name: Set build variables
+        shell: bash
+        run: |
+          echo "NODE_VERSION_FULL=$(node --version)" >> $GITHUB_ENV
+          # Use week number in cache key so we can refresh the cache weekly.
+          echo "WEEK_NUMBER=$(date +%V)" >> $GITHUB_ENV
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+            src/*/node_modules
+          key: ${{ env.CACHE_PREFIX }}-${{ env.WEEK_NUMBER }}-${{ runner.os }}-${{ env.NODE_VERSION_FULL }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ env.CACHE_PREFIX }}-${{ env.WEEK_NUMBER }}-${{ runner.os }}-${{ env.NODE_VERSION_FULL }}
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Lint TypeScript/React code
+        run: |
+          cd src/web
+          pnpm lint
+
+      - name: Check TypeScript compilation
+        run: |
+          cd src/web
+          npx tsc --noEmit
+
+      - name: Test React Frontend
+        run: |
+          cd src/web
+          pnpm test
+        env:
+          CI: true
+
+      - name: Build React Frontend
+        run: |
+          cd src/web
+          pnpm build
+        env:
+          CI: false
