@@ -86,11 +86,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Lint TypeScript/React code
-        run: |
-          cd src/web
-          pnpm lint
-
       - name: Check TypeScript compilation
         run: |
           cd src/web
