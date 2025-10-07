@@ -3,9 +3,6 @@
 # Tests and builds the React.js frontend application:
 # - React app in src/web/ using Vitest
 # - TypeScript compilation and linting
-#
-# Note: TypeSpec-aaz emitter tests remain in python-publish.yml workflow
-# where they logically belong with the Python package build process.
 
 name: Frontend CI
 
