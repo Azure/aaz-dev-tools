@@ -119,7 +119,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
     it("should handle 404 for new config setup", async () => {
       render(
         <WSEditorClientConfigDialog
-          workspaceUrl={`${mockWorkspaceUrl}?simulate404=false`}
+          workspaceUrl={`${mockWorkspaceUrl}?simulate404=true`}
           open={true}
           onClose={mockOnClose}
         />,
