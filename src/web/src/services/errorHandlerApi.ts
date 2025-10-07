@@ -2,6 +2,10 @@ export const errorHandlerApi = {
   getErrorMessage: (err: any): string => {
     console.log("err: ", err);
 
+    if (!err) {
+      return "An unexpected error occurred";
+    }
+
     if (err.response?.data?.message) {
       const data = err.response.data;
       const details = data.details ? `: ${JSON.stringify(data.details)}` : "";
