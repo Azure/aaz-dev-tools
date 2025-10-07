@@ -86,6 +86,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Build TypeSpec packages
+        run: pnpm build:typespec
+
       - name: Test React Frontend
         run: |
           cd src/web
