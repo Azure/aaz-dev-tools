@@ -201,47 +201,20 @@ def generate_by_swagger_tag(profile, swagger_tag, extension_or_module_name, cli_
 
 @bp.cli.command("generate", short_help="Generate code effortlessly. If the result isn't what you expected, use the UI to fine-tune it.")
 @click.option(
-    "--cli-path", '-c',
+    "--cli-path", "-c",
     type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
     default=Config.CLI_PATH,
     callback=Config.validate_and_setup_cli_path,
     expose_value=False,
-    help="The local path of azure-cli repo. Only required when generate code to azure-cli repo."
+    help="Local path of azure-cli repo. Only required when generate code to azure-cli repo."
 )
 @click.option(
-    "--cli-extension-path", '-e',
-    type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
-    default=Config.CLI_EXTENSION_PATH,
-    callback=Config.validate_and_setup_cli_extension_path,
-    expose_value=False,
-    hidden=True,
-    help="The local path of azure-cli-extension repo. Only required when generate code to azure-cli-extension repo."
-)
-@click.option(
-    "--swagger-path", '-s',
-    type=click.Path(file_okay=False, dir_okay=True, readable=True, resolve_path=True),
-    default=Config.SWAGGER_PATH,
-    callback=Config.validate_and_setup_swagger_path,
-    expose_value=False,
-    hidden=True,
-    help="The local path of azure-rest-api-specs repo. Official repo is https://github.com/Azure/azure-rest-api-specs"
-)
-@click.option(
-    "--aaz-path", '-a',
-    type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
-    default=Config.AAZ_PATH,
-    callback=Config.validate_and_setup_aaz_path,
-    expose_value=False,
-    hidden=True,
-    help="The local path of aaz repo."
-)
-@click.option(
-    "--spec",
+    "--spec", "-s",
     required=True,
     help="Folder name of the specification source."
 )
 @click.option(
-    "--module",
+    "--module", "-m",
     required=True,
     help="Module name of the CLI extension target."
 )
