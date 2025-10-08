@@ -3,6 +3,15 @@
 Release History
 ===============
 
+4.5.0
+++++++
+* Add `generate_all` command functionality for CLI generation. (#516)
+* Add CLI generate interface with Liftr integration. (#513)
+* Add comprehensive frontend testing infrastructure with Vitest and GitHub Actions CI pipeline. (#515)
+* Fix duplicate parameters in CLI generation. (#512)
+* Fix example generation issues and line break descriptions. (#510) (#511)
+* Refactor API layer from class-based to object-based service patterns. (#509)
+
 4.4.0
 ++++++
 * GUI heuristics upgrade. (#498)
