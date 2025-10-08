@@ -201,12 +201,12 @@ def generate_by_swagger_tag(profile, swagger_tag, extension_or_module_name, cli_
 
 @bp.cli.command("generate", short_help="Generate code effortlessly. If the result isn't what you expected, use the UI to fine-tune it.")
 @click.option(
-    "--cli-path", '-c',
+    "--cli-path", "-c",
     type=click.Path(file_okay=False, dir_okay=True, writable=True, readable=True, resolve_path=True),
     default=Config.CLI_PATH,
     callback=Config.validate_and_setup_cli_path,
     expose_value=False,
-    help="The local path of azure-cli repo. Only required when generate code to azure-cli repo."
+    help="Local path of azure-cli repo. Only required when generate code to azure-cli repo."
 )
 @click.option(
     "--cli-extension-path", '-e',
@@ -236,12 +236,12 @@ def generate_by_swagger_tag(profile, swagger_tag, extension_or_module_name, cli_
     help="The local path of aaz repo."
 )
 @click.option(
-    "--spec",
+    "--spec", "-s",
     required=True,
     help="Folder name of the specification source."
 )
 @click.option(
-    "--module",
+    "--module", "-m",
     required=True,
     help="Module name of the CLI extension target."
 )
