@@ -44,13 +44,21 @@ import {
   SubtitleTypography,
 } from "./WSEditorTheme";
 
-function WSEditorCommandArgumentsContent(props: {
+interface WSEditorCommandArgumentsContentProps {
   commandUrl: string;
   args: CMDArg[];
   clsArgDefineMap: ClsArgDefinitionMap;
   onReloadArgs: () => Promise<void>;
   onAddSubCommand: (argVar: string, subArgOptions: { var: string; options: string }[], argStackNames: string[]) => void;
-}) {
+}
+
+const WSEditorCommandArgumentsContent: React.FC<WSEditorCommandArgumentsContentProps> = ({
+  commandUrl,
+  args,
+  clsArgDefineMap,
+  onReloadArgs,
+  onAddSubCommand,
+}) => {
   const [displayArgumentDialog, setDisplayArgumentDialog] = useState<boolean>(false);
   const [editArg, setEditArg] = useState<CMDArg | undefined>(undefined);
   const [, setEditArgIdxStack] = useState<ArgIdx[] | undefined>(undefined);
@@ -59,7 +67,7 @@ function WSEditorCommandArgumentsContent(props: {
 
   const handleArgumentDialogClose = async (updated: boolean) => {
     if (updated) {
-      props.onReloadArgs();
+      onReloadArgs();
     }
     setDisplayArgumentDialog(false);
     setEditArg(undefined);
@@ -74,7 +82,7 @@ function WSEditorCommandArgumentsContent(props: {
 
   const handleFlattenDialogClose = async (flattened: boolean) => {
     if (flattened) {
-      props.onReloadArgs();
+      onReloadArgs();
     }
     setDisplayFlattenDialog(false);
     setEditArg(undefined);
@@ -89,7 +97,7 @@ function WSEditorCommandArgumentsContent(props: {
 
   const handleUnwrapClsDialogClose = async (unwrapped: boolean) => {
     if (unwrapped) {
-      props.onReloadArgs();
+      onReloadArgs();
     }
     setDisplayUnwrapClsDialog(false);
     setEditArg(undefined);
@@ -118,7 +126,7 @@ function WSEditorCommandArgumentsContent(props: {
     let a: CMDArgBase | undefined = arg;
     if (a.type.startsWith("@")) {
       const clsName = (a as CMDClsArg).clsName;
-      a = props.clsArgDefineMap[clsName];
+      a = clsArgDefineMap[clsName];
     }
     if (a.type.startsWith("dict<")) {
       a = (a as CMDDictArgBase).item;
@@ -130,7 +138,7 @@ function WSEditorCommandArgumentsContent(props: {
       let subArgs;
       if (a.type.startsWith("@")) {
         const clsName = (a as CMDClsArg).clsName;
-        subArgs = (props.clsArgDefineMap[clsName] as CMDObjectArgBase).args;
+        subArgs = (clsArgDefineMap[clsName] as CMDObjectArgBase).args;
       } else {
         subArgs = (a as CMDObjectArg).args;
       }
@@ -142,7 +150,7 @@ function WSEditorCommandArgumentsContent(props: {
       });
     }
 
-    props.onAddSubCommand(argVar, subArgOptions, argStackNames);
+    onAddSubCommand(argVar, subArgOptions, argStackNames);
   };
 
   return (
@@ -166,9 +174,9 @@ function WSEditorCommandArgumentsContent(props: {
           <CardTitleTypography sx={{ flexShrink: 0 }}>[ ARGUMENT ]</CardTitleTypography>
         </Box>
         <ArgumentNavigation
-          commandUrl={props.commandUrl}
-          args={props.args}
-          clsArgDefineMap={props.clsArgDefineMap}
+          commandUrl={commandUrl}
+          args={args}
+          clsArgDefineMap={clsArgDefineMap}
           onEdit={handleEditArgument}
           onFlatten={handleArgumentFlatten}
           onUnwrap={handleUnwrapClsArgument}
@@ -178,25 +186,25 @@ function WSEditorCommandArgumentsContent(props: {
 
       {displayArgumentDialog && (
         <ArgumentDialog
-          commandUrl={props.commandUrl}
+          commandUrl={commandUrl}
           arg={editArg!}
-          clsArgDefineMap={props.clsArgDefineMap}
+          clsArgDefineMap={clsArgDefineMap}
           open={displayArgumentDialog}
           onClose={handleArgumentDialogClose}
         />
       )}
       {displayFlattenDialog && (
         <FlattenDialog
-          commandUrl={props.commandUrl}
+          commandUrl={commandUrl}
           arg={editArg!}
-          clsArgDefineMap={props.clsArgDefineMap}
+          clsArgDefineMap={clsArgDefineMap}
           open={displayFlattenDialog}
           onClose={handleFlattenDialogClose}
         />
       )}
       {displayUnwrapClsDialog && (
         <UnwrapClsDialog
-          commandUrl={props.commandUrl}
+          commandUrl={commandUrl}
           arg={editArg!}
           open={displayUnwrapClsDialog}
           onClose={handleUnwrapClsDialogClose}
@@ -204,14 +212,14 @@ function WSEditorCommandArgumentsContent(props: {
       )}
     </React.Fragment>
   );
-}
+};
 
 interface ArgIdx {
   var: string;
   displayKey: string;
 }
 
-function ArgumentNavigation(props: {
+interface ArgumentNavigationProps {
   commandUrl: string;
   args: CMDArg[];
   clsArgDefineMap: ClsArgDefinitionMap;
@@ -219,14 +227,24 @@ function ArgumentNavigation(props: {
   onFlatten: (arg: CMDArg, argIdxStack: ArgIdx[]) => void;
   onUnwrap: (arg: CMDArg, argIdxStack: ArgIdx[]) => void;
   onAddSubcommand: (arg: CMDArg, argIdxStack: ArgIdx[]) => void;
-}) {
+}
+
+const ArgumentNavigation: React.FC<ArgumentNavigationProps> = ({
+  commandUrl,
+  args,
+  clsArgDefineMap,
+  onEdit,
+  onFlatten,
+  onUnwrap,
+  onAddSubcommand,
+}) => {
   const [argIdxStack, setArgIdxStack] = useState<ArgIdx[]>([]);
 
   const getArgProps = (
     selectedArgBase: CMDArgBase,
   ): { title: string; props: CMDArg[]; flattenArgVar: string | undefined } | undefined => {
     if (selectedArgBase.type.startsWith("@")) {
-      const clsArgDefine = props.clsArgDefineMap[(selectedArgBase as CMDClsArgBase).clsName];
+      const clsArgDefine = clsArgDefineMap[(selectedArgBase as CMDClsArgBase).clsName];
       const clsArgProps = getArgProps(clsArgDefine);
       if (clsArgProps !== undefined && clsArgDefine.type === "object") {
         clsArgProps!.flattenArgVar = (selectedArgBase as CMDClsArg).var;
@@ -269,15 +287,15 @@ function ArgumentNavigation(props: {
     if (stack.length === 0) {
       return undefined;
     } else {
-      let args: CMDArg[] = [...props.args];
+      let argsArray: CMDArg[] = [...args];
       let selectedArg: CMDArg | undefined = undefined;
       for (const i in stack) {
         const argVar = stack[i].var;
-        selectedArg = args.find((arg) => arg.var === argVar);
+        selectedArg = argsArray.find((arg) => arg.var === argVar);
         if (!selectedArg) {
           break;
         }
-        args = getArgProps(selectedArg)?.props ?? [];
+        argsArray = getArgProps(selectedArg)?.props ?? [];
       }
       return selectedArg;
     }
@@ -285,16 +303,17 @@ function ArgumentNavigation(props: {
 
   useEffect(() => {
     setArgIdxStack([]);
-  }, [props.commandUrl]);
+  }, [commandUrl]);
 
   useEffect(() => {
-    // update argument idx stack
     const stack = [...argIdxStack];
     while (stack.length > 0 && !getSelectedArg(stack)) {
       stack.pop();
     }
-    setArgIdxStack(stack);
-  }, [props.args, props.clsArgDefineMap]);
+    if (stack.length !== argIdxStack.length) {
+      setArgIdxStack(stack);
+    }
+  }, [args, clsArgDefineMap]);
 
   const handleSelectSubArg = (subArgVar: string) => {
     let subArg;
@@ -305,7 +324,7 @@ function ArgumentNavigation(props: {
       }
       subArg = getArgProps(arg)?.props.find((a) => a.var === subArgVar);
     } else {
-      subArg = props.args.find((a) => a.var === subArgVar);
+      subArg = args.find((a: CMDArg) => a.var === subArgVar);
     }
 
     if (!subArg) {
@@ -325,7 +344,7 @@ function ArgumentNavigation(props: {
 
     let argType = subArg.type;
     if (argType.startsWith("@")) {
-      argType = props.clsArgDefineMap[(subArg as CMDClsArg).clsName].type;
+      argType = clsArgDefineMap[(subArg as CMDClsArg).clsName].type;
     }
     if (argType.startsWith("dict<")) {
       argIdx.displayKey += "{}";
@@ -367,10 +386,10 @@ function ArgumentNavigation(props: {
           arg={selectedArg}
           depth={argIdxStack.length}
           onEdit={() => {
-            props.onEdit(selectedArg, argIdxStack);
+            onEdit(selectedArg, argIdxStack);
           }}
           onUnwrap={() => {
-            props.onUnwrap(selectedArg, argIdxStack);
+            onUnwrap(selectedArg, argIdxStack);
           }}
         />
       </React.Fragment>
@@ -379,13 +398,13 @@ function ArgumentNavigation(props: {
 
   const buildArgumentPropsReviewer = () => {
     if (argIdxStack.length === 0) {
-      if (props.args.length === 0) {
+      if (args.length === 0) {
         return <></>;
       }
       return (
         <ArgumentPropsReviewer
           title={"Argument Groups"}
-          args={props.args}
+          args={args}
           onFlatten={undefined}
           onAddSubcommand={undefined}
           depth={argIdxStack.length}
@@ -411,12 +430,12 @@ function ArgumentNavigation(props: {
           onFlatten={
             canFlatten
               ? () => {
-                  props.onFlatten(selectedArg!, argIdxStack);
+                  onFlatten(selectedArg!, argIdxStack);
                 }
               : undefined
           }
           onAddSubcommand={() => {
-            props.onAddSubcommand(selectedArg!, argIdxStack);
+            onAddSubcommand(selectedArg!, argIdxStack);
           }}
           onSelectSubArg={handleSelectSubArg}
         />
@@ -430,7 +449,7 @@ function ArgumentNavigation(props: {
       <React.Fragment>{buildArgumentPropsReviewer()}</React.Fragment>
     </React.Fragment>
   );
-}
+};
 
 const NavBarItemTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
   color: theme.palette.primary.main,
@@ -443,7 +462,12 @@ const NavBarItemHightLightedTypography = styled(NavBarItemTypography)<Typography
   color: "#5d64cf",
 }));
 
-function ArgNavBar(props: { argIdxStack: ArgIdx[]; onChangeArgIdStack: (end: number) => void }) {
+interface ArgNavBarProps {
+  argIdxStack: ArgIdx[];
+  onChangeArgIdStack: (end: number) => void;
+}
+
+const ArgNavBar: React.FC<ArgNavBarProps> = ({ argIdxStack, onChangeArgIdStack }) => {
   return (
     <React.Fragment>
       <Box
@@ -461,16 +485,16 @@ function ArgNavBar(props: { argIdxStack: ArgIdx[]; onChangeArgIdStack: (end: num
         <ButtonBase
           key="Back"
           onClick={() => {
-            props.onChangeArgIdStack(0);
+            onChangeArgIdStack(0);
           }}
         >
           <ArrowBackIosIcon sx={{ fontSize: 14 }} />
         </ButtonBase>
-        {props.argIdxStack.slice(0, -1).map((argIdx, index) => (
+        {argIdxStack.slice(0, -1).map((argIdx: ArgIdx, index: number) => (
           <ButtonBase
             key={`${index}`}
             onClick={() => {
-              props.onChangeArgIdStack(index + 1);
+              onChangeArgIdStack(index + 1);
             }}
           >
             <NavBarItemTypography sx={{ flexShrink: 0 }}>
@@ -479,21 +503,21 @@ function ArgNavBar(props: { argIdxStack: ArgIdx[]; onChangeArgIdStack: (end: num
           </ButtonBase>
         ))}
         <ButtonBase
-          key={`${props.argIdxStack.length - 1}`}
+          key={`${argIdxStack.length - 1}`}
           onClick={() => {
-            props.onChangeArgIdStack(props.argIdxStack.length);
+            onChangeArgIdStack(argIdxStack.length);
           }}
         >
           <NavBarItemHightLightedTypography sx={{ flexShrink: 0 }}>
-            {props.argIdxStack.length > 1
-              ? `.${props.argIdxStack[props.argIdxStack.length - 1].displayKey}`
-              : props.argIdxStack[props.argIdxStack.length - 1].displayKey}
+            {argIdxStack.length > 1
+              ? `.${argIdxStack[argIdxStack.length - 1].displayKey}`
+              : argIdxStack[argIdxStack.length - 1].displayKey}
           </NavBarItemHightLightedTypography>
         </ButtonBase>
       </Box>
     </React.Fragment>
   );
-}
+};
 
 const spliceArgOptionsString = (arg: CMDArg, depth: number) => {
   let optionsString = arg.options
@@ -580,41 +604,48 @@ const ArgChoicesTypography = styled(Typography)<TypographyProps>(({ theme }) => 
   fontWeight: 700,
 }));
 
-function ArgumentReviewer(props: { arg: CMDArg; depth: number; onEdit: () => void; onUnwrap: () => void }) {
+interface ArgumentReviewerProps {
+  arg: CMDArg;
+  depth: number;
+  onEdit: () => void;
+  onUnwrap: () => void;
+}
+
+const ArgumentReviewer: React.FC<ArgumentReviewerProps> = ({ arg, depth, onEdit, onUnwrap }) => {
   const [choices, setChoices] = useState<string[]>([]);
 
   const buildArgOptionsString = () => {
-    const argOptionsString = spliceArgOptionsString(props.arg, props.depth - 1);
+    const argOptionsString = spliceArgOptionsString(arg, depth - 1);
     return <ArgNameTypography>{argOptionsString}</ArgNameTypography>;
   };
 
   useEffect(() => {
     const newChoices: string[] = [];
-    if ((props.arg as CMDStringArg).enum) {
-      const items = (props.arg as CMDStringArg).enum!.items;
+    if ((arg as CMDStringArg).enum) {
+      const items = (arg as CMDStringArg).enum!.items;
       for (const idx in items) {
         const enumItem = items[idx];
         newChoices.push(enumItem.name);
       }
-    } else if ((props.arg as CMDNumberArg).enum) {
-      const items = (props.arg as CMDNumberArg).enum!.items;
+    } else if ((arg as CMDNumberArg).enum) {
+      const items = (arg as CMDNumberArg).enum!.items;
       for (const idx in items) {
         const enumItem = items[idx];
         newChoices.push(enumItem.name);
       }
     }
     setChoices(newChoices);
-  }, [props.arg]);
+  }, [arg]);
 
   const getUnwrapKeywords = () => {
-    if (props.arg.type.startsWith("@")) {
+    if (arg.type.startsWith("@")) {
       return "Unwrap";
-    } else if (props.arg.type.startsWith("array")) {
-      if ((props.arg as CMDArrayArg).item?.type.startsWith("@")) {
+    } else if (arg.type.startsWith("array")) {
+      if ((arg as CMDArrayArg).item?.type.startsWith("@")) {
         return "Unwrap Element";
       }
-    } else if (props.arg.type.startsWith("dict")) {
-      if ((props.arg as CMDDictArg).item?.type.startsWith("@")) {
+    } else if (arg.type.startsWith("dict")) {
+      if ((arg as CMDDictArg).item?.type.startsWith("@")) {
         return "Unwrap Element";
       }
     }
@@ -623,17 +654,17 @@ function ArgumentReviewer(props: { arg: CMDArg; depth: number; onEdit: () => voi
 
   const getDefaultValueToString = () => {
     if (
-      props.arg.type === "object" ||
-      props.arg.type.startsWith("dict<") ||
-      props.arg.type.startsWith("array<") ||
-      props.arg.type.startsWith("@")
+      arg.type === "object" ||
+      arg.type.startsWith("dict<") ||
+      arg.type.startsWith("array<") ||
+      arg.type.startsWith("@")
     ) {
-      if (props.arg.default !== undefined && props.arg.default !== null) {
-        return JSON.stringify(props.arg.default.value);
+      if (arg.default !== undefined && arg.default !== null) {
+        return JSON.stringify(arg.default.value);
       }
     } else {
-      if (props.arg.default !== undefined && props.arg.default !== null) {
-        return props.arg.default.value.toString();
+      if (arg.default !== undefined && arg.default !== null) {
+        return arg.default.value.toString();
       }
     }
     return "";
@@ -664,7 +695,7 @@ function ArgumentReviewer(props: { arg: CMDArg; depth: number; onEdit: () => voi
             sx={{ flexShrink: 0, ml: 3 }}
             startIcon={<EditIcon color="secondary" fontSize="small" />}
             onClick={() => {
-              props.onEdit();
+              onEdit();
             }}
           >
             <ArgEditTypography>Edit</ArgEditTypography>
@@ -688,23 +719,23 @@ function ArgumentReviewer(props: { arg: CMDArg; depth: number; onEdit: () => voi
               alignItems: "center",
             }}
           >
-            <ArgTypeTypography>{`/${props.arg.type}/`}</ArgTypeTypography>
+            <ArgTypeTypography>{`/${arg.type}/`}</ArgTypeTypography>
           </Box>
           {getUnwrapKeywords() !== null && (
             <Button
               sx={{ flexShrink: 0, ml: 1 }}
               startIcon={<ImportExportIcon color="secondary" fontSize="small" />}
               onClick={() => {
-                props.onUnwrap();
+                onUnwrap();
               }}
             >
               <ArgEditTypography>{getUnwrapKeywords()!}</ArgEditTypography>
             </Button>
           )}
           <Box sx={{ flexGrow: 1 }} />
-          {props.arg.required && <ArgRequiredTypography>[Required]</ArgRequiredTypography>}
+          {arg.required && <ArgRequiredTypography>[Required]</ArgRequiredTypography>}
         </Box>
-        {(props.arg.default !== undefined || choices.length > 0 || props.arg.configurationKey !== undefined) && (
+        {(arg.default !== undefined || choices.length > 0 || arg.configurationKey !== undefined) && (
           <Box
             sx={{
               ml: 5,
@@ -717,27 +748,23 @@ function ArgumentReviewer(props: { arg: CMDArg; depth: number; onEdit: () => voi
             {choices.length > 0 && (
               <ArgChoicesTypography sx={{ ml: 1 }}>{`Choices: ` + choices.join(", ")}</ArgChoicesTypography>
             )}
-            {props.arg.default !== undefined && (
+            {arg.default !== undefined && (
               <ArgChoicesTypography sx={{ ml: 1 }}>{`Default: ${getDefaultValueToString()}`}</ArgChoicesTypography>
             )}
-            {props.arg.configurationKey !== undefined && (
-              <ArgChoicesTypography sx={{ ml: 1 }}>
-                {`ConfigurationKey: ${props.arg.configurationKey}`}
-              </ArgChoicesTypography>
+            {arg.configurationKey !== undefined && (
+              <ArgChoicesTypography sx={{ ml: 1 }}>{`ConfigurationKey: ${arg.configurationKey}`}</ArgChoicesTypography>
             )}
           </Box>
         )}
-        {props.arg.help?.short && (
-          <ShortHelpTypography sx={{ ml: 6, mt: 1.5 }}> {props.arg.help?.short} </ShortHelpTypography>
-        )}
-        {!props.arg.help?.short && (
+        {arg.help?.short && <ShortHelpTypography sx={{ ml: 6, mt: 1.5 }}> {arg.help?.short} </ShortHelpTypography>}
+        {!arg.help?.short && (
           <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>
             Please add argument short summary!
           </ShortHelpPlaceHolderTypography>
         )}
-        {props.arg.help?.lines && (
+        {arg.help?.lines && (
           <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
-            {props.arg.help.lines.map((line, idx) => (
+            {arg.help.lines.map((line, idx) => (
               <LongHelpTypography key={idx}>{line}</LongHelpTypography>
             ))}
           </Box>
@@ -745,7 +772,7 @@ function ArgumentReviewer(props: { arg: CMDArg; depth: number; onEdit: () => voi
       </Box>
     </React.Fragment>
   );
-}
+};
 
 function ArgumentDialog(props: {
   commandUrl: string;
