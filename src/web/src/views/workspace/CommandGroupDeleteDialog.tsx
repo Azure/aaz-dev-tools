@@ -14,36 +14,44 @@ import { CommandGroup } from "./WSEditorCommandGroupContent";
 
 const commandPrefix = "az ";
 
-function CommandGroupDeleteDialog(props: {
+interface CommandGroupDeleteDialogProps {
   workspaceUrl: string;
   open: boolean;
   commandGroup: CommandGroup;
   onClose: (deleted: boolean) => void;
-}) {
+}
+
+const CommandGroupDeleteDialog: React.FC<CommandGroupDeleteDialogProps> = ({
+  workspaceUrl,
+  open,
+  commandGroup,
+  onClose,
+}) => {
   const [updating, setUpdating] = React.useState<boolean>(false);
 
-  const handleClose = () => {
-    props.onClose(false);
-  };
-  const handleDelete = async () => {
-    const nodeUrl = `${props.workspaceUrl}/CommandTree/Nodes/aaz/` + props.commandGroup.names.join("/");
+  const handleClose = React.useCallback(() => {
+    onClose(false);
+  }, [onClose]);
+
+  const handleDelete = React.useCallback(async () => {
+    const nodeUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/${commandGroup.names.join("/")}`;
     setUpdating(true);
 
     try {
       await commandApi.deleteCommandGroup(nodeUrl);
       setUpdating(false);
-      props.onClose(true);
+      onClose(true);
     } catch (err: any) {
       setUpdating(false);
       console.error(err);
     }
-  };
+  }, [workspaceUrl, commandGroup.names, onClose]);
 
   return (
-    <Dialog disableEscapeKeyDown open={props.open}>
+    <Dialog disableEscapeKeyDown open={open}>
       <DialogTitle>Delete Command Group</DialogTitle>
       <DialogContent dividers={true}>
-        <Typography variant="body2">{`${commandPrefix}${props.commandGroup.names.join(" ")}`}</Typography>
+        <Typography variant="body2">{`${commandPrefix}${commandGroup.names.join(" ")}`}</Typography>
       </DialogContent>
       <DialogActions>
         {updating && (
@@ -60,6 +68,6 @@ function CommandGroupDeleteDialog(props: {
       </DialogActions>
     </Dialog>
   );
-}
+};
 
 export default CommandGroupDeleteDialog;
