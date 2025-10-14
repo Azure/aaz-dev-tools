@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState, useCallback, useRef } from "react";
 import TreeView from "@mui/lab/TreeView";
 import TreeItem from "@mui/lab/TreeItem";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -32,10 +32,6 @@ interface WSEditorCommandTreeProps {
   onEditClientConfig?: () => void;
 }
 
-interface WSEditorCommandTreeState {
-  openMore: boolean;
-}
-
 const HeaderTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
   color: theme.palette.primary.main,
   fontFamily: "'Work Sans', sans-serif",
@@ -43,45 +39,46 @@ const HeaderTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
   fontWeight: 600,
 }));
 
-class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps, WSEditorCommandTreeState> {
-  constructor(props: WSEditorCommandTreeProps) {
-    super(props);
-    this.state = {
-      openMore: false,
-    };
-  }
+const WSEditorCommandTree: React.FC<WSEditorCommandTreeProps> = ({
+  commandTreeNodes,
+  selected,
+  expanded,
+  onSelected,
+  onToggle,
+  onAdd,
+  onReload,
+  onEditClientConfig,
+}) => {
+  const [openMore, setOpenMore] = useState<boolean>(false);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
 
-  moreButtonRef = React.createRef<HTMLButtonElement>();
+  const handleNodeSelected = useCallback(
+    (_event: React.SyntheticEvent, nodeIds: string[] | string) => {
+      if (typeof nodeIds === "string") {
+        onSelected(nodeIds);
+      }
+    },
+    [onSelected],
+  );
 
-  onNodeSelected = (_event: React.SyntheticEvent, nodeIds: string[] | string) => {
-    if (typeof nodeIds === "string") {
-      this.props.onSelected(nodeIds);
-    }
-  };
+  const handleNodeToggle = useCallback(
+    (_event: React.SyntheticEvent, nodeIds: string[]) => {
+      onToggle(nodeIds);
+    },
+    [onToggle],
+  );
 
-  onNodeToggle = (_event: React.SyntheticEvent, nodeIds: string[]) => {
-    this.props.onToggle(nodeIds);
-  };
+  const handleMoreClick = useCallback(() => {
+    setOpenMore((prevOpenMore) => !prevOpenMore);
+  }, []);
 
-  handleMoreClick = () => {
-    this.setState((preState) => {
-      return {
-        ...preState,
-        openMore: !preState.openMore,
-      };
-    });
-  };
+  const handleEditClientConfig = useCallback(() => {
+    setOpenMore(false);
+    onEditClientConfig!();
+  }, [onEditClientConfig]);
 
-  handleEditClientConfig = () => {
-    this.setState({ openMore: false });
-    this.props.onEditClientConfig!();
-  };
-
-  render() {
-    const { commandTreeNodes, selected, onAdd, onReload, expanded, onEditClientConfig } = this.props;
-    const { openMore } = this.state;
-
-    const renderLeaf = (leaf: CommandTreeLeaf) => {
+  const renderLeaf = useCallback(
+    (leaf: CommandTreeLeaf) => {
       const leafName = leaf.names[leaf.names.length - 1];
       return (
         <TreeItem
@@ -91,16 +88,19 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps, WSEd
           label={leafName}
           onClick={(event) => {
             if (selected !== leaf.id) {
-              this.onNodeSelected(event, leaf.id);
+              handleNodeSelected(event, leaf.id);
             }
             event.stopPropagation();
             event.preventDefault();
           }}
         />
       );
-    };
+    },
+    [selected, handleNodeSelected],
+  );
 
-    const renderNode = (node: CommandTreeNode) => {
+  const renderNode = useCallback(
+    (node: CommandTreeNode): React.ReactElement => {
       const nodeName = node.names[node.names.length - 1];
       return (
         <TreeItem
@@ -110,10 +110,10 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps, WSEd
           label={nodeName}
           onClick={(event) => {
             if (selected !== node.id || expanded.indexOf(node.id) === -1) {
-              this.onNodeSelected(event, node.id);
-              this.onNodeToggle(event, [...expanded, node.id]);
+              handleNodeSelected(event, node.id);
+              handleNodeToggle(event, [...expanded, node.id]);
             } else {
-              this.onNodeToggle(
+              handleNodeToggle(
                 event,
                 expanded.filter((v) => v !== node.id),
               );
@@ -126,83 +126,84 @@ class WSEditorCommandTree extends React.Component<WSEditorCommandTreeProps, WSEd
           {Array.isArray(node.nodes) ? node.nodes.map((subNode) => renderNode(subNode)) : null}
         </TreeItem>
       );
-    };
+    },
+    [selected, expanded, handleNodeSelected, handleNodeToggle, renderLeaf],
+  );
 
-    return (
-      <React.Fragment>
-        <Box
-          sx={{
-            mt: 2,
-            ml: 4,
-            mr: 2,
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "flex-start",
-          }}
-        >
-          <HeaderTypography>Command Tree</HeaderTypography>
-          <Box sx={{ flexGrow: 1 }} />
-          <Tooltip title="Reload Swagger Change">
-            <IconButton color="secondary" onClick={onReload} aria-label="reload">
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Add from Swagger">
-            <IconButton color="secondary" onClick={onAdd} aria-label="add">
-              <AddIcon />
-            </IconButton>
-          </Tooltip>
-          {onEditClientConfig !== undefined && (
-            <>
-              <Tooltip title="More Operations">
-                <IconButton
-                  ref={this.moreButtonRef}
-                  id="more-button"
-                  color="secondary"
-                  aria-controls={openMore ? "more-menu" : undefined}
-                  aria-expanded={openMore ? "true" : undefined}
-                  aria-haspopup="true"
-                  onClick={this.handleMoreClick}
-                >
-                  <MoreHorizSharpIcon />
-                </IconButton>
-              </Tooltip>
-              <Menu
-                id="more-menu"
-                anchorEl={this.moreButtonRef.current}
-                open={openMore}
-                onClose={() => {
-                  this.setState({ openMore: false });
-                }}
-                MenuListProps={{
-                  "aria-labelledby": "more-button",
-                }}
+  return (
+    <React.Fragment>
+      <Box
+        sx={{
+          mt: 2,
+          ml: 4,
+          mr: 2,
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "flex-start",
+        }}
+      >
+        <HeaderTypography>Command Tree</HeaderTypography>
+        <Box sx={{ flexGrow: 1 }} />
+        <Tooltip title="Reload Swagger Change">
+          <IconButton color="secondary" onClick={onReload} aria-label="reload">
+            <RefreshIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Add from Swagger">
+          <IconButton color="secondary" onClick={onAdd} aria-label="add">
+            <AddIcon />
+          </IconButton>
+        </Tooltip>
+        {onEditClientConfig !== undefined && (
+          <>
+            <Tooltip title="More Operations">
+              <IconButton
+                ref={moreButtonRef}
+                id="more-button"
+                color="secondary"
+                aria-controls={openMore ? "more-menu" : undefined}
+                aria-expanded={openMore ? "true" : undefined}
+                aria-haspopup="true"
+                onClick={handleMoreClick}
               >
-                <MenuItem onClick={this.handleEditClientConfig}>Edit Client Config</MenuItem>
-              </Menu>
-            </>
-          )}
-        </Box>
-        <TreeView
-          defaultCollapseIcon={<ExpandMoreIcon />}
-          defaultExpandIcon={<ChevronRightIcon />}
-          selected={selected}
-          expanded={expanded}
-          sx={{
-            flexGrow: 1,
-            overflowY: "auto",
-            mt: 1,
-            ml: 3,
-            mr: 3,
-          }}
-        >
-          {commandTreeNodes.map((node) => renderNode(node))}
-        </TreeView>
-      </React.Fragment>
-    );
-  }
-}
+                <MoreHorizSharpIcon />
+              </IconButton>
+            </Tooltip>
+            <Menu
+              id="more-menu"
+              anchorEl={moreButtonRef.current}
+              open={openMore}
+              onClose={() => {
+                setOpenMore(false);
+              }}
+              MenuListProps={{
+                "aria-labelledby": "more-button",
+              }}
+            >
+              <MenuItem onClick={handleEditClientConfig}>Edit Client Config</MenuItem>
+            </Menu>
+          </>
+        )}
+      </Box>
+      <TreeView
+        defaultCollapseIcon={<ExpandMoreIcon />}
+        defaultExpandIcon={<ChevronRightIcon />}
+        selected={selected}
+        expanded={expanded}
+        sx={{
+          flexGrow: 1,
+          overflowY: "auto",
+          mt: 1,
+          ml: 3,
+          mr: 3,
+        }}
+      >
+        {commandTreeNodes.map((node) => renderNode(node))}
+      </TreeView>
+    </React.Fragment>
+  );
+};
 
 export default WSEditorCommandTree;
 
