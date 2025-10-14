@@ -24,211 +24,175 @@ interface CommandGroupDialogProps {
   onClose: (newCommandGroup?: CommandGroup) => void;
 }
 
-interface CommandGroupDialogState {
-  name: string;
-  stage: string;
-  shortHelp: string;
-  longHelp: string;
-  invalidText?: string;
-  updating: boolean;
-}
+const CommandGroupDialog: React.FC<CommandGroupDialogProps> = ({ workspaceUrl, open, commandGroup, onClose }) => {
+  const [name, setName] = React.useState<string>(commandGroup.names.join(" "));
+  const [stage, setStage] = React.useState<string>(commandGroup.stage);
+  const [shortHelp, setShortHelp] = React.useState<string>(commandGroup.help?.short ?? "");
+  const [longHelp, setLongHelp] = React.useState<string>(commandGroup.help?.lines?.join("\n") ?? "");
+  const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
+  const [updating, setUpdating] = React.useState<boolean>(false);
 
-class CommandGroupDialog extends React.Component<CommandGroupDialogProps, CommandGroupDialogState> {
-  constructor(props: CommandGroupDialogProps) {
-    super(props);
-    this.state = {
-      name: this.props.commandGroup.names.join(" "),
-      shortHelp: this.props.commandGroup.help?.short ?? "",
-      longHelp: this.props.commandGroup.help?.lines?.join("\n") ?? "",
-      stage: this.props.commandGroup.stage,
-      updating: false,
-    };
-  }
+  React.useEffect(() => {
+    setName(commandGroup.names.join(" "));
+    setStage(commandGroup.stage);
+    setShortHelp(commandGroup.help?.short ?? "");
+    setLongHelp(commandGroup.help?.lines?.join("\n") ?? "");
+    setInvalidText(undefined);
+    setUpdating(false);
+  }, [commandGroup]);
 
-  handleModify = async () => {
-    let { name, shortHelp, longHelp } = this.state;
-    const { stage } = this.state;
-    const { workspaceUrl, commandGroup } = this.props;
+  const handleModify = React.useCallback(async () => {
+    let trimmedName = name.trim();
+    let trimmedShortHelp = shortHelp.trim();
+    let trimmedLongHelp = longHelp.trim();
 
-    name = name.trim();
-    shortHelp = shortHelp.trim();
-    longHelp = longHelp.trim();
+    const names = trimmedName.split(" ").filter((n: string) => n.length > 0);
 
-    const names = name.split(" ").filter((n) => n.length > 0);
-
-    this.setState({
-      invalidText: undefined,
-    });
+    setInvalidText(undefined);
 
     if (names.length < 1) {
-      this.setState({
-        invalidText: `Field 'Name' is required.`,
-      });
+      setInvalidText(`Field 'Name' is required.`);
       return;
     }
 
     for (const idx in names) {
       const piece = names[idx];
       if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(piece)) {
-        this.setState({
-          invalidText: `Invalid Name part: '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `,
-        });
+        setInvalidText(`Invalid Name part: '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `);
         return;
       }
     }
 
-    if (shortHelp.length < 1) {
-      this.setState({
-        invalidText: `Field 'Short Summary' is required.`,
-      });
+    if (trimmedShortHelp.length < 1) {
+      setInvalidText(`Field 'Short Summary' is required.`);
+      return;
     }
 
     let lines: string[] = [];
-    if (longHelp.length > 1) {
-      lines = longHelp.split("\n").filter((l) => l.length > 0);
+    if (trimmedLongHelp.length > 1) {
+      lines = trimmedLongHelp.split("\n").filter((l: string) => l.length > 0);
     }
 
-    this.setState({
-      updating: true,
-    });
+    setUpdating(true);
 
-    const nodeUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/` + commandGroup.names.join("/");
+    const nodeUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/${commandGroup.names.join("/")}`;
 
     try {
       const res = await commandApi.updateCommandGroup(nodeUrl, {
         help: {
-          short: shortHelp,
+          short: trimmedShortHelp,
           lines: lines,
         },
         stage: stage,
       });
 
-      const name = names.join(" ");
-      if (name === commandGroup.names.join(" ")) {
+      const finalName = names.join(" ");
+      if (finalName === commandGroup.names.join(" ")) {
         const cmdGroup = DecodeResponseCommandGroup(res);
-        this.setState({
-          updating: false,
-        });
-        this.props.onClose(cmdGroup);
+        setUpdating(false);
+        onClose(cmdGroup);
       } else {
-        const renameRes = await commandApi.renameCommandGroup(nodeUrl, name);
+        const renameRes = await commandApi.renameCommandGroup(nodeUrl, finalName);
         const cmdGroup = DecodeResponseCommandGroup(renameRes);
-        this.setState({
-          updating: false,
-        });
-        this.props.onClose(cmdGroup);
+        setUpdating(false);
+        onClose(cmdGroup);
       }
     } catch (err: any) {
       console.error(err);
-      this.setState({
-        updating: false,
-        invalidText: errorHandlerApi.getErrorMessage(err),
-      });
+      setUpdating(false);
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
     }
-  };
+  }, [name, shortHelp, longHelp, stage, workspaceUrl, commandGroup.names, onClose]);
 
-  handleClose = () => {
-    this.setState({
-      invalidText: undefined,
-    });
-    this.props.onClose();
-  };
+  const handleClose = React.useCallback(() => {
+    setInvalidText(undefined);
+    onClose();
+  }, [onClose]);
 
-  render() {
-    const { name, shortHelp, longHelp, invalidText, updating, stage } = this.state;
-    return (
-      <Dialog disableEscapeKeyDown open={this.props.open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
-        <DialogTitle>Command Group</DialogTitle>
-        <DialogContent dividers={true}>
-          {invalidText && (
-            <Alert variant="filled" severity="error">
-              {" "}
-              {invalidText}{" "}
-            </Alert>
-          )}
+  return (
+    <Dialog disableEscapeKeyDown open={open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
+      <DialogTitle>Command Group</DialogTitle>
+      <DialogContent dividers={true}>
+        {invalidText && (
+          <Alert variant="filled" severity="error">
+            {" "}
+            {invalidText}{" "}
+          </Alert>
+        )}
 
-          <InputLabel required shrink sx={{ font: "inherit" }}>
-            Stage
-          </InputLabel>
-          <RadioGroup
-            row
-            value={stage}
-            name="stage"
-            onChange={(event: any) => {
-              this.setState({
-                stage: event.target.value,
-              });
-            }}
-          >
-            <FormControlLabel value="Stable" control={<Radio />} label="Stable" sx={{ ml: 4 }} />
-            <FormControlLabel value="Preview" control={<Radio />} label="Preview" sx={{ ml: 4 }} />
-            <FormControlLabel value="Experimental" control={<Radio />} label="Experimental" sx={{ ml: 4 }} />
-          </RadioGroup>
+        <InputLabel required shrink sx={{ font: "inherit" }}>
+          Stage
+        </InputLabel>
+        <RadioGroup
+          row
+          value={stage}
+          name="stage"
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setStage(event.target.value);
+          }}
+        >
+          <FormControlLabel value="Stable" control={<Radio />} label="Stable" sx={{ ml: 4 }} />
+          <FormControlLabel value="Preview" control={<Radio />} label="Preview" sx={{ ml: 4 }} />
+          <FormControlLabel value="Experimental" control={<Radio />} label="Experimental" sx={{ ml: 4 }} />
+        </RadioGroup>
 
-          <TextField
-            id="name"
-            label="Name"
-            type="text"
-            fullWidth
-            variant="standard"
-            value={name}
-            onChange={(event: any) => {
-              this.setState({
-                name: event.target.value,
-              });
-            }}
-            margin="normal"
-            required
-          />
-          <TextField
-            id="shortSummary"
-            label="Short Summary"
-            type="text"
-            fullWidth
-            variant="standard"
-            value={shortHelp}
-            onChange={(event: any) => {
-              this.setState({
-                shortHelp: event.target.value,
-              });
-            }}
-            margin="normal"
-            required
-          />
-          <TextField
-            id="longSummary"
-            label="Long Summary"
-            helperText="Please add long summary in lines."
-            type="text"
-            fullWidth
-            multiline
-            rows={4}
-            variant="standard"
-            value={longHelp}
-            onChange={(event: any) => {
-              this.setState({
-                longHelp: event.target.value,
-              });
-            }}
-            margin="normal"
-          />
-        </DialogContent>
-        <DialogActions>
-          {updating && (
-            <Box sx={{ width: "100%" }}>
-              <LinearProgress color="secondary" />
-            </Box>
-          )}
-          {!updating && (
-            <React.Fragment>
-              <Button onClick={this.handleClose}>Cancel</Button>
-              <Button onClick={this.handleModify}>Save</Button>
-            </React.Fragment>
-          )}
-        </DialogActions>
-      </Dialog>
-    );
-  }
-}
+        <TextField
+          id="name"
+          label="Name"
+          type="text"
+          fullWidth
+          variant="standard"
+          value={name}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setName(event.target.value);
+          }}
+          margin="normal"
+          required
+        />
+        <TextField
+          id="shortSummary"
+          label="Short Summary"
+          type="text"
+          fullWidth
+          variant="standard"
+          value={shortHelp}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setShortHelp(event.target.value);
+          }}
+          margin="normal"
+          required
+        />
+        <TextField
+          id="longSummary"
+          label="Long Summary"
+          helperText="Please add long summary in lines."
+          type="text"
+          fullWidth
+          multiline
+          rows={4}
+          variant="standard"
+          value={longHelp}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setLongHelp(event.target.value);
+          }}
+          margin="normal"
+        />
+      </DialogContent>
+      <DialogActions>
+        {updating && (
+          <Box sx={{ width: "100%" }}>
+            <LinearProgress color="secondary" />
+          </Box>
+        )}
+        {!updating && (
+          <React.Fragment>
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={handleModify}>Save</Button>
+          </React.Fragment>
+        )}
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 export default CommandGroupDialog;
