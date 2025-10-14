@@ -2246,7 +2246,6 @@ function decodeArgBase(response: any): {
           args: args,
         };
       } else if (response.additionalProps && response.additionalProps.item) {
-        // Convert additionalProps to dict argBaseType
         const itemArgBaseParse = decodeArgBase(response.additionalProps.item);
         clsDefineMap = {
           ...clsDefineMap,
@@ -2430,7 +2429,6 @@ function decodeArg(response: any): {
       break;
     default:
       if (argBase.type.startsWith("dict<")) {
-        // dict type
         if (response.default) {
           arg = {
             ...arg,
@@ -2438,7 +2436,6 @@ function decodeArg(response: any): {
           };
         }
       } else if (argBase.type.startsWith("array<")) {
-        // array type
         if (response.singularOptions) {
           arg = {
             ...arg,
@@ -2542,17 +2539,14 @@ function convertArgDefaultText(defaultText: string, argType: string): any {
       }
     case "object": {
       const de = JSON.parse(defaultText.trim());
-      // TODO: verify object
       return de;
     }
     default:
       if (argType.startsWith("array")) {
         const de = JSON.parse(defaultText.trim());
-        // TODO: verify array
         return de;
       } else if (argType.startsWith("dict")) {
         const de = JSON.parse(defaultText.trim());
-        // TODO: verify dict
         return de;
       }
       throw Error(`Not supported type: ${argType}`);
