@@ -6,8 +6,6 @@ import {
   Toolbar,
   IconButton,
   Button,
-  Autocomplete,
-  TextField,
   Backdrop,
   CircularProgress,
   List,
@@ -31,6 +29,7 @@ import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 import EditorPageLayout from "../../components/EditorPageLayout";
 import { styled } from "@mui/material/styles";
 import { getTypespecRPResources, getTypespecRPResourcesOperations } from "../../typespec";
+import SwaggerItemSelector from "./SwaggerItemSelector";
 
 interface WSEditorSwaggerPickerProps {
   workspaceName: string;
@@ -46,7 +45,6 @@ interface WSEditorSwaggerPickerState {
   defaultModule: string | null;
   defaultResourceProvider: string | null;
   defaultSource: string | null;
-  // preVersion: string | null
 
   moduleOptions: string[];
   resourceProviderOptions: string[];
@@ -129,7 +127,6 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
       defaultModule: null,
       defaultResourceProvider: null,
       defaultSource: null,
-      // preVersion: null,
       existingResources: new Set(),
 
       plane: this.props.plane,
@@ -159,7 +156,6 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
       await this.loadSwaggerModules(this.props.plane);
       try {
         const swaggerDefault = await workspaceApi.getSwaggerDefault(this.props.workspaceName);
-        // default module name
         if (swaggerDefault.modNames === null || swaggerDefault.modNames.length == 0) {
           return;
         }
@@ -178,7 +174,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
           defaultModule: moduleValueUrl,
           defaultSource: swaggerDefault.source,
           selectedModule: moduleValueUrl,
-          moduleOptions: [moduleValueUrl], // only the default module selectable.
+          moduleOptions: [moduleValueUrl],
         });
         await this.loadResourceProviders(moduleValueUrl, rpUrl);
       } catch (err: any) {
@@ -229,7 +225,7 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         if (preferredRP !== null && options.findIndex((v) => v === preferredRP) >= 0) {
           selectedResourceProvider = preferredRP;
           defaultResourceProvider = preferredRP;
-          options = [preferredRP]; // only the default resource provider selectable.
+          options = [preferredRP];
         }
         this.setState({
           defaultResourceProvider: defaultResourceProvider,
@@ -299,20 +295,16 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         }
       }
       try {
-        // const resourceIdVersionMap: ResourceIdVersionMap = {}
         const versionResourceIdMap: VersionResourceIdMap = {};
         const versionOptions: string[] = [];
-        // const aazVersionOptions: string[] = []
         const resourceMap: ResourceMap = {};
         const resourceIdList: string[] = [];
         data.forEach((resource: Resource) => {
-          // resource.versions.sort((a, b) =>  a.version.localeCompare(b.version));
           resourceIdList.push(resource.id);
           resourceMap[resource.id] = resource;
           resourceMap[resource.id].aazVersions = null;
 
           const resourceVersions = resource.versions.map((v) => v.version);
-          // resourceIdVersionMap[resource.id] = versions;
           resourceVersions.forEach((v) => {
             if (!(v in versionResourceIdMap)) {
               versionResourceIdMap[v] = [];
@@ -375,7 +367,6 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
         },
       };
       if (updateOption === UpdateOptions[1]) {
-        // generic first
         const resource = resourceMap[resourceId];
         const operations = resource.versions.find((v) => v.version === selectedVersion)?.operations;
         if (operations) {
@@ -393,7 +384,6 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
           }
         }
       } else if (updateOption === UpdateOptions[2]) {
-        // patch first
         const resource = resourceMap[resourceId];
         const operations = resource.versions.find((v) => v.version === selectedVersion)?.operations;
         if (operations) {
@@ -405,7 +395,6 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
           }
         }
       } else if (updateOption === UpdateOptions[3]) {
-        // No update command generation
         res.options.update_by = "None";
       }
       resourceOptionMap[resourceId] = res.options;
@@ -901,57 +890,4 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
   }
 }
 
-interface SwaggerItemsSelectorProps {
-  commonPrefix: string;
-  options: string[];
-  name: string;
-  value: string | null;
-  onValueUpdate: (value: string | null) => void;
-}
-
-class SwaggerItemSelector extends React.Component<SwaggerItemsSelectorProps> {
-  constructor(props: SwaggerItemsSelectorProps) {
-    super(props);
-    this.state = {
-      value: this.props.options.length === 1 ? this.props.options[0] : null,
-    };
-  }
-
-  render() {
-    const { name, options, commonPrefix, value } = this.props;
-    return (
-      <Autocomplete
-        id={name}
-        value={value}
-        options={options}
-        onChange={(_event, newValue: any) => {
-          this.props.onValueUpdate(newValue);
-        }}
-        getOptionLabel={(option) => {
-          return option.replace(commonPrefix, "");
-        }}
-        renderOption={(props, option) => {
-          return (
-            <Box component="li" {...props}>
-              {option.replace(commonPrefix, "")}
-            </Box>
-          );
-        }}
-        selectOnFocus
-        clearOnBlur
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            size="small"
-            // variant='filled'
-            label={name}
-            required
-          />
-        )}
-      />
-    );
-  }
-}
-
 export default WSEditorSwaggerPicker;
-export { SwaggerItemSelector };
