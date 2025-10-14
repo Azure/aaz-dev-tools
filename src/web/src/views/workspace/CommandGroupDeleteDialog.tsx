@@ -11,8 +11,7 @@ import {
 import { commandApi } from "../../services";
 import * as React from "react";
 import { CommandGroup } from "./WSEditorCommandGroupContent";
-
-const commandPrefix = "az ";
+import { COMMAND_PREFIX } from "../../constants";
 
 interface CommandGroupDeleteDialogProps {
   workspaceUrl: string;
@@ -51,7 +50,7 @@ const CommandGroupDeleteDialog: React.FC<CommandGroupDeleteDialogProps> = ({
     <Dialog disableEscapeKeyDown open={open}>
       <DialogTitle>Delete Command Group</DialogTitle>
       <DialogContent dividers={true}>
-        <Typography variant="body2">{`${commandPrefix}${commandGroup.names.join(" ")}`}</Typography>
+        <Typography variant="body2">{`${COMMAND_PREFIX}${commandGroup.names.join(" ")}`}</Typography>
       </DialogContent>
       <DialogActions>
         {updating && (

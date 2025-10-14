@@ -3,6 +3,7 @@ import * as React from "react";
 import { ResponseCommands } from "./WSEditorCommandContent";
 import CommandGroupDialog from "./CommandGroupDialog";
 import CommandGroupDeleteDialog from "./CommandGroupDeleteDialog";
+import { COMMAND_PREFIX } from "../../constants";
 import {
   NameTypography,
   ShortHelpTypography,
@@ -38,9 +39,6 @@ interface ResponseCommandGroup {
 interface ResponseCommandGroups {
   [name: string]: ResponseCommandGroup;
 }
-
-// @TODO: export to a constants file, this is used in multiple components.
-const commandPrefix = "az ";
 
 interface WSEditorCommandGroupContentProps {
   workspaceUrl: string;
@@ -85,7 +83,7 @@ const WSEditorCommandGroupContent: React.FC<WSEditorCommandGroupContentProps> = 
     [onUpdateCommandGroup],
   );
 
-  const name = commandPrefix + commandGroup.names.join(" ");
+  const name = COMMAND_PREFIX + commandGroup.names.join(" ");
   const shortHelp = commandGroup.help?.short;
   const longHelp = commandGroup.help?.lines?.join("\n");
   const lines: string[] = commandGroup.help?.lines ?? [];

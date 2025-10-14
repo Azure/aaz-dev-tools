@@ -48,6 +48,7 @@ import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArro
 import DataObjectIcon from "@mui/icons-material/DataObject";
 import LabelIcon from "@mui/icons-material/Label";
 import { commandApi, errorHandlerApi } from "../../services";
+import { COMMAND_PREFIX } from "../../constants";
 import WSEditorCommandArgumentsContent, {
   ClsArgDefinitionMap,
   CMDArg,
@@ -172,8 +173,6 @@ interface WSEditorCommandContentState {
   outputIdx?: number;
   loading: boolean;
 }
-
-const commandPrefix = "az ";
 
 const ExampleCommandHeaderTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
   color: theme.palette.primary.main,
@@ -389,7 +388,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
   render() {
     const { workspaceUrl, previewCommand } = this.props;
     const commandNames = previewCommand.names;
-    const name = commandPrefix + commandNames.join(" ");
+    const name = COMMAND_PREFIX + commandNames.join(" ");
     const commandUrl =
       `${workspaceUrl}/CommandTree/Nodes/aaz/` +
       commandNames.slice(0, -1).join("/") +
@@ -431,7 +430,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
               }}
             >
               <KeyboardDoubleArrowRightIcon fontSize="small" />
-              <ExampleCommandHeaderTypography sx={{ flexShrink: 0 }}>{commandPrefix}</ExampleCommandHeaderTypography>
+              <ExampleCommandHeaderTypography sx={{ flexShrink: 0 }}>{COMMAND_PREFIX}</ExampleCommandHeaderTypography>
             </Box>
             <Box
               component="span"
@@ -830,7 +829,7 @@ function CommandDeleteDialog(props: {
       <DialogTitle>Delete Commands</DialogTitle>
       <DialogContent dividers={true}>
         {relatedCommands.map((command, idx) => (
-          <Typography key={`command-${idx}`} variant="body2">{`${commandPrefix}${command}`}</Typography>
+          <Typography key={`command-${idx}`} variant="body2">{`${COMMAND_PREFIX}${command}`}</Typography>
         ))}
       </DialogContent>
       <DialogActions>
@@ -1381,7 +1380,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
             placeholder="Input a command here."
             startAdornment={
               <InputAdornment position="start">
-                <ExampleCommandTypography>{commandPrefix}</ExampleCommandTypography>
+                <ExampleCommandTypography>{COMMAND_PREFIX}</ExampleCommandTypography>
               </InputAdornment>
             }
           />
