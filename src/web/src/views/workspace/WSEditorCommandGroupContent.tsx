@@ -39,6 +39,7 @@ interface ResponseCommandGroups {
   [name: string]: ResponseCommandGroup;
 }
 
+// @TODO: export to a constants file, this is used in multiple components.
 const commandPrefix = "az ";
 
 interface WSEditorCommandGroupContentProps {
@@ -48,181 +49,166 @@ interface WSEditorCommandGroupContentProps {
   onUpdateCommandGroup: (commandGroup: CommandGroup | null) => void;
 }
 
-interface WSEditorCommandGroupContentState {
-  displayCommandGroupDialog: boolean;
-  displayCommandGroupDeleteDialog: boolean;
-}
+const WSEditorCommandGroupContent: React.FC<WSEditorCommandGroupContentProps> = ({
+  workspaceUrl,
+  commandGroup,
+  onUpdateCommandGroup,
+}) => {
+  const [displayCommandGroupDialog, setDisplayCommandGroupDialog] = React.useState<boolean>(false);
+  const [displayCommandGroupDeleteDialog, setDisplayCommandGroupDeleteDialog] = React.useState<boolean>(false);
 
-class WSEditorCommandGroupContent extends React.Component<
-  WSEditorCommandGroupContentProps,
-  WSEditorCommandGroupContentState
-> {
-  constructor(props: WSEditorCommandGroupContentProps) {
-    super(props);
-    this.state = {
-      displayCommandGroupDialog: false,
-      displayCommandGroupDeleteDialog: false,
-    };
-  }
+  const onCommandGroupDialogDisplay = React.useCallback(() => {
+    setDisplayCommandGroupDialog(true);
+  }, []);
 
-  onCommandGroupDialogDisplay = () => {
-    this.setState({
-      displayCommandGroupDialog: true,
-    });
-  };
+  const onCommandGroupDeleteDialogDisplay = React.useCallback(() => {
+    setDisplayCommandGroupDeleteDialog(true);
+  }, []);
 
-  onCommandGroupDeleteDialogDisplay = () => {
-    this.setState({
-      displayCommandGroupDeleteDialog: true,
-    });
-  };
+  const handleCommandGroupDialogClose = React.useCallback(
+    (newCommandGroup?: CommandGroup) => {
+      setDisplayCommandGroupDialog(false);
+      if (newCommandGroup) {
+        onUpdateCommandGroup(newCommandGroup);
+      }
+    },
+    [onUpdateCommandGroup],
+  );
 
-  handleCommandGroupDialogClose = (newCommandGroup?: CommandGroup) => {
-    this.setState({
-      displayCommandGroupDialog: false,
-    });
-    if (newCommandGroup) {
-      this.props.onUpdateCommandGroup(newCommandGroup!);
-    }
-  };
+  const handleCommandGroupDeleteDialogClose = React.useCallback(
+    (deleted: boolean) => {
+      setDisplayCommandGroupDeleteDialog(false);
+      if (deleted) {
+        onUpdateCommandGroup(null);
+      }
+    },
+    [onUpdateCommandGroup],
+  );
 
-  handleCommandGroupDeleteDialogClose = (deleted: boolean) => {
-    this.setState({
-      displayCommandGroupDeleteDialog: false,
-    });
-    if (deleted) {
-      this.props.onUpdateCommandGroup(null);
-    }
-  };
+  const name = commandPrefix + commandGroup.names.join(" ");
+  const shortHelp = commandGroup.help?.short;
+  const longHelp = commandGroup.help?.lines?.join("\n");
+  const lines: string[] = commandGroup.help?.lines ?? [];
+  const stage = commandGroup.stage;
 
-  render() {
-    const { workspaceUrl, commandGroup } = this.props;
-    const name = commandPrefix + this.props.commandGroup.names.join(" ");
-    const shortHelp = this.props.commandGroup.help?.short;
-    const longHelp = this.props.commandGroup.help?.lines?.join("\n");
-    const lines: string[] = this.props.commandGroup.help?.lines ?? [];
-    const stage = this.props.commandGroup.stage;
-    const { displayCommandGroupDialog, displayCommandGroupDeleteDialog } = this.state;
-    return (
-      <React.Fragment>
-        <Box
+  return (
+    <React.Fragment>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "stretch",
+        }}
+      >
+        <Card
+          elevation={3}
           sx={{
+            flexGrow: 1,
             display: "flex",
             flexDirection: "column",
-            alignItems: "stretch",
+            p: 2,
           }}
         >
-          <Card
-            // variant='outlined'
-            elevation={3}
+          <CardContent
             sx={{
-              flexGrow: 1,
+              flex: "1 0 auto",
               display: "flex",
               flexDirection: "column",
-              p: 2,
+              alignItems: "stretch",
             }}
           >
-            <CardContent
+            <Box
               sx={{
-                flex: "1 0 auto",
+                mb: 2,
                 display: "flex",
-                flexDirection: "column",
-                alignItems: "stretch",
+                flexDirection: "row",
+                alignItems: "center",
               }}
             >
-              <Box
-                sx={{
-                  mb: 2,
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
-                <Typography variant="h6" sx={{ flexShrink: 0 }}>
-                  [ GROUP ]
-                </Typography>
-                <Box sx={{ flexGrow: 1 }} />
-                {stage === "Stable" && <StableTypography sx={{ flexShrink: 0 }}>{stage}</StableTypography>}
-                {stage === "Preview" && <PreviewTypography sx={{ flexShrink: 0 }}>{stage}</PreviewTypography>}
-                {stage === "Experimental" && (
-                  <ExperimentalTypography sx={{ flexShrink: 0 }}>{stage}</ExperimentalTypography>
-                )}
-              </Box>
+              <Typography variant="h6" sx={{ flexShrink: 0 }}>
+                [ GROUP ]
+              </Typography>
+              <Box sx={{ flexGrow: 1 }} />
+              {stage === "Stable" && <StableTypography sx={{ flexShrink: 0 }}>{stage}</StableTypography>}
+              {stage === "Preview" && <PreviewTypography sx={{ flexShrink: 0 }}>{stage}</PreviewTypography>}
+              {stage === "Experimental" && (
+                <ExperimentalTypography sx={{ flexShrink: 0 }}>{stage}</ExperimentalTypography>
+              )}
+            </Box>
 
-              <NameTypography sx={{ mt: 1 }}>{name}</NameTypography>
-              {shortHelp && <ShortHelpTypography sx={{ ml: 6, mt: 2 }}> {shortHelp} </ShortHelpTypography>}
-              {!shortHelp && (
-                <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>
-                  Please add command group short summary!
-                </ShortHelpPlaceHolderTypography>
-              )}
-              {longHelp && (
-                <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
-                  {lines.map((line, idx) => (
-                    <LongHelpTypography key={idx}>{line}</LongHelpTypography>
-                  ))}
-                </Box>
-              )}
-            </CardContent>
-            <CardActions
+            <NameTypography sx={{ mt: 1 }}>{name}</NameTypography>
+            {shortHelp && <ShortHelpTypography sx={{ ml: 6, mt: 2 }}> {shortHelp} </ShortHelpTypography>}
+            {!shortHelp && (
+              <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>
+                Please add command group short summary!
+              </ShortHelpPlaceHolderTypography>
+            )}
+            {longHelp && (
+              <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
+                {lines.map((line, idx) => (
+                  <LongHelpTypography key={idx}>{line}</LongHelpTypography>
+                ))}
+              </Box>
+            )}
+          </CardContent>
+          <CardActions
+            sx={{
+              display: "flex",
+              flexDirection: "row-reverse",
+              alignContent: "center",
+              justifyContent: "flex-start",
+            }}
+          >
+            <Box
               sx={{
                 display: "flex",
-                flexDirection: "row-reverse",
+                flexDirection: "row",
                 alignContent: "center",
                 justifyContent: "flex-start",
               }}
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignContent: "center",
-                  justifyContent: "flex-start",
-                }}
+              <Button
+                variant="contained"
+                size="small"
+                color="secondary"
+                disableElevation
+                onClick={onCommandGroupDialogDisplay}
               >
-                <Button
-                  variant="contained"
-                  size="small"
-                  color="secondary"
-                  disableElevation
-                  onClick={this.onCommandGroupDialogDisplay}
-                >
-                  <Typography variant="body2">Edit</Typography>
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  color="secondary"
-                  onClick={this.onCommandGroupDeleteDialogDisplay}
-                  disabled={!this.props.commandGroup.canDelete}
-                  sx={{ ml: 2 }}
-                >
-                  <Typography variant="body2">Delete</Typography>
-                </Button>
-              </Box>
-            </CardActions>
-          </Card>
-        </Box>
-        {displayCommandGroupDialog && (
-          <CommandGroupDialog
-            open={displayCommandGroupDialog}
-            workspaceUrl={workspaceUrl}
-            commandGroup={commandGroup}
-            onClose={this.handleCommandGroupDialogClose}
-          />
-        )}
-        {displayCommandGroupDeleteDialog && (
-          <CommandGroupDeleteDialog
-            open={displayCommandGroupDeleteDialog}
-            workspaceUrl={workspaceUrl}
-            commandGroup={commandGroup}
-            onClose={this.handleCommandGroupDeleteDialogClose}
-          />
-        )}
-      </React.Fragment>
-    );
-  }
-}
+                <Typography variant="body2">Edit</Typography>
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                color="secondary"
+                onClick={onCommandGroupDeleteDialogDisplay}
+                disabled={!commandGroup.canDelete}
+                sx={{ ml: 2 }}
+              >
+                <Typography variant="body2">Delete</Typography>
+              </Button>
+            </Box>
+          </CardActions>
+        </Card>
+      </Box>
+      {displayCommandGroupDialog && (
+        <CommandGroupDialog
+          open={displayCommandGroupDialog}
+          workspaceUrl={workspaceUrl}
+          commandGroup={commandGroup}
+          onClose={handleCommandGroupDialogClose}
+        />
+      )}
+      {displayCommandGroupDeleteDialog && (
+        <CommandGroupDeleteDialog
+          open={displayCommandGroupDeleteDialog}
+          workspaceUrl={workspaceUrl}
+          commandGroup={commandGroup}
+          onClose={handleCommandGroupDeleteDialogClose}
+        />
+      )}
+    </React.Fragment>
+  );
+};
 
 const DecodeResponseCommandGroup = (commandGroup: ResponseCommandGroup): CommandGroup => {
   return {
