@@ -99,10 +99,6 @@ function isArrayOutput(output: Output): output is ArrayOutput {
   return output.type === "array";
 }
 
-// function isStringOutput(output: Output): output is StringOutput {
-//     return output.type === "string";
-// }
-
 interface Resource {
   id: string;
   version: string;
@@ -123,15 +119,10 @@ interface Command {
   outputs?: Output[];
   resources: Resource[];
 
-  // additional property
   confirmation?: string;
   args?: CMDArg[];
   clsArgDefineMap?: ClsArgDefinitionMap;
 }
-
-// interface ClientConfig {
-//     args?: CMDArg[]
-// }
 
 interface ResponseCommand {
   names: string[];
@@ -760,16 +751,6 @@ function CommandDeleteDialog(props: {
       const version = btoa(resource.version);
       if (resource.subresource !== undefined) {
         const subresource = btoa(resource.subresource);
-        // TODO: delete list command together with crud
-        // if (resource.subresource.endsWith('[]') || resource.subresource.endsWith('{}')) {
-        //     let subresource2 = btoa(resource.subresource.slice(0, -2))
-        //     urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource2}`)
-        // } else {
-        //     let subresource2 = btoa(resource.subresource + '[]');
-        //     urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource2}`)
-        //     subresource2 = btoa(resource.subresource + '{}');
-        //     urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource2}`)
-        // }
         urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}/Subresources/${subresource}`);
       } else {
         urls.push(`${props.workspaceUrl}/Resources/${resourceId}/V/${version}`);
@@ -1087,8 +1068,6 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
     );
   }
 }
-
-// function CommandDeleteDialog
 
 interface ExampleDialogProps {
   workspaceUrl: string;
@@ -1416,12 +1395,6 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
               >
                 <Typography variant="body2">By OpenAPI Specification</Typography>
               </Button>
-              {/* <Button variant='outlined' size="large" color='secondary' sx={{ fontSize: '20px', padding: '10px 20px' }} disabled>
-                                <Typography variant='body2'>By Testing Record</Typography>
-                            </Button>
-                            <Button variant='outlined' size="large" color='secondary' sx={{ fontSize: '20px', padding: '10px 20px' }} disabled>
-                                <Typography variant='body2'>By Request Payload</Typography>
-                            </Button> */}
             </Stack>
           )}
           {(!isAdd || source != undefined) && (

@@ -282,7 +282,6 @@ class WSEditorSwaggerPicker extends React.Component<WSEditorSwaggerPickerProps, 
           versionOptions: [],
         });
         data = await getTypespecRPResources(resourceProviderUrl);
-        // console.log(data);
       } else {
         try {
           data = await specsApi.getProviderResources(resourceProviderUrl);

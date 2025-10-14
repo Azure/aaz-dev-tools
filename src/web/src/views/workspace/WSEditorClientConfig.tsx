@@ -453,7 +453,6 @@ class WSEditorClientConfigDialog extends React.Component<
         isAdd: false,
       });
     } catch (err: any) {
-      // catch 404 error
       if (errorHandlerApi.isHttpError(err, 404)) {
         this.setState({
           isAdd: true,
@@ -492,7 +491,6 @@ class WSEditorClientConfigDialog extends React.Component<
       templateAzureChinaCloud = templateAzureChinaCloud.trim();
       templateAzureUSGovernment = templateAzureUSGovernment.trim();
       templateAzureGermanCloud = templateAzureGermanCloud.trim();
-      // verify template url using regex, like https://{vaultName}.vault.azure.net
       const templateRegex = /^https:\/\/((\{[a-zA-Z0-9]+\})|([^{}.]+))(.((\{[a-zA-Z0-9]+\})|([^{}.]+)))*(\/)?$/;
       if (!templateRegex.test(templateAzureCloud)) {
         this.setState({
@@ -546,7 +544,6 @@ class WSEditorClientConfigDialog extends React.Component<
           selectorIndex: cloudMetadataSelectorIndex,
         };
         if (cloudMetadataPrefixTemplate.length > 0) {
-          // verify template url using regex, like https://{vaultName}
           if (!templateRegex.test(cloudMetadataPrefixTemplate)) {
             this.setState({
               invalidText: "Cloud Metadata Prefix is invalid.",

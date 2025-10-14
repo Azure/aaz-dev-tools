@@ -58,7 +58,6 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ name }) => {
         autoHighlight
         onChange={(_event, newValue: any) => {
           if (typeof newValue === "string") {
-            // timeout to avoid instant validation of the dialog's form.
             setTimeout(() => {
               setOpenDialog(true);
               setNewWorkspaceName(newValue);
@@ -105,7 +104,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ name }) => {
             label={name}
             inputProps={{
               ...params.inputProps,
-              autoComplete: "new-password", // disable autocomplete and autofill
+              autoComplete: "new-password",
             }}
           />
         )}

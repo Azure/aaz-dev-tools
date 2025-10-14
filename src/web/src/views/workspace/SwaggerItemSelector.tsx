@@ -46,15 +46,7 @@ const SwaggerItemSelector: React.FC<SwaggerItemsSelectorProps> = ({
       renderOption={renderOption}
       selectOnFocus
       clearOnBlur
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          size="small"
-          // variant='filled'
-          label={name}
-          required
-        />
-      )}
+      renderInput={(params) => <TextField {...params} size="small" label={name} required />}
     />
   );
 };

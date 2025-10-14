@@ -1956,13 +1956,6 @@ function ArgumentPropsReviewer(props: {
           </Button>
         )}
 
-        {/* {props.onUnflatten !== undefined && <Button sx={{ flexShrink: 0, ml: 3 }}
-                startIcon={<CallMergeSharpIcon color="secondary" fontSize='small' />}
-                onClick={props.onUnflatten}
-            >
-                <ArgEditTypography>Unflatten</ArgEditTypography>
-            </Button>} */}
-
         {props.onAddSubcommand !== undefined && checkCanAddSubcommand() && (
           <Button
             sx={{ flexShrink: 0, ml: 3 }}
@@ -2048,105 +2041,43 @@ interface CMDArgT<T> extends CMDArg {
   blank?: CMDArgBlank<T>;
 }
 
-// type: starts with "@"
 interface CMDClsArgBase extends CMDArgBase {
   clsName: string;
 }
 
 interface CMDClsArg extends CMDClsArgBase, CMDArg {
-  singularOptions?: string[]; // for list use only
+  singularOptions?: string[];
 }
 
-// type: string
 interface CMDStringArgBase extends CMDArgBaseT<string> {
   enum?: CMDArgEnum<string>;
-  // fmt?: CMDStringFormat
 }
 
 interface CMDStringArg extends CMDStringArgBase, CMDArgT<string> {}
 
-// // type: byte
-// interface CMDByteArgBase extends CMDStringArgBase { }
-
-// // type: binary
-// interface CMDBinaryArgBase extends CMDStringArgBase { }
-
-// // type: duration
-// interface CMDDurationArgBase extends CMDStringArgBase { }
-
-// // type: date  As defined by full-date - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
-// interface CMDDateArgBase extends CMDStringArgBase { }
-
-// // type: dateTime  As defined by date-time - https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14
-// interface CMDDateTimeArgBase extends CMDStringArgBase { }
-
-// interface CMDTimeArgBase extends CMDStringArgBase { }
-
-// // type: uuid
-// interface CMDUuidArgBase extends CMDStringArgBase { }
-
-// type: password
 interface CMDPasswordArgBase extends CMDStringArgBase {}
 interface CMDPasswordArg extends CMDPasswordArgBase, CMDStringArg {
   prompt?: CMDPasswordArgPromptInput;
 }
 
-// // type: SubscriptionId
-// interface CMDSubscriptionIdArgBase extends CMDStringArgBase { }
-
-// // type: ResourceGroupName
-// interface CMDResourceGroupNameArgBase extends CMDStringArgBase { }
-
-// // type: ResourceId
-// interface CMDResourceIdNameArgBase extends CMDStringArgBase { }
-
-// // type: ResourceLocation
-// interface CMDResourceLocationNameArgBase extends CMDStringArgBase { }
-
 interface CMDNumberArgBase extends CMDArgBaseT<number> {
   enum?: CMDArgEnum<number>;
-  // fmt?: CMDIntegerFormat
 }
 interface CMDNumberArg extends CMDNumberArgBase, CMDArgT<number> {}
 
-// // type: integer
-// interface CMDIntegerArgBase extends CMDNumberArgBase { }
-
-// // type: integer32
-// interface CMDInteger32ArgBase extends CMDNumberArgBase { }
-
-// // type: integer32
-// interface CMDInteger64ArgBase extends CMDNumberArgBase { }
-
-// // type: float
-// interface CMDFloatArgBase extends CMDNumberArgBase { }
-
-// // type: float32
-// interface CMDFloat32ArgBase extends CMDNumberArgBase { }
-
-// // type: float64
-// interface CMDFloat64ArgBase extends CMDNumberArgBase { }
-
-// // type: boolean
-// interface CMDBooleanArgBase extends CMDArgBaseT<boolean> { }
-
-// type: object
 interface CMDObjectArgBase extends CMDArgBase {
-  // fmt?: CMDObjectFormat
   args: CMDArg[];
 }
 
 interface CMDObjectArg extends CMDObjectArgBase, CMDArg {}
-// type: dict
+
 interface CMDDictArgBase extends CMDArgBase {
   item?: CMDArgBase;
   anyType: boolean;
 }
 interface CMDDictArg extends CMDDictArgBase, CMDArg {}
 
-// type: array
 interface CMDArrayArgBase extends CMDArgBase {
-  // fmt?: CMDArrayFormat
   item: CMDArgBase;
 }
 
