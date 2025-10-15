@@ -1,6 +1,6 @@
 export { default } from "./WSEditorCommandArgumentsContent";
-export { DecodeArgs } from "./WSEditorCommandArgumentsContent";
-export type { ClsArgDefinitionMap, CMDArg } from "./WSEditorCommandArgumentsContent";
+export { DecodeArgs } from "../utils/decodeArgs";
+export type { ClsArgDefinitionMap, CMDArg } from "../utils/decodeArgs";
 export { default as ArgumentDialog } from "./ArgumentDialog";
 export { default as FlattenDialog } from "./FlattenDialog";
 export { default as UnwrapClsDialog } from "./UnwrapClsDialog";

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { DecodeArgs } from "../../views/workspace/WSEditorCommandArgumentsContent/WSEditorCommandArgumentsContent";
+import { DecodeArgs } from "../../views/workspace/utils/decodeArgs";
 
 describe("Argument Decoding Functions", () => {
   describe("DecodeArgs", () => {
