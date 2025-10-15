@@ -25,11 +25,11 @@ import {
   FormHelperText,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
-import EditorPageLayout from "../../components/EditorPageLayout";
+import { workspaceApi, specsApi, errorHandlerApi } from "../../../services";
+import EditorPageLayout from "../../../components/EditorPageLayout";
 import { styled } from "@mui/material/styles";
-import { getTypespecRPResources, getTypespecRPResourcesOperations } from "../../typespec";
-import SwaggerItemSelector from "./common/SwaggerItemSelector";
+import { getTypespecRPResources, getTypespecRPResourcesOperations } from "../../../typespec";
+import SwaggerItemSelector from "../common/SwaggerItemSelector";
 
 interface WSEditorSwaggerPickerProps {
   workspaceName: string;
