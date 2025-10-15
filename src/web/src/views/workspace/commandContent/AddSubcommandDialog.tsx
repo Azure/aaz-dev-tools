@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import { commandApi, errorHandlerApi } from "../../../services";
-import { Command } from "./WSEditorCommandContent";
+import type { Command } from "../interfaces";
 
 export interface AddSubcommandDialogProps {
   workspaceUrl: string;

@@ -24,7 +24,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import { commandApi, errorHandlerApi } from "../../../services";
 import { COMMAND_PREFIX } from "../../../constants";
 import { ExampleItemSelector } from "../WSEditorExamplePicker";
-import { Command, Example, DecodeResponseCommand } from "./WSEditorCommandContent";
+import { DecodeResponseCommand } from "./WSEditorCommandContent";
+import type { Command, Example } from "../interfaces";
 
 export interface ExampleDialogProps {
   workspaceUrl: string;

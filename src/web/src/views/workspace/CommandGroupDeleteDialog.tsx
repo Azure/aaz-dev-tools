@@ -10,8 +10,8 @@ import {
 } from "@mui/material";
 import { commandApi } from "../../services";
 import * as React from "react";
-import { CommandGroup } from "./WSEditorCommandGroupContent";
 import { COMMAND_PREFIX } from "../../constants";
+import type { CommandGroup } from "./interfaces";
 
 interface CommandGroupDeleteDialogProps {
   workspaceUrl: string;

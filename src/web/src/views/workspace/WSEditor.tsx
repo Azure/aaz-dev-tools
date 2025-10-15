@@ -26,19 +26,17 @@ import { TransitionProps } from "@mui/material/transitions";
 import WSEditorSwaggerPicker from "./WSEditorSwaggerPicker";
 import WSEditorToolBar from "./WSEditorToolBar";
 import WSEditorCommandTree, { CommandTreeLeaf, CommandTreeNode } from "./WSEditorCommandTree";
-import WSEditorCommandGroupContent, {
+import WSEditorCommandGroupContent, { DecodeResponseCommandGroup } from "./WSEditorCommandGroupContent";
+import WSEditorCommandContent, { DecodeResponseCommand } from "./commandContent/WSEditorCommandContent";
+import WSEditorClientConfigDialog from "./WSEditorClientConfig";
+import type {
   CommandGroup,
-  DecodeResponseCommandGroup,
   ResponseCommandGroup,
   ResponseCommandGroups,
-} from "./WSEditorCommandGroupContent";
-import WSEditorCommandContent, {
   Command,
   Resource,
-  DecodeResponseCommand,
   ResponseCommand,
-} from "./commandContent/WSEditorCommandContent";
-import WSEditorClientConfigDialog from "./WSEditorClientConfig";
+} from "./interfaces";
 import { getTypespecRPResourcesOperations } from "../../typespec";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 

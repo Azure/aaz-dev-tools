@@ -22,9 +22,9 @@ import {
 import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 import DoDisturbOnRoundedIcon from "@mui/icons-material/DoDisturbOnRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
-import { Plane, Resource } from "./commandContent/WSEditorCommandContent";
 import SwaggerItemSelector from "./SwaggerItemSelector";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import type { Plane, Resource } from "./interfaces";
 
 interface WSEditorClientConfigDialogProps {
   workspaceUrl: string;

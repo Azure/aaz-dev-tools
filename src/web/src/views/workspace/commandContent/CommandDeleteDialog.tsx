@@ -11,7 +11,8 @@ import {
 import React from "react";
 import { commandApi } from "../../../services";
 import { COMMAND_PREFIX } from "../../../constants";
-import { Command, ResponseCommand, DecodeResponseCommand } from "./WSEditorCommandContent";
+import { DecodeResponseCommand } from "./WSEditorCommandContent";
+import type { Command, ResponseCommand } from "../interfaces";
 
 export interface CommandDeleteDialogProps {
   workspaceUrl: string;

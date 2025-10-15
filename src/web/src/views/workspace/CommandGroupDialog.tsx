@@ -15,7 +15,8 @@ import {
 } from "@mui/material";
 import { commandApi, errorHandlerApi } from "../../services";
 import * as React from "react";
-import { CommandGroup, DecodeResponseCommandGroup } from "./WSEditorCommandGroupContent";
+import { DecodeResponseCommandGroup } from "./WSEditorCommandGroupContent";
+import type { CommandGroup } from "./interfaces";
 
 interface CommandGroupDialogProps {
   workspaceUrl: string;

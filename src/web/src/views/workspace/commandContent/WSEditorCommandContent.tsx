@@ -40,67 +40,13 @@ import LabelIcon from "@mui/icons-material/Label";
 import EditIcon from "@mui/icons-material/Edit";
 import { commandApi, errorHandlerApi } from "../../../services";
 import { COMMAND_PREFIX } from "../../../constants";
-import WSEditorCommandArgumentsContent, { ClsArgDefinitionMap, CMDArg, DecodeArgs } from "../commandArgumentsContent";
+import WSEditorCommandArgumentsContent, { DecodeArgs } from "../commandArgumentsContent";
 import ExampleDialog from "./ExampleDialog";
 import AddSubcommandDialog from "./AddSubcommandDialog";
 import CommandDeleteDialog from "./CommandDeleteDialog";
 import OutputCard from "./OutputCard";
-import OutputDialog, { Output } from "./OutputDialog";
-
-interface Plane {
-  name: string;
-  displayName: string;
-  moduleOptions?: string[];
-}
-
-interface Example {
-  name: string;
-  commands: string[];
-}
-
-interface Resource {
-  id: string;
-  version: string;
-  subresource?: string;
-  swagger: string;
-}
-
-interface Command {
-  id: string;
-  names: string[];
-  help?: {
-    short: string;
-    lines?: string[];
-  };
-  stage: "Stable" | "Preview" | "Experimental";
-  version: string;
-  examples?: Example[];
-  outputs?: Output[];
-  resources: Resource[];
-
-  confirmation?: string;
-  args?: CMDArg[];
-  clsArgDefineMap?: ClsArgDefinitionMap;
-}
-
-interface ResponseCommand {
-  names: string[];
-  help?: {
-    short: string;
-    lines?: string[];
-  };
-  stage?: "Stable" | "Preview" | "Experimental";
-  version: string;
-  examples?: Example[];
-  resources: Resource[];
-  outputs?: Output[];
-  confirmation?: string;
-  argGroups?: any[];
-}
-
-interface ResponseCommands {
-  [name: string]: ResponseCommand;
-}
+import OutputDialog from "./OutputDialog";
+import type { Command, ResponseCommand, Example } from "../interfaces";
 
 interface WSEditorCommandContentProps {
   workspaceUrl: string;
@@ -834,5 +780,3 @@ const DecodeResponseCommand = (command: ResponseCommand): Command => {
 export default WSEditorCommandContent;
 
 export { DecodeResponseCommand };
-
-export type { Plane, Command, Resource, ResponseCommand, ResponseCommands, Example };

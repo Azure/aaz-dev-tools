@@ -1,6 +1,5 @@
 import { Box, Button, Card, CardActions, CardContent, Typography } from "@mui/material";
 import * as React from "react";
-import { ResponseCommands } from "./commandContent/WSEditorCommandContent";
 import CommandGroupDialog from "./CommandGroupDialog";
 import CommandGroupDeleteDialog from "./CommandGroupDeleteDialog";
 import { COMMAND_PREFIX } from "../../constants";
@@ -13,32 +12,7 @@ import {
   PreviewTypography,
   ExperimentalTypography,
 } from "./WSEditorTheme";
-
-interface CommandGroup {
-  id: string;
-  names: string[];
-  stage: "Stable" | "Preview" | "Experimental";
-  help?: {
-    short: string;
-    lines?: string[];
-  };
-  canDelete: boolean;
-}
-
-interface ResponseCommandGroup {
-  names: string[];
-  stage?: "Stable" | "Preview" | "Experimental";
-  help?: {
-    short: string;
-    lines?: string[];
-  };
-  commands?: ResponseCommands;
-  commandGroups?: ResponseCommandGroups;
-}
-
-interface ResponseCommandGroups {
-  [name: string]: ResponseCommandGroup;
-}
+import type { CommandGroup, ResponseCommandGroup } from "./interfaces";
 
 interface WSEditorCommandGroupContentProps {
   workspaceUrl: string;
@@ -221,4 +195,3 @@ const DecodeResponseCommandGroup = (commandGroup: ResponseCommandGroup): Command
 export default WSEditorCommandGroupContent;
 
 export { DecodeResponseCommandGroup };
-export type { CommandGroup, ResponseCommandGroup, ResponseCommandGroups };

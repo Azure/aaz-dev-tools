@@ -12,8 +12,8 @@ import {
 import React, { useState, useEffect, useCallback } from "react";
 import SwaggerItemSelector from "./SwaggerItemSelector";
 import styled from "@emotion/styled";
-import { Plane } from "./commandContent/WSEditorCommandContent";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
+import type { Plane } from "./interfaces";
 
 interface WorkspaceCreateDialogProps {
   openDialog: boolean;
