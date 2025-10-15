@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import WSEditorSwaggerPicker from "../../views/workspace/WSEditorSwaggerPicker";
-import SwaggerItemSelector from "../../views/workspace/SwaggerItemSelector";
+import SwaggerItemSelector from "../../views/workspace/common/SwaggerItemSelector";
 import { render } from "../test-utils";
 import { workspaceApi, specsApi } from "../../services";
 

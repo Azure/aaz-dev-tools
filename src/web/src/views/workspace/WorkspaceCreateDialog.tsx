@@ -10,7 +10,7 @@ import {
   Alert,
 } from "@mui/material";
 import React, { useState, useEffect, useCallback } from "react";
-import SwaggerItemSelector from "./SwaggerItemSelector";
+import SwaggerItemSelector from "./common/SwaggerItemSelector";
 import styled from "@emotion/styled";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 import type { Plane } from "./interfaces";

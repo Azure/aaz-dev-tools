@@ -29,7 +29,7 @@ import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 import EditorPageLayout from "../../components/EditorPageLayout";
 import { styled } from "@mui/material/styles";
 import { getTypespecRPResources, getTypespecRPResourcesOperations } from "../../typespec";
-import SwaggerItemSelector from "./SwaggerItemSelector";
+import SwaggerItemSelector from "./common/SwaggerItemSelector";
 
 interface WSEditorSwaggerPickerProps {
   workspaceName: string;
