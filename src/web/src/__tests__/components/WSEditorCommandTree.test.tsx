@@ -4,7 +4,7 @@ import { vi } from "vitest";
 import WSEditorCommandTree, {
   CommandTreeNode,
   CommandTreeLeaf,
-} from "../../views/workspace/WSEditor/WSEditorCommandTree";
+} from "../../views/workspace/components/WSEditor/WSEditorCommandTree";
 
 describe("WSEditorCommandTree", () => {
   const mockLeaf: CommandTreeLeaf = {

@@ -3,7 +3,7 @@ import { fireEvent, screen } from "@testing-library/react";
 import WSECArgumentSimilarPicker, {
   BuildArgSimilarTree,
   type ArgSimilarTree,
-} from "../../views/workspace/WSEditorCommandArgumentsContent/WSECArgumentSimilarPicker";
+} from "../../views/workspace/components/WSEditorCommandArgumentsContent/WSECArgumentSimilarPicker";
 import { render } from "../test-utils";
 
 describe("WSECArgumentSimilarPicker", () => {

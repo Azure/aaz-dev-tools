@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import { render } from "../test-utils";
-import WSEditorClientConfigDialog from "../../views/workspace/WSEditor/WSEditorClientConfig";
+import WSEditorClientConfigDialog from "../../views/workspace/components/WSEditor/WSEditorClientConfig";
 
 const mockConsoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 

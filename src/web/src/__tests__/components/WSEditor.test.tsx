@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
-import { WSEditor } from "../../views/workspace/WSEditor";
+import { WSEditor } from "../../views/workspace/components/WSEditor";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 
-vi.mock("../../views/workspace/WSEditor/WSEditorToolBar", () => ({
+vi.mock("../../views/workspace/components/WSEditor/WSEditorToolBar", () => ({
   default: ({ workspaceName, onHomePage, onGenerate, onDelete, onModify }: any) => (
     <div data-testid="ws-editor-toolbar">
       <span data-testid="workspace-name">{workspaceName}</span>
@@ -24,7 +24,7 @@ vi.mock("../../views/workspace/WSEditor/WSEditorToolBar", () => ({
   ),
 }));
 
-vi.mock("../../views/workspace/WSEditor/WSEditorCommandTree", () => ({
+vi.mock("../../views/workspace/components/WSEditor/WSEditorCommandTree", () => ({
   default: ({ onSelected, onToggle, onAdd, onReload, selected, expanded, onEditClientConfig }: any) => (
     <div data-testid="ws-editor-command-tree">
       <button onClick={() => onSelected("command:test-command")} data-testid="select-command">
@@ -55,7 +55,7 @@ vi.mock("../../views/workspace/WSEditor/WSEditorCommandTree", () => ({
   CommandTreeNode: {},
 }));
 
-vi.mock("../../views/workspace/WSEditorCommandGroupContent", () => ({
+vi.mock("../../views/workspace/components/WSEditorCommandGroupContent", () => ({
   default: ({ commandGroup, onUpdateCommandGroup }: any) => (
     <div data-testid="ws-editor-command-group-content">
       <span data-testid="command-group-id">{commandGroup.id}</span>
@@ -70,7 +70,7 @@ vi.mock("../../views/workspace/WSEditorCommandGroupContent", () => ({
   ResponseCommandGroups: {},
 }));
 
-vi.mock("../../views/workspace/WSEditorCommandContent", () => ({
+vi.mock("../../views/workspace/components/WSEditorCommandContent", () => ({
   default: ({ previewCommand, onUpdateCommand }: any) => (
     <div data-testid="ws-editor-command-content">
       <span data-testid="command-id">{previewCommand.id}</span>
@@ -85,7 +85,7 @@ vi.mock("../../views/workspace/WSEditorCommandContent", () => ({
   ResponseCommand: {},
 }));
 
-vi.mock("../../views/workspace/WSEditorSwaggerPicker", () => ({
+vi.mock("../../views/workspace/components/WSEditorSwaggerPicker", () => ({
   default: ({ plane, workspaceName, onClose }: any) => (
     <div data-testid="ws-editor-swagger-picker">
       <span data-testid="picker-plane">{plane}</span>
@@ -100,7 +100,7 @@ vi.mock("../../views/workspace/WSEditorSwaggerPicker", () => ({
   ),
 }));
 
-vi.mock("../../views/workspace/WSEditor/WSEditorClientConfig", () => ({
+vi.mock("../../views/workspace/components/WSEditor/WSEditorClientConfig", () => ({
   default: ({ workspaceUrl, open, onClose }: any) =>
     open ? (
       <div data-testid="ws-editor-client-config-dialog">

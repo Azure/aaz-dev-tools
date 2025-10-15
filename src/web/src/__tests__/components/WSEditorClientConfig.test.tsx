@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render } from "../test-utils";
-import WSEditorClientConfigDialog from "../../views/workspace/WSEditor/WSEditorClientConfig";
+import WSEditorClientConfigDialog from "../../views/workspace/components/WSEditor/WSEditorClientConfig";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 
 vi.mock("../../services", () => ({
