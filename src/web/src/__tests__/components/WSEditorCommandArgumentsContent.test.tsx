@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, screen } from "@testing-library/react";
-import WSEditorCommandArgumentsContent from "../../views/workspace/commandArgumentsContent/WSEditorCommandArgumentsContent";
+import WSEditorCommandArgumentsContent from "../../views/workspace/WSEditorCommandArgumentsContent/WSEditorCommandArgumentsContent";
 import type {
   CMDArg,
   ClsArgDefinitionMap,
-} from "../../views/workspace/commandArgumentsContent/WSEditorCommandArgumentsContent";
+} from "../../views/workspace/WSEditorCommandArgumentsContent/WSEditorCommandArgumentsContent";
 import { render } from "../test-utils";
 
 vi.mock("../../services/commandApi");

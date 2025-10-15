@@ -1,5 +1,5 @@
 import type { Output } from "../WSEditorCommandContent/OutputDialog";
-import type { CMDArg, ClsArgDefinitionMap } from "../commandArgumentsContent";
+import type { CMDArg, ClsArgDefinitionMap } from "../WSEditorCommandArgumentsContent";
 
 export interface Plane {
   name: string;

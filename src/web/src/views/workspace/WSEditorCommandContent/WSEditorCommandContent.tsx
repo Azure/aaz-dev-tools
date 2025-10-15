@@ -40,7 +40,7 @@ import LabelIcon from "@mui/icons-material/Label";
 import EditIcon from "@mui/icons-material/Edit";
 import { commandApi, errorHandlerApi } from "../../../services";
 import { COMMAND_PREFIX } from "../../../constants";
-import WSEditorCommandArgumentsContent, { DecodeArgs } from "../commandArgumentsContent";
+import WSEditorCommandArgumentsContent, { DecodeArgs } from "../WSEditorCommandArgumentsContent";
 import ExampleDialog from "./ExampleDialog";
 import AddSubcommandDialog from "./AddSubcommandDialog";
 import CommandDeleteDialog from "./CommandDeleteDialog";
