@@ -1,4 +1,4 @@
-import type { Output } from "../commandContent/OutputDialog";
+import type { Output } from "../WSEditorCommandContent/OutputDialog";
 import type { CMDArg, ClsArgDefinitionMap } from "../commandArgumentsContent";
 
 export interface Plane {

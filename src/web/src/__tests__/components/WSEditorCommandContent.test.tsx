@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import WSEditorCommandContent from "../../views/workspace/commandContent/WSEditorCommandContent";
-import type { Command, Example, Resource } from "../../views/workspace/commandContent/WSEditorCommandContent";
+import WSEditorCommandContent from "../../views/workspace/WSEditorCommandContent";
+import type { Command, Example, Resource } from "../../views/workspace/interfaces";
 import { render } from "../test-utils";
 import { commandApi } from "../../services/commandApi";
 
