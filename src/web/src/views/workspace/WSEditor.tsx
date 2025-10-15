@@ -26,7 +26,7 @@ import { TransitionProps } from "@mui/material/transitions";
 import WSEditorSwaggerPicker from "./WSEditorSwaggerPicker";
 import WSEditorToolBar from "./WSEditorToolBar";
 import WSEditorCommandTree, { CommandTreeLeaf, CommandTreeNode } from "./WSEditorCommandTree";
-import WSEditorCommandGroupContent, { DecodeResponseCommandGroup } from "./WSEditorCommandGroupContent";
+import WSEditorCommandGroupContent, { DecodeResponseCommandGroup } from "./commandGroupContent";
 import WSEditorCommandContent, { DecodeResponseCommand } from "./commandContent/WSEditorCommandContent";
 import WSEditorClientConfigDialog from "./WSEditorClientConfig";
 import type {

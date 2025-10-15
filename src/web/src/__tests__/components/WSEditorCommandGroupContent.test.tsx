@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
-import WSEditorCommandGroupContent from "../../views/workspace/WSEditorCommandGroupContent";
+import WSEditorCommandGroupContent from "../../views/workspace/commandGroupContent/WSEditorCommandGroupContent";
 import * as commandApi from "../../services/commandApi";
 
 interface CommandGroup {

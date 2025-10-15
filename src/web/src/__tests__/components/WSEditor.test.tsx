@@ -55,7 +55,7 @@ vi.mock("../../views/workspace/WSEditorCommandTree", () => ({
   CommandTreeNode: {},
 }));
 
-vi.mock("../../views/workspace/WSEditorCommandGroupContent", () => ({
+vi.mock("../../views/workspace/commandGroupContent", () => ({
   default: ({ commandGroup, onUpdateCommandGroup }: any) => (
     <div data-testid="ws-editor-command-group-content">
       <span data-testid="command-group-id">{commandGroup.id}</span>

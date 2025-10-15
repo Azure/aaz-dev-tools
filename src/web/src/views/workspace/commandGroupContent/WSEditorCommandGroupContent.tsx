@@ -2,7 +2,7 @@ import { Box, Button, Card, CardActions, CardContent, Typography } from "@mui/ma
 import * as React from "react";
 import CommandGroupDialog from "./CommandGroupDialog";
 import CommandGroupDeleteDialog from "./CommandGroupDeleteDialog";
-import { COMMAND_PREFIX } from "../../constants";
+import { COMMAND_PREFIX } from "../../../constants";
 import {
   NameTypography,
   ShortHelpTypography,
@@ -11,8 +11,8 @@ import {
   StableTypography,
   PreviewTypography,
   ExperimentalTypography,
-} from "./WSEditorTheme";
-import type { CommandGroup, ResponseCommandGroup } from "./interfaces";
+} from "../WSEditorTheme";
+import type { CommandGroup, ResponseCommandGroup } from "../interfaces";
 
 interface WSEditorCommandGroupContentProps {
   workspaceUrl: string;
@@ -66,6 +66,7 @@ const WSEditorCommandGroupContent: React.FC<WSEditorCommandGroupContentProps> = 
   return (
     <React.Fragment>
       <Box
+        data-testid="ws-editor-command-group-content"
         sx={{
           display: "flex",
           flexDirection: "column",

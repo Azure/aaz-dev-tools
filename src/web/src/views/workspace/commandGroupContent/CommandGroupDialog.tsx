@@ -13,10 +13,10 @@ import {
   RadioGroup,
   TextField,
 } from "@mui/material";
-import { commandApi, errorHandlerApi } from "../../services";
+import { commandApi, errorHandlerApi } from "../../../services";
 import * as React from "react";
 import { DecodeResponseCommandGroup } from "./WSEditorCommandGroupContent";
-import type { CommandGroup } from "./interfaces";
+import type { CommandGroup } from "../interfaces";
 
 interface CommandGroupDialogProps {
   workspaceUrl: string;

@@ -8,10 +8,10 @@ import {
   LinearProgress,
   Typography,
 } from "@mui/material";
-import { commandApi } from "../../services";
+import { commandApi } from "../../../services";
 import * as React from "react";
-import { COMMAND_PREFIX } from "../../constants";
-import type { CommandGroup } from "./interfaces";
+import { COMMAND_PREFIX } from "../../../constants";
+import type { CommandGroup } from "../interfaces";
 
 interface CommandGroupDeleteDialogProps {
   workspaceUrl: string;
