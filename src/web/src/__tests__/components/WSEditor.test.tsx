@@ -100,7 +100,7 @@ vi.mock("../../views/workspace/WSEditorSwaggerPicker", () => ({
   ),
 }));
 
-vi.mock("../../views/workspace/WSEditorClientConfig", () => ({
+vi.mock("../../views/workspace/WSEditor/WSEditorClientConfig", () => ({
   default: ({ workspaceUrl, open, onClose }: any) =>
     open ? (
       <div data-testid="ws-editor-client-config-dialog">

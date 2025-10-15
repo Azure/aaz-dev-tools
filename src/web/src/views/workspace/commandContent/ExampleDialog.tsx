@@ -23,8 +23,8 @@ import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import CloseIcon from "@mui/icons-material/Close";
 import { commandApi, errorHandlerApi } from "../../../services";
 import { COMMAND_PREFIX } from "../../../constants";
-import { ExampleItemSelector } from "./ExampleItemSelector";
-import { DecodeResponseCommand } from "../utils/decodeResponseCommand";
+import { ExampleItemSelector } from "../WSEditorCommandContent/ExampleItemSelector";
+import { DecodeResponseCommand } from "./WSEditorCommandContent";
 import type { Command, Example } from "../interfaces";
 
 export interface ExampleDialogProps {

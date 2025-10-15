@@ -7,7 +7,7 @@ import WSEditorToolBar from "./WSEditorToolBar";
 import WSEditorCommandTree, { CommandTreeLeaf, CommandTreeNode } from "./WSEditorCommandTree";
 import WSEditorCommandGroupContent, { DecodeResponseCommandGroup } from "../WSEditorCommandGroupContent";
 import WSEditorCommandContent, { DecodeResponseCommand } from "../WSEditorCommandContent";
-import WSEditorClientConfigDialog from "../WSEditorClientConfig";
+import WSEditorClientConfigDialog from "./WSEditorClientConfig";
 import type {
   CommandGroup,
   ResponseCommandGroup,

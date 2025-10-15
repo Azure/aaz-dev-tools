@@ -19,12 +19,12 @@ import {
   Tabs,
   Tab,
 } from "@mui/material";
-import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
+import { workspaceApi, specsApi, errorHandlerApi } from "../../../services";
 import DoDisturbOnRoundedIcon from "@mui/icons-material/DoDisturbOnRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
-import SwaggerItemSelector from "./common/SwaggerItemSelector";
+import SwaggerItemSelector from "../common/SwaggerItemSelector";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import type { Plane, Resource } from "./interfaces";
+import type { Plane, Resource } from "../interfaces";
 
 interface WSEditorClientConfigDialogProps {
   workspaceUrl: string;
