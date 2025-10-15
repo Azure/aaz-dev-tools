@@ -5,6 +5,7 @@ Release History
 
 4.5.1
 ++++++
+* Fix validation of schema pattern and error message. (#507)
 * Fix redundant url item within example generation request. (#524)
 * Upgrade `@typespec/compiler` to 1.4.0. (#522)
 * Update the document for generating codes via command-line interface. (#521)
