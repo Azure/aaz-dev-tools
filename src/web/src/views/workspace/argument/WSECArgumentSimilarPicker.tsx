@@ -1,3 +1,4 @@
+import React, { useCallback } from "react";
 import TreeView from "@mui/lab/TreeView";
 import TreeItem from "@mui/lab/TreeItem";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -51,25 +52,27 @@ interface ResponseArgSimilarGroup {
   };
 }
 
-function decodeResponseArgSimilarCommand(
+const decodeResponseArgSimilarCommand = (
   responseCommand: ResponseArgSimilarCommand,
   commandName: string,
-): ArgSimilarCommand {
-  let command: ArgSimilarCommand = {
+): ArgSimilarCommand => {
+  const command: ArgSimilarCommand = {
     id: responseCommand.id,
     name: commandName,
     args: [],
     total: 0,
     selectedCount: 0,
   };
-  for (const argVar in responseCommand.args) {
+
+  Object.entries(responseCommand.args).forEach(([argVar, indexes]) => {
     const arg: ArgSimilarArg = {
       id: `${command.id}/Arguments/${argVar}`,
       var: argVar,
-      indexes: responseCommand.args[argVar],
+      indexes,
       display: "",
       isSelected: false,
     };
+
     if (arg.indexes.length > 1) {
       arg.display = `[${arg.var}] ${arg.indexes
         .map((idx) => {
@@ -81,7 +84,7 @@ function decodeResponseArgSimilarCommand(
         })
         .join(" ")}`;
     } else if (arg.indexes.length === 1) {
-      let idx = arg.indexes[0];
+      const idx = arg.indexes[0];
       if (idx[1] === "." || idx[1] === "[" || idx[1] === "{") {
         arg.display = `-${idx}`;
       } else {
@@ -89,12 +92,13 @@ function decodeResponseArgSimilarCommand(
       }
     }
     command.args.push(arg);
-  }
+  });
+
   command.total = command.args.length;
   return command;
-}
+};
 
-function decodeResponseArgSimilarGroup(responseGroup: ResponseArgSimilarGroup, groupName: string): ArgSimilarGroup {
+const decodeResponseArgSimilarGroup = (responseGroup: ResponseArgSimilarGroup, groupName: string): ArgSimilarGroup => {
   let group: ArgSimilarGroup = {
     id: responseGroup.id,
     name: groupName,
@@ -102,46 +106,45 @@ function decodeResponseArgSimilarGroup(responseGroup: ResponseArgSimilarGroup, g
     selectedCount: 0,
   };
 
-  if (typeof responseGroup.commandGroups === "object" && responseGroup.commandGroups !== null) {
-    group.groups = [];
-    for (const name in responseGroup.commandGroups) {
-      const subGroup = decodeResponseArgSimilarGroup(responseGroup.commandGroups[name], name);
-      group.groups.push(subGroup);
-      group.total += subGroup.total;
-    }
+  if (responseGroup.commandGroups && typeof responseGroup.commandGroups === "object") {
+    group.groups = Object.entries(responseGroup.commandGroups).map(([name, subGroup]) => {
+      const decodedSubGroup = decodeResponseArgSimilarGroup(subGroup, name);
+      group.total += decodedSubGroup.total;
+      return decodedSubGroup;
+    });
   }
 
-  if (typeof responseGroup.commands === "object" && responseGroup.commands !== null) {
-    group.commands = [];
-    for (const name in responseGroup.commands) {
-      const command = decodeResponseArgSimilarCommand(responseGroup.commands[name], name);
-      group.commands.push(command);
-      group.total += command.total;
-    }
+  if (responseGroup.commands && typeof responseGroup.commands === "object") {
+    group.commands = Object.entries(responseGroup.commands).map(([name, command]) => {
+      const decodedCommand = decodeResponseArgSimilarCommand(command, name);
+      group.total += decodedCommand.total;
+      return decodedCommand;
+    });
   }
-  if (group.commands === undefined && group.groups !== undefined && group.groups.length === 1) {
+
+  if (!group.commands && group.groups?.length === 1) {
     group = group.groups[0];
     group.name = `${groupName} ${group.name}`;
   }
+
   return group;
-}
+};
 
-function gatherNodeIds(group: ArgSimilarGroup): string[] {
-  let nodeIds: string[] = [group.id];
-  if (group.commands !== undefined) {
-    group.commands.forEach((command) => {
-      nodeIds.push(command.id);
-    });
-  }
-  if (group.groups !== undefined) {
-    group.groups.forEach((subGroup) => {
-      nodeIds = [...nodeIds, ...gatherNodeIds(subGroup)];
-    });
-  }
+const gatherNodeIds = (group: ArgSimilarGroup): string[] => {
+  const nodeIds: string[] = [group.id];
+
+  group.commands?.forEach((command) => {
+    nodeIds.push(command.id);
+  });
+
+  group.groups?.forEach((subGroup) => {
+    nodeIds.push(...gatherNodeIds(subGroup));
+  });
+
   return nodeIds;
-}
+};
 
-function BuildArgSimilarTree(response: any): { tree: ArgSimilarTree; expandedIds: string[] } {
+const BuildArgSimilarTree = (response: any): { tree: ArgSimilarTree; expandedIds: string[] } => {
   const tree = {
     root: decodeResponseArgSimilarGroup(response.data.aaz, "az"),
     selectedArgIds: [],
@@ -150,39 +153,46 @@ function BuildArgSimilarTree(response: any): { tree: ArgSimilarTree; expandedIds
   const newTree = updateSelectionStateForArgSimilarTree(tree, new Set<string>([tree.root.id]));
   return {
     tree: newTree,
-    expandedIds: expandedIds,
+    expandedIds,
   };
+};
+
+interface WSECArgumentSimilarPickerProps {
+  tree: ArgSimilarTree;
+  expandedIds: string[];
+  updatedIds: string[];
+  onTreeUpdated: (tree: ArgSimilarTree) => void;
+  onToggle: (nodeIds: string[]) => void;
 }
 
-function updateSelectionStateForArgSimilarCommand(
+const updateSelectionStateForArgSimilarCommand = (
   command: ArgSimilarCommand,
   selectedIds: Set<string>,
-): { command: ArgSimilarCommand; selectedArgIds: string[] } {
-  let newSelectedIds: string[] = [];
-  let newCommand = {
+): { command: ArgSimilarCommand; selectedArgIds: string[] } => {
+  const newSelectedIds: string[] = [];
+  const newCommand = {
     ...command,
     args: command.args.map((arg) => {
       let isSelected = selectedIds.has(arg.id);
       if (!isSelected) {
         const idParts = arg.id.split("/");
         for (let idx = 1; idx < idParts.length; idx += 1) {
-          let newId = idParts.slice(0, idx + 1).join("/");
+          const newId = idParts.slice(0, idx + 1).join("/");
           if (selectedIds.has(newId)) {
             isSelected = true;
             break;
           }
         }
       }
-      if (isSelected === true) {
+      if (isSelected) {
         newSelectedIds.push(arg.id);
       }
 
-      let newArg: ArgSimilarArg = {
+      return {
         ...arg,
         indexes: [...arg.indexes],
-        isSelected: isSelected,
+        isSelected,
       };
-      return newArg;
     }),
   };
 
@@ -192,21 +202,21 @@ function updateSelectionStateForArgSimilarCommand(
     command: newCommand,
     selectedArgIds: newSelectedIds,
   };
-}
+};
 
-function updateSelectionStateForArgSimilarGroup(
+const updateSelectionStateForArgSimilarGroup = (
   group: ArgSimilarGroup,
   selectedIds: Set<string>,
-): { group: ArgSimilarGroup; selectedArgIds: string[] } {
+): { group: ArgSimilarGroup; selectedArgIds: string[] } => {
   let newSelectedIds: string[] = [];
-  let newGroup = {
+  const newGroup = {
     ...group,
     groups: group.groups?.map((subGroup) => {
       const { group: newSubGroup, selectedArgIds: subSelectedIds } = updateSelectionStateForArgSimilarGroup(
         subGroup,
         selectedIds,
       );
-      newSelectedIds = [...newSelectedIds, ...subSelectedIds];
+      newSelectedIds.push(...subSelectedIds);
       return newSubGroup;
     }),
     commands: group.commands?.map((command) => {
@@ -214,7 +224,7 @@ function updateSelectionStateForArgSimilarGroup(
         command,
         selectedIds,
       );
-      newSelectedIds = [...newSelectedIds, ...subSelectedIds];
+      newSelectedIds.push(...subSelectedIds);
       return newCommand;
     }),
   };
@@ -225,153 +235,166 @@ function updateSelectionStateForArgSimilarGroup(
     group: newGroup,
     selectedArgIds: newSelectedIds,
   };
-}
+};
 
-function updateSelectionStateForArgSimilarTree(tree: ArgSimilarTree, selectedIds: Set<string>): ArgSimilarTree {
+const updateSelectionStateForArgSimilarTree = (tree: ArgSimilarTree, selectedIds: Set<string>): ArgSimilarTree => {
   const { group, selectedArgIds } = updateSelectionStateForArgSimilarGroup(tree.root, selectedIds);
   return {
     root: group,
-    selectedArgIds: selectedArgIds,
+    selectedArgIds,
   };
-}
+};
 
-function WSECArgumentSimilarPicker(props: {
-  tree: ArgSimilarTree;
-  expandedIds: string[];
-  updatedIds: string[];
-  onTreeUpdated: (tree: ArgSimilarTree) => void;
-  onToggle: (nodeIds: string[]) => void;
-}) {
-  const onCheckItem = (itemId: string, select: boolean) => {
-    let selectedIds: Set<string>;
-    if (select) {
-      selectedIds = new Set(props.tree.selectedArgIds).add(itemId);
-    } else {
-      selectedIds = new Set(props.tree.selectedArgIds.filter((id) => id !== itemId && !id.startsWith(`${itemId}/`)));
-    }
-    props.onTreeUpdated(updateSelectionStateForArgSimilarTree(props.tree, selectedIds));
-  };
+const WSECArgumentSimilarPicker: React.FC<WSECArgumentSimilarPickerProps> = ({
+  tree,
+  expandedIds,
+  updatedIds,
+  onTreeUpdated,
+  onToggle,
+}) => {
+  const onCheckItem = useCallback(
+    (itemId: string, select: boolean) => {
+      let selectedIds: Set<string>;
+      if (select) {
+        selectedIds = new Set(tree.selectedArgIds).add(itemId);
+      } else {
+        selectedIds = new Set(tree.selectedArgIds.filter((id) => id !== itemId && !id.startsWith(`${itemId}/`)));
+      }
+      onTreeUpdated(updateSelectionStateForArgSimilarTree(tree, selectedIds));
+    },
+    [tree, onTreeUpdated],
+  );
 
-  const onNodeToggle = (event: React.SyntheticEvent, nodeIds: string[]) => {
-    props.onToggle(nodeIds);
-    event.stopPropagation();
-    event.preventDefault();
-  };
+  const onNodeToggle = useCallback(
+    (event: React.SyntheticEvent, nodeIds: string[]) => {
+      onToggle(nodeIds);
+      event.stopPropagation();
+      event.preventDefault();
+    },
+    [onToggle],
+  );
 
-  const renderArg = (arg: ArgSimilarArg) => {
-    const isUpdated = props.updatedIds.indexOf(arg.id) !== -1;
-    return (
-      <TreeItem
-        key={arg.id}
-        nodeId={arg.id}
-        color="inherit"
-        label={
-          <FormControlLabel
-            control={
-              <Checkbox
-                size="small"
-                checked={arg.isSelected}
-                onClick={(event) => {
-                  onCheckItem(arg.id, !arg.isSelected);
-                  event.stopPropagation();
-                  event.preventDefault();
-                }}
-                disabled={isUpdated}
-              />
-            }
-            label={arg.display}
-            sx={{
-              paddingLeft: 1,
-            }}
-          />
-        }
-      />
-    );
-  };
+  const renderArg = useCallback(
+    (arg: ArgSimilarArg) => {
+      const isUpdated = updatedIds.includes(arg.id);
+      return (
+        <TreeItem
+          key={arg.id}
+          nodeId={arg.id}
+          color="inherit"
+          label={
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="small"
+                  checked={arg.isSelected}
+                  onClick={(event) => {
+                    onCheckItem(arg.id, !arg.isSelected);
+                    event.stopPropagation();
+                    event.preventDefault();
+                  }}
+                  disabled={isUpdated}
+                />
+              }
+              label={arg.display}
+              sx={{
+                paddingLeft: 1,
+              }}
+            />
+          }
+        />
+      );
+    },
+    [updatedIds, onCheckItem],
+  );
 
-  const renderCommand = (command: ArgSimilarCommand) => {
-    return (
-      <TreeItem
-        key={command.id}
-        nodeId={command.id}
-        color="inherit"
-        label={
-          <FormControlLabel
-            control={
-              <Checkbox
-                size="small"
-                checked={command.selectedCount > 0 && command.selectedCount === command.total}
-                indeterminate={command.selectedCount > 0 && command.selectedCount < command.total}
-                onClick={(event) => {
-                  onCheckItem(command.id, !(command.selectedCount > 0 && command.selectedCount === command.total));
-                  event.stopPropagation();
-                  event.preventDefault();
-                }}
-              />
-            }
-            label={command.name}
-            sx={{
-              paddingLeft: 1,
-            }}
-          />
-        }
-      >
-        {Array.isArray(command.args) ? command.args.map((arg) => renderArg(arg)) : null}
-      </TreeItem>
-    );
-  };
+  const renderCommand = useCallback(
+    (command: ArgSimilarCommand) => {
+      return (
+        <TreeItem
+          key={command.id}
+          nodeId={command.id}
+          color="inherit"
+          label={
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="small"
+                  checked={command.selectedCount > 0 && command.selectedCount === command.total}
+                  indeterminate={command.selectedCount > 0 && command.selectedCount < command.total}
+                  onClick={(event) => {
+                    onCheckItem(command.id, !(command.selectedCount > 0 && command.selectedCount === command.total));
+                    event.stopPropagation();
+                    event.preventDefault();
+                  }}
+                />
+              }
+              label={command.name}
+              sx={{
+                paddingLeft: 1,
+              }}
+            />
+          }
+        >
+          {command.args?.map((arg) => renderArg(arg))}
+        </TreeItem>
+      );
+    },
+    [onCheckItem, renderArg],
+  );
 
-  const renderGroup = (group: ArgSimilarGroup) => {
-    return (
-      <TreeItem
-        key={group.id}
-        nodeId={group.id}
-        color="inherit"
-        label={
-          <FormControlLabel
-            control={
-              <Checkbox
-                size="small"
-                checked={group.selectedCount > 0 && group.selectedCount === group.total}
-                indeterminate={group.selectedCount > 0 && group.selectedCount < group.total}
-                onClick={(event) => {
-                  onCheckItem(group.id, !(group.selectedCount > 0 && group.selectedCount === group.total));
-                  event.stopPropagation();
-                  event.preventDefault();
-                }}
-              />
-            }
-            label={group.name}
-            sx={{
-              paddingLeft: 1,
-            }}
-          />
-        }
-      >
-        {Array.isArray(group.commands) ? group.commands.map((command) => renderCommand(command)) : null}
-        {Array.isArray(group.groups) ? group.groups.map((subGroup) => renderGroup(subGroup)) : null}
-      </TreeItem>
-    );
-  };
+  const renderGroup = useCallback(
+    (group: ArgSimilarGroup): React.ReactElement => {
+      return (
+        <TreeItem
+          key={group.id}
+          nodeId={group.id}
+          color="inherit"
+          label={
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="small"
+                  checked={group.selectedCount > 0 && group.selectedCount === group.total}
+                  indeterminate={group.selectedCount > 0 && group.selectedCount < group.total}
+                  onClick={(event) => {
+                    onCheckItem(group.id, !(group.selectedCount > 0 && group.selectedCount === group.total));
+                    event.stopPropagation();
+                    event.preventDefault();
+                  }}
+                />
+              }
+              label={group.name}
+              sx={{
+                paddingLeft: 1,
+              }}
+            />
+          }
+        >
+          {group.commands?.map((command) => renderCommand(command))}
+          {group.groups?.map((subGroup) => renderGroup(subGroup))}
+        </TreeItem>
+      );
+    },
+    [onCheckItem, renderCommand],
+  );
 
   return (
-    <>
-      <TreeView
-        sx={{
-          flexGrow: 1,
-          overflowY: "auto",
-        }}
-        defaultCollapseIcon={<ExpandMoreIcon />}
-        defaultExpandIcon={<ChevronRightIcon />}
-        onNodeToggle={onNodeToggle}
-        selected={[]}
-        expanded={props.expandedIds}
-      >
-        {renderGroup(props.tree.root)}
-      </TreeView>
-    </>
+    <TreeView
+      sx={{
+        flexGrow: 1,
+        overflowY: "auto",
+      }}
+      defaultCollapseIcon={<ExpandMoreIcon />}
+      defaultExpandIcon={<ChevronRightIcon />}
+      onNodeToggle={onNodeToggle}
+      selected={[]}
+      expanded={expandedIds}
+    >
+      {renderGroup(tree.root)}
+    </TreeView>
   );
-}
+};
 
 export default WSECArgumentSimilarPicker;
 export { BuildArgSimilarTree };
