@@ -17,7 +17,7 @@ import {
   TypographyProps,
   Stack,
 } from "@mui/material";
-import React from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import DoDisturbOnRoundedIcon from "@mui/icons-material/DoDisturbOnRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import CloseIcon from "@mui/icons-material/Close";
@@ -34,16 +34,6 @@ export interface ExampleDialogProps {
   onClose: (newCommand?: Command) => void;
 }
 
-interface ExampleDialogState {
-  name: string;
-  exampleCommands: string[];
-  isAdd: boolean;
-  invalidText?: string;
-  updating: boolean;
-  source?: string;
-  exampleOptions: Example[];
-}
-
 const ExampleCommandTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
   color: theme.palette.primary.main,
   fontFamily: "'Roboto Condensed', sans-serif",
@@ -51,248 +41,202 @@ const ExampleCommandTypography = styled(Typography)<TypographyProps>(({ theme })
   fontWeight: 400,
 }));
 
-class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogState> {
-  constructor(props: ExampleDialogProps) {
-    super(props);
-    const examples: Example[] = this.props.command.examples ?? [];
-    if (this.props.idx === undefined) {
-      this.state = {
-        name: "",
-        exampleCommands: [""],
-        isAdd: true,
-        invalidText: undefined,
-        updating: false,
-        source: undefined,
-        exampleOptions: [],
-      };
-    } else {
-      const example = examples[this.props.idx];
-      this.state = {
-        name: example.name,
-        exampleCommands: example.commands,
-        isAdd: false,
-        invalidText: undefined,
-        updating: false,
-        source: undefined,
-        exampleOptions: [],
-      };
-    }
-  }
+const ExampleDialog: React.FC<ExampleDialogProps> = ({ workspaceUrl, open, command, idx, onClose }) => {
+  const [name, setName] = useState<string>("");
+  const [exampleCommands, setExampleCommands] = useState<string[]>([""]);
+  const [isAdd, setIsAdd] = useState<boolean>(true);
+  const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
+  const [updating, setUpdating] = useState<boolean>(false);
+  const [source, setSource] = useState<string | undefined>(undefined);
+  const [exampleOptions, setExampleOptions] = useState<Example[]>([]);
 
-  onUpdateExamples = async (examples: Example[]) => {
-    const { workspaceUrl, command } = this.props;
-
-    const leafUrl =
-      `${workspaceUrl}/CommandTree/Nodes/aaz/` +
-      command.names.slice(0, -1).join("/") +
-      "/Leaves/" +
-      command.names[command.names.length - 1];
-
-    this.setState({
-      updating: true,
-    });
-
-    try {
-      const responseData = await commandApi.updateCommandExamples(leafUrl, examples);
-      const cmd = DecodeResponseCommand(responseData);
-      this.setState({
-        updating: false,
-      });
-      this.props.onClose(cmd);
-    } catch (err: any) {
-      console.error(err);
-      const message = errorHandlerApi.getErrorMessage(err);
-      this.setState({
-        invalidText: `ResponseError: ${message}`,
-        updating: false,
-      });
-    }
-  };
-
-  handleDelete = () => {
-    const { command } = this.props;
-    let examples: Example[] = command.examples ?? [];
-    const idx = this.props.idx!;
-    examples = [...examples.slice(0, idx), ...examples.slice(idx + 1)];
-    this.onUpdateExamples(examples);
-  };
-
-  handleModify = () => {
-    const { command } = this.props;
-    let { name, exampleCommands } = this.state;
-    let examples: Example[] = command.examples ?? [];
-    const idx = this.props.idx!;
-
-    name = name.trim();
-    if (name.length < 1) {
-      this.setState({
-        invalidText: `Field 'Name' is required.`,
-      });
-      return;
-    }
-    exampleCommands = exampleCommands
-      .map((cmd) => {
-        return cmd
-          .split("\n")
-          .map((cmdLine) => cmdLine.trim())
-          .filter((cmdLine) => cmdLine.length > 0)
-          .join(" ")
-          .trim();
-      })
-      .filter((cmd) => cmd.length > 0);
-
-    if (exampleCommands.length < 1) {
-      this.setState({
-        invalidText: `Field 'Commands' is required.`,
-      });
-      return;
-    }
-
-    const newExample: Example = {
-      name: name,
-      commands: exampleCommands,
-    };
-
-    examples = [...examples.slice(0, idx), newExample, ...examples.slice(idx + 1)];
-
-    this.onUpdateExamples(examples);
-  };
-
-  handleAdd = () => {
-    const { command } = this.props;
-    let { name, exampleCommands } = this.state;
+  useEffect(() => {
     const examples: Example[] = command.examples ?? [];
-
-    name = name.trim();
-    if (name.length < 1) {
-      this.setState({
-        invalidText: `Field 'Name' is required.`,
-      });
-      return;
+    if (idx === undefined) {
+      setName("");
+      setExampleCommands([""]);
+      setIsAdd(true);
+      setInvalidText(undefined);
+      setUpdating(false);
+      setSource(undefined);
+      setExampleOptions([]);
+    } else {
+      const example = examples[idx];
+      setName(example.name);
+      setExampleCommands(example.commands);
+      setIsAdd(false);
+      setInvalidText(undefined);
+      setUpdating(false);
+      setSource(undefined);
+      setExampleOptions([]);
     }
-    exampleCommands = exampleCommands
-      .map((cmd) => {
-        return cmd
-          .split("\n")
-          .map((cmdLine) => cmdLine.trim())
-          .filter((cmdLine) => cmdLine.length > 0)
-          .join(" ")
-          .trim();
-      })
-      .filter((cmd) => cmd.length > 0);
+  }, [command.examples, idx]);
 
-    if (exampleCommands.length < 1) {
-      this.setState({
-        invalidText: `Field 'Commands' is required.`,
-      });
-      return;
-    }
-
-    const newExample: Example = {
-      name: name,
-      commands: exampleCommands,
-    };
-    examples.push(newExample);
-
-    this.onUpdateExamples(examples);
-  };
-
-  handleClose = () => {
-    this.setState({
-      invalidText: undefined,
-    });
-    this.props.onClose();
-  };
-
-  onModifyExampleCommand = (cmd: string, idx: number) => {
-    this.setState((preState) => {
-      return {
-        ...preState,
-        exampleCommands: [...preState.exampleCommands.slice(0, idx), cmd, ...preState.exampleCommands.slice(idx + 1)],
-      };
-    });
-  };
-
-  onRemoveExampleCommand = (idx: number) => {
-    this.setState((preState) => {
-      const exampleCommands: string[] = [
-        ...preState.exampleCommands.slice(0, idx),
-        ...preState.exampleCommands.slice(idx + 1),
-      ];
-      if (exampleCommands.length === 0) {
-        exampleCommands.push("");
-      }
-      return {
-        ...preState,
-        exampleCommands: exampleCommands,
-      };
-    });
-  };
-
-  onAddExampleCommand = () => {
-    this.setState((preState) => {
-      return {
-        ...preState,
-        exampleCommands: [...preState.exampleCommands, ""],
-      };
-    });
-  };
-
-  loadSwaggerExamples = async () => {
-    try {
-      let { workspaceUrl, command } = this.props;
-
+  const onUpdateExamples = useCallback(
+    async (examples: Example[]) => {
       const leafUrl =
         `${workspaceUrl}/CommandTree/Nodes/aaz/` +
         command.names.slice(0, -1).join("/") +
         "/Leaves/" +
         command.names[command.names.length - 1];
 
-      this.setState({
-        source: "swagger",
-        updating: true,
-      });
+      setUpdating(true);
+
+      try {
+        const responseData = await commandApi.updateCommandExamples(leafUrl, examples);
+        const cmd = DecodeResponseCommand(responseData);
+        setUpdating(false);
+        onClose(cmd);
+      } catch (err: any) {
+        console.error(err);
+        const message = errorHandlerApi.getErrorMessage(err);
+        setInvalidText(`ResponseError: ${message}`);
+        setUpdating(false);
+      }
+    },
+    [workspaceUrl, command.names, onClose],
+  );
+
+  const handleDelete = useCallback(() => {
+    let examples: Example[] = command.examples ?? [];
+    const currentIdx = idx!;
+    examples = [...examples.slice(0, currentIdx), ...examples.slice(currentIdx + 1)];
+    onUpdateExamples(examples);
+  }, [command.examples, idx, onUpdateExamples]);
+
+  const handleModify = useCallback(() => {
+    let trimmedName = name.trim();
+    let examples: Example[] = command.examples ?? [];
+    const currentIdx = idx!;
+
+    if (trimmedName.length < 1) {
+      setInvalidText(`Field 'Name' is required.`);
+      return;
+    }
+
+    const processedCommands = exampleCommands
+      .map((cmd) => {
+        return cmd
+          .split("\n")
+          .map((cmdLine) => cmdLine.trim())
+          .filter((cmdLine) => cmdLine.length > 0)
+          .join(" ")
+          .trim();
+      })
+      .filter((cmd) => cmd.length > 0);
+
+    if (processedCommands.length < 1) {
+      setInvalidText(`Field 'Commands' is required.`);
+      return;
+    }
+
+    const newExample: Example = {
+      name: trimmedName,
+      commands: processedCommands,
+    };
+
+    examples = [...examples.slice(0, currentIdx), newExample, ...examples.slice(currentIdx + 1)];
+    onUpdateExamples(examples);
+  }, [name, exampleCommands, command.examples, idx, onUpdateExamples]);
+
+  const handleAdd = useCallback(() => {
+    let trimmedName = name.trim();
+    const examples: Example[] = command.examples ?? [];
+
+    if (trimmedName.length < 1) {
+      setInvalidText(`Field 'Name' is required.`);
+      return;
+    }
+
+    const processedCommands = exampleCommands
+      .map((cmd) => {
+        return cmd
+          .split("\n")
+          .map((cmdLine) => cmdLine.trim())
+          .filter((cmdLine) => cmdLine.length > 0)
+          .join(" ")
+          .trim();
+      })
+      .filter((cmd) => cmd.length > 0);
+
+    if (processedCommands.length < 1) {
+      setInvalidText(`Field 'Commands' is required.`);
+      return;
+    }
+
+    const newExample: Example = {
+      name: trimmedName,
+      commands: processedCommands,
+    };
+    examples.push(newExample);
+    onUpdateExamples(examples);
+  }, [name, exampleCommands, command.examples, onUpdateExamples]);
+
+  const handleClose = useCallback(() => {
+    setInvalidText(undefined);
+    onClose();
+  }, [onClose]);
+
+  const onModifyExampleCommand = useCallback((cmd: string, cmdIdx: number) => {
+    setExampleCommands((prevCommands) => [...prevCommands.slice(0, cmdIdx), cmd, ...prevCommands.slice(cmdIdx + 1)]);
+  }, []);
+
+  const onRemoveExampleCommand = useCallback((cmdIdx: number) => {
+    setExampleCommands((prevCommands) => {
+      const newCommands = [...prevCommands.slice(0, cmdIdx), ...prevCommands.slice(cmdIdx + 1)];
+      if (newCommands.length === 0) {
+        newCommands.push("");
+      }
+      return newCommands;
+    });
+  }, []);
+
+  const onAddExampleCommand = useCallback(() => {
+    setExampleCommands((prevCommands) => [...prevCommands, ""]);
+  }, []);
+
+  const loadSwaggerExamples = useCallback(async () => {
+    try {
+      const leafUrl =
+        `${workspaceUrl}/CommandTree/Nodes/aaz/` +
+        command.names.slice(0, -1).join("/") +
+        "/Leaves/" +
+        command.names[command.names.length - 1];
+
+      setSource("swagger");
+      setUpdating(true);
       const examples = await commandApi.generateSwaggerExamples(leafUrl);
-      this.setState({
-        exampleOptions: examples,
-        updating: false,
-      });
+      setExampleOptions(examples);
+      setUpdating(false);
       if (examples.length > 0) {
-        this.onExampleSelectorUpdate(examples[0].name);
+        onExampleSelectorUpdate(examples[0].name);
       }
     } catch (err: any) {
       console.error(err.response);
-      this.setState({
-        updating: false,
-        invalidText: errorHandlerApi.getErrorMessage(err),
-      });
+      setUpdating(false);
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
     }
-  };
+  }, [workspaceUrl, command.names]);
 
-  onExampleSelectorUpdate = (exampleDisplayName: string | null) => {
-    let example = this.state.exampleOptions.find((v) => v.name === exampleDisplayName) ?? undefined;
+  const onExampleSelectorUpdate = useCallback(
+    (exampleDisplayName: string | null) => {
+      const example = exampleOptions.find((v) => v.name === exampleDisplayName) ?? undefined;
 
-    if (example === undefined) {
-      this.setState({
-        name: exampleDisplayName ?? "",
-      });
-    } else {
-      this.setState({
-        name: example?.name ?? "",
-        exampleCommands: example?.commands ?? [""],
-      });
-    }
-  };
+      if (example === undefined) {
+        setName(exampleDisplayName ?? "");
+      } else {
+        setName(example?.name ?? "");
+        setExampleCommands(example?.commands ?? [""]);
+      }
+    },
+    [exampleOptions],
+  );
 
-  render() {
-    const { name, exampleCommands, isAdd, invalidText, updating, source, exampleOptions } = this.state;
-
-    const selectedName = name;
-
-    const buildExampleInput = (cmd: string, idx: number) => {
+  const buildExampleInput = useCallback(
+    (cmd: string, cmdIdx: number) => {
       return (
         <Box
-          key={idx}
+          key={cmdIdx}
           sx={{
             display: "flex",
             flexDirection: "row",
@@ -301,15 +245,15 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
             ml: 1,
           }}
         >
-          <IconButton edge="start" color="inherit" onClick={() => this.onRemoveExampleCommand(idx)} aria-label="remove">
+          <IconButton edge="start" color="inherit" onClick={() => onRemoveExampleCommand(cmdIdx)} aria-label="remove">
             <DoDisturbOnRoundedIcon fontSize="small" />
           </IconButton>
           <Input
-            id={`command-${idx}`}
+            id={`command-${cmdIdx}`}
             multiline
             value={cmd}
             onChange={(event: any) => {
-              this.onModifyExampleCommand(event.target.value, idx);
+              onModifyExampleCommand(event.target.value, cmdIdx);
             }}
             sx={{ flexGrow: 1 }}
             placeholder="Input a command here."
@@ -321,120 +265,119 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
           />
         </Box>
       );
-    };
+    },
+    [onRemoveExampleCommand, onModifyExampleCommand],
+  );
 
-    return (
-      <Dialog disableEscapeKeyDown open={this.props.open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
-        <DialogTitle>
-          {isAdd ? "Add Example" : "Modify Example"}
-          <IconButton
-            style={{ position: "absolute", right: 16, top: 8 }}
-            edge="end"
-            color="inherit"
-            onClick={this.handleClose}
-            aria-label="close"
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers={true}>
-          {isAdd && source === undefined && (
-            <Stack direction="column" spacing={2}>
-              <Button
-                variant="contained"
-                size="large"
-                color="secondary"
-                sx={{ fontSize: "20px", padding: "10px 20px" }}
-                onClick={() => {
-                  this.loadSwaggerExamples();
-                }}
-              >
-                <Typography variant="body2">By OpenAPI Specification</Typography>
-              </Button>
-            </Stack>
-          )}
-          {(!isAdd || source != undefined) && (
-            <React.Fragment>
-              {invalidText && (
-                <Alert variant="filled" severity="error">
-                  {" "}
-                  {invalidText}{" "}
-                </Alert>
-              )}
-              {!isAdd && (
-                <React.Fragment>
-                  <TextField
-                    id="name"
-                    label="Name"
-                    type="text"
-                    fullWidth
-                    variant="standard"
-                    value={name}
-                    onChange={(event: any) => {
-                      this.setState({
-                        name: event.target.value,
-                      });
-                    }}
-                    margin="normal"
-                    required
-                  />
-                </React.Fragment>
-              )}
-              {source === "swagger" && (
-                <React.Fragment>
-                  <ExampleItemSelector
-                    name="Name"
-                    commonPrefix={""}
-                    options={exampleOptions.map((v: any) => v.name)}
-                    value={selectedName}
-                    onValueUpdate={this.onExampleSelectorUpdate}
-                  />
-                </React.Fragment>
-              )}
-              <InputLabel required sx={{ font: "inherit", mt: 1 }}>
-                Commands
-              </InputLabel>
-              {exampleCommands.map(buildExampleInput)}
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  ml: 1,
-                }}
-              >
-                <IconButton edge="start" color="inherit" onClick={this.onAddExampleCommand} aria-label="add">
-                  <AddCircleRoundedIcon fontSize="small" />
-                </IconButton>
-                <ExampleCommandTypography sx={{ flexShrink: 0 }}> One more command</ExampleCommandTypography>
-              </Box>
-            </React.Fragment>
-          )}
-        </DialogContent>
+  const selectedName = name;
+
+  return (
+    <Dialog disableEscapeKeyDown open={open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
+      <DialogTitle>
+        {isAdd ? "Add Example" : "Modify Example"}
+        <IconButton
+          style={{ position: "absolute", right: 16, top: 8 }}
+          edge="end"
+          color="inherit"
+          onClick={handleClose}
+          aria-label="close"
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent dividers={true}>
+        {isAdd && source === undefined && (
+          <Stack direction="column" spacing={2}>
+            <Button
+              variant="contained"
+              size="large"
+              color="secondary"
+              sx={{ fontSize: "20px", padding: "10px 20px" }}
+              onClick={loadSwaggerExamples}
+            >
+              <Typography variant="body2">By OpenAPI Specification</Typography>
+            </Button>
+          </Stack>
+        )}
         {(!isAdd || source != undefined) && (
-          <DialogActions>
-            {updating && (
-              <Box sx={{ width: "100%" }}>
-                <LinearProgress color="secondary" />
-              </Box>
+          <React.Fragment>
+            {invalidText && (
+              <Alert variant="filled" severity="error">
+                {" "}
+                {invalidText}{" "}
+              </Alert>
             )}
-            {!updating && (
+            {!isAdd && (
               <React.Fragment>
-                {!isAdd && (
-                  <React.Fragment>
-                    <Button onClick={this.handleDelete}>Delete</Button>
-                    <Button onClick={this.handleModify}>Save</Button>
-                  </React.Fragment>
-                )}
-                {isAdd && <Button onClick={this.handleAdd}>Add</Button>}
+                <TextField
+                  id="name"
+                  label="Name"
+                  type="text"
+                  fullWidth
+                  variant="standard"
+                  value={name}
+                  onChange={(event: any) => {
+                    setName(event.target.value);
+                  }}
+                  margin="normal"
+                  required
+                />
               </React.Fragment>
             )}
-          </DialogActions>
+            {source === "swagger" && (
+              <React.Fragment>
+                <ExampleItemSelector
+                  name="Name"
+                  commonPrefix={""}
+                  options={exampleOptions.map((v: any) => v.name)}
+                  value={selectedName}
+                  onValueUpdate={onExampleSelectorUpdate}
+                />
+              </React.Fragment>
+            )}
+            <InputLabel required sx={{ font: "inherit", mt: 1 }}>
+              Commands
+            </InputLabel>
+            {exampleCommands.map(buildExampleInput)}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                ml: 1,
+              }}
+            >
+              <IconButton edge="start" color="inherit" onClick={onAddExampleCommand} aria-label="add">
+                <AddCircleRoundedIcon fontSize="small" />
+              </IconButton>
+              <ExampleCommandTypography sx={{ flexShrink: 0 }}> One more command</ExampleCommandTypography>
+            </Box>
+          </React.Fragment>
         )}
-      </Dialog>
-    );
-  }
-}
+      </DialogContent>
+      {(!isAdd || source != undefined) && (
+        <DialogActions>
+          {updating && (
+            <Box sx={{ width: "100%" }}>
+              <LinearProgress color="secondary" />
+            </Box>
+          )}
+          {!updating && (
+            <React.Fragment>
+              {!isAdd && (
+                <React.Fragment>
+                  <Button onClick={handleDelete}>Delete</Button>
+                  <Button onClick={handleModify}>Save</Button>
+                </React.Fragment>
+              )}
+              {isAdd && <Button onClick={handleAdd}>Add</Button>}
+            </React.Fragment>
+          )}
+        </DialogActions>
+      )}
+    </Dialog>
+  );
+};
 
 export default ExampleDialog;
