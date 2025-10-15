@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Box, Button, Card, CardContent, Typography, ButtonBase, styled, TypographyProps } from "@mui/material";
 import DataObjectIcon from "@mui/icons-material/DataObject";
 import EditIcon from "@mui/icons-material/Edit";
@@ -87,17 +87,17 @@ const OutputEditTypography = styled(Typography)<TypographyProps>(() => ({
   fontWeight: 400,
 }));
 
-function OutputCard(props: OutputCardProps) {
-  const outputs = props.command.outputs!;
+const OutputCard: React.FC<OutputCardProps> = ({ command, onOutputDialogDisplay }) => {
+  const outputs = command.outputs!;
 
-  const buildBaseOutputView = (
-    idx: number,
-    refName: string,
-    type: string,
-    flags: string[],
-    onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined,
-  ) => {
-    return (
+  const buildBaseOutputView = useCallback(
+    (
+      idx: number,
+      refName: string,
+      type: string,
+      flags: string[],
+      onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined,
+    ) => (
       <Box sx={{ my: 1 }}>
         <Box
           sx={{
@@ -156,66 +156,65 @@ function OutputCard(props: OutputCardProps) {
                 }}
               >{`/${type}/`}</OutputTypeTypography>
               <Box sx={{ flexGrow: 1 }} />
-              {flags.map((flag, idx) => {
-                return <OutputFlagTypography key={`output-flag-${idx}`}>{`[${flag}]`}</OutputFlagTypography>;
-              })}
+              {flags.map((flag, idx) => (
+                <OutputFlagTypography key={`output-flag-${idx}`}>{`[${flag}]`}</OutputFlagTypography>
+              ))}
             </Box>
           </Box>
         </Box>
       </Box>
-    );
-  };
+    ),
+    [],
+  );
 
-  const buildObjectOutputView = (
-    output: ObjectOutput,
-    idx: number,
-    onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined,
-  ) => {
-    return buildBaseOutputView(
-      idx,
-      output.ref,
-      output.type,
-      output.clientFlatten ? ["Flattened"] : ["Unflattened"],
-      onClick,
-    );
-  };
+  const buildObjectOutputView = useCallback(
+    (output: ObjectOutput, idx: number, onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined) =>
+      buildBaseOutputView(
+        idx,
+        output.ref,
+        output.type,
+        output.clientFlatten ? ["Flattened"] : ["Unflattened"],
+        onClick,
+      ),
+    [buildBaseOutputView],
+  );
 
-  const buildArrayOutputView = (
-    output: ArrayOutput,
-    idx: number,
-    onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined,
-  ) => {
-    return buildBaseOutputView(
-      idx,
-      output.ref,
-      output.type,
-      output.clientFlatten ? ["Flattened"] : ["Unflattened"],
-      onClick,
-    );
-  };
+  const buildArrayOutputView = useCallback(
+    (output: ArrayOutput, idx: number, onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined) =>
+      buildBaseOutputView(
+        idx,
+        output.ref,
+        output.type,
+        output.clientFlatten ? ["Flattened"] : ["Unflattened"],
+        onClick,
+      ),
+    [buildBaseOutputView],
+  );
 
-  const buildStringOutputView = (
-    output: StringOutput,
-    idx: number,
-    onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined,
-  ) => {
-    const title = output.ref ? output.ref : output.value;
-    return buildBaseOutputView(idx, title, output.type, [], onClick);
-  };
+  const buildStringOutputView = useCallback(
+    (output: StringOutput, idx: number, onClick?: React.MouseEventHandler<HTMLButtonElement> | undefined) => {
+      const title = output.ref ? output.ref : output.value;
+      return buildBaseOutputView(idx, title, output.type, [], onClick);
+    },
+    [buildBaseOutputView],
+  );
 
-  const buildOutputView = (output: Output, idx: number) => {
-    const onClick = () => {
-      props.onOutputDialogDisplay(idx);
-    };
-    switch (output.type) {
-      case "object":
-        return buildObjectOutputView(output, idx, onClick);
-      case "array":
-        return buildArrayOutputView(output, idx, onClick);
-      case "string":
-        return buildStringOutputView(output, idx, onClick);
-    }
-  };
+  const buildOutputView = useCallback(
+    (output: Output, idx: number) => {
+      const onClick = () => {
+        onOutputDialogDisplay(idx);
+      };
+      switch (output.type) {
+        case "object":
+          return buildObjectOutputView(output, idx, onClick);
+        case "array":
+          return buildArrayOutputView(output, idx, onClick);
+        case "string":
+          return buildStringOutputView(output, idx, onClick);
+      }
+    },
+    [onOutputDialogDisplay, buildObjectOutputView, buildArrayOutputView, buildStringOutputView],
+  );
 
   return (
     <Card
@@ -251,7 +250,7 @@ function OutputCard(props: OutputCardProps) {
       </CardContent>
     </Card>
   );
-}
+};
 
 export default OutputCard;
 export type { OutputCardProps, Command, Output, ObjectOutput, ArrayOutput, StringOutput, Example, Resource };
