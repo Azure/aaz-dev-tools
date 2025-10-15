@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { WSEditor } from "../../views/workspace/WSEditor";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 
-vi.mock("../../views/workspace/WSEditorToolBar", () => ({
+vi.mock("../../views/workspace/WSEditor/WSEditorToolBar", () => ({
   default: ({ workspaceName, onHomePage, onGenerate, onDelete, onModify }: any) => (
     <div data-testid="ws-editor-toolbar">
       <span data-testid="workspace-name">{workspaceName}</span>
