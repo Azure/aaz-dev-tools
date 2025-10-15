@@ -1,7 +1,10 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
-import WSEditorCommandTree, { CommandTreeNode, CommandTreeLeaf } from "../../views/workspace/WSEditorCommandTree";
+import WSEditorCommandTree, {
+  CommandTreeNode,
+  CommandTreeLeaf,
+} from "../../views/workspace/WSEditor/WSEditorCommandTree";
 
 describe("WSEditorCommandTree", () => {
   const mockLeaf: CommandTreeLeaf = {

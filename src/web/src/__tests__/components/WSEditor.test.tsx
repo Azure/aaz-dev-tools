@@ -24,7 +24,7 @@ vi.mock("../../views/workspace/WSEditorToolBar", () => ({
   ),
 }));
 
-vi.mock("../../views/workspace/WSEditorCommandTree", () => ({
+vi.mock("../../views/workspace/WSEditor/WSEditorCommandTree", () => ({
   default: ({ onSelected, onToggle, onAdd, onReload, selected, expanded, onEditClientConfig }: any) => (
     <div data-testid="ws-editor-command-tree">
       <button onClick={() => onSelected("command:test-command")} data-testid="select-command">
