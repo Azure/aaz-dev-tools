@@ -22,7 +22,7 @@ import {
   AccordionDetails,
   AccordionSummaryProps,
 } from "@mui/material";
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import {
   NameTypography,
@@ -37,10 +37,10 @@ import {
 } from "../WSEditorTheme";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import LabelIcon from "@mui/icons-material/Label";
+import EditIcon from "@mui/icons-material/Edit";
 import { commandApi, errorHandlerApi } from "../../../services";
 import { COMMAND_PREFIX } from "../../../constants";
 import WSEditorCommandArgumentsContent, { ClsArgDefinitionMap, CMDArg, DecodeArgs } from "../commandArgumentsContent";
-import EditIcon from "@mui/icons-material/Edit";
 import ExampleDialog from "./ExampleDialog";
 import AddSubcommandDialog from "./AddSubcommandDialog";
 import CommandDeleteDialog from "./CommandDeleteDialog";
@@ -109,21 +109,6 @@ interface WSEditorCommandContentProps {
   onUpdateCommand: (command: Command | null) => void;
 }
 
-interface WSEditorCommandContentState {
-  command?: Command;
-  displayCommandDialog: boolean;
-  displayExampleDialog: boolean;
-  displayOutputDialog: boolean;
-  displayCommandDeleteDialog: boolean;
-  displayAddSubcommandDialog: boolean;
-  subcommandDefaultGroupNames?: string[];
-  subcommandArgVar?: string;
-  subcommandSubArgOptions?: { var: string; options: string }[];
-  exampleIdx?: number;
-  outputIdx?: number;
-  loading: boolean;
-}
-
 const ExampleCommandHeaderTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
   color: theme.palette.primary.main,
   fontFamily: "'Work Sans', sans-serif",
@@ -154,23 +139,29 @@ const ExampleAccordionSummary = styled((props: AccordionSummaryProps) => (
   },
 }));
 
-class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps, WSEditorCommandContentState> {
-  constructor(props: WSEditorCommandContentProps) {
-    super(props);
-    this.state = {
-      command: undefined,
-      displayCommandDialog: false,
-      displayExampleDialog: false,
-      displayOutputDialog: false,
-      displayCommandDeleteDialog: false,
-      displayAddSubcommandDialog: false,
-      loading: false,
-    };
-  }
+const WSEditorCommandContent: React.FC<WSEditorCommandContentProps> = ({
+  workspaceUrl,
+  previewCommand,
+  reloadTimestamp,
+  onUpdateCommand,
+}) => {
+  const [command, setCommand] = useState<Command | undefined>(undefined);
+  const [displayCommandDialog, setDisplayCommandDialog] = useState(false);
+  const [displayExampleDialog, setDisplayExampleDialog] = useState(false);
+  const [displayOutputDialog, setDisplayOutputDialog] = useState(false);
+  const [displayCommandDeleteDialog, setDisplayCommandDeleteDialog] = useState(false);
+  const [displayAddSubcommandDialog, setDisplayAddSubcommandDialog] = useState(false);
+  const [subcommandDefaultGroupNames, setSubcommandDefaultGroupNames] = useState<string[] | undefined>(undefined);
+  const [subcommandArgVar, setSubcommandArgVar] = useState<string | undefined>(undefined);
+  const [subcommandSubArgOptions, setSubcommandSubArgOptions] = useState<
+    { var: string; options: string }[] | undefined
+  >(undefined);
+  const [exampleIdx, setExampleIdx] = useState<number | undefined>(undefined);
+  const [outputIdx, setOutputIdx] = useState<number | undefined>(undefined);
+  const [loading, setLoading] = useState(false);
 
-  loadCommand = async () => {
-    this.setState({ loading: true });
-    const { workspaceUrl, previewCommand } = this.props;
+  const loadCommand = useCallback(async () => {
+    setLoading(true);
     const commandNames = previewCommand.names;
     const leafUrl =
       `${workspaceUrl}/CommandTree/Nodes/aaz/` +
@@ -179,146 +170,119 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
       commandNames[commandNames.length - 1];
     try {
       const commandData = await commandApi.getCommand(leafUrl);
-      const command = DecodeResponseCommand(commandData);
-      if (command.id === this.props.previewCommand.id) {
-        this.setState({
-          loading: false,
-          command: command,
-        });
+      const cmd = DecodeResponseCommand(commandData);
+      if (cmd.id === previewCommand.id) {
+        setCommand(cmd);
+        setLoading(false);
       }
     } catch (err: any) {
-      this.setState({ loading: false });
+      setLoading(false);
       console.error(err);
       return;
     }
-  };
+  }, [workspaceUrl, previewCommand]);
 
-  componentDidMount() {
-    this.loadCommand();
-  }
+  useEffect(() => {
+    loadCommand();
+  }, [loadCommand]);
 
-  componentDidUpdate(prevProps: WSEditorCommandContentProps) {
-    if (
-      prevProps.workspaceUrl !== this.props.workspaceUrl ||
-      prevProps.previewCommand.id !== this.props.previewCommand.id ||
-      prevProps.reloadTimestamp !== this.props.reloadTimestamp
-    ) {
-      if (prevProps.previewCommand.id !== this.props.previewCommand.id) {
-        this.setState({ command: undefined });
+  useEffect(() => {
+    if (command?.id !== previewCommand.id) {
+      setCommand(undefined);
+    }
+    loadCommand();
+  }, [workspaceUrl, previewCommand.id, reloadTimestamp, loadCommand, command?.id, previewCommand]);
+
+  const onCommandDialogDisplay = useCallback(() => {
+    setDisplayCommandDialog(true);
+  }, []);
+
+  const onCommandDeleteDialogDisplay = useCallback(() => {
+    setDisplayCommandDeleteDialog(true);
+  }, []);
+
+  const handleCommandDialogClose = useCallback(
+    (newCommand?: Command) => {
+      if (newCommand) {
+        onUpdateCommand(newCommand);
       }
-      this.loadCommand();
-    }
-  }
+      setDisplayCommandDialog(false);
+    },
+    [onUpdateCommand],
+  );
 
-  onCommandDialogDisplay = () => {
-    this.setState({
-      displayCommandDialog: true,
-    });
-  };
+  const handleCommandDeleteDialogClose = useCallback(
+    (deleted: boolean) => {
+      if (deleted) {
+        onUpdateCommand(null);
+      }
+      setDisplayCommandDeleteDialog(false);
+    },
+    [onUpdateCommand],
+  );
 
-  onCommandDeleteDialogDisplay = () => {
-    this.setState({
-      displayCommandDeleteDialog: true,
-    });
-  };
+  const onExampleDialogDisplay = useCallback((idx?: number) => {
+    setDisplayExampleDialog(true);
+    setExampleIdx(idx);
+  }, []);
 
-  handleCommandDialogClose = (newCommand?: Command) => {
-    if (newCommand) {
-      this.props.onUpdateCommand(newCommand!);
-    }
-    this.setState({
-      displayCommandDialog: false,
-    });
-  };
+  const handleExampleDialogClose = useCallback(
+    (newCommand?: Command) => {
+      if (newCommand) {
+        onUpdateCommand(newCommand);
+      }
+      setDisplayExampleDialog(false);
+    },
+    [onUpdateCommand],
+  );
 
-  handleCommandDeleteDialogClose = (deleted: boolean) => {
-    if (deleted) {
-      this.props.onUpdateCommand(null);
-    }
-    this.setState({
-      displayCommandDeleteDialog: false,
-    });
-  };
+  const onOutputDialogDisplay = useCallback((idx?: number) => {
+    setDisplayOutputDialog(true);
+    setOutputIdx(idx);
+  }, []);
 
-  onExampleDialogDisplay = (idx?: number) => {
-    this.setState({
-      displayExampleDialog: true,
-      exampleIdx: idx,
-    });
-  };
+  const handleOutputDialogClose = useCallback(
+    (newCommand?: Command) => {
+      if (newCommand) {
+        onUpdateCommand(newCommand);
+      }
+      setDisplayOutputDialog(false);
+    },
+    [onUpdateCommand],
+  );
 
-  handleExampleDialogClose = (newCommand?: Command) => {
-    if (newCommand) {
-      this.props.onUpdateCommand(newCommand!);
-    }
-    this.setState({
-      displayExampleDialog: false,
-    });
-  };
+  const onAddSubcommandDialogDisplay = useCallback(
+    (argVar: string, subArgOptions: { var: string; options: string }[], argStackNames: string[]) => {
+      setDisplayAddSubcommandDialog(true);
+      setSubcommandArgVar(argVar);
+      setSubcommandSubArgOptions(subArgOptions);
+      setSubcommandDefaultGroupNames([...previewCommand.names.slice(0, -1), ...argStackNames]);
+    },
+    [previewCommand.names],
+  );
 
-  onOutputDialogDisplay = (idx?: number) => {
-    this.setState({
-      displayOutputDialog: true,
-      outputIdx: idx,
-    });
-  };
+  const handleAddSubcommandDisplayClose = useCallback(
+    (add: boolean) => {
+      if (add && command) {
+        onUpdateCommand(command);
+      }
+      setDisplayAddSubcommandDialog(false);
+      setSubcommandArgVar(undefined);
+      setSubcommandDefaultGroupNames(undefined);
+    },
+    [command, onUpdateCommand],
+  );
 
-  handleOutputDialogClose = (newCommand?: Command) => {
-    if (newCommand) {
-      this.props.onUpdateCommand(newCommand!);
-    }
-    this.setState({
-      displayOutputDialog: false,
-    });
-  };
+  const commandNames = previewCommand.names;
+  const name = COMMAND_PREFIX + commandNames.join(" ");
+  const commandUrl =
+    `${workspaceUrl}/CommandTree/Nodes/aaz/` +
+    commandNames.slice(0, -1).join("/") +
+    "/Leaves/" +
+    commandNames[commandNames.length - 1];
 
-  onAddSubcommandDialogDisplay = (
-    argVar: string,
-    subArgOptions: { var: string; options: string }[],
-    argStackNames: string[],
-  ) => {
-    this.setState({
-      displayAddSubcommandDialog: true,
-      subcommandArgVar: argVar,
-      subcommandSubArgOptions: subArgOptions,
-      subcommandDefaultGroupNames: [...this.props.previewCommand.names.slice(0, -1), ...argStackNames],
-    });
-  };
-
-  handleAddSubcommandDisplayClose = (add: boolean) => {
-    if (add) {
-      this.props.onUpdateCommand(this.state.command!);
-    }
-    this.setState({
-      displayAddSubcommandDialog: false,
-      subcommandArgVar: undefined,
-      subcommandDefaultGroupNames: undefined,
-    });
-  };
-
-  render() {
-    const { workspaceUrl, previewCommand } = this.props;
-    const commandNames = previewCommand.names;
-    const name = COMMAND_PREFIX + commandNames.join(" ");
-    const commandUrl =
-      `${workspaceUrl}/CommandTree/Nodes/aaz/` +
-      commandNames.slice(0, -1).join("/") +
-      "/Leaves/" +
-      commandNames[commandNames.length - 1];
-
-    const {
-      command,
-      displayCommandDialog,
-      displayExampleDialog,
-      displayOutputDialog,
-      displayCommandDeleteDialog,
-      displayAddSubcommandDialog,
-      exampleIdx,
-      outputIdx,
-      loading,
-    } = this.state;
-
-    const buildExampleView = (example: Example, idx: number) => {
+  const buildExampleView = useCallback(
+    (example: Example, idx: number) => {
       const buildCommand = (exampleCommand: string, cmdIdx: number) => {
         return (
           <Box
@@ -360,7 +324,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
           expanded
           key={`example-${idx}`}
           onDoubleClick={() => {
-            this.onExampleDialogDisplay(idx);
+            onExampleDialogDisplay(idx);
           }}
         >
           <ExampleAccordionSummary id={`example-${idx}-header`}>
@@ -374,12 +338,11 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
               }}
             >
               <SubtitleTypography sx={{ flexShrink: 0 }}>{example.name}</SubtitleTypography>
-              {/* <Box sx={{ flexGrow: 1 }} /> */}
               <Button
                 sx={{ flexShrink: 0, ml: 3 }}
                 startIcon={<EditIcon color="secondary" fontSize="small" />}
                 onClick={() => {
-                  this.onExampleDialogDisplay(idx);
+                  onExampleDialogDisplay(idx);
                 }}
               >
                 <ExampleEditTypography>Edit</ExampleEditTypography>
@@ -401,260 +364,261 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
           </AccordionDetails>
         </Accordion>
       );
-    };
+    },
+    [onExampleDialogDisplay],
+  );
 
-    const buildCommandCard = () => {
-      const shortHelp = (command ?? previewCommand).help?.short;
-      const longHelp = (command ?? previewCommand).help?.lines?.join("\n");
-      const lines: string[] = (command ?? previewCommand).help?.lines ?? [];
-      const stage = (command ?? previewCommand).stage;
-      const version = (command ?? previewCommand).version;
-
-      return (
-        <Card
-          onDoubleClick={this.onCommandDialogDisplay}
-          elevation={3}
-          sx={{
-            flexGrow: 1,
-            display: "flex",
-            flexDirection: "column",
-            p: 2,
-          }}
-        >
-          <CardContent
-            sx={{
-              flex: "1 0 auto",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "stretch",
-            }}
-          >
-            <Box
-              sx={{
-                mb: 2,
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-              }}
-            >
-              <CardTitleTypography sx={{ flexShrink: 0 }}>[ COMMAND ]</CardTitleTypography>
-              <Box sx={{ flexGrow: 1 }} />
-              {stage === "Stable" && <StableTypography sx={{ flexShrink: 0 }}>{`v${version}`}</StableTypography>}
-              {stage === "Preview" && <PreviewTypography sx={{ flexShrink: 0 }}>{`v${version}`}</PreviewTypography>}
-              {stage === "Experimental" && (
-                <ExperimentalTypography sx={{ flexShrink: 0 }}>{`v${version}`}</ExperimentalTypography>
-              )}
-            </Box>
-
-            <NameTypography sx={{ mt: 1 }}>{name}</NameTypography>
-            {shortHelp && <ShortHelpTypography sx={{ ml: 6, mt: 2 }}> {shortHelp} </ShortHelpTypography>}
-            {!shortHelp && (
-              <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>
-                Please add command short summary!
-              </ShortHelpPlaceHolderTypography>
-            )}
-            {longHelp && (
-              <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
-                {lines.map((line, idx) => (
-                  <LongHelpTypography key={idx}>{line}</LongHelpTypography>
-                ))}
-              </Box>
-            )}
-          </CardContent>
-          <CardActions
-            sx={{
-              display: "flex",
-              flexDirection: "row-reverse",
-              alignContent: "center",
-              justifyContent: "flex-start",
-            }}
-          >
-            {loading && (
-              <Box sx={{ width: "100%" }}>
-                <LinearProgress color="secondary" />
-              </Box>
-            )}
-            {!loading && (
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignContent: "center",
-                  justifyContent: "flex-start",
-                }}
-              >
-                <Button
-                  data-testid="update-command"
-                  variant="contained"
-                  size="small"
-                  color="secondary"
-                  disableElevation
-                  onClick={this.onCommandDialogDisplay}
-                  disabled={loading}
-                  sx={{ mr: 2 }}
-                >
-                  <Typography variant="body2">Edit</Typography>
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  color="secondary"
-                  onClick={this.onCommandDeleteDialogDisplay}
-                  disabled={loading}
-                  sx={{ mr: 2 }}
-                >
-                  <Typography variant="body2">Delete</Typography>
-                </Button>
-              </Box>
-            )}
-          </CardActions>
-        </Card>
-      );
-    };
-
-    const buildArgumentsCard = () => {
-      return (
-        <Card
-          elevation={3}
-          sx={{
-            flexGrow: 1,
-            display: "flex",
-            flexDirection: "column",
-            mt: 1,
-            p: 2,
-          }}
-        >
-          <WSEditorCommandArgumentsContent
-            commandUrl={commandUrl}
-            args={command!.args!}
-            clsArgDefineMap={command!.clsArgDefineMap!}
-            onReloadArgs={this.loadCommand}
-            onAddSubCommand={this.onAddSubcommandDialogDisplay}
-          />
-        </Card>
-      );
-    };
-
-    const buildExampleCard = () => {
-      const examples = command!.examples ?? [];
-      return (
-        <Card
-          elevation={3}
-          sx={{
-            flexGrow: 1,
-            display: "flex",
-            flexDirection: "column",
-            mt: 1,
-            p: 2,
-          }}
-        >
-          <CardContent
-            sx={{
-              flex: "1 0 auto",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "stretch",
-            }}
-          >
-            <Box
-              sx={{
-                mb: 2,
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-              }}
-            >
-              <CardTitleTypography sx={{ flexShrink: 0 }}>[ EXAMPLE ]</CardTitleTypography>
-            </Box>
-            {examples.length > 0 && <Box>{examples.map(buildExampleView)}</Box>}
-          </CardContent>
-
-          <CardActions
-            sx={{
-              display: "flex",
-              flexDirection: "row-reverse",
-            }}
-          >
-            <Button
-              variant="contained"
-              size="small"
-              color="secondary"
-              disableElevation
-              onClick={() => this.onExampleDialogDisplay(undefined)}
-            >
-              <Typography variant="body2">Add</Typography>
-            </Button>
-          </CardActions>
-        </Card>
-      );
-    };
+  const buildCommandCard = useCallback(() => {
+    const shortHelp = (command ?? previewCommand).help?.short;
+    const longHelp = (command ?? previewCommand).help?.lines?.join("\n");
+    const stage = (command ?? previewCommand).stage;
+    const version = (command ?? previewCommand).version;
 
     return (
-      <React.Fragment>
-        <Box
-          data-testid="ws-editor-command-content"
+      <Card
+        onDoubleClick={onCommandDialogDisplay}
+        elevation={3}
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+          p: 2,
+        }}
+      >
+        <CardContent
           sx={{
+            flex: "1 0 auto",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "stretch",
+          }}
+        >
+          <Box
+            sx={{
+              mb: 2,
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <CardTitleTypography sx={{ flexShrink: 0 }}>[ COMMAND ]</CardTitleTypography>
+            <Box sx={{ flexGrow: 1 }} />
+            {stage === "Stable" && <StableTypography sx={{ flexShrink: 0 }}>{`v${version}`}</StableTypography>}
+            {stage === "Preview" && <PreviewTypography sx={{ flexShrink: 0 }}>{`v${version}`}</PreviewTypography>}
+            {stage === "Experimental" && (
+              <ExperimentalTypography sx={{ flexShrink: 0 }}>{`v${version}`}</ExperimentalTypography>
+            )}
+          </Box>
+          <NameTypography sx={{ mt: 1 }}>{name}</NameTypography>
+          {shortHelp && <ShortHelpTypography sx={{ ml: 6, mt: 2 }}> {shortHelp} </ShortHelpTypography>}
+          {!shortHelp && (
+            <ShortHelpPlaceHolderTypography sx={{ ml: 6, mt: 2 }}>
+              Please add command short summary!
+            </ShortHelpPlaceHolderTypography>
+          )}
+          {longHelp && (
+            <Box sx={{ ml: 6, mt: 1, mb: 1 }}>
+              {longHelp
+                .split("\n")
+                .filter((l) => l.length > 0)
+                .map((line, idx) => (
+                  <LongHelpTypography key={idx}>{line}</LongHelpTypography>
+                ))}
+            </Box>
+          )}
+        </CardContent>
+        <CardActions
+          sx={{
+            display: "flex",
+            flexDirection: "row-reverse",
+            alignContent: "center",
+            justifyContent: "flex-start",
+          }}
+        >
+          {loading && (
+            <Box sx={{ width: "100%" }}>
+              <LinearProgress color="secondary" />
+            </Box>
+          )}
+          {!loading && (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                alignContent: "center",
+                justifyContent: "flex-start",
+              }}
+            >
+              <Button
+                data-testid="update-command"
+                variant="contained"
+                size="small"
+                color="secondary"
+                disableElevation
+                onClick={onCommandDialogDisplay}
+                disabled={loading}
+                sx={{ mr: 2 }}
+              >
+                <Typography variant="body2">Edit</Typography>
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                color="secondary"
+                onClick={onCommandDeleteDialogDisplay}
+                disabled={loading}
+                sx={{ mr: 2 }}
+              >
+                <Typography variant="body2">Delete</Typography>
+              </Button>
+            </Box>
+          )}
+        </CardActions>
+      </Card>
+    );
+  }, [command, previewCommand, name, onCommandDialogDisplay, loading, onCommandDeleteDialogDisplay]);
+  const buildArgumentsCard = useCallback(() => {
+    return (
+      <Card
+        elevation={3}
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+          mt: 1,
+          p: 2,
+        }}
+      >
+        <WSEditorCommandArgumentsContent
+          commandUrl={commandUrl}
+          args={command!.args!}
+          clsArgDefineMap={command!.clsArgDefineMap!}
+          onReloadArgs={loadCommand}
+          onAddSubCommand={onAddSubcommandDialogDisplay}
+        />
+      </Card>
+    );
+  }, [commandUrl, command, loadCommand, onAddSubcommandDialogDisplay]);
+
+  const buildExampleCard = useCallback(() => {
+    const examples = command!.examples ?? [];
+    return (
+      <Card
+        elevation={3}
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+          mt: 1,
+          p: 2,
+        }}
+      >
+        <CardContent
+          sx={{
+            flex: "1 0 auto",
             display: "flex",
             flexDirection: "column",
             alignItems: "stretch",
           }}
         >
-          {buildCommandCard()}
-          {command !== undefined && command.args !== undefined && buildArgumentsCard()}
-          {command !== undefined && buildExampleCard()}
-          {command !== undefined && command.outputs !== undefined && (
-            <OutputCard command={command} onOutputDialogDisplay={this.onOutputDialogDisplay} />
-          )}
-        </Box>
-        {command !== undefined && displayCommandDialog && (
-          <CommandDialog
-            open={displayCommandDialog}
-            workspaceUrl={workspaceUrl}
-            command={command!}
-            onClose={this.handleCommandDialogClose}
-          />
-        )}
-        {command !== undefined && displayExampleDialog && (
-          <ExampleDialog
-            open={displayExampleDialog}
-            workspaceUrl={workspaceUrl}
-            command={command!}
-            idx={exampleIdx}
-            onClose={this.handleExampleDialogClose}
-          />
-        )}
-        {command !== undefined && displayOutputDialog && (
-          <OutputDialog
-            open={displayOutputDialog}
-            workspaceUrl={workspaceUrl}
-            command={command!}
-            idx={outputIdx}
-            onClose={this.handleOutputDialogClose}
-          />
-        )}
-        {command !== undefined && displayCommandDeleteDialog && (
-          <CommandDeleteDialog
-            open={displayCommandDeleteDialog}
-            workspaceUrl={workspaceUrl}
-            command={command!}
-            onClose={this.handleCommandDeleteDialogClose}
-          />
-        )}
-        {command !== undefined && displayAddSubcommandDialog && (
-          <AddSubcommandDialog
-            open={displayAddSubcommandDialog}
-            workspaceUrl={workspaceUrl}
-            command={command!}
-            onClose={this.handleAddSubcommandDisplayClose}
-            argVar={this.state.subcommandArgVar!}
-            subArgOptions={this.state.subcommandSubArgOptions!}
-            defaultGroupNames={this.state.subcommandDefaultGroupNames!}
-          />
-        )}
-      </React.Fragment>
+          <Box
+            sx={{
+              mb: 2,
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <CardTitleTypography sx={{ flexShrink: 0 }}>[ EXAMPLE ]</CardTitleTypography>
+          </Box>
+          {examples.length > 0 && <Box>{examples.map(buildExampleView)}</Box>}
+        </CardContent>
+
+        <CardActions
+          sx={{
+            display: "flex",
+            flexDirection: "row-reverse",
+          }}
+        >
+          <Button
+            variant="contained"
+            size="small"
+            color="secondary"
+            disableElevation
+            onClick={() => onExampleDialogDisplay(undefined)}
+          >
+            <Typography variant="body2">Add</Typography>
+          </Button>
+        </CardActions>
+      </Card>
     );
-  }
-}
+  }, [command, buildExampleView, onExampleDialogDisplay]);
+
+  return (
+    <React.Fragment>
+      <Box
+        data-testid="ws-editor-command-content"
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "stretch",
+        }}
+      >
+        {buildCommandCard()}
+        {command !== undefined && command.args !== undefined && buildArgumentsCard()}
+        {command !== undefined && buildExampleCard()}
+        {command !== undefined && command.outputs !== undefined && (
+          <OutputCard command={command} onOutputDialogDisplay={onOutputDialogDisplay} />
+        )}
+      </Box>
+      {command !== undefined && displayCommandDialog && (
+        <CommandDialog
+          open={displayCommandDialog}
+          workspaceUrl={workspaceUrl}
+          command={command}
+          onClose={handleCommandDialogClose}
+        />
+      )}
+      {command !== undefined && displayExampleDialog && (
+        <ExampleDialog
+          open={displayExampleDialog}
+          workspaceUrl={workspaceUrl}
+          command={command}
+          idx={exampleIdx}
+          onClose={handleExampleDialogClose}
+        />
+      )}
+      {command !== undefined && displayOutputDialog && (
+        <OutputDialog
+          open={displayOutputDialog}
+          workspaceUrl={workspaceUrl}
+          command={command}
+          idx={outputIdx}
+          onClose={handleOutputDialogClose}
+        />
+      )}
+      {command !== undefined && displayCommandDeleteDialog && (
+        <CommandDeleteDialog
+          open={displayCommandDeleteDialog}
+          workspaceUrl={workspaceUrl}
+          command={command}
+          onClose={handleCommandDeleteDialogClose}
+        />
+      )}
+      {command !== undefined && displayAddSubcommandDialog && (
+        <AddSubcommandDialog
+          open={displayAddSubcommandDialog}
+          workspaceUrl={workspaceUrl}
+          command={command}
+          onClose={handleAddSubcommandDisplayClose}
+          argVar={subcommandArgVar!}
+          subArgOptions={subcommandSubArgOptions!}
+          defaultGroupNames={subcommandDefaultGroupNames!}
+        />
+      )}
+    </React.Fragment>
+  );
+};
 
 interface CommandDialogProps {
   workspaceUrl: string;
@@ -663,78 +627,49 @@ interface CommandDialogProps {
   onClose: (newCommand?: Command) => void;
 }
 
-interface CommandDialogState {
-  name: string;
-  stage: string;
-  shortHelp: string;
-  longHelp: string;
-  invalidText?: string;
-  confirmation: string;
-  updating: boolean;
-}
+const CommandDialog: React.FC<CommandDialogProps> = ({ workspaceUrl, open, command, onClose }) => {
+  const [name, setName] = useState(command.names.join(" "));
+  const [shortHelp, setShortHelp] = useState(command.help?.short ?? "");
+  const [longHelp, setLongHelp] = useState(command.help?.lines?.join("\n") ?? "");
+  const [stage, setStage] = useState(command.stage);
+  const [confirmation, setConfirmation] = useState(command.confirmation ?? "");
+  const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
+  const [updating, setUpdating] = useState(false);
 
-class CommandDialog extends React.Component<CommandDialogProps, CommandDialogState> {
-  constructor(props: CommandDialogProps) {
-    super(props);
-    this.state = {
-      name: this.props.command.names.join(" "),
-      shortHelp: this.props.command.help?.short ?? "",
-      longHelp: this.props.command.help?.lines?.join("\n") ?? "",
-      stage: this.props.command.stage,
-      confirmation: this.props.command.confirmation ?? "",
-      updating: false,
-    };
-  }
+  const handleModify = useCallback(async () => {
+    let trimmedName = name.trim();
+    let trimmedShortHelp = shortHelp.trim();
+    let trimmedLongHelp = longHelp.trim();
+    let trimmedConfirmation = confirmation.trim();
 
-  handleModify = async () => {
-    let { name, shortHelp, longHelp, confirmation } = this.state;
-    const { stage } = this.state;
+    const names = trimmedName.split(" ").filter((n) => n.length > 0);
 
-    const { workspaceUrl, command } = this.props;
-
-    name = name.trim();
-    shortHelp = shortHelp.trim();
-    longHelp = longHelp.trim();
-    confirmation = confirmation.trim();
-
-    const names = name.split(" ").filter((n) => n.length > 0);
-
-    this.setState({
-      invalidText: undefined,
-    });
+    setInvalidText(undefined);
 
     if (names.length < 1) {
-      this.setState({
-        invalidText: `Field 'Name' is required.`,
-      });
+      setInvalidText(`Field 'Name' is required.`);
       return;
     }
 
     for (const idx in names) {
       const piece = names[idx];
       if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(piece)) {
-        this.setState({
-          invalidText: `Invalid Name part: '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `,
-        });
+        setInvalidText(`Invalid Name part: '${piece}'. Supported regular expression is: [a-z0-9]+(-[a-z0-9]+)* `);
         return;
       }
     }
 
-    if (shortHelp.length < 1) {
-      this.setState({
-        invalidText: `Field 'Short Summary' is required.`,
-      });
+    if (trimmedShortHelp.length < 1) {
+      setInvalidText(`Field 'Short Summary' is required.`);
       return;
     }
 
     let lines: string[] | null = null;
-    if (longHelp.length > 1) {
-      lines = longHelp.split("\n").filter((l) => l.length > 0);
+    if (trimmedLongHelp.length > 1) {
+      lines = trimmedLongHelp.split("\n").filter((l) => l.length > 0);
     }
 
-    this.setState({
-      updating: true,
-    });
+    setUpdating(true);
 
     const leafUrl =
       `${workspaceUrl}/CommandTree/Nodes/aaz/` +
@@ -745,155 +680,134 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
     try {
       const commandData = await commandApi.updateCommand(leafUrl, {
         help: {
-          short: shortHelp,
+          short: trimmedShortHelp,
           lines: lines,
         },
         stage: stage,
-        confirmation: confirmation,
+        confirmation: trimmedConfirmation,
       });
 
-      const name = names.join(" ");
-      if (name === command.names.join(" ")) {
+      const commandName = names.join(" ");
+      if (commandName === command.names.join(" ")) {
         const cmd = DecodeResponseCommand(commandData);
-        this.setState({
-          updating: false,
-        });
-        this.props.onClose(cmd);
+        setUpdating(false);
+        onClose(cmd);
       } else {
-        const renamedData = await commandApi.renameCommand(leafUrl, name);
+        const renamedData = await commandApi.renameCommand(leafUrl, commandName);
         const cmd = DecodeResponseCommand(renamedData);
-        this.setState({
-          updating: false,
-        });
-        this.props.onClose(cmd);
+        setUpdating(false);
+        onClose(cmd);
       }
     } catch (err: any) {
       console.error(err);
-      this.setState({
-        invalidText: errorHandlerApi.getErrorMessage(err),
-        updating: false,
-      });
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
+      setUpdating(false);
     }
-  };
+  }, [name, shortHelp, longHelp, confirmation, stage, workspaceUrl, command, onClose]);
 
-  handleClose = () => {
-    this.setState({
-      invalidText: undefined,
-    });
-    this.props.onClose();
-  };
+  const handleClose = useCallback(() => {
+    setInvalidText(undefined);
+    onClose();
+  }, [onClose]);
 
-  render() {
-    const { name, shortHelp, longHelp, invalidText, updating, stage, confirmation } = this.state;
-    return (
-      <Dialog disableEscapeKeyDown open={this.props.open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
-        <DialogTitle>Command</DialogTitle>
-        <DialogContent dividers={true}>
-          {invalidText && (
-            <Alert variant="filled" severity="error">
-              {" "}
-              {invalidText}{" "}
-            </Alert>
-          )}
-          <InputLabel required shrink sx={{ font: "inherit" }}>
-            Stage
-          </InputLabel>
-          <RadioGroup
-            row
-            value={stage}
-            name="stage"
-            onChange={(event: any) => {
-              this.setState({
-                stage: event.target.value,
-              });
-            }}
-          >
-            <FormControlLabel value="Stable" control={<Radio />} label="Stable" sx={{ ml: 4 }} />
-            <FormControlLabel value="Preview" control={<Radio />} label="Preview" sx={{ ml: 4 }} />
-            <FormControlLabel value="Experimental" control={<Radio />} label="Experimental" sx={{ ml: 4 }} />
-          </RadioGroup>
+  return (
+    <Dialog disableEscapeKeyDown open={open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
+      <DialogTitle>Command</DialogTitle>
+      <DialogContent dividers={true}>
+        {invalidText && (
+          <Alert variant="filled" severity="error">
+            {" "}
+            {invalidText}{" "}
+          </Alert>
+        )}
+        <InputLabel required shrink sx={{ font: "inherit" }}>
+          Stage
+        </InputLabel>
+        <RadioGroup
+          row
+          value={stage}
+          name="stage"
+          onChange={(event: any) => {
+            setStage(event.target.value);
+          }}
+        >
+          <FormControlLabel value="Stable" control={<Radio />} label="Stable" sx={{ ml: 4 }} />
+          <FormControlLabel value="Preview" control={<Radio />} label="Preview" sx={{ ml: 4 }} />
+          <FormControlLabel value="Experimental" control={<Radio />} label="Experimental" sx={{ ml: 4 }} />
+        </RadioGroup>
 
-          <TextField
-            id="name"
-            label="Name"
-            type="text"
-            fullWidth
-            variant="standard"
-            value={name}
-            onChange={(event: any) => {
-              this.setState({
-                name: event.target.value,
-              });
-            }}
-            margin="normal"
-            required
-          />
-          <TextField
-            id="shortSummary"
-            label="Short Summary"
-            type="text"
-            fullWidth
-            variant="standard"
-            value={shortHelp}
-            onChange={(event: any) => {
-              this.setState({
-                shortHelp: event.target.value,
-              });
-            }}
-            margin="normal"
-            required
-          />
-          <TextField
-            id="longSummary"
-            label="Long Summary"
-            helperText="Please add long summary in lines."
-            type="text"
-            fullWidth
-            multiline
-            rows={4}
-            variant="standard"
-            value={longHelp}
-            onChange={(event: any) => {
-              this.setState({
-                longHelp: event.target.value,
-              });
-            }}
-            margin="normal"
-          />
-          <TextField
-            id="confirmation"
-            label="Command confirmation"
-            helperText="Modify or clear confirmation message as needed."
-            type="text"
-            fullWidth
-            multiline
-            variant="standard"
-            value={confirmation}
-            onChange={(event: any) => {
-              this.setState({
-                confirmation: event.target.value,
-              });
-            }}
-            margin="normal"
-          />
-        </DialogContent>
-        <DialogActions>
-          {updating && (
-            <Box sx={{ width: "100%" }}>
-              <LinearProgress color="secondary" />
-            </Box>
-          )}
-          {!updating && (
-            <React.Fragment>
-              <Button onClick={this.handleClose}>Cancel</Button>
-              <Button onClick={this.handleModify}>Save</Button>
-            </React.Fragment>
-          )}
-        </DialogActions>
-      </Dialog>
-    );
-  }
-}
+        <TextField
+          id="name"
+          label="Name"
+          type="text"
+          fullWidth
+          variant="standard"
+          value={name}
+          onChange={(event: any) => {
+            setName(event.target.value);
+          }}
+          margin="normal"
+          required
+        />
+        <TextField
+          id="shortSummary"
+          label="Short Summary"
+          type="text"
+          fullWidth
+          variant="standard"
+          value={shortHelp}
+          onChange={(event: any) => {
+            setShortHelp(event.target.value);
+          }}
+          margin="normal"
+          required
+        />
+        <TextField
+          id="longSummary"
+          label="Long Summary"
+          helperText="Please add long summary in lines."
+          type="text"
+          fullWidth
+          multiline
+          rows={4}
+          variant="standard"
+          value={longHelp}
+          onChange={(event: any) => {
+            setLongHelp(event.target.value);
+          }}
+          margin="normal"
+        />
+        <TextField
+          id="confirmation"
+          label="Command confirmation"
+          helperText="Modify or clear confirmation message as needed."
+          type="text"
+          fullWidth
+          multiline
+          variant="standard"
+          value={confirmation}
+          onChange={(event: any) => {
+            setConfirmation(event.target.value);
+          }}
+          margin="normal"
+        />
+      </DialogContent>
+      <DialogActions>
+        {updating && (
+          <Box sx={{ width: "100%" }}>
+            <LinearProgress color="secondary" />
+          </Box>
+        )}
+        {!updating && (
+          <React.Fragment>
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={handleModify}>Save</Button>
+          </React.Fragment>
+        )}
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 const DecodeResponseCommand = (command: ResponseCommand): Command => {
   let cmd: Command = {
