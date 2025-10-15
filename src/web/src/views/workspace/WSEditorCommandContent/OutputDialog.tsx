@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material";
 import { commandApi, errorHandlerApi } from "../../../services";
+import { DecodeResponseCommand } from "../utils/decodeResponseCommand";
 
 interface ObjectOutput {
   type: "object";
@@ -60,18 +61,6 @@ interface Command {
   resources: any[];
 }
 
-interface ResponseCommand {
-  names: string[];
-  help?: {
-    short: string;
-    lines?: string[];
-  };
-  stage?: "Stable" | "Preview" | "Experimental";
-  version: string;
-  outputs?: Output[];
-  resources: any[];
-}
-
 const OutputDialogLabel = styled(FormLabel)<FormLabelProps>(() => ({
   fontSize: 12,
 }));
@@ -90,20 +79,6 @@ interface OutputDialogProps {
   open: boolean;
   onClose: (newCommand?: Command) => void;
 }
-
-const DecodeResponseCommand = (command: ResponseCommand): Command => {
-  let cmd: Command = {
-    id: "command:" + command.names.join("/"),
-    names: command.names,
-    help: command.help,
-    stage: command.stage ?? "Stable",
-    outputs: command.outputs,
-    resources: command.resources,
-    version: command.version,
-  };
-
-  return cmd;
-};
 
 const OutputDialog: React.FC<OutputDialogProps> = (props) => {
   const [updating, setUpdating] = useState<boolean>(false);
