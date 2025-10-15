@@ -10,8 +10,8 @@ import {
   TextField,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { commandApi, errorHandlerApi } from "../../services";
-import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./argument/WSECArgumentSimilarPicker";
+import { commandApi, errorHandlerApi } from "../../../services";
+import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./WSECArgumentSimilarPicker";
 
 interface FlattenDialogProps {
   commandUrl: string;

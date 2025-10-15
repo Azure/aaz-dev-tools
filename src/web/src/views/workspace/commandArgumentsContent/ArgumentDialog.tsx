@@ -16,9 +16,9 @@ import {
   TextField,
 } from "@mui/material";
 
-import { commandApi, errorHandlerApi } from "../../services";
+import { commandApi, errorHandlerApi } from "../../../services";
 import React, { useEffect, useState } from "react";
-import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./argument/WSECArgumentSimilarPicker";
+import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./WSECArgumentSimilarPicker";
 
 interface CMDClsArg {
   var: string;

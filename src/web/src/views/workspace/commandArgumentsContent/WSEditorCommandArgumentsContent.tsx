@@ -8,7 +8,7 @@ import ArgumentDialog from "./ArgumentDialog";
 import UnwrapClsDialog from "./UnwrapClsDialog";
 import FlattenDialog from "./FlattenDialog";
 
-import { CardTitleTypography } from "./WSEditorTheme";
+import { CardTitleTypography } from "../WSEditorTheme";
 
 interface WSEditorCommandArgumentsContentProps {
   commandUrl: string;

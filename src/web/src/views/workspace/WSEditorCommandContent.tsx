@@ -42,11 +42,7 @@ import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArro
 import LabelIcon from "@mui/icons-material/Label";
 import { commandApi, errorHandlerApi } from "../../services";
 import { COMMAND_PREFIX } from "../../constants";
-import WSEditorCommandArgumentsContent, {
-  ClsArgDefinitionMap,
-  CMDArg,
-  DecodeArgs,
-} from "./WSEditorCommandArgumentsContent";
+import WSEditorCommandArgumentsContent, { ClsArgDefinitionMap, CMDArg, DecodeArgs } from "./commandArgumentsContent";
 import EditIcon from "@mui/icons-material/Edit";
 import ExampleDialog from "./ExampleDialog";
 import AddSubcommandDialog from "./AddSubcommandDialog";

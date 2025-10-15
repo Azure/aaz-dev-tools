@@ -3,7 +3,7 @@ import { Box, Button, ButtonBase, styled, Typography, TypographyProps } from "@m
 import { ChevronRight } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
 import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
-import { SmallExperimentalTypography, SmallPreviewTypography, SubtitleTypography } from "./WSEditorTheme";
+import { SmallExperimentalTypography, SmallPreviewTypography, SubtitleTypography } from "../WSEditorTheme";
 import type { CMDArg } from "./WSEditorCommandArgumentsContent";
 
 interface CMDArrayArg extends CMDArg {

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Box } from "@mui/material";
-import { ExperimentalTypography, PreviewTypography, StableTypography } from "./WSEditorTheme";
+import { ExperimentalTypography, PreviewTypography, StableTypography } from "../WSEditorTheme";
 import ArgumentPropsReviewer from "./ArgumentPropsReviewer";
-import ArgNavBar, { type ArgIdx } from "./argument/ArgNavBar";
-import ArgumentReviewer from "./argument/ArgumentReviewer";
+import ArgNavBar, { type ArgIdx } from "./ArgNavBar";
+import ArgumentReviewer from "./ArgumentReviewer";
 import type { CMDArg, ClsArgDefinitionMap } from "./WSEditorCommandArgumentsContent";
 
 interface CMDArgBase {

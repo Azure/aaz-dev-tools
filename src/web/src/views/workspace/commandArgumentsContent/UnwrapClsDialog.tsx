@@ -12,7 +12,7 @@ import {
   TypographyProps,
 } from "@mui/material";
 
-import { commandApi, errorHandlerApi } from "../../services";
+import { commandApi, errorHandlerApi } from "../../../services";
 import React, { useState } from "react";
 
 const ArgTypeTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
