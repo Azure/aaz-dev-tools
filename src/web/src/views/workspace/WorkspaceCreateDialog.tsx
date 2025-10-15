@@ -12,7 +12,7 @@ import {
 import React, { useState, useEffect, useCallback } from "react";
 import SwaggerItemSelector from "./SwaggerItemSelector";
 import styled from "@emotion/styled";
-import { Plane } from "./WSEditorCommandContent";
+import { Plane } from "./commandContent/WSEditorCommandContent";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 
 interface WorkspaceCreateDialogProps {

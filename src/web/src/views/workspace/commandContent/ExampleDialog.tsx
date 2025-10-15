@@ -21,9 +21,9 @@ import React, { useState, useCallback, useEffect } from "react";
 import DoDisturbOnRoundedIcon from "@mui/icons-material/DoDisturbOnRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import CloseIcon from "@mui/icons-material/Close";
-import { commandApi, errorHandlerApi } from "../../services";
-import { COMMAND_PREFIX } from "../../constants";
-import { ExampleItemSelector } from "./WSEditorExamplePicker";
+import { commandApi, errorHandlerApi } from "../../../services";
+import { COMMAND_PREFIX } from "../../../constants";
+import { ExampleItemSelector } from "../WSEditorExamplePicker";
 import { Command, Example, DecodeResponseCommand } from "./WSEditorCommandContent";
 
 export interface ExampleDialogProps {

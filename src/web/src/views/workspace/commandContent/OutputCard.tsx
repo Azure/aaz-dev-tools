@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Button, Card, CardContent, Typography, ButtonBase, styled, TypographyProps } from "@mui/material";
 import DataObjectIcon from "@mui/icons-material/DataObject";
 import EditIcon from "@mui/icons-material/Edit";
-import { SubtitleTypography, CardTitleTypography } from "./WSEditorTheme";
+import { SubtitleTypography, CardTitleTypography } from "../WSEditorTheme";
 
 interface Example {
   name: string;

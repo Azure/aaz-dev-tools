@@ -1,6 +1,6 @@
 import { Box, Button, Card, CardActions, CardContent, Typography } from "@mui/material";
 import * as React from "react";
-import { ResponseCommands } from "./WSEditorCommandContent";
+import { ResponseCommands } from "./commandContent/WSEditorCommandContent";
 import CommandGroupDialog from "./CommandGroupDialog";
 import CommandGroupDeleteDialog from "./CommandGroupDeleteDialog";
 import { COMMAND_PREFIX } from "../../constants";

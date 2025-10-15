@@ -34,12 +34,12 @@ import {
   ExperimentalTypography,
   SubtitleTypography,
   CardTitleTypography,
-} from "./WSEditorTheme";
+} from "../WSEditorTheme";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import LabelIcon from "@mui/icons-material/Label";
-import { commandApi, errorHandlerApi } from "../../services";
-import { COMMAND_PREFIX } from "../../constants";
-import WSEditorCommandArgumentsContent, { ClsArgDefinitionMap, CMDArg, DecodeArgs } from "./commandArgumentsContent";
+import { commandApi, errorHandlerApi } from "../../../services";
+import { COMMAND_PREFIX } from "../../../constants";
+import WSEditorCommandArgumentsContent, { ClsArgDefinitionMap, CMDArg, DecodeArgs } from "../commandArgumentsContent";
 import EditIcon from "@mui/icons-material/Edit";
 import ExampleDialog from "./ExampleDialog";
 import AddSubcommandDialog from "./AddSubcommandDialog";
@@ -484,6 +484,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
                 }}
               >
                 <Button
+                  data-testid="update-command"
                   variant="contained"
                   size="small"
                   color="secondary"
@@ -591,6 +592,7 @@ class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps
     return (
       <React.Fragment>
         <Box
+          data-testid="ws-editor-command-content"
           sx={{
             display: "flex",
             flexDirection: "column",

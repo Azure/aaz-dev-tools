@@ -16,7 +16,7 @@ import {
   FormLabelProps,
 } from "@mui/material";
 import { styled } from "@mui/material";
-import { commandApi, errorHandlerApi } from "../../services";
+import { commandApi, errorHandlerApi } from "../../../services";
 
 interface ObjectOutput {
   type: "object";

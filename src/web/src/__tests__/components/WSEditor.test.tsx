@@ -70,7 +70,7 @@ vi.mock("../../views/workspace/WSEditorCommandGroupContent", () => ({
   ResponseCommandGroups: {},
 }));
 
-vi.mock("../../views/workspace/WSEditorCommandContent", () => ({
+vi.mock("../../views/workspace/commandContent/WSEditorCommandContent", () => ({
   default: ({ previewCommand, onUpdateCommand }: any) => (
     <div data-testid="ws-editor-command-content">
       <span data-testid="command-id">{previewCommand.id}</span>

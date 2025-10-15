@@ -37,7 +37,7 @@ import WSEditorCommandContent, {
   Resource,
   DecodeResponseCommand,
   ResponseCommand,
-} from "./WSEditorCommandContent";
+} from "./commandContent/WSEditorCommandContent";
 import WSEditorClientConfigDialog from "./WSEditorClientConfig";
 import { getTypespecRPResourcesOperations } from "../../typespec";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../services";

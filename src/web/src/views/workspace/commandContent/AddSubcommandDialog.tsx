@@ -11,7 +11,7 @@ import {
   TextField,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
-import { commandApi, errorHandlerApi } from "../../services";
+import { commandApi, errorHandlerApi } from "../../../services";
 import { Command } from "./WSEditorCommandContent";
 
 export interface AddSubcommandDialogProps {

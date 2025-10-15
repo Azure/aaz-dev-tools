@@ -9,8 +9,8 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { commandApi } from "../../services";
-import { COMMAND_PREFIX } from "../../constants";
+import { commandApi } from "../../../services";
+import { COMMAND_PREFIX } from "../../../constants";
 import { Command, ResponseCommand, DecodeResponseCommand } from "./WSEditorCommandContent";
 
 export interface CommandDeleteDialogProps {
