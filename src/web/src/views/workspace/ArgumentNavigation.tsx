@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, ButtonBase, styled, Typography, TypographyProps } from "@mui/material";
-import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import { Box, Button, styled, Typography, TypographyProps } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import ImportExportIcon from "@mui/icons-material/ImportExport";
 import {
@@ -12,6 +11,7 @@ import {
   StableTypography,
 } from "./WSEditorTheme";
 import ArgumentPropsReviewer from "./ArgumentPropsReviewer";
+import ArgNavBar, { type ArgIdx } from "./argument/ArgNavBar";
 import type { CMDArg, ClsArgDefinitionMap } from "./WSEditorCommandArgumentsContent";
 
 interface CMDArgBase {
@@ -51,11 +51,6 @@ interface CMDNumberArg extends CMDArg {
   };
 }
 
-interface ArgIdx {
-  var: string;
-  displayKey: string;
-}
-
 interface ArgumentNavigationProps {
   commandUrl: string;
   args: CMDArg[];
@@ -66,28 +61,12 @@ interface ArgumentNavigationProps {
   onAddSubcommand: (arg: CMDArg, argIdxStack: ArgIdx[]) => void;
 }
 
-interface ArgNavBarProps {
-  argIdxStack: ArgIdx[];
-  onChangeArgIdStack: (end: number) => void;
-}
-
 interface ArgumentReviewerProps {
   arg: CMDArg;
   depth: number;
   onEdit: () => void;
   onUnwrap: () => void;
 }
-
-const NavBarItemTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
-  color: theme.palette.primary.main,
-  fontFamily: "'Work Sans', sans-serif",
-  fontSize: 14,
-  fontWeight: 400,
-}));
-
-const NavBarItemHightLightedTypography = styled(NavBarItemTypography)<TypographyProps>(() => ({
-  color: "#5d64cf",
-}));
 
 const ArgNameTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
   color: theme.palette.primary.main,
@@ -172,58 +151,6 @@ const spliceArgOptionsString = (arg: CMDArg, depth: number) => {
   }
 
   return optionsString;
-};
-
-const ArgNavBar: React.FC<ArgNavBarProps> = ({ argIdxStack, onChangeArgIdStack }) => {
-  return (
-    <React.Fragment>
-      <Box
-        sx={{
-          flexGrow: 1,
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          mt: 1,
-          mb: 0.5,
-          mr: 2,
-        }}
-      >
-        <ButtonBase
-          key="Back"
-          onClick={() => {
-            onChangeArgIdStack(0);
-          }}
-        >
-          <ArrowBackIosIcon sx={{ fontSize: 14 }} />
-        </ButtonBase>
-        {argIdxStack.slice(0, -1).map((argIdx: ArgIdx, index: number) => (
-          <ButtonBase
-            key={`${index}`}
-            onClick={() => {
-              onChangeArgIdStack(index + 1);
-            }}
-          >
-            <NavBarItemTypography sx={{ flexShrink: 0 }}>
-              {index > 0 ? `.${argIdx.displayKey}` : argIdx.displayKey}
-            </NavBarItemTypography>
-          </ButtonBase>
-        ))}
-        <ButtonBase
-          key={`${argIdxStack.length - 1}`}
-          onClick={() => {
-            onChangeArgIdStack(argIdxStack.length);
-          }}
-        >
-          <NavBarItemHightLightedTypography sx={{ flexShrink: 0 }}>
-            {argIdxStack.length > 1
-              ? `.${argIdxStack[argIdxStack.length - 1].displayKey}`
-              : argIdxStack[argIdxStack.length - 1].displayKey}
-          </NavBarItemHightLightedTypography>
-        </ButtonBase>
-      </Box>
-    </React.Fragment>
-  );
 };
 
 const ArgumentReviewer: React.FC<ArgumentReviewerProps> = ({ arg, depth, onEdit, onUnwrap }) => {
@@ -612,4 +539,4 @@ const ArgumentNavigation: React.FC<ArgumentNavigationProps> = ({
 };
 
 export default ArgumentNavigation;
-export type { ArgumentNavigationProps, ArgIdx, ArgumentReviewerProps, ArgNavBarProps };
+export type { ArgumentNavigationProps, ArgumentReviewerProps };
