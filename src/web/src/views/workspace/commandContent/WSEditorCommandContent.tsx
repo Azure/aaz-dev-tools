@@ -183,10 +183,6 @@ const WSEditorCommandContent: React.FC<WSEditorCommandContentProps> = ({
   }, [workspaceUrl, previewCommand]);
 
   useEffect(() => {
-    loadCommand();
-  }, [loadCommand]);
-
-  useEffect(() => {
     if (command?.id !== previewCommand.id) {
       setCommand(undefined);
     }
