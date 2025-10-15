@@ -78,9 +78,6 @@ class SwaggerExampleBuilder(ExampleBuilder):
         self.cmd_operation = cmd_operation
 
     def mapping(self, example_dict):
-        if not self.operation.parameters:
-            return self.example_items
-
         for param in self.operation.parameters:
             if param.name not in example_dict:
                 continue
