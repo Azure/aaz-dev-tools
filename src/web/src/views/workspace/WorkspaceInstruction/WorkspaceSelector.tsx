@@ -1,7 +1,7 @@
 import { Box, Autocomplete, createFilterOptions, TextField } from "@mui/material";
 import * as React from "react";
-import { workspaceApi, type Workspace as WorkspaceType } from "../../services";
-import WorkspaceCreateDialog from "./WorkspaceCreateDialog";
+import { workspaceApi, type Workspace as WorkspaceType } from "../../../services";
+import { WorkspaceCreateDialog } from "./";
 
 interface WorkspaceSelectorProps {
   name: string;

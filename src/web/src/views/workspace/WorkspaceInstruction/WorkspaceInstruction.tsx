@@ -1,9 +1,9 @@
 import React from "react";
 import { Typography, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import WorkspaceSelector from "./WorkspaceSelector";
-import { AppAppBar } from "../../components/AppAppBar";
-import PageLayout from "../../components/PageLayout";
+import { WorkspaceSelector } from "./";
+import { AppAppBar } from "../../../components/AppAppBar";
+import PageLayout from "../../../components/PageLayout";
 
 const MiddlePadding = styled(Box)(() => ({
   height: "6vh",
