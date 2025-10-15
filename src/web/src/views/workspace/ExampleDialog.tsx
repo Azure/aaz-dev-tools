@@ -246,8 +246,7 @@ class ExampleDialog extends React.Component<ExampleDialogProps, ExampleDialogSta
         `${workspaceUrl}/CommandTree/Nodes/aaz/` +
         command.names.slice(0, -1).join("/") +
         "/Leaves/" +
-        command.names[command.names.length - 1] +
-        "/GenerateExamples";
+        command.names[command.names.length - 1];
 
       this.setState({
         source: "swagger",
