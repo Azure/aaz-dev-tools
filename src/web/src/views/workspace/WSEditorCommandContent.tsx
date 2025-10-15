@@ -21,11 +21,8 @@ import {
   TypographyProps,
   AccordionDetails,
   AccordionSummaryProps,
-  FormLabel,
-  Switch,
-  FormLabelProps,
 } from "@mui/material";
-import React, { useState } from "react";
+import React from "react";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import {
   NameTypography,
@@ -48,6 +45,7 @@ import ExampleDialog from "./ExampleDialog";
 import AddSubcommandDialog from "./AddSubcommandDialog";
 import CommandDeleteDialog from "./CommandDeleteDialog";
 import OutputCard from "./OutputCard";
+import OutputDialog, { Output } from "./OutputDialog";
 
 interface Plane {
   name: string;
@@ -58,35 +56,6 @@ interface Plane {
 interface Example {
   name: string;
   commands: string[];
-}
-
-interface ObjectOutput {
-  type: "object";
-  ref: string;
-  clientFlatten: boolean;
-}
-
-interface ArrayOutput {
-  type: "array";
-  ref: string;
-  clientFlatten: boolean;
-  nextLink: string;
-}
-
-interface StringOutput {
-  type: "string";
-  ref: string;
-  value: string;
-}
-
-type Output = ObjectOutput | ArrayOutput | StringOutput;
-
-function isObjectOutput(output: Output): output is ObjectOutput {
-  return output.type === "object";
-}
-
-function isArrayOutput(output: Output): output is ArrayOutput {
-  return output.type === "array";
 }
 
 interface Resource {
@@ -183,17 +152,6 @@ const ExampleAccordionSummary = styled((props: AccordionSummaryProps) => (
   "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
     transform: "rotate(0deg)",
   },
-}));
-
-const OutputDialogLabel = styled(FormLabel)<FormLabelProps>(() => ({
-  fontSize: 12,
-}));
-
-const OutputDialogMainTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
-  color: theme.palette.primary.main,
-  fontFamily: "'Work Sans', sans-serif",
-  fontSize: 18,
-  fontWeight: 400,
 }));
 
 class WSEditorCommandContent extends React.Component<WSEditorCommandContentProps, WSEditorCommandContentState> {
@@ -933,121 +891,6 @@ class CommandDialog extends React.Component<CommandDialogProps, CommandDialogSta
       </Dialog>
     );
   }
-}
-
-function OutputDialog(props: {
-  workspaceUrl: string;
-  command: Command;
-  idx?: number;
-  open: boolean;
-  onClose: (newCommand?: Command) => void;
-}) {
-  const [updating, setUpdating] = useState<boolean>(false);
-  const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
-  const outputs = props.command.outputs ?? [];
-  const output = outputs[props.idx!];
-  const [flatten, setFlatten] = useState<boolean>(output.type !== "string" ? output.clientFlatten : false);
-  const flattenLabelContent = flatten ? "Flattened" : "Unflattened";
-
-  const handleClose = () => {
-    setInvalidText(undefined);
-    props.onClose();
-  };
-
-  const handleUpdateOutput = async () => {
-    setInvalidText(undefined);
-    setUpdating(true);
-
-    if (isObjectOutput(output) || isArrayOutput(output)) {
-      let commandNames = props.command.names;
-      const leafUrl =
-        `${props.workspaceUrl}/CommandTree/Nodes/aaz/` +
-        commandNames.slice(0, -1).join("/") +
-        "/Leaves/" +
-        commandNames[commandNames.length - 1];
-      console.log("Original clientFlatten: ");
-      console.log(output.clientFlatten);
-      output.clientFlatten = !output.clientFlatten;
-      console.log("New clientFlatten: ");
-      console.log(output.clientFlatten);
-
-      try {
-        const responseData = await commandApi.updateCommandOutputs(leafUrl, outputs);
-        const cmd = DecodeResponseCommand(responseData);
-        setUpdating(false);
-        props.onClose(cmd);
-      } catch (err: any) {
-        console.error(err);
-        const message = errorHandlerApi.getErrorMessage(err);
-        setInvalidText(`ResponseError: ${message}`);
-        setUpdating(false);
-      }
-    } else {
-      console.error(`Invalid output type for flatten switch: ${output.type}`);
-      setInvalidText(`Invalid output type for flatten switch: ${output.type}`);
-    }
-  };
-
-  return (
-    <Dialog disableEscapeKeyDown open={props.open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
-      <DialogTitle>JSON Format Output</DialogTitle>
-      <DialogContent dividers={true}>
-        {invalidText && (
-          <Alert variant="filled" severity="error">
-            {" "}
-            {invalidText}{" "}
-          </Alert>
-        )}
-        {(output.type !== "string" || output.ref !== undefined) && (
-          <React.Fragment>
-            <OutputDialogLabel>Output Reference</OutputDialogLabel>
-            <OutputDialogMainTypography sx={{ my: 1 }}>{output.ref}</OutputDialogMainTypography>
-          </React.Fragment>
-        )}
-        {output.type == "string" && output.ref == undefined && (
-          <React.Fragment>
-            <OutputDialogLabel>Output Value</OutputDialogLabel>
-            <OutputDialogMainTypography sx={{ my: 1 }}>{output.value}</OutputDialogMainTypography>
-          </React.Fragment>
-        )}
-        {output.type == "array" && output.nextLink !== undefined && (
-          <React.Fragment>
-            <OutputDialogLabel>Next Link Reference</OutputDialogLabel>
-            <OutputDialogMainTypography sx={{ my: 1 }}>{output.nextLink}</OutputDialogMainTypography>
-          </React.Fragment>
-        )}
-        {(output.type !== "string" || output.ref !== undefined) && (
-          <React.Fragment>
-            <OutputDialogLabel>Client Flatten</OutputDialogLabel>
-            <Box sx={{ display: "flex" }}>
-              <FormControlLabel
-                sx={{ ml: 2 }}
-                control={
-                  <Switch
-                    checked={flatten}
-                    onChange={(event: any) => {
-                      setFlatten(event.target.checked);
-                    }}
-                  />
-                }
-                label={<OutputDialogMainTypography sx={{ mx: 2 }}>{flattenLabelContent}</OutputDialogMainTypography>}
-                labelPlacement="end"
-              />
-            </Box>
-          </React.Fragment>
-        )}
-      </DialogContent>
-      <DialogActions>
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
-        {!updating && <Button onClick={handleClose}>Cancel</Button>}
-        <Button onClick={handleUpdateOutput}>Update</Button>
-      </DialogActions>
-    </Dialog>
-  );
 }
 
 const DecodeResponseCommand = (command: ResponseCommand): Command => {
