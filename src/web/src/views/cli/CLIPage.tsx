@@ -1,5 +1,4 @@
 import * as React from "react";
-import withRoot from "../../withRoot";
 import { Outlet } from "react-router";
 
 class CLIPage extends React.Component {
@@ -12,4 +11,4 @@ class CLIPage extends React.Component {
   }
 }
 
-export default withRoot(CLIPage);
+export default CLIPage;

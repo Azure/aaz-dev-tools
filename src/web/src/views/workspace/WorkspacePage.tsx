@@ -1,5 +1,4 @@
 import React from "react";
-import withRoot from "../../withRoot";
 import { Outlet } from "react-router";
 
 const WorkspacePage: React.FC = () => {
@@ -10,4 +9,4 @@ const WorkspacePage: React.FC = () => {
   );
 };
 
-export default withRoot(WorkspacePage);
+export default WorkspacePage;
