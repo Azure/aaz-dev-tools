@@ -24,7 +24,7 @@ const WSRenameDialog: React.FC<WSRenameDialogProps> = ({ workspaceUrl, workspace
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [updating, setUpdating] = useState<boolean>(false);
 
-  const handleModify = () => {
+  const handleModify = async () => {
     const nName = newWSName.trim();
     if (nName.length < 1) {
       setInvalidText(`Field 'Name' is required.`);
@@ -38,16 +38,14 @@ const WSRenameDialog: React.FC<WSRenameDialogProps> = ({ workspaceUrl, workspace
       setUpdating(false);
       onClose(null);
     } else {
-      workspaceApi
-        .renameWorkspace(workspaceUrl, nName)
-        .then((res: any) => {
-          setUpdating(false);
-          onClose(res.name);
-        })
-        .catch((err: any) => {
-          setUpdating(false);
-          setInvalidText(errorHandlerApi.getErrorMessage(err));
-        });
+      try {
+        const res = await workspaceApi.renameWorkspace(workspaceUrl, nName);
+        setUpdating(false);
+        onClose(res.name);
+      } catch (err: any) {
+        setUpdating(false);
+        setInvalidText(errorHandlerApi.getErrorMessage(err));
+      }
     }
   };
 
