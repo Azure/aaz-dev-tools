@@ -1,5 +1,5 @@
 import { Box, Autocomplete, createFilterOptions, TextField } from "@mui/material";
-import * as React from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import { workspaceApi, type Workspace as WorkspaceType } from "../../../../services";
 import { WorkspaceCreateDialog } from ".";
 
@@ -15,12 +15,12 @@ interface InputType {
 const filter = createFilterOptions<WorkspaceType | InputType>();
 
 const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ name }) => {
-  const [options, setOptions] = React.useState<any[]>([]);
-  const [value, setValue] = React.useState<WorkspaceType | null>(null);
-  const [openDialog, setOpenDialog] = React.useState<boolean>(false);
-  const [newWorkspaceName, setNewWorkspaceName] = React.useState<string>("");
+  const [options, setOptions] = useState<any[]>([]);
+  const [value, setValue] = useState<WorkspaceType | null>(null);
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState<string>("");
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadWorkspaces();
   }, []);
 
@@ -49,7 +49,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ name }) => {
   };
 
   return (
-    <React.Fragment>
+    <Fragment>
       <Autocomplete
         id="workspace-select"
         value={value}
@@ -112,7 +112,7 @@ const WorkspaceSelector: React.FC<WorkspaceSelectorProps> = ({ name }) => {
       {openDialog && (
         <WorkspaceCreateDialog openDialog={openDialog} onClose={handleDialogClose} name={newWorkspaceName} />
       )}
-    </React.Fragment>
+    </Fragment>
   );
 };
 
