@@ -5,14 +5,7 @@ import AddIcon from "@mui/icons-material/Add";
 import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
 import { SmallExperimentalTypography, SmallPreviewTypography, SubtitleTypography } from "../WSEditor/WSEditorTheme";
 import type { CMDArg } from "../../utils/decodeArgs";
-
-interface CMDArrayArg extends CMDArg {
-  singularOptions?: string[];
-}
-
-interface CMDClsArg extends CMDArg {
-  singularOptions?: string[];
-}
+import { spliceArgOptionsString } from "../../utils/spliceArgOptionsString";
 
 interface ArgGroup {
   name: string;
@@ -85,56 +78,6 @@ const ArgEditTypography = styled(Typography)<TypographyProps>(() => ({
   fontSize: 14,
   fontWeight: 400,
 }));
-
-const spliceArgOptionsString = (arg: CMDArg, depth: number) => {
-  let optionsString = arg.options
-    .map((option: string) => {
-      if (depth === 0) {
-        if (option.length === 1) {
-          return "-" + option;
-        } else {
-          return "--" + option;
-        }
-      } else {
-        return "." + option;
-      }
-    })
-    .join(" ");
-
-  if ((arg as CMDArrayArg).singularOptions) {
-    const singularOptionString = (arg as CMDArrayArg)
-      .singularOptions!.map((option: string) => {
-        if (depth === 0) {
-          if (option.length === 1) {
-            return "-" + option;
-          } else {
-            return "--" + option;
-          }
-        } else {
-          return "." + option;
-        }
-      })
-      .join(" ");
-    optionsString += ` (${singularOptionString})`;
-  } else if ((arg as CMDClsArg).singularOptions) {
-    const singularOptionString = (arg as CMDClsArg)
-      .singularOptions!.map((option: string) => {
-        if (depth === 0) {
-          if (option.length === 1) {
-            return "-" + option;
-          } else {
-            return "--" + option;
-          }
-        } else {
-          return "." + option;
-        }
-      })
-      .join(" ");
-    optionsString += ` (${singularOptionString})`;
-  }
-
-  return optionsString;
-};
 
 const ArgumentPropsReviewer: React.FC<ArgumentPropsReviewerProps> = (props) => {
   const groupArgs: { [name: string]: CMDArg[] } = {};
