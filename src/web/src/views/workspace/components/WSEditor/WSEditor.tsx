@@ -9,7 +9,6 @@ import WSEditorCommandGroupContent from "../WSEditorCommandGroupContent";
 import WSEditorCommandContent from "../WSEditorCommandContent";
 import WSEditorClientConfigDialog from "./WSEditorClientConfig";
 import type { CommandGroup, Command } from "../../interfaces";
-import type { ClientConfig } from "../../../../services";
 import WSEditorExportDialog from "./WSEditorExportDialog";
 import WSEditorDeleteDialog from "./WSEditorDeleteDialog";
 import WSEditorSwaggerReloadDialog from "./WSEditorSwaggerReloadDialog";
@@ -45,16 +44,20 @@ function WSEditor({ params }: WSEditorProps) {
   useEffect(() => {
     if (!workspace.reloadTimestamp) return;
 
-    if (workspace.clientConfigurable) {
-      workspace
-        .getWorkspaceClientConfig(workspace.workspaceUrl)
-        .then((clientConfig: ClientConfig | null) => {
+    const checkClientConfig = async () => {
+      if (workspace.clientConfigurable) {
+        try {
+          const clientConfig = await workspace.getWorkspaceClientConfig(workspace.workspaceUrl);
           if (!clientConfig) {
             dialogManager.openClientConfigDialog();
           }
-        })
-        .catch(console.error);
-    }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    };
+
+    checkClientConfig();
 
     if (workspace.commandTree.length === 0) {
       dialogManager.openSwaggerResourcePicker();

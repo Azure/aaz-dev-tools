@@ -101,9 +101,9 @@ const WSEditorCommandContent: React.FC<WSEditorCommandContentProps> = ({
 
   useEffect(() => {
     const loadCommand = async () => {
-      const requestKey = `${previewCommand.id}-${reloadTimestamp}`;
+      const requestKey = `${workspaceUrl}-${previewCommand.id}-${reloadTimestamp}`;
 
-      if (lastLoadRef.current === requestKey || loading) {
+      if (lastLoadRef.current === requestKey) {
         return;
       }
 
