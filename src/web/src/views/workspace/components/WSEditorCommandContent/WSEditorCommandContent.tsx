@@ -12,7 +12,7 @@ import {
   AccordionDetails,
   AccordionSummaryProps,
 } from "@mui/material";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import {
   NameTypography,
@@ -97,8 +97,46 @@ const WSEditorCommandContent: React.FC<WSEditorCommandContentProps> = ({
   const [exampleIdx, setExampleIdx] = useState<number | undefined>(undefined);
   const [outputIdx, setOutputIdx] = useState<number | undefined>(undefined);
   const [loading, setLoading] = useState(false);
+  const lastLoadRef = useRef<string>("");
 
-  const loadCommand = useCallback(async () => {
+  useEffect(() => {
+    const loadCommand = async () => {
+      const requestKey = `${previewCommand.id}-${reloadTimestamp}`;
+
+      if (lastLoadRef.current === requestKey || loading) {
+        return;
+      }
+
+      lastLoadRef.current = requestKey;
+      setLoading(true);
+
+      const commandNames = previewCommand.names;
+      const leafUrl =
+        `${workspaceUrl}/CommandTree/Nodes/aaz/` +
+        commandNames.slice(0, -1).join("/") +
+        "/Leaves/" +
+        commandNames[commandNames.length - 1];
+      try {
+        const commandData = await commandApi.getCommand(leafUrl);
+        const cmd = DecodeResponseCommand(commandData);
+        if (cmd.id === previewCommand.id) {
+          setCommand(cmd);
+        }
+      } catch (err: any) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (command?.id !== previewCommand.id) {
+      setCommand(undefined);
+    }
+    loadCommand();
+  }, [workspaceUrl, previewCommand.id, reloadTimestamp]);
+
+  const reloadCommand = useCallback(async () => {
+    lastLoadRef.current = "";
     setLoading(true);
     const commandNames = previewCommand.names;
     const leafUrl =
@@ -111,21 +149,13 @@ const WSEditorCommandContent: React.FC<WSEditorCommandContentProps> = ({
       const cmd = DecodeResponseCommand(commandData);
       if (cmd.id === previewCommand.id) {
         setCommand(cmd);
-        setLoading(false);
       }
     } catch (err: any) {
-      setLoading(false);
       console.error(err);
-      return;
+    } finally {
+      setLoading(false);
     }
-  }, [workspaceUrl, previewCommand]);
-
-  useEffect(() => {
-    if (command?.id !== previewCommand.id) {
-      setCommand(undefined);
-    }
-    loadCommand();
-  }, [workspaceUrl, previewCommand.id, reloadTimestamp, loadCommand, command?.id, previewCommand]);
+  }, [workspaceUrl, previewCommand.id, previewCommand.names]);
 
   const onCommandDialogDisplay = useCallback(() => {
     setDisplayCommandDialog(true);
@@ -411,6 +441,7 @@ const WSEditorCommandContent: React.FC<WSEditorCommandContentProps> = ({
       </Card>
     );
   }, [command, previewCommand, name, onCommandDialogDisplay, loading, onCommandDeleteDialogDisplay]);
+
   const buildArgumentsCard = useCallback(() => {
     return (
       <Card
@@ -427,12 +458,12 @@ const WSEditorCommandContent: React.FC<WSEditorCommandContentProps> = ({
           commandUrl={commandUrl}
           args={command!.args!}
           clsArgDefineMap={command!.clsArgDefineMap!}
-          onReloadArgs={loadCommand}
+          onReloadArgs={reloadCommand}
           onAddSubCommand={onAddSubcommandDialogDisplay}
         />
       </Card>
     );
-  }, [commandUrl, command, loadCommand, onAddSubcommandDialogDisplay]);
+  }, [commandUrl, command, reloadCommand, onAddSubcommandDialogDisplay]);
 
   const buildExampleCard = useCallback(() => {
     const examples = command!.examples ?? [];
