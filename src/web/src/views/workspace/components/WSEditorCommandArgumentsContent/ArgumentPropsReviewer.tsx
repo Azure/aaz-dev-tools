@@ -4,7 +4,7 @@ import { ChevronRight } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
 import CallSplitSharpIcon from "@mui/icons-material/CallSplitSharp";
 import { SmallExperimentalTypography, SmallPreviewTypography, SubtitleTypography } from "../WSEditor/WSEditorTheme";
-import type { CMDArg } from "./WSEditorCommandArgumentsContent";
+import type { CMDArg } from "../../utils/decodeArgs";
 
 interface CMDArrayArg extends CMDArg {
   singularOptions?: string[];
@@ -88,7 +88,7 @@ const ArgEditTypography = styled(Typography)<TypographyProps>(() => ({
 
 const spliceArgOptionsString = (arg: CMDArg, depth: number) => {
   let optionsString = arg.options
-    .map((option) => {
+    .map((option: string) => {
       if (depth === 0) {
         if (option.length === 1) {
           return "-" + option;
