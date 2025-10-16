@@ -8,7 +8,7 @@ import {
   LinearProgress,
   Typography,
 } from "@mui/material";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { commandApi } from "../../../../services";
 import { COMMAND_PREFIX } from "../../../../constants";
 import { DecodeResponseCommand } from "../../utils/decodeResponseCommand";
@@ -22,8 +22,8 @@ export interface CommandDeleteDialogProps {
 }
 
 const CommandDeleteDialog: React.FC<CommandDeleteDialogProps> = (props) => {
-  const [updating, setUpdating] = React.useState<boolean>(false);
-  const [relatedCommands, setRelatedCommands] = React.useState<string[]>([]);
+  const [updating, setUpdating] = useState<boolean>(false);
+  const [relatedCommands, setRelatedCommands] = useState<string[]>([]);
 
   const getUrls = () => {
     const urls: string[] = [];
@@ -41,7 +41,7 @@ const CommandDeleteDialog: React.FC<CommandDeleteDialogProps> = (props) => {
     return urls;
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     setRelatedCommands([]);
     const urls = getUrls();
     const promisesAll = urls.map(async (url) => {
