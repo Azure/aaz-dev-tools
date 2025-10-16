@@ -4,32 +4,15 @@ import { ExperimentalTypography, PreviewTypography, StableTypography } from "../
 import ArgumentPropsReviewer from "./ArgumentPropsReviewer";
 import ArgNavBar, { type ArgIdx } from "./ArgNavBar";
 import ArgumentReviewer from "./ArgumentReviewer";
-import type { CMDArg, ClsArgDefinitionMap } from "./WSEditorCommandArgumentsContent";
-
-interface CMDArgBase {
-  type: string;
-  nullable: boolean;
-  blank?: any;
-}
-
-interface CMDClsArg extends CMDArg {
-  clsName: string;
-  singularOptions?: string[];
-}
-
-interface CMDObjectArg extends CMDArg {
-  args: CMDArg[];
-}
-
-interface CMDDictArg extends CMDArg {
-  item?: any;
-  anyType: boolean;
-}
-
-interface CMDArrayArg extends CMDArg {
-  item: any;
-  singularOptions?: string[];
-}
+import type {
+  CMDArg,
+  CMDArgBase,
+  CMDClsArg,
+  CMDObjectArg,
+  CMDDictArgBase,
+  CMDArrayArgBase,
+  ClsArgDefinitionMap,
+} from "../../utils/decodeArgs";
 
 interface ArgumentNavigationProps {
   commandUrl: string;
@@ -70,7 +53,7 @@ const ArgumentNavigation: React.FC<ArgumentNavigationProps> = ({
         flattenArgVar: (selectedArgBase as CMDObjectArg).var,
       };
     } else if (selectedArgBase.type.startsWith("dict<")) {
-      const item = (selectedArgBase as CMDDictArg).item;
+      const item = (selectedArgBase as CMDDictArgBase).item;
       const itemProps = item ? getArgProps(item) : undefined;
       if (!itemProps) {
         return undefined;
@@ -81,7 +64,7 @@ const ArgumentNavigation: React.FC<ArgumentNavigationProps> = ({
         flattenArgVar: undefined,
       };
     } else if (selectedArgBase.type.startsWith("array<")) {
-      const itemProps = getArgProps((selectedArgBase as CMDArrayArg).item);
+      const itemProps = getArgProps((selectedArgBase as CMDArrayArgBase).item);
       if (!itemProps) {
         return undefined;
       }
