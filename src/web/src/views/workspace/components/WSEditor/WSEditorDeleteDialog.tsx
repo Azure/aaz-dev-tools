@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState, Fragment } from "react";
 import {
   Box,
   Dialog,
@@ -18,33 +18,31 @@ interface WSEditorDeleteDialogProps {
   onClose: (deleted: boolean) => void;
 }
 
-function WSEditorDeleteDialog(props: WSEditorDeleteDialogProps) {
-  const [updating, setUpdating] = React.useState<boolean>(false);
-  const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
-  const [confirmName, setConfirmName] = React.useState<string | undefined>(undefined);
+const WSEditorDeleteDialog: React.FC<WSEditorDeleteDialogProps> = ({ workspaceName, open, onClose }) => {
+  const [updating, setUpdating] = useState<boolean>(false);
+  const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
+  const [confirmName, setConfirmName] = useState<string | undefined>(undefined);
 
   const handleClose = () => {
-    props.onClose(false);
+    onClose(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     setUpdating(true);
-    workspaceApi
-      .deleteWorkspace(props.workspaceName)
-      .then(() => {
-        setUpdating(false);
-        props.onClose(true);
-      })
-      .catch((err: any) => {
-        console.error(err);
-        setInvalidText(errorHandlerApi.getErrorMessage(err));
-        setUpdating(false);
-      });
+    try {
+      await workspaceApi.deleteWorkspace(workspaceName);
+      setUpdating(false);
+      onClose(true);
+    } catch (err: any) {
+      console.error(err);
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
+      setUpdating(false);
+    }
   };
 
   return (
-    <Dialog disableEscapeKeyDown open={props.open}>
-      <DialogTitle>Delete '{props.workspaceName}' workspace?</DialogTitle>
+    <Dialog disableEscapeKeyDown open={open}>
+      <DialogTitle>Delete '{workspaceName}' workspace?</DialogTitle>
       <DialogContent dividers={true}>
         {invalidText && (
           <Alert variant="filled" severity="error">
@@ -74,16 +72,16 @@ function WSEditorDeleteDialog(props: WSEditorDeleteDialogProps) {
           </Box>
         )}
         {!updating && (
-          <React.Fragment>
+          <Fragment>
             <Button onClick={handleClose}>Cancel</Button>
-            <Button onClick={handleDelete} disabled={props.workspaceName !== confirmName}>
+            <Button onClick={handleDelete} disabled={workspaceName !== confirmName}>
               Confirm
             </Button>
-          </React.Fragment>
+          </Fragment>
         )}
       </DialogActions>
     </Dialog>
   );
-}
+};
 
 export default WSEditorDeleteDialog;
