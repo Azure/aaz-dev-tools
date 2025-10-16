@@ -42,13 +42,13 @@ const CommandDeleteDialog: React.FC<CommandDeleteDialogProps> = (props) => {
   };
 
   useEffect(() => {
-    setRelatedCommands([]);
-    const urls = getUrls();
-    const promisesAll = urls.map(async (url) => {
-      return await commandApi.getCommandsForResource(url);
-    });
-    Promise.all(promisesAll)
-      .then((responses) => {
+    const fetchRelatedCommands = async () => {
+      setRelatedCommands([]);
+      const urls = getUrls();
+
+      try {
+        const responses = await Promise.all(urls.map((url) => commandApi.getCommandsForResource(url)));
+
         const commands = new Set<string>();
         responses.forEach((responseCommands: ResponseCommand[]) => {
           responseCommands
@@ -58,35 +58,32 @@ const CommandDeleteDialog: React.FC<CommandDeleteDialogProps> = (props) => {
             });
         });
 
-        const cmdNames: string[] = [];
-        commands.forEach((cmdName) => cmdNames.push(cmdName));
-        cmdNames.sort((a, b) => a.localeCompare(b));
+        const cmdNames = Array.from(commands).sort((a, b) => a.localeCompare(b));
         setRelatedCommands(cmdNames);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err);
-      });
+      }
+    };
+
+    fetchRelatedCommands();
   }, [props.command]);
 
   const handleClose = () => {
     props.onClose(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     setUpdating(true);
     const urls = getUrls();
-    const promisesAll = urls.map(async (url) => {
-      return await commandApi.deleteResource(url);
-    });
-    Promise.all(promisesAll)
-      .then(() => {
-        setUpdating(false);
-        props.onClose(true);
-      })
-      .catch((err) => {
-        setUpdating(false);
-        console.error(err);
-      });
+
+    try {
+      await Promise.all(urls.map((url) => commandApi.deleteResource(url)));
+      setUpdating(false);
+      props.onClose(true);
+    } catch (err) {
+      setUpdating(false);
+      console.error(err);
+    }
   };
 
   return (
@@ -104,10 +101,10 @@ const CommandDeleteDialog: React.FC<CommandDeleteDialogProps> = (props) => {
           </Box>
         )}
         {!updating && (
-          <React.Fragment>
+          <>
             <Button onClick={handleClose}>Cancel</Button>
             <Button onClick={handleDelete}>Delete</Button>
-          </React.Fragment>
+          </>
         )}
       </DialogActions>
     </Dialog>
