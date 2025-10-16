@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import {
   Box,
   Dialog,
@@ -29,58 +29,42 @@ interface WSEditorSwaggerReloadDialogProps {
   onClose: (exported: boolean) => void;
 }
 
-interface WSEditorSwaggerReloadDialogState {
-  updating: boolean;
-  invalidText?: string;
-  resourceOptions: Resource[];
-  selectedResources: Set<string>;
-}
+const WSEditorSwaggerReloadDialog: React.FC<WSEditorSwaggerReloadDialogProps> = ({
+  workspaceName,
+  workspaceUrl,
+  open,
+  source,
+  onClose,
+}) => {
+  const [updating, setUpdating] = useState<boolean>(false);
+  const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
+  const [resourceOptions, setResourceOptions] = useState<Resource[]>([]);
+  const [selectedResources, setSelectedResources] = useState<Set<string>>(new Set());
 
-class WSEditorSwaggerReloadDialog extends React.Component<
-  WSEditorSwaggerReloadDialogProps,
-  WSEditorSwaggerReloadDialogState
-> {
-  constructor(props: WSEditorSwaggerReloadDialogProps) {
-    super(props);
-    this.state = {
-      updating: false,
-      invalidText: undefined,
-      resourceOptions: [],
-      selectedResources: new Set(),
-    };
-  }
+  useEffect(() => {
+    loadResourceOptions();
+  }, []);
 
-  componentDidMount() {
-    this.loadResourceOptions();
-  }
-
-  loadResourceOptions = async () => {
-    this.setState({
-      invalidText: undefined,
-      updating: true,
-    });
+  const loadResourceOptions = async () => {
+    setInvalidText(undefined);
+    setUpdating(true);
     try {
-      const resources: Resource[] = await workspaceApi.getWorkspaceResources(this.props.workspaceUrl);
-      this.setState({
-        updating: false,
-        resourceOptions: resources,
-        selectedResources: new Set(resources.map((resource) => resource.id)),
-      });
+      const resources: Resource[] = await workspaceApi.getWorkspaceResources(workspaceUrl);
+      setUpdating(false);
+      setResourceOptions(resources);
+      setSelectedResources(new Set(resources.map((resource) => resource.id)));
     } catch (err: any) {
       console.error(err);
-      this.setState({
-        invalidText: errorHandlerApi.getErrorMessage(err),
-        updating: false,
-      });
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
+      setUpdating(false);
     }
   };
 
-  handleClose = () => {
-    this.props.onClose(false);
+  const handleClose = () => {
+    onClose(false);
   };
 
-  handleReload = async () => {
-    const { selectedResources, resourceOptions } = this.state;
+  const handleReload = async () => {
     const data = {
       resources: resourceOptions
         .filter((option) => selectedResources.has(option.id))
@@ -93,24 +77,26 @@ class WSEditorSwaggerReloadDialog extends React.Component<
     };
 
     if (data.resources.length === 0) {
-      this.props.onClose(false);
+      onClose(false);
       return;
     }
 
-    this.setState({
-      invalidText: undefined,
-      updating: true,
-    });
+    setInvalidText(undefined);
+    setUpdating(true);
 
     try {
-      if (this.props.source.toLowerCase() === "typespec") {
-        const swaggerDefault = await workspaceApi.getWorkspaceSwaggerDefault(this.props.workspaceName);
-        const { modNames, rpName, source } = swaggerDefault;
-        if (!modNames || modNames.length === 0 || !rpName || !source || source.toLowerCase() !== "typespec") {
-          this.setState({
-            invalidText: "Invalid workspace info",
-            updating: false,
-          });
+      if (source.toLowerCase() === "typespec") {
+        const swaggerDefault = await workspaceApi.getWorkspaceSwaggerDefault(workspaceName);
+        const { modNames, rpName, source: swaggerSource } = swaggerDefault;
+        if (
+          !modNames ||
+          modNames.length === 0 ||
+          !rpName ||
+          !swaggerSource ||
+          swaggerSource.toLowerCase() !== "typespec"
+        ) {
+          setInvalidText("Invalid workspace info");
+          setUpdating(false);
           return;
         }
         const resourceProviderUrl =
@@ -124,184 +110,161 @@ class WSEditorSwaggerReloadDialog extends React.Component<
           resources: data.resources,
           resourceProviderUrl: resourceProviderUrl,
         };
-        console.log("request emitter data: ", requestBody);
         const emitterOptionRes = await getTypespecRPResourcesOperations(requestBody);
-        console.log("emitterResourceOptionRes: ", emitterOptionRes);
         if (emitterOptionRes.length === 0) {
-          this.setState({
-            invalidText: "Invalid resource operation emitter info",
-            updating: false,
-          });
+          setInvalidText("Invalid resource operation emitter info");
+          setUpdating(false);
           return;
         }
         data.resources = emitterOptionRes;
-        await workspaceApi.reloadTypespecResources(this.props.workspaceUrl, data);
+        await workspaceApi.reloadTypespecResources(workspaceUrl, data);
       } else {
-        await workspaceApi.reloadSwaggerResources(this.props.workspaceUrl, data);
+        await workspaceApi.reloadSwaggerResources(workspaceUrl, data);
       }
 
-      this.setState({
-        updating: false,
-      });
-      this.props.onClose(true);
+      setUpdating(false);
+      onClose(true);
     } catch (err: any) {
       console.error(err);
-      this.setState({
-        invalidText: errorHandlerApi.getErrorMessage(err),
-        updating: false,
-      });
+      setInvalidText(errorHandlerApi.getErrorMessage(err));
+      setUpdating(false);
     }
   };
 
-  onSelectedAllClick = () => {
-    this.setState((preState) => {
-      return {
-        ...preState,
-        selectedResources:
-          preState.selectedResources.size > 0 ? new Set() : new Set(preState.resourceOptions.map((op) => op.id)),
-      };
-    });
+  const onSelectedAllClick = () => {
+    setSelectedResources(selectedResources.size > 0 ? new Set() : new Set(resourceOptions.map((op) => op.id)));
   };
 
-  onResourceItemClick = (resourceId: string) => {
+  const onResourceItemClick = (resourceId: string) => {
     return () => {
-      this.setState((preState) => {
-        const selectedResources = new Set(preState.selectedResources);
-        if (selectedResources.has(resourceId)) {
-          selectedResources.delete(resourceId);
+      setSelectedResources((prev) => {
+        const newSelectedResources = new Set(prev);
+        if (newSelectedResources.has(resourceId)) {
+          newSelectedResources.delete(resourceId);
         } else {
-          selectedResources.add(resourceId);
+          newSelectedResources.add(resourceId);
         }
-        return {
-          ...preState,
-          selectedResources: selectedResources,
-        };
+        return newSelectedResources;
       });
     };
   };
 
-  render() {
-    const { invalidText, selectedResources, updating, resourceOptions } = this.state;
+  return (
+    <Dialog disableEscapeKeyDown open={open} fullWidth={true} maxWidth="xl">
+      <DialogTitle>Reload {source.toLowerCase() === "typespec" ? "TypeSpec" : "Swagger"} Resources</DialogTitle>
+      <DialogContent>
+        {invalidText && (
+          <Alert variant="filled" severity="error">
+            {" "}
+            {invalidText}{" "}
+          </Alert>
+        )}
+        <List
+          sx={{ flexGrow: 1 }}
+          subheader={
+            <ListSubheader>
+              <Box
+                sx={{
+                  mt: 1,
+                  mb: 1,
+                  flexDirection: "column",
+                  display: "flex",
+                  alignItems: "stretch",
+                  justifyContent: "flex-start",
+                }}
+                color="inherit"
+              >
+                {/* <Typography component='h6'>Resource Url</Typography> */}
 
-    return (
-      <Dialog disableEscapeKeyDown open={this.props.open} fullWidth={true} maxWidth="xl">
-        <DialogTitle>
-          Reload {this.props.source.toLowerCase() === "typespec" ? "TypeSpec" : "Swagger"} Resources
-        </DialogTitle>
-        <DialogContent>
-          {invalidText && (
-            <Alert variant="filled" severity="error">
-              {" "}
-              {invalidText}{" "}
-            </Alert>
-          )}
-          <List
-            sx={{ flexGrow: 1 }}
-            subheader={
-              <ListSubheader>
-                <Box
+                <Paper
                   sx={{
-                    mt: 1,
-                    mb: 1,
-                    flexDirection: "column",
                     display: "flex",
-                    alignItems: "stretch",
-                    justifyContent: "flex-start",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    mt: 1,
                   }}
-                  color="inherit"
+                  variant="outlined"
+                  square
                 >
-                  {/* <Typography component='h6'>Resource Url</Typography> */}
-
-                  <Paper
+                  <ListItemButton dense onClick={onSelectedAllClick} disabled={resourceOptions.length === 0}>
+                    <ListItemIcon>
+                      <Checkbox
+                        edge="start"
+                        checked={selectedResources.size > 0 && selectedResources.size === resourceOptions.length}
+                        indeterminate={selectedResources.size > 0 && selectedResources.size < resourceOptions.length}
+                        tabIndex={-1}
+                        disableRipple
+                        inputProps={{ "aria-labelledby": "SelectAll" }}
+                      />
+                    </ListItemIcon>
+                    <ListItemText
+                      id="SelectAll"
+                      primary={`All (${resourceOptions.length})`}
+                      primaryTypographyProps={{
+                        variant: "h6",
+                      }}
+                    />
+                  </ListItemButton>
+                </Paper>
+              </Box>
+            </ListSubheader>
+          }
+        >
+          {resourceOptions.length > 0 && (
+            <Paper sx={{ ml: 2, mr: 2 }} variant="outlined" square>
+              {resourceOptions.map((option) => {
+                const labelId = `resource-${option.id}`;
+                const selected = selectedResources.has(option.id);
+                return (
+                  <ListItem
+                    key={option.id}
                     sx={{
                       display: "flex",
                       flexDirection: "row",
                       alignItems: "center",
-                      mt: 1,
                     }}
-                    variant="outlined"
-                    square
+                    disablePadding
                   >
-                    <ListItemButton dense onClick={this.onSelectedAllClick} disabled={resourceOptions.length === 0}>
+                    <ListItemButton dense onClick={onResourceItemClick(option.id)}>
                       <ListItemIcon>
                         <Checkbox
                           edge="start"
-                          checked={selectedResources.size > 0 && selectedResources.size === resourceOptions.length}
-                          indeterminate={selectedResources.size > 0 && selectedResources.size < resourceOptions.length}
+                          checked={selected}
                           tabIndex={-1}
                           disableRipple
-                          inputProps={{ "aria-labelledby": "SelectAll" }}
+                          inputProps={{ "aria-labelledby": labelId }}
                         />
                       </ListItemIcon>
                       <ListItemText
-                        id="SelectAll"
-                        primary={`All (${resourceOptions.length})`}
+                        id={labelId}
+                        primary={`${option.version} ${option.id}`}
                         primaryTypographyProps={{
                           variant: "h6",
                         }}
                       />
                     </ListItemButton>
-                  </Paper>
-                </Box>
-              </ListSubheader>
-            }
-          >
-            {resourceOptions.length > 0 && (
-              <Paper sx={{ ml: 2, mr: 2 }} variant="outlined" square>
-                {resourceOptions.map((option) => {
-                  const labelId = `resource-${option.id}`;
-                  const selected = selectedResources.has(option.id);
-                  return (
-                    <ListItem
-                      key={option.id}
-                      sx={{
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                      }}
-                      disablePadding
-                    >
-                      <ListItemButton dense onClick={this.onResourceItemClick(option.id)}>
-                        <ListItemIcon>
-                          <Checkbox
-                            edge="start"
-                            checked={selected}
-                            tabIndex={-1}
-                            disableRipple
-                            inputProps={{ "aria-labelledby": labelId }}
-                          />
-                        </ListItemIcon>
-                        <ListItemText
-                          id={labelId}
-                          primary={`${option.version} ${option.id}`}
-                          primaryTypographyProps={{
-                            variant: "h6",
-                          }}
-                        />
-                      </ListItemButton>
-                    </ListItem>
-                  );
-                })}
-              </Paper>
-            )}
-          </List>
-        </DialogContent>
-        <DialogActions>
-          {updating && (
-            <Box sx={{ width: "100%" }}>
-              <LinearProgress color="secondary" />
-            </Box>
+                  </ListItem>
+                );
+              })}
+            </Paper>
           )}
-          {!updating && (
-            <React.Fragment>
-              <Button onClick={this.handleClose}>Cancel</Button>
-              <Button onClick={this.handleReload}>Reload</Button>
-            </React.Fragment>
-          )}
-        </DialogActions>
-      </Dialog>
-    );
-  }
-}
+        </List>
+      </DialogContent>
+      <DialogActions>
+        {updating && (
+          <Box sx={{ width: "100%" }}>
+            <LinearProgress color="secondary" />
+          </Box>
+        )}
+        {!updating && (
+          <Fragment>
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={handleReload}>Reload</Button>
+          </Fragment>
+        )}
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 export default WSEditorSwaggerReloadDialog;
