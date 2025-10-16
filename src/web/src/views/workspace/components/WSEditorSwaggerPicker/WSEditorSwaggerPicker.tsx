@@ -31,6 +31,7 @@ import EditorPageLayout from "../../../../components/EditorPageLayout";
 import { styled } from "@mui/material/styles";
 import { getTypespecRPResources, getTypespecRPResourcesOperations } from "../../../../typespec";
 import SwaggerItemSelector from "../../common/SwaggerItemSelector";
+import { useResourceFilter } from "../../hooks/useResourceFilter";
 
 interface WSEditorSwaggerPickerProps {
   workspaceName: string;
@@ -84,6 +85,8 @@ const MiddlePadding2 = styled(Box)(() => ({
 const UpdateOptions = ["Default", "Generic(Get&Put) First", "Patch First", "No update command"];
 
 const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwaggerPickerProps) => {
+  const { filterText, updateFilter, filterResources } = useResourceFilter();
+
   const [loading, setLoading] = useState(false);
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [_defaultModule, setDefaultModule] = useState<string | null>(null);
@@ -107,8 +110,6 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [updateOptions] = useState(UpdateOptions);
   const [updateOption, setUpdateOption] = useState(UpdateOptions[0]);
-  const [filterText, setFilterText] = useState("");
-  const [realFilterText, setRealFilterText] = useState("");
 
   useEffect(() => {
     const initializeComponent = async () => {
@@ -155,10 +156,6 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
   const handleClose = useCallback(() => {
     onClose(false);
   }, [onClose]);
-
-  const handleSubmit = useCallback(() => {
-    addSwagger();
-  }, []);
 
   const loadResourceProviders = useCallback(
     async (moduleUrl: string | null, preferredRP: string | null) => {
@@ -274,6 +271,15 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
   );
 
   const addSwagger = useCallback(async () => {
+    if (!selectedModule || !selectedVersion || selectedResources.size < 1) {
+      console.warn("Cannot submit: missing required values", {
+        selectedModule,
+        selectedVersion,
+        selectedResourcesSize: selectedResources.size,
+      });
+      return;
+    }
+
     const resources: { id: string; options: { update_by?: string; aaz_version: string | null } }[] = [];
     const resourceOptionMap: { [key: string]: { update_by?: string; aaz_version: string | null } } = {};
     selectedResources.forEach((resourceId: string) => {
@@ -319,7 +325,7 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
     });
 
     const requestBody = {
-      module: selectedModule!.slice().replace(moduleOptionsCommonPrefix, ""),
+      module: selectedModule.replace(moduleOptionsCommonPrefix, ""),
       version: selectedVersion,
       resources: resources,
     };
@@ -385,6 +391,10 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
     workspaceName,
     onClose,
   ]);
+
+  const handleSubmit = useCallback(() => {
+    addSwagger();
+  }, [addSwagger]);
 
   const onModuleSelectorUpdate = useCallback(
     async (moduleValueUrl: string | null) => {
@@ -653,9 +663,7 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
                     inputProps={{ "aria-label": "Filter by keywords" }}
                     value={filterText}
                     onChange={(event: any) => {
-                      const reg = /\{.*?\}/g;
-                      setFilterText(event.target.value);
-                      setRealFilterText(event.target.value.toLocaleLowerCase().replace(reg, "{}"));
+                      updateFilter(event.target.value);
                     }}
                   />
                 </Paper>
@@ -665,85 +673,77 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
         >
           {resourceOptions.length > 0 && (
             <Paper sx={{ ml: 2, mr: 2 }} variant="outlined" square>
-              {resourceOptions
-                .filter((option) => {
-                  if (realFilterText.trim().length > 0) {
-                    return option.id.indexOf(realFilterText) > -1;
-                  } else {
-                    return true;
-                  }
-                })
-                .map((option) => {
-                  const labelId = `resource-${option.id}`;
-                  const selected = selectedResources.has(option.id);
-                  const inheritanceOptions = resourceMap[option.id]?.aazVersions;
-                  let selectedInheritance = null;
-                  if (selectedResourceInheritanceAAZVersionMap !== null) {
-                    selectedInheritance = selectedResourceInheritanceAAZVersionMap[option.id];
-                  }
-                  return (
-                    <ListItem
-                      key={option.id}
-                      sx={{
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                      }}
-                      disablePadding
-                    >
-                      <ListItemButton dense onClick={onResourceItemClick(option.id)}>
-                        <ListItemIcon>
-                          <Checkbox
-                            edge="start"
-                            checked={selected || existingResources.has(option.id)}
-                            tabIndex={-1}
-                            disableRipple
-                            inputProps={{ "aria-labelledby": labelId }}
-                          />
-                        </ListItemIcon>
-                        <ListItemText
-                          id={labelId}
-                          primary={option.id}
-                          primaryTypographyProps={{
-                            variant: "h6",
-                          }}
+              {filterResources(resourceOptions).map((option) => {
+                const labelId = `resource-${option.id}`;
+                const selected = selectedResources.has(option.id);
+                const inheritanceOptions = resourceMap[option.id]?.aazVersions;
+                let selectedInheritance = null;
+                if (selectedResourceInheritanceAAZVersionMap !== null) {
+                  selectedInheritance = selectedResourceInheritanceAAZVersionMap[option.id];
+                }
+                return (
+                  <ListItem
+                    key={option.id}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                    }}
+                    disablePadding
+                  >
+                    <ListItemButton dense onClick={onResourceItemClick(option.id)}>
+                      <ListItemIcon>
+                        <Checkbox
+                          edge="start"
+                          checked={selected || existingResources.has(option.id)}
+                          tabIndex={-1}
+                          disableRipple
+                          inputProps={{ "aria-labelledby": labelId }}
                         />
-                      </ListItemButton>
-                      {selected && (
-                        <FormControl sx={{ m: 1, minWidth: 120 }}>
-                          <InputLabel id={`${labelId}-inheritance-select-label`}>Inheritance</InputLabel>
-                          <Select
-                            id={`${labelId}-inheritance-select`}
-                            value={selectedInheritance === null ? "_NULL_" : selectedInheritance}
-                            onChange={(event) => {
-                              onResourceInheritanceAAZVersionUpdate(
-                                option.id,
-                                event.target.value === "_NULL_" ? null : event.target.value,
+                      </ListItemIcon>
+                      <ListItemText
+                        id={labelId}
+                        primary={option.id}
+                        primaryTypographyProps={{
+                          variant: "h6",
+                        }}
+                      />
+                    </ListItemButton>
+                    {selected && (
+                      <FormControl sx={{ m: 1, minWidth: 120 }}>
+                        <InputLabel id={`${labelId}-inheritance-select-label`}>Inheritance</InputLabel>
+                        <Select
+                          id={`${labelId}-inheritance-select`}
+                          value={selectedInheritance === null ? "_NULL_" : selectedInheritance}
+                          onChange={(event) => {
+                            onResourceInheritanceAAZVersionUpdate(
+                              option.id,
+                              event.target.value === "_NULL_" ? null : event.target.value,
+                            );
+                          }}
+                          size="small"
+                        >
+                          <MenuItem value="_NULL_" key={`${labelId}-inheritance-select-null`}>
+                            None
+                          </MenuItem>
+                          {inheritanceOptions &&
+                            inheritanceOptions.map((inheritanceOption: string) => {
+                              return (
+                                <MenuItem
+                                  value={inheritanceOption}
+                                  key={`${labelId}-inheritance-select-${inheritanceOption}`}
+                                >
+                                  {inheritanceOption}
+                                </MenuItem>
                               );
-                            }}
-                            size="small"
-                          >
-                            <MenuItem value="_NULL_" key={`${labelId}-inheritance-select-null`}>
-                              None
-                            </MenuItem>
-                            {inheritanceOptions &&
-                              inheritanceOptions.map((inheritanceOption: string) => {
-                                return (
-                                  <MenuItem
-                                    value={inheritanceOption}
-                                    key={`${labelId}-inheritance-select-${inheritanceOption}`}
-                                  >
-                                    {inheritanceOption}
-                                  </MenuItem>
-                                );
-                              })}
-                          </Select>
-                          <FormHelperText>Inherit modification from exported command models in aaz</FormHelperText>
-                        </FormControl>
-                      )}
-                    </ListItem>
-                  );
-                })}
+                            })}
+                        </Select>
+                        <FormHelperText>Inherit modification from exported command models in aaz</FormHelperText>
+                      </FormControl>
+                    )}
+                  </ListItem>
+                );
+              })}
             </Paper>
           )}
         </List>
