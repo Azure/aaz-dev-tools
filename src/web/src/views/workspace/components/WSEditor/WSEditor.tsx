@@ -9,11 +9,12 @@ import WSEditorCommandGroupContent from "../WSEditorCommandGroupContent";
 import WSEditorCommandContent from "../WSEditorCommandContent";
 import WSEditorClientConfigDialog from "./WSEditorClientConfig";
 import type { CommandGroup, Command } from "../../interfaces";
+import type { ClientConfig } from "../../../../services";
 import WSEditorExportDialog from "./WSEditorExportDialog";
 import WSEditorDeleteDialog from "./WSEditorDeleteDialog";
 import WSEditorSwaggerReloadDialog from "./WSEditorSwaggerReloadDialog";
 import WSRenameDialog from "./WSRenameDialog";
-import { useDialogManager, useWorkspaceData, useTreeState } from "../../hooks";
+import { useDialogManager, useWorkspaceData, useTreeState } from "../../hooks/index";
 
 interface WSEditorProps {
   params: {
@@ -47,7 +48,7 @@ function WSEditor({ params }: WSEditorProps) {
     if (workspace.clientConfigurable) {
       workspace
         .getWorkspaceClientConfig(workspace.workspaceUrl)
-        .then((clientConfig) => {
+        .then((clientConfig: ClientConfig | null) => {
           if (!clientConfig) {
             dialogManager.openClientConfigDialog();
           }
