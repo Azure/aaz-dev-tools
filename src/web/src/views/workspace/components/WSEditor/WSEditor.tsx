@@ -30,7 +30,7 @@ const swaggerResourcePickerTransition = React.forwardRef(function swaggerResourc
 
 const drawerWidth = 300;
 
-function WSEditor({ params }: WSEditorProps) {
+const WSEditor = ({ params }: WSEditorProps) => {
   const { workspaceName } = params;
 
   const dialogManager = useDialogManager();
@@ -295,7 +295,7 @@ function WSEditor({ params }: WSEditorProps) {
       )}
     </>
   );
-}
+};
 
 const WSEditorWrapper = (props: any) => {
   const params = useParams();
