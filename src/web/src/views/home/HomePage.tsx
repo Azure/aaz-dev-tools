@@ -2,7 +2,7 @@ import * as React from "react";
 import { Typography, Box, Link, Stepper, Step, StepButton, StepContent, TypographyProps } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
-import { AppAppBar } from "../../components/AppAppBar";
+import { AppNavBar } from "../../components/AppNavBar";
 import PageLayout from "../../components/PageLayout";
 
 const MiddlePadding = styled(Box)(() => ({
@@ -32,7 +32,7 @@ function HomePage() {
 
   return (
     <React.Fragment>
-      <AppAppBar pageName={"HomePage"} />
+      <AppNavBar pageName={"HomePage"} />
       <PageLayout>
         <Box
           sx={{

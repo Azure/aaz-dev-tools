@@ -2,7 +2,7 @@ import React from "react";
 import { Typography, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { WorkspaceSelector } from ".";
-import { AppAppBar } from "../../../../components/AppAppBar";
+import { AppNavBar } from "../../../../components/AppNavBar";
 import PageLayout from "../../../../components/PageLayout";
 
 const MiddlePadding = styled(Box)(() => ({
@@ -12,7 +12,7 @@ const MiddlePadding = styled(Box)(() => ({
 const WorkspaceInstruction: React.FC = () => {
   return (
     <React.Fragment>
-      <AppAppBar pageName={"Workspace"} />
+      <AppNavBar pageName={"Workspace"} />
       <PageLayout>
         <Box
           sx={{

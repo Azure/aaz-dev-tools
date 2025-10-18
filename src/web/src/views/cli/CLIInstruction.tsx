@@ -2,7 +2,7 @@ import * as React from "react";
 import { Typography, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import CLIModuleSelector from "./CLIModuleSelector";
-import { AppAppBar } from "../../components/AppAppBar";
+import { AppNavBar } from "../../components/AppNavBar";
 import PageLayout from "../../components/PageLayout";
 
 const MiddlePadding = styled(Box)(() => ({
@@ -17,7 +17,7 @@ class CLIInstruction extends React.Component {
   render() {
     return (
       <React.Fragment>
-        <AppAppBar pageName={"CLI"} />
+        <AppNavBar pageName={"CLI"} />
         <PageLayout>
           <Box
             sx={{
