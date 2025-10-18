@@ -188,6 +188,8 @@ const CommandGroupItem: React.FC<CommandGroupItemProps> = React.memo(
   },
 );
 
+CommandGroupItem.displayName = "CommandGroupItem";
+
 export default CommandGroupItem;
 
 export type { CommandGroupItemProps };
