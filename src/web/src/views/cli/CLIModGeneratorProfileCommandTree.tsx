@@ -534,9 +534,6 @@ interface ProfileCTCommands {
 interface ProfileCTCommandGroup {
   id: string;
   names: string[];
-  // We use simple command tree now.
-  // `help` is not used.
-  // help: string;
 
   commandGroups?: ProfileCTCommandGroups;
   commands?: ProfileCTCommands;
@@ -549,7 +546,6 @@ interface ProfileCTCommandGroup {
 interface ProfileCTCommand {
   id: string;
   names: string[];
-  // help: string;
 
   versions?: ProfileCTCommandVersion[];
 
@@ -584,7 +580,6 @@ function decodeProfileCTCommand(
   const command = {
     id: response.names.join("/"),
     names: [...response.names],
-    // help: response.help.short,
     versions: versions,
     modified: modified,
     loading: false,
