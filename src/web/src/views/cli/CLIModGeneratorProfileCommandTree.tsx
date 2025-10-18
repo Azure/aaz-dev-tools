@@ -609,49 +609,6 @@ function decodeProfileCTCommand(
   }
 }
 
-function decodeProfileCTCommandGroup(response: CLISpecsCommandGroup, selected: boolean = false): ProfileCTCommandGroup {
-  const commands =
-    response.commands !== undefined
-      ? Object.fromEntries(
-          Object.entries(response.commands).map(([name, command]) => [
-            name,
-            decodeProfileCTCommand(command, selected, selected, undefined),
-          ]),
-        )
-      : undefined;
-  const commandGroups =
-    response.commandGroups !== undefined
-      ? Object.fromEntries(
-          Object.entries(response.commandGroups).map(([name, group]) => [
-            name,
-            decodeProfileCTCommandGroup(group, selected),
-          ]),
-        )
-      : undefined;
-  return {
-    id: response.names.join("/"),
-    names: [...response.names],
-    // help: response.help?.short ?? '',
-    commandGroups: commandGroups,
-    commands: commands,
-    loading: false,
-    selected: selected,
-  };
-}
-
-function BuildProfileCommandTree(profileName: string, response: CLISpecsCommandGroup): ProfileCommandTree {
-  const commandGroups =
-    response.commandGroups !== undefined
-      ? Object.fromEntries(
-          Object.entries(response.commandGroups).map(([name, group]) => [name, decodeProfileCTCommandGroup(group)]),
-        )
-      : {};
-  return {
-    name: profileName,
-    commandGroups: commandGroups,
-  };
-}
-
 function getDefaultExpandedOfCommandGroup(commandGroup: ProfileCTCommandGroup): string[] {
   const expandedIds = commandGroup.commandGroups
     ? Object.values(commandGroup.commandGroups).flatMap((value) =>
@@ -972,4 +929,4 @@ export default CLIModGeneratorProfileCommandTree;
 
 export type { ProfileCommandTree };
 
-export { InitializeCommandTreeByModView, BuildProfileCommandTree, ExportModViewProfile };
+export { InitializeCommandTreeByModView, ExportModViewProfile };
