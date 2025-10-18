@@ -80,8 +80,11 @@ describe("CLIModGeneratorProfileCommandTree", () => {
       />,
     );
 
-    expect(screen.getByTestId("tree-view")).toBeInTheDocument();
-    expect(screen.getAllByTestId("tree-item")).toHaveLength(4);
+    expect(screen.getByTestId("cli-command-tree")).toBeInTheDocument();
+    // Should have 1 command group + 2 command items + 1 nested command group = 4 total
+    const commandGroups = screen.getAllByTestId(/^command-group-/);
+    const commandItems = screen.getAllByTestId("tree-item");
+    expect(commandGroups.length + commandItems.length).toBe(4);
   });
 
   it("should display command group names correctly", () => {
