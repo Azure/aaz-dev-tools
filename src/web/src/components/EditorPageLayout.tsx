@@ -1,5 +1,5 @@
+import React from "react";
 import { styled, Box } from "@mui/material";
-import * as React from "react";
 
 const PageContainer = styled(Box)(({ theme }) => ({
   color: theme.palette.common.white,
@@ -25,13 +25,13 @@ const Background = styled(Box)({
   zIndex: -2,
 });
 
-export default function EditorPageLayout(props: React.HTMLAttributes<HTMLDivElement>) {
-  const { children } = props;
-
+const EditorPageLayout: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ children }) => {
   return (
-    <React.Fragment>
+    <>
       <PageContainer>{children}</PageContainer>
       <Background />
-    </React.Fragment>
+    </>
   );
-}
+};
+
+export default EditorPageLayout;
