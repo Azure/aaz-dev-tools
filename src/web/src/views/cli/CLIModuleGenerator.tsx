@@ -22,7 +22,7 @@ import CLIModGeneratorProfileCommandTree, {
   ProfileCommandTree,
 } from "./CLIModGeneratorProfileCommandTree";
 import CLIModGeneratorProfileTabs from "./CLIModGeneratorProfileTabs";
-import { CLIModView, CLIModViewProfiles } from "./CLIModuleCommon";
+import { CLIModView, CLIModViewProfiles } from "./interfaces";
 
 interface CLISpecsSimpleCommand {
   names: string[];

@@ -24,7 +24,7 @@ import {
   CLIModViewCommandGroups,
   CLIModViewCommands,
   CLIModViewProfile,
-} from "./CLIModuleCommon";
+} from "./interfaces";
 import {
   CLISpecsCommand,
   CLISpecsCommandGroup,
