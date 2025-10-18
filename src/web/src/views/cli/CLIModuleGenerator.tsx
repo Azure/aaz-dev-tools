@@ -76,21 +76,6 @@ interface CLISpecsCommand {
   versions: CLISpecsCommandVersion[];
 }
 
-interface CLISpecsCommandGroup {
-  names: string[];
-  help?: CLISpecsHelp;
-  commands?: CLISpecsCommands;
-  commandGroups?: CLISpecsCommandGroups;
-}
-
-interface CLISpecsCommandGroups {
-  [name: string]: CLISpecsCommandGroup;
-}
-
-interface CLISpecsCommands {
-  [name: string]: CLISpecsCommand;
-}
-
 async function retrieveCommand(names: string[]): Promise<CLISpecsCommand> {
   return await cliApi.getSpecsCommand(names);
 }
@@ -390,11 +375,5 @@ const CLIModuleGeneratorWrapper = (props: any) => {
   return <CLIModuleGenerator params={params} {...props} />;
 };
 
-export type {
-  CLISpecsCommandGroup,
-  CLISpecsCommand,
-  CLISpecsSimpleCommandTree,
-  CLISpecsSimpleCommandGroup,
-  CLISpecsSimpleCommand,
-};
+export type { CLISpecsCommand, CLISpecsSimpleCommandTree, CLISpecsSimpleCommandGroup, CLISpecsSimpleCommand };
 export { CLIModuleGeneratorWrapper as CLIModuleGenerator };

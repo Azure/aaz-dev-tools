@@ -27,7 +27,6 @@ import {
 } from "./interfaces";
 import {
   CLISpecsCommand,
-  CLISpecsCommandGroup,
   CLISpecsSimpleCommand,
   CLISpecsSimpleCommandGroup,
   CLISpecsSimpleCommandTree,
