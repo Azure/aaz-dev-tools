@@ -66,20 +66,6 @@ class AppAppBar extends React.Component<AppAppBarProps, AppAppBarState> {
               >
                 {"Workspace"}
               </Link>
-              {/* <Box sx={{ p: 4}}/>
-                        <Link
-                            variant="h6"
-                            underline="none"
-                            color="inherit"
-                            href="/?#/Commands"
-                            fontWeight={
-                                this.props.pageName === "Commands" ? 
-                                theme.typography.fontWeightMedium : 
-                                theme.typography.fontWeightLight
-                            }
-                        >
-                            {'Commands'}
-                        </Link> */}
               <Box sx={{ p: 4 }} />
               <Link
                 variant="h6"

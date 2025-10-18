@@ -9,7 +9,6 @@ import HomePage from "./views/home/HomePage";
 import WorkspacePage from "./views/workspace/components/WorkspacePage";
 import WorkspaceInstruction from "./views/workspace/components/WorkspaceInstruction";
 import { WSEditor } from "./views/workspace/components/WSEditor";
-import CommandsPage from "./views/commands/CommandsPage";
 import CLIPage from "./views/cli/CLIPage";
 import CLIInstruction from "./views/cli/CLIInstruction";
 import { CLIModuleGenerator } from "./views/cli/CLIModuleGenerator";
@@ -31,7 +30,6 @@ root.render(
               <Route path="Instruction" element={<WorkspaceInstruction />} />
               <Route path=":workspaceName" element={<WSEditor />} />
             </Route>
-            <Route path="Commands" element={<CommandsPage />}></Route>
             <Route path="CLI" element={<CLIPage />}>
               <Route index element={<CLIInstruction />} />
               <Route path="Instruction" element={<CLIInstruction />}></Route>
