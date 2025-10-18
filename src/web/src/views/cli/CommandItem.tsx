@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { memo, useCallback } from "react";
 import TreeItem from "@mui/lab/TreeItem";
 import EditIcon from "@mui/icons-material/Edit";
 import {
@@ -41,10 +41,10 @@ interface CommandItemProps {
   onLoadCommand(names: string[]): Promise<void>;
 }
 
-const CommandItem: React.FC<CommandItemProps> = React.memo(({ command, onUpdateCommand, onLoadCommand }) => {
+const CommandItem: React.FC<CommandItemProps> = memo(({ command, onUpdateCommand, onLoadCommand }) => {
   const leafName = command.names[command.names.length - 1];
 
-  const selectCommand = React.useCallback(
+  const selectCommand = useCallback(
     (selected: boolean) => {
       onUpdateCommand(leafName, (oldCommand) => {
         if (oldCommand.versions === undefined && selected === true) {
@@ -68,7 +68,7 @@ const CommandItem: React.FC<CommandItemProps> = React.memo(({ command, onUpdateC
     [onUpdateCommand, onLoadCommand, leafName],
   );
 
-  const selectVersion = React.useCallback(
+  const selectVersion = useCallback(
     (version: string) => {
       onUpdateCommand(leafName, (oldCommand) => {
         return {
@@ -81,7 +81,7 @@ const CommandItem: React.FC<CommandItemProps> = React.memo(({ command, onUpdateC
     [onUpdateCommand, leafName],
   );
 
-  const selectRegistered = React.useCallback(
+  const selectRegistered = useCallback(
     (registered: boolean) => {
       onUpdateCommand(leafName, (oldCommand) => {
         return {

@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import TreeView from "@mui/lab/TreeView";
 
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
@@ -38,9 +38,9 @@ const CLIModGeneratorProfileCommandTree: React.FC<CLIModGeneratorProfileCommandT
   onChange,
   onLoadCommands,
 }) => {
-  const [defaultExpanded, _] = React.useState(GetDefaultExpanded(profileCommandTree));
+  const [defaultExpanded, _] = useState(GetDefaultExpanded(profileCommandTree));
 
-  const onUpdateCommandGroup = React.useCallback(
+  const onUpdateCommandGroup = useCallback(
     (name: string, updater: (oldCommandGroup: ProfileCTCommandGroup) => ProfileCTCommandGroup) => {
       onChange((profileCommandTree) => {
         return {
@@ -55,7 +55,7 @@ const CLIModGeneratorProfileCommandTree: React.FC<CLIModGeneratorProfileCommandT
     [onChange],
   );
 
-  const handleBatchedLoadedCommands = React.useCallback(
+  const handleBatchedLoadedCommands = useCallback(
     (commands: CLISpecsCommand[]) => {
       onChange((profileCommandTree) => {
         const newTree = commands.reduce((tree, command) => {
@@ -77,7 +77,7 @@ const CLIModGeneratorProfileCommandTree: React.FC<CLIModGeneratorProfileCommandT
     [onChange],
   );
 
-  const onLoadAndDecodeCommands = React.useCallback(
+  const onLoadAndDecodeCommands = useCallback(
     async (names: string[][]) => {
       const commands = await onLoadCommands(names);
       handleBatchedLoadedCommands(commands);
@@ -85,7 +85,7 @@ const CLIModGeneratorProfileCommandTree: React.FC<CLIModGeneratorProfileCommandT
     [onLoadCommands],
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     const [loadingNamesList, newTree] = PrepareLoadCommands(profileCommandTree);
     if (loadingNamesList.length > 0) {
       onChange(newTree);
@@ -122,20 +122,20 @@ interface ProfileCommandTree {
   commandGroups: ProfileCTCommandGroups;
 }
 
-function decodeProfileCTCommandVersion(response: any): ProfileCTCommandVersion {
+const decodeProfileCTCommandVersion = (response: any): ProfileCTCommandVersion => {
   return {
     name: response.name,
     stage: response.stage,
   };
-}
+};
 
-function decodeProfileCTCommand(
+const decodeProfileCTCommand = (
   response: CLISpecsCommand,
   selected: boolean = false,
   modified: boolean = false,
   registered: boolean | undefined = undefined,
   selectedVersion: string | undefined = undefined,
-): ProfileCTCommand {
+): ProfileCTCommand => {
   const versions = response.versions?.map((value: any) => decodeProfileCTCommandVersion(value));
   const command = {
     id: response.names.join("/"),
@@ -161,18 +161,18 @@ function decodeProfileCTCommand(
   } else {
     return command;
   }
-}
+};
 
-function getDefaultExpandedOfCommandGroup(commandGroup: ProfileCTCommandGroup): string[] {
+const getDefaultExpandedOfCommandGroup = (commandGroup: ProfileCTCommandGroup): string[] => {
   const expandedIds = commandGroup.commandGroups
     ? Object.values(commandGroup.commandGroups).flatMap((value) =>
         value.selected !== false ? [value.id, ...getDefaultExpandedOfCommandGroup(value)] : [],
       )
     : [];
   return expandedIds;
-}
+};
 
-function GetDefaultExpanded(tree: ProfileCommandTree): string[] {
+const GetDefaultExpanded = (tree: ProfileCommandTree): string[] => {
   return Object.values(tree.commandGroups).flatMap((value) => {
     const ids = getDefaultExpandedOfCommandGroup(value);
     if (value.selected !== false) {
@@ -180,9 +180,9 @@ function GetDefaultExpanded(tree: ProfileCommandTree): string[] {
     }
     return ids;
   });
-}
+};
 
-function PrepareLoadCommands(tree: ProfileCommandTree): [string[][], ProfileCommandTree] {
+const PrepareLoadCommands = (tree: ProfileCommandTree): [string[][], ProfileCommandTree] => {
   const namesList: string[][] = [];
   const commandGroups = Object.fromEntries(
     Object.entries(tree.commandGroups).map(([key, value]) => {
@@ -202,13 +202,13 @@ function PrepareLoadCommands(tree: ProfileCommandTree): [string[][], ProfileComm
   } else {
     return [[], tree];
   }
-}
+};
 
-function genericUpdateCommand(
+const genericUpdateCommand = (
   tree: ProfileCommandTree,
   names: string[],
   updater: (command: ProfileCTCommand) => ProfileCTCommand | undefined,
-): ProfileCommandTree | undefined {
+): ProfileCommandTree | undefined => {
   const nodes: ProfileCTCommandGroup[] = [];
   for (const name of names.slice(0, -1)) {
     const node = nodes.length === 0 ? tree : nodes[nodes.length - 1];
@@ -251,12 +251,12 @@ function genericUpdateCommand(
       [currentCommandGroup.names[currentCommandGroup.names.length - 1]]: currentCommandGroup,
     },
   };
-}
+};
 
-function initializeCommandByModView(
+const initializeCommandByModView = (
   view: CLIModViewCommand | undefined,
   simpleCommand: CLISpecsSimpleCommand,
-): ProfileCTCommand {
+): ProfileCTCommand => {
   return {
     id: simpleCommand.names.join("/"),
     names: simpleCommand.names,
@@ -266,12 +266,12 @@ function initializeCommandByModView(
     selectedVersion: view !== undefined ? view.version : undefined,
     registered: view !== undefined ? view.registered : true,
   };
-}
+};
 
-function initializeCommandGroupByModView(
+const initializeCommandGroupByModView = (
   view: CLIModViewCommandGroup | undefined,
   simpleCommandGroup: CLISpecsSimpleCommandGroup,
-): ProfileCTCommandGroup {
+): ProfileCTCommandGroup => {
   const commands =
     simpleCommandGroup.commands !== undefined
       ? Object.fromEntries(
@@ -322,13 +322,13 @@ function initializeCommandGroupByModView(
     loading: false,
     selected: selected,
   };
-}
+};
 
-function InitializeCommandTreeByModView(
+const InitializeCommandTreeByModView = (
   profileName: string,
   view: CLIModViewProfile | null,
   simpleTree: CLISpecsSimpleCommandTree,
-): ProfileCommandTree {
+): ProfileCommandTree => {
   const commandGroups = Object.fromEntries(
     Object.entries(simpleTree.root.commandGroups).map(([key, value]) => [
       key,
@@ -348,9 +348,9 @@ function InitializeCommandTreeByModView(
     name: profileName,
     commandGroups: commandGroups,
   };
-}
+};
 
-function ExportModViewCommand(command: ProfileCTCommand): CLIModViewCommand | undefined {
+const ExportModViewCommand = (command: ProfileCTCommand): CLIModViewCommand | undefined => {
   if (command.selectedVersion === undefined) {
     return undefined;
   }
@@ -361,9 +361,9 @@ function ExportModViewCommand(command: ProfileCTCommand): CLIModViewCommand | un
     version: command.selectedVersion!,
     modified: command.modified,
   };
-}
+};
 
-function ExportModViewCommandGroup(commandGroup: ProfileCTCommandGroup): CLIModViewCommandGroup | undefined {
+const ExportModViewCommandGroup = (commandGroup: ProfileCTCommandGroup): CLIModViewCommandGroup | undefined => {
   if (commandGroup.selected === false) {
     return undefined;
   }
@@ -397,9 +397,9 @@ function ExportModViewCommandGroup(commandGroup: ProfileCTCommandGroup): CLIModV
     commands: commands,
     waitCommand: commandGroup.waitCommand,
   };
-}
+};
 
-function ExportModViewProfile(tree: ProfileCommandTree): CLIModViewProfile {
+const ExportModViewProfile = (tree: ProfileCommandTree): CLIModViewProfile => {
   const commandGroups: CLIModViewCommandGroups = {};
 
   Object.values(tree.commandGroups).forEach((value) => {
@@ -413,7 +413,7 @@ function ExportModViewProfile(tree: ProfileCommandTree): CLIModViewProfile {
     name: tree.name,
     commandGroups: commandGroups,
   };
-}
+};
 
 export default CLIModGeneratorProfileCommandTree;
 

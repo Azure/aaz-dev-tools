@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { memo, useCallback } from "react";
 import TreeItem from "@mui/lab/TreeItem";
 import FolderIcon from "@mui/icons-material/Folder";
 import { Box, Checkbox, Typography, styled, TypographyProps } from "@mui/material";
@@ -26,12 +26,12 @@ interface CommandGroupItemProps {
   onLoadCommands: (names: string[][]) => Promise<void>;
 }
 
-const CommandGroupItem: React.FC<CommandGroupItemProps> = React.memo(
+const CommandGroupItem: React.FC<CommandGroupItemProps> = memo(
   ({ commandGroup, onUpdateCommandGroup, onLoadCommands }) => {
     const nodeName = commandGroup.names[commandGroup.names.length - 1];
     const selected = commandGroup.selected ?? false;
 
-    const onUpdateCommand = React.useCallback(
+    const onUpdateCommand = useCallback(
       (name: string, updater: (oldCommand: ProfileCTCommand) => ProfileCTCommand) => {
         onUpdateCommandGroup(nodeName, (oldCommandGroup) => {
           const commands = {
@@ -49,7 +49,7 @@ const CommandGroupItem: React.FC<CommandGroupItemProps> = React.memo(
       [onUpdateCommandGroup, nodeName],
     );
 
-    const onUpdateSubCommandGroup = React.useCallback(
+    const onUpdateSubCommandGroup = useCallback(
       (name: string, updater: (oldCommandGroup: ProfileCTCommandGroup) => ProfileCTCommandGroup) => {
         onUpdateCommandGroup(nodeName, (oldCommandGroup) => {
           const commandGroups = {
@@ -68,7 +68,7 @@ const CommandGroupItem: React.FC<CommandGroupItemProps> = React.memo(
       [onUpdateCommandGroup, nodeName],
     );
 
-    const onLoadCommand = React.useCallback(
+    const onLoadCommand = useCallback(
       async (names: string[]) => {
         await onLoadCommands([names]);
       },
@@ -115,7 +115,7 @@ const CommandGroupItem: React.FC<CommandGroupItemProps> = React.memo(
       };
     };
 
-    const selectCommandGroup = React.useCallback(
+    const selectCommandGroup = useCallback(
       (selected: boolean) => {
         onUpdateCommandGroup(nodeName, (oldCommandGroup) => {
           const selectedGroup = updateGroupSelected(oldCommandGroup, selected);
