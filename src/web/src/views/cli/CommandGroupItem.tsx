@@ -2,6 +2,7 @@ import * as React from "react";
 import TreeItem from "@mui/lab/TreeItem";
 import FolderIcon from "@mui/icons-material/Folder";
 import { Box, Checkbox, Typography, styled, TypographyProps } from "@mui/material";
+import CommandItem from "./CommandItem";
 import {
   calculateSelected,
   prepareLoadCommandsOfCommandGroup,
@@ -23,15 +24,10 @@ interface CommandGroupItemProps {
     updater: (oldCommandGroup: ProfileCTCommandGroup) => ProfileCTCommandGroup,
   ) => void;
   onLoadCommands: (names: string[][]) => Promise<void>;
-  CommandItem: React.ComponentType<{
-    command: ProfileCTCommand;
-    onUpdateCommand: (name: string, updater: (oldCommand: ProfileCTCommand) => ProfileCTCommand) => void;
-    onLoadCommand: (names: string[]) => Promise<void>;
-  }>;
 }
 
 const CommandGroupItem: React.FC<CommandGroupItemProps> = React.memo(
-  ({ commandGroup, onUpdateCommandGroup, onLoadCommands, CommandItem }) => {
+  ({ commandGroup, onUpdateCommandGroup, onLoadCommands }) => {
     const nodeName = commandGroup.names[commandGroup.names.length - 1];
     const selected = commandGroup.selected ?? false;
 
@@ -180,7 +176,6 @@ const CommandGroupItem: React.FC<CommandGroupItemProps> = React.memo(
               commandGroup={group}
               onUpdateCommandGroup={onUpdateSubCommandGroup}
               onLoadCommands={onLoadCommands}
-              CommandItem={CommandItem}
             />
           ))}
       </TreeItem>
