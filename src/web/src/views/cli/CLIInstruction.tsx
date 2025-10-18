@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { Typography, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import CLIModuleSelector from "./CLIModuleSelector";
@@ -13,57 +13,55 @@ const SpacePadding = styled(Box)(() => ({
   width: "3vh",
 }));
 
-class CLIInstruction extends React.Component {
-  render() {
-    return (
-      <React.Fragment>
-        <AppNavBar pageName={"CLI"} />
-        <PageLayout>
+const CLIInstruction: React.FC = () => {
+  return (
+    <>
+      <AppNavBar pageName="CLI" />
+      <PageLayout>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+        >
+          <Box sx={{ flexGrow: 3 }} />
           <Box
             sx={{
+              flexGrow: 3,
+              flexShrink: 0,
               display: "flex",
               alignItems: "center",
-              flexDirection: "column",
               justifyContent: "center",
+              flexDirection: "column",
             }}
           >
-            <Box sx={{ flexGrow: 3 }} />
+            <Typography variant="h3" gutterBottom>
+              Please select a CLI Module
+            </Typography>
+            <MiddlePadding />
             <Box
               sx={{
-                flexGrow: 3,
-                flexShrink: 0,
                 display: "flex",
+                flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "column",
               }}
             >
-              <Typography variant="h3" gutterBottom>
-                Please select a CLI Module
+              <CLIModuleSelector repo="Main" name="Azure CLI Module" />
+              <SpacePadding />
+              <Typography variant="h6" gutterBottom>
+                Or
               </Typography>
-              <MiddlePadding />
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
-                <CLIModuleSelector repo="Main" name="Azure CLI Module" />
-                <SpacePadding />
-                <Typography variant="h6" gutterBottom>
-                  Or
-                </Typography>
-                <SpacePadding />
-                <CLIModuleSelector repo="Extension" name="Azure CLI Extension Module" />
-              </Box>
+              <SpacePadding />
+              <CLIModuleSelector repo="Extension" name="Azure CLI Extension Module" />
             </Box>
-            <Box sx={{ flexGrow: 5 }} />
           </Box>
-        </PageLayout>
-      </React.Fragment>
-    );
-  }
-}
+          <Box sx={{ flexGrow: 5 }} />
+        </Box>
+      </PageLayout>
+    </>
+  );
+};
 
 export default CLIInstruction;
