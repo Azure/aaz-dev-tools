@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, Fragment, FC } from "react";
+import { useState, useEffect, useCallback, Fragment, FC } from "react";
 import { Backdrop, Box, CircularProgress, Drawer, Toolbar, Alert } from "@mui/material";
 import { useParams } from "react-router";
 import { cliApi, errorHandlerApi } from "../../services";
@@ -8,6 +8,7 @@ import { initializeCommandTreeByModView, ProfileCommandTree } from "./utils/comm
 import CLIModGeneratorProfileTabs from "./CLIModGeneratorProfileTabs";
 import { CLIModView } from "./interfaces";
 import GenerateDialog, { type ProfileCommandTrees } from "./GenerateDialog";
+import { useSpecsCommandTree } from "./hooks";
 
 interface CLISpecsSimpleCommand {
   names: string[];
@@ -30,81 +31,6 @@ interface CLISpecsSimpleCommandGroup {
 interface CLISpecsSimpleCommandTree {
   root: CLISpecsSimpleCommandGroup;
 }
-
-interface CLISpecsHelp {
-  short: string;
-  lines?: string[];
-}
-
-interface CLISpecsResource {
-  plane: string;
-  id: string;
-  version: string;
-  subresource?: string;
-}
-
-interface CLISpecsCommandExample {
-  name: string;
-  commands: string[];
-}
-
-interface CLISpecsCommandVersion {
-  name: string;
-  stage?: string;
-  resources: CLISpecsResource[];
-  examples?: CLISpecsCommandExample[];
-}
-
-interface CLISpecsCommand {
-  names: string[];
-  help: CLISpecsHelp;
-  versions: CLISpecsCommandVersion[];
-}
-
-async function retrieveCommand(names: string[]): Promise<CLISpecsCommand> {
-  return await cliApi.getSpecsCommand(names);
-}
-
-async function retrieveCommands(namesList: string[][]): Promise<CLISpecsCommand[]> {
-  return await cliApi.retrieveCommands(namesList);
-}
-
-const useSpecsCommandTree: () => (namesList: string[][]) => Promise<CLISpecsCommand[]> = () => {
-  const commandCache = useRef(new Map<string, Promise<CLISpecsCommand>>());
-
-  const fetchCommands = useCallback(
-    async (namesList: string[][]) => {
-      const promiseResults = [];
-      const uncachedNamesList = [];
-      for (const names of namesList) {
-        const cachedPromise = commandCache.current.get(names.join("/"));
-        if (!cachedPromise) {
-          uncachedNamesList.push(names);
-        } else {
-          promiseResults.push(cachedPromise);
-        }
-      }
-      if (uncachedNamesList.length === 0) {
-        return await Promise.all(promiseResults);
-      } else if (uncachedNamesList.length === 1) {
-        const commandPromise = retrieveCommand(uncachedNamesList[0]);
-        commandCache.current.set(uncachedNamesList[0].join("/"), commandPromise);
-        return await Promise.all(promiseResults.concat(commandPromise));
-      } else {
-        const uncachedCommandsPromise = retrieveCommands(uncachedNamesList);
-        uncachedNamesList.forEach((names, idx) => {
-          commandCache.current.set(
-            names.join("/"),
-            uncachedCommandsPromise.then((commands) => commands[idx]),
-          );
-        });
-        return (await Promise.all(promiseResults)).concat(await uncachedCommandsPromise);
-      }
-    },
-    [commandCache],
-  );
-  return fetchCommands;
-};
 
 interface CLIModuleGeneratorProps {
   params: {
@@ -269,5 +195,6 @@ const CLIModuleGeneratorWrapper = (props: any) => {
   return <CLIModuleGenerator params={params} {...props} />;
 };
 
-export type { CLISpecsCommand, CLISpecsSimpleCommandTree, CLISpecsSimpleCommandGroup, CLISpecsSimpleCommand };
+export type { CLISpecsCommand } from "./hooks";
+export type { CLISpecsSimpleCommandTree, CLISpecsSimpleCommandGroup, CLISpecsSimpleCommand };
 export { CLIModuleGeneratorWrapper as CLIModuleGenerator };
