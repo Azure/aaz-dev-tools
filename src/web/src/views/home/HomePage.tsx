@@ -84,7 +84,7 @@ function HomePage() {
                 <Stepper nonLinear activeStep={activeStep} orientation="vertical">
                   <Step>
                     <StepButton color="inherit" onClick={handleStep(0)}>
-                      {"Introduce"}
+                      {"Introduction"}
                     </StepButton>
                     <StepContent>
                       <StepContentTypography>
@@ -93,11 +93,11 @@ function HomePage() {
                         }
                       </StepContentTypography>
                       <StepContentTypography>
-                        {"Go to "}
+                        {"Go to the "}
                         <Link href="https://azure.github.io/aaz-dev-tools/" underline="always" target="_blank">
-                          Introduction
+                          introduction
                         </Link>
-                        {" for more details."}
+                        {" page in our docs for more details."}
                       </StepContentTypography>
                     </StepContent>
                   </Step>
@@ -107,10 +107,10 @@ function HomePage() {
                     </StepButton>
                     <StepContent>
                       <StepContentTypography>
-                        {"The definition of API in swagger/TypeSpec is required before using AAZDev tool."}
+                        {"The definition of API specs in Swagger/TypeSpec is required before using the AAZDev tool."}
                       </StepContentTypography>
                       <StepContentTypography>
-                        {"Please make sure the API specs has been defined in "}
+                        {"Please make sure the API specs have been defined in the "}
                       </StepContentTypography>
                       <StepContentTypography>
                         <Link
@@ -121,7 +121,7 @@ function HomePage() {
                         >
                           azure-rest-api-specs
                         </Link>
-                        {" repo or "}
+                        {" repo or the "}
                         <Link
                           href="https://github.com/Azure/azure-rest-api-specs-pr"
                           // align="center"
@@ -142,9 +142,9 @@ function HomePage() {
                       <StepContentTypography>
                         {"Model editors can help you build command models."}
                       </StepContentTypography>
-                      <StepContentTypography>{"To build command models from swagger/TypeSpec,"}</StepContentTypography>
+                      <StepContentTypography>{"To build command models from Swagger/TypeSpec,"}</StepContentTypography>
                       <StepContentTypography>
-                        {"please use "}
+                        {"please use the "}
                         <Link href="/?#/Workspace" align="center" underline="always">
                           Workspace
                         </Link>
@@ -159,7 +159,7 @@ function HomePage() {
                     <StepContent>
                       <StepContentTypography>{"To convert command models to CLI code,"}</StepContentTypography>
                       <StepContentTypography>
-                        {"please use "}
+                        {"please use the "}
                         <Link href="/?#/CLI" align="center" underline="always">
                           CLI
                         </Link>

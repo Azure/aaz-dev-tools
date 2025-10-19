@@ -80,7 +80,7 @@ const AppNavBar: React.FC<AppNavBarProps> = ({ pageName }) => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Document
+              Documentation
             </MenuItem>
             <MenuItem
               onClick={handleMenuClose}
@@ -89,7 +89,7 @@ const AppNavBar: React.FC<AppNavBarProps> = ({ pageName }) => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Send a Feedback
+              Send Feedback
             </MenuItem>
           </Menu>
         </Toolbar>
