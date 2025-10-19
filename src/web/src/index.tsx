@@ -9,9 +9,9 @@ import HomePage from "./views/home/HomePage";
 import WorkspacePage from "./views/workspace/components/WorkspacePage";
 import WorkspaceInstruction from "./views/workspace/components/WorkspaceInstruction";
 import { WSEditor } from "./views/workspace/components/WSEditor";
-import CLIPage from "./views/cli/CLIPage";
-import CLIInstruction from "./views/cli/CLIInstruction";
-import { CLIModuleGenerator } from "./views/cli/CLIModuleGenerator";
+import CLIPage from "./views/cli/components/CLIPage";
+import CLIInstruction from "./views/cli/components/CLIInstruction";
+import { CLIModuleGenerator } from "./views/cli/components/CLIModuleGenerator";
 import theme from "./theme";
 
 const container = document.getElementById("root");

@@ -9,7 +9,7 @@ import {
   TextField,
   Button,
 } from "@mui/material";
-import { cliApi, errorHandlerApi } from "../../services";
+import { cliApi, errorHandlerApi } from "../../../services";
 import * as React from "react";
 
 interface CLIModule {

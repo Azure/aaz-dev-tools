@@ -2,8 +2,8 @@ import React from "react";
 import { Typography, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import CLIModuleSelector from "./CLIModuleSelector";
-import { AppNavBar } from "../../components/AppNavBar";
-import PageLayout from "../../components/PageLayout";
+import { AppNavBar } from "../../../components/AppNavBar";
+import PageLayout from "../../../components/PageLayout";
 
 const MiddlePadding = styled(Box)(() => ({
   height: "6vh",

@@ -13,7 +13,7 @@ import {
   InputLabel,
   IconButton,
 } from "@mui/material";
-import { type ProfileCTCommand } from "./utils/commandTreeUtils";
+import { type ProfileCTCommand } from "../utils/commandTreeUtils";
 
 const CommandTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
   color: theme.palette.primary.main,

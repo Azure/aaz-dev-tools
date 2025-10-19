@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress } from "@mui/material";
-import { cliApi, errorHandlerApi } from "../../services";
-import { exportModViewProfile, type ProfileCommandTree } from "./utils/commandTreeInitialization";
-import { type CLIModViewProfiles } from "./interfaces";
+import { cliApi, errorHandlerApi } from "../../../services";
+import { exportModViewProfile, type ProfileCommandTree } from "../utils/commandTreeInitialization";
+import { type CLIModViewProfiles } from "../interfaces";
 
 interface ProfileCommandTrees {
   [name: string]: ProfileCommandTree;

@@ -10,7 +10,7 @@ import {
   CLISpecsSimpleCommand,
   CLISpecsSimpleCommandGroup,
   CLISpecsSimpleCommandTree,
-} from "../CLIModuleGenerator";
+} from "../components/CLIModuleGenerator";
 import {
   calculateSelected,
   type ProfileCTCommandGroup,

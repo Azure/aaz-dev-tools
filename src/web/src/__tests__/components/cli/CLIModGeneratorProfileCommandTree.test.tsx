@@ -1,8 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import CLIModGeneratorProfileCommandTree, {
-  ProfileCommandTree,
-} from "../../../views/cli/CLIModGeneratorProfileCommandTree";
+import CLIModGeneratorProfileCommandTree from "../../../views/cli/components/CLIModGeneratorProfileCommandTree";
+import { ProfileCommandTree } from "../../../views/cli/utils/commandTreeInitialization";
 
 vi.mock("@mui/lab/TreeView", () => ({
   default: ({ children, ...props }: any) => (

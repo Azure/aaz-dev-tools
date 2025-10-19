@@ -1,7 +1,7 @@
-import React from "react";
+import { FC } from "react";
 import { Outlet } from "react-router";
 
-const CLIPage: React.FC = () => {
+const CLIPage: FC = () => {
   return (
     <>
       <Outlet />

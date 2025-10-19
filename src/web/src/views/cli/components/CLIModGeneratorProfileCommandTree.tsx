@@ -10,8 +10,8 @@ import {
   prepareLoadCommandsOfCommandGroup,
   type ProfileCTCommandGroup,
   type ProfileCTCommand,
-} from "./utils/commandTreeUtils";
-import { ProfileCommandTree, decodeProfileCTCommand } from "./utils/commandTreeInitialization";
+} from "../utils/commandTreeUtils";
+import { ProfileCommandTree, decodeProfileCTCommand } from "../utils/commandTreeInitialization";
 
 interface CLIModGeneratorProfileCommandTreeProps {
   profile?: string;
@@ -195,5 +195,3 @@ const genericUpdateCommand = (
 };
 
 export default CLIModGeneratorProfileCommandTree;
-
-export type { ProfileCommandTree };

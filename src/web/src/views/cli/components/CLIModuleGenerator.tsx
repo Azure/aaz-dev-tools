@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback, Fragment, FC } from "react";
 import { Backdrop, Box, CircularProgress, Drawer, Toolbar, Alert } from "@mui/material";
 import { useParams } from "react-router";
-import { cliApi, errorHandlerApi } from "../../services";
+import { cliApi, errorHandlerApi } from "../../../services";
 import CLIModGeneratorToolBar from "./CLIModGeneratorToolBar";
 import CLIModGeneratorProfileCommandTree from "./CLIModGeneratorProfileCommandTree";
-import { initializeCommandTreeByModView, ProfileCommandTree } from "./utils/commandTreeInitialization";
+import { initializeCommandTreeByModView, ProfileCommandTree } from "../utils/commandTreeInitialization";
 import CLIModGeneratorProfileTabs from "./CLIModGeneratorProfileTabs";
-import { CLIModView } from "./interfaces";
+import { CLIModView } from "../interfaces";
 import GenerateDialog, { type ProfileCommandTrees } from "./GenerateDialog";
-import { useSpecsCommandTree } from "./hooks";
+import { useSpecsCommandTree } from "../hooks";
 
 interface CLISpecsSimpleCommand {
   names: string[];
@@ -195,6 +195,6 @@ const CLIModuleGeneratorWrapper = (props: any) => {
   return <CLIModuleGenerator params={params} {...props} />;
 };
 
-export type { CLISpecsCommand } from "./hooks";
+export type { CLISpecsCommand } from "../hooks";
 export type { CLISpecsSimpleCommandTree, CLISpecsSimpleCommandGroup, CLISpecsSimpleCommand };
 export { CLIModuleGeneratorWrapper as CLIModuleGenerator };

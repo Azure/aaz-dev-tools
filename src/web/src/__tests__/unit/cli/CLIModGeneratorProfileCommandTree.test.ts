@@ -5,7 +5,7 @@ import {
   exportModViewProfile,
 } from "../../../views/cli/utils/commandTreeInitialization";
 import { CLIModViewProfile } from "../../../views/cli/interfaces";
-import { CLISpecsSimpleCommandTree } from "../../../views/cli/CLIModuleGenerator";
+import { CLISpecsSimpleCommandTree } from "../../../views/cli/components/CLIModuleGenerator";
 
 describe("CLIModGeneratorProfileCommandTree", () => {
   describe("initializeCommandTreeByModView", () => {

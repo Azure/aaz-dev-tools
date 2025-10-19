@@ -8,7 +8,7 @@ import {
   prepareLoadCommandsOfCommandGroup,
   type ProfileCTCommandGroup,
   type ProfileCTCommand,
-} from "./utils/commandTreeUtils";
+} from "../utils/commandTreeUtils";
 
 const CommandGroupTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
   color: theme.palette.primary.main,
