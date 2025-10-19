@@ -1,28 +1,15 @@
 import * as React from "react";
-import {
-  Backdrop,
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Drawer,
-  LinearProgress,
-  Toolbar,
-  Alert,
-} from "@mui/material";
+import { Backdrop, Box, CircularProgress, Drawer, Toolbar, Alert } from "@mui/material";
 import { useParams } from "react-router";
 import { cliApi, errorHandlerApi } from "../../services";
 import CLIModGeneratorToolBar from "./CLIModGeneratorToolBar";
 import CLIModGeneratorProfileCommandTree, {
-  exportModViewProfile,
   initializeCommandTreeByModView,
   ProfileCommandTree,
 } from "./CLIModGeneratorProfileCommandTree";
 import CLIModGeneratorProfileTabs from "./CLIModGeneratorProfileTabs";
-import { CLIModView, CLIModViewProfiles } from "./interfaces";
+import { CLIModView } from "./interfaces";
+import GenerateDialog, { type ProfileCommandTrees } from "./GenerateDialog";
 
 interface CLISpecsSimpleCommand {
   names: string[];
@@ -120,10 +107,6 @@ const useSpecsCommandTree: () => (namesList: string[][]) => Promise<CLISpecsComm
   );
   return fetchCommands;
 };
-
-interface ProfileCommandTrees {
-  [name: string]: ProfileCommandTree;
-}
 
 interface CLIModuleGeneratorProps {
   params: {
@@ -282,93 +265,6 @@ const CLIModuleGenerator: React.FC<CLIModuleGeneratorProps> = ({ params }) => {
     </React.Fragment>
   );
 };
-
-function GenerateDialog(props: {
-  repoName: string;
-  moduleName: string;
-  profileCommandTrees: ProfileCommandTrees;
-  open: boolean;
-  onClose: (generated: boolean) => void;
-}) {
-  const [updating, setUpdating] = React.useState<boolean>(false);
-  const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
-
-  const handleClose = () => {
-    props.onClose(false);
-  };
-
-  const handleGenerateAll = async () => {
-    const profiles: CLIModViewProfiles = {};
-    Object.values(props.profileCommandTrees).forEach((tree) => {
-      profiles[tree.name] = exportModViewProfile(tree);
-    });
-    const data = {
-      name: props.moduleName,
-      profiles: profiles,
-    };
-
-    setUpdating(true);
-    try {
-      await cliApi.updateCliModule(props.repoName, props.moduleName, data);
-      setUpdating(false);
-      props.onClose(true);
-    } catch (err: any) {
-      console.error(err);
-      setInvalidText(errorHandlerApi.getErrorMessage(err));
-      setUpdating(false);
-    }
-  };
-
-  const handleGenerateModified = async () => {
-    const profiles: CLIModViewProfiles = {};
-    Object.values(props.profileCommandTrees).forEach((tree) => {
-      profiles[tree.name] = exportModViewProfile(tree);
-    });
-    const data = {
-      name: props.moduleName,
-      profiles: profiles,
-    };
-
-    setUpdating(true);
-    try {
-      await cliApi.patchCliModule(props.repoName, props.moduleName, data);
-      setUpdating(false);
-      props.onClose(true);
-    } catch (err: any) {
-      console.error(err);
-      setInvalidText(errorHandlerApi.getErrorMessage(err));
-      setUpdating(false);
-    }
-  };
-
-  return (
-    <Dialog disableEscapeKeyDown open={props.open}>
-      <DialogTitle>Generate CLI commands to {props.moduleName}</DialogTitle>
-      <DialogContent>
-        {invalidText && (
-          <Alert variant="filled" severity="error">
-            {" "}
-            {invalidText}{" "}
-          </Alert>
-        )}
-      </DialogContent>
-      <DialogActions>
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
-        {!updating && (
-          <React.Fragment>
-            <Button onClick={handleClose}>Cancel</Button>
-            <Button onClick={handleGenerateAll}>Generate All</Button>
-            <Button onClick={handleGenerateModified}>Generate Edited Only</Button>
-          </React.Fragment>
-        )}
-      </DialogActions>
-    </Dialog>
-  );
-}
 
 const CLIModuleGeneratorWrapper = (props: any) => {
   const params = useParams();
