@@ -3,7 +3,7 @@ import {
   ProfileCommandTree,
   initializeCommandTreeByModView,
   exportModViewProfile,
-} from "../../../views/cli/CLIModGeneratorProfileCommandTree";
+} from "../../../views/cli/utils/commandTreeInitialization";
 import { CLIModViewProfile } from "../../../views/cli/interfaces";
 import { CLISpecsSimpleCommandTree } from "../../../views/cli/CLIModuleGenerator";
 

@@ -3,10 +3,8 @@ import { Backdrop, Box, CircularProgress, Drawer, Toolbar, Alert } from "@mui/ma
 import { useParams } from "react-router";
 import { cliApi, errorHandlerApi } from "../../services";
 import CLIModGeneratorToolBar from "./CLIModGeneratorToolBar";
-import CLIModGeneratorProfileCommandTree, {
-  initializeCommandTreeByModView,
-  ProfileCommandTree,
-} from "./CLIModGeneratorProfileCommandTree";
+import CLIModGeneratorProfileCommandTree from "./CLIModGeneratorProfileCommandTree";
+import { initializeCommandTreeByModView, ProfileCommandTree } from "./utils/commandTreeInitialization";
 import CLIModGeneratorProfileTabs from "./CLIModGeneratorProfileTabs";
 import { CLIModView } from "./interfaces";
 import GenerateDialog, { type ProfileCommandTrees } from "./GenerateDialog";
