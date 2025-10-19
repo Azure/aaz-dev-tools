@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useState, useEffect, useCallback, useRef, Fragment, FC } from "react";
 import { Backdrop, Box, CircularProgress, Drawer, Toolbar, Alert } from "@mui/material";
 import { useParams } from "react-router";
 import { cliApi, errorHandlerApi } from "../../services";
@@ -70,9 +70,9 @@ async function retrieveCommands(namesList: string[][]): Promise<CLISpecsCommand[
 }
 
 const useSpecsCommandTree: () => (namesList: string[][]) => Promise<CLISpecsCommand[]> = () => {
-  const commandCache = React.useRef(new Map<string, Promise<CLISpecsCommand>>());
+  const commandCache = useRef(new Map<string, Promise<CLISpecsCommand>>());
 
-  const fetchCommands = React.useCallback(
+  const fetchCommands = useCallback(
     async (namesList: string[][]) => {
       const promiseResults = [];
       const uncachedNamesList = [];
@@ -113,17 +113,17 @@ interface CLIModuleGeneratorProps {
   };
 }
 
-const CLIModuleGenerator: React.FC<CLIModuleGeneratorProps> = ({ params }) => {
-  const [loading, setLoading] = React.useState(false);
-  const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
-  const [profiles, setProfiles] = React.useState<string[]>([]);
-  const [commandTrees, setCommandTrees] = React.useState<ProfileCommandTrees>({});
-  const [selectedProfile, setSelectedProfile] = React.useState<string | undefined>(undefined);
-  const [showGenerateDialog, setShowGenerateDialog] = React.useState(false);
+const CLIModuleGenerator: FC<CLIModuleGeneratorProps> = ({ params }) => {
+  const [loading, setLoading] = useState(false);
+  const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
+  const [profiles, setProfiles] = useState<string[]>([]);
+  const [commandTrees, setCommandTrees] = useState<ProfileCommandTrees>({});
+  const [selectedProfile, setSelectedProfile] = useState<string | undefined>(undefined);
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
 
   const fetchCommands = useSpecsCommandTree();
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadModule();
   }, []);
 
@@ -173,11 +173,11 @@ const CLIModuleGenerator: React.FC<CLIModuleGeneratorProps> = ({ params }) => {
     setShowGenerateDialog(false);
   };
 
-  const onProfileChange = React.useCallback((selectedProfile: string) => {
+  const onProfileChange = useCallback((selectedProfile: string) => {
     setSelectedProfile(selectedProfile);
   }, []);
 
-  const onSelectedProfileTreeUpdate = React.useCallback(
+  const onSelectedProfileTreeUpdate = useCallback(
     (updater: ((oldTree: ProfileCommandTree) => ProfileCommandTree) | ProfileCommandTree) => {
       setCommandTrees((commandTrees) => {
         const selectedCommandTree = commandTrees[selectedProfile!];
@@ -189,7 +189,7 @@ const CLIModuleGenerator: React.FC<CLIModuleGeneratorProps> = ({ params }) => {
   );
 
   return (
-    <React.Fragment>
+    <Fragment>
       <CLIModGeneratorToolBar
         moduleName={params.moduleName}
         onHomePage={handleBackToHomepage}
@@ -260,7 +260,7 @@ const CLIModuleGenerator: React.FC<CLIModuleGeneratorProps> = ({ params }) => {
           <CircularProgress color="inherit" />
         )}
       </Backdrop>
-    </React.Fragment>
+    </Fragment>
   );
 };
 
