@@ -38,7 +38,7 @@ const CLIModGeneratorProfileCommandTree: React.FC<CLIModGeneratorProfileCommandT
   onChange,
   onLoadCommands,
 }) => {
-  const [defaultExpanded, _] = useState(GetDefaultExpanded(profileCommandTree));
+  const [defaultExpanded, _] = useState(getDefaultExpanded(profileCommandTree));
 
   const onUpdateCommandGroup = useCallback(
     (name: string, updater: (oldCommandGroup: ProfileCTCommandGroup) => ProfileCTCommandGroup) => {
@@ -86,7 +86,7 @@ const CLIModGeneratorProfileCommandTree: React.FC<CLIModGeneratorProfileCommandT
   );
 
   useEffect(() => {
-    const [loadingNamesList, newTree] = PrepareLoadCommands(profileCommandTree);
+    const [loadingNamesList, newTree] = prepareLoadCommands(profileCommandTree);
     if (loadingNamesList.length > 0) {
       onChange(newTree);
       onLoadCommands(loadingNamesList).then((commands) => {
@@ -172,7 +172,7 @@ const getDefaultExpandedOfCommandGroup = (commandGroup: ProfileCTCommandGroup): 
   return expandedIds;
 };
 
-const GetDefaultExpanded = (tree: ProfileCommandTree): string[] => {
+const getDefaultExpanded = (tree: ProfileCommandTree): string[] => {
   return Object.values(tree.commandGroups).flatMap((value) => {
     const ids = getDefaultExpandedOfCommandGroup(value);
     if (value.selected !== false) {
@@ -182,7 +182,7 @@ const GetDefaultExpanded = (tree: ProfileCommandTree): string[] => {
   });
 };
 
-const PrepareLoadCommands = (tree: ProfileCommandTree): [string[][], ProfileCommandTree] => {
+const prepareLoadCommands = (tree: ProfileCommandTree): [string[][], ProfileCommandTree] => {
   const namesList: string[][] = [];
   const commandGroups = Object.fromEntries(
     Object.entries(tree.commandGroups).map(([key, value]) => {
@@ -324,7 +324,7 @@ const initializeCommandGroupByModView = (
   };
 };
 
-const InitializeCommandTreeByModView = (
+const initializeCommandTreeByModView = (
   profileName: string,
   view: CLIModViewProfile | null,
   simpleTree: CLISpecsSimpleCommandTree,
@@ -350,7 +350,7 @@ const InitializeCommandTreeByModView = (
   };
 };
 
-const ExportModViewCommand = (command: ProfileCTCommand): CLIModViewCommand | undefined => {
+const exportModViewCommand = (command: ProfileCTCommand): CLIModViewCommand | undefined => {
   if (command.selectedVersion === undefined) {
     return undefined;
   }
@@ -363,7 +363,7 @@ const ExportModViewCommand = (command: ProfileCTCommand): CLIModViewCommand | un
   };
 };
 
-const ExportModViewCommandGroup = (commandGroup: ProfileCTCommandGroup): CLIModViewCommandGroup | undefined => {
+const exportModViewCommandGroup = (commandGroup: ProfileCTCommandGroup): CLIModViewCommandGroup | undefined => {
   if (commandGroup.selected === false) {
     return undefined;
   }
@@ -373,7 +373,7 @@ const ExportModViewCommandGroup = (commandGroup: ProfileCTCommandGroup): CLIModV
     commands = {};
 
     Object.values(commandGroup.commands!).forEach((value) => {
-      const view = ExportModViewCommand(value);
+      const view = exportModViewCommand(value);
       if (view !== undefined) {
         commands![value.names[value.names.length - 1]] = view;
       }
@@ -385,7 +385,7 @@ const ExportModViewCommandGroup = (commandGroup: ProfileCTCommandGroup): CLIModV
     commandGroups = {};
 
     Object.values(commandGroup.commandGroups!).forEach((value) => {
-      const view = ExportModViewCommandGroup(value);
+      const view = exportModViewCommandGroup(value);
       if (view !== undefined) {
         commandGroups![value.names[value.names.length - 1]] = view;
       }
@@ -399,11 +399,11 @@ const ExportModViewCommandGroup = (commandGroup: ProfileCTCommandGroup): CLIModV
   };
 };
 
-const ExportModViewProfile = (tree: ProfileCommandTree): CLIModViewProfile => {
+const exportModViewProfile = (tree: ProfileCommandTree): CLIModViewProfile => {
   const commandGroups: CLIModViewCommandGroups = {};
 
   Object.values(tree.commandGroups).forEach((value) => {
-    const view = ExportModViewCommandGroup(value);
+    const view = exportModViewCommandGroup(value);
     if (view !== undefined) {
       commandGroups[value.names[value.names.length - 1]] = view;
     }
@@ -419,4 +419,4 @@ export default CLIModGeneratorProfileCommandTree;
 
 export type { ProfileCommandTree };
 
-export { InitializeCommandTreeByModView, ExportModViewProfile };
+export { initializeCommandTreeByModView, exportModViewProfile };

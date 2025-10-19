@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest";
 import {
-  InitializeCommandTreeByModView,
-  ExportModViewProfile,
   ProfileCommandTree,
+  initializeCommandTreeByModView,
+  exportModViewProfile,
 } from "../../../views/cli/CLIModGeneratorProfileCommandTree";
 import { CLIModViewProfile } from "../../../views/cli/interfaces";
 import { CLISpecsSimpleCommandTree } from "../../../views/cli/CLIModuleGenerator";
 
 describe("CLIModGeneratorProfileCommandTree", () => {
-  describe("InitializeCommandTreeByModView", () => {
+  describe("initializeCommandTreeByModView", () => {
     it("should initialize command tree with empty profile", () => {
       const profileName = "test-profile";
       const view: CLIModViewProfile | null = null;
@@ -30,7 +30,7 @@ describe("CLIModGeneratorProfileCommandTree", () => {
         },
       };
 
-      const result = InitializeCommandTreeByModView(profileName, view, simpleTree);
+      const result = initializeCommandTreeByModView(profileName, view, simpleTree);
 
       expect(result.name).toBe(profileName);
       expect(result.commandGroups).toBeDefined();
@@ -81,7 +81,7 @@ describe("CLIModGeneratorProfileCommandTree", () => {
         },
       };
 
-      const result = InitializeCommandTreeByModView(profileName, view, simpleTree);
+      const result = initializeCommandTreeByModView(profileName, view, simpleTree);
 
       expect(result.name).toBe(profileName);
       expect(result.commandGroups["test-group"].commands!["test-command"].selected).toBe(true);
@@ -109,12 +109,12 @@ describe("CLIModGeneratorProfileCommandTree", () => {
       };
 
       expect(() => {
-        InitializeCommandTreeByModView(profileName, view, simpleTree);
+        initializeCommandTreeByModView(profileName, view, simpleTree);
       }).toThrow("Miss command groups in aaz: `az missing-group`");
     });
   });
 
-  describe("ExportModViewProfile", () => {
+  describe("exportModViewProfile", () => {
     it("should export profile with selected commands", () => {
       const tree: ProfileCommandTree = {
         name: "test-profile",
@@ -139,7 +139,7 @@ describe("CLIModGeneratorProfileCommandTree", () => {
         },
       };
 
-      const result = ExportModViewProfile(tree);
+      const result = exportModViewProfile(tree);
 
       expect(result.name).toBe("test-profile");
       expect(result.commandGroups).toBeDefined();
@@ -186,7 +186,7 @@ describe("CLIModGeneratorProfileCommandTree", () => {
         },
       };
 
-      const result = ExportModViewProfile(tree);
+      const result = exportModViewProfile(tree);
 
       expect(result.commandGroups!["test-group"].commands!["selected-command"]).toBeDefined();
       expect(result.commandGroups!["test-group"].commands!["unselected-command"]).toBeUndefined();
@@ -213,7 +213,7 @@ describe("CLIModGeneratorProfileCommandTree", () => {
         },
       };
 
-      const result = ExportModViewProfile(tree);
+      const result = exportModViewProfile(tree);
 
       expect(result.commandGroups!["selected-group"]).toBeDefined();
       expect(result.commandGroups!["unselected-group"]).toBeUndefined();

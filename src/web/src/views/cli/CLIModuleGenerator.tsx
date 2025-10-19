@@ -17,8 +17,8 @@ import { useParams } from "react-router";
 import { cliApi, errorHandlerApi } from "../../services";
 import CLIModGeneratorToolBar from "./CLIModGeneratorToolBar";
 import CLIModGeneratorProfileCommandTree, {
-  ExportModViewProfile,
-  InitializeCommandTreeByModView,
+  exportModViewProfile,
+  initializeCommandTreeByModView,
   ProfileCommandTree,
 } from "./CLIModGeneratorProfileCommandTree";
 import CLIModGeneratorProfileTabs from "./CLIModGeneratorProfileTabs";
@@ -163,7 +163,7 @@ const CLIModuleGenerator: React.FC<CLIModuleGeneratorProps> = ({ params }) => {
 
       const commandTrees = Object.fromEntries(
         profiles.map((profile) => {
-          return [profile, InitializeCommandTreeByModView(profile, modView!.profiles[profile] ?? null, simpleTree)];
+          return [profile, initializeCommandTreeByModView(profile, modView!.profiles[profile] ?? null, simpleTree)];
         }),
       );
 
@@ -300,7 +300,7 @@ function GenerateDialog(props: {
   const handleGenerateAll = async () => {
     const profiles: CLIModViewProfiles = {};
     Object.values(props.profileCommandTrees).forEach((tree) => {
-      profiles[tree.name] = ExportModViewProfile(tree);
+      profiles[tree.name] = exportModViewProfile(tree);
     });
     const data = {
       name: props.moduleName,
@@ -322,7 +322,7 @@ function GenerateDialog(props: {
   const handleGenerateModified = async () => {
     const profiles: CLIModViewProfiles = {};
     Object.values(props.profileCommandTrees).forEach((tree) => {
-      profiles[tree.name] = ExportModViewProfile(tree);
+      profiles[tree.name] = exportModViewProfile(tree);
     });
     const data = {
       name: props.moduleName,
