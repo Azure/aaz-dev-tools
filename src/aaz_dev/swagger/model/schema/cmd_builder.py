@@ -409,14 +409,10 @@ class CMDBuilder:
         if schema.pattern is not None:
             try:
                 _ = re.compile(schema.pattern)  # verify schema pattern
+                fmt.pattern = schema.pattern
+                fmt_assigned = True
             except Exception as err:
-                raise exceptions.InvalidSwaggerValueError(
-                    msg=f"Invalid regex expression",
-                    key=[schema.traces],
-                    value=[schema.pattern]
-                )
-            fmt.pattern = schema.pattern
-            fmt_assigned = True
+                logger.warning('Invalid regex expression: traces: {}, pattern: {}'.format(str([schema.traces]), schema.pattern))
         if schema.max_length is not None:
             fmt.max_length = schema.max_length
             fmt_assigned = True
