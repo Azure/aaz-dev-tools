@@ -172,7 +172,7 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
           setDefaultResourceProvider(defaultResourceProviderVal);
           setResourceProviderOptions(options);
           setResourceProviderOptionsCommonPrefix(`${moduleUrl}/ResourceProviders/`);
-          await onResourceProviderUpdate(selectedResourceProvider);
+          setSelectedResourceProvider(selectedResourceProvider);
         } catch (err: any) {
           console.error(err);
           const message = errorHandlerApi.getErrorMessage(err);
@@ -180,7 +180,10 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
         }
       } else {
         setResourceProviderOptions([]);
-        onResourceProviderUpdate(null);
+        setSelectedResourceProvider(null);
+        setVersionOptions([]);
+        setResourceOptions([]);
+        setSelectedVersion(null);
       }
     },
     [defaultSource],
@@ -210,9 +213,15 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
         setLoading(true);
         let data;
         if (resourceProviderUrl.endsWith("/TypeSpec")) {
-          setLoading(false);
-          setVersionOptions([]);
-          data = await getTypespecRPResources(resourceProviderUrl);
+          try {
+            data = await getTypespecRPResources(resourceProviderUrl);
+          } catch (err: any) {
+            console.error(err);
+            const message = errorHandlerApi.getErrorMessage(err);
+            setInvalidText(`ResponseError: ${message}`);
+            setLoading(false);
+            return;
+          }
         } else {
           try {
             data = await specsApi.getProviderResources(resourceProviderUrl);
@@ -220,9 +229,16 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
             console.error(err);
             const message = errorHandlerApi.getErrorMessage(err);
             setInvalidText(`ResponseError: ${message}`);
+            setLoading(false);
+            return;
           }
         }
         try {
+          if (!data || !Array.isArray(data)) {
+            setInvalidText("No resources found or invalid data format");
+            setLoading(false);
+            return;
+          }
           const versionResourceIdMapLocal: VersionResourceIdMap = {};
           const versionOptionsLocal: string[] = [];
           const resourceMapLocal: ResourceMap = {};
@@ -257,10 +273,25 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
           setVersionResourceIdMap(versionResourceIdMapLocal);
           setResourceMap(resourceMapLocal);
           setVersionOptions(versionOptionsLocal);
-          onVersionUpdate(selectVersion);
+
+          if (
+            selectVersion != null &&
+            versionResourceIdMapLocal[selectVersion] &&
+            Array.isArray(versionResourceIdMapLocal[selectVersion])
+          ) {
+            const newResourceOptions = [...versionResourceIdMapLocal[selectVersion]]
+              .sort((a, b) => a.id.localeCompare(b.id))
+              .filter((r) => !existingResources.has(r.id));
+            setResourceOptions(newResourceOptions);
+            setSelectedVersion(selectVersion);
+            setPreferredAAZVersion(selectVersion);
+            setSelectedResources(new Set());
+            setSelectedResourceInheritanceAAZVersionMap({});
+          }
         } catch (err: any) {
           console.error(err);
           setInvalidText(errorHandlerApi.getErrorMessage(err));
+          setLoading(false);
         }
       } else {
         setVersionOptions([]);
@@ -269,6 +300,17 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
     },
     [plane],
   );
+
+  // Effect to load resources when selectedResourceProvider changes
+  useEffect(() => {
+    if (selectedResourceProvider) {
+      loadResources(selectedResourceProvider);
+    } else {
+      setVersionOptions([]);
+      setResourceOptions([]);
+      setSelectedVersion(null);
+    }
+  }, [selectedResourceProvider, loadResources]);
 
   const addSwagger = useCallback(async () => {
     if (!selectedModule || !selectedVersion || selectedResources.size < 1) {

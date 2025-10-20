@@ -13,7 +13,7 @@ export const useResourceFilter = () => {
   const filterResources = useCallback(
     (resources: any[]) => {
       if (realFilterText.trim().length > 0) {
-        return resources.filter((resource) => resource.id.indexOf(realFilterText) > -1);
+        return resources.filter((resource) => resource.id.toLowerCase().indexOf(realFilterText) > -1);
       }
       return resources;
     },
