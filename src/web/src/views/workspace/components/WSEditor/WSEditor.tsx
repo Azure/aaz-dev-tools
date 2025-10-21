@@ -64,6 +64,12 @@ const WSEditor = ({ params }: WSEditorProps) => {
     }
   }, [workspace.reloadTimestamp]);
 
+  useEffect(() => {
+    if (Object.keys(workspace.commandGroupMap).length > 0) {
+      treeState.updateExpanded(workspace.commandGroupMap, undefined, true);
+    }
+  }, [workspace.commandGroupMap, treeState.updateExpanded]);
+
   const handleSwaggerReloadDialogClose = useCallback(
     async (reloaded: boolean) => {
       if (reloaded) {

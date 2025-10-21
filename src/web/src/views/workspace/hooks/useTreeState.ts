@@ -14,7 +14,11 @@ interface UseTreeStateReturn {
   expanded: Set<string>;
   handleCommandTreeSelect: (nodeId: string) => void;
   handleCommandTreeToggle: (nodeIds: string[]) => void;
-  updateExpanded: (commandGroupMap: CommandGroupMap, selected?: Command | CommandGroup | null) => void;
+  updateExpanded: (
+    commandGroupMap: CommandGroupMap,
+    selected?: Command | CommandGroup | null,
+    autoExpandAll?: boolean,
+  ) => void;
   setSelected: (selected: Command | CommandGroup | null) => void;
 }
 
@@ -58,7 +62,7 @@ export function useTreeState(
   }, []);
 
   const updateExpanded = useCallback(
-    (newCommandGroupMap: CommandGroupMap, newSelected?: Command | CommandGroup | null) => {
+    (newCommandGroupMap: CommandGroupMap, newSelected?: Command | CommandGroup | null, autoExpandAll?: boolean) => {
       setExpanded((prevExpanded) => {
         const newExpanded = new Set<string>();
 
@@ -68,9 +72,27 @@ export function useTreeState(
           }
         });
 
-        for (const groupId in newCommandGroupMap) {
-          if (!(groupId in commandGroupMap)) {
+        if (autoExpandAll) {
+          for (const groupId in newCommandGroupMap) {
             newExpanded.add(groupId);
+
+            const parts = groupId.split("/");
+            for (let i = 1; i < parts.length; i++) {
+              const parentPath = parts.slice(0, i + 1).join("/");
+              newExpanded.add(parentPath);
+            }
+          }
+        } else {
+          for (const groupId in newCommandGroupMap) {
+            if (!(groupId in commandGroupMap)) {
+              newExpanded.add(groupId);
+
+              const parts = groupId.split("/");
+              for (let i = 1; i < parts.length; i++) {
+                const parentPath = parts.slice(0, i + 1).join("/");
+                newExpanded.add(parentPath);
+              }
+            }
           }
         }
 
