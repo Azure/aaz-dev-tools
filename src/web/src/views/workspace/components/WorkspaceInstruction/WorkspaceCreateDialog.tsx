@@ -39,11 +39,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
   const [selectedResourceProvider, setSelectedResourceProvider] = useState<string | null>(null);
 
   useEffect(() => {
-    loadPlanes().then(async () => {
-      if (planes.length > 0) {
-        await onPlaneSelectorUpdate(planes[0].name);
-      }
-    });
+    loadPlanes();
   }, []);
 
   const loadPlanes = useCallback(async () => {
@@ -56,7 +52,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
       setPlaneOptions(planeOptionsData);
       setLoading(false);
       if (planeOptionsData.length > 0) {
-        await onPlaneSelectorUpdate(planeOptionsData[0]);
+        await onPlaneSelectorUpdateWithData(planeOptionsData[0], planesData);
       }
     } catch (err: any) {
       console.error(err);
@@ -65,9 +61,27 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
     }
   }, []);
 
+  const onPlaneSelectorUpdateWithData = useCallback(
+    async (planeDisplayName: string | null, freshPlanesData: Plane[]) => {
+      const plane = freshPlanesData.find((v: Plane) => v.displayName === planeDisplayName) ?? null;
+
+      if (selectedPlane !== (plane?.displayName ?? null)) {
+        if (!plane) {
+          return;
+        }
+        setSelectedPlane(plane?.displayName ?? null);
+        await loadSwaggerModules(plane);
+      } else {
+        setSelectedPlane(plane?.displayName ?? null);
+      }
+    },
+    [selectedPlane],
+  );
+
   const onPlaneSelectorUpdate = useCallback(
     async (planeDisplayName: string | null) => {
       const plane = planes.find((v: Plane) => v.displayName === planeDisplayName) ?? null;
+
       if (selectedPlane !== (plane?.displayName ?? null)) {
         if (!plane) {
           return;
