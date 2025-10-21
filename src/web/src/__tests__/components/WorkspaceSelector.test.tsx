@@ -298,4 +298,44 @@ describe("Workspace Management", () => {
       expect(result).toEqual(expectedResult);
     });
   });
+
+  describe("WorkspaceCreateDialog Component", () => {
+    it("should pre-select the first plane after planes are loaded in the create dialog", async () => {
+      const user = userEvent.setup();
+      const mockPlanes = [
+        { name: "MgmtClient", displayName: "Control plane", moduleOptions: ["mod1", "mod2"] },
+        { name: "DataPlaneClient", displayName: "Data plane", moduleOptions: ["mod3"] },
+      ];
+      const { specsApi } = await import("../../services");
+      (specsApi.getPlanes as any).mockResolvedValue(mockPlanes);
+
+      render(<WorkspaceSelector name="Select Workspace" />);
+
+      // Wait for workspaces to load
+      await waitFor(() => {
+        expect(workspaceApi.getWorkspaces).toHaveBeenCalled();
+      });
+
+      // Type a new workspace name to trigger create option
+      const autocomplete = screen.getByLabelText("Select Workspace");
+      await user.click(autocomplete);
+      await user.type(autocomplete, "new-test-workspace");
+
+      // Click on the create option
+      const createOption = await screen.findByText('Create "new-test-workspace"');
+      await user.click(createOption);
+
+      // Wait for the dialog to appear
+      await screen.findByText("Create a new workspace");
+
+      // Wait for the getPlanes API to be called
+      await waitFor(() => {
+        expect(specsApi.getPlanes).toHaveBeenCalled();
+      });
+
+      // The plane dropdown should be populated with the first plane
+      const planeDropdown = await screen.findByLabelText(/Plane/i);
+      expect(planeDropdown).toHaveValue("Control plane");
+    });
+  });
 });
