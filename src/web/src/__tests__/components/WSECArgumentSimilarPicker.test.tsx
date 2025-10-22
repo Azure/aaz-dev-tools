@@ -271,19 +271,17 @@ describe("WSECArgumentSimilarPicker", () => {
   describe("BuildArgSimilarTree Utility", () => {
     it("transforms API response into correct tree structure", () => {
       const mockApiResponse = {
-        data: {
-          aaz: {
-            id: "aaz",
-            commandGroups: {
-              storage: {
-                id: "storage",
-                commands: {
-                  "account create": {
-                    id: "account-create",
-                    args: {
-                      name: ["name"],
-                      resource_group: ["resource-group", "g"],
-                    },
+        aaz: {
+          id: "aaz",
+          commandGroups: {
+            storage: {
+              id: "storage",
+              commands: {
+                "account create": {
+                  id: "account-create",
+                  args: {
+                    name: ["name"],
+                    resource_group: ["resource-group", "g"],
                   },
                 },
               },
@@ -303,17 +301,15 @@ describe("WSECArgumentSimilarPicker", () => {
 
     it("handles single character options correctly", () => {
       const mockApiResponse = {
-        data: {
-          aaz: {
-            id: "aaz",
-            commands: {
-              test: {
-                id: "test",
-                args: {
-                  short_option: ["g"],
-                  long_option: ["resource-group"],
-                  both_options: ["resource-group", "g"],
-                },
+        aaz: {
+          id: "aaz",
+          commands: {
+            test: {
+              id: "test",
+              args: {
+                short_option: ["g"],
+                long_option: ["resource-group"],
+                both_options: ["resource-group", "g"],
               },
             },
           },
@@ -330,15 +326,13 @@ describe("WSECArgumentSimilarPicker", () => {
 
     it("handles nested special characters in options", () => {
       const mockApiResponse = {
-        data: {
-          aaz: {
-            id: "aaz",
-            commands: {
-              test: {
-                id: "test",
-                args: {
-                  nested_option: [".property", "[index]", "{key}"],
-                },
+        aaz: {
+          id: "aaz",
+          commands: {
+            test: {
+              id: "test",
+              args: {
+                nested_option: [".property", "[index]", "{key}"],
               },
             },
           },

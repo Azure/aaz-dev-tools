@@ -145,8 +145,12 @@ const gatherNodeIds = (group: ArgSimilarGroup): string[] => {
 };
 
 const BuildArgSimilarTree = (response: any): { tree: ArgSimilarTree; expandedIds: string[] } => {
+  if (!response || !response.aaz) {
+    throw new Error("Invalid response: missing 'aaz' property");
+  }
+
   const tree = {
-    root: decodeResponseArgSimilarGroup(response.data.aaz, "az"),
+    root: decodeResponseArgSimilarGroup(response.aaz, "az"),
     selectedArgIds: [],
   };
   const expandedIds = gatherNodeIds(tree.root);
