@@ -142,7 +142,7 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
         setDefaultSource(swaggerDefault.source);
         setSelectedModule(moduleValueUrl);
         setModuleOptions([moduleValueUrl]);
-        await loadResourceProviders(moduleValueUrl, rpUrl);
+        await loadResourceProviders(moduleValueUrl, rpUrl, swaggerDefault.source);
       } catch (err: any) {
         console.error(err);
         const message = errorHandlerApi.getErrorMessage(err);
@@ -158,10 +158,11 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
   }, [onClose]);
 
   const loadResourceProviders = useCallback(
-    async (moduleUrl: string | null, preferredRP: string | null) => {
+    async (moduleUrl: string | null, preferredRP: string | null, sourceOverride?: string) => {
       if (moduleUrl != null) {
         try {
-          let options = await specsApi.getResourceProvidersWithType(moduleUrl, defaultSource ?? undefined);
+          const typeParam = sourceOverride ?? defaultSource ?? undefined;
+          let options = await specsApi.getResourceProvidersWithType(moduleUrl, typeParam);
           let selectedResourceProvider = options.length === 1 ? options[0] : null;
           let defaultResourceProviderVal = null;
           if (preferredRP !== null && options.findIndex((v) => v === preferredRP) >= 0) {

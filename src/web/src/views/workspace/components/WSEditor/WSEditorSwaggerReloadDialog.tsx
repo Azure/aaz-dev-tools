@@ -174,8 +174,6 @@ const WSEditorSwaggerReloadDialog: React.FC<WSEditorSwaggerReloadDialogProps> = 
                 }}
                 color="inherit"
               >
-                {/* <Typography component='h6'>Resource Url</Typography> */}
-
                 <Paper
                   sx={{
                     display: "flex",
