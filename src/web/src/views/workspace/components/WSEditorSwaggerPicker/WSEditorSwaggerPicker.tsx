@@ -299,7 +299,7 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
         onVersionUpdate(null);
       }
     },
-    [plane],
+    [plane, existingResources],
   );
 
   // Effect to load resources when selectedResourceProvider changes
