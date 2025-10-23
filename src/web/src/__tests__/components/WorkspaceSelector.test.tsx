@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render } from "../test-utils";
-import WorkspaceSelector from "../../views/workspace/WorkspaceSelector";
+import WorkspaceSelector from "../../views/workspace/components/WorkspaceInstruction/WorkspaceSelector";
 import { workspaceApi } from "../../services";
 
 vi.mock("../../services", () => ({
@@ -296,6 +296,40 @@ describe("Workspace Management", () => {
 
       expect(workspaceApi.renameWorkspace).toHaveBeenCalledWith("/workspace/test-workspace-1", "renamed-workspace");
       expect(result).toEqual(expectedResult);
+    });
+  });
+
+  describe("WorkspaceCreateDialog Component", () => {
+    it("should pre-select the first plane after planes are loaded in the create dialog", async () => {
+      const user = userEvent.setup();
+      const mockPlanes = [
+        { name: "MgmtClient", displayName: "Control plane", moduleOptions: ["mod1", "mod2"] },
+        { name: "DataPlaneClient", displayName: "Data plane", moduleOptions: ["mod3"] },
+      ];
+      const { specsApi } = await import("../../services");
+      (specsApi.getPlanes as any).mockResolvedValue(mockPlanes);
+
+      render(<WorkspaceSelector name="Select Workspace" />);
+
+      await waitFor(() => {
+        expect(workspaceApi.getWorkspaces).toHaveBeenCalled();
+      });
+
+      const autocomplete = screen.getByLabelText("Select Workspace");
+      await user.click(autocomplete);
+      await user.type(autocomplete, "new-test-workspace");
+
+      const createOption = await screen.findByText('Create "new-test-workspace"');
+      await user.click(createOption);
+
+      await screen.findByText("Create a new workspace");
+
+      await waitFor(() => {
+        expect(specsApi.getPlanes).toHaveBeenCalled();
+      });
+
+      const planeDropdown = await screen.findByLabelText(/Plane/i);
+      expect(planeDropdown).toHaveValue("Control plane");
     });
   });
 });

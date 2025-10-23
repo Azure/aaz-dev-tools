@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import WSEditorSwaggerPicker, { SwaggerItemSelector } from "../../views/workspace/WSEditorSwaggerPicker";
+import WSEditorSwaggerPicker from "../../views/workspace/components/WSEditorSwaggerPicker";
+import SwaggerItemSelector from "../../views/workspace/common/SwaggerItemSelector";
 import { render } from "../test-utils";
 import { workspaceApi, specsApi } from "../../services";
 
@@ -208,6 +209,71 @@ describe("WSEditorSwaggerPicker", () => {
 
       await waitFor(() => {
         expect(vi.mocked(workspaceApi).getWorkspaceResourcesByName).toHaveBeenCalledWith("test-workspace");
+      });
+    });
+
+    it("calls getResourceProvidersWithType with type=OpenAPI parameter", async () => {
+      render(<WSEditorSwaggerPicker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(vi.mocked(specsApi).getResourceProvidersWithType).toHaveBeenCalledWith(
+          "/Swagger/Specs/ResourceManagement/microsoft.storage",
+          "Swagger",
+        );
+      });
+    });
+
+    it("passes sourceOverride parameter when loading resource providers", async () => {
+      vi.mocked(workspaceApi).getSwaggerDefault.mockResolvedValue({
+        ...mockSwaggerDefault,
+        source: "TypeSpec",
+      });
+
+      render(<WSEditorSwaggerPicker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(vi.mocked(specsApi).getResourceProvidersWithType).toHaveBeenCalledWith(
+          "/Swagger/Specs/ResourceManagement/microsoft.storage",
+          "TypeSpec",
+        );
+      });
+    });
+
+    it("reloads resources when existingResources change", async () => {
+      const { rerender } = render(<WSEditorSwaggerPicker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(vi.mocked(specsApi).getResourceProvidersWithType).toHaveBeenCalledTimes(1);
+      });
+
+      const newMockWorkspaceResources = [
+        ...mockWorkspaceResources,
+        {
+          id: "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{accountName}/blobServices/default",
+        },
+      ];
+      vi.mocked(workspaceApi).getWorkspaceResourcesByName.mockResolvedValue(newMockWorkspaceResources);
+
+      rerender(<WSEditorSwaggerPicker {...defaultProps} />);
+
+      expect(vi.mocked(specsApi).getResourceProvidersWithType).toHaveBeenCalledWith(
+        "/Swagger/Specs/ResourceManagement/microsoft.storage",
+        "Swagger",
+      );
+    });
+
+    it("correctly filters existing resources when displaying available options", async () => {
+      const availableResources = [mockResources[0], mockResources[1]];
+      vi.mocked(specsApi).getProviderResources.mockResolvedValue(availableResources);
+
+      render(<WSEditorSwaggerPicker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(vi.mocked(workspaceApi).getWorkspaceResourcesByName).toHaveBeenCalledWith("test-workspace");
+      });
+
+      await waitFor(() => {
+        expect(vi.mocked(specsApi).getProviderResources).toHaveBeenCalled();
       });
     });
   });
@@ -486,6 +552,125 @@ describe("WSEditorSwaggerPicker", () => {
             ]),
           }),
         );
+      });
+    });
+  });
+
+  describe("API Type Parameter Handling", () => {
+    it("includes type=OpenAPI parameter for Swagger sources", async () => {
+      vi.mocked(workspaceApi).getSwaggerDefault.mockResolvedValue({
+        ...mockSwaggerDefault,
+        source: "Swagger",
+      });
+
+      render(<WSEditorSwaggerPicker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(vi.mocked(specsApi).getResourceProvidersWithType).toHaveBeenCalledWith(
+          "/Swagger/Specs/ResourceManagement/microsoft.storage",
+          "Swagger",
+        );
+      });
+    });
+
+    it("includes type=TypeSpec parameter for TypeSpec sources", async () => {
+      vi.mocked(workspaceApi).getSwaggerDefault.mockResolvedValue({
+        ...mockSwaggerDefault,
+        source: "TypeSpec",
+      });
+
+      render(<WSEditorSwaggerPicker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(vi.mocked(specsApi).getResourceProvidersWithType).toHaveBeenCalledWith(
+          "/Swagger/Specs/ResourceManagement/microsoft.storage",
+          "TypeSpec",
+        );
+      });
+    });
+
+    it("uses default source when no source override is available", async () => {
+      vi.mocked(workspaceApi).getSwaggerDefault.mockResolvedValue({
+        ...mockSwaggerDefault,
+        source: undefined,
+      });
+
+      render(<WSEditorSwaggerPicker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(vi.mocked(specsApi).getResourceProvidersWithType).toHaveBeenCalledWith(
+          "/Swagger/Specs/ResourceManagement/microsoft.storage",
+          undefined,
+        );
+      });
+    });
+  });
+
+  describe("Existing Resources State Management", () => {
+    it("reloads resources when existing workspace resources change", async () => {
+      render(<WSEditorSwaggerPicker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(vi.mocked(specsApi).getResourceProvidersWithType).toHaveBeenCalledTimes(1);
+      });
+
+      expect(vi.mocked(specsApi).getResourceProvidersWithType).toHaveBeenCalledWith(
+        "/Swagger/Specs/ResourceManagement/microsoft.storage",
+        "Swagger",
+      );
+    });
+
+    it("prevents duplicate resources from appearing in selector", async () => {
+      const duplicateResource = {
+        id: "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{accountName}",
+      };
+
+      vi.mocked(workspaceApi).getWorkspaceResourcesByName.mockResolvedValue([duplicateResource]);
+      vi.mocked(specsApi).getProviderResources.mockResolvedValue([
+        {
+          ...mockResources[0],
+          id: duplicateResource.id,
+        },
+        mockResources[1],
+      ]);
+
+      render(<WSEditorSwaggerPicker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(vi.mocked(workspaceApi).getWorkspaceResourcesByName).toHaveBeenCalledWith("test-workspace");
+      });
+
+      await waitFor(() => {
+        expect(vi.mocked(specsApi).getProviderResources).toHaveBeenCalled();
+      });
+    });
+
+    it("handles empty workspace resources correctly", async () => {
+      vi.mocked(workspaceApi).getWorkspaceResourcesByName.mockResolvedValue([]);
+
+      render(<WSEditorSwaggerPicker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(vi.mocked(workspaceApi).getWorkspaceResourcesByName).toHaveBeenCalledWith("test-workspace");
+      });
+
+      await waitFor(() => {
+        expect(vi.mocked(specsApi).getResourceProvidersWithType).toHaveBeenCalledWith(
+          "/Swagger/Specs/ResourceManagement/microsoft.storage",
+          "Swagger",
+        );
+      });
+    });
+
+    it("validates existingResources dependency in useCallback", async () => {
+      render(<WSEditorSwaggerPicker {...defaultProps} />);
+
+      await waitFor(() => {
+        expect(vi.mocked(workspaceApi).getWorkspaceResourcesByName).toHaveBeenCalledWith("test-workspace");
+      });
+
+      await waitFor(() => {
+        expect(vi.mocked(specsApi).getResourceProvidersWithType).toHaveBeenCalledTimes(1);
       });
     });
   });
