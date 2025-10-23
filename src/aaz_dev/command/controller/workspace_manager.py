@@ -945,7 +945,7 @@ class WorkspaceManager:
 
     def _build_command_tree_leaf_from_aaz_ref(self, parent, name, aaz_ref):
         cmd_names = [*parent.names, name]
-        if (ref_v_name := aaz_ref.get(' '.join(cmd_names), None)) \
+        if aaz_ref and (ref_v_name := aaz_ref.get(' '.join(cmd_names), None)) \
                 and (aaz_leaf := self.aaz_specs.find_command(*cmd_names)):
             # reference from aaz specs
             ref_v = None
