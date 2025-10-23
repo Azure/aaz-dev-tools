@@ -3,6 +3,11 @@
 Release History
 ===============
 
+4.5.2
+++++++
+* Update items in the `/workspace` dir to be function-based React instead of class-based. (#523)
+* Fix add subcommands failure. (#529)
+
 4.5.1
 ++++++
 * Fix validation of schema pattern and error message. (#507)
