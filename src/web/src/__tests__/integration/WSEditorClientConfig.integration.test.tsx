@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import { render } from "../test-utils";
-import WSEditorClientConfigDialog from "../../views/workspace/components/WSEditor/WSEditorClientConfig";
+import WSEditorClientConfig from "../../views/workspace/components/WSEditor/WSEditorClientConfig";
 
 const mockConsoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -24,7 +24,7 @@ afterAll(() => {
   mockConsoleError.mockRestore();
 });
 
-describe("WSEditorClientConfigDialog - Integration", () => {
+describe("WSEditorClientConfig - Integration", () => {
   const mockWorkspaceUrl = "/AAZ/Editor/Workspaces/test-workspace";
   const mockOnClose = vi.fn();
 
@@ -34,7 +34,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
 
   describe("Data Loading Workflows", () => {
     it("should load existing client config and populate form", async () => {
-      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => expect(screen.getByText("Modify Client Config")).toBeInTheDocument());
 
@@ -53,7 +53,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
 
     it("should handle 404 for new config setup", async () => {
       render(
-        <WSEditorClientConfigDialog
+        <WSEditorClientConfig
           workspaceUrl={`${mockWorkspaceUrl}?simulate404=true`}
           open={true}
           onClose={mockOnClose}
@@ -73,7 +73,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
 
     it.skip("should cascade load planes → modules → providers → versions", async () => {
       // @NOTE: skipping this workflow for now, there is servere delay in loading, will revisit once loading states are improved.
-      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       // Switch to the resource property tab
       const resourcePropertyTab = screen.getByRole("tab", { name: /By resource property/i });
@@ -112,7 +112,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
     it("should handle API errors gracefully during cascade loading", async () => {
       const user = userEvent.setup();
       render(
-        <WSEditorClientConfigDialog
+        <WSEditorClientConfig
           workspaceUrl={`${mockWorkspaceUrl}?simulate404=false`}
           open={true}
           onClose={mockOnClose}
@@ -135,7 +135,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
   describe("Complete User Workflows", () => {
     it("should complete template config setup end-to-end", async () => {
       const user = userEvent.setup();
-      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
@@ -193,7 +193,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       );
 
       const user = userEvent.setup();
-      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("By resource property")).toBeInTheDocument();
@@ -265,7 +265,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       // @NOTE: revisit once workflows and loading states are improved
       const user = userEvent.setup();
       render(
-        <WSEditorClientConfigDialog
+        <WSEditorClientConfig
           workspaceUrl={`${mockWorkspaceUrl}?simulate404=false`}
           open={true}
           onClose={mockOnClose}
@@ -304,7 +304,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       );
 
       const user = userEvent.setup();
-      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("Update")).toBeInTheDocument();
@@ -335,7 +335,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
     it.skip("should validate template URLs in real-time", async () => {
       // @NOTE: revisit once error/loading states are cleared up
       const user = userEvent.setup();
-      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(document.querySelector("#AzureCloud")).toBeInTheDocument();

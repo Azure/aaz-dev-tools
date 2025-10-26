@@ -26,13 +26,13 @@ import SwaggerItemSelector from "../../common/SwaggerItemSelector";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import type { Plane, Resource } from "../../interfaces";
 
-interface WSEditorClientConfigDialogProps {
+interface WSEditorClientConfigProps {
   workspaceUrl: string;
   open: boolean;
   onClose: (updated: boolean) => void;
 }
 
-interface WSEditorClientConfigDialogState {
+interface WSEditorClientConfigState {
   updating: boolean;
   invalidText: string | undefined;
   isAdd: boolean;
@@ -99,11 +99,8 @@ const MiddlePadding = styled(Box)(() => ({
   height: "1.5vh",
 }));
 
-class WSEditorClientConfigDialog extends React.Component<
-  WSEditorClientConfigDialogProps,
-  WSEditorClientConfigDialogState
-> {
-  constructor(props: WSEditorClientConfigDialogProps) {
+class WSEditorClientConfig extends React.Component<WSEditorClientConfigProps, WSEditorClientConfigState> {
+  constructor(props: WSEditorClientConfigProps) {
     super(props);
     this.state = {
       updating: false,
@@ -1046,5 +1043,5 @@ type ResourceVersionOperations = {
   [Named: string]: string;
 };
 
-export default WSEditorClientConfigDialog;
+export default WSEditorClientConfig;
 export type { ClientEndpointTemplate, ClientTemplateMap, ClientAADAuth, ClientConfig };
