@@ -2,6 +2,7 @@ import { http, HttpResponse } from "msw";
 
 export const handlers = [
   http.get("/AAZ/Editor/Workspaces", () => {
+    console.log("🟢 [MSW] hit /AAZ/Editor/Workspaces");
     return HttpResponse.json([
       {
         name: "test-workspace-1",
@@ -21,6 +22,7 @@ export const handlers = [
   }),
 
   http.post("/AAZ/Editor/Workspaces", async ({ request }) => {
+    console.log("🟢 [MSW] hit /AAZ/Editor/Workspaces");
     const body = (await request.json()) as any;
     return HttpResponse.json(
       {
@@ -37,12 +39,14 @@ export const handlers = [
   }),
 
   http.delete("/AAZ/Editor/Workspaces/:name", ({ params }) => {
+    console.log("🟢 [MSW] hit /AAZ/Editor/Workspaces?:name");
     return HttpResponse.json({
       message: `Workspace ${params.name} deleted successfully`,
     });
   }),
 
   http.post("/AAZ/Editor/Workspaces/:name/Rename", async ({ request }) => {
+    console.log("🟢 [MSW] hit /AAZ/Editor/Workspaces/:name/Rename");
     const body = (await request.json()) as any;
     return HttpResponse.json({
       name: body.name,
@@ -50,6 +54,7 @@ export const handlers = [
   }),
 
   http.get("/AAZ/Editor/Workspaces/:name/ClientConfig", ({ request, params }) => {
+    console.log("🟢 [MSW] hit /AAZ/Editor/Workspaces/:name/ClientConfig");
     const url = new URL(request.url);
     if (url.searchParams.get("simulate404") === "true" || params.name === "nonexistent") {
       return HttpResponse.json({ message: "Client config not found" }, { status: 404 });
@@ -120,6 +125,74 @@ export const handlers = [
   http.get("/Swagger/Specs/:planeName/:moduleName/ResourceProviders", () => {
     const resourceProviders = ["Microsoft.Storage", "Microsoft.Compute", "Microsoft.Network", "Microsoft.KeyVault"];
     return HttpResponse.json(resourceProviders);
+  }),
+
+  // New endpoints for cascade loading workflow
+  http.get("/Swagger/Specs/mgmt-plane", () => {
+    return HttpResponse.json([
+      { url: "storage" },
+      { url: "compute" },
+      { url: "network" },
+      { url: "keyvault" },
+      { url: "containerservice" },
+    ]);
+  }),
+
+  http.get("/Swagger/Specs/mgmt-plane/:param/ResourceProviders/:rp/Resources", ({ params }) => {
+    const resourceProvider = params.rp;
+
+    // Return different resources based on the resource provider
+    switch (resourceProvider) {
+      case "Microsoft.Storage":
+        return HttpResponse.json([
+          {
+            id: "storageAccounts",
+            apiVersions: ["2021-09-01", "2022-09-01", "2023-01-01"],
+            operations: ["read", "write", "delete", "listKeys"],
+          },
+          {
+            id: "storageAccounts/blobServices",
+            apiVersions: ["2021-09-01", "2022-09-01"],
+            operations: ["read", "write"],
+          },
+        ]);
+      case "Microsoft.Compute":
+        return HttpResponse.json([
+          {
+            id: "virtualMachines",
+            apiVersions: ["2021-03-01", "2022-03-01", "2023-03-01"],
+            operations: ["read", "write", "delete", "start", "stop"],
+          },
+          {
+            id: "disks",
+            apiVersions: ["2021-04-01", "2022-03-02"],
+            operations: ["read", "write", "delete"],
+          },
+        ]);
+      case "Microsoft.Network":
+        return HttpResponse.json([
+          {
+            id: "virtualNetworks",
+            apiVersions: ["2021-02-01", "2022-01-01", "2023-02-01"],
+            operations: ["read", "write", "delete"],
+          },
+          {
+            id: "loadBalancers",
+            apiVersions: ["2021-02-01", "2022-01-01"],
+            operations: ["read", "write", "delete"],
+          },
+        ]);
+      case "Microsoft.KeyVault":
+        return HttpResponse.json([
+          {
+            id: "vaults",
+            apiVersions: ["2021-10-01", "2022-07-01", "2023-02-01"],
+            operations: ["read", "write", "delete"],
+          },
+        ]);
+      default:
+        return HttpResponse.json([]);
+    }
   }),
 
   http.get("/CLI/Az/Modules", () => {

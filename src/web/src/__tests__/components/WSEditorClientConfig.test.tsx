@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render } from "../test-utils";
-import WSEditorClientConfig from "../../views/workspace/components/WSEditor/WSEditorClientConfig";
+import WSEditorClientConfigDialog from "../../views/workspace/components/WSEditor/WSEditorClientConfig";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../services";
 
 vi.mock("../../services", () => ({
@@ -22,7 +22,7 @@ vi.mock("../../services", () => ({
   },
 }));
 
-describe("WSEditorClientConfig", () => {
+describe("WSEditorClientConfigDialog", () => {
   const mockWorkspaceUrl = "/workspace/test-workspace";
   const mockOnClose = vi.fn();
 
@@ -65,7 +65,7 @@ describe("WSEditorClientConfig", () => {
       (workspaceApi.getClientConfig as any).mockRejectedValue(new Error("404"));
       (errorHandlerApi.isHttpError as any).mockReturnValue(true);
 
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
@@ -87,7 +87,7 @@ describe("WSEditorClientConfig", () => {
       };
       (workspaceApi.getClientConfig as any).mockResolvedValue(mockExistingConfig);
 
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("Modify Client Config")).toBeInTheDocument();
@@ -102,7 +102,7 @@ describe("WSEditorClientConfig", () => {
       (workspaceApi.getClientConfig as any).mockRejectedValue(new Error("Network error"));
       (errorHandlerApi.isHttpError as any).mockReturnValue(false);
 
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("ResponseError: Mock error message")).toBeInTheDocument();
@@ -114,7 +114,7 @@ describe("WSEditorClientConfig", () => {
       (errorHandlerApi.isHttpError as any).mockReturnValue(true);
 
       const user = userEvent.setup();
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("By templates")).toBeInTheDocument();
@@ -135,7 +135,7 @@ describe("WSEditorClientConfig", () => {
       (workspaceApi.getClientConfig as any).mockRejectedValue(new Error("404"));
       (errorHandlerApi.isHttpError as any).mockReturnValue(true);
 
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByRole("progressbar")).toBeInTheDocument();
@@ -151,7 +151,7 @@ describe("WSEditorClientConfig", () => {
 
     it("should validate required Azure Cloud template", async () => {
       const user = userEvent.setup();
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
@@ -171,7 +171,7 @@ describe("WSEditorClientConfig", () => {
 
     it("should validate template URL format", async () => {
       const user = userEvent.setup();
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       const templatesTab = screen.getByRole("tab", { name: /By templates/i });
       await user.click(templatesTab);
@@ -193,7 +193,7 @@ describe("WSEditorClientConfig", () => {
       (errorHandlerApi.isHttpError as any).mockReturnValue(true);
 
       const user = userEvent.setup();
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       const azureInput = screen.getByPlaceholderText(
         /Endpoint template in Azure Cloud, e.g. https:\/\/\{vaultName\}\.vault\.azure\.net/i,
@@ -212,7 +212,7 @@ describe("WSEditorClientConfig", () => {
     it("should validate cloud metadata selector index when prefix is provided", async () => {
       const user = userEvent.setup();
 
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
@@ -242,7 +242,7 @@ describe("WSEditorClientConfig", () => {
 
     it("should validate required fields in http-operation mode", async () => {
       const user = userEvent.setup();
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("By resource property")).toBeInTheDocument();
@@ -268,7 +268,7 @@ describe("WSEditorClientConfig", () => {
 
     it("should add AAD scope when add button is clicked", async () => {
       const user = userEvent.setup();
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByLabelText("add")).toBeInTheDocument();
@@ -283,7 +283,7 @@ describe("WSEditorClientConfig", () => {
 
     it("should remove AAD scope when remove button is clicked", async () => {
       const user = userEvent.setup();
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByLabelText("add")).toBeInTheDocument();
@@ -301,7 +301,7 @@ describe("WSEditorClientConfig", () => {
 
     it("should update AAD scope value when typing", async () => {
       const user = userEvent.setup();
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope/)).toBeInTheDocument();
@@ -325,7 +325,7 @@ describe("WSEditorClientConfig", () => {
       (workspaceApi.getClientConfig as any).mockResolvedValue(mockExistingConfig);
 
       const user = userEvent.setup();
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("Cancel")).toBeInTheDocument();
@@ -343,7 +343,7 @@ describe("WSEditorClientConfig", () => {
       (workspaceApi.getClientConfig as any).mockRejectedValue(new Error("404"));
       (errorHandlerApi.isHttpError as any).mockReturnValue(true);
 
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("Setup Client Config")).toBeInTheDocument();
@@ -367,7 +367,7 @@ describe("WSEditorClientConfig", () => {
       };
       (workspaceApi.getClientConfig as any).mockResolvedValue(mockExistingConfig);
 
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByDisplayValue("https://{vaultName}.vault.azure.net")).toBeInTheDocument();
@@ -380,7 +380,7 @@ describe("WSEditorClientConfig", () => {
       (workspaceApi.getClientConfig as any).mockRejectedValue(new Error("Network error"));
       (errorHandlerApi.isHttpError as any).mockReturnValue(false);
 
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("ResponseError: Mock error message")).toBeInTheDocument();
@@ -392,7 +392,7 @@ describe("WSEditorClientConfig", () => {
       (errorHandlerApi.isHttpError as any).mockReturnValue(true);
 
       const user = userEvent.setup();
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText("Update")).toBeInTheDocument();
@@ -420,7 +420,7 @@ describe("WSEditorClientConfig", () => {
       (workspaceApi.getClientConfig as any).mockRejectedValue(new Error("404"));
       (errorHandlerApi.isHttpError as any).mockReturnValue(true);
 
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(workspaceApi.getClientConfig).toHaveBeenCalledWith(mockWorkspaceUrl);
@@ -431,7 +431,7 @@ describe("WSEditorClientConfig", () => {
       (workspaceApi.getClientConfig as any).mockRejectedValue(new Error("404"));
       (errorHandlerApi.isHttpError as any).mockReturnValue(true);
 
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(specsApi.getPlanes).toHaveBeenCalled();
@@ -444,7 +444,7 @@ describe("WSEditorClientConfig", () => {
       (workspaceApi.updateClientConfig as any).mockResolvedValue({});
 
       const user = userEvent.setup();
-      render(<WSEditorClientConfig workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByPlaceholderText(/Endpoint template in Azure Cloud/i)).toBeInTheDocument();
