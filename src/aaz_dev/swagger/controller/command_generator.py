@@ -448,14 +448,16 @@ class _CommandGenerator(ABC):
 
         if path_item.get is not None and 'get' in methods:
             cmd_builder = CMDBuilder(path=resource.path, method='get', mutability=MutabilityEnum.Read,
-                                     parameterized_host=parameterized_host)
+                                     parameterized_host=parameterized_host,
+                                     ignore_x_ms_client_flatten=kwargs.get("ignore_x_ms_client_flatten", None))
             op = self.generate_operation(cmd_builder, path_item, instance_var)
             show_or_list_command = self.generate_command(path_item, resource, instance_var, cmd_builder, op)
             command_group.commands.append(show_or_list_command)
 
         if path_item.delete is not None and 'delete' in methods:
             cmd_builder = CMDBuilder(path=resource.path, method='delete', mutability=MutabilityEnum.Create,
-                                     parameterized_host=parameterized_host)
+                                     parameterized_host=parameterized_host,
+                                     ignore_x_ms_client_flatten=kwargs.get("ignore_x_ms_client_flatten", None))
             op = self.generate_operation(cmd_builder, path_item, instance_var)
             delete_command = self.generate_command(path_item, resource, instance_var, cmd_builder, op)
             delete_command.confirmation = DEFAULT_CONFIRMATION_PROMPT   # add confirmation for delete command by default
@@ -463,21 +465,24 @@ class _CommandGenerator(ABC):
 
         if path_item.put is not None and 'put' in methods:
             cmd_builder = CMDBuilder(path=resource.path, method='put', mutability=MutabilityEnum.Create,
-                                     parameterized_host=parameterized_host)
+                                     parameterized_host=parameterized_host,
+                                     ignore_x_ms_client_flatten=kwargs.get("ignore_x_ms_client_flatten", None))
             op = self.generate_operation(cmd_builder, path_item, instance_var)
             create_command = self.generate_command(path_item, resource, instance_var, cmd_builder, op)
             command_group.commands.append(create_command)
 
         if path_item.post is not None and 'post' in methods:
             cmd_builder = CMDBuilder(path=resource.path, method='post', mutability=MutabilityEnum.Create,
-                                     parameterized_host=parameterized_host)
+                                     parameterized_host=parameterized_host,
+                                     ignore_x_ms_client_flatten=kwargs.get("ignore_x_ms_client_flatten", None))
             op = self.generate_operation(cmd_builder, path_item, instance_var)
             action_command = self.generate_command(path_item, resource, instance_var, cmd_builder, op)
             command_group.commands.append(action_command)
 
         if path_item.head is not None and 'head' in methods:
             cmd_builder = CMDBuilder(path=resource.path, method='head', mutability=MutabilityEnum.Read,
-                                     parameterized_host=parameterized_host)
+                                     parameterized_host=parameterized_host,
+                                     ignore_x_ms_client_flatten=kwargs.get("ignore_x_ms_client_flatten", None))
             op = self.generate_operation(cmd_builder, path_item, instance_var)
             head_command = self.generate_command(path_item, resource, instance_var, cmd_builder, op)
             command_group.commands.append(head_command)
@@ -488,12 +493,14 @@ class _CommandGenerator(ABC):
             update_by_generic_command = None
             if path_item.patch is not None and 'patch' in methods:
                 cmd_builder = CMDBuilder(path=resource.path, method='patch', mutability=MutabilityEnum.Update,
-                                         parameterized_host=parameterized_host)
+                                         parameterized_host=parameterized_host,
+                                         ignore_x_ms_client_flatten=kwargs.get("ignore_x_ms_client_flatten", None))
                 op = self.generate_operation(cmd_builder, path_item, instance_var)
                 update_by_patch_command = self.generate_command(path_item, resource, instance_var, cmd_builder, op)
             if path_item.get is not None and path_item.put is not None and 'get' in methods and 'put' in methods:
                 cmd_builder = CMDBuilder(path=resource.path,
-                                         parameterized_host=parameterized_host)
+                                         parameterized_host=parameterized_host,
+                                         ignore_x_ms_client_flatten=kwargs.get("ignore_x_ms_client_flatten", None))
                 get_op = self.generate_operation(
                     cmd_builder, path_item, instance_var, method='get', mutability=MutabilityEnum.Read)
                 put_op = self.generate_operation(
@@ -511,7 +518,8 @@ class _CommandGenerator(ABC):
                 if 'get' not in methods or 'put' not in methods:
                     raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: '{resource}': 'get' or 'put' not in methods: '{methods}'")
                 cmd_builder = CMDBuilder(path=resource.path,
-                                         parameterized_host=parameterized_host)
+                                         parameterized_host=parameterized_host,
+                                         ignore_x_ms_client_flatten=kwargs.get("ignore_x_ms_client_flatten", None))
                 get_op = self.generate_operation(
                     cmd_builder, path_item, instance_var, method='get', mutability=MutabilityEnum.Read)
                 put_op = self.generate_operation(
@@ -529,7 +537,8 @@ class _CommandGenerator(ABC):
                     raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: '{resource}': 'patch' not in methods: '{methods}'")
 
                 if kwargs.get('is_identity', False) is True:
-                    cmd_builder = CMDBuilder(path=resource.path, parameterized_host=parameterized_host)
+                    cmd_builder = CMDBuilder(path=resource.path, parameterized_host=parameterized_host,
+                                             ignore_x_ms_client_flatten=kwargs.get("ignore_x_ms_client_flatten", None))
                     get_op = self.generate_operation(cmd_builder, path_item, instance_var, method='get', mutability=MutabilityEnum.Read)
                     patch_op = self.generate_operation(cmd_builder, path_item, instance_var, method='patch', mutability=MutabilityEnum.Update)
                     specific_update_command = self.generate_specific_update_command(path_item, resource, instance_var, cmd_builder, get_op, patch_op)
@@ -541,7 +550,8 @@ class _CommandGenerator(ABC):
 
                 else:
                     cmd_builder = CMDBuilder(path=resource.path, method='patch', mutability=MutabilityEnum.Update,
-                                             parameterized_host=parameterized_host)
+                                             parameterized_host=parameterized_host,
+                                             ignore_x_ms_client_flatten=kwargs.get("ignore_x_ms_client_flatten", None))
                     op = self.generate_operation(cmd_builder, path_item, instance_var)
                     patch_update_command = self.generate_command(path_item, resource, instance_var, cmd_builder, op)
                     command_group.commands.append(patch_update_command)

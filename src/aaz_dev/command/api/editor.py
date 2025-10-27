@@ -619,6 +619,11 @@ def editor_workspace_tree_node_add_swagger_resources(name, node_names):
     except KeyError:
         raise exceptions.InvalidAPIUsage("Invalid request")
 
+    for resource in resources:
+        resource["options"] = {
+            "ignore_x_ms_client_flatten": True
+        }
+
     manager.add_new_resources_by_swagger(
         mod_names=mod_names,
         version=version,
