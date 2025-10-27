@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   styled,
   Box,
@@ -32,43 +33,6 @@ interface WSEditorClientConfigDialogProps {
   onClose: (updated: boolean) => void;
 }
 
-interface WSEditorClientConfigDialogState {
-  updating: boolean;
-  invalidText: string | undefined;
-  isAdd: boolean;
-
-  endpointType: "template" | "http-operation";
-
-  templateAzureCloud: string;
-  templateAzureChinaCloud: string;
-  templateAzureUSGovernment: string;
-  templateAzureGermanCloud: string;
-  cloudMetadataSelectorIndex: string;
-  cloudMetadataPrefixTemplate: string;
-
-  aadAuthScopes: string[];
-
-  planes: Plane[];
-  planeOptions: string[];
-  selectedPlane: string | null;
-
-  moduleOptions: string[];
-  moduleOptionsCommonPrefix: string;
-  selectedModule: string | null;
-
-  resourceProviderOptions: string[];
-  resourceProviderOptionsCommonPrefix: string;
-  selectedResourceProvider: string | null;
-
-  versionOptions: string[];
-  versionResourceIdMap: SwaggerVersionResourceIdMap;
-  selectedVersion: string | null;
-
-  resourceIdOptions: string[];
-  selectedResourceId: string | null;
-  subresource: string;
-}
-
 interface SwaggerVersionResourceIdMap {
   [version: string]: string[];
 }
@@ -99,217 +63,152 @@ const MiddlePadding = styled(Box)(() => ({
   height: "1.5vh",
 }));
 
-class WSEditorClientConfigDialog extends React.Component<
-  WSEditorClientConfigDialogProps,
-  WSEditorClientConfigDialogState
-> {
-  constructor(props: WSEditorClientConfigDialogProps) {
-    super(props);
-    this.state = {
-      updating: false,
-      invalidText: undefined,
-      isAdd: true,
+const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({ workspaceUrl, open, onClose }) => {
+  const [updating, setUpdating] = useState(false);
+  const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
+  const [isAdd, setIsAdd] = useState(true);
 
-      endpointType: "template",
+  const [endpointType, setEndpointType] = useState<"template" | "http-operation">("template");
 
-      templateAzureCloud: "",
-      templateAzureChinaCloud: "",
-      templateAzureUSGovernment: "",
-      templateAzureGermanCloud: "",
-      cloudMetadataSelectorIndex: "",
-      cloudMetadataPrefixTemplate: "",
+  const [templateAzureCloud, setTemplateAzureCloud] = useState("");
+  const [templateAzureChinaCloud, setTemplateAzureChinaCloud] = useState("");
+  const [templateAzureUSGovernment, setTemplateAzureUSGovernment] = useState("");
+  const [templateAzureGermanCloud, setTemplateAzureGermanCloud] = useState("");
+  const [cloudMetadataSelectorIndex, setCloudMetadataSelectorIndex] = useState("");
+  const [cloudMetadataPrefixTemplate, setCloudMetadataPrefixTemplate] = useState("");
 
-      aadAuthScopes: [""],
+  const [aadAuthScopes, setAadAuthScopes] = useState<string[]>([""]);
 
-      planes: [],
-      planeOptions: [],
-      selectedPlane: null,
+  const [planes, setPlanes] = useState<Plane[]>([]);
+  const [selectedPlane, setSelectedPlane] = useState<string | null>(null);
 
-      moduleOptions: [],
-      moduleOptionsCommonPrefix: "",
-      selectedModule: null,
+  const [moduleOptions, setModuleOptions] = useState<string[]>([]);
+  const [moduleOptionsCommonPrefix, setModuleOptionsCommonPrefix] = useState("");
+  const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
-      resourceProviderOptions: [],
-      resourceProviderOptionsCommonPrefix: "",
-      selectedResourceProvider: null,
+  const [resourceProviderOptions, setResourceProviderOptions] = useState<string[]>([]);
+  const [resourceProviderOptionsCommonPrefix, setResourceProviderOptionsCommonPrefix] = useState("");
+  const [selectedResourceProvider, setSelectedResourceProvider] = useState<string | null>(null);
 
-      versionOptions: [],
-      versionResourceIdMap: {},
-      selectedVersion: null,
+  const [versionOptions, setVersionOptions] = useState<string[]>([]);
+  const [versionResourceIdMap, setVersionResourceIdMap] = useState<SwaggerVersionResourceIdMap>({});
+  const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
 
-      resourceIdOptions: [],
-      selectedResourceId: null,
-      subresource: "",
-    };
-  }
+  const [resourceIdOptions, setResourceIdOptions] = useState<string[]>([]);
+  const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
+  const [subresource, setSubresource] = useState("");
 
-  componentDidMount(): void {
-    this.loadPlanes().then(async () => {
-      await this.loadWorkspaceClientConfig();
-      const { selectedPlane, selectedModule, selectedResourceProvider, selectedVersion } = this.state;
-      await this.onPlaneSelectorUpdate(selectedPlane ?? this.state.planeOptions[0]);
-      if (selectedModule) {
-        await this.loadResourceProviders(selectedModule);
-      }
-      if (selectedResourceProvider) {
-        await this.loadResources(selectedResourceProvider, selectedVersion);
-      }
-    });
-  }
-
-  loadPlanes = async () => {
+  const loadPlanes = useCallback(async () => {
     try {
-      this.setState({
-        updating: true,
-      });
+      setUpdating(true);
 
-      const planes = await specsApi.getPlanes();
-      const planeOptions: string[] = planes.map((v: any) => v.displayName);
-      this.setState({
-        planes: planes,
-        planeOptions: planeOptions,
-        updating: false,
-      });
-      await this.onPlaneSelectorUpdate(planeOptions[0]);
+      const planesData = await specsApi.getPlanes();
+      setPlanes(planesData);
+      setUpdating(false);
+
+      // Find the first plane and call the update function with the actual plane object
+      if (planesData.length > 0) {
+        const firstPlane = planesData[0];
+        setSelectedPlane(firstPlane.displayName);
+        await loadSwaggerModules(firstPlane);
+      }
     } catch (err: any) {
       console.error(err);
       const message = errorHandlerApi.getErrorMessage(err);
-      this.setState({
-        updating: false,
-        invalidText: `ResponseError: ${message}`,
-      });
+      setUpdating(false);
+      setInvalidText(`ResponseError: ${message}`);
     }
-  };
+  }, []);
 
-  onPlaneSelectorUpdate = async (planeDisplayName: string | null) => {
-    const plane = this.state.planes.find((v) => v.displayName === planeDisplayName) ?? null;
-    if (this.state.selectedPlane !== (plane?.displayName ?? null)) {
-      if (!plane) {
-        return;
-      }
-      this.setState({
-        selectedPlane: plane?.displayName ?? null,
-      });
-      await this.loadSwaggerModules(plane);
-    } else {
-      this.setState({
-        selectedPlane: plane?.displayName ?? null,
-      });
-    }
-  };
-
-  loadSwaggerModules = async (plane: Plane | null) => {
+  const loadSwaggerModules = useCallback(async (plane: Plane | null) => {
     if (plane !== null) {
       if (plane!.moduleOptions?.length) {
-        this.setState({
-          moduleOptions: plane!.moduleOptions!,
-          moduleOptionsCommonPrefix: `/Swagger/Specs/${plane!.name}/`,
-        });
-        await this.onModuleSelectionUpdate(null);
+        setModuleOptions(plane!.moduleOptions!);
+        setModuleOptionsCommonPrefix(`/Swagger/Specs/${plane!.name}/`);
+        await onModuleSelectionUpdate(null);
       } else {
         try {
-          this.setState({
-            updating: true,
-          });
+          setUpdating(true);
           const options = await specsApi.getSwaggerModules(plane!.name);
-          this.setState((preState) => {
-            const planes = preState.planes;
-            const index = planes.findIndex((v) => v.name === plane!.name);
-            planes[index].moduleOptions = options;
-            return {
-              ...preState,
-              updating: false,
-              planes: planes,
-              moduleOptions: options,
-              moduleOptionsCommonPrefix: `/Swagger/Specs/${plane!.name}/`,
-            };
+          setPlanes((prevPlanes) => {
+            const newPlanes = [...prevPlanes];
+            const index = newPlanes.findIndex((v) => v.name === plane!.name);
+            newPlanes[index].moduleOptions = options;
+            return newPlanes;
           });
-          await this.onModuleSelectionUpdate(null);
+          setUpdating(false);
+          setModuleOptions(options);
+          setModuleOptionsCommonPrefix(`/Swagger/Specs/${plane!.name}/`);
+          await onModuleSelectionUpdate(null);
         } catch (err: any) {
           console.error(err);
           const message = errorHandlerApi.getErrorMessage(err);
-          this.setState({
-            updating: false,
-            invalidText: `ResponseError: ${message}`,
-          });
+          setUpdating(false);
+          setInvalidText(`ResponseError: ${message}`);
         }
       }
     } else {
-      this.setState({
-        moduleOptions: [],
-        moduleOptionsCommonPrefix: "",
-      });
-      await this.onModuleSelectionUpdate(null);
+      setModuleOptions([]);
+      setModuleOptionsCommonPrefix("");
+      await onModuleSelectionUpdate(null);
     }
-  };
+  }, []);
 
-  onModuleSelectionUpdate = async (moduleValueUrl: string | null) => {
-    if (this.state.selectedModule !== moduleValueUrl) {
-      this.setState({
-        selectedModule: moduleValueUrl,
-      });
-      await this.loadResourceProviders(moduleValueUrl);
-    } else {
-      this.setState({
-        selectedModule: moduleValueUrl,
-      });
-    }
-  };
+  const onModuleSelectionUpdate = useCallback(
+    async (moduleValueUrl: string | null) => {
+      if (selectedModule !== moduleValueUrl) {
+        setSelectedModule(moduleValueUrl);
+        await loadResourceProviders(moduleValueUrl);
+      } else {
+        setSelectedModule(moduleValueUrl);
+      }
+    },
+    [selectedModule],
+  );
 
-  loadResourceProviders = async (moduleUrl: string | null) => {
+  const loadResourceProviders = useCallback(async (moduleUrl: string | null) => {
     if (moduleUrl !== null) {
       try {
-        this.setState({
-          updating: true,
-        });
+        setUpdating(true);
         const options = await specsApi.getResourceProviders(moduleUrl);
-        const selectedResourceProvider = options.length === 1 ? options[0] : null;
-        this.setState({
-          updating: false,
-          resourceProviderOptions: options,
-          resourceProviderOptionsCommonPrefix: `${moduleUrl}/ResourceProviders/`,
-        });
-        this.onResourceProviderUpdate(selectedResourceProvider);
+        const selectedRP = options.length === 1 ? options[0] : null;
+        setUpdating(false);
+        setResourceProviderOptions(options);
+        setResourceProviderOptionsCommonPrefix(`${moduleUrl}/ResourceProviders/`);
+        onResourceProviderUpdate(selectedRP);
       } catch (err: any) {
         console.error(err);
         const message = errorHandlerApi.getErrorMessage(err);
-        this.setState({
-          updating: false,
-          invalidText: `ResponseError: ${message}`,
-        });
+        setUpdating(false);
+        setInvalidText(`ResponseError: ${message}`);
       }
     } else {
-      this.setState({
-        resourceProviderOptions: [],
-        resourceProviderOptionsCommonPrefix: "",
-      });
-      this.onResourceProviderUpdate(null);
+      setResourceProviderOptions([]);
+      setResourceProviderOptionsCommonPrefix("");
+      onResourceProviderUpdate(null);
     }
-  };
+  }, []);
 
-  onResourceProviderUpdate = async (resourceProviderUrl: string | null) => {
-    if (this.state.selectedResourceProvider !== resourceProviderUrl) {
-      this.setState({
-        selectedResourceProvider: resourceProviderUrl,
-      });
-      await this.loadResources(resourceProviderUrl, null);
-    } else {
-      this.setState({
-        selectedResourceProvider: resourceProviderUrl,
-      });
-    }
-  };
+  const onResourceProviderUpdate = useCallback(
+    async (resourceProviderUrl: string | null) => {
+      if (selectedResourceProvider !== resourceProviderUrl) {
+        setSelectedResourceProvider(resourceProviderUrl);
+        await loadResources(resourceProviderUrl, null);
+      } else {
+        setSelectedResourceProvider(resourceProviderUrl);
+      }
+    },
+    [selectedResourceProvider],
+  );
 
-  loadResources = async (resourceProviderUrl: string | null, selectVersion: string | null) => {
+  const loadResources = useCallback(async (resourceProviderUrl: string | null, selectVersion: string | null) => {
     if (resourceProviderUrl != null) {
-      this.setState({
-        invalidText: undefined,
-        updating: true,
-      });
+      setInvalidText(undefined);
+      setUpdating(true);
       try {
         const resources = await specsApi.getProviderResources(resourceProviderUrl);
-        const versionResourceIdMap: SwaggerVersionResourceIdMap = {};
-        const versionOptions: string[] = [];
+        const versionResIdMap: SwaggerVersionResourceIdMap = {};
+        const versionOpts: string[] = [];
         const resourceIdList: string[] = [];
         resources.forEach((resource: any) => {
           resourceIdList.push(resource.id);
@@ -324,88 +223,77 @@ class WSEditorClientConfigDialog extends React.Component<
             })
             .map((v: any) => v.version);
           resourceVersions.forEach((v: any) => {
-            if (!(v in versionResourceIdMap)) {
-              versionResourceIdMap[v] = [];
-              versionOptions.push(v);
+            if (!(v in versionResIdMap)) {
+              versionResIdMap[v] = [];
+              versionOpts.push(v);
             }
-            versionResourceIdMap[v].push(resource.id);
+            versionResIdMap[v].push(resource.id);
           });
         });
-        versionOptions.sort((a, b) => a.localeCompare(b)).reverse();
+        versionOpts.sort((a, b) => a.localeCompare(b)).reverse();
         if (
           selectVersion === null &&
-          (versionOptions.length === 0 || versionOptions.findIndex((v) => v === selectVersion) < 0)
+          (versionOpts.length === 0 || versionOpts.findIndex((v) => v === selectVersion) < 0)
         ) {
           selectVersion = null;
         }
-        if (!selectVersion && versionOptions.length > 0) {
-          selectVersion = versionOptions[0];
+        if (!selectVersion && versionOpts.length > 0) {
+          selectVersion = versionOpts[0];
         }
 
-        this.setState({
-          updating: false,
-          versionResourceIdMap: versionResourceIdMap,
-          versionOptions: versionOptions,
-        });
-        this.onVersionUpdate(selectVersion);
+        setUpdating(false);
+        setVersionResourceIdMap(versionResIdMap);
+        setVersionOptions(versionOpts);
+        onVersionUpdate(selectVersion);
       } catch (err: any) {
         console.error(err);
         const message = errorHandlerApi.getErrorMessage(err);
-        this.setState({
-          invalidText: `ResponseError: ${message}`,
-        });
+        setInvalidText(`ResponseError: ${message}`);
       }
     } else {
-      this.setState({
-        versionOptions: [],
-      });
-      this.onVersionUpdate(null);
+      setVersionOptions([]);
+      onVersionUpdate(null);
     }
-  };
+  }, []);
 
-  onVersionUpdate = (version: string | null) => {
-    this.setState((preState) => {
-      let selectedResourceId = preState.selectedResourceId;
-      let resourceIdOptions: string[] = [];
-      if (version != null) {
-        resourceIdOptions = [...preState.versionResourceIdMap[version]].sort((a, b) =>
-          a.toString().localeCompare(b.toString()),
-        );
-        if (selectedResourceId !== null && resourceIdOptions.findIndex((v) => v === selectedResourceId) < 0) {
-          selectedResourceId = null;
+  const onVersionUpdate = useCallback(
+    (version: string | null) => {
+      let newSelectedResourceId = selectedResourceId;
+      let resourceIdOpts: string[] = [];
+      if (version != null && versionResourceIdMap[version]) {
+        resourceIdOpts = [...versionResourceIdMap[version]].sort((a, b) => a.toString().localeCompare(b.toString()));
+        if (newSelectedResourceId !== null && resourceIdOpts.findIndex((v) => v === newSelectedResourceId) < 0) {
+          newSelectedResourceId = null;
         }
       }
-      return {
-        ...preState,
-        resourceIdOptions: resourceIdOptions,
-        selectedVersion: version,
-        preferredAAZVersion: version,
-        selectedResourceId: selectedResourceId,
-      };
-    });
-  };
+      setResourceIdOptions(resourceIdOpts);
+      setSelectedVersion(version);
+      setSelectedResourceId(newSelectedResourceId);
+    },
+    [selectedResourceId, versionResourceIdMap],
+  );
 
-  loadWorkspaceClientConfig = async () => {
-    this.setState({ updating: true });
+  const loadWorkspaceClientConfig = useCallback(async () => {
+    setUpdating(true);
     try {
-      const clientConfigData = await workspaceApi.getClientConfig(this.props.workspaceUrl);
+      const clientConfigData = await workspaceApi.getClientConfig(workspaceUrl);
       const clientConfig: ClientConfig = {
         version: clientConfigData.version,
         auth: clientConfigData.auth,
       };
-      let templateAzureCloud = "";
-      let templateAzureChinaCloud = "";
-      let templateAzureUSGovernment = "";
-      let templateAzureGermanCloud = "";
-      let cloudMetadataSelectorIndex = "";
-      let cloudMetadataPrefixTemplate = "";
-      let endpointType: "template" | "http-operation" = "template";
-      let selectedPlane: string | null = null;
-      let selectedModule: string | null = null;
-      let selectedResourceProvider: string | null = null;
-      let selectedVersion: string | null = null;
-      let selectedResourceId: string | null = null;
-      let subresource: string = "";
+      let templateAzureCloudVal = "";
+      let templateAzureChinaCloudVal = "";
+      let templateAzureUSGovernmentVal = "";
+      let templateAzureGermanCloudVal = "";
+      let cloudMetadataSelectorIndexVal = "";
+      let cloudMetadataPrefixTemplateVal = "";
+      let endpointTypeVal: "template" | "http-operation" = "template";
+      let selectedPlaneVal: string | null = null;
+      let selectedModuleVal: string | null = null;
+      let selectedResourceProviderVal: string | null = null;
+      let selectedVersionVal: string | null = null;
+      let selectedResourceIdVal: string | null = null;
+      let subresourceVal: string = "";
 
       if (clientConfigData.endpoints.type === "template") {
         clientConfig.endpointTemplates = {};
@@ -414,190 +302,160 @@ class WSEditorClientConfigDialog extends React.Component<
         });
         clientConfig.endpointCloudMetadata = clientConfigData.endpoints.cloudMetadata;
 
-        endpointType = "template";
-        templateAzureCloud = clientConfig.endpointTemplates!["AzureCloud"] ?? "";
-        templateAzureChinaCloud = clientConfig.endpointTemplates!["AzureChinaCloud"] ?? "";
-        templateAzureUSGovernment = clientConfig.endpointTemplates!["AzureUSGovernment"] ?? "";
-        templateAzureGermanCloud = clientConfig.endpointTemplates!["AzureGermanCloud"] ?? "";
-        cloudMetadataSelectorIndex = clientConfig.endpointCloudMetadata?.selectorIndex ?? "";
-        cloudMetadataPrefixTemplate = clientConfig.endpointCloudMetadata?.prefixTemplate ?? "";
+        endpointTypeVal = "template";
+        templateAzureCloudVal = clientConfig.endpointTemplates!["AzureCloud"] ?? "";
+        templateAzureChinaCloudVal = clientConfig.endpointTemplates!["AzureChinaCloud"] ?? "";
+        templateAzureUSGovernmentVal = clientConfig.endpointTemplates!["AzureUSGovernment"] ?? "";
+        templateAzureGermanCloudVal = clientConfig.endpointTemplates!["AzureGermanCloud"] ?? "";
+        cloudMetadataSelectorIndexVal = clientConfig.endpointCloudMetadata?.selectorIndex ?? "";
+        cloudMetadataPrefixTemplateVal = clientConfig.endpointCloudMetadata?.prefixTemplate ?? "";
       } else if (clientConfigData.endpoints.type === "http-operation") {
         clientConfig.endpointResource = clientConfigData.endpoints.resource;
         const rpUrl: string = clientConfig.endpointResource!.swagger.split("/Paths/")[0];
         const moduleUrl: string = rpUrl.split("/ResourceProviders/")[0];
         const planeUrl: string = moduleUrl.split("/")[0];
-        selectedResourceProvider = `/Swagger/Specs/${rpUrl}`;
-        selectedModule = `/Swagger/Specs/${moduleUrl}`;
-        selectedPlane = `/Swagger/Specs/${planeUrl}`;
-        selectedVersion = clientConfig.endpointResource!.version;
-        selectedResourceId = clientConfig.endpointResource!.id;
-        subresource = clientConfig.endpointResource!.subresource ?? "";
-        endpointType = "http-operation";
+        selectedResourceProviderVal = `/Swagger/Specs/${rpUrl}`;
+        selectedModuleVal = `/Swagger/Specs/${moduleUrl}`;
+        selectedPlaneVal = `/Swagger/Specs/${planeUrl}`;
+        selectedVersionVal = clientConfig.endpointResource!.version;
+        selectedResourceIdVal = clientConfig.endpointResource!.id;
+        subresourceVal = clientConfig.endpointResource!.subresource ?? "";
+        endpointTypeVal = "http-operation";
       }
 
-      this.setState({
-        aadAuthScopes: clientConfig.auth.aad.scopes ?? [""],
-        endpointType: endpointType,
-        templateAzureCloud: templateAzureCloud,
-        templateAzureChinaCloud: templateAzureChinaCloud,
-        templateAzureUSGovernment: templateAzureUSGovernment,
-        templateAzureGermanCloud: templateAzureGermanCloud,
-        cloudMetadataSelectorIndex: cloudMetadataSelectorIndex,
-        cloudMetadataPrefixTemplate: cloudMetadataPrefixTemplate,
-        selectedPlane: selectedPlane,
-        selectedModule: selectedModule,
-        selectedResourceProvider: selectedResourceProvider,
-        selectedVersion: selectedVersion,
-        selectedResourceId: selectedResourceId,
-        subresource: subresource,
-        isAdd: false,
-      });
+      setAadAuthScopes(clientConfig.auth.aad.scopes ?? [""]);
+      setEndpointType(endpointTypeVal);
+      setTemplateAzureCloud(templateAzureCloudVal);
+      setTemplateAzureChinaCloud(templateAzureChinaCloudVal);
+      setTemplateAzureUSGovernment(templateAzureUSGovernmentVal);
+      setTemplateAzureGermanCloud(templateAzureGermanCloudVal);
+      setCloudMetadataSelectorIndex(cloudMetadataSelectorIndexVal);
+      setCloudMetadataPrefixTemplate(cloudMetadataPrefixTemplateVal);
+      setSelectedPlane(selectedPlaneVal);
+      setSelectedModule(selectedModuleVal);
+      setSelectedResourceProvider(selectedResourceProviderVal);
+      setSelectedVersion(selectedVersionVal);
+      setSelectedResourceId(selectedResourceIdVal);
+      setSubresource(subresourceVal);
+      setIsAdd(false);
     } catch (err: any) {
       if (errorHandlerApi.isHttpError(err, 404)) {
-        this.setState({
-          isAdd: true,
-        });
+        setIsAdd(true);
       } else {
         console.error(err);
         const message = errorHandlerApi.getErrorMessage(err);
-        this.setState({ invalidText: `ResponseError: ${message}` });
+        setInvalidText(`ResponseError: ${message}`);
       }
     }
 
-    this.setState({ updating: false });
-  };
+    setUpdating(false);
+  }, [workspaceUrl]);
 
-  handleClose = () => {
-    this.props.onClose(false);
-  };
+  // Initialize component when dialog opens
+  useEffect(() => {
+    const initializeComponent = async () => {
+      await loadPlanes();
+      await loadWorkspaceClientConfig();
+    };
 
-  handleUpdate = async () => {
-    let { aadAuthScopes } = this.state;
-    const { endpointType } = this.state;
+    if (open) {
+      initializeComponent();
+    }
+  }, [open, loadPlanes, loadWorkspaceClientConfig]);
+
+  const handleClose = useCallback(() => {
+    onClose(false);
+  }, [onClose]);
+
+  const handleUpdate = useCallback(async () => {
+    let currentAadAuthScopes = [...aadAuthScopes];
     let templates: ClientEndpointTemplate[] | undefined = undefined;
     let resource: ClientEndpointResource | undefined = undefined;
     let cloudMetadata: ClientEndpointCloudMetadata | undefined = undefined;
 
     if (endpointType === "template") {
-      let { templateAzureCloud, templateAzureChinaCloud, templateAzureGermanCloud, templateAzureUSGovernment } =
-        this.state;
-      templateAzureCloud = templateAzureCloud.trim();
-      if (templateAzureCloud.length < 1) {
-        this.setState({
-          invalidText: "Azure Cloud Endpoint Template is required.",
-        });
+      let currentTemplateAzureCloud = templateAzureCloud.trim();
+      if (currentTemplateAzureCloud.length < 1) {
+        setInvalidText("Azure Cloud Endpoint Template is required.");
         return;
       }
-      templateAzureChinaCloud = templateAzureChinaCloud.trim();
-      templateAzureUSGovernment = templateAzureUSGovernment.trim();
-      templateAzureGermanCloud = templateAzureGermanCloud.trim();
+      let currentTemplateAzureChinaCloud = templateAzureChinaCloud.trim();
+      let currentTemplateAzureUSGovernment = templateAzureUSGovernment.trim();
+      let currentTemplateAzureGermanCloud = templateAzureGermanCloud.trim();
       const templateRegex = /^https:\/\/((\{[a-zA-Z0-9]+\})|([^{}.]+))(.((\{[a-zA-Z0-9]+\})|([^{}.]+)))*(\/)?$/;
-      if (!templateRegex.test(templateAzureCloud)) {
-        this.setState({
-          invalidText: "Azure Cloud Endpoint Template is invalid.",
-        });
+      if (!templateRegex.test(currentTemplateAzureCloud)) {
+        setInvalidText("Azure Cloud Endpoint Template is invalid.");
         return;
       }
 
-      if (templateAzureChinaCloud.length > 0 && !templateRegex.test(templateAzureChinaCloud)) {
-        this.setState({
-          invalidText: "Azure China Cloud Endpoint Template is invalid.",
-        });
+      if (currentTemplateAzureChinaCloud.length > 0 && !templateRegex.test(currentTemplateAzureChinaCloud)) {
+        setInvalidText("Azure China Cloud Endpoint Template is invalid.");
         return;
       }
 
-      if (templateAzureUSGovernment.length > 0 && !templateRegex.test(templateAzureUSGovernment)) {
-        this.setState({
-          invalidText: "Azure US Government Endpoint Template is invalid.",
-        });
+      if (currentTemplateAzureUSGovernment.length > 0 && !templateRegex.test(currentTemplateAzureUSGovernment)) {
+        setInvalidText("Azure US Government Endpoint Template is invalid.");
         return;
       }
 
-      if (templateAzureGermanCloud.length > 0 && !templateRegex.test(templateAzureGermanCloud)) {
-        this.setState({
-          invalidText: "Azure German Cloud Endpoint Template is invalid.",
-        });
+      if (currentTemplateAzureGermanCloud.length > 0 && !templateRegex.test(currentTemplateAzureGermanCloud)) {
+        setInvalidText("Azure German Cloud Endpoint Template is invalid.");
         return;
       }
 
-      templates = [{ cloud: "AzureCloud", template: templateAzureCloud }];
-      if (templateAzureChinaCloud.length > 0) {
-        templates.push({ cloud: "AzureChinaCloud", template: templateAzureChinaCloud });
+      templates = [{ cloud: "AzureCloud", template: currentTemplateAzureCloud }];
+      if (currentTemplateAzureChinaCloud.length > 0) {
+        templates.push({ cloud: "AzureChinaCloud", template: currentTemplateAzureChinaCloud });
       }
-      if (templateAzureUSGovernment.length > 0) {
-        templates.push({ cloud: "AzureUSGovernment", template: templateAzureUSGovernment });
+      if (currentTemplateAzureUSGovernment.length > 0) {
+        templates.push({ cloud: "AzureUSGovernment", template: currentTemplateAzureUSGovernment });
       }
-      if (templateAzureGermanCloud.length > 0) {
-        templates.push({ cloud: "AzureGermanCloud", template: templateAzureGermanCloud });
+      if (currentTemplateAzureGermanCloud.length > 0) {
+        templates.push({ cloud: "AzureGermanCloud", template: currentTemplateAzureGermanCloud });
       }
 
-      let { cloudMetadataSelectorIndex, cloudMetadataPrefixTemplate } = this.state;
-      cloudMetadataSelectorIndex = cloudMetadataSelectorIndex.trim();
-      cloudMetadataPrefixTemplate = cloudMetadataPrefixTemplate.trim();
-      if (cloudMetadataSelectorIndex.length < 1 && cloudMetadataPrefixTemplate.length > 0) {
-        this.setState({
-          invalidText: "Cloud Metadata Selector Index is required.",
-        });
+      let currentCloudMetadataSelectorIndex = cloudMetadataSelectorIndex.trim();
+      let currentCloudMetadataPrefixTemplate = cloudMetadataPrefixTemplate.trim();
+      if (currentCloudMetadataSelectorIndex.length < 1 && currentCloudMetadataPrefixTemplate.length > 0) {
+        setInvalidText("Cloud Metadata Selector Index is required.");
         return;
-      } else if (cloudMetadataSelectorIndex.length > 0) {
+      } else if (currentCloudMetadataSelectorIndex.length > 0) {
         cloudMetadata = {
-          selectorIndex: cloudMetadataSelectorIndex,
+          selectorIndex: currentCloudMetadataSelectorIndex,
         };
-        if (cloudMetadataPrefixTemplate.length > 0) {
-          if (!templateRegex.test(cloudMetadataPrefixTemplate)) {
-            this.setState({
-              invalidText: "Cloud Metadata Prefix is invalid.",
-            });
+        if (currentCloudMetadataPrefixTemplate.length > 0) {
+          if (!templateRegex.test(currentCloudMetadataPrefixTemplate)) {
+            setInvalidText("Cloud Metadata Prefix is invalid.");
             return;
           }
-          cloudMetadata.prefixTemplate = cloudMetadataPrefixTemplate;
+          cloudMetadata.prefixTemplate = currentCloudMetadataPrefixTemplate;
         }
       }
     } else if (endpointType === "http-operation") {
-      let { subresource } = this.state;
-      const {
-        selectedPlane,
-        selectedModule,
-        selectedResourceProvider,
-        selectedVersion,
-        selectedResourceId,
-        moduleOptionsCommonPrefix,
-      } = this.state;
+      let currentSubresource = subresource;
       if (!selectedPlane) {
-        this.setState({
-          invalidText: "Plane is required.",
-        });
+        setInvalidText("Plane is required.");
         return;
       }
       if (!selectedModule) {
-        this.setState({
-          invalidText: "Module is required.",
-        });
+        setInvalidText("Module is required.");
         return;
       }
       if (!selectedResourceProvider) {
-        this.setState({
-          invalidText: "Resource Provider is required.",
-        });
+        setInvalidText("Resource Provider is required.");
         return;
       }
       if (!selectedVersion) {
-        this.setState({
-          invalidText: "API Version is required.",
-        });
+        setInvalidText("API Version is required.");
         return;
       }
       if (!selectedResourceId) {
-        this.setState({
-          invalidText: "Resource ID is required.",
-        });
+        setInvalidText("Resource ID is required.");
         return;
       }
-      subresource = subresource.trim();
-      if (subresource.length < 1) {
-        this.setState({
-          invalidText: "Endpoint Property Index is required.",
-        });
+      currentSubresource = currentSubresource.trim();
+      if (currentSubresource.length < 1) {
+        setInvalidText("Endpoint Property Index is required.");
         return;
       }
 
@@ -606,403 +464,373 @@ class WSEditorClientConfigDialog extends React.Component<
         module: selectedModule.replace(moduleOptionsCommonPrefix, ""),
         version: selectedVersion,
         id: selectedResourceId,
-        subresource: subresource,
+        subresource: currentSubresource,
       };
     }
 
-    aadAuthScopes = aadAuthScopes.map((scope) => scope.trim()).filter((scope) => scope.length > 0);
-    if (aadAuthScopes.length < 1) {
-      this.setState({
-        invalidText: "MS Entra(AAD) Auth Scopes is required.",
-      });
+    currentAadAuthScopes = currentAadAuthScopes.map((scope) => scope.trim()).filter((scope) => scope.length > 0);
+    if (currentAadAuthScopes.length < 1) {
+      setInvalidText("MS Entra(AAD) Auth Scopes is required.");
       return;
     }
 
     const auth = {
       aad: {
-        scopes: aadAuthScopes,
+        scopes: currentAadAuthScopes,
       },
     };
 
-    this.onUpdateClientConfig(templates, cloudMetadata, resource, auth);
-  };
+    onUpdateClientConfig(templates, cloudMetadata, resource, auth);
+  }, [
+    aadAuthScopes,
+    endpointType,
+    templateAzureCloud,
+    templateAzureChinaCloud,
+    templateAzureUSGovernment,
+    templateAzureGermanCloud,
+    cloudMetadataSelectorIndex,
+    cloudMetadataPrefixTemplate,
+    selectedPlane,
+    selectedModule,
+    selectedResourceProvider,
+    selectedVersion,
+    selectedResourceId,
+    subresource,
+    moduleOptionsCommonPrefix,
+  ]);
 
-  onUpdateClientConfig = async (
-    templates: ClientEndpointTemplate[] | undefined,
-    cloudMetadata: ClientEndpointCloudMetadata | undefined,
-    resource: ClientEndpointResource | undefined,
-    auth: ClientAuth,
-  ) => {
-    this.setState({ updating: true });
-    try {
-      await workspaceApi.updateClientConfig(this.props.workspaceUrl, {
-        templates: templates,
-        cloudMetadata: cloudMetadata,
-        resource: resource,
-        auth: auth,
-      });
-      this.setState({ updating: false });
-      this.props.onClose(true);
-    } catch (err: any) {
-      console.error(err);
-      const message = errorHandlerApi.getErrorMessage(err);
-      this.setState({ invalidText: `ResponseError: ${message}` });
-      this.setState({ updating: false });
-    }
-  };
-
-  onRemoveAadScope = (idx: number) => {
-    this.setState((preState) => {
-      const aadAuthScopes: string[] = [
-        ...preState.aadAuthScopes.slice(0, idx),
-        ...preState.aadAuthScopes.slice(idx + 1),
-      ];
-      if (aadAuthScopes.length === 0) {
-        aadAuthScopes.push("");
+  const onUpdateClientConfig = useCallback(
+    async (
+      templates: ClientEndpointTemplate[] | undefined,
+      cloudMetadata: ClientEndpointCloudMetadata | undefined,
+      resource: ClientEndpointResource | undefined,
+      auth: ClientAuth,
+    ) => {
+      setUpdating(true);
+      try {
+        await workspaceApi.updateClientConfig(workspaceUrl, {
+          templates: templates,
+          cloudMetadata: cloudMetadata,
+          resource: resource,
+          auth: auth,
+        });
+        setUpdating(false);
+        onClose(true);
+      } catch (err: any) {
+        console.error(err);
+        const message = errorHandlerApi.getErrorMessage(err);
+        setInvalidText(`ResponseError: ${message}`);
+        setUpdating(false);
       }
-      return {
-        ...preState,
-        aadAuthScopes: aadAuthScopes,
-      };
-    });
-  };
+    },
+    [workspaceUrl, onClose],
+  );
 
-  onModifyAadScope = (scope: string, idx: number) => {
-    this.setState((preState) => {
-      return {
-        ...preState,
-        aadAuthScopes: [...preState.aadAuthScopes.slice(0, idx), scope, ...preState.aadAuthScopes.slice(idx + 1)],
-      };
+  const onRemoveAadScope = useCallback((idx: number) => {
+    setAadAuthScopes((prev) => {
+      const newScopes = [...prev.slice(0, idx), ...prev.slice(idx + 1)];
+      if (newScopes.length === 0) {
+        newScopes.push("");
+      }
+      return newScopes;
     });
-  };
+  }, []);
 
-  onAddAadScope = () => {
-    this.setState((preState) => {
-      return {
-        ...preState,
-        aadAuthScopes: [...preState.aadAuthScopes, ""],
-      };
-    });
-  };
+  const onModifyAadScope = useCallback((scope: string, idx: number) => {
+    setAadAuthScopes((prev) => [...prev.slice(0, idx), scope, ...prev.slice(idx + 1)]);
+  }, []);
 
-  buildAadScopeInput = (scope: string, idx: number) => {
-    return (
-      <Box
-        key={idx}
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          ml: 1,
-        }}
-      >
-        <IconButton edge="start" color="inherit" onClick={() => this.onRemoveAadScope(idx)} aria-label="remove">
-          <DoDisturbOnRoundedIcon fontSize="small" />
-        </IconButton>
-        <Input
-          id={`aadScope-${idx}`}
-          value={scope}
-          onChange={(event: any) => {
-            this.onModifyAadScope(event.target.value, idx);
+  const onAddAadScope = useCallback(() => {
+    setAadAuthScopes((prev) => [...prev, ""]);
+  }, []);
+
+  const buildAadScopeInput = useCallback(
+    (scope: string, idx: number) => {
+      return (
+        <Box
+          key={idx}
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            ml: 1,
           }}
-          sx={{ flexGrow: 1 }}
-          placeholder="Input Microsoft Entra(AAD) auth Scope here, e.g. https://metrics.monitor.azure.com/.default"
-        />
-      </Box>
-    );
-  };
-
-  render() {
-    const {
-      invalidText,
-      updating,
-      isAdd,
-      aadAuthScopes,
-      endpointType,
-      templateAzureCloud,
-      templateAzureChinaCloud,
-      templateAzureUSGovernment,
-      templateAzureGermanCloud,
-      cloudMetadataSelectorIndex,
-      cloudMetadataPrefixTemplate,
-    } = this.state;
-    const { selectedModule, selectedResourceProvider, selectedVersion, selectedResourceId, subresource } = this.state;
-    return (
-      <Dialog disableEscapeKeyDown fullWidth={true} maxWidth="md" open={this.props.open}>
-        <DialogTitle>{isAdd ? "Setup Client Config" : "Modify Client Config"}</DialogTitle>
-        <DialogContent dividers={true}>
-          {invalidText && (
-            <Alert variant="filled" severity="error">
-              {" "}
-              {invalidText}{" "}
-            </Alert>
-          )}
-          <InputLabel required sx={{ font: "inherit", mt: 1 }}>
-            Endpoint
-          </InputLabel>
-          <Paper square={false} sx={{ mt: 1 }}>
-            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-              <Tabs
-                value={endpointType}
-                textColor="secondary"
-                indicatorColor="secondary"
-                onChange={(_event: any, newValue: any) => {
-                  this.setState({
-                    endpointType: newValue,
-                  });
-                }}
-              >
-                <Tab label="By templates" value="template" />
-                <Tab label="By resource property" value="http-operation" />
-              </Tabs>
-            </Box>
-            {endpointType === "template" && (
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "stretch",
-                  justifyContent: "flex-start",
-                  pl: 2,
-                  pr: 2,
-                  pb: 2,
-                }}
-              >
-                <InputLabel sx={{ font: "inherit", pt: 2 }}>Default Templates</InputLabel>
-
-                <TextField
-                  id="AzureCloud"
-                  label="Azure Cloud"
-                  type="text"
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  fullWidth
-                  variant="standard"
-                  placeholder="Endpoint template in Azure Cloud, e.g. https://{vaultName}.vault.azure.net"
-                  value={templateAzureCloud}
-                  onChange={(event: any) => {
-                    this.setState({
-                      templateAzureCloud: event.target.value,
-                    });
-                  }}
-                  margin="dense"
-                  required
-                />
-
-                <TextField
-                  id="AzureChinaCloud"
-                  label="Azure China Cloud"
-                  type="text"
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  fullWidth
-                  variant="standard"
-                  placeholder="Endpoint template in Azure China Cloud, e.g. https://{vaultName}.vault.azure.cn"
-                  value={templateAzureChinaCloud}
-                  onChange={(event: any) => {
-                    this.setState({
-                      templateAzureChinaCloud: event.target.value,
-                    });
-                  }}
-                  margin="normal"
-                />
-
-                <TextField
-                  id="AzureUSGovernment"
-                  label="Azure US Government"
-                  type="text"
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  fullWidth
-                  variant="standard"
-                  placeholder="Endpoint template in Azure US Government, e.g. https://{vaultName}.vault.usgovcloudapi.net"
-                  value={templateAzureUSGovernment}
-                  onChange={(event: any) => {
-                    this.setState({
-                      templateAzureUSGovernment: event.target.value,
-                    });
-                  }}
-                  margin="normal"
-                />
-
-                <TextField
-                  id="AzureGermanCloud"
-                  label="Azure German Cloud"
-                  type="text"
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  fullWidth
-                  variant="standard"
-                  placeholder="Endpoint template in Azure German Cloud, e.g. https://{vaultName}.vault.microsoftazure.de"
-                  value={templateAzureGermanCloud}
-                  onChange={(event: any) => {
-                    this.setState({
-                      templateAzureGermanCloud: event.target.value,
-                    });
-                  }}
-                  margin="normal"
-                />
-                <InputLabel sx={{ font: "inherit", pt: 2 }}>From Cloud Metadata</InputLabel>
-
-                <TextField
-                  id="selector-index"
-                  label="Endpoint/Suffix Index"
-                  type="text"
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  fullWidth
-                  variant="standard"
-                  placeholder="Property index to fetch endpoint or suffix from cloud metadata api response, e.g. suffixes.keyVaultDns"
-                  value={cloudMetadataSelectorIndex}
-                  onChange={(event: any) => {
-                    this.setState({
-                      cloudMetadataSelectorIndex: event.target.value,
-                    });
-                  }}
-                  margin="dense"
-                />
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "flex-end",
-                    justifyContent: "flex-start",
-                  }}
-                >
-                  <TextField
-                    id="prefix-template"
-                    label="Prefix"
-                    type="text"
-                    fullWidth
-                    variant="standard"
-                    placeholder="Template appended before suffix, e.g. https://{vaultName}"
-                    value={cloudMetadataPrefixTemplate}
-                    onChange={(event: any) => {
-                      this.setState({
-                        cloudMetadataPrefixTemplate: event.target.value,
-                      });
-                    }}
-                    margin="dense"
-                  />
-                  <AddRoundedIcon />
-                  <TemplateSuffixTypography sx={{ flexShrink: 0, mr: 1 }}>.Suffix</TemplateSuffixTypography>
-                </Box>
-              </Box>
-            )}
-            {endpointType === "http-operation" && (
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "stretch",
-                  justifyContent: "flex-start",
-                  pt: 2,
-                  pl: 2,
-                  pr: 2,
-                  pb: 2,
-                }}
-              >
-                <SwaggerItemSelector
-                  name="Module"
-                  commonPrefix={this.state.moduleOptionsCommonPrefix}
-                  options={this.state.moduleOptions}
-                  value={selectedModule}
-                  onValueUpdate={this.onModuleSelectionUpdate}
-                />
-                <MiddlePadding />
-                <SwaggerItemSelector
-                  name="Resource Provider"
-                  commonPrefix={this.state.resourceProviderOptionsCommonPrefix}
-                  options={this.state.resourceProviderOptions}
-                  value={selectedResourceProvider}
-                  onValueUpdate={this.onResourceProviderUpdate}
-                />
-                <MiddlePadding />
-                <SwaggerItemSelector
-                  name="API Version"
-                  commonPrefix=""
-                  options={this.state.versionOptions}
-                  value={selectedVersion}
-                  onValueUpdate={this.onVersionUpdate}
-                />
-                <MiddlePadding />
-                <SwaggerItemSelector
-                  name="Resource ID"
-                  commonPrefix=""
-                  options={this.state.resourceIdOptions}
-                  value={selectedResourceId}
-                  onValueUpdate={(resourceId: string | null) => {
-                    this.setState({
-                      selectedResourceId: resourceId,
-                    });
-                  }}
-                />
-                <MiddlePadding />
-                <TextField
-                  id="subresource"
-                  label="Endpoint Property Index"
-                  type="text"
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  fullWidth
-                  variant="standard"
-                  placeholder="Property index for the api response to fetch the endpoint, e.g. properties.attestUri"
-                  value={subresource}
-                  onChange={(event: any) => {
-                    this.setState({
-                      subresource: event.target.value,
-                    });
-                  }}
-                  margin="dense"
-                  required
-                />
-              </Box>
-            )}
-          </Paper>
-
-          <InputLabel required sx={{ font: "inherit", mt: 4 }}>
-            MS Entra(AAD) Auth Scopes
-          </InputLabel>
-          {aadAuthScopes?.map(this.buildAadScopeInput)}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              ml: 1,
+        >
+          <IconButton edge="start" color="inherit" onClick={() => onRemoveAadScope(idx)} aria-label="remove">
+            <DoDisturbOnRoundedIcon fontSize="small" />
+          </IconButton>
+          <Input
+            id={`aadScope-${idx}`}
+            value={scope}
+            onChange={(event: any) => {
+              onModifyAadScope(event.target.value, idx);
             }}
-          >
-            <IconButton edge="start" color="inherit" onClick={this.onAddAadScope} aria-label="add">
-              <AddCircleRoundedIcon fontSize="small" />
-            </IconButton>
-            <AuthTypography sx={{ flexShrink: 0 }}> One more scope </AuthTypography>
+            sx={{ flexGrow: 1 }}
+            placeholder="Input Microsoft Entra(AAD) auth Scope here, e.g. https://metrics.monitor.azure.com/.default"
+          />
+        </Box>
+      );
+    },
+    [onRemoveAadScope, onModifyAadScope],
+  );
+
+  return (
+    <Dialog disableEscapeKeyDown fullWidth={true} maxWidth="md" open={open}>
+      <DialogTitle>{isAdd ? "Setup Client Config" : "Modify Client Config"}</DialogTitle>
+      <DialogContent dividers={true}>
+        {invalidText && (
+          <Alert variant="filled" severity="error">
+            {" "}
+            {invalidText}{" "}
+          </Alert>
+        )}
+        <InputLabel required sx={{ font: "inherit", mt: 1 }}>
+          Endpoint
+        </InputLabel>
+        <Paper square={false} sx={{ mt: 1 }}>
+          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Tabs
+              value={endpointType}
+              textColor="secondary"
+              indicatorColor="secondary"
+              onChange={(_event: any, newValue: any) => {
+                setEndpointType(newValue);
+              }}
+            >
+              <Tab label="By templates" value="template" />
+              <Tab label="By resource property" value="http-operation" />
+            </Tabs>
           </Box>
-        </DialogContent>
-        <DialogActions>
-          {updating && (
-            <Box sx={{ width: "100%" }}>
-              <LinearProgress color="secondary" />
+          {endpointType === "template" && (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "stretch",
+                justifyContent: "flex-start",
+                pl: 2,
+                pr: 2,
+                pb: 2,
+              }}
+            >
+              <InputLabel sx={{ font: "inherit", pt: 2 }}>Default Templates</InputLabel>
+
+              <TextField
+                id="AzureCloud"
+                label="Azure Cloud"
+                type="text"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                fullWidth
+                variant="standard"
+                placeholder="Endpoint template in Azure Cloud, e.g. https://{vaultName}.vault.azure.net"
+                value={templateAzureCloud}
+                onChange={(event: any) => {
+                  setTemplateAzureCloud(event.target.value);
+                }}
+                margin="dense"
+                required
+              />
+
+              <TextField
+                id="AzureChinaCloud"
+                label="Azure China Cloud"
+                type="text"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                fullWidth
+                variant="standard"
+                placeholder="Endpoint template in Azure China Cloud, e.g. https://{vaultName}.vault.azure.cn"
+                value={templateAzureChinaCloud}
+                onChange={(event: any) => {
+                  setTemplateAzureChinaCloud(event.target.value);
+                }}
+                margin="normal"
+              />
+
+              <TextField
+                id="AzureUSGovernment"
+                label="Azure US Government"
+                type="text"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                fullWidth
+                variant="standard"
+                placeholder="Endpoint template in Azure US Government, e.g. https://{vaultName}.vault.usgovcloudapi.net"
+                value={templateAzureUSGovernment}
+                onChange={(event: any) => {
+                  setTemplateAzureUSGovernment(event.target.value);
+                }}
+                margin="normal"
+              />
+
+              <TextField
+                id="AzureGermanCloud"
+                label="Azure German Cloud"
+                type="text"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                fullWidth
+                variant="standard"
+                placeholder="Endpoint template in Azure German Cloud, e.g. https://{vaultName}.vault.microsoftazure.de"
+                value={templateAzureGermanCloud}
+                onChange={(event: any) => {
+                  setTemplateAzureGermanCloud(event.target.value);
+                }}
+                margin="normal"
+              />
+              <InputLabel sx={{ font: "inherit", pt: 2 }}>From Cloud Metadata</InputLabel>
+
+              <TextField
+                id="selector-index"
+                label="Endpoint/Suffix Index"
+                type="text"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                fullWidth
+                variant="standard"
+                placeholder="Property index to fetch endpoint or suffix from cloud metadata api response, e.g. suffixes.keyVaultDns"
+                value={cloudMetadataSelectorIndex}
+                onChange={(event: any) => {
+                  setCloudMetadataSelectorIndex(event.target.value);
+                }}
+                margin="dense"
+              />
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "flex-end",
+                  justifyContent: "flex-start",
+                }}
+              >
+                <TextField
+                  id="prefix-template"
+                  label="Prefix"
+                  type="text"
+                  fullWidth
+                  variant="standard"
+                  placeholder="Template appended before suffix, e.g. https://{vaultName}"
+                  value={cloudMetadataPrefixTemplate}
+                  onChange={(event: any) => {
+                    setCloudMetadataPrefixTemplate(event.target.value);
+                  }}
+                  margin="dense"
+                />
+                <AddRoundedIcon />
+                <TemplateSuffixTypography sx={{ flexShrink: 0, mr: 1 }}>.Suffix</TemplateSuffixTypography>
+              </Box>
             </Box>
           )}
-          {!updating && (
-            <React.Fragment>
-              {!isAdd && <Button onClick={this.handleClose}>Cancel</Button>}
-              <Button onClick={this.handleUpdate}>Update</Button>
-            </React.Fragment>
+          {endpointType === "http-operation" && (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "stretch",
+                justifyContent: "flex-start",
+                pt: 2,
+                pl: 2,
+                pr: 2,
+                pb: 2,
+              }}
+            >
+              <SwaggerItemSelector
+                name="Module"
+                commonPrefix={moduleOptionsCommonPrefix}
+                options={moduleOptions}
+                value={selectedModule}
+                onValueUpdate={onModuleSelectionUpdate}
+              />
+              <MiddlePadding />
+              <SwaggerItemSelector
+                name="Resource Provider"
+                commonPrefix={resourceProviderOptionsCommonPrefix}
+                options={resourceProviderOptions}
+                value={selectedResourceProvider}
+                onValueUpdate={onResourceProviderUpdate}
+              />
+              <MiddlePadding />
+              <SwaggerItemSelector
+                name="API Version"
+                commonPrefix=""
+                options={versionOptions}
+                value={selectedVersion}
+                onValueUpdate={onVersionUpdate}
+              />
+              <MiddlePadding />
+              <SwaggerItemSelector
+                name="Resource ID"
+                commonPrefix=""
+                options={resourceIdOptions}
+                value={selectedResourceId}
+                onValueUpdate={(resourceId: string | null) => {
+                  setSelectedResourceId(resourceId);
+                }}
+              />
+              <MiddlePadding />
+              <TextField
+                id="subresource"
+                label="Endpoint Property Index"
+                type="text"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                fullWidth
+                variant="standard"
+                placeholder="Property index for the api response to fetch the endpoint, e.g. properties.attestUri"
+                value={subresource}
+                onChange={(event: any) => {
+                  setSubresource(event.target.value);
+                }}
+                margin="dense"
+                required
+              />
+            </Box>
           )}
-        </DialogActions>
-      </Dialog>
-    );
-  }
-}
+        </Paper>
+
+        <InputLabel required sx={{ font: "inherit", mt: 4 }}>
+          MS Entra(AAD) Auth Scopes
+        </InputLabel>
+        {aadAuthScopes?.map(buildAadScopeInput)}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            ml: 1,
+          }}
+        >
+          <IconButton edge="start" color="inherit" onClick={onAddAadScope} aria-label="add">
+            <AddCircleRoundedIcon fontSize="small" />
+          </IconButton>
+          <AuthTypography sx={{ flexShrink: 0 }}> One more scope </AuthTypography>
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        {updating && (
+          <Box sx={{ width: "100%" }}>
+            <LinearProgress color="secondary" />
+          </Box>
+        )}
+        {!updating && (
+          <React.Fragment>
+            {!isAdd && <Button onClick={handleClose}>Cancel</Button>}
+            <Button onClick={handleUpdate}>Update</Button>
+          </React.Fragment>
+        )}
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 interface ClientEndpointTemplate {
   cloud: string;
