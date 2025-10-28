@@ -79,7 +79,6 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
 
   const [aadAuthScopes, setAadAuthScopes] = useState<string[]>([""]);
 
-  const [planes, setPlanes] = useState<Plane[]>([]);
   const [selectedPlane, setSelectedPlane] = useState<string | null>(null);
 
   const [moduleOptions, setModuleOptions] = useState<string[]>([]);
@@ -103,7 +102,6 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
       setUpdating(true);
 
       const planesData = await specsApi.getPlanes();
-      setPlanes(planesData);
       setUpdating(false);
 
       if (planesData.length > 0) {
@@ -129,12 +127,6 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
         try {
           setUpdating(true);
           const options = await specsApi.getSwaggerModules(plane!.name);
-          setPlanes((prevPlanes) => {
-            const newPlanes = [...prevPlanes];
-            const index = newPlanes.findIndex((v) => v.name === plane!.name);
-            newPlanes[index].moduleOptions = options;
-            return newPlanes;
-          });
           setUpdating(false);
           setModuleOptions(options);
           setModuleOptionsCommonPrefix(`/Swagger/Specs/${plane!.name}/`);
@@ -243,7 +235,7 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
         setUpdating(false);
         setVersionResourceIdMap(versionResIdMap);
         setVersionOptions(versionOpts);
-        onVersionUpdate(selectVersion);
+        onVersionUpdate(selectVersion, versionResIdMap);
       } catch (err: any) {
         console.error(err);
         const message = errorHandlerApi.getErrorMessage(err);
@@ -256,11 +248,12 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
   }, []);
 
   const onVersionUpdate = useCallback(
-    (version: string | null) => {
+    (version: string | null, versionResIdMap?: SwaggerVersionResourceIdMap) => {
+      const mapToUse = versionResIdMap || versionResourceIdMap;
       let newSelectedResourceId = selectedResourceId;
       let resourceIdOpts: string[] = [];
-      if (version != null && versionResourceIdMap[version]) {
-        resourceIdOpts = [...versionResourceIdMap[version]].sort((a, b) => a.toString().localeCompare(b.toString()));
+      if (version != null && mapToUse[version]) {
+        resourceIdOpts = [...mapToUse[version]].sort((a, b) => a.toString().localeCompare(b.toString()));
         if (newSelectedResourceId !== null && resourceIdOpts.findIndex((v) => v === newSelectedResourceId) < 0) {
           newSelectedResourceId = null;
         }
@@ -350,7 +343,6 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
     setUpdating(false);
   }, [workspaceUrl]);
 
-  // Initialize component when dialog opens
   useEffect(() => {
     const initializeComponent = async () => {
       await loadPlanes();
@@ -432,10 +424,6 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
       }
     } else if (endpointType === "http-operation") {
       let currentSubresource = subresource;
-      if (!selectedPlane) {
-        setInvalidText("Plane is required.");
-        return;
-      }
       if (!selectedModule) {
         setInvalidText("Module is required.");
         return;
@@ -459,7 +447,7 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
       }
 
       resource = {
-        plane: selectedPlane.replace("/Swagger/Specs/", ""),
+        plane: selectedPlane?.replace("/Swagger/Specs/", "") ?? "",
         module: selectedModule.replace(moduleOptionsCommonPrefix, ""),
         version: selectedVersion,
         id: selectedResourceId,
