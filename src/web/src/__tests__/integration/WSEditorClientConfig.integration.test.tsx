@@ -164,36 +164,34 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       });
     });
 
-    it.skip("should complete resource config setup end-to-end", async () => {
-      // @NOTE: revisit once workflows and loading states are improved
-      server.use(
-        http.get(`*/workspaces${mockWorkspaceUrl}/client-config`, () => {
-          return new HttpResponse(null, { status: 404 });
-        }),
-        http.put(`*/workspaces${mockWorkspaceUrl}/client-config`, async ({ request }) => {
-          const body = await request.json();
-          expect(body).toEqual({
-            templates: undefined,
-            cloudMetadata: undefined,
-            resource: {
-              plane: "azure-cli",
-              module: "storage",
-              version: "2021-04-01",
-              id: "storageAccounts",
-              subresource: "properties.primaryEndpoints.blob",
-            },
-            auth: {
-              aad: {
-                scopes: ["https://storage.azure.com/.default"],
-              },
-            },
-          });
-          return HttpResponse.json({ success: true });
-        }),
-      );
+    it.skip("should complete template config setup end-to-end", async () => {
+      // @TODO: once `by resource passes` (below) complete this test
+      // &&&&
+      // const user = userEvent.setup();
+      // render(
+      //   <WSEditorClientConfigDialog
+      //     workspaceUrl={`${mockWorkspaceUrl}?simulate404=false`}
+      //     open={true}
+      //     onClose={mockOnClose}
+      //   />,
+      // );
+      // await waitFor(() => {
+      //   expect(screen.getByText("By templates")).toBeInTheDocument();
+      // });
+      // const resourceTab = screen.getByText("By templates");
+      // await user.click(resourceTab);
+      // &&&
+    });
 
+    it("should complete resource property config setup end-to-end", async () => {
       const user = userEvent.setup();
-      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
+      render(
+        <WSEditorClientConfigDialog
+          workspaceUrl={`${mockWorkspaceUrl}?simulate404=false`}
+          open={true}
+          onClose={mockOnClose}
+        />,
+      );
 
       await waitFor(() => {
         expect(screen.getByText("By resource property")).toBeInTheDocument();
@@ -292,6 +290,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       expect(mockOnClose).not.toHaveBeenCalled();
     });
 
+    // @TODO: not sure this test is required:
     it.skip("should handle error recovery - fix validation error and retry", async () => {
       // @NOTE: revisit once workflows and loading states are improved
       server.use(

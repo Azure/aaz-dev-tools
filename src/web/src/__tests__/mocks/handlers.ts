@@ -94,9 +94,12 @@ export const handlers = [
   http.get("/AAZ/Editor/Workspaces/:name", ({ params }) => {
     return HttpResponse.json({
       name: params.name,
-      plane: "azure-cli",
+      plane: `data-plane:${params.name}`,
       folder: `/workspaces/${params.name}`,
-      commandTree: {},
+      resourceProvider: `${params.name}`,
+      commandTree: {
+        names: ["aaz"],
+      },
     });
   }),
 
@@ -115,6 +118,7 @@ export const handlers = [
     ]);
   }),
 
+  // @TODO: check response conditional here:
   http.get("/AAZ/Specs/Planes/:planeName/Modules", ({ params }) => {
     if (params.planeName === "azure-cli") {
       return HttpResponse.json(["storage", "compute", "network", "keyvault"]);
@@ -122,22 +126,27 @@ export const handlers = [
     return HttpResponse.json(["extensions-module"]);
   }),
 
-  http.get("/Swagger/Specs/:planeName/:moduleName/ResourceProviders", () => {
-    const resourceProviders = ["Microsoft.Storage", "Microsoft.Compute", "Microsoft.Network", "Microsoft.KeyVault"];
-    return HttpResponse.json(resourceProviders);
+  http.get("/Swagger/Specs/:planeName/:moduleName/ResourceProviders", ({ params }) => {
+    return HttpResponse.json({
+      entryFiles: [`specification/${params.moduleName}/Microsoft.BlobStorage/main.tsp`],
+      name: `${params.moduleName}.Blob`,
+      type: "TypeSpec",
+      url: `/Swagger/Specs/${params.planeName}:${params.moduleName}.blob/${params.moduleName}.blob/ResourceProviders/${params.moduleName}.blob/TypeSpec`,
+    });
   }),
 
   http.get("/Swagger/Specs/mgmt-plane", () => {
     return HttpResponse.json([
-      { url: "/Swagger/Specs/mgmt-plane/addons" },
-      { url: "/Swagger/Specs/mgmt-plane/compute" },
-      { url: "/Swagger/Specs/mgmt-plane/network" },
-      { url: "/Swagger/Specs/mgmt-plane/keyvault" },
-      { url: "/Swagger/Specs/mgmt-plane/containerservice" },
-      { url: "/Swagger/Specs/mgmt-plane/storage" },
+      { url: "/Swagger/Specs/mgmt-plane/addons", name: "addons" },
+      { url: "/Swagger/Specs/mgmt-plane/compute", name: "compute" },
+      { url: "/Swagger/Specs/mgmt-plane/network", name: "network" },
+      { url: "/Swagger/Specs/mgmt-plane/keyvault", name: "keyvault" },
+      { url: "/Swagger/Specs/mgmt-plane/containerservice", name: "containerservice" },
+      { url: "/Swagger/Specs/mgmt-plane/storage", name: "storage" },
     ]);
   }),
 
+  // @TODO: check this, do we need to switch? and is the response shape accurate.
   http.get("/Swagger/Specs/mgmt-plane/:param/ResourceProviders/:rp/Resources", ({ params }) => {
     const resourceProvider = params.rp;
 
@@ -299,6 +308,15 @@ export const handlers = [
       clsArgDefineMap: {},
     };
     return HttpResponse.json(response);
+  }),
+
+  http.get("/AAZ/Editor/Workspaces/:workspaceName/SwaggerDefault", ({ params }) => {
+    return HttpResponse.json({
+      modNames: [`${params.workspaceName}`],
+      plane: `data-plane:${params.workspaceName}`,
+      rpName: `${params.workspaceName}`,
+      source: "TypeSpec",
+    });
   }),
 
   http.get("/workspace/:name/Resources/*/V/*/Commands", () => {
