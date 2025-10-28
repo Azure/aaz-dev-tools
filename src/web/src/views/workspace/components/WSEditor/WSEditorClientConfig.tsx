@@ -106,7 +106,6 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
       setPlanes(planesData);
       setUpdating(false);
 
-      // Find the first plane and call the update function with the actual plane object
       if (planesData.length > 0) {
         const firstPlane = planesData[0];
         setSelectedPlane(firstPlane.displayName);
