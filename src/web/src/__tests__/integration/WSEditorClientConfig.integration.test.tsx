@@ -133,7 +133,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
   });
 
   describe("Complete User Workflows", () => {
-    it("should complete template config setup end-to-end", async () => {
+    it("should handle user inputs for relevant fields", async () => {
       const user = userEvent.setup();
       render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 

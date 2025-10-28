@@ -103,14 +103,14 @@ export const handlers = [
   http.get("/AAZ/Specs/Planes", () => {
     return HttpResponse.json([
       {
-        name: "azure-cli",
-        displayName: "Azure CLI",
-        moduleOptions: ["storage", "compute", "network"],
+        client: "MgmtClient",
+        displayName: "Control plane",
+        name: "mgmt-plane",
       },
       {
-        name: "azure-cli-extensions",
-        displayName: "Azure CLI Extensions",
-        moduleOptions: [],
+        client: "DataPlaneClient",
+        displayName: "Data plane",
+        name: "data-plane",
       },
     ]);
   }),
@@ -127,21 +127,20 @@ export const handlers = [
     return HttpResponse.json(resourceProviders);
   }),
 
-  // New endpoints for cascade loading workflow
   http.get("/Swagger/Specs/mgmt-plane", () => {
     return HttpResponse.json([
-      { url: "storage" },
-      { url: "compute" },
-      { url: "network" },
-      { url: "keyvault" },
-      { url: "containerservice" },
+      { url: "/Swagger/Specs/mgmt-plane/addons" },
+      { url: "/Swagger/Specs/mgmt-plane/compute" },
+      { url: "/Swagger/Specs/mgmt-plane/network" },
+      { url: "/Swagger/Specs/mgmt-plane/keyvault" },
+      { url: "/Swagger/Specs/mgmt-plane/containerservice" },
+      { url: "/Swagger/Specs/mgmt-plane/storage" },
     ]);
   }),
 
   http.get("/Swagger/Specs/mgmt-plane/:param/ResourceProviders/:rp/Resources", ({ params }) => {
     const resourceProvider = params.rp;
 
-    // Return different resources based on the resource provider
     switch (resourceProvider) {
       case "Microsoft.Storage":
         return HttpResponse.json([
