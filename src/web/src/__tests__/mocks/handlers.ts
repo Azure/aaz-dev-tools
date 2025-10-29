@@ -94,7 +94,7 @@ export const handlers = [
   http.get("/AAZ/Editor/Workspaces/:name", ({ params }) => {
     return HttpResponse.json({
       name: params.name,
-      plane: `data-plane:${params.name}`,
+      plane: `data-plane${params.name}`,
       folder: `/workspaces/${params.name}`,
       resourceProvider: `${params.name}`,
       commandTree: {
@@ -118,21 +118,8 @@ export const handlers = [
     ]);
   }),
 
-  // @TODO: check response conditional here:
-  http.get("/AAZ/Specs/Planes/:planeName/Modules", ({ params }) => {
-    if (params.planeName === "azure-cli") {
-      return HttpResponse.json(["storage", "compute", "network", "keyvault"]);
-    }
-    return HttpResponse.json(["extensions-module"]);
-  }),
-
-  http.get("/Swagger/Specs/:planeName/:moduleName/ResourceProviders", ({ params }) => {
-    return HttpResponse.json({
-      entryFiles: [`specification/${params.moduleName}/Microsoft.BlobStorage/main.tsp`],
-      name: `${params.moduleName}.Blob`,
-      type: "TypeSpec",
-      url: `/Swagger/Specs/${params.planeName}:${params.moduleName}.blob/${params.moduleName}.blob/ResourceProviders/${params.moduleName}.blob/TypeSpec`,
-    });
+  http.get("/AAZ/Specs/Planes/:planeName/Modules", () => {
+    return HttpResponse.json(["storage", "compute", "network", "keyvault"]);
   }),
 
   http.get("/Swagger/Specs/mgmt-plane", () => {
@@ -146,61 +133,159 @@ export const handlers = [
     ]);
   }),
 
-  // @TODO: check this, do we need to switch? and is the response shape accurate.
-  http.get("/Swagger/Specs/mgmt-plane/:param/ResourceProviders/:rp/Resources", ({ params }) => {
-    const resourceProvider = params.rp;
+  // Resources
+  http.get("/Swagger/Specs/mgmt-plane/:moduleName/ResourceProviders/:rp/Resources", ({ params }) => {
+    let rpName = params.rp + "";
+    switch (rpName?.toLowerCase()) {
+      case "storage":
+        rpName = "Microsoft.Storage";
+        break;
+      case "compute":
+        rpName = "Microsoft.Compute";
+        break;
+      case "network":
+        rpName = "Microsoft.Network";
+        break;
+      case "keyvault":
+        rpName = "Microsoft.KeyVault";
+        break;
+      case "addons":
+        rpName = "Microsoft.Addons";
+        break;
+    }
 
-    switch (resourceProvider) {
+    switch (rpName) {
       case "Microsoft.Storage":
         return HttpResponse.json([
           {
             id: "storageAccounts",
-            apiVersions: ["2021-09-01", "2022-09-01", "2023-01-01"],
-            operations: ["read", "write", "delete", "listKeys"],
+            versions: [
+              { version: "2021-04-01", operations: { read: "GET", write: "PUT", delete: "DELETE", listKeys: "GET" } },
+              { version: "2021-09-01", operations: { read: "GET", write: "PUT", delete: "DELETE", listKeys: "GET" } },
+              { version: "2022-09-01", operations: { read: "GET", write: "PUT", delete: "DELETE", listKeys: "GET" } },
+              { version: "2023-01-01", operations: { read: "GET", write: "PUT", delete: "DELETE", listKeys: "GET" } },
+            ],
           },
           {
             id: "storageAccounts/blobServices",
-            apiVersions: ["2021-09-01", "2022-09-01"],
-            operations: ["read", "write"],
+            versions: [
+              { version: "2021-04-01", operations: { read: "GET", write: "PUT" } },
+              { version: "2021-09-01", operations: { read: "GET", write: "PUT" } },
+              { version: "2022-09-01", operations: { read: "GET", write: "PUT" } },
+            ],
           },
         ]);
+
       case "Microsoft.Compute":
         return HttpResponse.json([
           {
             id: "virtualMachines",
-            apiVersions: ["2021-03-01", "2022-03-01", "2023-03-01"],
-            operations: ["read", "write", "delete", "start", "stop"],
+            versions: [
+              {
+                version: "2021-03-01",
+                operations: { read: "GET", write: "PUT", delete: "DELETE", start: "POST", stop: "POST" },
+              },
+              {
+                version: "2022-03-01",
+                operations: { read: "GET", write: "PUT", delete: "DELETE", start: "POST", stop: "POST" },
+              },
+              {
+                version: "2023-03-01",
+                operations: { read: "GET", write: "PUT", delete: "DELETE", start: "POST", stop: "POST" },
+              },
+            ],
           },
           {
             id: "disks",
-            apiVersions: ["2021-04-01", "2022-03-02"],
-            operations: ["read", "write", "delete"],
+            versions: [
+              { version: "2021-04-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+              { version: "2022-03-02", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+            ],
           },
         ]);
+
       case "Microsoft.Network":
         return HttpResponse.json([
           {
             id: "virtualNetworks",
-            apiVersions: ["2021-02-01", "2022-01-01", "2023-02-01"],
-            operations: ["read", "write", "delete"],
+            versions: [
+              { version: "2021-02-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+              { version: "2022-01-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+              { version: "2023-02-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+            ],
           },
           {
             id: "loadBalancers",
-            apiVersions: ["2021-02-01", "2022-01-01"],
-            operations: ["read", "write", "delete"],
+            versions: [
+              { version: "2021-02-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+              { version: "2022-01-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+            ],
           },
         ]);
+
       case "Microsoft.KeyVault":
         return HttpResponse.json([
           {
             id: "vaults",
-            apiVersions: ["2021-10-01", "2022-07-01", "2023-02-01"],
-            operations: ["read", "write", "delete"],
+            versions: [
+              { version: "2021-10-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+              { version: "2022-07-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+              { version: "2023-02-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+            ],
           },
         ]);
+
+      case "Microsoft.Addons":
+        return HttpResponse.json([
+          {
+            id: "/subscriptions/{}/providers/microsoft.addons/supportproviders/{}/supportplantypes/{}",
+            opGroup: "SupportPlanType",
+            versions: [
+              {
+                version: "2017-05-15",
+                operations: {
+                  SupportPlanTypes_CreateOrUpdate: "PUT",
+                  SupportPlanTypes_Delete: "DELETE",
+                  SupportPlanTypes_Get: "GET",
+                },
+              },
+              {
+                version: "2018-03-01",
+                operations: {
+                  SupportPlanTypes_CreateOrUpdate: "PUT",
+                  SupportPlanTypes_Delete: "DELETE",
+                  SupportPlanTypes_Get: "GET",
+                },
+              },
+            ],
+          },
+          {
+            id: "/subscriptions/{}/providers/microsoft.addons/supportproviders/{}/supportplantypes",
+            opGroup: "CanonicalSupportPlanType",
+            versions: [
+              {
+                version: "2017-05-15",
+                operations: { CanonicalSupportPlanTypes_Get: "GET" },
+              },
+            ],
+          },
+        ]);
+
       default:
         return HttpResponse.json([]);
     }
+  }),
+
+  // Resource providers:
+  http.get("/Swagger/Specs/:planeName/:moduleName/ResourceProviders", ({ params }) => {
+    return HttpResponse.json([
+      {
+        entryFiles: [`specification/${params.moduleName}/Microsoft.BlobStorage/main.tsp`],
+        name: `Microsoft.${params.moduleName}`,
+        type: "TypeSpec",
+        url: `/Swagger/Specs/${params.planeName}/${params.moduleName}/ResourceProviders/${params.moduleName}`,
+      },
+    ]);
   }),
 
   http.get("/CLI/Az/Modules", () => {

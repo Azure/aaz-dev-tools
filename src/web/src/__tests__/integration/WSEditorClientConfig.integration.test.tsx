@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import { render } from "../test-utils";
+import axios from "axios";
 import WSEditorClientConfigDialog from "../../views/workspace/components/WSEditor/WSEditorClientConfig";
 
 const mockConsoleError = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -183,6 +184,18 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       // &&&
     });
 
+    // @TODO: remove:
+    // Log requests globally
+    axios.interceptors.request.use((req) => {
+      console.log("➡️ Request:", req.method, req.url, req.data, req.headers);
+      return req;
+    });
+
+    axios.interceptors.response.use((res) => {
+      console.log("⬅️ Response:", res.status, res.data);
+      return res;
+    });
+
     it("should complete resource property config setup end-to-end", async () => {
       const user = userEvent.setup();
       render(
@@ -193,67 +206,55 @@ describe("WSEditorClientConfigDialog - Integration", () => {
         />,
       );
 
-      await waitFor(() => {
-        expect(screen.getByText("By resource property")).toBeInTheDocument();
-      });
-
-      const resourceTab = screen.getByText("By resource property");
+      // Wait for "By resource property" tab and click it
+      const resourceTab = await screen.findByText("By resource property");
       await user.click(resourceTab);
 
-      await waitFor(() => {
-        expect(screen.getByRole("combobox", { name: /module/i })).toBeInTheDocument();
-      });
-
-      const moduleInput = screen.getByRole("combobox", { name: /module/i });
+      // -------- Module Autocomplete --------
+      const moduleInput = await screen.findByRole("combobox", { name: /module/i });
       await user.click(moduleInput);
-      await waitFor(() => {
-        expect(screen.getByText("storage")).toBeInTheDocument();
-      });
-      await user.click(screen.getByText("storage"));
+      const storageOption = await screen.findByText("storage");
+      await user.click(storageOption);
+      expect(moduleInput).toHaveValue("storage");
 
-      await waitFor(() => {
-        const rpInput = screen.getByLabelText("Resource Provider");
-        expect(rpInput).toBeInTheDocument();
-      });
-      const rpInput = screen.getByLabelText("Resource Provider");
+      // -------- Resource Provider Autocomplete --------
+      const rpInput = await screen.findByRole("combobox", { name: /Resource Provider/i });
       await user.click(rpInput);
-      await waitFor(() => {
-        expect(screen.getByText("Microsoft.Storage")).toBeInTheDocument();
+      const rpOption = await screen.findByText((content, node) => {
+        return node?.textContent === "Microsoft.storage";
       });
-      await user.click(screen.getByText("Microsoft.Storage"));
+      await user.click(rpOption);
+      expect(rpInput).toHaveValue("Microsoft.storage");
 
-      await waitFor(() => {
-        const versionInput = screen.getByLabelText("API Version");
-        expect(versionInput).toBeInTheDocument();
-      });
-      const versionInput = screen.getByLabelText("API Version");
+      // -------- API Version Autocomplete --------
+      const versionInput = await screen.findByLabelText("API Version");
       await user.click(versionInput);
-      await waitFor(() => {
-        expect(screen.getByText("2021-04-01")).toBeInTheDocument();
-      });
-      await user.click(screen.getByText("2021-04-01"));
+      const versionOption = await screen.findByText("2021-04-01");
+      await user.click(versionOption);
+      expect(versionInput).toHaveValue("2021-04-01");
 
-      await waitFor(() => {
-        const resourceIdInput = screen.getByLabelText("Resource ID");
-        expect(resourceIdInput).toBeInTheDocument();
-      });
-      const resourceIdInput = screen.getByLabelText("Resource ID");
+      // -------- Resource ID Autocomplete --------
+      const resourceIdInput = await screen.findByLabelText("Resource ID");
       await user.click(resourceIdInput);
-      await waitFor(() => {
-        expect(screen.getByText("storageAccounts")).toBeInTheDocument();
-      });
-      await user.click(screen.getByText("storageAccounts"));
+      const resourceIdOption = await screen.findByText("storageAccounts");
+      await user.click(resourceIdOption);
+      expect(resourceIdInput).toHaveValue("storageAccounts");
 
-      const subresourceInput = screen.getByLabelText("Endpoint Property Index");
-      await user.type(subresourceInput, "properties.primaryEndpoints.blob");
+      // -------- Endpoint Property Index --------
+      const endpointPropertyIdx = screen.getByLabelText("Endpoint Property Index");
+      await user.clear(endpointPropertyIdx);
+      await user.type(endpointPropertyIdx, "properties.primaryEndpoints.blob");
 
+      // -------- AAD Scope Input --------
       const aadScopeInput = screen.getByPlaceholderText(/Input Microsoft Entra\(AAD\) auth Scope/);
       await user.clear(aadScopeInput);
       await user.type(aadScopeInput, "https://storage.azure.com/.default");
 
+      // -------- Update Button --------
       const updateButton = screen.getByText("Update");
       await user.click(updateButton);
 
+      // Confirm dialog closes with success
       await waitFor(() => {
         expect(mockOnClose).toHaveBeenCalledWith(true);
       });

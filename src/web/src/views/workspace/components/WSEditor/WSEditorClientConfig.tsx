@@ -287,7 +287,7 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
       let selectedResourceIdVal: string | null = null;
       let subresourceVal: string = "";
 
-      if (clientConfigData.endpoints.type === "template") {
+      if (clientConfigData.endpoints?.type === "template") {
         clientConfig.endpointTemplates = {};
         clientConfigData.endpoints.templates.forEach((value: any) => {
           clientConfig.endpointTemplates![value.cloud] = value.template;
@@ -301,7 +301,7 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
         templateAzureGermanCloudVal = clientConfig.endpointTemplates!["AzureGermanCloud"] ?? "";
         cloudMetadataSelectorIndexVal = clientConfig.endpointCloudMetadata?.selectorIndex ?? "";
         cloudMetadataPrefixTemplateVal = clientConfig.endpointCloudMetadata?.prefixTemplate ?? "";
-      } else if (clientConfigData.endpoints.type === "http-operation") {
+      } else if (clientConfigData.endpoints?.type === "http-operation") {
         clientConfig.endpointResource = clientConfigData.endpoints.resource;
         const rpUrl: string = clientConfig.endpointResource!.swagger.split("/Paths/")[0];
         const moduleUrl: string = rpUrl.split("/ResourceProviders/")[0];
