@@ -70,44 +70,6 @@ describe("WSEditorClientConfigDialog - Integration", () => {
       expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
     });
 
-    it.skip("should cascade load planes → modules → providers → versions", async () => {
-      // @NOTE: skipping this workflow for now, there is servere delay in loading, will revisit once loading states are improved.
-      render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
-
-      // Switch to the resource property tab
-      const resourcePropertyTab = screen.getByRole("tab", { name: /By resource property/i });
-      await userEvent.click(resourcePropertyTab);
-
-      // --- MODULES ---
-      const moduleInput = screen.getByRole("combobox", { name: /Module/i });
-      await userEvent.click(moduleInput);
-
-      // Wait for the popper to render an option (it will display "storage", not "Microsoft.Storage")
-      const storageOption = await screen.findByRole("option", { name: /storage/i });
-      await userEvent.click(storageOption);
-
-      // --- PROVIDERS ---
-      const providerInput = screen.getByRole("combobox", { name: /Resource Provider/i });
-      await userEvent.click(providerInput);
-
-      // Providers are stripped of common prefix, so if API returned ["Microsoft.Storage"],
-      // and `commonPrefix = "Microsoft."`, you’ll actually see "Storage" in the DOM
-      const rpOption = await screen.findByRole("option", { name: /Storage/i });
-      await userEvent.click(rpOption);
-
-      // --- VERSIONS ---
-      const versionInput = screen.getByRole("combobox", { name: /API Version/i });
-      await userEvent.click(versionInput);
-
-      const versionOption = await screen.findByRole("option", { name: /2021-04-01/i });
-      await userEvent.click(versionOption);
-
-      // Final assertions (all cascades complete)
-      expect(moduleInput).toHaveValue("storage");
-      expect(providerInput).toHaveValue("Storage");
-      expect(versionInput).toHaveValue("2021-04-01");
-    });
-
     it("should handle API errors gracefully during cascade loading", async () => {
       const user = userEvent.setup();
       render(
