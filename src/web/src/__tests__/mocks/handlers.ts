@@ -2,7 +2,6 @@ import { http, HttpResponse } from "msw";
 
 export const handlers = [
   http.get("/AAZ/Editor/Workspaces", () => {
-    console.log("🟢 [MSW] hit /AAZ/Editor/Workspaces");
     return HttpResponse.json([
       {
         name: "test-workspace-1",
@@ -22,7 +21,6 @@ export const handlers = [
   }),
 
   http.post("/AAZ/Editor/Workspaces", async ({ request }) => {
-    console.log("🟢 [MSW] hit /AAZ/Editor/Workspaces");
     const body = (await request.json()) as any;
     return HttpResponse.json(
       {
@@ -39,14 +37,12 @@ export const handlers = [
   }),
 
   http.delete("/AAZ/Editor/Workspaces/:name", ({ params }) => {
-    console.log("🟢 [MSW] hit /AAZ/Editor/Workspaces?:name");
     return HttpResponse.json({
       message: `Workspace ${params.name} deleted successfully`,
     });
   }),
 
   http.post("/AAZ/Editor/Workspaces/:name/Rename", async ({ request }) => {
-    console.log("🟢 [MSW] hit /AAZ/Editor/Workspaces/:name/Rename");
     const body = (await request.json()) as any;
     return HttpResponse.json({
       name: body.name,
@@ -54,7 +50,6 @@ export const handlers = [
   }),
 
   http.get("/AAZ/Editor/Workspaces/:name/ClientConfig", ({ request, params }) => {
-    console.log("🟢 [MSW] hit /AAZ/Editor/Workspaces/:name/ClientConfig");
     const url = new URL(request.url);
     if (url.searchParams.get("simulate404") === "true" || params.name === "nonexistent") {
       return HttpResponse.json({ message: "Client config not found" }, { status: 404 });
