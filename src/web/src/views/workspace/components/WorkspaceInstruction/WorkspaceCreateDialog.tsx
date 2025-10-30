@@ -259,11 +259,8 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
           </Alert>
         )}
         {/* @TODO: revisit msg and component */}
-        {/* {modulesLoader.loading && (
-          <Alert variant="outlined" severity="info">
-            {modulesLoader.loadingMessage}
-          </Alert>
-        )} */}
+        {/* @TODO:  export to reusable component in /src/components */}
+        {/* @TODO: convert to styled component as used elsewhere */}
         {modulesLoader.loading && (
           <Box
             sx={{
