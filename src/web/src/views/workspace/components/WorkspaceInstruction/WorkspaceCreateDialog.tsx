@@ -8,6 +8,8 @@ import {
   Button,
   InputLabel,
   Alert,
+  Typography,
+  CircularProgress,
 } from "@mui/material";
 import React, { useState, useEffect, useCallback } from "react";
 import SwaggerItemSelector from "../../common/SwaggerItemSelector";
@@ -257,10 +259,27 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
           </Alert>
         )}
         {/* @TODO: revisit msg and component */}
-        {modulesLoader.loading && (
+        {/* {modulesLoader.loading && (
           <Alert variant="outlined" severity="info">
             {modulesLoader.loadingMessage}
           </Alert>
+        )} */}
+        {modulesLoader.loading && (
+          <Box
+            sx={{
+              p: 1.5,
+              mb: 2,
+              backgroundColor: "lightblue",
+              color: "text.primary",
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+            }}
+          >
+            <CircularProgress size={20} color="primary" />
+            <Typography variant="body2">{modulesLoader.loadingMessage}</Typography>
+          </Box>
         )}
         <InputLabel shrink> API Specs</InputLabel>
         <Box
