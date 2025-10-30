@@ -54,6 +54,7 @@ describe("WSEditorClientConfigDialog", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (specsApi.getPlanes as any).mockResolvedValue(mockPlanes);
+    (specsApi.getSwaggerModules as any).mockResolvedValue(["storage", "compute"]);
     (specsApi.getResourceProviders as any).mockResolvedValue(mockResourceProviders);
     (specsApi.getProviderResources as any).mockResolvedValue(mockProviderResources);
     (errorHandlerApi.getErrorMessage as any).mockReturnValue("Mock error message");
@@ -255,7 +256,7 @@ describe("WSEditorClientConfigDialog", () => {
       await user.click(updateButton);
 
       await waitFor(() => {
-        expect(screen.getByText("Plane is required.")).toBeInTheDocument();
+        expect(screen.getByText("Module is required.")).toBeInTheDocument();
       });
     });
   });

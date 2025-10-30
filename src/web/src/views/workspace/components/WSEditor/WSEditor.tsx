@@ -7,7 +7,7 @@ import WSEditorToolBar from "./WSEditorToolBar";
 import WSEditorCommandTree from "./WSEditorCommandTree";
 import WSEditorCommandGroupContent from "../WSEditorCommandGroupContent";
 import WSEditorCommandContent from "../WSEditorCommandContent";
-import WSEditorClientConfigDialog from "./WSEditorClientConfig";
+import WSEditorClientConfig from "./WSEditorClientConfig";
 import type { CommandGroup, Command } from "../../interfaces";
 import WSEditorExportDialog from "./WSEditorExportDialog";
 import WSEditorDeleteDialog from "./WSEditorDeleteDialog";
@@ -293,7 +293,7 @@ const WSEditor = ({ params }: WSEditorProps) => {
         />
       )}
       {dialogManager.showClientConfigDialog && (
-        <WSEditorClientConfigDialog
+        <WSEditorClientConfig
           workspaceUrl={workspace.workspaceUrl}
           open={dialogManager.showClientConfigDialog}
           onClose={handleClientConfigDialogClose}
