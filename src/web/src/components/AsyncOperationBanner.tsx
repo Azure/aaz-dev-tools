@@ -42,7 +42,7 @@ const LoadingBanner = styled(Box)<{ backgroundColor?: string; textColor?: string
 export const AsyncOperationBanner: React.FC<AsyncOperationBannerProps> = ({
   operation,
   backgroundColor = "grey.200",
-  textColor = "text.primary",
+  textColor,
   spinnerColor = "primary",
   spinnerSize = 20,
 }) => {
