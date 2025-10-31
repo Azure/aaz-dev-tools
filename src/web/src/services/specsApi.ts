@@ -28,7 +28,7 @@ export const specsApi = {
 
   getModulesForPlane: {
     // @TODO: revisit msg:
-    loadingMessage: "Loading modules for plane... (this may take up to 40+ seconds)",
+    loadingMessage: "Loading modules for plane...",
     fn: async (planeName: string): Promise<string[]> => {
       const res = await axios.get(`/Swagger/Specs/${planeName}`);
       return res.data.map((v: any) => v.url);

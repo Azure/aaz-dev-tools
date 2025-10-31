@@ -8,14 +8,13 @@ import {
   Button,
   InputLabel,
   Alert,
-  Typography,
-  CircularProgress,
 } from "@mui/material";
 import React, { useState, useEffect, useCallback } from "react";
 import SwaggerItemSelector from "../../common/SwaggerItemSelector";
 import styled from "@emotion/styled";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../../../services";
 import { useAsyncOperation } from "../../../../services/hooks";
+import AsyncOperationBanner from "../../../../components/AsyncOperationBanner";
 import type { Plane } from "../../interfaces";
 
 interface WorkspaceCreateDialogProps {
@@ -258,26 +257,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
             {invalidText}{" "}
           </Alert>
         )}
-        {/* @TODO: revisit msg and component */}
-        {/* @TODO:  export to reusable component in /src/components */}
-        {/* @TODO: convert to styled component as used elsewhere */}
-        {modulesLoader.loading && (
-          <Box
-            sx={{
-              p: 1.5,
-              mb: 2,
-              backgroundColor: "lightblue",
-              color: "text.primary",
-              borderRadius: 2,
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            <CircularProgress size={20} color="primary" />
-            <Typography variant="body2">{modulesLoader.loadingMessage}</Typography>
-          </Box>
-        )}
+        <AsyncOperationBanner operation={modulesLoader} />
         <InputLabel shrink> API Specs</InputLabel>
         <Box
           sx={{
