@@ -129,7 +129,6 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
         await onModuleSelectionUpdate(null);
       } else {
         try {
-          // Load modules using the new async operation pattern
           const options = await modulesLoader.execute(plane!.name);
           setModuleOptions(options || []);
           setModuleOptionsCommonPrefix(`/Swagger/Specs/${plane!.name}/`);
