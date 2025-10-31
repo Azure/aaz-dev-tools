@@ -27,7 +27,6 @@ export const specsApi = {
   },
 
   getModulesForPlane: {
-    // @TODO: revisit msg:
     loadingMessage: "Loading modules for plane...",
     fn: async (planeName: string): Promise<string[]> => {
       const res = await axios.get(`/Swagger/Specs/${planeName}`);
@@ -43,11 +42,6 @@ export const specsApi = {
   getResources: async (resourceProviderUrl: string): Promise<Resource[]> => {
     const res = await axios.get(`${resourceProviderUrl}/Resources`);
     return res.data;
-  },
-
-  getSwaggerModules: async (plane: string): Promise<string[]> => {
-    const res = await axios.get(`/Swagger/Specs/${plane}`);
-    return res.data.map((v: any) => v.url);
   },
 
   getResourceProvidersWithType: async (moduleUrl: string, type?: string): Promise<string[]> => {

@@ -21,6 +21,8 @@ import {
   Tab,
 } from "@mui/material";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import AsyncOperationBanner from "../../../../components/AsyncOperationBanner";
 import DoDisturbOnRoundedIcon from "@mui/icons-material/DoDisturbOnRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import SwaggerItemSelector from "../../common/SwaggerItemSelector";
@@ -67,6 +69,9 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
   const [updating, setUpdating] = useState(false);
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [isAdd, setIsAdd] = useState(true);
+
+  // Async operation hooks
+  const modulesLoader = useAsyncOperation(specsApi.getModulesForPlane);
 
   const [endpointType, setEndpointType] = useState<"template" | "http-operation">("template");
 
@@ -125,16 +130,14 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
         await onModuleSelectionUpdate(null);
       } else {
         try {
-          setUpdating(true);
-          const options = await specsApi.getSwaggerModules(plane!.name);
-          setUpdating(false);
-          setModuleOptions(options);
+          // Load modules using the new async operation pattern
+          const options = await modulesLoader.execute(plane!.name);
+          setModuleOptions(options || []);
           setModuleOptionsCommonPrefix(`/Swagger/Specs/${plane!.name}/`);
           await onModuleSelectionUpdate(null);
         } catch (err: any) {
           console.error(err);
           const message = errorHandlerApi.getErrorMessage(err);
-          setUpdating(false);
           setInvalidText(`ResponseError: ${message}`);
         }
       }
@@ -728,6 +731,7 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
                 pb: 2,
               }}
             >
+              <AsyncOperationBanner operation={modulesLoader} />
               <SwaggerItemSelector
                 name="Module"
                 commonPrefix={moduleOptionsCommonPrefix}

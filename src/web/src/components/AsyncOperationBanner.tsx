@@ -26,7 +26,9 @@ const LoadingBanner = styled(Box)<{ backgroundColor?: string; textColor?: string
 
 /**
  * A reusable banner component that displays loading state for async operations.
- * Shows a rectangular banner of the specified colour with spinner and loading message when operation is loading.
+ * Designed to be used with the UseAsyncOperationResult interface.
+ *
+ * Returns null if !loading
  *
  * @example
  * ```tsx
