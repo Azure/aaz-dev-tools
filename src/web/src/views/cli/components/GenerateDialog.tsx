@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress } from "@mui/material";
 import { cliApi, errorHandlerApi } from "../../../services";
+import { useAsyncOperation } from "../../../services/hooks";
 import { exportModViewProfile, type ProfileCommandTree } from "../utils/commandTreeInitialization";
 import { type CLIModViewProfiles } from "../interfaces";
 
@@ -17,8 +17,8 @@ interface GenerateDialogProps {
 }
 
 const GenerateDialog = (props: GenerateDialogProps) => {
-  const [updating, setUpdating] = useState<boolean>(false);
-  const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
+  const updateAllOperation = useAsyncOperation(cliApi.updateCliModule);
+  const updateModifiedOperation = useAsyncOperation(cliApi.patchCliModule);
 
   const handleClose = () => {
     props.onClose(false);
@@ -34,15 +34,11 @@ const GenerateDialog = (props: GenerateDialogProps) => {
       profiles: profiles,
     };
 
-    setUpdating(true);
     try {
-      await cliApi.updateCliModule(props.repoName, props.moduleName, data);
-      setUpdating(false);
+      await updateAllOperation.execute(props.repoName, props.moduleName, data);
       props.onClose(true);
-    } catch (err: any) {
-      console.error(err);
-      setInvalidText(errorHandlerApi.getErrorMessage(err));
-      setUpdating(false);
+    } catch (error) {
+      console.error("Generate all failed:", error);
     }
   };
 
@@ -56,36 +52,35 @@ const GenerateDialog = (props: GenerateDialogProps) => {
       profiles: profiles,
     };
 
-    setUpdating(true);
     try {
-      await cliApi.patchCliModule(props.repoName, props.moduleName, data);
-      setUpdating(false);
+      await updateModifiedOperation.execute(props.repoName, props.moduleName, data);
       props.onClose(true);
-    } catch (err: any) {
-      console.error(err);
-      setInvalidText(errorHandlerApi.getErrorMessage(err));
-      setUpdating(false);
+    } catch (error) {
+      console.error("Generate modified failed:", error);
     }
   };
+
+  const isLoading = updateAllOperation.loading || updateModifiedOperation.loading;
+  const error = updateAllOperation.error || updateModifiedOperation.error;
 
   return (
     <Dialog disableEscapeKeyDown open={props.open}>
       <DialogTitle>Generate CLI commands to {props.moduleName}</DialogTitle>
       <DialogContent>
-        {invalidText && (
+        {error && (
           <Alert variant="filled" severity="error">
             {" "}
-            {invalidText}{" "}
+            {errorHandlerApi.getErrorMessage(error)}{" "}
           </Alert>
         )}
       </DialogContent>
       <DialogActions>
-        {updating && (
+        {isLoading && (
           <Box sx={{ width: "100%" }}>
             <LinearProgress color="secondary" />
           </Box>
         )}
-        {!updating && (
+        {!isLoading && (
           <>
             <Button onClick={handleClose}>Cancel</Button>
             <Button onClick={handleGenerateAll}>Generate All</Button>
