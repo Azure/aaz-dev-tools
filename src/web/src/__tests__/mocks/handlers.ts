@@ -89,37 +89,198 @@ export const handlers = [
   http.get("/AAZ/Editor/Workspaces/:name", ({ params }) => {
     return HttpResponse.json({
       name: params.name,
-      plane: "azure-cli",
+      plane: `data-plane${params.name}`,
       folder: `/workspaces/${params.name}`,
-      commandTree: {},
+      resourceProvider: `${params.name}`,
+      commandTree: {
+        names: ["aaz"],
+      },
     });
   }),
 
   http.get("/AAZ/Specs/Planes", () => {
     return HttpResponse.json([
       {
-        name: "azure-cli",
-        displayName: "Azure CLI",
-        moduleOptions: ["storage", "compute", "network"],
+        client: "MgmtClient",
+        displayName: "Control plane",
+        name: "mgmt-plane",
       },
       {
-        name: "azure-cli-extensions",
-        displayName: "Azure CLI Extensions",
-        moduleOptions: [],
+        client: "DataPlaneClient",
+        displayName: "Data plane",
+        name: "data-plane",
       },
     ]);
   }),
 
-  http.get("/AAZ/Specs/Planes/:planeName/Modules", ({ params }) => {
-    if (params.planeName === "azure-cli") {
-      return HttpResponse.json(["storage", "compute", "network", "keyvault"]);
-    }
-    return HttpResponse.json(["extensions-module"]);
+  http.get("/AAZ/Specs/Planes/:planeName/Modules", () => {
+    return HttpResponse.json(["storage", "compute", "network", "keyvault"]);
   }),
 
-  http.get("/Swagger/Specs/:planeName/:moduleName/ResourceProviders", () => {
-    const resourceProviders = ["Microsoft.Storage", "Microsoft.Compute", "Microsoft.Network", "Microsoft.KeyVault"];
-    return HttpResponse.json(resourceProviders);
+  http.get("/Swagger/Specs/mgmt-plane", () => {
+    return HttpResponse.json([
+      { url: "/Swagger/Specs/mgmt-plane/addons", name: "addons" },
+      { url: "/Swagger/Specs/mgmt-plane/compute", name: "compute" },
+      { url: "/Swagger/Specs/mgmt-plane/network", name: "network" },
+      { url: "/Swagger/Specs/mgmt-plane/keyvault", name: "keyvault" },
+      { url: "/Swagger/Specs/mgmt-plane/containerservice", name: "containerservice" },
+      { url: "/Swagger/Specs/mgmt-plane/storage", name: "storage" },
+    ]);
+  }),
+
+  // Resources
+  http.get("/Swagger/Specs/mgmt-plane/:moduleName/ResourceProviders/:rp/Resources", ({ params }) => {
+    let rpName = params.rp + "";
+    switch (rpName?.toLowerCase()) {
+      case "storage":
+        rpName = "Microsoft.Storage";
+        break;
+      case "compute":
+        rpName = "Microsoft.Compute";
+        break;
+      case "network":
+        rpName = "Microsoft.Network";
+        break;
+      case "keyvault":
+        rpName = "Microsoft.KeyVault";
+        break;
+      case "addons":
+        rpName = "Microsoft.Addons";
+        break;
+    }
+
+    switch (rpName) {
+      case "Microsoft.Storage":
+        return HttpResponse.json([
+          {
+            id: "storageAccounts",
+            versions: [
+              { version: "2021-04-01", operations: { read: "GET", write: "PUT", delete: "DELETE", listKeys: "GET" } },
+              { version: "2021-09-01", operations: { read: "GET", write: "PUT", delete: "DELETE", listKeys: "GET" } },
+              { version: "2022-09-01", operations: { read: "GET", write: "PUT", delete: "DELETE", listKeys: "GET" } },
+              { version: "2023-01-01", operations: { read: "GET", write: "PUT", delete: "DELETE", listKeys: "GET" } },
+            ],
+          },
+          {
+            id: "storageAccounts/blobServices",
+            versions: [
+              { version: "2021-04-01", operations: { read: "GET", write: "PUT" } },
+              { version: "2021-09-01", operations: { read: "GET", write: "PUT" } },
+              { version: "2022-09-01", operations: { read: "GET", write: "PUT" } },
+            ],
+          },
+        ]);
+
+      case "Microsoft.Compute":
+        return HttpResponse.json([
+          {
+            id: "virtualMachines",
+            versions: [
+              {
+                version: "2021-03-01",
+                operations: { read: "GET", write: "PUT", delete: "DELETE", start: "POST", stop: "POST" },
+              },
+              {
+                version: "2022-03-01",
+                operations: { read: "GET", write: "PUT", delete: "DELETE", start: "POST", stop: "POST" },
+              },
+              {
+                version: "2023-03-01",
+                operations: { read: "GET", write: "PUT", delete: "DELETE", start: "POST", stop: "POST" },
+              },
+            ],
+          },
+          {
+            id: "disks",
+            versions: [
+              { version: "2021-04-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+              { version: "2022-03-02", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+            ],
+          },
+        ]);
+
+      case "Microsoft.Network":
+        return HttpResponse.json([
+          {
+            id: "virtualNetworks",
+            versions: [
+              { version: "2021-02-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+              { version: "2022-01-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+              { version: "2023-02-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+            ],
+          },
+          {
+            id: "loadBalancers",
+            versions: [
+              { version: "2021-02-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+              { version: "2022-01-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+            ],
+          },
+        ]);
+
+      case "Microsoft.KeyVault":
+        return HttpResponse.json([
+          {
+            id: "vaults",
+            versions: [
+              { version: "2021-10-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+              { version: "2022-07-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+              { version: "2023-02-01", operations: { read: "GET", write: "PUT", delete: "DELETE" } },
+            ],
+          },
+        ]);
+
+      case "Microsoft.Addons":
+        return HttpResponse.json([
+          {
+            id: "/subscriptions/{}/providers/microsoft.addons/supportproviders/{}/supportplantypes/{}",
+            opGroup: "SupportPlanType",
+            versions: [
+              {
+                version: "2017-05-15",
+                operations: {
+                  SupportPlanTypes_CreateOrUpdate: "PUT",
+                  SupportPlanTypes_Delete: "DELETE",
+                  SupportPlanTypes_Get: "GET",
+                },
+              },
+              {
+                version: "2018-03-01",
+                operations: {
+                  SupportPlanTypes_CreateOrUpdate: "PUT",
+                  SupportPlanTypes_Delete: "DELETE",
+                  SupportPlanTypes_Get: "GET",
+                },
+              },
+            ],
+          },
+          {
+            id: "/subscriptions/{}/providers/microsoft.addons/supportproviders/{}/supportplantypes",
+            opGroup: "CanonicalSupportPlanType",
+            versions: [
+              {
+                version: "2017-05-15",
+                operations: { CanonicalSupportPlanTypes_Get: "GET" },
+              },
+            ],
+          },
+        ]);
+
+      default:
+        return HttpResponse.json([]);
+    }
+  }),
+
+  // Resource providers:
+  http.get("/Swagger/Specs/:planeName/:moduleName/ResourceProviders", ({ params }) => {
+    return HttpResponse.json([
+      {
+        entryFiles: [`specification/${params.moduleName}/Microsoft.BlobStorage/main.tsp`],
+        name: `Microsoft.${params.moduleName}`,
+        type: "TypeSpec",
+        url: `/Swagger/Specs/${params.planeName}/${params.moduleName}/ResourceProviders/${params.moduleName}`,
+      },
+    ]);
   }),
 
   http.get("/CLI/Az/Modules", () => {
@@ -227,6 +388,15 @@ export const handlers = [
       clsArgDefineMap: {},
     };
     return HttpResponse.json(response);
+  }),
+
+  http.get("/AAZ/Editor/Workspaces/:workspaceName/SwaggerDefault", ({ params }) => {
+    return HttpResponse.json({
+      modNames: [`${params.workspaceName}`],
+      plane: `data-plane:${params.workspaceName}`,
+      rpName: `${params.workspaceName}`,
+      source: "TypeSpec",
+    });
   }),
 
   http.get("/workspace/:name/Resources/*/V/*/Commands", () => {

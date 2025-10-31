@@ -97,9 +97,12 @@ describe("Workspace API", () => {
 
       expect(result).toEqual({
         name: "test-workspace-1",
-        plane: "azure-cli",
+        plane: "data-planetest-workspace-1",
+        resourceProvider: "test-workspace-1",
         folder: "/workspaces/test-workspace-1",
-        commandTree: {},
+        commandTree: {
+          names: ["aaz"],
+        },
       });
     });
   });
