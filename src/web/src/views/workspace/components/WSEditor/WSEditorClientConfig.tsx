@@ -70,7 +70,6 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [isAdd, setIsAdd] = useState(true);
 
-  // Async operation hooks
   const modulesLoader = useAsyncOperation(specsApi.getModulesForPlane);
 
   const [endpointType, setEndpointType] = useState<"template" | "http-operation">("template");

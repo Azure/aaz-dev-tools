@@ -306,7 +306,6 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
     [plane, existingResources],
   );
 
-  // Effect to load resources when selectedResourceProvider changes
   useEffect(() => {
     if (selectedResourceProvider) {
       loadResources(selectedResourceProvider);
