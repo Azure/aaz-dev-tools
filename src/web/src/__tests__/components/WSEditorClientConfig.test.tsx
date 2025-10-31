@@ -12,7 +12,10 @@ vi.mock("../../services", () => ({
   },
   specsApi: {
     getPlanes: vi.fn(),
-    getSwaggerModules: vi.fn(),
+    getModulesForPlane: {
+      loadingMessage: "Loading modules for plane...",
+      fn: vi.fn(),
+    },
     getResourceProviders: vi.fn(),
     getProviderResources: vi.fn(),
   },
@@ -54,7 +57,7 @@ describe("WSEditorClientConfigDialog", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (specsApi.getPlanes as any).mockResolvedValue(mockPlanes);
-    (specsApi.getSwaggerModules as any).mockResolvedValue(["storage", "compute"]);
+    (specsApi.getModulesForPlane.fn as any).mockResolvedValue(["storage", "compute"]);
     (specsApi.getResourceProviders as any).mockResolvedValue(mockResourceProviders);
     (specsApi.getProviderResources as any).mockResolvedValue(mockProviderResources);
     (errorHandlerApi.getErrorMessage as any).mockReturnValue("Mock error message");
