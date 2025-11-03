@@ -28,7 +28,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [workspaceName, setWorkspaceName] = useState<string>(name);
 
-  const modulesLoader = useAsyncOperation(specsApi.getModulesForPlane);
+  const resourcesLoader = useAsyncOperation(specsApi.getResourcesForWorkspace);
 
   const [planes, setPlanes] = useState<Plane[]>([]);
   const [planeOptions, setPlaneOptions] = useState<string[]>([]);
@@ -107,7 +107,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
         await onModuleSelectionUpdate(null);
       } else {
         try {
-          const options = await modulesLoader.execute(plane.name);
+          const options = await resourcesLoader.execute(plane.name);
           setPlanes((prevPlanes) => {
             const updatedPlanes = [...prevPlanes];
             const index = updatedPlanes.findIndex((v: Plane) => v.name === plane.name);
@@ -257,7 +257,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
             {invalidText}{" "}
           </Alert>
         )}
-        <AsyncOperationBanner operation={modulesLoader} />
+        <AsyncOperationBanner operation={resourcesLoader} />
         <InputLabel shrink> API Specs</InputLabel>
         <Box
           sx={{
@@ -314,7 +314,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
           <Button
             disabled={
               loading ||
-              modulesLoader.loading ||
+              resourcesLoader.loading ||
               !selectedPlane ||
               !selectedModule ||
               !selectedResourceProvider ||

@@ -26,8 +26,8 @@ export const specsApi = {
     return res.data.map((v: any) => v.name);
   },
 
-  getModulesForPlane: {
-    loadingMessage: "Loading modules for plane...",
+  getResourcesForWorkspace: {
+    loadingMessage: "Loading resources...",
     fn: async (planeName: string): Promise<string[]> => {
       const res = await axios.get(`/Swagger/Specs/${planeName}`);
       return res.data.map((v: any) => v.url);

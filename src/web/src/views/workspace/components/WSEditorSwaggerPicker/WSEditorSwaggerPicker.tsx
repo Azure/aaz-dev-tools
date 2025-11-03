@@ -89,7 +89,7 @@ const UpdateOptions = ["Default", "Generic(Get&Put) First", "Patch First", "No u
 const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwaggerPickerProps) => {
   const { filterText, updateFilter, filterResources } = useResourceFilter();
 
-  const modulesLoader = useAsyncOperation(specsApi.getModulesForPlane);
+  const resourcesLoader = useAsyncOperation(specsApi.getResourcesForWorkspace);
 
   const [loading, setLoading] = useState(false);
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
@@ -120,7 +120,7 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
       await loadWorkspaceResources();
 
       try {
-        const allModules = await modulesLoader.execute(plane);
+        const allModules = await resourcesLoader.execute(plane);
         setModuleOptions(allModules || []);
         setModuleOptionsCommonPrefix(`/Swagger/Specs/${plane}/`);
 
@@ -611,7 +611,7 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
         >
           <ListSubheader> Swagger Filters</ListSubheader>
           <MiddlePadding />
-          <AsyncOperationBanner operation={modulesLoader} />
+          <AsyncOperationBanner operation={resourcesLoader} />
           <SwaggerItemSelector
             name="Swagger Module"
             commonPrefix={moduleOptionsCommonPrefix}

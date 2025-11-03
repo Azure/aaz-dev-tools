@@ -84,8 +84,8 @@ describe("WSEditorSwaggerPicker", () => {
     vi.mocked(workspaceApi).addSwaggerResources.mockResolvedValue(undefined);
     vi.mocked(workspaceApi).addTypespecResources.mockResolvedValue(undefined);
 
-    vi.mocked(specsApi).getModulesForPlane = {
-      loadingMessage: "Loading modules for plane...",
+    vi.mocked(specsApi).getResourcesForWorkspace = {
+      loadingMessage: "Loading resources...",
       fn: vi.fn().mockResolvedValue(mockModules),
     };
     vi.mocked(specsApi).getResourceProvidersWithType.mockResolvedValue(mockResourceProviders);
@@ -129,7 +129,7 @@ describe("WSEditorSwaggerPicker", () => {
       render(<WSEditorSwaggerPicker {...defaultProps} />);
 
       await waitFor(() => {
-        expect(vi.mocked(specsApi).getModulesForPlane.fn).toHaveBeenCalledWith("ResourceManagement");
+        expect(vi.mocked(specsApi).getResourcesForWorkspace.fn).toHaveBeenCalledWith("ResourceManagement");
       });
     });
 

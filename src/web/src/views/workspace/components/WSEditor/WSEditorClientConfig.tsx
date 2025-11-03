@@ -70,7 +70,7 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [isAdd, setIsAdd] = useState(true);
 
-  const modulesLoader = useAsyncOperation(specsApi.getModulesForPlane);
+  const resourcesLoader = useAsyncOperation(specsApi.getResourcesForWorkspace);
 
   const [endpointType, setEndpointType] = useState<"template" | "http-operation">("template");
 
@@ -129,7 +129,7 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
         await onModuleSelectionUpdate(null);
       } else {
         try {
-          const options = await modulesLoader.execute(plane!.name);
+          const options = await resourcesLoader.execute(plane!.name);
           setModuleOptions(options || []);
           setModuleOptionsCommonPrefix(`/Swagger/Specs/${plane!.name}/`);
           await onModuleSelectionUpdate(null);
@@ -729,7 +729,7 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
                 pb: 2,
               }}
             >
-              <AsyncOperationBanner operation={modulesLoader} />
+              <AsyncOperationBanner operation={resourcesLoader} />
               <SwaggerItemSelector
                 name="Module"
                 commonPrefix={moduleOptionsCommonPrefix}
