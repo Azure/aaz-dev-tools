@@ -1,14 +1,7 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  LinearProgress,
-  Typography,
-} from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
 import { commandApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import { AsyncOperationBanner } from "../../../../components";
 import * as React from "react";
 import { COMMAND_PREFIX } from "../../../../constants";
 import type { CommandGroup } from "../../interfaces";
@@ -26,7 +19,7 @@ const CommandGroupDeleteDialog: React.FC<CommandGroupDeleteDialogProps> = ({
   commandGroup,
   onClose,
 }) => {
-  const [updating, setUpdating] = React.useState<boolean>(false);
+  const deleteCommandGroupOperation = useAsyncOperation(commandApi.deleteCommandGroup);
 
   const handleClose = React.useCallback(() => {
     onClose(false);
@@ -34,31 +27,24 @@ const CommandGroupDeleteDialog: React.FC<CommandGroupDeleteDialogProps> = ({
 
   const handleDelete = React.useCallback(async () => {
     const nodeUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/${commandGroup.names.join("/")}`;
-    setUpdating(true);
 
     try {
-      await commandApi.deleteCommandGroup(nodeUrl);
-      setUpdating(false);
+      await deleteCommandGroupOperation.execute(nodeUrl);
       onClose(true);
     } catch (err: any) {
-      setUpdating(false);
       console.error(err);
     }
-  }, [workspaceUrl, commandGroup.names, onClose]);
+  }, [workspaceUrl, commandGroup.names, onClose, deleteCommandGroupOperation]);
 
   return (
     <Dialog disableEscapeKeyDown open={open}>
       <DialogTitle>Delete Command Group</DialogTitle>
       <DialogContent dividers={true}>
+        <AsyncOperationBanner operation={deleteCommandGroupOperation} />
         <Typography variant="body2">{`${COMMAND_PREFIX}${commandGroup.names.join(" ")}`}</Typography>
       </DialogContent>
       <DialogActions>
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
-        {!updating && (
+        {!deleteCommandGroupOperation.loading && (
           <React.Fragment>
             <Button onClick={handleClose}>Cancel</Button>
             <Button onClick={handleDelete}>Delete</Button>

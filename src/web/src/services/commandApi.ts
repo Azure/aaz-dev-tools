@@ -91,8 +91,11 @@ export const commandApi = {
     await axios.post(flattenUrl);
   },
 
-  deleteCommandGroup: async (nodeUrl: string): Promise<void> => {
-    await axios.delete(nodeUrl);
+  deleteCommandGroup: {
+    loadingMessage: "Deleting command group...",
+    fn: async (nodeUrl: string): Promise<void> => {
+      await axios.delete(nodeUrl);
+    },
   },
 
   updateCommandGroup: async (
