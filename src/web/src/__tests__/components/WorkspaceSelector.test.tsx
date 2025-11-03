@@ -295,11 +295,15 @@ describe("Workspace Management", () => {
 
     it("should rename workspace successfully", async () => {
       const expectedResult = { name: "renamed-workspace" };
-      (workspaceApi.renameWorkspace as any).mockResolvedValue(expectedResult);
+      const mockFn = vi.fn().mockResolvedValue(expectedResult);
+      (workspaceApi.renameWorkspace as any) = {
+        loadingMessage: "Renaming workspace...",
+        fn: mockFn,
+      };
 
-      const result = await workspaceApi.renameWorkspace("/workspace/test-workspace-1", "renamed-workspace");
+      const result = await workspaceApi.renameWorkspace.fn("/workspace/test-workspace-1", "renamed-workspace");
 
-      expect(workspaceApi.renameWorkspace).toHaveBeenCalledWith("/workspace/test-workspace-1", "renamed-workspace");
+      expect(mockFn).toHaveBeenCalledWith("/workspace/test-workspace-1", "renamed-workspace");
       expect(result).toEqual(expectedResult);
     });
   });

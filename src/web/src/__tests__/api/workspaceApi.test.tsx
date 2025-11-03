@@ -85,7 +85,10 @@ describe("Workspace API", () => {
 
   describe("renameWorkspace", () => {
     it("should rename workspace and return new name", async () => {
-      const result = await workspaceApi.renameWorkspace("/AAZ/Editor/Workspaces/test-workspace-1", "renamed-workspace");
+      const operation = workspaceApi.renameWorkspace;
+      expect(operation.loadingMessage).toBe("Renaming workspace...");
+
+      const result = await operation.fn("/AAZ/Editor/Workspaces/test-workspace-1", "renamed-workspace");
 
       expect(result).toEqual({
         name: "renamed-workspace",

@@ -1,16 +1,8 @@
 import React, { useState, Fragment } from "react";
-import {
-  Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  LinearProgress,
-  Button,
-  TextField,
-  Alert,
-} from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Alert } from "@mui/material";
 import { workspaceApi, errorHandlerApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import { AsyncOperationBanner } from "../../../../components";
 
 interface WSRenameDialogProps {
   workspaceUrl: string;
@@ -22,7 +14,8 @@ interface WSRenameDialogProps {
 const WSRenameDialog: React.FC<WSRenameDialogProps> = ({ workspaceUrl, workspaceName, open, onClose }) => {
   const [newWSName, setNewWSName] = useState<string>(workspaceName);
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
-  const [updating, setUpdating] = useState<boolean>(false);
+
+  const renameWorkspaceOperation = useAsyncOperation(workspaceApi.renameWorkspace);
 
   const handleModify = async () => {
     const nName = newWSName.trim();
@@ -32,18 +25,14 @@ const WSRenameDialog: React.FC<WSRenameDialogProps> = ({ workspaceUrl, workspace
     }
 
     setInvalidText(undefined);
-    setUpdating(true);
 
     if (workspaceName === nName) {
-      setUpdating(false);
       onClose(null);
     } else {
       try {
-        const res = await workspaceApi.renameWorkspace(workspaceUrl, nName);
-        setUpdating(false);
-        onClose(res.name);
+        const res = await renameWorkspaceOperation.execute(workspaceUrl, nName);
+        onClose(res?.name || nName);
       } catch (err: any) {
-        setUpdating(false);
         setInvalidText(errorHandlerApi.getErrorMessage(err));
       }
     }
@@ -79,12 +68,8 @@ const WSRenameDialog: React.FC<WSRenameDialogProps> = ({ workspaceUrl, workspace
         />
       </DialogContent>
       <DialogActions>
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
-        {!updating && (
+        <AsyncOperationBanner operation={renameWorkspaceOperation} />
+        {!renameWorkspaceOperation.loading && (
           <Fragment>
             <Button onClick={handleClose}>Cancel</Button>
             <Button onClick={handleModify}>Save</Button>

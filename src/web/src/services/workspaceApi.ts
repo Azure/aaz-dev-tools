@@ -64,9 +64,12 @@ export const workspaceApi = {
     },
   },
 
-  renameWorkspace: async (workspaceUrl: string, newName: string): Promise<{ name: string }> => {
-    const res = await axios.post(`${workspaceUrl}/Rename`, { name: newName });
-    return res.data;
+  renameWorkspace: {
+    loadingMessage: "Renaming workspace...",
+    fn: async (workspaceUrl: string, newName: string): Promise<{ name: string }> => {
+      const res = await axios.post(`${workspaceUrl}/Rename`, { name: newName });
+      return res.data;
+    },
   },
 
   getWorkspaceClientConfig: async (workspaceUrl: string): Promise<ClientConfig | null> => {
