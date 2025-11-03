@@ -127,7 +127,10 @@ describe("WSEditorCommandContent", () => {
     vi.clearAllMocks();
     vi.mocked(commandApi).getCommand.mockResolvedValue(mockCommand);
     vi.mocked(commandApi).getCommandsForResource.mockResolvedValue([mockCommand]);
-    vi.mocked(commandApi).deleteResource.mockResolvedValue(undefined);
+    vi.mocked(commandApi).deleteResource = {
+      loadingMessage: "Deleting commands...",
+      fn: vi.fn().mockResolvedValue(undefined),
+    };
     vi.mocked(commandApi).updateCommand.mockResolvedValue(mockCommand);
     vi.mocked(commandApi).updateCommandExamples.mockResolvedValue(mockCommand);
     vi.mocked(commandApi).updateCommandOutputs.mockResolvedValue(mockCommand);
@@ -500,7 +503,10 @@ describe("WSEditorCommandContent", () => {
     });
 
     it("handles delete dialog confirmation", async () => {
-      vi.mocked(commandApi).deleteResource.mockResolvedValue(undefined);
+      vi.mocked(commandApi).deleteResource = {
+        loadingMessage: "Deleting commands...",
+        fn: vi.fn().mockResolvedValue(undefined),
+      };
 
       render(<WSEditorCommandContent {...defaultProps} />);
 
