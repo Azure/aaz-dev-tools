@@ -56,9 +56,12 @@ export const workspaceApi = {
     return res.data;
   },
 
-  deleteWorkspace: async (workspaceName: string): Promise<void> => {
-    const nodeUrl = `/AAZ/Editor/Workspaces/${workspaceName}`;
-    await axios.delete(nodeUrl);
+  deleteWorkspace: {
+    loadingMessage: "Deleting workspace...",
+    fn: async (workspaceName: string): Promise<void> => {
+      const nodeUrl = `/AAZ/Editor/Workspaces/${workspaceName}`;
+      await axios.delete(nodeUrl);
+    },
   },
 
   renameWorkspace: async (workspaceUrl: string, newName: string): Promise<{ name: string }> => {

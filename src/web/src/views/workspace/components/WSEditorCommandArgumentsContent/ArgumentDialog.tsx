@@ -133,7 +133,7 @@ interface ArgumentDialogProps {
 
 const ArgumentDialog: React.FC<ArgumentDialogProps> = (props) => {
   const updateArgumentOperation = useAsyncOperation(commandApi.updateCommandArgument);
-  const findSimilarOperation = useAsyncOperation(commandApi.findSimilarArguments);
+  const findSimilarOperation = useAsyncOperation(commandApi.findSimilarArgumentsOperation);
   const updateArgumentByIdOperation = useAsyncOperation(commandApi.updateArgumentById);
 
   const isLoading =

@@ -77,7 +77,9 @@ describe("Workspace API", () => {
 
   describe("deleteWorkspace", () => {
     it("should delete workspace by name", async () => {
-      await expect(workspaceApi.deleteWorkspace("test-workspace-1")).resolves.toBeUndefined();
+      const operation = workspaceApi.deleteWorkspace;
+      expect(operation.loadingMessage).toBe("Deleting workspace...");
+      await expect(operation.fn("test-workspace-1")).resolves.toBeUndefined();
     });
   });
 

@@ -108,7 +108,13 @@ export const commandApi = {
     return res.data;
   },
 
-  findSimilarArguments: {
+  findSimilarArguments: async (commandUrl: string, argVar: string): Promise<any> => {
+    const similarUrl = `${commandUrl}/Arguments/${argVar}/FindSimilar`;
+    const res = await axios.post(similarUrl);
+    return res.data;
+  },
+
+  findSimilarArgumentsOperation: {
     loadingMessage: "Finding similar arguments...",
     fn: async (commandUrl: string, argVar: string): Promise<any> => {
       const similarUrl = `${commandUrl}/Arguments/${argVar}/FindSimilar`;

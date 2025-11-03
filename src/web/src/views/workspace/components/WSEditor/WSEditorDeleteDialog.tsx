@@ -1,16 +1,8 @@
 import React, { useState, Fragment } from "react";
-import {
-  Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  LinearProgress,
-  Button,
-  TextField,
-  Alert,
-} from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Alert } from "@mui/material";
 import { workspaceApi, errorHandlerApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import { AsyncOperationBanner } from "../../../../components";
 
 interface WSEditorDeleteDialogProps {
   workspaceName: string;
@@ -19,24 +11,22 @@ interface WSEditorDeleteDialogProps {
 }
 
 const WSEditorDeleteDialog: React.FC<WSEditorDeleteDialogProps> = ({ workspaceName, open, onClose }) => {
-  const [updating, setUpdating] = useState<boolean>(false);
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [confirmName, setConfirmName] = useState<string | undefined>(undefined);
+
+  const deleteWorkspaceOperation = useAsyncOperation(workspaceApi.deleteWorkspace);
 
   const handleClose = () => {
     onClose(false);
   };
 
   const handleDelete = async () => {
-    setUpdating(true);
     try {
-      await workspaceApi.deleteWorkspace(workspaceName);
-      setUpdating(false);
+      await deleteWorkspaceOperation.execute(workspaceName);
       onClose(true);
     } catch (err: any) {
       console.error(err);
       setInvalidText(errorHandlerApi.getErrorMessage(err));
-      setUpdating(false);
     }
   };
 
@@ -66,12 +56,8 @@ const WSEditorDeleteDialog: React.FC<WSEditorDeleteDialogProps> = ({ workspaceNa
         />
       </DialogContent>
       <DialogActions>
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
-        {!updating && (
+        <AsyncOperationBanner operation={deleteWorkspaceOperation} />
+        {!deleteWorkspaceOperation.loading && (
           <Fragment>
             <Button onClick={handleClose}>Cancel</Button>
             <Button onClick={handleDelete} disabled={workspaceName !== confirmName}>
