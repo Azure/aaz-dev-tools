@@ -131,8 +131,22 @@ describe("WSEditorCommandContent", () => {
       loadingMessage: "Deleting commands...",
       fn: vi.fn().mockResolvedValue(undefined),
     };
-    vi.mocked(commandApi).updateCommand.mockResolvedValue(mockCommand);
-    vi.mocked(commandApi).updateCommandExamples.mockResolvedValue(mockCommand);
+    vi.mocked(commandApi).updateCommand = {
+      loadingMessage: "Updating command...",
+      fn: vi.fn().mockResolvedValue(mockCommand),
+    };
+    vi.mocked(commandApi).renameCommand = {
+      loadingMessage: "Renaming command...",
+      fn: vi.fn().mockResolvedValue(mockCommand),
+    };
+    vi.mocked(commandApi).updateCommandExamples = {
+      loadingMessage: "Updating command examples...",
+      fn: vi.fn().mockResolvedValue(mockCommand),
+    };
+    vi.mocked(commandApi).generateSwaggerExamples = {
+      loadingMessage: "Generating examples from OpenAPI...",
+      fn: vi.fn().mockResolvedValue([]),
+    };
     vi.mocked(commandApi).updateCommandOutputs.mockResolvedValue(mockCommand);
   });
 
@@ -473,7 +487,7 @@ describe("WSEditorCommandContent", () => {
 
     it("handles example dialog close with changes", async () => {
       const updatedCommand = { ...mockCommand, version: "2.0" };
-      vi.mocked(commandApi).updateCommandExamples.mockResolvedValue(updatedCommand);
+      (vi.mocked(commandApi).updateCommandExamples.fn as any).mockResolvedValue(updatedCommand);
 
       render(<WSEditorCommandContent {...defaultProps} />);
 

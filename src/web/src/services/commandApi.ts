@@ -18,27 +18,39 @@ export const commandApi = {
     },
   },
 
-  updateCommand: async (leafUrl: string, data: any): Promise<any> => {
-    const res = await axios.patch(leafUrl, data);
-    return res.data;
+  updateCommand: {
+    loadingMessage: "Updating command...",
+    fn: async (leafUrl: string, data: any): Promise<any> => {
+      const res = await axios.patch(leafUrl, data);
+      return res.data;
+    },
   },
 
-  renameCommand: async (leafUrl: string, newName: string): Promise<any> => {
-    const res = await axios.post(`${leafUrl}/Rename`, { name: newName });
-    return res.data;
+  renameCommand: {
+    loadingMessage: "Renaming command...",
+    fn: async (leafUrl: string, newName: string): Promise<any> => {
+      const res = await axios.post(`${leafUrl}/Rename`, { name: newName });
+      return res.data;
+    },
   },
 
-  updateCommandExamples: async (leafUrl: string, examples: any[]): Promise<any> => {
-    const res = await axios.patch(leafUrl, { examples });
-    return res.data;
+  updateCommandExamples: {
+    loadingMessage: "Updating command examples...",
+    fn: async (leafUrl: string, examples: any[]): Promise<any> => {
+      const res = await axios.patch(leafUrl, { examples });
+      return res.data;
+    },
   },
 
-  generateSwaggerExamples: async (leafUrl: string): Promise<any[]> => {
-    const res = await axios.post(`${leafUrl}/GenerateExamples`, { source: "swagger" });
-    return res.data.map((v: any) => ({
-      name: v.name,
-      commands: v.commands,
-    }));
+  generateSwaggerExamples: {
+    loadingMessage: "Generating examples from OpenAPI...",
+    fn: async (leafUrl: string): Promise<any[]> => {
+      const res = await axios.post(`${leafUrl}/GenerateExamples`, { source: "swagger" });
+      return res.data.map((v: any) => ({
+        name: v.name,
+        commands: v.commands,
+      }));
+    },
   },
 
   addSubcommands: async (resourceUrl: string, data: any): Promise<void> => {

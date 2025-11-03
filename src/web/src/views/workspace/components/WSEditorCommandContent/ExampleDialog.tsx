@@ -11,7 +11,6 @@ import {
   Input,
   InputAdornment,
   InputLabel,
-  LinearProgress,
   TextField,
   Typography,
   TypographyProps,
@@ -22,6 +21,8 @@ import DoDisturbOnRoundedIcon from "@mui/icons-material/DoDisturbOnRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import CloseIcon from "@mui/icons-material/Close";
 import { commandApi, errorHandlerApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import { AsyncOperationBanner } from "../../../../components";
 import { COMMAND_PREFIX } from "../../../../constants";
 import { ExampleItemSelector } from "./ExampleItemSelector";
 import { DecodeResponseCommand } from "../../utils/decodeResponseCommand";
@@ -43,11 +44,13 @@ const ExampleCommandTypography = styled(Typography)<TypographyProps>(({ theme })
 }));
 
 const ExampleDialog: React.FC<ExampleDialogProps> = ({ workspaceUrl, open, command, idx, onClose }) => {
+  const updateExamplesOperation = useAsyncOperation(commandApi.updateCommandExamples);
+  const generateExamplesOperation = useAsyncOperation(commandApi.generateSwaggerExamples);
+
   const [name, setName] = useState<string>("");
   const [exampleCommands, setExampleCommands] = useState<string[]>([""]);
   const [isAdd, setIsAdd] = useState<boolean>(true);
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
-  const [updating, setUpdating] = useState<boolean>(false);
   const [source, setSource] = useState<string | undefined>(undefined);
   const [exampleOptions, setExampleOptions] = useState<Example[]>([]);
 
@@ -58,7 +61,6 @@ const ExampleDialog: React.FC<ExampleDialogProps> = ({ workspaceUrl, open, comma
       setExampleCommands([""]);
       setIsAdd(true);
       setInvalidText(undefined);
-      setUpdating(false);
       setSource(undefined);
       setExampleOptions([]);
     } else {
@@ -67,7 +69,6 @@ const ExampleDialog: React.FC<ExampleDialogProps> = ({ workspaceUrl, open, comma
       setExampleCommands(example.commands);
       setIsAdd(false);
       setInvalidText(undefined);
-      setUpdating(false);
       setSource(undefined);
       setExampleOptions([]);
     }
@@ -81,21 +82,17 @@ const ExampleDialog: React.FC<ExampleDialogProps> = ({ workspaceUrl, open, comma
         "/Leaves/" +
         command.names[command.names.length - 1];
 
-      setUpdating(true);
-
       try {
-        const responseData = await commandApi.updateCommandExamples(leafUrl, examples);
+        const responseData = await updateExamplesOperation.execute(leafUrl, examples);
         const cmd = DecodeResponseCommand(responseData);
-        setUpdating(false);
         onClose(cmd);
       } catch (err: any) {
         console.error(err);
         const message = errorHandlerApi.getErrorMessage(err);
         setInvalidText(`ResponseError: ${message}`);
-        setUpdating(false);
       }
     },
-    [workspaceUrl, command.names, onClose],
+    [workspaceUrl, command.names, onClose, updateExamplesOperation],
   );
 
   const handleDelete = useCallback(() => {
@@ -205,19 +202,18 @@ const ExampleDialog: React.FC<ExampleDialogProps> = ({ workspaceUrl, open, comma
         command.names[command.names.length - 1];
 
       setSource("swagger");
-      setUpdating(true);
-      const examples = await commandApi.generateSwaggerExamples(leafUrl);
-      setExampleOptions(examples);
-      setUpdating(false);
-      if (examples.length > 0) {
-        onExampleSelectorUpdate(examples[0].name);
+      const examples = await generateExamplesOperation.execute(leafUrl);
+      if (examples) {
+        setExampleOptions(examples);
+        if (examples.length > 0) {
+          onExampleSelectorUpdate(examples[0].name);
+        }
       }
     } catch (err: any) {
       console.error(err.response);
-      setUpdating(false);
       setInvalidText(errorHandlerApi.getErrorMessage(err));
     }
-  }, [workspaceUrl, command.names]);
+  }, [workspaceUrl, command.names, generateExamplesOperation]);
 
   const onExampleSelectorUpdate = useCallback(
     (exampleDisplayName: string | null) => {
@@ -359,12 +355,9 @@ const ExampleDialog: React.FC<ExampleDialogProps> = ({ workspaceUrl, open, comma
       </DialogContent>
       {(!isAdd || source != undefined) && (
         <DialogActions>
-          {updating && (
-            <Box sx={{ width: "100%" }}>
-              <LinearProgress color="secondary" />
-            </Box>
-          )}
-          {!updating && (
+          <AsyncOperationBanner operation={updateExamplesOperation} />
+          <AsyncOperationBanner operation={generateExamplesOperation} />
+          {!updateExamplesOperation.loading && !generateExamplesOperation.loading && (
             <React.Fragment>
               {!isAdd && (
                 <React.Fragment>

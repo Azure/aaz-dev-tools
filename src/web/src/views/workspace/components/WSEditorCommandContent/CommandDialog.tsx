@@ -1,6 +1,5 @@
 import {
   Alert,
-  Box,
   Button,
   Dialog,
   DialogActions,
@@ -8,13 +7,14 @@ import {
   DialogTitle,
   FormControlLabel,
   InputLabel,
-  LinearProgress,
   Radio,
   RadioGroup,
   TextField,
 } from "@mui/material";
 import React, { useState, useCallback } from "react";
 import { commandApi, errorHandlerApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import { AsyncOperationBanner } from "../../../../components";
 import { DecodeResponseCommand } from "../../utils/decodeResponseCommand";
 import type { Command } from "../../interfaces";
 
@@ -26,13 +26,15 @@ export interface CommandDialogProps {
 }
 
 const CommandDialog: React.FC<CommandDialogProps> = ({ workspaceUrl, open, command, onClose }) => {
+  const updateOperation = useAsyncOperation(commandApi.updateCommand);
+  const renameOperation = useAsyncOperation(commandApi.renameCommand);
+
   const [name, setName] = useState(command.names.join(" "));
   const [shortHelp, setShortHelp] = useState(command.help?.short ?? "");
   const [longHelp, setLongHelp] = useState(command.help?.lines?.join("\n") ?? "");
   const [stage, setStage] = useState(command.stage);
   const [confirmation, setConfirmation] = useState(command.confirmation ?? "");
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
-  const [updating, setUpdating] = useState(false);
 
   const handleModify = useCallback(async () => {
     let trimmedName = name.trim();
@@ -67,8 +69,6 @@ const CommandDialog: React.FC<CommandDialogProps> = ({ workspaceUrl, open, comma
       lines = trimmedLongHelp.split("\n").filter((l) => l.length > 0);
     }
 
-    setUpdating(true);
-
     const leafUrl =
       `${workspaceUrl}/CommandTree/Nodes/aaz/` +
       command.names.slice(0, -1).join("/") +
@@ -76,7 +76,7 @@ const CommandDialog: React.FC<CommandDialogProps> = ({ workspaceUrl, open, comma
       command.names[command.names.length - 1];
 
     try {
-      const commandData = await commandApi.updateCommand(leafUrl, {
+      const commandData = await updateOperation.execute(leafUrl, {
         help: {
           short: trimmedShortHelp,
           lines: lines,
@@ -88,18 +88,15 @@ const CommandDialog: React.FC<CommandDialogProps> = ({ workspaceUrl, open, comma
       const commandName = names.join(" ");
       if (commandName === command.names.join(" ")) {
         const cmd = DecodeResponseCommand(commandData);
-        setUpdating(false);
         onClose(cmd);
       } else {
-        const renamedData = await commandApi.renameCommand(leafUrl, commandName);
+        const renamedData = await renameOperation.execute(leafUrl, commandName);
         const cmd = DecodeResponseCommand(renamedData);
-        setUpdating(false);
         onClose(cmd);
       }
     } catch (err: any) {
       console.error(err);
       setInvalidText(errorHandlerApi.getErrorMessage(err));
-      setUpdating(false);
     }
   }, [name, shortHelp, longHelp, confirmation, stage, workspaceUrl, command, onClose]);
 
@@ -108,14 +105,19 @@ const CommandDialog: React.FC<CommandDialogProps> = ({ workspaceUrl, open, comma
     onClose();
   }, [onClose]);
 
+  const isLoading = updateOperation.loading || renameOperation.loading;
+  const error = updateOperation.error || renameOperation.error;
+
   return (
     <Dialog disableEscapeKeyDown open={open} sx={{ "& .MuiDialog-paper": { width: "80%" } }}>
       <DialogTitle>Command</DialogTitle>
       <DialogContent dividers={true}>
-        {invalidText && (
+        <AsyncOperationBanner operation={updateOperation} />
+        <AsyncOperationBanner operation={renameOperation} />
+        {(invalidText || error) && (
           <Alert variant="filled" severity="error">
             {" "}
-            {invalidText}{" "}
+            {invalidText || errorHandlerApi.getErrorMessage(error!)}{" "}
           </Alert>
         )}
         <InputLabel required shrink sx={{ font: "inherit" }}>
@@ -191,17 +193,12 @@ const CommandDialog: React.FC<CommandDialogProps> = ({ workspaceUrl, open, comma
         />
       </DialogContent>
       <DialogActions>
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
-        {!updating && (
-          <React.Fragment>
-            <Button onClick={handleClose}>Cancel</Button>
-            <Button onClick={handleModify}>Save</Button>
-          </React.Fragment>
-        )}
+        <Button onClick={handleClose} disabled={isLoading}>
+          Cancel
+        </Button>
+        <Button onClick={handleModify} disabled={isLoading}>
+          Save
+        </Button>
       </DialogActions>
     </Dialog>
   );
