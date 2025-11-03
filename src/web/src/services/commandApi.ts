@@ -126,15 +126,18 @@ export const commandApi = {
     },
   },
 
-  createSubresource: async (
-    subresourceUrl: string,
-    data: {
-      commandGroupName: string;
-      refArgsOptions: { [argVar: string]: string[] };
-      arg: string;
+  createSubresource: {
+    loadingMessage: "Creating subcommands...",
+    fn: async (
+      subresourceUrl: string,
+      data: {
+        commandGroupName: string;
+        refArgsOptions: { [argVar: string]: string[] };
+        arg: string;
+      },
+    ): Promise<any> => {
+      const response = await axios.post(subresourceUrl, data);
+      return response.data;
     },
-  ): Promise<any> => {
-    const response = await axios.post(subresourceUrl, data);
-    return response.data;
   },
 } as const;
