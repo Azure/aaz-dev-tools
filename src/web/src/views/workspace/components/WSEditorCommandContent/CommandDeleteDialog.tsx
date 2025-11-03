@@ -1,15 +1,8 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  LinearProgress,
-  Typography,
-} from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import { commandApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import { AsyncOperationBanner } from "../../../../components";
 import { COMMAND_PREFIX } from "../../../../constants";
 import { DecodeResponseCommand } from "../../utils/decodeResponseCommand";
 import type { Command, ResponseCommand } from "../../interfaces";
@@ -22,7 +15,7 @@ export interface CommandDeleteDialogProps {
 }
 
 const CommandDeleteDialog: React.FC<CommandDeleteDialogProps> = (props) => {
-  const [updating, setUpdating] = useState<boolean>(false);
+  const deleteOperation = useAsyncOperation(commandApi.deleteResource);
   const [relatedCommands, setRelatedCommands] = useState<string[]>([]);
 
   const getUrls = () => {
@@ -73,39 +66,32 @@ const CommandDeleteDialog: React.FC<CommandDeleteDialogProps> = (props) => {
   };
 
   const handleDelete = async () => {
-    setUpdating(true);
     const urls = getUrls();
 
     try {
-      await Promise.all(urls.map((url) => commandApi.deleteResource(url)));
-      setUpdating(false);
+      await Promise.all(urls.map((url) => deleteOperation.execute(url)));
       props.onClose(true);
-    } catch (err) {
-      setUpdating(false);
-      console.error(err);
+    } catch (error) {
+      console.error("Delete failed:", error);
     }
   };
 
   return (
     <Dialog disableEscapeKeyDown open={props.open}>
-      <DialogTitle>Delete Commands</DialogTitle>
+      {!deleteOperation.loading && <DialogTitle>Delete Commands</DialogTitle>}
       <DialogContent dividers={true}>
+        <AsyncOperationBanner operation={deleteOperation} />
         {relatedCommands.map((command, idx) => (
           <Typography key={`command-${idx}`} variant="body2">{`${COMMAND_PREFIX}${command}`}</Typography>
         ))}
       </DialogContent>
       <DialogActions>
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
-        {!updating && (
-          <>
-            <Button onClick={handleClose}>Cancel</Button>
-            <Button onClick={handleDelete}>Delete</Button>
-          </>
-        )}
+        <Button onClick={handleClose} disabled={deleteOperation.loading}>
+          Cancel
+        </Button>
+        <Button onClick={handleDelete} disabled={deleteOperation.loading}>
+          Delete
+        </Button>
       </DialogActions>
     </Dialog>
   );

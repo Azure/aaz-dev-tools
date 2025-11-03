@@ -11,8 +11,11 @@ export const commandApi = {
     return res.data;
   },
 
-  deleteResource: async (resourceUrl: string): Promise<void> => {
-    await axios.delete(resourceUrl);
+  deleteResource: {
+    loadingMessage: "Deleting commands...",
+    fn: async (resourceUrl: string): Promise<void> => {
+      await axios.delete(resourceUrl);
+    },
   },
 
   updateCommand: async (leafUrl: string, data: any): Promise<any> => {
