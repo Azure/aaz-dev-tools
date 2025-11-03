@@ -1,6 +1,5 @@
 import {
   Alert,
-  Box,
   Button,
   Dialog,
   DialogActions,
@@ -8,12 +7,13 @@ import {
   DialogTitle,
   FormControlLabel,
   InputLabel,
-  LinearProgress,
   Radio,
   RadioGroup,
   TextField,
 } from "@mui/material";
 import { commandApi, errorHandlerApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import { AsyncOperationBanner } from "../../../../components";
 import * as React from "react";
 import { DecodeResponseCommandGroup } from "./WSEditorCommandGroupContent";
 import type { CommandGroup } from "../../interfaces";
@@ -31,7 +31,9 @@ const CommandGroupDialog: React.FC<CommandGroupDialogProps> = ({ workspaceUrl, o
   const [shortHelp, setShortHelp] = React.useState<string>(commandGroup.help?.short ?? "");
   const [longHelp, setLongHelp] = React.useState<string>(commandGroup.help?.lines?.join("\n") ?? "");
   const [invalidText, setInvalidText] = React.useState<string | undefined>(undefined);
-  const [updating, setUpdating] = React.useState<boolean>(false);
+
+  const updateCommandGroupOperation = useAsyncOperation(commandApi.updateCommandGroup);
+  const renameCommandGroupOperation = useAsyncOperation(commandApi.renameCommandGroup);
 
   React.useEffect(() => {
     setName(commandGroup.names.join(" "));
@@ -39,7 +41,6 @@ const CommandGroupDialog: React.FC<CommandGroupDialogProps> = ({ workspaceUrl, o
     setShortHelp(commandGroup.help?.short ?? "");
     setLongHelp(commandGroup.help?.lines?.join("\n") ?? "");
     setInvalidText(undefined);
-    setUpdating(false);
   }, [commandGroup]);
 
   const handleModify = React.useCallback(async () => {
@@ -74,12 +75,10 @@ const CommandGroupDialog: React.FC<CommandGroupDialogProps> = ({ workspaceUrl, o
       lines = trimmedLongHelp.split("\n").filter((l: string) => l.length > 0);
     }
 
-    setUpdating(true);
-
     const nodeUrl = `${workspaceUrl}/CommandTree/Nodes/aaz/${commandGroup.names.join("/")}`;
 
     try {
-      const res = await commandApi.updateCommandGroup(nodeUrl, {
+      const res = await updateCommandGroupOperation.execute(nodeUrl, {
         help: {
           short: trimmedShortHelp,
           lines: lines,
@@ -90,20 +89,27 @@ const CommandGroupDialog: React.FC<CommandGroupDialogProps> = ({ workspaceUrl, o
       const finalName = names.join(" ");
       if (finalName === commandGroup.names.join(" ")) {
         const cmdGroup = DecodeResponseCommandGroup(res);
-        setUpdating(false);
         onClose(cmdGroup);
       } else {
-        const renameRes = await commandApi.renameCommandGroup(nodeUrl, finalName);
+        const renameRes = await renameCommandGroupOperation.execute(nodeUrl, finalName);
         const cmdGroup = DecodeResponseCommandGroup(renameRes);
-        setUpdating(false);
         onClose(cmdGroup);
       }
     } catch (err: any) {
       console.error(err);
-      setUpdating(false);
       setInvalidText(errorHandlerApi.getErrorMessage(err));
     }
-  }, [name, shortHelp, longHelp, stage, workspaceUrl, commandGroup.names, onClose]);
+  }, [
+    name,
+    shortHelp,
+    longHelp,
+    stage,
+    workspaceUrl,
+    commandGroup.names,
+    onClose,
+    updateCommandGroupOperation,
+    renameCommandGroupOperation,
+  ]);
 
   const handleClose = React.useCallback(() => {
     setInvalidText(undefined);
@@ -178,14 +184,11 @@ const CommandGroupDialog: React.FC<CommandGroupDialogProps> = ({ workspaceUrl, o
           }}
           margin="normal"
         />
+        {<AsyncOperationBanner operation={updateCommandGroupOperation} />}
+        {<AsyncOperationBanner operation={renameCommandGroupOperation} />}
       </DialogContent>
       <DialogActions>
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
-        {!updating && (
+        {!updateCommandGroupOperation.loading && !renameCommandGroupOperation.loading && (
           <React.Fragment>
             <Button onClick={handleClose}>Cancel</Button>
             <Button onClick={handleModify}>Save</Button>

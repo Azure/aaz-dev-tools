@@ -21,8 +21,14 @@ vi.mock("../../services", () => ({
       loadingMessage: "Deleting command group...",
       fn: vi.fn(),
     },
-    updateCommandGroup: vi.fn(),
-    renameCommandGroup: vi.fn(),
+    updateCommandGroup: {
+      loadingMessage: "Updating command group...",
+      fn: vi.fn(),
+    },
+    renameCommandGroup: {
+      loadingMessage: "Renaming command group...",
+      fn: vi.fn(),
+    },
   },
   errorHandlerApi: {
     getErrorMessage: vi.fn(),
@@ -50,6 +56,20 @@ describe("WSEditorCommandGroupContent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCommandApi.deleteCommandGroup.fn.mockResolvedValue(undefined);
+    mockCommandApi.updateCommandGroup.fn.mockResolvedValue({
+      id: "updated-group-id",
+      names: ["updated-group"],
+      stage: "Stable",
+      help: { short: "Updated help text" },
+      canDelete: true,
+    });
+    mockCommandApi.renameCommandGroup.fn.mockResolvedValue({
+      id: "renamed-group-id",
+      names: ["renamed-group"],
+      stage: "Stable",
+      help: { short: "Test help" },
+      canDelete: true,
+    });
   });
 
   describe("Core Rendering", () => {
@@ -173,7 +193,7 @@ describe("WSEditorCommandGroupContent", () => {
       });
     });
 
-    it.skip("saves changes and updates command group", async () => {
+    it("saves changes and updates command group", async () => {
       // @NOTE: will change approach once mocking setup changes
       const user = userEvent.setup();
 
@@ -196,7 +216,7 @@ describe("WSEditorCommandGroupContent", () => {
       await user.click(saveButton);
 
       await waitFor(() =>
-        expect(mockCommandApi.updateCommandGroup).toHaveBeenCalledWith(
+        expect(mockCommandApi.updateCommandGroup.fn).toHaveBeenCalledWith(
           expect.stringContaining(mockWorkspaceUrl),
           expect.objectContaining({
             help: expect.objectContaining({ short: "Updated help text" }),
@@ -295,7 +315,7 @@ describe("WSEditorCommandGroupContent", () => {
       const user = userEvent.setup();
       const mockError = new Error("Update failed");
 
-      mockCommandApi.updateCommandGroup.mockRejectedValue(mockError);
+      mockCommandApi.updateCommandGroup.fn.mockRejectedValue(mockError);
 
       render(
         <WSEditorCommandGroupContent
@@ -310,14 +330,14 @@ describe("WSEditorCommandGroupContent", () => {
       await user.click(editButton);
 
       await waitFor(() => {
-        expect(screen.getByText("Edit Command Group")).toBeInTheDocument();
+        expect(screen.getByText("Command Group")).toBeInTheDocument();
       });
 
       const saveButton = screen.getByRole("button", { name: /save/i });
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(mockCommandApi.updateCommandGroup).toHaveBeenCalled();
+        expect(mockCommandApi.updateCommandGroup.fn).toHaveBeenCalled();
       });
     });
 

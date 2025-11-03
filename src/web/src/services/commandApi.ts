@@ -98,17 +98,20 @@ export const commandApi = {
     },
   },
 
-  updateCommandGroup: async (
-    nodeUrl: string,
-    data: { help: { short: string; lines: string[] }; stage: string },
-  ): Promise<any> => {
-    const res = await axios.patch(nodeUrl, data);
-    return res.data;
+  updateCommandGroup: {
+    loadingMessage: "Updating command group...",
+    fn: async (nodeUrl: string, data: { help: { short: string; lines: string[] }; stage: string }): Promise<any> => {
+      const res = await axios.patch(nodeUrl, data);
+      return res.data;
+    },
   },
 
-  renameCommandGroup: async (nodeUrl: string, name: string): Promise<any> => {
-    const res = await axios.post(`${nodeUrl}/Rename`, { name });
-    return res.data;
+  renameCommandGroup: {
+    loadingMessage: "Renaming command group...",
+    fn: async (nodeUrl: string, name: string): Promise<any> => {
+      const res = await axios.post(`${nodeUrl}/Rename`, { name });
+      return res.data;
+    },
   },
 
   findSimilarArguments: async (commandUrl: string, argVar: string): Promise<any> => {
