@@ -147,7 +147,10 @@ describe("WSEditorCommandContent", () => {
       loadingMessage: "Generating examples from OpenAPI...",
       fn: vi.fn().mockResolvedValue([]),
     };
-    vi.mocked(commandApi).updateCommandOutputs.mockResolvedValue(mockCommand);
+    vi.mocked(commandApi).updateCommandOutputs = {
+      loadingMessage: "Updating command outputs...",
+      fn: vi.fn().mockResolvedValue(mockCommand),
+    };
   });
 
   describe("Core Rendering", () => {

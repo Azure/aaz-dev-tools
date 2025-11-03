@@ -9,7 +9,6 @@ import {
   DialogTitle,
   FormControlLabel,
   FormLabel,
-  LinearProgress,
   Switch,
   Typography,
   TypographyProps,
@@ -17,6 +16,8 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material";
 import { commandApi, errorHandlerApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import { AsyncOperationBanner } from "../../../../components";
 import { DecodeResponseCommand } from "../../utils/decodeResponseCommand";
 
 interface ObjectOutput {
@@ -81,7 +82,7 @@ interface OutputDialogProps {
 }
 
 const OutputDialog: React.FC<OutputDialogProps> = (props) => {
-  const [updating, setUpdating] = useState<boolean>(false);
+  const updateOutputsOperation = useAsyncOperation(commandApi.updateCommandOutputs);
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const outputs = props.command.outputs ?? [];
   const output = outputs[props.idx!];
@@ -95,7 +96,6 @@ const OutputDialog: React.FC<OutputDialogProps> = (props) => {
 
   const handleUpdateOutput = async () => {
     setInvalidText(undefined);
-    setUpdating(true);
 
     if (isObjectOutput(output) || isArrayOutput(output)) {
       let commandNames = props.command.names;
@@ -104,22 +104,17 @@ const OutputDialog: React.FC<OutputDialogProps> = (props) => {
         commandNames.slice(0, -1).join("/") +
         "/Leaves/" +
         commandNames[commandNames.length - 1];
-      console.log("Original clientFlatten: ");
-      console.log(output.clientFlatten);
+
       output.clientFlatten = !output.clientFlatten;
-      console.log("New clientFlatten: ");
-      console.log(output.clientFlatten);
 
       try {
-        const responseData = await commandApi.updateCommandOutputs(leafUrl, outputs);
+        const responseData = await updateOutputsOperation.execute(leafUrl, outputs);
         const cmd = DecodeResponseCommand(responseData);
-        setUpdating(false);
         props.onClose(cmd);
       } catch (err: any) {
         console.error(err);
         const message = errorHandlerApi.getErrorMessage(err);
         setInvalidText(`ResponseError: ${message}`);
-        setUpdating(false);
       }
     } else {
       console.error(`Invalid output type for flatten switch: ${output.type}`);
@@ -177,13 +172,11 @@ const OutputDialog: React.FC<OutputDialogProps> = (props) => {
         )}
       </DialogContent>
       <DialogActions>
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
-        {!updating && <Button onClick={handleClose}>Cancel</Button>}
-        <Button onClick={handleUpdateOutput}>Update</Button>
+        <AsyncOperationBanner operation={updateOutputsOperation} />
+        {!updateOutputsOperation.loading && <Button onClick={handleClose}>Cancel</Button>}
+        <Button onClick={handleUpdateOutput} disabled={updateOutputsOperation.loading}>
+          Update
+        </Button>
       </DialogActions>
     </Dialog>
   );

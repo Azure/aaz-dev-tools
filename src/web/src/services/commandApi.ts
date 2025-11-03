@@ -57,9 +57,12 @@ export const commandApi = {
     await axios.post(resourceUrl, data);
   },
 
-  updateCommandOutputs: async (leafUrl: string, outputs: any[]): Promise<any> => {
-    const res = await axios.patch(leafUrl, { outputs });
-    return res.data;
+  updateCommandOutputs: {
+    loadingMessage: "Updating command outputs...",
+    fn: async (leafUrl: string, outputs: any[]): Promise<any> => {
+      const res = await axios.patch(leafUrl, { outputs });
+      return res.data;
+    },
   },
 
   updateCommandArgument: async (argumentUrl: string, data: any): Promise<void> => {
