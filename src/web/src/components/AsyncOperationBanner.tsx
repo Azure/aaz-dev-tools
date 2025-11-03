@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, CircularProgress, Typography } from "@mui/material";
+import { Box, LinearProgress, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import type { UseAsyncOperationResult } from "../services/hooks";
 
@@ -19,8 +19,8 @@ const LoadingBanner = styled(Box)<{ backgroundColor?: string; textColor?: string
     color: textColor || theme.palette.text.primary,
     borderRadius: theme.spacing(1),
     display: "flex",
-    alignItems: "center",
-    gap: theme.spacing(2),
+    flexDirection: "column",
+    gap: theme.spacing(1),
   }),
 );
 
@@ -41,10 +41,8 @@ const LoadingBanner = styled(Box)<{ backgroundColor?: string; textColor?: string
  */
 export const AsyncOperationBanner: React.FC<AsyncOperationBannerProps> = ({
   operation,
-  backgroundColor = "grey.200",
+  backgroundColor = "white",
   textColor,
-  spinnerColor = "primary",
-  spinnerSize = 20,
 }) => {
   if (!operation.loading) {
     return null;
@@ -52,8 +50,8 @@ export const AsyncOperationBanner: React.FC<AsyncOperationBannerProps> = ({
 
   return (
     <LoadingBanner backgroundColor={backgroundColor} textColor={textColor}>
-      <CircularProgress size={spinnerSize} color={spinnerColor} />
-      <Typography variant="body2">{operation.loadingMessage}</Typography>
+      <Typography variant="body1">{operation.loadingMessage}</Typography>
+      <LinearProgress color="secondary" />
     </LoadingBanner>
   );
 };
