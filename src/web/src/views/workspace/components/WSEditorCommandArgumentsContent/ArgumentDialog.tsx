@@ -9,7 +9,6 @@ import {
   DialogTitle,
   FormControlLabel,
   InputLabel,
-  LinearProgress,
   Radio,
   RadioGroup,
   Switch,
@@ -17,6 +16,8 @@ import {
 } from "@mui/material";
 
 import { commandApi, errorHandlerApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import { AsyncOperationBanner } from "../../../../components";
 import React, { useEffect, useState } from "react";
 import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./WSECArgumentSimilarPicker";
 import { convertArgDefaultText } from "../../utils/convertArgDefaultText";
@@ -131,7 +132,13 @@ interface ArgumentDialogProps {
 }
 
 const ArgumentDialog: React.FC<ArgumentDialogProps> = (props) => {
-  const [updating, setUpdating] = useState<boolean>(false);
+  const updateArgumentOperation = useAsyncOperation(commandApi.updateCommandArgument);
+  const findSimilarOperation = useAsyncOperation(commandApi.findSimilarArguments);
+  const updateArgumentByIdOperation = useAsyncOperation(commandApi.updateArgumentById);
+
+  const isLoading =
+    updateArgumentOperation.loading || findSimilarOperation.loading || updateArgumentByIdOperation.loading;
+
   const [stage, setStage] = useState<string>("");
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [options, setOptions] = useState<string>("");
@@ -292,18 +299,14 @@ const ArgumentDialog: React.FC<ArgumentDialogProps> = (props) => {
       return;
     }
 
-    setUpdating(true);
-
     const argumentUrl = `${props.commandUrl}/Arguments/${props.arg.var}`;
 
     try {
-      await commandApi.updateCommandArgument(argumentUrl, data);
-      setUpdating(false);
+      await updateArgumentOperation.execute(argumentUrl, data);
       await props.onClose(true);
     } catch (err: any) {
       console.error(err);
       setInvalidText(errorHandlerApi.getErrorMessage(err));
-      setUpdating(false);
     }
   };
 
@@ -312,11 +315,8 @@ const ArgumentDialog: React.FC<ArgumentDialogProps> = (props) => {
       return;
     }
 
-    setUpdating(true);
-
     try {
-      const res = await commandApi.findSimilarArguments(props.commandUrl, props.arg.var);
-      setUpdating(false);
+      const res = await findSimilarOperation.execute(props.commandUrl, props.arg.var);
       const { tree, expandedIds } = BuildArgSimilarTree(res);
       setArgSimilarTree(tree);
       setArgSimilarTreeExpandedIds(expandedIds);
@@ -324,7 +324,6 @@ const ArgumentDialog: React.FC<ArgumentDialogProps> = (props) => {
     } catch (err: any) {
       console.error(err);
       setInvalidText(errorHandlerApi.getErrorMessage(err));
-      setUpdating(false);
     }
   };
 
@@ -347,14 +346,13 @@ const ArgumentDialog: React.FC<ArgumentDialogProps> = (props) => {
       return;
     }
 
-    setUpdating(true);
     let invalidText = "";
     const updatedIds: string[] = [...argSimilarTreeArgIdsUpdated];
     for (const idx in argSimilarTree!.selectedArgIds) {
       const argId = argSimilarTree!.selectedArgIds[idx];
       if (updatedIds.indexOf(argId) === -1) {
         try {
-          await commandApi.updateArgumentById(argId, data);
+          await updateArgumentByIdOperation.execute(argId, data);
           updatedIds.push(argId);
           setArgSimilarTreeArgIdsUpdated([...updatedIds]);
         } catch (err: any) {
@@ -366,9 +364,7 @@ const ArgumentDialog: React.FC<ArgumentDialogProps> = (props) => {
 
     if (invalidText.length > 0) {
       setInvalidText(invalidText);
-      setUpdating(false);
     } else {
-      setUpdating(false);
       await props.onClose(true);
     }
   };
@@ -410,7 +406,6 @@ const ArgumentDialog: React.FC<ArgumentDialogProps> = (props) => {
     setShortHelp(props.arg.help?.short ?? "");
     setLongHelp(props.arg.help?.lines?.join("\n") ?? "");
     setConfigurationKey(props.arg.configurationKey ?? "");
-    setUpdating(false);
     setArgSimilarTree(undefined);
     setArgSimilarTreeExpandedIds([]);
 
@@ -719,12 +714,10 @@ const ArgumentDialog: React.FC<ArgumentDialogProps> = (props) => {
         </>
       )}
       <DialogActions>
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
-        {!updating && !argSimilarTree && (
+        <AsyncOperationBanner operation={updateArgumentOperation} />
+        <AsyncOperationBanner operation={findSimilarOperation} />
+        <AsyncOperationBanner operation={updateArgumentByIdOperation} />
+        {!isLoading && !argSimilarTree && (
           <>
             <Button onClick={handleClose}>Cancel</Button>
             {!props.arg.var.startsWith("@") && (
@@ -733,7 +726,7 @@ const ArgumentDialog: React.FC<ArgumentDialogProps> = (props) => {
             {!isClientArg && <Button onClick={handleDisplaySimilar}>Update Similar</Button>}
           </>
         )}
-        {!updating && argSimilarTree && (
+        {!isLoading && argSimilarTree && (
           <>
             <Button onClick={handleDisableSimilar}>Back</Button>
             <Button onClick={handleModifySimilar} disabled={argSimilarTree.selectedArgIds.length === 0}>

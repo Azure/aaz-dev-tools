@@ -65,12 +65,18 @@ export const commandApi = {
     },
   },
 
-  updateCommandArgument: async (argumentUrl: string, data: any): Promise<void> => {
-    await axios.patch(argumentUrl, data);
+  updateCommandArgument: {
+    loadingMessage: "Updating command argument...",
+    fn: async (argumentUrl: string, data: any): Promise<void> => {
+      await axios.patch(argumentUrl, data);
+    },
   },
 
-  updateArgumentById: async (argId: string, data: any): Promise<void> => {
-    await axios.patch(argId, data);
+  updateArgumentById: {
+    loadingMessage: "Updating argument...",
+    fn: async (argId: string, data: any): Promise<void> => {
+      await axios.patch(argId, data);
+    },
   },
 
   flattenArgument: async (flattenUrl: string, data?: any): Promise<void> => {
@@ -102,10 +108,13 @@ export const commandApi = {
     return res.data;
   },
 
-  findSimilarArguments: async (commandUrl: string, argVar: string): Promise<any> => {
-    const similarUrl = `${commandUrl}/Arguments/${argVar}/FindSimilar`;
-    const res = await axios.post(similarUrl);
-    return res.data;
+  findSimilarArguments: {
+    loadingMessage: "Finding similar arguments...",
+    fn: async (commandUrl: string, argVar: string): Promise<any> => {
+      const similarUrl = `${commandUrl}/Arguments/${argVar}/FindSimilar`;
+      const res = await axios.post(similarUrl);
+      return res.data;
+    },
   },
 
   createSubresource: async (
