@@ -399,6 +399,7 @@ const WSEditorCommandContent: React.FC<WSEditorCommandContentProps> = ({
             justifyContent: "flex-start",
           }}
         >
+          {/* @TODO: update usage: */}
           {loading && (
             <Box sx={{ width: "100%" }}>
               <LinearProgress color="secondary" />

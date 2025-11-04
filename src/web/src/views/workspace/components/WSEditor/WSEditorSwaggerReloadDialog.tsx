@@ -249,6 +249,7 @@ const WSEditorSwaggerReloadDialog: React.FC<WSEditorSwaggerReloadDialogProps> = 
         </List>
       </DialogContent>
       <DialogActions>
+        {/* @TODO: update usage: */}
         {updating && (
           <Box sx={{ width: "100%" }}>
             <LinearProgress color="secondary" />

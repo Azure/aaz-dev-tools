@@ -301,6 +301,7 @@ const FlattenDialog: React.FC<FlattenDialogProps> = (props) => {
         </>
       )}
       <DialogActions>
+        {/* @TODO: update usage: */}
         {updating && (
           <Box sx={{ width: "100%" }}>
             <LinearProgress color="secondary" />

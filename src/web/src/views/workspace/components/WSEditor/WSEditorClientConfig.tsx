@@ -805,6 +805,7 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
         </Box>
       </DialogContent>
       <DialogActions>
+        {/* @TODO: update usage: */}
         {updating && (
           <Box sx={{ width: "100%" }}>
             <LinearProgress color="secondary" />
