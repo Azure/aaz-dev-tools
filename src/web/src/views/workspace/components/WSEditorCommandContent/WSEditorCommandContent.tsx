@@ -6,7 +6,6 @@ import {
   CardActions,
   CardContent,
   Accordion,
-  LinearProgress,
   Typography,
   TypographyProps,
   AccordionDetails,
@@ -39,6 +38,7 @@ import CommandDialog from "./CommandDialog";
 import OutputCard from "./OutputCard";
 import OutputDialog from "./OutputDialog";
 import type { Command, Example } from "../../interfaces";
+import { LoadingBanner } from "../../../../components";
 
 interface WSEditorCommandContentProps {
   workspaceUrl: string;
@@ -391,6 +391,7 @@ const WSEditorCommandContent: React.FC<WSEditorCommandContentProps> = ({
             </Box>
           )}
         </CardContent>
+        <LoadingBanner loading={loading} />
         <CardActions
           sx={{
             display: "flex",
@@ -399,11 +400,6 @@ const WSEditorCommandContent: React.FC<WSEditorCommandContentProps> = ({
             justifyContent: "flex-start",
           }}
         >
-          {loading && (
-            <Box sx={{ width: "100%" }}>
-              <LinearProgress color="secondary" />
-            </Box>
-          )}
           {!loading && (
             <Box
               sx={{

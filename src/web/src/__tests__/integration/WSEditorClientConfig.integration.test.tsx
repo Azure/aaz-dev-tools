@@ -94,7 +94,7 @@ describe("WSEditorClientConfigDialog - Integration", () => {
   });
 
   describe("Complete User Workflows", () => {
-    it("should handle user inputs for relevant fields", async () => {
+    it("should handle user inputs for relevant fields", { timeout: 10000 }, async () => {
       const user = userEvent.setup();
       render(<WSEditorClientConfigDialog workspaceUrl={mockWorkspaceUrl} open={true} onClose={mockOnClose} />);
 

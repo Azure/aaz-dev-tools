@@ -27,6 +27,8 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import AsyncOperationBanner from "../../../../components/AsyncOperationBanner";
 import EditorPageLayout from "../../../../components/EditorPageLayout";
 import { styled } from "@mui/material/styles";
 import { getTypespecRPResources, getTypespecRPResourcesOperations } from "../../../../typespec";
@@ -87,6 +89,8 @@ const UpdateOptions = ["Default", "Generic(Get&Put) First", "Patch First", "No u
 const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwaggerPickerProps) => {
   const { filterText, updateFilter, filterResources } = useResourceFilter();
 
+  const resourcesLoader = useAsyncOperation(specsApi.getResourcesForWorkspace);
+
   const [loading, setLoading] = useState(false);
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [_defaultModule, setDefaultModule] = useState<string | null>(null);
@@ -116,8 +120,8 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
       await loadWorkspaceResources();
 
       try {
-        const allModules = await specsApi.getSwaggerModules(plane);
-        setModuleOptions(allModules);
+        const allModules = await resourcesLoader.execute(plane);
+        setModuleOptions(allModules || []);
         setModuleOptionsCommonPrefix(`/Swagger/Specs/${plane}/`);
 
         const swaggerDefault = await workspaceApi.getSwaggerDefault(workspaceName);
@@ -126,7 +130,7 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
         }
 
         const moduleValueUrl = `/Swagger/Specs/${plane}/` + swaggerDefault.modNames.join("/");
-        if (allModules.findIndex((v) => v === moduleValueUrl) == -1) {
+        if (!allModules || allModules.findIndex((v) => v === moduleValueUrl) == -1) {
           return;
         }
 
@@ -302,7 +306,6 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
     [plane, existingResources],
   );
 
-  // Effect to load resources when selectedResourceProvider changes
   useEffect(() => {
     if (selectedResourceProvider) {
       loadResources(selectedResourceProvider);
@@ -608,6 +611,7 @@ const WSEditorSwaggerPicker = ({ workspaceName, plane, onClose }: WSEditorSwagge
         >
           <ListSubheader> Swagger Filters</ListSubheader>
           <MiddlePadding />
+          <AsyncOperationBanner operation={resourcesLoader} />
           <SwaggerItemSelector
             name="Swagger Module"
             commonPrefix={moduleOptionsCommonPrefix}

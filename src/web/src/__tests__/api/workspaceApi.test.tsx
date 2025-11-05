@@ -77,13 +77,18 @@ describe("Workspace API", () => {
 
   describe("deleteWorkspace", () => {
     it("should delete workspace by name", async () => {
-      await expect(workspaceApi.deleteWorkspace("test-workspace-1")).resolves.toBeUndefined();
+      const operation = workspaceApi.deleteWorkspace;
+      expect(operation.loadingMessage).toBe("Deleting workspace...");
+      await expect(operation.fn("test-workspace-1")).resolves.toBeUndefined();
     });
   });
 
   describe("renameWorkspace", () => {
     it("should rename workspace and return new name", async () => {
-      const result = await workspaceApi.renameWorkspace("/AAZ/Editor/Workspaces/test-workspace-1", "renamed-workspace");
+      const operation = workspaceApi.renameWorkspace;
+      expect(operation.loadingMessage).toBe("Renaming workspace...");
+
+      const result = await operation.fn("/AAZ/Editor/Workspaces/test-workspace-1", "renamed-workspace");
 
       expect(result).toEqual({
         name: "renamed-workspace",

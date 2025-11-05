@@ -7,7 +7,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  LinearProgress,
   Button,
   Paper,
   TextField,
@@ -21,6 +20,8 @@ import {
   Tab,
 } from "@mui/material";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import AsyncOperationBanner, { LoadingBanner } from "../../../../components/AsyncOperationBanner";
 import DoDisturbOnRoundedIcon from "@mui/icons-material/DoDisturbOnRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import SwaggerItemSelector from "../../common/SwaggerItemSelector";
@@ -67,6 +68,8 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
   const [updating, setUpdating] = useState(false);
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [isAdd, setIsAdd] = useState(true);
+
+  const resourcesLoader = useAsyncOperation(specsApi.getResourcesForWorkspace);
 
   const [endpointType, setEndpointType] = useState<"template" | "http-operation">("template");
 
@@ -125,16 +128,13 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
         await onModuleSelectionUpdate(null);
       } else {
         try {
-          setUpdating(true);
-          const options = await specsApi.getSwaggerModules(plane!.name);
-          setUpdating(false);
-          setModuleOptions(options);
+          const options = await resourcesLoader.execute(plane!.name);
+          setModuleOptions(options || []);
           setModuleOptionsCommonPrefix(`/Swagger/Specs/${plane!.name}/`);
           await onModuleSelectionUpdate(null);
         } catch (err: any) {
           console.error(err);
           const message = errorHandlerApi.getErrorMessage(err);
-          setUpdating(false);
           setInvalidText(`ResponseError: ${message}`);
         }
       }
@@ -728,6 +728,7 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
                 pb: 2,
               }}
             >
+              <AsyncOperationBanner operation={resourcesLoader} />
               <SwaggerItemSelector
                 name="Module"
                 commonPrefix={moduleOptionsCommonPrefix}
@@ -801,13 +802,9 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
           </IconButton>
           <AuthTypography sx={{ flexShrink: 0 }}> One more scope </AuthTypography>
         </Box>
+        <LoadingBanner loading={updating} />
       </DialogContent>
       <DialogActions>
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
         {!updating && (
           <React.Fragment>
             {!isAdd && <Button onClick={handleClose}>Cancel</Button>}

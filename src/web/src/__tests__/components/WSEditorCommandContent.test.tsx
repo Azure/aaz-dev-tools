@@ -127,10 +127,30 @@ describe("WSEditorCommandContent", () => {
     vi.clearAllMocks();
     vi.mocked(commandApi).getCommand.mockResolvedValue(mockCommand);
     vi.mocked(commandApi).getCommandsForResource.mockResolvedValue([mockCommand]);
-    vi.mocked(commandApi).deleteResource.mockResolvedValue(undefined);
-    vi.mocked(commandApi).updateCommand.mockResolvedValue(mockCommand);
-    vi.mocked(commandApi).updateCommandExamples.mockResolvedValue(mockCommand);
-    vi.mocked(commandApi).updateCommandOutputs.mockResolvedValue(mockCommand);
+    vi.mocked(commandApi).deleteResource = {
+      loadingMessage: "Deleting commands...",
+      fn: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.mocked(commandApi).updateCommand = {
+      loadingMessage: "Updating command...",
+      fn: vi.fn().mockResolvedValue(mockCommand),
+    };
+    vi.mocked(commandApi).renameCommand = {
+      loadingMessage: "Renaming command...",
+      fn: vi.fn().mockResolvedValue(mockCommand),
+    };
+    vi.mocked(commandApi).updateCommandExamples = {
+      loadingMessage: "Updating command examples...",
+      fn: vi.fn().mockResolvedValue(mockCommand),
+    };
+    vi.mocked(commandApi).generateSwaggerExamples = {
+      loadingMessage: "Generating examples from OpenAPI...",
+      fn: vi.fn().mockResolvedValue([]),
+    };
+    vi.mocked(commandApi).updateCommandOutputs = {
+      loadingMessage: "Updating command outputs...",
+      fn: vi.fn().mockResolvedValue(mockCommand),
+    };
   });
 
   describe("Core Rendering", () => {
@@ -470,7 +490,7 @@ describe("WSEditorCommandContent", () => {
 
     it("handles example dialog close with changes", async () => {
       const updatedCommand = { ...mockCommand, version: "2.0" };
-      vi.mocked(commandApi).updateCommandExamples.mockResolvedValue(updatedCommand);
+      (vi.mocked(commandApi).updateCommandExamples.fn as any).mockResolvedValue(updatedCommand);
 
       render(<WSEditorCommandContent {...defaultProps} />);
 
@@ -500,7 +520,10 @@ describe("WSEditorCommandContent", () => {
     });
 
     it("handles delete dialog confirmation", async () => {
-      vi.mocked(commandApi).deleteResource.mockResolvedValue(undefined);
+      vi.mocked(commandApi).deleteResource = {
+        loadingMessage: "Deleting commands...",
+        fn: vi.fn().mockResolvedValue(undefined),
+      };
 
       render(<WSEditorCommandContent {...defaultProps} />);
 

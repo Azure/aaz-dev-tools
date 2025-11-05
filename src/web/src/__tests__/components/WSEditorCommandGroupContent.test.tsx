@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import WSEditorCommandGroupContent from "../../views/workspace/components/WSEditorCommandGroupContent/WSEditorCommandGroupContent";
-import * as commandApi from "../../services/commandApi";
+import { commandApi } from "../../services";
 
 interface CommandGroup {
   id: string;
@@ -15,10 +15,28 @@ interface CommandGroup {
   canDelete: boolean;
 }
 
-vi.mock("../../services/commandApi");
-vi.mock("../../services/errorHandlerApi");
+vi.mock("../../services", () => ({
+  commandApi: {
+    deleteCommandGroup: {
+      loadingMessage: "Deleting command group...",
+      fn: vi.fn(),
+    },
+    updateCommandGroup: {
+      loadingMessage: "Updating command group...",
+      fn: vi.fn(),
+    },
+    renameCommandGroup: {
+      loadingMessage: "Renaming command group...",
+      fn: vi.fn(),
+    },
+  },
+  errorHandlerApi: {
+    getErrorMessage: vi.fn(),
+  },
+}));
 
 const mockCommandApi = commandApi as any;
+
 describe("WSEditorCommandGroupContent", () => {
   const mockWorkspaceUrl = "https://test-workspace.com/workspace/ws1";
 
@@ -37,6 +55,21 @@ describe("WSEditorCommandGroupContent", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCommandApi.deleteCommandGroup.fn.mockResolvedValue(undefined);
+    mockCommandApi.updateCommandGroup.fn.mockResolvedValue({
+      id: "updated-group-id",
+      names: ["updated-group"],
+      stage: "Stable",
+      help: { short: "Updated help text" },
+      canDelete: true,
+    });
+    mockCommandApi.renameCommandGroup.fn.mockResolvedValue({
+      id: "renamed-group-id",
+      names: ["renamed-group"],
+      stage: "Stable",
+      help: { short: "Test help" },
+      canDelete: true,
+    });
   });
 
   describe("Core Rendering", () => {
@@ -160,8 +193,7 @@ describe("WSEditorCommandGroupContent", () => {
       });
     });
 
-    it.skip("saves changes and updates command group", async () => {
-      // @NOTE: will change approach once mocking setup changes
+    it("saves changes and updates command group", async () => {
       const user = userEvent.setup();
 
       render(
@@ -183,7 +215,7 @@ describe("WSEditorCommandGroupContent", () => {
       await user.click(saveButton);
 
       await waitFor(() =>
-        expect(mockCommandApi.updateCommandGroup).toHaveBeenCalledWith(
+        expect(mockCommandApi.updateCommandGroup.fn).toHaveBeenCalledWith(
           expect.stringContaining(mockWorkspaceUrl),
           expect.objectContaining({
             help: expect.objectContaining({ short: "Updated help text" }),
@@ -270,7 +302,7 @@ describe("WSEditorCommandGroupContent", () => {
       await user.click(confirmDeleteButton);
 
       await waitFor(() => {
-        expect(mockCommandApi.deleteCommandGroup).toHaveBeenCalled();
+        expect(mockCommandApi.deleteCommandGroup.fn).toHaveBeenCalled();
         expect(mockOnUpdateCommandGroup).toHaveBeenCalledWith(null);
       });
     });
@@ -282,7 +314,7 @@ describe("WSEditorCommandGroupContent", () => {
       const user = userEvent.setup();
       const mockError = new Error("Update failed");
 
-      mockCommandApi.updateCommandGroup.mockRejectedValue(mockError);
+      mockCommandApi.updateCommandGroup.fn.mockRejectedValue(mockError);
 
       render(
         <WSEditorCommandGroupContent
@@ -297,14 +329,14 @@ describe("WSEditorCommandGroupContent", () => {
       await user.click(editButton);
 
       await waitFor(() => {
-        expect(screen.getByText("Edit Command Group")).toBeInTheDocument();
+        expect(screen.getByText("Command Group")).toBeInTheDocument();
       });
 
       const saveButton = screen.getByRole("button", { name: /save/i });
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(mockCommandApi.updateCommandGroup).toHaveBeenCalled();
+        expect(mockCommandApi.updateCommandGroup.fn).toHaveBeenCalled();
       });
     });
 
@@ -313,7 +345,7 @@ describe("WSEditorCommandGroupContent", () => {
       const user = userEvent.setup();
       const mockError = new Error("Delete failed");
 
-      mockCommandApi.deleteCommandGroup.mockRejectedValue(mockError);
+      mockCommandApi.deleteCommandGroup.fn.mockRejectedValue(mockError);
 
       render(
         <WSEditorCommandGroupContent
@@ -335,7 +367,7 @@ describe("WSEditorCommandGroupContent", () => {
       await user.click(confirmDeleteButton);
 
       await waitFor(() => {
-        expect(mockCommandApi.deleteCommandGroup).toHaveBeenCalled();
+        expect(mockCommandApi.deleteCommandGroup.fn).toHaveBeenCalled();
       });
     });
 

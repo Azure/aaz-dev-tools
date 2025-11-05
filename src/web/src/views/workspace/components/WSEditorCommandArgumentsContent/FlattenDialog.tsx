@@ -1,17 +1,8 @@
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  LinearProgress,
-  TextField,
-} from "@mui/material";
+import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { commandApi, errorHandlerApi } from "../../../../services";
 import WSECArgumentSimilarPicker, { ArgSimilarTree, BuildArgSimilarTree } from "./WSECArgumentSimilarPicker";
+import { LoadingBanner } from "../../../../components";
 
 interface FlattenDialogProps {
   commandUrl: string;
@@ -300,12 +291,8 @@ const FlattenDialog: React.FC<FlattenDialogProps> = (props) => {
           </DialogContent>
         </>
       )}
+      <LoadingBanner loading={updating} />
       <DialogActions>
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
         {!updating && !argSimilarTree && (
           <>
             <Button onClick={handleClose}>Cancel</Button>

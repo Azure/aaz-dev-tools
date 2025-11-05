@@ -1,17 +1,8 @@
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormLabel,
-  LinearProgress,
-  TextField,
-} from "@mui/material";
+import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormLabel, TextField } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import { commandApi, errorHandlerApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import { AsyncOperationBanner } from "../../../../components";
 import type { Command } from "../../interfaces";
 
 export interface AddSubcommandDialogProps {
@@ -33,10 +24,11 @@ const AddSubcommandDialog: React.FC<AddSubcommandDialogProps> = ({
   open,
   onClose,
 }) => {
-  const [updating, setUpdating] = useState<boolean>(false);
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [commandGroupName, setCommandGroupName] = useState<string>("");
   const [refArgsOptions, setRefArgsOptions] = useState<{ var: string; options: string }[]>([]);
+
+  const createSubresourceOperation = useAsyncOperation(commandApi.createSubresource);
 
   useEffect(() => {
     setCommandGroupName(defaultGroupNames.join(" "));
@@ -103,10 +95,8 @@ const AddSubcommandDialog: React.FC<AddSubcommandDialogProps> = ({
       return;
     }
 
-    setUpdating(true);
-
     try {
-      await commandApi.createSubresource(urls[0], {
+      await createSubresourceOperation.execute(urls[0], {
         ...data,
         arg: argVar,
       });
@@ -115,7 +105,6 @@ const AddSubcommandDialog: React.FC<AddSubcommandDialogProps> = ({
       console.error(err);
       const message = errorHandlerApi.getErrorMessage(err);
       setInvalidText(`ResponseError: ${message}`);
-      setUpdating(false);
     }
   };
 
@@ -180,14 +169,10 @@ const AddSubcommandDialog: React.FC<AddSubcommandDialogProps> = ({
             {refArgsOptions.map(buildRefArgText)}
           </>
         )}
+        <AsyncOperationBanner operation={createSubresourceOperation} />
       </DialogContent>
       <DialogActions>
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
-        {!updating && (
+        {!createSubresourceOperation.loading && (
           <>
             <Button onClick={handleClose}>Cancel</Button>
             <Button onClick={handleAddSubresource}>Add Subcommands</Button>

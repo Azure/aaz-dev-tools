@@ -39,11 +39,17 @@ export const cliApi = {
     return res.data;
   },
 
-  updateCliModule: async (repoName: string, moduleName: string, data: any): Promise<void> => {
-    await axios.put(`/CLI/Az/${repoName}/Modules/${moduleName}`, data);
+  updateCliModule: {
+    loadingMessage: "Generating CLI commands...",
+    fn: async (repoName: string, moduleName: string, data: any): Promise<void> => {
+      await axios.put(`/CLI/Az/${repoName}/Modules/${moduleName}`, data);
+    },
   },
 
-  patchCliModule: async (repoName: string, moduleName: string, data: any): Promise<void> => {
-    await axios.patch(`/CLI/Az/${repoName}/Modules/${moduleName}`, data);
+  patchCliModule: {
+    loadingMessage: "Generating CLI commands...",
+    fn: async (repoName: string, moduleName: string, data: any): Promise<void> => {
+      await axios.patch(`/CLI/Az/${repoName}/Modules/${moduleName}`, data);
+    },
   },
 } as const;

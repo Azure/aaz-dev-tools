@@ -13,6 +13,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import SwaggerItemSelector from "../../common/SwaggerItemSelector";
 import styled from "@emotion/styled";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../../../services";
+import { useAsyncOperation } from "../../../../services/hooks";
+import AsyncOperationBanner from "../../../../components/AsyncOperationBanner";
 import type { Plane } from "../../interfaces";
 
 interface WorkspaceCreateDialogProps {
@@ -25,6 +27,8 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
   const [loading, setLoading] = useState<boolean>(false);
   const [invalidText, setInvalidText] = useState<string | undefined>(undefined);
   const [workspaceName, setWorkspaceName] = useState<string>(name);
+
+  const resourcesLoader = useAsyncOperation(specsApi.getResourcesForWorkspace);
 
   const [planes, setPlanes] = useState<Plane[]>([]);
   const [planeOptions, setPlaneOptions] = useState<string[]>([]);
@@ -103,21 +107,18 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
         await onModuleSelectionUpdate(null);
       } else {
         try {
-          setLoading(true);
-          const options = await specsApi.getModulesForPlane(plane.name);
+          const options = await resourcesLoader.execute(plane.name);
           setPlanes((prevPlanes) => {
             const updatedPlanes = [...prevPlanes];
             const index = updatedPlanes.findIndex((v: Plane) => v.name === plane.name);
-            updatedPlanes[index].moduleOptions = options;
+            updatedPlanes[index].moduleOptions = options || [];
             return updatedPlanes;
           });
-          setLoading(false);
-          setModuleOptions(options);
+          setModuleOptions(options || []);
           setModuleOptionsCommonPrefix(`/Swagger/Specs/${plane.name}/`);
           await onModuleSelectionUpdate(null);
         } catch (err: any) {
           console.error(err);
-          setLoading(false);
           setInvalidText(errorHandlerApi.getErrorMessage(err));
         }
       }
@@ -247,7 +248,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
   }, [onClose]);
 
   return (
-    <Dialog open={openDialog} fullWidth={true} onClose={handleClose}>
+    <Dialog open={openDialog} fullWidth={true} disableEscapeKeyDown>
       <DialogTitle>Create a new workspace</DialogTitle>
       <DialogContent>
         {invalidText && (
@@ -256,6 +257,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
             {invalidText}{" "}
           </Alert>
         )}
+        <AsyncOperationBanner operation={resourcesLoader} />
         <InputLabel shrink> API Specs</InputLabel>
         <Box
           sx={{
@@ -310,7 +312,14 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
         <Box>
           <Button onClick={handleClose}>Cancel</Button>
           <Button
-            disabled={loading || !selectedPlane || !selectedModule || !selectedResourceProvider || !workspaceName}
+            disabled={
+              loading ||
+              resourcesLoader.loading ||
+              !selectedPlane ||
+              !selectedModule ||
+              !selectedResourceProvider ||
+              !workspaceName
+            }
             onClick={handleCreate}
             color="success"
           >

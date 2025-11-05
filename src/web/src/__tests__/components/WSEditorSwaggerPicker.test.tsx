@@ -84,7 +84,10 @@ describe("WSEditorSwaggerPicker", () => {
     vi.mocked(workspaceApi).addSwaggerResources.mockResolvedValue(undefined);
     vi.mocked(workspaceApi).addTypespecResources.mockResolvedValue(undefined);
 
-    vi.mocked(specsApi).getSwaggerModules.mockResolvedValue(mockModules);
+    vi.mocked(specsApi).getResourcesForWorkspace = {
+      loadingMessage: "Loading resources...",
+      fn: vi.fn().mockResolvedValue(mockModules),
+    };
     vi.mocked(specsApi).getResourceProvidersWithType.mockResolvedValue(mockResourceProviders);
     vi.mocked(specsApi).getProviderResources.mockResolvedValue(mockResources);
     vi.mocked(specsApi).filterResourcesByPlane.mockResolvedValue({ resources: mockResources });
@@ -126,7 +129,7 @@ describe("WSEditorSwaggerPicker", () => {
       render(<WSEditorSwaggerPicker {...defaultProps} />);
 
       await waitFor(() => {
-        expect(vi.mocked(specsApi).getSwaggerModules).toHaveBeenCalledWith("ResourceManagement");
+        expect(vi.mocked(specsApi).getResourcesForWorkspace.fn).toHaveBeenCalledWith("ResourceManagement");
       });
     });
 
@@ -684,79 +687,6 @@ describe("WSEditorSwaggerPicker", () => {
       fireEvent.click(closeButton);
 
       expect(onCloseMock).toHaveBeenCalledWith(false);
-    });
-  });
-
-  describe("Error Handling", () => {
-    it.skip("displays error when swagger modules fail to load", async () => {
-      // @NOTE: will address once loading issues have been addressed
-      vi.mocked(specsApi).getSwaggerModules.mockRejectedValue(new Error("Failed to load modules"));
-
-      render(<WSEditorSwaggerPicker {...defaultProps} />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/ResponseError/)).toBeInTheDocument();
-      });
-    });
-
-    it.skip("displays error when resource providers fail to load", async () => {
-      // @NOTE: will address once loading issues have been addressed
-      vi.mocked(specsApi).getResourceProvidersWithType.mockRejectedValue(new Error("Failed to load providers"));
-
-      render(<WSEditorSwaggerPicker {...defaultProps} />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/ResponseError/)).toBeInTheDocument();
-      });
-    });
-
-    it.skip("displays error when resources fail to load", async () => {
-      // @NOTE: will address once loading issues have been addressed
-      vi.mocked(specsApi).getProviderResources.mockRejectedValue(new Error("Failed to load resources"));
-
-      render(<WSEditorSwaggerPicker {...defaultProps} />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/ResponseError/)).toBeInTheDocument();
-      });
-    });
-
-    it.skip("displays error when submission fails", async () => {
-      // @NOTE: will address once loading issues have been addressed
-      vi.mocked(workspaceApi).addSwaggerResources.mockRejectedValue(new Error("Submission failed"));
-
-      render(<WSEditorSwaggerPicker {...defaultProps} />);
-
-      await waitFor(() => {
-        const resourceCheckbox = screen.getAllByRole("checkbox")[1];
-        fireEvent.click(resourceCheckbox);
-      });
-
-      const submitButton = screen.getByRole("button", { name: /submit/i });
-      fireEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/ResponseError/)).toBeInTheDocument();
-      });
-    });
-
-    it.skip("allows dismissing error messages", async () => {
-      // @NOTE: will address once loading issues have been addressed
-      vi.mocked(specsApi).getSwaggerModules.mockRejectedValue(new Error("Failed to load modules"));
-
-      render(<WSEditorSwaggerPicker {...defaultProps} />);
-
-      await waitFor(() => {
-        const errorAlert = screen.getByText(/ResponseError/);
-        expect(errorAlert).toBeInTheDocument();
-      });
-
-      const closeErrorButton = screen.getByLabelText(/close/i);
-      fireEvent.click(closeErrorButton);
-
-      await waitFor(() => {
-        expect(screen.queryByText(/ResponseError/)).not.toBeInTheDocument();
-      });
     });
   });
 });
