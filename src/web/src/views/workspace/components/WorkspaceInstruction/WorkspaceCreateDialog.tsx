@@ -248,7 +248,7 @@ const WorkspaceCreateDialog: React.FC<WorkspaceCreateDialogProps> = ({ openDialo
   }, [onClose]);
 
   return (
-    <Dialog open={openDialog} fullWidth={true} onClose={handleClose}>
+    <Dialog open={openDialog} fullWidth={true} disableEscapeKeyDown>
       <DialogTitle>Create a new workspace</DialogTitle>
       <DialogContent>
         {invalidText && (
