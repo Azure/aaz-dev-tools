@@ -184,8 +184,8 @@ const CommandGroupDialog: React.FC<CommandGroupDialogProps> = ({ workspaceUrl, o
           }}
           margin="normal"
         />
-        {<AsyncOperationBanner operation={updateCommandGroupOperation} />}
-        {<AsyncOperationBanner operation={renameCommandGroupOperation} />}
+        <AsyncOperationBanner operation={updateCommandGroupOperation} />
+        <AsyncOperationBanner operation={renameCommandGroupOperation} />
       </DialogContent>
       <DialogActions>
         {!updateCommandGroupOperation.loading && !renameCommandGroupOperation.loading && (
