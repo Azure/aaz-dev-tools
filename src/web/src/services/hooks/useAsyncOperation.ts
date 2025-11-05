@@ -34,14 +34,6 @@ export interface UseAsyncOperationResult<T> extends AsyncOperationState<T>, Asyn
  *
  * // Usage
  * await resourceProviders.execute(moduleUrl);
- *
- * // In JSX
- * {resourceProviders.loading && (
- *   <Box>
- *     <CircularProgress />
- *     <Typography>{resourceProviders.loadingMessage}</Typography>
- *   </Box>
- * )}
  * ```
  */
 export const useAsyncOperation = <T>(serviceMethod?: AsyncServiceMethod<T>): UseAsyncOperationResult<T> => {
