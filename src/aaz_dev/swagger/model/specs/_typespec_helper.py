@@ -45,22 +45,36 @@ class TypeSpecHelper:
 
     @classmethod
     def _parse_main_tsp(cls, path):
-        def expand(import_path):
-            with open(import_path, "r", encoding="utf-8") as f:
-                lines = f.readlines()
+        def load_file_lines(path):
+            with open(path, "r", encoding="utf-8") as f:
+                return f.readlines()
 
-            base = os.path.dirname(import_path)
+        def parse_by_line(lines):
+            namespace, is_mgmt_plane = None, False
+            for line in lines:
+                if line.startswith("@armProviderNamespace"):
+                    is_mgmt_plane = True
+
+                if line.startswith("namespace "):
+                    assert namespace is None
+                    namespace = re.match(r"^namespace\s+([A-Za-z0-9.]+)", line).group(1)
+                    # armProviderNamespace will always be appeared before namespace
+                    break
+
+            return namespace, is_mgmt_plane
+
+        def expand(path):
+            base = os.path.dirname(path)
 
             content = []
             for line in lines:
-                if match := import_pattern.findall(line):
+                if match := re.compile(r'^import "([^"]+)"').findall(line):
                     rel_path = match[0]
                     abs_path = os.path.abspath(os.path.join(base, rel_path))
 
-                    if os.path.isfile(abs_path):  # expand first level only; otherwise, will impact performance
+                    if os.path.isfile(abs_path):  # expand first level only; otherwise, may have circular reference
                         with open(abs_path, "r", encoding="utf-8") as f:
                             content.append("".join(f.readlines()))
-
                     else:
                         content.append(line)
                 else:
@@ -68,20 +82,14 @@ class TypeSpecHelper:
 
             return "".join(content).split("\n")
 
-        import_pattern = re.compile(r'^import "([^"]+)"')
+        lines = load_file_lines(path)
+        if any("@armProviderNamespace" in line for line in lines):
+            namespace, is_mgmt_plane = parse_by_line(lines)
 
-        is_mgmt_plane = False
-        namespace = None
+        else:
+            namespace, is_mgmt_plane = parse_by_line(expand(path))
 
-        for line in expand(path):
-            if line.startswith("@armProviderNamespace"):
-                is_mgmt_plane = True
-            if line.startswith("namespace "):
-                assert namespace is None
-                namespace = re.match(r"^namespace\s+([A-Za-z0-9.]+)", line).group(1)
-                # armProviderNamespace will always be appeared before namespace
-                break
         if namespace is None:
-            # logger.warning("Failed to parse main tsp file: %s namespace is not exist.", path)
             return None, None
+
         return namespace, is_mgmt_plane
