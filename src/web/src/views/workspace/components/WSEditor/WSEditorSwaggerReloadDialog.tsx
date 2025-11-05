@@ -5,7 +5,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  LinearProgress,
   Button,
   List,
   ListSubheader,
@@ -20,6 +19,7 @@ import {
 import type { Resource } from "../../interfaces";
 import { getTypespecRPResourcesOperations } from "../../../../typespec";
 import { workspaceApi, errorHandlerApi } from "../../../../services";
+import { LoadingBanner } from "../../../../components";
 
 interface WSEditorSwaggerReloadDialogProps {
   workspaceName: string;
@@ -247,14 +247,9 @@ const WSEditorSwaggerReloadDialog: React.FC<WSEditorSwaggerReloadDialogProps> = 
             </Paper>
           )}
         </List>
+        <LoadingBanner loading={updating} />
       </DialogContent>
       <DialogActions>
-        {/* @TODO: update usage: */}
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
         {!updating && (
           <Fragment>
             <Button onClick={handleClose}>Cancel</Button>

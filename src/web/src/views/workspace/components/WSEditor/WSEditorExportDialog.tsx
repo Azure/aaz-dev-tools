@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Fragment } from "react";
-import { Box, Dialog, DialogTitle, DialogContent, DialogActions, LinearProgress, Button, Alert } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert } from "@mui/material";
 import { workspaceApi, errorHandlerApi } from "../../../../services";
+import { LoadingBanner } from "../../../../components";
 
 interface WSEditorExportDialogProps {
   workspaceUrl: string;
@@ -89,13 +90,8 @@ const WSEditorExportDialog: React.FC<WSEditorExportDialogProps> = ({
           </Alert>
         )}
       </DialogContent>
+      <LoadingBanner loading={updating} />
       <DialogActions>
-        {/* @TODO: update usage: */}
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
         {!updating && (
           <Fragment>
             {clientConfigOOD && <Button onClick={inheritClientConfig}>Refresh Client Config</Button>}

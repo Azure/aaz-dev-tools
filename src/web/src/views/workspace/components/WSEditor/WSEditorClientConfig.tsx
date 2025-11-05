@@ -7,7 +7,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  LinearProgress,
   Button,
   Paper,
   TextField,
@@ -22,7 +21,7 @@ import {
 } from "@mui/material";
 import { workspaceApi, specsApi, errorHandlerApi } from "../../../../services";
 import { useAsyncOperation } from "../../../../services/hooks";
-import AsyncOperationBanner from "../../../../components/AsyncOperationBanner";
+import AsyncOperationBanner, { LoadingBanner } from "../../../../components/AsyncOperationBanner";
 import DoDisturbOnRoundedIcon from "@mui/icons-material/DoDisturbOnRounded";
 import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
 import SwaggerItemSelector from "../../common/SwaggerItemSelector";
@@ -803,14 +802,9 @@ const WSEditorClientConfigDialog: React.FC<WSEditorClientConfigDialogProps> = ({
           </IconButton>
           <AuthTypography sx={{ flexShrink: 0 }}> One more scope </AuthTypography>
         </Box>
+        <LoadingBanner loading={updating} />
       </DialogContent>
       <DialogActions>
-        {/* @TODO: update usage: */}
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
         {!updating && (
           <React.Fragment>
             {!isAdd && <Button onClick={handleClose}>Cancel</Button>}

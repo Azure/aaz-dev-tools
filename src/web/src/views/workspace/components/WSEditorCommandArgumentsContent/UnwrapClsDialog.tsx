@@ -1,12 +1,10 @@
 import {
   Alert,
-  Box,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  LinearProgress,
   styled,
   Typography,
   TypographyProps,
@@ -14,6 +12,7 @@ import {
 
 import { commandApi, errorHandlerApi } from "../../../../services";
 import React, { useState } from "react";
+import { LoadingBanner } from "../../../../components";
 
 const ArgTypeTypography = styled(Typography)<TypographyProps>(({ theme }) => ({
   color: theme.palette.primary.main,
@@ -98,13 +97,8 @@ const UnwrapClsDialog: React.FC<UnwrapClsDialogProps> = (props) => {
         )}
         <ArgTypeTypography>{props.arg.type}</ArgTypeTypography>
       </DialogContent>
+      <LoadingBanner loading={updating} />
       <DialogActions>
-        {/* @TODO: update usage: */}
-        {updating && (
-          <Box sx={{ width: "100%" }}>
-            <LinearProgress color="secondary" />
-          </Box>
-        )}
         {!updating && (
           <>
             <Button onClick={handleClose}>Cancel</Button>
