@@ -194,7 +194,6 @@ describe("WSEditorCommandGroupContent", () => {
     });
 
     it("saves changes and updates command group", async () => {
-      // @NOTE: will change approach once mocking setup changes
       const user = userEvent.setup();
 
       render(
