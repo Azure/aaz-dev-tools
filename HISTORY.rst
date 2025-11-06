@@ -3,6 +3,11 @@
 Release History
 ===============
 
+4.5.3
+++++++
+* Improve spec module loading performance to reduce module loading time. (#536)
+* Add loading states for async operations in the UI with visual loading indicators. (#533)
+
 4.5.2
 ++++++
 * Update items in the `/workspace` dir to be function-based React instead of class-based. (#523)
