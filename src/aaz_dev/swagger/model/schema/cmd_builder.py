@@ -42,7 +42,7 @@ logger = logging.getLogger("aaz")
 
 class CMDBuilder:
 
-    def __init__(self, path, method=None, mutability=None, in_base=False, frozen=False, parent_ids=None, cls_definitions=None, parameterized_host=None, ignore_x_ms_client_flatten=None):
+    def __init__(self, path, method=None, mutability=None, in_base=False, frozen=False, parent_ids=None, cls_definitions=None, parameterized_host=None, non_flatten=None):
         self.path = path
         self.method = method
         self.mutability = mutability
@@ -53,7 +53,7 @@ class CMDBuilder:
         self.parent_ids = parent_ids or []
         self.cls_definitions = {} if cls_definitions is None else cls_definitions
         self.parameterized_host = parameterized_host
-        self.ignore_x_ms_client_flatten=ignore_x_ms_client_flatten
+        self.non_flatten=non_flatten
 
     def __call__(self, schema, **kwargs):
         sub_builder = CMDBuilder(
@@ -65,7 +65,7 @@ class CMDBuilder:
             parent_ids=[*self.parent_ids, self.id],
             cls_definitions=kwargs.pop('cls_definitions', self.cls_definitions),
             parameterized_host=kwargs.pop('parameterized_host', self.parameterized_host),
-            ignore_x_ms_client_flatten=kwargs.pop('ignore_x_ms_client_flatten', self.ignore_x_ms_client_flatten)
+            non_flatten=kwargs.pop('non_flatten', self.non_flatten)
         )
         if getattr(schema, 'read_only', None):
             sub_builder.read_only = True
@@ -86,8 +86,6 @@ class CMDBuilder:
                             key=sub_builder.id,
                             value=sub_builder.parent_ids.index(sub_builder.id),
                         )
-        if hasattr(schema, 'x_ms_client_flatten') and schema.x_ms_client_flatten and self.ignore_x_ms_client_flatten:
-            schema.x_ms_client_flatten = None
 
         return schema.to_cmd(sub_builder, **kwargs)
 
@@ -237,6 +235,8 @@ class CMDBuilder:
             raise exceptions.InvalidSwaggerValueError(
                 f"type is not supported", key=getattr(schema, "traces", None), value=[schema_type])
 
+        if isinstance(model, CMDObjectSchemaBase):
+            model.non_flatten = self.non_flatten
         model.read_only = self.read_only
         model.frozen = self.frozen
         return model

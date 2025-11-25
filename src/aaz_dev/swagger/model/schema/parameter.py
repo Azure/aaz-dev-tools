@@ -219,6 +219,7 @@ class BodyParameter(ParameterBase, Linkable):
             if isinstance(v, CMDObjectSchema):
                 # flatten body parameter
                 v.client_flatten = True
+                v.non_flatten = None
         else:
             raise exceptions.InvalidSwaggerValueError(
                 msg="Invalid Request type",

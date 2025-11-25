@@ -230,6 +230,10 @@ def generate_all():
                     aaz_manager=AAZSpecsManager(),
                     source=SourceTypeEnum.OpenAPI,
                 )
+                for resource in resources:
+                    resource["options"] = {
+                        "non_flatten": True
+                    }
                 ws.add_new_resources_by_swagger(mod_names=module_name, version=version, resources=resources)
 
                 # provide default short summary
