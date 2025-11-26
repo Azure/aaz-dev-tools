@@ -110,6 +110,8 @@ class CMDArgBuilder:
 
     def _need_flatten(self):
         if isinstance(self.schema, CMDObjectSchema):
+            if self.schema.non_flatten:
+                return False
             if self.get_cls():
                 # not support to flatten object which is a cls.
                 return False
