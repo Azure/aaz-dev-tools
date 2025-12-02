@@ -890,8 +890,6 @@ class CMDObjectSchemaBase(CMDSchemaBase):
     discriminators = ListType(CMDObjectSchemaDiscriminatorField())
     additional_props = CMDObjectSchemaAdditionalPropertiesField()
 
-    non_flatten = None
-
     # define a schema cls which can be used by others,
     # cls definition will not include properties in CMDSchema only, such as following properties:
     #  - name
