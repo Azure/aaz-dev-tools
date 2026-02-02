@@ -28,7 +28,7 @@
     "typescript": "^5.2.2"
   },
   "peerDependencies": {
-    "@azure-tools/typespec-azure-core": "workspace:~",
+    "@azure-tools/typespec-azure-core": "^0.60.0",
     "@azure-tools/typespec-client-generator-core": "workspace:~",
     "@azure-tools/typespec-azure-resource-manager": "workspace:~",
     "@typespec/compiler": "workspace:~",
