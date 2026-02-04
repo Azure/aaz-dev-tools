@@ -36,7 +36,7 @@ on:
 env:
   # Change this to invalidate existing cache.
   CACHE_PREFIX: v0
-  NODE_VERSION: "20.x"
+  NODE_VERSION: "22.x"
   PNPM_VERSION: "9.5.0"
 
 permissions:
