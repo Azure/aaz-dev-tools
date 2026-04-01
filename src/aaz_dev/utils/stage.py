@@ -10,7 +10,7 @@ class AAZStageEnum:
 class AAZStageField(StringType):
     """The stage for command group, command or argument."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(
             choices=(AAZStageEnum.Experimental, AAZStageEnum.Preview, AAZStageEnum.Stable),
             default=AAZStageEnum.Stable,

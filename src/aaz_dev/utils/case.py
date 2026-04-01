@@ -16,5 +16,5 @@ def to_snake_case(name, separator='_'):
     name = re.sub('([a-z0-9])([A-Z])', r'\1' + separator + r'\2', name).lower()
     return name.replace('-', separator).replace('_', separator)
 
-def to_singular(name):
+def to_singular(name: str) -> str:
     return _pluralizer.singular(name)

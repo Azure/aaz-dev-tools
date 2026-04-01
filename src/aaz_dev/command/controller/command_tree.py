@@ -8,6 +8,7 @@ from command.model.specs import CMDSpecsCommandGroup, CMDSpecsCommand, CMDSpecsR
 from command.model.specs._command_tree import CMDSpecsSimpleCommand, CMDSpecsSimpleCommandGroup, \
     CMDSpecsSimpleCommandTree
 from utils import exceptions
+from typing import List, Any
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ def build_simple_command_tree(aaz_path):
 
 
 class CMDSpecsPartialCommandGroup:
-    def __init__(self, names, short_help, uri, aaz_path):
+    def __init__(self, names: List[str], short_help: str, uri: str, aaz_path: str) -> None:
         self.names = names
         self.short_help = short_help
         self.uri = uri
@@ -316,12 +317,12 @@ class CMDSpecsPartialCommand:
 
 
 class CMDSpecsPartialCommandTree:
-    def __init__(self, aaz_path, root=None):
+    def __init__(self, aaz_path: str, root: None=None):
         self.aaz_path = aaz_path
         self._root = root or CMDSpecsPartialCommandGroup(names=["aaz"], short_help='', uri="/Commands/readme.md",
                                                          aaz_path=aaz_path).load()
-        self._modified_command_groups = set()
-        self._modified_commands = set()
+        self._modified_command_groups: set[Any] = set()
+        self._modified_commands: set[Any] = set()
 
     @property
     def root(self):

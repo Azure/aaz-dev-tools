@@ -1,10 +1,11 @@
 import json
+from typing import Dict, Optional
 
 
 class InvalidAPIUsage(Exception):
     status_code = 400
 
-    def __init__(self, message, status_code=None, payload=None):
+    def __init__(self, message: str, status_code: None=None, payload: Optional[Dict[str, str]]=None) -> None:
         super().__init__()
         self.message = message
         if status_code is not None:
@@ -30,7 +31,7 @@ class InvalidAPIUsage(Exception):
 
 class VerificationError(InvalidAPIUsage):
 
-    def __init__(self, message, details, status_code=None):
+    def __init__(self, message: str, details: str, status_code: None=None) -> None:
         super().__init__(message=message, status_code=status_code, payload={
             'details': details
         })

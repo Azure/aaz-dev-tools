@@ -59,7 +59,7 @@ class CMDSelectorIndexBase(Model):
 
 class CMDSelectorIndexBaseField(PolyModelType):
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super(CMDSelectorIndexBaseField, self).__init__(
             model_spec=CMDSelectorIndexBase,
             allow_subclasses=True,
@@ -128,7 +128,7 @@ class CMDSelectorIndex(CMDSelectorIndexBase):
 
 class CMDSelectorIndexField(PolyModelType):
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super(CMDSelectorIndexField, self).__init__(
             model_spec=CMDSelectorIndex,
             allow_subclasses=True,

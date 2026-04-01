@@ -6,7 +6,7 @@ from utils.client import CloudEnum
 
 class PlaneField(StringType):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(
             regex=r'^({})|({}:[a-z0-9_\-.]+)$'.format(PlaneEnum.Mgmt, PlaneEnum._Data),
             *args, **kwargs
@@ -15,7 +15,7 @@ class PlaneField(StringType):
 
 class CloudField(StringType):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
          super().__init__(
             choices=CloudEnum.choices(),
             *args, **kwargs

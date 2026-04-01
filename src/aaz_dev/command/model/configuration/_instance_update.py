@@ -7,6 +7,7 @@ from schematics.types import ModelType, StringType
 
 from ._content import CMDRequestJson
 from ._fields import CMDVariantField
+from typing import Dict, Union
 
 
 class CMDInstanceUpdateAction(Model):
@@ -16,7 +17,7 @@ class CMDInstanceUpdateAction(Model):
     ref = CMDVariantField(required=True, deserialize_from=["ref", "instance"])
 
     @classmethod
-    def _claim_polymorphic(cls, data):
+    def _claim_polymorphic(cls, data: Dict[str, Union[bool, Dict[str, str], str]]) -> bool:
         if cls.POLYMORPHIC_KEY is None:
             return False
 
