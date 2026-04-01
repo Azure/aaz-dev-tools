@@ -60,7 +60,7 @@ def build_simple_command_tree(aaz_path):
 
 
 class CMDSpecsPartialCommandGroup:
-    def __init__(self, names: List[str], short_help: str, uri: str, aaz_path: str) -> None:
+    def __init__(self, names: List[str], short_help: str, uri: str, aaz_path: str):
         self.names = names
         self.short_help = short_help
         self.uri = uri

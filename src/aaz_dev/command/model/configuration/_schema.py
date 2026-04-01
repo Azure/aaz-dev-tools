@@ -363,7 +363,7 @@ class CMDClsSchemaBase(CMDSchemaBase):
     def _get_type(self) -> str:
         return self._type
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.implement = None
 
@@ -734,7 +734,7 @@ class CMDAnyTypeSchema(CMDAnyTypeSchemaBase, CMDSchema):
 
 class CMDObjectSchemaDiscriminatorField(ModelType):
 
-    def __init__(self, model_spec: Optional[str]=None, **kwargs) -> None:
+    def __init__(self, model_spec: Optional[str]=None, **kwargs: Any) -> None:
         super(CMDObjectSchemaDiscriminatorField, self).__init__(
             model_spec=model_spec or CMDObjectSchemaDiscriminator,
             serialize_when_none=False,
@@ -865,7 +865,7 @@ class CMDObjectSchemaAdditionalProperties(Model):
 
 class CMDObjectSchemaAdditionalPropertiesField(ModelType):
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         super(CMDObjectSchemaAdditionalPropertiesField, self).__init__(
             model_spec=CMDObjectSchemaAdditionalProperties,
             serialized_name="additionalProps",
