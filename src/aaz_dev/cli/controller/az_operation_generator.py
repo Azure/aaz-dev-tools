@@ -68,11 +68,7 @@ class AzHttpOperationGenerator(AzOperationGenerator):
             else:
                 if not isinstance(response.body, CMDHttpResponseJsonBody):
                     if not response.body:
-                        raise exceptions.InvalidAPIUsage(
-                            f"Invalid `Error` response schema in operation `{self._operation.operation_id}`: "
-                            f"Missing `schema` property in response "
-                            f"`{response.status_codes or 'default'}`."
-                        )
+                        continue
                     else:
                         raise exceptions.InvalidAPIUsage(
                             f"Invalid `Error` response schema in operation `{self._operation.operation_id}`: "

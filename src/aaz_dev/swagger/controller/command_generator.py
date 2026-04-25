@@ -381,11 +381,7 @@ class _CommandGenerator(ABC):
             if resp.is_error:
                 if not isinstance(resp.body, CMDHttpResponseJsonBody):
                     if not resp.body:
-                        raise exceptions.InvalidAPIUsage(
-                            f"Invalid `Error` response schema in operation `{op.operation_id}`: "
-                            f"Missing `schema` property in response "
-                            f"`{resp.status_codes or 'default'}`."
-                        )
+                        continue
                     else:
                         raise exceptions.InvalidAPIUsage(
                             f"Invalid `Error` response schema in operation `{op.operation_id}`: "
