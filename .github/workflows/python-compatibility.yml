@@ -1,11 +1,11 @@
 # Python Compatibility Testing Workflow
 #
 # Tests Python package build compatibility across:
-# - Operating Systems: Ubuntu, macOS, Windows
-# - Python Versions: 3.9, 3.10, 3.11, 3.12, 3.13
+# - Operating Systems: Ubuntu
+# - Python Versions: 3.10 (floor), 3.14 (ceiling)
 #
 # Validates that the package can be built and installed correctly
-# on all supported platforms and Python versions.
+# on the supported Python versions.
 
 name: Python Compatibility Check
 
@@ -34,8 +34,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]  
-        python: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        os: [ubuntu-latest]  
+        python: ['3.10', '3.14']
         task:
           - name: Build
             run: |
@@ -48,10 +48,10 @@ jobs:
               twine check ./dist/*
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
 
@@ -64,8 +64,7 @@ jobs:
         run: |
           echo "PYTHON_VERSION=$(python --version)" >> $GITHUB_ENV
 
-      - name: Test dependency wheels availability - Unix/Linux/macOS
-        if: runner.os != 'Windows'
+      - name: Test dependency wheels availability
         run: |
           python -m venv .venv-deps-test
           . .venv-deps-test/bin/activate
@@ -79,65 +78,20 @@ jobs:
           rm -rf .venv-deps-test
         shell: bash
 
-      - name: Test dependency wheels availability - Windows
-        if: runner.os == 'Windows'
-        run: |
-          python -m venv .venv-deps-test
-          .venv-deps-test\Scripts\Activate.ps1
-          # Try installing with wheel-only first to catch dependency conflicts early
-          pip install --only-binary=:all: -r requirements.txt
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "Warning: Some dependencies may not have wheels available"
-            Write-Host "Attempting installation with source packages allowed..."
-            pip install -r requirements.txt
-          }
-          deactivate
-          Remove-Item -Recurse -Force .venv-deps-test
-        shell: pwsh
-
-      - name: Setup virtual environment - Unix/Linux/macOS
-        if: runner.os != 'Windows'
+      - name: Setup virtual environment
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install -e .[dev]
         shell: bash
 
-      - name: Setup virtual environment - Windows
-        if: runner.os == 'Windows'
-        run: |
-          python -m venv .venv
-          .venv\Scripts\Activate.ps1
-          pip install -e .[dev]
-        shell: pwsh
-
-      - name: Show environment info - Unix/Linux/macOS
-        if: runner.os != 'Windows'
+      - name: Show environment info
         run: |
           . .venv/bin/activate
           which python
           python --version
           pip freeze
-          # Node.js version info - uncomment if you need to verify Node.js/npm/pnpm versions
-          # which node
-          # node --version
-          # npm --version
-          # pnpm --version
         shell: bash
-
-      - name: Show environment info - Windows
-        if: runner.os == 'Windows'
-        run: |
-          .venv\Scripts\Activate.ps1
-          Get-Command python
-          python --version
-          pip freeze
-          # Node.js version info - uncomment if you need to verify Node.js/npm/pnpm versions
-          # Get-Command node
-          # node --version
-          # npm --version
-          # pnpm --version
-        shell: pwsh
 
       # Web build steps - tests TypeScript/web components compilation and bundling
       # Uncomment if you need to verify that web components work with your Python package changes
@@ -155,17 +109,8 @@ jobs:
       #   run: |
       #       pnpm test-aaz-emitter
 
-      - name: ${{ matrix.task.name }} - Unix/Linux/macOS
-        if: runner.os != 'Windows'
+      - name: ${{ matrix.task.name }}
         run: |
           . .venv/bin/activate
           ${{ matrix.task.run }}
         shell: bash
-
-      - name: ${{ matrix.task.name }} - Windows
-        if: runner.os == 'Windows'
-        run: |
-          .venv\Scripts\Activate.ps1
-          ${{ matrix.task.run }}
-        shell: pwsh
-

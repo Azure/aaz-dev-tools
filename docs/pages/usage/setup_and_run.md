@@ -17,7 +17,7 @@ weight: 100
 
 ### Install python
 
-This tool is compatible with python versions >=3.9 and <=3.13. You can use an existing python or install a new one by the following ways:
+This tool is compatible with python versions >=3.10 and <=3.14. You can use an existing python or install a new one by the following ways:
 
 - For Windows users: You can download and run full installer from [Python Download](https://www.python.org/downloads/).
 - For Linux users: You can install python from Package Manager or build a stable release from source code
