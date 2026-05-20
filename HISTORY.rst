@@ -5,7 +5,7 @@ Release History
 
 4.5.4
 ++++++
-* Add Python 3.14 support and unpin ``setuptools`` to allow versions compatible with newer Python releases (``setuptools>=78``).
+* Add Python 3.14 support.
 * Drop Python 3.9 support (end-of-life since October 2025); ``python_requires`` is now ``>=3.10``.
 * Refine the Python compatibility CI workflow: reduce the test matrix to ``ubuntu-latest`` with Python 3.10 (floor) and 3.14 (ceiling), and bump ``actions/checkout`` and ``actions/setup-python`` to current major versions.
 
