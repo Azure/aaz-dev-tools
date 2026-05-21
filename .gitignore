@@ -121,6 +121,7 @@ __pycache__/
 
 
 venv/
+.venv*/
 
 *.pyc
 

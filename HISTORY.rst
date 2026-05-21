@@ -3,6 +3,12 @@
 Release History
 ===============
 
+4.5.4
+++++++
+* Add Python 3.14 support.
+* Drop Python 3.9 support (end-of-life since October 2025); ``python_requires`` is now ``>=3.10``.
+* Refine the Python compatibility CI workflow: reduce the test matrix to ``ubuntu-latest`` with Python 3.10 (floor) and 3.14 (ceiling), and bump ``actions/checkout`` and ``actions/setup-python`` to current major versions.
+
 4.5.3
 ++++++
 * Improve spec module loading performance to reduce module loading time. (#536)
