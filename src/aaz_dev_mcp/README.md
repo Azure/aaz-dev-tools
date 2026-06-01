@@ -53,6 +53,52 @@ The server speaks MCP over **stdio**:
 aaz-dev-mcp
 ```
 
+## GitHub Actions issue codegen
+
+This repo also includes a lightweight GitHub Actions flow for issue-driven
+codegen. It does not run the MCP stdio server in CI; it calls the shared Python
+helpers directly.
+
+1. Create an **AAZ Codegen Request** issue and describe the API version in
+   prose, e.g. `Generate Azure CLI for Microsoft.Consumption using API version
+   2024-08-01.`
+2. The `codegen:request` label triggers `.github/workflows/aaz-codegen-preview.yml`.
+   The workflow calls GitHub Models with the built-in `GITHUB_TOKEN`
+   (`models: read`) to extract candidate fields, validates them against
+   `Azure/azure-rest-api-specs@main`, and comments a preview.
+3. Comment `/codegen` on an issue with a valid preview to run
+   `.github/workflows/aaz-codegen-run.yml`. The run uses the latest valid bot
+   preview, generates into `Azure/aaz` and `Azure/azure-cli`, and opens or
+   updates draft PRs.
+
+The `/codegen` workflow never writes to a developer's local checkout. It checks
+out fresh copies of `Azure/aaz`, `Azure/azure-cli`, and `Azure/azure-rest-api-specs`
+inside the GitHub Actions runner workspace, modifies those runner worktrees,
+then pushes bot branches and opens or updates draft PRs.
+
+GitHub Models does not require Azure OpenAI secrets. Cross-repo PR creation
+still requires a token that can push branches and open PRs in `Azure/aaz` and
+`Azure/azure-cli`; configure it as `CODEGEN_GITHUB_TOKEN`. Without that secret,
+the workflow falls back to `GITHUB_TOKEN`, which usually cannot write to those
+repos from this control repo.
+
+### Testing the flow from a branch
+
+GitHub issue and issue-comment events are repository events, so they are not a
+good way to test a brand-new workflow file that only exists on a feature branch.
+Use `.github/workflows/aaz-codegen-branch-test.yml` for pre-merge smoke tests.
+
+Push a commit whose message contains `[aaz-codegen-test]` to run the GitHub
+Models extraction and preview validation against a synthetic issue. Use
+`[aaz-codegen-run-test]` to also run deterministic codegen against fresh runner
+checkouts of `Azure/aaz` and `Azure/azure-cli`.
+
+To test draft PR creation before merging the issue workflow, configure
+`CODEGEN_GITHUB_TOKEN`, then push a commit whose message contains
+`[aaz-codegen-pr-test]`. That mode still uses fresh runner checkouts, but it
+also pushes generated branches to `Azure/aaz` and `Azure/azure-cli` and opens
+draft PRs. It never comments on GitHub issues.
+
 ### Claude Desktop / OpenCode config snippet
 
 ```json

@@ -1,0 +1,240 @@
+name: AAZ Codegen Branch Test
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - master
+      - dev
+  workflow_dispatch:
+    inputs:
+      issue_title:
+        description: Synthetic issue title to extract from.
+        required: true
+        default: "AAZ codegen request: Microsoft.Consumption 2024-08-01"
+      issue_body:
+        description: Synthetic issue body to extract from.
+        required: true
+        default: "Generate Azure CLI code for Microsoft.Consumption using API version 2024-08-01. Target azure-cli main module. CLI module consumption. Profile latest."
+      spec_ref:
+        description: azure-rest-api-specs ref to validate against.
+        required: true
+        default: main
+      run_codegen:
+        description: Also run deterministic codegen in runner checkouts without pushing PRs.
+        required: true
+        type: boolean
+        default: false
+      publish_prs:
+        description: Push runner-generated branches and open draft PRs.
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  models: read
+
+concurrency:
+  group: aaz-codegen-branch-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  branch-smoke:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.message || '', '[aaz-codegen-test]') ||
+      contains(github.event.head_commit.message || '', '[aaz-codegen-run-test]') ||
+      contains(github.event.head_commit.message || '', '[aaz-codegen-pr-test]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    env:
+      GITHUB_MODELS_ENDPOINT: https://models.github.ai/inference/chat/completions
+      GITHUB_MODELS_MODEL: openai/gpt-4o-mini
+      TEST_ISSUE_TITLE: "${{ github.event.inputs.issue_title || 'AAZ codegen request: Microsoft.Consumption 2024-08-01' }}"
+      TEST_ISSUE_BODY: "${{ github.event.inputs.issue_body || 'Generate Azure CLI code for Microsoft.Consumption using API version 2024-08-01. Target azure-cli main module. CLI module consumption. Profile latest.' }}"
+      SPEC_REF: "${{ github.event.inputs.spec_ref || 'main' }}"
+      RUN_CODEGEN: "${{ github.event.inputs.run_codegen == 'true' || github.event.inputs.publish_prs == 'true' || contains(github.event.head_commit.message || '', '[aaz-codegen-run-test]') || contains(github.event.head_commit.message || '', '[aaz-codegen-pr-test]') }}"
+      PUBLISH_PRS: "${{ github.event.inputs.publish_prs == 'true' || contains(github.event.head_commit.message || '', '[aaz-codegen-pr-test]') }}"
+      CODEGEN_TOKEN: "${{ secrets.CODEGEN_GITHUB_TOKEN }}"
+      AAZ_BRANCH: codegen/branch-test-${{ github.run_id }}-aaz
+      CLI_BRANCH: codegen/branch-test-${{ github.run_id }}-azure-cli
+
+    steps:
+      - name: Checkout aaz-dev-tools
+        uses: actions/checkout@v4
+
+      - name: Checkout azure-rest-api-specs
+        uses: actions/checkout@v4
+        with:
+          repository: Azure/azure-rest-api-specs
+          ref: ${{ env.SPEC_REF }}
+          path: azure-rest-api-specs
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install aaz-dev-tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Build synthetic issue event
+        run: |
+          python -m aaz_dev_mcp.ci.build_issue_event \
+            --title "$TEST_ISSUE_TITLE" \
+            --body "$TEST_ISSUE_BODY" \
+            --repo "$GITHUB_REPOSITORY" \
+            --out synthetic-issue-event.json
+
+      - name: Build GitHub Models request
+        run: |
+          python -m aaz_dev_mcp.ci.issue_prompt \
+            --event synthetic-issue-event.json \
+            --payload \
+            --model "$GITHUB_MODELS_MODEL" \
+            --out github-models-request.json
+
+      - name: Extract codegen fields with GitHub Models
+        run: |
+          curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json" \
+            -d @github-models-request.json \
+            "$GITHUB_MODELS_ENDPOINT" \
+            > github-models-response.json
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Build preview
+        run: |
+          python -m aaz_dev_mcp.ci.preview_issue_codegen \
+            --event synthetic-issue-event.json \
+            --llm-response github-models-response.json \
+            --swagger-path azure-rest-api-specs \
+            --out codegen-preview.md \
+            --state codegen-preview.json
+
+          cat codegen-preview.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Checkout aaz
+        if: env.RUN_CODEGEN == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: Azure/aaz
+          ref: main
+          path: aaz
+          token: ${{ env.CODEGEN_TOKEN || github.token }}
+
+      - name: Checkout azure-cli
+        if: env.RUN_CODEGEN == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: Azure/azure-cli
+          ref: dev
+          path: azure-cli
+          token: ${{ env.CODEGEN_TOKEN || github.token }}
+
+      - name: Run deterministic codegen without publishing
+        if: env.RUN_CODEGEN == 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/aaz-workspaces"
+          python -m aaz_dev_mcp.ci.run_issue_codegen \
+            --preview codegen-preview.json \
+            --swagger-path azure-rest-api-specs \
+            --aaz-path aaz \
+            --cli-path azure-cli \
+            --workspace-folder "$RUNNER_TEMP/aaz-workspaces" \
+            --summary codegen-summary.md \
+            --json-out codegen-result.json \
+            --by-patch true
+
+          {
+            echo "## Runner-only codegen diff"
+            echo
+            echo "### Azure/aaz"
+            echo '```'
+            git -C aaz status --short
+            echo '```'
+            echo
+            echo "### Azure/azure-cli"
+            echo '```'
+            git -C azure-cli status --short
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Push test branches and open draft PRs
+        if: env.PUBLISH_PRS == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${CODEGEN_TOKEN}" ]]; then
+            echo "CODEGEN_GITHUB_TOKEN is required to publish branch-test PRs." >&2
+            exit 2
+          fi
+
+          git config --global user.name "aaz-codegen-bot"
+          git config --global user.email "aaz-codegen-bot@users.noreply.github.com"
+
+          : > pr-links.md
+
+          publish_repo() {
+            local path="$1"
+            local repo="$2"
+            local base="$3"
+            local branch="$4"
+            local label="$5"
+
+            if git -C "$path" diff --quiet; then
+              echo "- ${label}: no changes" >> pr-links.md
+              return
+            fi
+
+            git -C "$path" checkout -B "$branch"
+            git -C "$path" add -A
+            git -C "$path" commit -m "Codegen branch test from ${GITHUB_REPOSITORY}@${GITHUB_SHA}"
+            git -C "$path" push --force-with-lease origin "HEAD:${branch}"
+
+            local url
+            url="$(gh pr create \
+              --repo "$repo" \
+              --base "$base" \
+              --head "$branch" \
+              --draft \
+              --title "AAZ codegen branch test from ${GITHUB_REF_NAME}" \
+              --body-file codegen-summary.md)"
+            echo "- ${label}: ${url}" >> pr-links.md
+          }
+
+          publish_repo "aaz" "Azure/aaz" "main" "$AAZ_BRANCH" "Azure/aaz"
+          publish_repo "azure-cli" "Azure/azure-cli" "dev" "$CLI_BRANCH" "Azure/azure-cli"
+
+          {
+            echo
+            echo "## Draft PRs"
+            cat pr-links.md
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          GH_TOKEN: ${{ env.CODEGEN_TOKEN }}
+
+      - name: Upload branch test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aaz-codegen-branch-test-${{ github.run_id }}
+          path: |
+            synthetic-issue-event.json
+            github-models-request.json
+            github-models-response.json
+            codegen-preview.json
+            codegen-preview.md
+            codegen-result.json
+            codegen-summary.md
+            pr-links.md
+          if-no-files-found: ignore

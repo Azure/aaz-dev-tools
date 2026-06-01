@@ -1,0 +1,101 @@
+name: AAZ Codegen Preview
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  contents: read
+  issues: write
+  models: read
+
+concurrency:
+  group: aaz-codegen-preview-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    if: contains(github.event.issue.labels.*.name, 'codegen:request')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      GITHUB_MODELS_ENDPOINT: https://models.github.ai/inference/chat/completions
+      GITHUB_MODELS_MODEL: openai/gpt-4o-mini
+
+    steps:
+      - name: Checkout aaz-dev-tools
+        uses: actions/checkout@v4
+
+      - name: Checkout azure-rest-api-specs
+        uses: actions/checkout@v4
+        with:
+          repository: Azure/azure-rest-api-specs
+          ref: main
+          path: azure-rest-api-specs
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install aaz-dev-tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Build GitHub Models request
+        run: |
+          python -m aaz_dev_mcp.ci.issue_prompt \
+            --event "$GITHUB_EVENT_PATH" \
+            --payload \
+            --model "$GITHUB_MODELS_MODEL" \
+            --out github-models-request.json
+
+      - name: Extract codegen fields with GitHub Models
+        run: |
+          curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json" \
+            -d @github-models-request.json \
+            "$GITHUB_MODELS_ENDPOINT" \
+            > github-models-response.json
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Build preview comment
+        run: |
+          python -m aaz_dev_mcp.ci.preview_issue_codegen \
+            --event "$GITHUB_EVENT_PATH" \
+            --llm-response github-models-response.json \
+            --swagger-path azure-rest-api-specs \
+            --out codegen-preview.md \
+            --state codegen-preview.json
+
+      - name: Comment preview on issue
+        run: gh issue comment "$ISSUE_NUMBER" --body-file codegen-preview.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+
+      - name: Comment preview failure on issue
+        if: failure()
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --body "AAZ codegen preview failed. See workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+
+      - name: Upload preview artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aaz-codegen-preview-${{ github.event.issue.number }}
+          path: |
+            github-models-request.json
+            github-models-response.json
+            codegen-preview.json
+            codegen-preview.md
+          if-no-files-found: ignore

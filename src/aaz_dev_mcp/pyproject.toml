@@ -26,6 +26,7 @@ aaz-dev-mcp = "aaz_dev_mcp.server:main"
 package-dir = {"aaz_dev_mcp" = "."}
 packages = [
     "aaz_dev_mcp",
+    "aaz_dev_mcp.ci",
     "aaz_dev_mcp.services",
     "aaz_dev_mcp.services.command",
     "aaz_dev_mcp.services.cli",
