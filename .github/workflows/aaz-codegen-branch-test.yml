@@ -57,6 +57,7 @@ jobs:
       SPEC_REF: "${{ github.event.inputs.spec_ref || 'main' }}"
       RUN_CODEGEN: "${{ github.event.inputs.run_codegen == 'true' || github.event.inputs.publish_prs == 'true' || contains(github.event.head_commit.message || '', '[aaz-codegen-run-test]') || contains(github.event.head_commit.message || '', '[aaz-codegen-pr-test]') }}"
       PUBLISH_PRS: "${{ github.event.inputs.publish_prs == 'true' || contains(github.event.head_commit.message || '', '[aaz-codegen-pr-test]') }}"
+      SKIP_CLI_CODEGEN: "true"
       CODEGEN_TOKEN: "${{ secrets.CODEGEN_GITHUB_TOKEN }}"
       AAZ_BRANCH: codegen/branch-test-${{ github.run_id }}-aaz
       CLI_BRANCH: codegen/branch-test-${{ github.run_id }}-azure-cli
@@ -141,7 +142,7 @@ jobs:
           token: ${{ env.CODEGEN_TOKEN || github.token }}
 
       - name: Checkout azure-cli
-        if: env.RUN_CODEGEN == 'true'
+        if: env.RUN_CODEGEN == 'true' && env.SKIP_CLI_CODEGEN != 'true'
         uses: actions/checkout@v4
         with:
           repository: Azure/azure-cli
@@ -151,17 +152,23 @@ jobs:
 
       - name: Run deterministic codegen without publishing
         if: env.RUN_CODEGEN == 'true'
+        shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/aaz-workspaces"
+          cli_args=()
+          if [[ "$SKIP_CLI_CODEGEN" != "true" ]]; then
+            cli_args+=(--cli-path azure-cli)
+          fi
           python -m aaz_dev_mcp.ci.run_issue_codegen \
             --preview codegen-preview.json \
             --swagger-path azure-rest-api-specs \
             --aaz-path aaz \
-            --cli-path azure-cli \
+            "${cli_args[@]}" \
             --workspace-folder "$RUNNER_TEMP/aaz-workspaces" \
             --summary codegen-summary.md \
             --json-out codegen-result.json \
-            --by-patch true
+            --by-patch true \
+            --skip-cli "$SKIP_CLI_CODEGEN"
 
           {
             echo "## Runner-only codegen diff"
@@ -173,7 +180,11 @@ jobs:
             echo
             echo "### Azure/azure-cli"
             echo '```'
-            git -C azure-cli status --short
+            if [[ -d azure-cli ]]; then
+              git -C azure-cli status --short
+            else
+              echo "skipped"
+            fi
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -222,7 +233,11 @@ jobs:
           }
 
           publish_repo "aaz" "Azure/aaz" "main" "$AAZ_BRANCH" "Azure/aaz"
-          publish_repo "azure-cli" "Azure/azure-cli" "dev" "$CLI_BRANCH" "Azure/azure-cli"
+          if [[ -d azure-cli ]]; then
+            publish_repo "azure-cli" "Azure/azure-cli" "dev" "$CLI_BRANCH" "Azure/azure-cli"
+          else
+            echo "- Azure/azure-cli: skipped" >> pr-links.md
+          fi
 
           {
             echo

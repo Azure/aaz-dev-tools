@@ -15,10 +15,11 @@ def run_codegen_from_preview(
     preview: dict[str, Any],
     swagger_path: str,
     aaz_path: str,
-    cli_path: str,
+    cli_path: str | None,
     cli_extension_path: str | None,
     workspace_folder: str,
     by_patch: bool,
+    skip_cli: bool = False,
 ) -> dict[str, Any]:
     request = preview["request"]
     discovery = discover_resources(
@@ -70,13 +71,14 @@ def run_codegen_from_preview(
         api_version=request["api_version"],
     )
     workspaces.generate_to_aaz(workspace_name)
-    modules.select_command_versions(
-        target=request.get("target") or "main",
-        module_name=request["cli_module"],
-        profile=request.get("profile") or "latest",
-        command_versions=command_versions,
-        by_patch=by_patch,
-    )
+    if not skip_cli:
+        modules.select_command_versions(
+            target=request.get("target") or "main",
+            module_name=request["cli_module"],
+            profile=request.get("profile") or "latest",
+            command_versions=command_versions,
+            by_patch=by_patch,
+        )
     return {
         "workspace": workspace_name,
         "request": request,
@@ -84,6 +86,7 @@ def run_codegen_from_preview(
         "command_count": len(command_versions),
         "commands": sorted(command_versions.keys()),
         "by_patch": by_patch,
+        "cli_generated": not skip_cli,
     }
 
 
@@ -102,6 +105,7 @@ def render_summary(result: dict[str, Any]) -> str:
         f"- Resources: `{result['resource_count']}`",
         f"- Commands: `{result['command_count']}`",
         f"- by_patch: `{result['by_patch']}`",
+        f"- Azure CLI generated: `{result['cli_generated']}`",
         "",
         "### Commands",
     ]
@@ -135,12 +139,13 @@ def main() -> None:
     parser.add_argument("--preview", required=True)
     parser.add_argument("--swagger-path", required=True)
     parser.add_argument("--aaz-path", required=True)
-    parser.add_argument("--cli-path", required=True)
+    parser.add_argument("--cli-path")
     parser.add_argument("--cli-extension-path")
     parser.add_argument("--workspace-folder", required=True)
     parser.add_argument("--summary", required=True)
     parser.add_argument("--json-out", required=True)
     parser.add_argument("--by-patch", choices=["true", "false"], default="true")
+    parser.add_argument("--skip-cli", choices=["true", "false"], default="false")
     args = parser.parse_args()
 
     preview = json.loads(Path(args.preview).read_text(encoding="utf-8"))
@@ -152,6 +157,7 @@ def main() -> None:
         cli_extension_path=args.cli_extension_path,
         workspace_folder=args.workspace_folder,
         by_patch=args.by_patch == "true",
+        skip_cli=args.skip_cli == "true",
     )
     Path(args.summary).write_text(render_summary(result), encoding="utf-8")
     Path(args.json_out).write_text(json.dumps(result, indent=2), encoding="utf-8")
