@@ -196,6 +196,8 @@ def _read_swagger_resources(
     for path in sorted(paths):
         if provider_lower not in path.lower():
             continue
+        if _is_provider_operations_path(path, provider):
+            continue
         resources.append(
             DiscoveredResource(
                 module=module,
@@ -206,3 +208,8 @@ def _read_swagger_resources(
             )
         )
     return resources
+
+
+def _is_provider_operations_path(path: str, provider: str) -> bool:
+    path = path.split("?", maxsplit=1)[0].rstrip("/")
+    return path.lower() == f"/providers/{provider.lower()}/operations"

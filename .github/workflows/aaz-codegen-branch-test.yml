@@ -65,6 +65,15 @@ jobs:
       - name: Checkout aaz-dev-tools
         uses: actions/checkout@v4
 
+      - name: Validate PR publish token
+        if: env.PUBLISH_PRS == 'true'
+        run: |
+          if [ -z "$CODEGEN_TOKEN" ]; then
+            echo "CODEGEN_GITHUB_TOKEN is required to publish branch-test PRs."
+            echo "Add it as an Actions repository secret on $GITHUB_REPOSITORY."
+            exit 2
+          fi
+
       - name: Checkout azure-rest-api-specs
         uses: actions/checkout@v4
         with:
