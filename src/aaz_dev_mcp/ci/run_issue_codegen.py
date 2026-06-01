@@ -26,6 +26,7 @@ def run_codegen_from_preview(
         resource_provider=request["resource_provider"],
         api_version=request["api_version"],
         swagger_module=request["swagger_module"],
+        resource_paths=request.get("resource_paths"),
     )
     if discovery.errors:
         raise RuntimeError("; ".join(discovery.errors))
@@ -158,4 +159,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

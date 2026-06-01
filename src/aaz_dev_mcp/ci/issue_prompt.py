@@ -25,6 +25,7 @@ Schema:
   "api_version": string | null,
   "swagger_module": string | null,
   "cli_module": string | null,
+  "resource_paths": string[] | null,
   "target": "main" | "extension" | null,
   "profile": string | null,
   "spec_source": "main" | string | null,
@@ -39,6 +40,8 @@ Rules:
 - api_version must look like "2024-08-01" or "2024-08-01-preview".
 - swagger_module is the azure-rest-api-specs top-level module, for example "consumption".
 - cli_module is the azure-cli command module, often the same as swagger_module.
+- If the issue includes exact swagger resource paths, copy them verbatim into resource_paths.
+- If the issue does not include exact swagger resource paths, set resource_paths to null.
 - target defaults to "main" unless the issue clearly asks for an extension.
 - profile defaults to "latest".
 - spec_source defaults to "main" unless a branch or PR is explicitly requested.
@@ -89,4 +92,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

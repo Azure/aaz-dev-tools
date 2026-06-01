@@ -52,6 +52,9 @@ def build_preview(
     api_version = validate_api_version(extracted.get("api_version"))
     swagger_module = _empty_to_none(extracted.get("swagger_module"))
     cli_module = _empty_to_none(extracted.get("cli_module"))
+    resource_paths = _normalize_resource_paths(extracted.get("resource_paths"))
+    if not resource_paths:
+        resource_paths = _extract_resource_paths_from_text(issue.get("body"), provider)
     target = _empty_to_none(extracted.get("target")) or "main"
     profile = _empty_to_none(extracted.get("profile")) or "latest"
     spec_source = _empty_to_none(extracted.get("spec_source")) or "main"
@@ -79,6 +82,7 @@ def build_preview(
             resource_provider=provider,
             api_version=api_version,
             swagger_module=swagger_module,
+            resource_paths=resource_paths,
         )
         errors.extend(discovery.errors)
         if not swagger_module and len(discovery.modules) == 1:
@@ -99,6 +103,7 @@ def build_preview(
         "api_version": api_version,
         "swagger_module": swagger_module,
         "cli_module": cli_module,
+        "resource_paths": resource_paths or None,
         "target": target,
         "profile": profile,
         "spec_source": spec_source,
@@ -137,13 +142,14 @@ def render_preview_markdown(state: dict[str, Any], resources: list[Any]) -> str:
         "api_version",
         "swagger_module",
         "cli_module",
+        "resource_paths",
         "target",
         "profile",
         "spec_source",
         "confidence",
     ]:
         value = request.get(key)
-        lines.append(f"| `{key}` | `{value or ''}` |")
+        lines.append(f"| `{key}` | {_format_table_value(value)} |")
 
     if state["errors"]:
         lines.extend(["", "### Blocking Issues"])
@@ -212,6 +218,39 @@ def _empty_to_none(value: Any) -> str | None:
     if not value or value.upper() == "N/A" or value.lower() == "null":
         return None
     return value
+
+
+def _normalize_resource_paths(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        values = [value]
+    else:
+        values = list(value) if isinstance(value, list) else []
+    return [
+        path
+        for path in (str(item).strip().strip("`") for item in values)
+        if path
+    ]
+
+
+def _extract_resource_paths_from_text(text: Any, provider: str | None) -> list[str]:
+    if not text:
+        return []
+    provider_lower = provider.lower() if provider else None
+    paths = []
+    for match in re.finditer(r"/[A-Za-z0-9{}._~:/?&=%+-]+", str(text)):
+        path = match.group(0).rstrip(".,;:")
+        if provider_lower and provider_lower not in path.lower():
+            continue
+        paths.append(path)
+    return _dedupe(paths)
+
+
+def _format_table_value(value: Any) -> str:
+    if isinstance(value, list):
+        return "<br>".join(f"`{item}`" for item in value)
+    return f"`{value or ''}`"
 
 
 def _dedupe(values: list[str]) -> list[str]:

@@ -16,7 +16,6 @@ body:
     attributes:
       label: Codegen request
       description: Include the resource provider and API version. Add any useful context for reviewers.
-      placeholder: Generate Azure CLI for Microsoft.Consumption using API version 2024-08-01.
+      placeholder: Generate Azure CLI for Microsoft.Cdn using API version 2021-06-01. Use swagger module cdn and CLI module cdn.
     validations:
       required: true
-

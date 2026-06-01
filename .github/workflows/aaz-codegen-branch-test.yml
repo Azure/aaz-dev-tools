@@ -11,11 +11,11 @@ on:
       issue_title:
         description: Synthetic issue title to extract from.
         required: true
-        default: "AAZ codegen request: Microsoft.Consumption 2024-08-01"
+        default: "AAZ codegen request: Microsoft.Cdn endpoints 2021-06-01"
       issue_body:
         description: Synthetic issue body to extract from.
         required: true
-        default: "Generate Azure CLI code for Microsoft.Consumption using API version 2024-08-01. Target azure-cli main module. CLI module consumption. Profile latest."
+        default: "Generate Azure CLI code for Microsoft.Cdn using API version 2021-06-01. Target azure-cli main module. Swagger module cdn. CLI module cdn. Profile latest. Exact swagger resource paths: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints and /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}."
       spec_ref:
         description: azure-rest-api-specs ref to validate against.
         required: true
@@ -52,8 +52,8 @@ jobs:
     env:
       GITHUB_MODELS_ENDPOINT: https://models.github.ai/inference/chat/completions
       GITHUB_MODELS_MODEL: openai/gpt-4o-mini
-      TEST_ISSUE_TITLE: "${{ github.event.inputs.issue_title || 'AAZ codegen request: Microsoft.Consumption 2024-08-01' }}"
-      TEST_ISSUE_BODY: "${{ github.event.inputs.issue_body || 'Generate Azure CLI code for Microsoft.Consumption using API version 2024-08-01. Target azure-cli main module. CLI module consumption. Profile latest.' }}"
+      TEST_ISSUE_TITLE: "${{ github.event.inputs.issue_title || 'AAZ codegen request: Microsoft.Cdn endpoints 2021-06-01' }}"
+      TEST_ISSUE_BODY: "${{ github.event.inputs.issue_body || 'Generate Azure CLI code for Microsoft.Cdn using API version 2021-06-01. Target azure-cli main module. Swagger module cdn. CLI module cdn. Profile latest. Exact swagger resource paths: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints and /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}.' }}"
       SPEC_REF: "${{ github.event.inputs.spec_ref || 'main' }}"
       RUN_CODEGEN: "${{ github.event.inputs.run_codegen == 'true' || github.event.inputs.publish_prs == 'true' || contains(github.event.head_commit.message || '', '[aaz-codegen-run-test]') || contains(github.event.head_commit.message || '', '[aaz-codegen-pr-test]') }}"
       PUBLISH_PRS: "${{ github.event.inputs.publish_prs == 'true' || contains(github.event.head_commit.message || '', '[aaz-codegen-pr-test]') }}"

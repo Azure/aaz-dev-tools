@@ -60,8 +60,8 @@ codegen. It does not run the MCP stdio server in CI; it calls the shared Python
 helpers directly.
 
 1. Create an **AAZ Codegen Request** issue and describe the API version in
-   prose, e.g. `Generate Azure CLI for Microsoft.Consumption using API version
-   2024-08-01.`
+   prose, e.g. `Generate Azure CLI for Microsoft.Cdn using API version
+   2021-06-01.`
 2. The `codegen:request` label triggers `.github/workflows/aaz-codegen-preview.yml`.
    The workflow calls GitHub Models with the built-in `GITHUB_TOKEN`
    (`models: read`) to extract candidate fields, validates them against

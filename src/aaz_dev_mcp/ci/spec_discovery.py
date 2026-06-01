@@ -67,6 +67,7 @@ def discover_resources(
     resource_provider: str,
     api_version: str,
     swagger_module: str | None = None,
+    resource_paths: Iterable[str] | None = None,
 ) -> DiscoveryResult:
     """Find swagger paths for a provider and API version.
 
@@ -91,6 +92,7 @@ def discover_resources(
         errors.append(f"Invalid API version: {api_version!r}")
     if errors:
         return DiscoveryResult(resources=[], modules=[], errors=errors)
+    requested_paths = _normalize_resource_paths(resource_paths)
 
     provider_dirs = _find_provider_dirs(spec_root, provider, swagger_module)
     if not provider_dirs:
@@ -112,6 +114,7 @@ def discover_resources(
                     module=module,
                     provider=provider,
                     api_version=version,
+                    requested_paths=requested_paths,
                 )
             )
 
@@ -122,14 +125,20 @@ def discover_resources(
             f"`{swagger_module}`: {', '.join(modules)}"
         )
     if not resources:
-        errors.append(
-            f"No OpenAPI resources found for `{provider}` at `{version}`."
-        )
+        errors.append(f"No OpenAPI resources found for `{provider}` at `{version}`.")
     elif not swagger_module and len(modules) > 1:
         errors.append(
             "Provider/version matched multiple swagger modules: "
             + ", ".join(f"`{m}`" for m in modules)
         )
+    if requested_paths:
+        discovered_paths = {r.path for r in resources}
+        missing_paths = sorted(requested_paths - discovered_paths)
+        if missing_paths:
+            errors.append(
+                "Requested swagger resource paths were not found: "
+                + ", ".join(f"`{p}`" for p in missing_paths)
+            )
 
     return DiscoveryResult(
         resources=sorted(
@@ -177,6 +186,7 @@ def _read_swagger_resources(
     module: str,
     provider: str,
     api_version: str,
+    requested_paths: set[str],
 ) -> list[DiscoveredResource]:
     try:
         body = json.loads(json_file.read_text(encoding="utf-8"))
@@ -194,6 +204,8 @@ def _read_swagger_resources(
     provider_lower = provider.lower()
     resources = []
     for path in sorted(paths):
+        if requested_paths and path not in requested_paths:
+            continue
         if provider_lower not in path.lower():
             continue
         if _is_provider_operations_path(path, provider):
@@ -213,3 +225,13 @@ def _read_swagger_resources(
 def _is_provider_operations_path(path: str, provider: str) -> bool:
     path = path.split("?", maxsplit=1)[0].rstrip("/")
     return path.lower() == f"/providers/{provider.lower()}/operations"
+
+
+def _normalize_resource_paths(resource_paths: Iterable[str] | None) -> set[str]:
+    if not resource_paths:
+        return set()
+    return {
+        str(path).strip().strip("`")
+        for path in resource_paths
+        if str(path).strip()
+    }
