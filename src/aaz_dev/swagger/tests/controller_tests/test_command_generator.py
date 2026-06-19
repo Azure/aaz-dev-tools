@@ -3,6 +3,7 @@ from swagger.controller.command_generator import SwaggerCommandGenerator
 from swagger.model.specs._utils import get_url_path_valid_parts
 from swagger.utils import exceptions
 from command.model.configuration import CMDBuildInVariants
+import unittest
 
 
 MUTE_ERROR_MESSAGES = (
@@ -280,3 +281,43 @@ class CommandGeneratorTestCase(SwaggerSpecsTestCase):
                     if name in command_group_names and command_group_names[name][0] != valid_url:
                         print(f"Duplicated command group name : '{name}' :\n\t{command_group_names[name][0]} and {valid_url} :\n\t\t{command_group_names[name][1]}\n\t\t{resource.path}")
                     command_group_names[name] = (valid_url, resource.path)
+
+
+class CommandGroupNameUnitTestCase(unittest.TestCase):
+    """Pure-string tests for command group name generation (no swagger specs required)."""
+
+    def _gen(self, resource_path, rp_name):
+        return SwaggerCommandGenerator.generate_command_group_name_by_resource(
+            resource_path=resource_path, rp_name=rp_name)
+
+    def test_trailing_acronym_does_not_break_name(self):
+        # Abbreviations ending in a capital letter (e.g., "SaaS") will be tokenized as "saa-s";
+        # `to_singular` will remove the trailing "s", leaving a null separator
+        # ("activate-saa-"). The generator must keep the name usable instead.
+        rp = "Napster.CompanionAPI"
+        cases = {
+            "/subscriptions/{subscriptionId}/providers/Napster.CompanionAPI/activateSaaS":
+                "napster companion-api activate-saa-s",
+            "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/"
+            "Napster.CompanionAPI/organizations/{organizationname}/linkSaaS":
+                "napster companion-api organization link-saa-s",
+            "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/"
+            "Napster.CompanionAPI/organizations/{organizationname}/latestLinkedSaaS":
+                "napster companion-api organization latest-linked-saa-s",
+        }
+        for path, expected in cases.items():
+            name = self._gen(path, rp)
+            self.assertEqual(name, expected)
+            self.assertFalse(name.endswith('-'), f"dangling separator in: {name!r}")
+
+    def test_normal_plurals_still_singularized(self):
+        # Regression guard: ordinary plural segments must still be singularized.
+        self.assertEqual(
+            self._gen("/subscriptions/{subscriptionId}/providers/Microsoft.Compute/virtualMachines",
+                      "Microsoft.Compute"),
+            "compute virtual-machine")
+        self.assertEqual(
+            self._gen("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/"
+                      "Napster.CompanionAPI/organizations/{organizationname}",
+                      "Napster.CompanionAPI"),
+            "napster companion-api organization")

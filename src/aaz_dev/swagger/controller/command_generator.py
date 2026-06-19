@@ -207,6 +207,11 @@ class _CommandGenerator(ABC):
             part = re.sub(r"[^a-zA-Z0-9\-._]", '', part)
             name = camel_case_to_snake_case(part, '-')
             singular_name = to_singular(name) or name
+            # to_singular can strip a trailing acronym token (e.g. "saa-s" -> "saa-"),
+            # leaving a dangling separator and an unusable command name. Keep the
+            # un-singularized name in that case.
+            if singular_name.endswith('-'):
+                singular_name = name
             names.append(singular_name)
         return " ".join([name for name in names if name])
 
