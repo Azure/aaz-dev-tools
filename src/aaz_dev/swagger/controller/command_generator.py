@@ -208,10 +208,12 @@ class _CommandGenerator(ABC):
             name = camel_case_to_snake_case(part, '-')
             singular_name = to_singular(name) or name
             # to_singular can strip a trailing acronym token (e.g. "saa-s" -> "saa-"),
-            # leaving a dangling separator and an unusable command name. Keep the
-            # un-singularized name in that case.
+            # leaving a dangling separator and an unusable command name. Merge the
+            # stripped token back into the preceding one in that case
+            # (e.g. "activate-saa-s" -> "activate-saas").
             if singular_name.endswith('-'):
-                singular_name = name
+                head, _, last_token = name.rpartition('-')
+                singular_name = head + last_token
             names.append(singular_name)
         return " ".join([name for name in names if name])
 

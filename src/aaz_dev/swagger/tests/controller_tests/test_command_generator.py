@@ -293,17 +293,18 @@ class CommandGroupNameUnitTestCase(unittest.TestCase):
     def test_trailing_acronym_does_not_break_name(self):
         # Abbreviations ending in a capital letter (e.g., "SaaS") will be tokenized as "saa-s";
         # `to_singular` will remove the trailing "s", leaving a null separator
-        # ("activate-saa-"). The generator must keep the name usable instead.
+        # ("activate-saa-"). The generator must merge the stripped token back
+        # ("activate-saas") to keep the name usable.
         rp = "Napster.CompanionAPI"
         cases = {
             "/subscriptions/{subscriptionId}/providers/Napster.CompanionAPI/activateSaaS":
-                "napster companion-api activate-saa-s",
+                "napster companion-api activate-saas",
             "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/"
             "Napster.CompanionAPI/organizations/{organizationname}/linkSaaS":
-                "napster companion-api organization link-saa-s",
+                "napster companion-api organization link-saas",
             "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/"
             "Napster.CompanionAPI/organizations/{organizationname}/latestLinkedSaaS":
-                "napster companion-api organization latest-linked-saa-s",
+                "napster companion-api organization latest-linked-saas",
         }
         for path, expected in cases.items():
             name = self._gen(path, rp)
