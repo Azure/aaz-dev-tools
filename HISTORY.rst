@@ -3,6 +3,10 @@
 Release History
 ===============
 
+4.5.5
+++++++
+* Fix camelCase ending with `S` incorrectly treated as plural. (#553)
+
 4.5.4
 ++++++
 * Add Python 3.14 support.
