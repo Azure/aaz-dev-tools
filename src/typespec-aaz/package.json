@@ -25,7 +25,7 @@
     "change-case": "~5.4.4",
     "eslint": "^8.57.0",
     "prettier": "^3.0.3",
-    "typescript": "^5.2.2"
+    "typescript": "^5.9.0"
   },
   "peerDependencies": {
     "@azure-tools/typespec-azure-core": "workspace:~",

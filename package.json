@@ -2,10 +2,10 @@
   "name": "aaz-dev-tools",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@9.5.0",
+  "packageManager": "pnpm@10.30.2",
   "scripts": {
     "run-all": "pnpm -r --filter=\"!./src/typespec/core/\" ",
-    "build:typespec": "pnpm install -C src/typespec/ && pnpm -r --filter=\"!./src/web/\" --filter=\"!./src/typespec/core/\" --filter=\"!./src/typespec/core/packages/typespec-vs\" --workspace-concurrency=Infinity --aggregate-output --reporter=append-only build ",
+    "build:typespec": "pnpm install -C src/typespec/ && pnpm -C src/typespec -r --filter=\"!@typespec/monorepo\" --filter=\"!@azure-tools/typespec-azure-monorepo\" --filter=\"!@typespec/typespec-vs\" --filter=\"!@typespec/website\" --filter=\"!@azure-tools/typespec-azure-website\" --filter=\"!...@typespec/emitter-framework\" --workspace-concurrency=Infinity --aggregate-output --reporter=append-only build && pnpm -C src/typespec-aaz build",
     "build:web": "pnpm -r --filter=\"./src/web/\" --workspace-concurrency=Infinity --aggregate-output --reporter=append-only build ",
     "bundle": "node ./eng/scripts/bundle_dists.js",
     "test-aaz-emitter": "cd ./src/typespec-aaz && pnpm test-aaz",
@@ -33,5 +33,11 @@
   },
   "dependencies": {
     "picocolors": "~1.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "^18.2.66",
+      "@types/react-dom": "^18.2.22"
+    }
   }
 }

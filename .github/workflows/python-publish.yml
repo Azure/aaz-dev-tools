@@ -80,7 +80,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20.x'
+          node-version: '22.x'
 
       - name: Setup Python
         uses: actions/setup-python@v3
@@ -90,7 +90,7 @@ jobs:
       - name: Install prerequisites
         run: |
           pip install --upgrade pip setuptools wheel virtualenv
-          npm install -g pnpm@9.5.0
+          npm install -g pnpm@10.30.2
           pnpm install
 
       - name: Set build variables

@@ -24,13 +24,18 @@ def get_path_stat(path):
     if not root_dir:
         # return 200 status code to avoid print error logs in the client side
         return jsonify({"error": "Swagger root not found"})
-    path = os.path.join(root_dir, path)
-    if not os.path.exists(path):
+    try:
+        full_path = os.path.join(root_dir, path)
+        exists = os.path.exists(full_path)
+    except (OSError, ValueError):
+        # invalid/too-long paths are just "not found" for a stat probe
+        exists = False
+    if not exists:
         # return 200 status code to avoid print error logs in the client side
         return jsonify({"error": "Path not exist"})
     return jsonify({
-        "isDir": os.path.isdir(path),
-        "isFile": os.path.isfile(path),
+        "isDir": os.path.isdir(full_path),
+        "isFile": os.path.isfile(full_path),
     })
 
 
