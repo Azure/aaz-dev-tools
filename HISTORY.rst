@@ -3,6 +3,10 @@
 Release History
 ===============
 
+4.6.0
+++++++
+* Upgrade `@typespec/compiler` to 1.13.0. (#558)
+
 4.5.5
 ++++++
 * Fix camelCase ending with `S` incorrectly treated as plural. (#553)
