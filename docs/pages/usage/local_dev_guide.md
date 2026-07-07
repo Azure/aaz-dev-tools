@@ -8,8 +8,8 @@ weight: 105
 ## Prerequisites
 
 - [Python 3.9+](https://www.python.org/downloads/)
-- [Node.js 18+](https://nodejs.org/)
-- [pnpm](https://pnpm.io/installation)
+- [Node.js 22+](https://nodejs.org/) (required by the vendored TypeSpec 1.13 submodule)
+- [pnpm 10+](https://pnpm.io/installation) (the workspace uses pnpm 10 `catalog:`/overrides syntax)
 
 ---
 

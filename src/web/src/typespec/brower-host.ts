@@ -151,7 +151,14 @@ export async function createBrowserHost(
 
       const spec_path = path.replace(rootPath, "");
       if (!spec_path.includes("node_modules")) {
-        const res = await axios.get(`/Swagger/Specs/Stat${spec_path}`);
+        let res;
+        try {
+          res = await axios.get(`/Swagger/Specs/Stat${spec_path}`);
+        } catch {
+          const e = new Error(`File ${path} not found.`);
+          (e as any).code = "ENOENT";
+          throw e;
+        }
         if (res.data.error) {
           const e = new Error(`File ${path} not found.`);
           (e as any).code = "ENOENT";

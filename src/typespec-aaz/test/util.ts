@@ -60,7 +60,6 @@ export function generateCompileArmResourceTemplate(modelVar?: ModelVar) {
   namespace Microsoft.Mock;
 
   enum Versions {
-    @useDependency(Azure.ResourceManager.Versions.v1_0_Preview_1)
     A,
   }
 

@@ -43,6 +43,7 @@ import {
   getMinValue,
   getMinValueExclusive,
   getPattern,
+  getPagingOperation,
   getProperty,
   isArrayModelType,
   isNeverType,
@@ -58,11 +59,9 @@ import {
 import { TwoLevelMap } from "@typespec/compiler/utils";
 import {
   LroMetadata,
-  PagedResultMetadata,
   UnionEnum,
   getArmResourceIdentifierConfig,
   getLroMetadata,
-  getPagedResult,
   getUnionAsEnum,
 } from "@azure-tools/typespec-azure-core";
 import { XmsPageable } from "./model/x_ms_pageable.js";
@@ -1335,7 +1334,11 @@ function convertEnum2CMDSchemaBase(
   e: Enum,
 ): CMDStringSchemaBase | CMDIntegerSchemaBase | undefined {
   let schema;
-  const type = getEnumMemberType(e.members.values().next().value);
+  const firstMember = e.members.values().next().value;
+  if (firstMember === undefined) {
+    return undefined;
+  }
+  const type = getEnumMemberType(firstMember);
   for (const option of e.members.values()) {
     if (type !== getEnumMemberType(option)) {
       return undefined;
@@ -1939,54 +1942,23 @@ function getPathWithoutQuery(path: string): string {
   return path.replace(/\/?\?.*/, "");
 }
 
-function parseNextLinkName(paged: PagedResultMetadata): string | undefined {
-  const pathComponents = paged.nextLinkSegments;
-  if (pathComponents) {
-    return pathComponents[pathComponents.length - 1];
-  }
-  return undefined;
-}
-
-function extractPagedMetadataNested(program: Program, type: Model): PagedResultMetadata | undefined {
-  // This only works for `is Page<T>` not `extends Page<T>`.
-  let paged = getPagedResult(program, type);
-  if (paged) {
-    return paged;
-  }
-  if (type.baseModel) {
-    paged = getPagedResult(program, type.baseModel);
-  }
-  if (paged) {
-    return paged;
-  }
-  const templateArguments = type.templateMapper;
-  if (templateArguments) {
-    for (const argument of templateArguments.args) {
-      const modelArgument = argument as Model;
-      if (modelArgument) {
-        paged = extractPagedMetadataNested(program, modelArgument);
-        if (paged) {
-          return paged;
-        }
-      }
-    }
-  }
-  return paged;
-}
-
 function extractPagedMetadata(program: Program, operation: HttpOperation): XmsPageable | undefined {
-  for (const response of operation.responses) {
-    const paged = extractPagedMetadataNested(program, response.type as Model);
-    if (paged) {
-      let nextLinkName = parseNextLinkName(paged);
-      if (!nextLinkName) {
-        nextLinkName = "nextLink";
-      }
-      return {
-        nextLinkName,
-      };
-    }
+  // `getPagedResult`/`PagedResultMetadata` were removed from @azure-tools/typespec-azure-core;
+  // pagination metadata now comes from the compiler's `getPagingOperation`.
+  const [paging] = getPagingOperation(program, operation.operation);
+  if (paging === undefined) {
+    return undefined;
   }
+  // x-ms-pageable can only model nextLink-style paging. Use the operation's real @nextLink
+  // property name; when it pages by continuationToken (no @nextLink), leave nextLinkName empty
+  // instead of fabricating "nextLink" — downstream treats an empty name as "no next link"
+  // (see _command.py `if pageable.next_link_name`), so a fake name would emit a broken pager.
+  const nextLinkPath = paging.output.nextLink?.path;
+  const nextLinkName =
+    nextLinkPath && nextLinkPath.length > 0 ? nextLinkPath[nextLinkPath.length - 1].name : "";
+  return {
+    nextLinkName,
+  };
 }
 
 function getModelOrScalarTypeIfNullable(type: Type): Model | Scalar | undefined {
