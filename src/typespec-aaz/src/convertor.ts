@@ -1949,11 +1949,13 @@ function extractPagedMetadata(program: Program, operation: HttpOperation): XmsPa
   if (paging === undefined) {
     return undefined;
   }
-  let nextLinkName = "nextLink";
+  // x-ms-pageable can only model nextLink-style paging. Use the operation's real @nextLink
+  // property name; when it pages by continuationToken (no @nextLink), leave nextLinkName empty
+  // instead of fabricating "nextLink" — downstream treats an empty name as "no next link"
+  // (see _command.py `if pageable.next_link_name`), so a fake name would emit a broken pager.
   const nextLinkPath = paging.output.nextLink?.path;
-  if (nextLinkPath && nextLinkPath.length > 0) {
-    nextLinkName = nextLinkPath[nextLinkPath.length - 1].name;
-  }
+  const nextLinkName =
+    nextLinkPath && nextLinkPath.length > 0 ? nextLinkPath[nextLinkPath.length - 1].name : "";
   return {
     nextLinkName,
   };

@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@10.30.2",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10"
+  },
   "scripts": {
     "run-all": "pnpm -r --filter=\"!./src/typespec/core/\" ",
     "build:typespec": "pnpm install -C src/typespec/ && pnpm -C src/typespec -r --filter=\"!@typespec/monorepo\" --filter=\"!@azure-tools/typespec-azure-monorepo\" --filter=\"!@typespec/typespec-vs\" --filter=\"!@typespec/website\" --filter=\"!@azure-tools/typespec-azure-website\" --filter=\"!...@typespec/emitter-framework\" --workspace-concurrency=Infinity --aggregate-output --reporter=append-only build && pnpm -C src/typespec-aaz build",
