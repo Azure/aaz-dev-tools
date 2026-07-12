@@ -11,7 +11,7 @@ Jinja2~=3.1.4
 MarkupSafe>=2.1.5
 jsonschema~=4.23.0
 click~=8.1.2
-setuptools==70.0.0
+setuptools<81
 python-Levenshtein
 azure-mgmt-core
 azdev

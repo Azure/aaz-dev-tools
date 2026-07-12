@@ -3,6 +3,10 @@
 Release History
 ===============
 
+4.6.1
+++++++
+* Unpinned ``setuptools`` (was ``==70.0.0``) to allow newer versions, capped at ``<81`` because setuptools 81+ drops ``setup.py``-based build support.
+
 4.6.0
 ++++++
 * Upgrade `@typespec/compiler` to 1.13.0. (#558)
