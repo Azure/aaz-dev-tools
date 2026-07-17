@@ -33,10 +33,11 @@ url: "https://azure.github.io" # the base hostname & protocol for your site, e.g
 github:
   repo: https://github.com/Azure/aaz-dev-tools
 
-pypi: https://pypi.org/project/aaz-dev/
+# Used by jekyll-github-metadata to resolve site.github.* when building outside
+# of GitHub Pages. Pages infers it, local builds wont.
+repository: Azure/aaz-dev-tools
 
-# TODO: get version number from github
-version: v4.6.1
+pypi: https://pypi.org/project/aaz-dev/
 
 # Build settings
 theme: minima
