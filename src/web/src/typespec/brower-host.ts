@@ -13,12 +13,33 @@ export function resolveVirtualPath(path: string, ...paths: string[]) {
   return resolvePath(rootPath, path, ...paths);
 }
 
+// Axios errors are transport failures, never file-not-found responses.
+// Retry transient socket exhaustion errors instead of treating the spec file as missing.
+async function getWithRetry(url: string, maxAttempts = 8) {
+  let lastErr: any;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await axios.get(url);
+    } catch (e: any) {
+      // An error carrying an HTTP response is a real server error, not a socket issue —
+      // don't retry it.
+      if (e?.response != null) throw e;
+      lastErr = e;
+      await new Promise((r) => setTimeout(r, 100 * (attempt + 1)));
+    }
+  }
+  throw lastErr;
+}
+
 export async function createBrowserHost(
   libsToLoad: readonly string[],
   importOptions: LibraryImportOptions = {},
 ): Promise<BrowserHost> {
   const virtualFs = new Map<string, string>();
   const jsImports = new Map<string, Promise<any>>();
+  // Cache stat results (including misses) to avoid repeated probes of the same paths.
+  // This prevents socket exhaustion and non-deterministic resource drops during compilation.
+  const statCache = new Map<string, { isDir: boolean; isFile: boolean; exists: boolean }>();
 
   const libraries: Record<string, TspLibrary> = {};
   for (const libName of libsToLoad) {
@@ -151,24 +172,47 @@ export async function createBrowserHost(
 
       const spec_path = path.replace(rootPath, "");
       if (!spec_path.includes("node_modules")) {
+        const cached = statCache.get(path);
+        if (cached) {
+          if (!cached.exists) {
+            const e = new Error(`File ${path} not found.`);
+            (e as any).code = "ENOENT";
+            throw e;
+          }
+          return {
+            isDirectory() {
+              return cached.isDir;
+            },
+            isFile() {
+              return cached.isFile;
+            },
+          };
+        }
+
         let res;
         try {
-          res = await axios.get(`/Swagger/Specs/Stat${spec_path}`);
-        } catch {
-          const e = new Error(`File ${path} not found.`);
-          (e as any).code = "ENOENT";
-          throw e;
+          res = await getWithRetry(`/Swagger/Specs/Stat${spec_path}`);
+        } catch (e: any) {
+          // Transport failure that survived every retry. Do NOT cache and do NOT report
+          // ENOENT: a false "not found" makes the compiler silently drop this spec file
+          // and all resources it defines. Surface the real error so it is visible.
+          throw new Error(
+            `Failed to stat ${path} after retries: ${e?.message ?? e}. ` +
+              `This is usually local socket exhaustion (ERR_NO_BUFFER_SPACE / ERR_ADDRESS_IN_USE).`,
+          );
         }
         if (res.data.error) {
+          statCache.set(path, { isDir: false, isFile: false, exists: false });
           const e = new Error(`File ${path} not found.`);
           (e as any).code = "ENOENT";
           throw e;
         }
         if (res.data.isFile) {
           // cache the file in virtualFs
-          const content = await axios.get(`/Swagger/Specs/Files${spec_path}`);
+          const content = await getWithRetry(`/Swagger/Specs/Files${spec_path}`);
           virtualFs.set(path, content.data);
         }
+        statCache.set(path, { isDir: res.data.isDir, isFile: res.data.isFile, exists: true });
         return {
           isDirectory() {
             return res.data.isDir;

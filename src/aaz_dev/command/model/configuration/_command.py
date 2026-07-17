@@ -81,9 +81,35 @@ class CMDCommand(Model):
                         arg.options = [*ref_options[arg.var]]
                     arguments[arg.var] = arg
 
+        if ref_options:
+            # Different generators use different body arg roots (e.g. "$parameters.*" vs "$resource.*").
+            # When inheriting cfg changes from another generator, remap body-arg customizations to the
+            # current root so existing option overrides can still be matched and applied.
+            self._apply_ref_options_with_body_root_remap(arguments, ref_options)
+
         arguments = handle_duplicated_options(
             arguments, has_subresource=has_subresource, operation_id=self.operations[-1].operation_id)
         self.arg_groups = self._build_arg_groups(arguments)
+
+    _NON_BODY_ARG_ROOTS = ("$Path", "$Query", "$Header")
+
+    @classmethod
+    def _apply_ref_options_with_body_root_remap(cls, arguments, ref_options):
+        def root_of(var):
+            return var.split('.', 1)[0]
+
+        body_roots = {root_of(var) for var in arguments if root_of(var) not in cls._NON_BODY_ARG_ROOTS}
+        if len(body_roots) != 1:
+            # only remap when there is exactly one body root; ambiguous otherwise.
+            return
+        cur_root = body_roots.pop()
+        for key, options in ref_options.items():
+            root = root_of(key)
+            if root in cls._NON_BODY_ARG_ROOTS or root == cur_root:
+                continue
+            remapped = cur_root + key[len(root):]
+            if remapped in arguments:
+                arguments[remapped].options = [*options]
 
     def generate_outputs(self, ref_outputs=None, pageable=None):
         if not ref_outputs:

@@ -778,7 +778,9 @@ function convertModel2CMDObjectSchemaBase(
   }
 
   let pending;
-  if (context.supportClsSchema) {
+  // Record<> dict models have no usable schema identifier.
+  // Keep them inline rather than generating a shared cls schema.
+  if (context.supportClsSchema && !isRecordModelType(context.program, payloadModel)) {
     pending = context.pendingSchemas.getOrAdd(payloadModel, context.visibility, () => ({
       type: payloadModel,
       visibility: context.visibility,

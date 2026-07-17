@@ -113,6 +113,11 @@ class CMDArgBuilder:
             if self.get_cls():
                 # not support to flatten object which is a cls.
                 return False
+            if self._parent is None and self.schema.props and (
+                    self._arg_var.endswith("[]") or self._arg_var.endswith("{}")):
+                # Always flatten forked array/dict elements used as a command root body.
+                # Otherwise, stale inherited configs may regenerate invalid options such as "...[]" or "...{}".
+                return True
             if self._flatten is not None:
                 return self._flatten
             if self.schema.client_flatten:
