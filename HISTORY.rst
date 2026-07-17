@@ -3,6 +3,13 @@
 Release History
 ===============
 
+4.5.6
+++++++
+* Fix invalid Python identifiers generated from generic type names containing angle brackets (e.g. ``Record<...>``).
+* Fix ``SyntaxError`` in generated subresource create/update commands caused by an unflattened array/dict element body argument.
+* Fix loss of command argument customizations when regenerating a resource migrated from Swagger to TypeSpec, where the request body root changes from ``$parameters`` to ``$resource``.
+* Harden the browser TypeSpec host with retry and stat caching for reliable resource picking.
+
 4.5.5
 ++++++
 * Fix camelCase ending with `S` incorrectly treated as plural. (#553)
