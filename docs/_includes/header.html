@@ -27,12 +27,19 @@
           ></path></svg
         ><span class="h4 text-semibold ml-2">GitHub Repo</span></a
       >
+      {% comment %}
+        Populated from the latest GitHub release. Empty on local builds without
+        a JEKYLL_GITHUB_TOKEN, so hide the whole block rather than show a blank.
+      {% endcomment %}
+      {% assign latest_version = site.github.latest_release.tag_name %}
+      {% if latest_version %}
       <div class="hide-sm border-left">
         <div class="pl-2 pr-2">
           <span class="color-fg-muted text-normal">Version: </span>
-          <span>{{ site.version }}</span>
+          <span>{{ latest_version }}</span>
         </div>
       </div>
+      {% endif %}
     </div>
   </div>
 </header>
