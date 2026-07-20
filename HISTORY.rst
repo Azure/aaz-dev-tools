@@ -3,12 +3,13 @@
 Release History
 ===============
 
-4.5.6
+4.6.1
 ++++++
-* Fix invalid Python identifiers generated from generic type names containing angle brackets (e.g. ``Record<...>``).
-* Fix ``SyntaxError`` in generated subresource create/update commands caused by an unflattened array/dict element body argument.
-* Fix loss of command argument customizations when regenerating a resource migrated from Swagger to TypeSpec, where the request body root changes from ``$parameters`` to ``$resource``.
-* Harden the browser TypeSpec host with retry and stat caching for reliable resource picking.
+* Unpinned ``setuptools`` (was ``==70.0.0``) to allow newer versions, capped at ``<81`` because setuptools 81+ drops ``setup.py``-based build support.
+
+4.6.0
+++++++
+* Upgrade `@typespec/compiler` to 1.13.0. (#558)
 
 4.5.5
 ++++++
