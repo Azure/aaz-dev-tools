@@ -113,7 +113,10 @@ export function toCamelCase(name: string, delimiters: string = ""): string {
   const parts = name.replace(/[-_]/g, " ").split(" ");
   const camelCasedParts = parts.map((part) => {
     if (part) {
-      return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+      // Preserve the rest of each part's original casing to match the Python `to_camel_case`
+      // twin (utils/case.py); lowercasing it would collapse PascalCase names like
+      // "ApplicationGatewaySslPolicy" into "Applicationgatewaysslpolicy".
+      return part.charAt(0).toUpperCase() + part.slice(1);
     }
     return "";
   });

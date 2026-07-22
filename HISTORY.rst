@@ -8,6 +8,8 @@ Release History
 * Fix invalid Python identifiers generated from generic type names containing angle brackets (e.g. ``Record<...>``).
 * Fix ``SyntaxError`` in generated subresource create/update commands caused by an unflattened array/dict element body argument.
 * Fix loss of command argument customizations when regenerating a resource migrated from Swagger to TypeSpec, where the request body root changes from ``$parameters`` to ``$resource``.
+* Emit ``location`` as a ResourceLocation and hide the resource-envelope ``id`` (read-only ResourceId) for legacy ``@customAzureResource`` models, matching the Swagger-generated commands.
+* Align generated ``@cls`` reference class names with the Swagger convertor (preserve PascalCase and drop the create/update visibility infix) so TypeSpec output matches Swagger.
 * Harden the browser TypeSpec host with retry and stat caching for reliable resource picking.
 
 4.6.1

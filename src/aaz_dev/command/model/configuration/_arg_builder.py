@@ -339,10 +339,9 @@ class CMDArgBuilder:
         if getattr(self.schema, 'name', None) == 'id' and not self.get_required() and self._parent and \
                 isinstance(self.schema, CMDResourceIdSchema):
             if self._arg_var.split('.', maxsplit=1)[-1] == 'id':
-                # hide top level 'id' property when it has 'name' property,
-                for prop in self._parent.schema.props:
-                    if prop.name == 'name':
-                        return True
+                # hide the resource's own read-only ARM id. Swagger relied on a sibling frozen
+                # 'name'; TypeSpec strips read-only siblings, so hide any optional top-level id.
+                return True
 
         if getattr(self.schema, 'name', None) in ['userAssignedIdentities', 'type'] and self._parent and \
                 isinstance(self._parent.schema, CMDIdentityObjectSchema):
