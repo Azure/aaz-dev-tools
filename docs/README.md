@@ -138,7 +138,7 @@ methods:
 This resource will be translated into four commands under `az edge-order address` command group:
 
 ```yaml
-az data-bricks workspace:
+az edge-order address:
     - show
     - delete
     - create
