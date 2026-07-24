@@ -3,6 +3,10 @@
 Release History
 ===============
 
+4.6.2
+++++++
+* Remove the ``setuptools<81`` upper bound; require ``setuptools>=78.1.1`` instead (includes the CVE-2025-47273 fix). aaz-dev only renders ``setup.py`` templates and never executes them, so newer setuptools does not affect it; in a shared dev environment the effective version is still bounded by ``azdev``'s own ``setuptools`` requirement.
+
 4.6.1
 ++++++
 * Unpinned ``setuptools`` (was ``==70.0.0``) to allow newer versions, capped at ``<81`` because setuptools 81+ drops ``setup.py``-based build support.
