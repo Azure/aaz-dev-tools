@@ -11,6 +11,7 @@ Release History
 * Emit ``location`` as a ResourceLocation and hide the resource-envelope ``id`` (read-only ResourceId) for legacy ``@customAzureResource`` models, matching the Swagger-generated commands.
 * Align generated ``@cls`` reference class names with the Swagger convertor (preserve PascalCase and drop the create/update visibility infix) so TypeSpec output matches Swagger.
 * Harden the browser TypeSpec host with retry and stat caching for reliable resource picking.
+* Remove the ``setuptools<81`` upper bound; require ``setuptools>=78.1.1`` instead (includes the CVE-2025-47273 fix). aaz-dev only renders ``setup.py`` templates and never executes them, so newer setuptools does not affect it; in a shared dev environment the effective version is still bounded by ``azdev``'s own ``setuptools`` requirement.
 
 4.6.1
 ++++++
