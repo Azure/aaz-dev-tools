@@ -62,6 +62,12 @@ class CMDCommand(Model):
                     ref_args.extend(group.args)
             ref_args = ref_args or None
 
+        if ref_args:
+            # Reference args may use a different body root (e.g. "$parameters.*" vs tsp's "$resource.*"),
+            # which breaks the arg builder's exact-var match and loses inherited customizations. Remap
+            # them onto the current body root so they match and are inherited.
+            ref_args = self._remap_ref_args_to_body_root(ref_args)
+
         arguments = {}
         has_subresource = False
         if self.subresource_selector:
@@ -81,9 +87,104 @@ class CMDCommand(Model):
                         arg.options = [*ref_options[arg.var]]
                     arguments[arg.var] = arg
 
+        if ref_options:
+            # Different generators use different body arg roots (e.g. "$parameters.*" vs "$resource.*").
+            # When inheriting cfg changes from another generator, remap body-arg customizations to the
+            # current root so existing option overrides can still be matched and applied.
+            self._apply_ref_options_with_body_root_remap(arguments, ref_options)
+
         arguments = handle_duplicated_options(
             arguments, has_subresource=has_subresource, operation_id=self.operations[-1].operation_id)
         self.arg_groups = self._build_arg_groups(arguments)
+
+    _NON_BODY_ARG_ROOTS = ("$Path", "$Query", "$Header")
+
+    @classmethod
+    def _apply_ref_options_with_body_root_remap(cls, arguments, ref_options):
+        def root_of(var):
+            return var.split('.', 1)[0]
+
+        body_roots = {root_of(var) for var in arguments if root_of(var) not in cls._NON_BODY_ARG_ROOTS}
+        if len(body_roots) != 1:
+            # only remap when there is exactly one body root; ambiguous otherwise.
+            return
+        cur_root = body_roots.pop()
+        for key, options in ref_options.items():
+            root = root_of(key)
+            if root in cls._NON_BODY_ARG_ROOTS or root == cur_root:
+                continue
+            remapped = cur_root + key[len(root):]
+            if remapped in arguments:
+                arguments[remapped].options = [*options]
+
+    def _detect_body_arg_root(self):
+        roots = set()
+        for op in self.operations:
+            schema = None
+            http = getattr(op, 'http', None)
+            if http is not None:
+                request = getattr(http, 'request', None)
+                body = getattr(request, 'body', None) if request is not None else None
+                json_body = getattr(body, 'json', None) if body is not None else None
+                schema = getattr(json_body, 'schema', None) if json_body is not None else None
+            else:
+                for action_attr in ('instance_update', 'instance_create'):
+                    action = getattr(op, action_attr, None)
+                    json_body = getattr(action, 'json', None) if action is not None else None
+                    if json_body is not None:
+                        schema = getattr(json_body, 'schema', None)
+                        break
+            name = getattr(schema, 'name', None) if schema is not None else None
+            if name:
+                # schema.name may be a full path (e.g. "resource.properties.sslCertificates[]");
+                # keep only the leading root token.
+                root = '$' + name.replace('$', '')
+                root = root.split('.', 1)[0].split('[', 1)[0]
+                roots.add(root)
+        if len(roots) == 1:
+            return roots.pop()
+        return None
+
+    def _remap_ref_args_to_body_root(self, ref_args):
+        def root_of(var):
+            return var.split('.', 1)[0].split('[', 1)[0]
+
+        cur_root = self._detect_body_arg_root()
+        if not cur_root:
+            return ref_args
+        ref_roots = {
+            root_of(arg.var) for arg in ref_args
+            if getattr(arg, 'var', None) and root_of(arg.var) not in self._NON_BODY_ARG_ROOTS
+        }
+        if len(ref_roots) != 1:
+            # only remap when the reference args have exactly one body root.
+            return ref_args
+        ref_root = ref_roots.pop()
+        if ref_root == cur_root:
+            return ref_args
+        # schematics models can't be deepcopied; round-trip through primitives to clone (preserving
+        # polymorphic subtypes) so we don't mutate the caller's ref_args.
+        remapped = list(CMDArgGroup({"name": "", "args": [a.to_primitive() for a in ref_args]}).args)
+        for arg in remapped:
+            self._remap_arg_var_root(arg, ref_root, cur_root)
+        return remapped
+
+    @classmethod
+    def _remap_arg_var_root(cls, node, old_root, new_root):
+        if node is None:
+            return
+        var = getattr(node, 'var', None)
+        if var:
+            if var == old_root:
+                node.var = new_root
+            elif var.startswith(old_root + '.') or var.startswith(old_root + '['):
+                node.var = new_root + var[len(old_root):]
+        for sub in (getattr(node, 'args', None) or []):
+            cls._remap_arg_var_root(sub, old_root, new_root)
+        cls._remap_arg_var_root(getattr(node, 'item', None), old_root, new_root)
+        additional_props = getattr(node, 'additional_props', None)
+        if additional_props is not None:
+            cls._remap_arg_var_root(getattr(additional_props, 'item', None), old_root, new_root)
 
     def generate_outputs(self, ref_outputs=None, pageable=None):
         if not ref_outputs:

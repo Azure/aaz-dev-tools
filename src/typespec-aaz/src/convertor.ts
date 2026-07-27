@@ -9,11 +9,10 @@ import {
   getHeaderFieldOptions,
   getServers,
   getStatusCodeDescription,
-  getVisibilitySuffix,
   resolveRequestVisibility,
   HttpProperty,
 } from "@typespec/http";
-import { isAzureResource } from "@azure-tools/typespec-azure-resource-manager";
+import { isAzureResource, isCustomAzureResource } from "@azure-tools/typespec-azure-resource-manager";
 import { AAZEmitterContext, AAZOperationEmitterContext, AAZSchemaEmitterContext } from "./context.js";
 import { resolveOperationId, toCamelCase } from "./utils.js";
 import { TypeSpecPathItem } from "./model/path_item.js";
@@ -90,6 +89,7 @@ import {
   CMDUuidSchemaBase,
   CMDPasswordSchemaBase,
   CMDResourceIdSchemaBase,
+  CMDResourceIdSchema,
   CMDDateSchemaBase,
   CMDDateTimeSchemaBase,
   CMDDurationSchemaBase,
@@ -778,7 +778,9 @@ function convertModel2CMDObjectSchemaBase(
   }
 
   let pending;
-  if (context.supportClsSchema) {
+  // Record<> dict models have no usable schema identifier.
+  // Keep them inline rather than generating a shared cls schema.
+  if (context.supportClsSchema && !isRecordModelType(context.program, payloadModel)) {
     pending = context.pendingSchemas.getOrAdd(payloadModel, context.visibility, () => ({
       type: payloadModel,
       visibility: context.visibility,
@@ -928,6 +930,20 @@ function convertModel2CMDObjectSchemaBase(
       ...(properties.location as CMDStringSchema),
       type: "ResourceLocation",
     } as CMDResourceLocationSchema;
+  }
+
+  if (
+    context.visibility !== Visibility.Read &&
+    isAzureResourceOverall(context, payloadModel) &&
+    properties.id &&
+    properties.id.type === "string"
+  ) {
+    // Legacy custom resources may leak their read-only ARM id as a writable string. Emit it
+    // as a ResourceId (write payloads only) so the arg builder hides it, matching swagger.
+    properties.id = {
+      ...(properties.id as CMDStringSchema),
+      type: "ResourceId",
+    } as CMDResourceIdSchema;
   }
 
   if (properties.userAssignedIdentities && properties.type) {
@@ -1417,13 +1433,15 @@ function getDiscriminatorInfo(context: AAZSchemaEmitterContext, model: Model): D
 }
 
 function isAzureResourceOverall(context: AAZSchemaEmitterContext, model: Model): boolean {
-  let current = model;
-  let isResource = isAzureResource(context.program, current);
-  while (!isResource && current.baseModel) {
+  // Also match legacy custom resources (@customAzureResource), else "location" isn't a ResourceLocation.
+  let current: Model | undefined = model;
+  while (current) {
+    if (isAzureResource(context.program, current) || isCustomAzureResource(context.program, current)) {
+      return true;
+    }
     current = current.baseModel;
-    isResource = isAzureResource(context.program, current);
   }
-  return !!isResource;
+  return false;
 }
 
 function convertLiteral2CMDSchemaBase(
@@ -1493,10 +1511,6 @@ function processPendingSchemas(
       } else {
         const name = getOpenAPITypeName(context.program, type, context.typeNameOptions);
         let ref_name = toCamelCase(name.replace(/\./g, " "));
-        if (group.size > 1 && visibility !== Visibility.Read) {
-          // TODO: handle item
-          ref_name += getVisibilitySuffix(verbVisibility, Visibility.Read);
-        }
         if (Visibility.Read !== visibility) {
           ref_name += "_" + suffix;
         } else {

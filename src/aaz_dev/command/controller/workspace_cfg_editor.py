@@ -1043,10 +1043,13 @@ class WorkspaceCfgEditor(CfgReader, ArgumentUpdateMixin):
 
         # inherit arguments modification
         ref_args = []
+        ref_options = {}
         if ref_command.arg_groups:
             for group in ref_command.arg_groups:
-                ref_args.extend(group.args)
-        command.generate_args(ref_args=ref_args)
+                for arg in group.args:
+                    ref_args.append(arg)
+                    ref_options[arg.var] = [*arg.options]
+        command.generate_args(ref_args=ref_args, ref_options=ref_options)
 
         # inherit outputs
         command.generate_outputs(ref_outputs=ref_command.outputs)

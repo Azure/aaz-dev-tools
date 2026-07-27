@@ -12,6 +12,9 @@ def to_camel_case(name, delimeters=""):
 
 def to_snake_case(name, separator='_'):
     assert isinstance(name, str)
+    # defense-in-depth: drop angle brackets from generic type names (e.g. "Record<Foo>") so the
+    # result is a valid Python identifier. See aaz-dev-tools#562.
+    name = name.replace('<', '').replace('>', '')
     name = re.sub('(.)([A-Z][a-z]+)', r'\1' + separator + r'\2', name)
     name = re.sub('([a-z0-9])([A-Z])', r'\1' + separator + r'\2', name).lower()
     return name.replace('-', separator).replace('_', separator)
