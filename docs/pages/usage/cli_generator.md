@@ -73,7 +73,7 @@ When you unpick some commands in selection and regenerate the code, the unpicked
 
 ### About profiles
 
-In azure-cli, there are 5 profiles right now. The `latest` profile will contains all the commands in the **latest** version, the rest profiles are used to support azure stack. You can reference the following links to learn more about azure stack:
+In azure-cli, there are 5 profiles right now. The `latest` profile contains all the commands in the **latest** version and the rest of the profiles are used to support azure stack. You can reference the following links to learn more about azure stack:
 
 - [Manage API version profiles in Azure Stack Hub](https://learn.microsoft.com/en-us/azure-stack/user/azure-stack-version-profiles?view=azs-2301)
 - [Profiles in azure-rest-api-specs](https://github.com/Azure/azure-rest-api-specs/tree/main/profile)

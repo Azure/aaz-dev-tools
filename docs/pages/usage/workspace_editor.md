@@ -345,7 +345,7 @@ While editing the arguments, you can hide it. The code of hidden arguments will 
 
 ![hidden_arguments](../../assets/recordings/workspace_editor/hidden_arguments.gif)
 
-### Support Entensible Enumeration Arguments
+### Support Extensible Enumeration Arguments
 
 Users can set enum arguments extensible for accepting other values in the future, as denoted by [x-ms-enum](https://github.com/Azure/autorest/tree/main/docs/extensions#x-ms-enum) in swagger. If `supportExtension` is set, then argument validation will be skipped when executing cmds using azure cli.
 
