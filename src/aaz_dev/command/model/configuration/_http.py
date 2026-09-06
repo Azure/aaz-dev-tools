@@ -143,6 +143,8 @@ class CMDHttpRequestHeader(CMDHttpRequestArgs):
 
     def generate_args(self, ref_args, var_prefix=None):
         args = []
+        if not self.params:
+            return args
         if var_prefix:
             if not var_prefix.endswith("$"):
                 var_prefix += '.'

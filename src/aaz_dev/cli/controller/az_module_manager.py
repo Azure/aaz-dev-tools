@@ -36,10 +36,12 @@ class AzModuleManager:
         raise NotImplementedError()
 
     def has_module(self, mod_name):
-        mod_file = os.path.join(self.get_mod_path(mod_name), "setup.py")
-        if not os.path.exists(mod_file):
+        mod_path = self.get_mod_path(mod_name)
+        if not os.path.isdir(mod_path):
             return False
-        return True
+        if os.path.exists(os.path.join(mod_path, "setup.py")):
+            return True
+        return os.path.exists(os.path.join(mod_path, "__init__.py"))
 
     def find_module_cmd_registered(self, node):
         group_nodes = deque()

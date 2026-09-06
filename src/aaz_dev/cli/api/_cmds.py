@@ -57,7 +57,7 @@ def regenerate_code(extension_or_module_name, cli_path=None, cli_extension_path=
         sys.exit(1)
 
     try:
-        if cli_path is not None:
+        if cli_path is not None or Config.CLI_PATH is not None:
             assert Config.CLI_PATH is not None
             manager = AzMainManager()
         else:
@@ -172,7 +172,7 @@ def generate_by_swagger_tag(profile, swagger_tag, extension_or_module_name, cli_
 
         profile = _build_profile(profile, commands_map)
 
-        if cli_path is not None:
+        if cli_path is not None or Config.CLI_PATH is not None:
             assert Config.CLI_PATH is not None
             manager = AzMainManager()
         else:
@@ -321,7 +321,7 @@ def generate(spec, module, cli_path=None):
 
                     commands_map[key] = command.version
 
-        if cli_path is not None:
+        if cli_path is not None or Config.CLI_PATH is not None:
             assert Config.CLI_PATH is not None
             manager = AzMainManager()
 
