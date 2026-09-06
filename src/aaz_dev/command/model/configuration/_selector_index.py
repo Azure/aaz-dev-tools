@@ -3,6 +3,8 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
+from typing import Any
+
 from schematics.models import Model
 from schematics.types import StringType, ListType, ModelType, PolyModelType
 from schematics.types.serializable import serializable
@@ -59,7 +61,7 @@ class CMDSelectorIndexBase(Model):
 
 class CMDSelectorIndexBaseField(PolyModelType):
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         super(CMDSelectorIndexBaseField, self).__init__(
             model_spec=CMDSelectorIndexBase,
             allow_subclasses=True,
@@ -128,7 +130,7 @@ class CMDSelectorIndex(CMDSelectorIndexBase):
 
 class CMDSelectorIndexField(PolyModelType):
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         super(CMDSelectorIndexField, self).__init__(
             model_spec=CMDSelectorIndex,
             allow_subclasses=True,

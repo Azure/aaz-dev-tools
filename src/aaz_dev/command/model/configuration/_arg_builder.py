@@ -10,12 +10,15 @@ from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaB
     CMDResourceLocationSchemaBase, CMDPasswordSchema, CMDBooleanSchemaBase
 from ..configuration._schema import CMDIdentityObjectSchema, CMDStringSchemaBase, \
     CMDStringSchema
+from typing import TYPE_CHECKING, Any, List, Optional
+if TYPE_CHECKING:
+    from command.model.configuration._arg import CMDStringArg
 
 
 class CMDArgBuilder:
 
     @classmethod
-    def new_builder(cls, schema, parent=None, var_prefix=None, ref_args=None, ref_arg=None, is_update_action=False):
+    def new_builder(cls, schema: Any, parent: Any=None, var_prefix: Optional[str]=None, ref_args: Any=None, ref_arg: Any=None, is_update_action: bool=False) -> "CMDArgBuilder":
         if var_prefix is None:
             if parent is None or parent._arg_var is None:
                 arg_var = "$"
@@ -70,7 +73,7 @@ class CMDArgBuilder:
         sub_ref_args = sub_ref_args or None
         return cls(schema=schema, arg_var=arg_var, ref_arg=ref_arg, sub_ref_args=sub_ref_args, parent=parent, is_update_action=is_update_action, flatten=flatten)
 
-    def __init__(self, schema, arg_var, ref_arg, sub_ref_args, parent=None, is_update_action=False, flatten=None):
+    def __init__(self, schema: Any, arg_var: str, ref_arg: Any, sub_ref_args: Any, parent: Any=None, is_update_action: bool=False, flatten: Any=None) -> None:
         self.schema = schema
         self._parent = parent
         self._arg_var = arg_var
@@ -84,7 +87,7 @@ class CMDArgBuilder:
         return self.new_builder(
             schema=schema, parent=self, ref_args=ref_args, ref_arg=ref_arg, is_update_action=self._is_update_action)
 
-    def _ignore(self):
+    def _ignore(self) -> bool:
         if self.schema.frozen:
             return True
         if isinstance(self.schema, CMDSchemaBase):
@@ -100,7 +103,7 @@ class CMDArgBuilder:
         assert issubclass(arg_cls, (CMDArgBase, CMDObjectArgAdditionalProperties))
         return arg_cls.build_arg_base(self)
 
-    def _build_arg(self):
+    def _build_arg(self) -> "Optional[CMDStringArg]":
         if self._ignore():
             return None
 
@@ -108,7 +111,7 @@ class CMDArgBuilder:
         assert issubclass(arg_cls, CMDArg)
         return arg_cls.build_arg(self)
 
-    def _need_flatten(self):
+    def _need_flatten(self) -> Any:
         if isinstance(self.schema, CMDObjectSchema):
             if self.get_cls():
                 # not support to flatten object which is a cls.
@@ -131,7 +134,7 @@ class CMDArgBuilder:
             return self._parent._flatten_discriminators
         return False
 
-    def get_args(self):
+    def get_args(self) -> "List[CMDStringArg]":
         if self._ignore():
             return []
 
@@ -264,12 +267,12 @@ class CMDArgBuilder:
         else:
             return None
 
-    def get_required(self):
+    def get_required(self) -> bool:
         if not self._is_update_action and isinstance(self.schema, CMDSchema):
             return self.schema.required
         return False
 
-    def get_nullable(self):
+    def get_nullable(self) -> bool:
         if isinstance(self.schema, CMDSchemaBase) and self.schema.nullable:
             return True
 
@@ -290,7 +293,7 @@ class CMDArgBuilder:
 
         return False
 
-    def get_default(self):
+    def get_default(self) -> Any:
         if self._ref_arg:
             # ref_arg already has default value return it
             if self._ref_arg.default:
@@ -302,12 +305,12 @@ class CMDArgBuilder:
             return CMDArgDefault.build_default(self, self.schema.default)
         return None
 
-    def get_configuration_key(self):
+    def get_configuration_key(self) -> Any:
         if self._ref_arg:
             return self._ref_arg.configuration_key
         return None
 
-    def get_prompt(self):
+    def get_prompt(self) -> Any:
         if self._ref_arg:
             # ref_arg already has prompt return it
             if hasattr(self._ref_arg, "prompt") and self._ref_arg.prompt:
@@ -316,7 +319,7 @@ class CMDArgBuilder:
             return CMDPasswordArgPromptInput(raw_data={"msg": "Password:"})
         return None
 
-    def get_blank(self):
+    def get_blank(self) -> Any:
         if self.get_prompt() is not None:
             # disable blank when get prompt is available
             return None
@@ -349,17 +352,17 @@ class CMDArgBuilder:
 
         return False
 
-    def get_var(self):
+    def get_var(self) -> str:
         return self._arg_var
 
     @staticmethod
-    def _build_option_name(name):
+    def _build_option_name(name: str) -> str:
         name = name.replace('_', '-')
         name = re.sub('(.)([A-Z][a-z]+)', r'\1-\2', name)
         name = re.sub('([a-z0-9])([A-Z])', r'\1-\2', name).lower()
         return '-'.join([p for p in name.split('-') if p])
 
-    def get_options(self):
+    def get_options(self) -> List[str]:
         if self._ref_arg:
             return [*self._ref_arg.options]
 
@@ -403,7 +406,7 @@ class CMDArgBuilder:
         #         return [singular_opt_name, ]
         return None
 
-    def get_help(self):
+    def get_help(self) -> Any:
         if self._ref_arg:
             if self._ref_arg.help:
                 return CMDArgumentHelp(raw_data=self._ref_arg.help.to_native())
@@ -414,12 +417,12 @@ class CMDArgBuilder:
             return h
         return None
 
-    def get_group(self):
+    def get_group(self) -> Any:
         if self._ref_arg:
             return self._ref_arg.group
         return None
 
-    def get_fmt(self):
+    def get_fmt(self) -> Any:
         if isinstance(self.schema, CMDObjectSchemaDiscriminator):
             return None
         assert hasattr(self.schema, 'fmt')
@@ -429,7 +432,7 @@ class CMDArgBuilder:
             return self.schema.fmt.build_arg_fmt(self, ref_fmt=ref_fmt)
         return None
 
-    def get_enum(self):
+    def get_enum(self) -> Any:
         assert hasattr(self.schema, 'enum')
         if self.schema.enum:
             ref_enum = self._ref_arg.enum if self._ref_arg else None

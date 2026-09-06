@@ -1,6 +1,6 @@
 
 
-def create_data_plane_name(resource_provider):
+def create_data_plane_name(resource_provider: str) -> str:
     return 'data-plane:' + resource_provider.lower()
 
 
@@ -9,7 +9,7 @@ class PlaneEnum:
     _Data = "data-plane"
 
     @staticmethod
-    def Data(resource_provider):
+    def Data(resource_provider: str) -> str:
         """For data plane, it's required to provide resource_provider which defined the scope of data plane."""
         return create_data_plane_name(resource_provider)
 

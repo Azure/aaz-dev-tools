@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from command.model.configuration import CMDRequestJson, CMDBooleanSchema, CMDStringSchema, CMDObjectSchema, \
     CMDArraySchema, CMDFloatSchema, CMDIntegerSchema
@@ -230,7 +231,7 @@ class BodyParameter(ParameterBase, Linkable):
 
 class ParameterField(PolyModelType):
 
-    def __init__(self, support_reference, **kwargs):
+    def __init__(self, support_reference: bool, **kwargs: Any):
         model_spec = [
             QueryParameter, HeaderParameter, PathParameter, FormDataParameter, BodyParameter
         ]
