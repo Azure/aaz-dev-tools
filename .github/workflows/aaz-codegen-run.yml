@@ -1,0 +1,176 @@
+name: AAZ Codegen Run
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: aaz-codegen-run-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  run-codegen:
+    if: >-
+      github.event.issue.pull_request == null &&
+      startsWith(github.event.comment.body, '/codegen') &&
+      contains(github.event.issue.labels.*.name, 'codegen:request')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    env:
+      CODEGEN_TOKEN: ${{ secrets.CODEGEN_GITHUB_TOKEN || github.token }}
+      CODEGEN_PR_OWNER: ${{ vars.CODEGEN_PR_OWNER || github.repository_owner }}
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+      AAZ_BRANCH: codegen/issue-${{ github.event.issue.number }}-aaz
+      CLI_BRANCH: codegen/issue-${{ github.event.issue.number }}-azure-cli
+
+    steps:
+      - name: Checkout aaz-dev-tools
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install aaz-dev-tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Load latest valid preview
+        run: |
+          python -m aaz_dev_mcp.ci.find_preview \
+            --event "$GITHUB_EVENT_PATH" \
+            --out codegen-preview.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Checkout azure-rest-api-specs
+        uses: actions/checkout@v4
+        with:
+          repository: Azure/azure-rest-api-specs
+          ref: main
+          path: azure-rest-api-specs
+
+      - name: Checkout aaz
+        uses: actions/checkout@v4
+        with:
+          repository: Azure/aaz
+          ref: main
+          path: aaz
+          token: ${{ env.CODEGEN_TOKEN }}
+
+      - name: Checkout azure-cli
+        uses: actions/checkout@v4
+        with:
+          repository: Azure/azure-cli
+          ref: dev
+          path: azure-cli
+          token: ${{ env.CODEGEN_TOKEN }}
+
+      - name: Run deterministic codegen
+        run: |
+          mkdir -p "$RUNNER_TEMP/aaz-workspaces"
+          python -m aaz_dev_mcp.ci.run_issue_codegen \
+            --preview codegen-preview.json \
+            --swagger-path azure-rest-api-specs \
+            --aaz-path aaz \
+            --cli-path azure-cli \
+            --workspace-folder "$RUNNER_TEMP/aaz-workspaces" \
+            --summary codegen-summary.md \
+            --json-out codegen-result.json \
+            --by-patch true
+
+      - name: Push branches and open draft PRs
+        id: prs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config --global user.name "aaz-codegen-bot"
+          git config --global user.email "aaz-codegen-bot@users.noreply.github.com"
+
+          : > pr-links.md
+
+          publish_repo() {
+            local path="$1"
+            local base_repo="$2"
+            local head_repo="$3"
+            local base="$4"
+            local branch="$5"
+            local label="$6"
+            local head_owner="${head_repo%%/*}"
+
+            if git -C "$path" diff --quiet; then
+              echo "- ${label}: no changes" >> pr-links.md
+              return
+            fi
+
+            git -C "$path" checkout -B "$branch"
+            git -C "$path" add -A
+            git -C "$path" commit -m "Codegen from aaz-dev-tools-mcp issue #${ISSUE_NUMBER}"
+            git -C "$path" remote add codegen "https://x-access-token:${CODEGEN_TOKEN}@github.com/${head_repo}.git"
+            git -C "$path" push --force-with-lease codegen "HEAD:${branch}"
+
+            local existing
+            existing="$(gh pr list --repo "$base_repo" --head "${head_owner}:${branch}" --json url --jq '.[0].url // empty')"
+            if [[ -n "$existing" ]]; then
+              gh pr edit "$existing" \
+                --title "AAZ codegen for issue #${ISSUE_NUMBER}" \
+                --body-file codegen-summary.md
+              echo "- ${label}: ${existing}" >> pr-links.md
+            else
+              local url
+              url="$(gh pr create \
+                --repo "$base_repo" \
+                --base "$base" \
+                --head "${head_owner}:${branch}" \
+                --draft \
+                --title "AAZ codegen for issue #${ISSUE_NUMBER}" \
+                --body-file codegen-summary.md)"
+              echo "- ${label}: ${url}" >> pr-links.md
+            fi
+          }
+
+          publish_repo "aaz" "Azure/aaz" "${CODEGEN_PR_OWNER}/aaz" "main" "$AAZ_BRANCH" "Azure/aaz"
+          publish_repo "azure-cli" "Azure/azure-cli" "${CODEGEN_PR_OWNER}/azure-cli" "dev" "$CLI_BRANCH" "Azure/azure-cli"
+
+          {
+            cat codegen-summary.md
+            echo
+            echo "### Pull Requests"
+            cat pr-links.md
+          } > codegen-result.md
+        env:
+          GH_TOKEN: ${{ env.CODEGEN_TOKEN }}
+
+      - name: Comment result on issue
+        run: gh issue comment "$ISSUE_NUMBER" --body-file codegen-result.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Comment failure on issue
+        if: failure()
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --body "AAZ codegen failed. See workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aaz-codegen-run-${{ github.event.issue.number }}
+          path: |
+            codegen-preview.json
+            codegen-result.json
+            codegen-summary.md
+            pr-links.md
+            codegen-result.md
+          if-no-files-found: ignore
