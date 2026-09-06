@@ -1,8 +1,8 @@
 from command.model.configuration import (
-    CMDHttpOperation, CMDHttpRequestJsonBody, CMDArraySchema, CMDInstanceUpdateOperation, CMDRequestJson,
+    CMDHttpOperation, CMDHttpRequestJsonBody, CMDArraySchema, CMDInstanceUpdateOperation, CMDRequestJson, CMDHttpRequestBinaryBody, CMDRequestBinary,
     CMDHttpResponseJsonBody, CMDObjectSchema, CMDSchema, CMDStringSchemaBase, CMDIntegerSchemaBase, CMDFloatSchemaBase,
     CMDBooleanSchemaBase, CMDObjectSchemaBase, CMDArraySchemaBase, CMDClsSchemaBase, CMDJsonInstanceUpdateAction,
-    CMDObjectSchemaDiscriminator, CMDSchemaEnum, CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction,
+    CMDObjectSchemaDiscriminator, CMDSchemaEnum, CMDJsonInstanceCreateAction, CMDJsonInstanceDeleteAction, CMDBinarySchema,
     CMDInstanceCreateOperation, CMDInstanceDeleteOperation, CMDClientEndpointsByTemplate, CMDIdentityObjectSchemaBase, CMDAnyTypeSchemaBase)
 from utils import exceptions
 from utils.case import to_snake_case
@@ -114,10 +114,14 @@ class AzHttpOperationGenerator(AzOperationGenerator):
         self.content = None
         self.form_content = None
         self.stream_content = None
+        self.content_as_binary = None
         if self._operation.http.request.body:
             body = self._operation.http.request.body
             if isinstance(body, CMDHttpRequestJsonBody):
                 self.content = AzHttpRequestContentGenerator(self._cmd_ctx, body)
+            elif isinstance(body, CMDHttpRequestBinaryBody):
+                self.content_as_binary = True
+                self.content = AzHttpRequestContentBytesGenerator(self._cmd_ctx, body)
             else:
                 raise NotImplementedError()
 
@@ -258,6 +262,19 @@ class AzHttpOperationGenerator(AzOperationGenerator):
                     "Content-Type",
                     "application/json",
                     True,
+                    {}
+                ])
+            elif isinstance(body, CMDHttpRequestBinaryBody):
+                parameters.append([
+                    "Content-Type",
+                    "application/octet-stream",
+                    True,
+                    {}
+                ])
+                parameters.append([
+                    "Content-Length",
+                    "self.ctx.file_length",
+                    False,
                     {}
                 ])
         if self.success_responses:
@@ -509,6 +526,23 @@ class AzRequestClsGenerator:
         arg_key = f"@{self.name}"
         for scopes in _iter_request_scopes_by_schema_base(self.schema, self.BUILDER_NAME, None, arg_key, self._cmd_ctx):
             yield scopes
+
+class AzHttpRequestContentBytesGenerator:
+
+    def __init__(self, cmd_ctx, body):
+        self._cmd_ctx = cmd_ctx
+        assert isinstance(body.bytes, CMDRequestBinary)
+        self._bodycontent = body.bytes
+        self.ref = None
+        if self._bodycontent.ref:
+            self.ref, is_selector = self._cmd_ctx.get_variant(self._bodycontent.ref)
+            assert not is_selector
+        self.arg_key = "self.ctx.args"
+        if self.ref is None:
+            assert isinstance(self._bodycontent.schema, CMDSchema)
+            if self._bodycontent.schema.arg:
+                self.arg_key, hide = self._cmd_ctx.get_argument(self._bodycontent.schema.arg)
+                assert not hide
 
 
 class AzHttpResponseGenerator:
@@ -990,6 +1024,8 @@ def render_schema_base(schema, cls_map, schema_kwargs=None):
         schema_type = "AAZFloatType"
     elif isinstance(schema, CMDIdentityObjectSchemaBase):
         schema_type = "AAZIdentityObjectType"
+    elif isinstance(schema, CMDBinarySchema):
+        schema_type = "AAZFileUploadType"
     elif isinstance(schema, CMDObjectSchemaBase):
         if schema.props or schema.discriminators:
             schema_type = "AAZObjectType"

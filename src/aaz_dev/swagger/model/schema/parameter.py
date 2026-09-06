@@ -1,7 +1,7 @@
 import logging
 
 from command.model.configuration import CMDRequestJson, CMDBooleanSchema, CMDStringSchema, CMDObjectSchema, \
-    CMDArraySchema, CMDFloatSchema, CMDIntegerSchema
+    CMDArraySchema, CMDFloatSchema, CMDIntegerSchema, CMDBinarySchema, CMDRequestBinary
 from schematics.models import Model
 from schematics.types import StringType, BooleanType, ModelType, PolyModelType, BaseType
 from swagger.utils import exceptions
@@ -205,7 +205,11 @@ class BodyParameter(ParameterBase, Linkable):
                 msg=f"Request Body Parameter is None: {self.traces}"
             )
             return None
-        if isinstance(v, (
+        if isinstance(v, CMDBinarySchema):
+            model = CMDRequestBinary()
+            model.schema = v
+            v.required = self.required
+        elif isinstance(v, (
                 CMDStringSchema,
                 CMDObjectSchema,
                 CMDArraySchema,

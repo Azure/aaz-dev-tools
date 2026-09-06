@@ -294,6 +294,10 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
 
     if isinstance(arg, CMDAnyTypeArgBase):
         arg_type = "AAZAnyTypeArg"
+    elif isinstance(arg, CMDByteArgBase):
+        raise NotImplementedError()
+    elif isinstance(arg, CMDBinaryArgBase):
+        arg_type = "AAZFileUploadArg"
     elif isinstance(arg, CMDStringArgBase):
         arg_type = "AAZStrArg"
         enum_kwargs = parse_arg_enum(arg.enum)
@@ -347,10 +351,6 @@ def render_arg_base(arg, cmd_ctx, arg_kwargs=None):
                             "resource_group_arg": resource_group_arg
                         }
                     }
-        elif isinstance(arg, CMDByteArgBase):
-            raise NotImplementedError()
-        elif isinstance(arg, CMDBinaryArgBase):
-            raise NotImplementedError()
         elif isinstance(arg, CMDDurationArgBase):
             arg_type = "AAZDurationArg"
         elif isinstance(arg, CMDDateArgBase):
