@@ -2471,7 +2471,7 @@ class APIEditorTest(CommandTestCase):
     @workspace_name("test_dataplane_monitor_metrics")
     def test_dataplane_monitor_metrics(self, ws_name):
         module = "monitor"
-        resource_provider = "Microsoft.Insights"
+        resource_provider = "Insights"
         api_version = '2023-05-01-preview'
         with self.app.test_client() as c:
             rv = c.post(f"/AAZ/Editor/Workspaces", json={
@@ -2643,7 +2643,7 @@ class APIEditorTest(CommandTestCase):
     @workspace_name("test_dataplane_attestation")
     def test_dataplane_attestation(self, ws_name):
         module = "attestation"
-        resource_provider = "Microsoft.Attestation"
+        resource_provider = "Attestation"
         api_version = '2022-09-01-preview'
 
         with self.app.test_client() as c:
@@ -2693,6 +2693,7 @@ class APIEditorTest(CommandTestCase):
                         'options': ['provider-name'],
                         'required': True,
                         'type': 'string',
+                        'format': {'pattern': '^[a-zA-Z0-9-]{3,24}$'},
                         'group': 'Client',
                         'idPart': 'name',
                         'help': {'short': 'Name of the attestation provider.'},

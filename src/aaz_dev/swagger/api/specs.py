@@ -247,7 +247,7 @@ def get_resource_in_module(plane, mod_names, resource_id):
 )
 def get_resource_version_in_rp(plane, mod_names, rp_name, resource_id, version):
     specs_module_manager = SwaggerSpecsManager().get_module_manager(plane, mod_names)
-    resource = specs_module_manager.get_resource_in_version(rp_name, resource_id, version)
+    resource = specs_module_manager.get_resource_in_version(resource_id, version, rp_name=rp_name)
     result = {
         "url": url_for('swagger.get_resource_version_in_rp',
                        plane=plane, mod_names=mod_names, rp_name=resource.rp_name,

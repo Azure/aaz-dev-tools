@@ -90,7 +90,47 @@ class AzModuleManager:
         return module
 
     _def_load_command_table = re.compile(r"^(\s+)def\s+load_command_table\(\s*self,\s+(\w+)\s*\):(.*)?$")
-    _def_import_load_aaz = re.compile(r"\s+(import\s+(\w+.)*load_aaz_command_table)\s*$")
+
+    @staticmethod
+    def _loads_aaz_commands(module, line):
+        owner = next((
+            node for node in ast.walk(module) if isinstance(node, ast.ClassDef)
+            and any(isinstance(member, ast.FunctionDef) and member.lineno == line for member in node.body)
+        ), None)
+        if owner is None:
+            return False
+        methods = {node.name: node for node in owner.body if isinstance(node, ast.FunctionDef)}
+        loaders = {"load_aaz_command_table", "load_aaz_command_table_args_guided"}
+        pending = ["load_command_table"]
+        visited = set()
+        while pending:
+            name = pending.pop()
+            if name in visited or name not in methods:
+                continue
+            visited.add(name)
+            nodes = []
+            stack = list(methods[name].body)
+            while stack:
+                node = stack.pop()
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
+                    continue
+                nodes.append(node)
+                stack.extend(ast.iter_child_nodes(node))
+            aliases = loaders | {
+                alias.asname or alias.name
+                for node in [*module.body, *nodes]
+                if isinstance(node, ast.ImportFrom) and node.module == "azure.cli.core.aaz"
+                for alias in node.names if alias.name in loaders
+            }
+            for node in nodes:
+                if not isinstance(node, ast.Call):
+                    continue
+                if isinstance(node.func, ast.Name) and node.func.id in aliases:
+                    return True
+                if (isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name)
+                        and node.func.value.id == "self"):
+                    pending.append(node.func.attr)
+        return False
 
     def _patch_module(self, mod_name):
         """Patch the __init__.py file of module"""
@@ -107,10 +147,6 @@ class AzModuleManager:
         space = None
         for idx in range(len(lines)):
             line = lines[idx]
-            if self._def_import_load_aaz.findall(line):
-                # already patched
-                logger.debug(f"Module is already patched")
-                return
             if start_line is None:
                 def_match = self._def_load_command_table.match(line)
                 if def_match:
@@ -130,6 +166,14 @@ class AzModuleManager:
                     insert_after = idx
         if start_line is None:
             raise exceptions.InvalidAPIUsage(f"Patch Module failed: Cannot find load_command_table function in file: {file}")
+
+        try:
+            module = ast.parse('\n'.join(lines), filename=file)
+        except SyntaxError as err:
+            raise exceptions.InvalidAPIUsage(f"Patch Module failed: Invalid Python in file: {file}: {err}") from err
+        if self._loads_aaz_commands(module, start_line + 1):
+            logger.debug("Module is already patched")
+            return
 
         insert_lines = [
             f"{space}{space}from azure.cli.core.aaz import load_aaz_command_table",
