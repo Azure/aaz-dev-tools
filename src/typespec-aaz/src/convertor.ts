@@ -2110,8 +2110,9 @@ function classifyErrorFormat(
     return undefined;
   }
 
-  // difference update propKeys with ["code", "message", "target", "details", "innerError", "innererror"]
-  for (const key of ["code", "message", "target", "details", "innerError", "innererror"]) {
+  // difference update propKeys with ["code", "message", "target", "details", "innerError", "innererror", "additionalProperties"]
+  // "additionalProperties" is a literal property name used by some data-plane error models
+  for (const key of ["code", "message", "target", "details", "innerError", "innererror", "additionalProperties"]) {
     propKeys.delete(key);
   }
 

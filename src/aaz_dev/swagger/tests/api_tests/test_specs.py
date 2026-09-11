@@ -69,7 +69,8 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
             modules = rv.get_json()
             assert rv.status_code == 200, rv.get_json()['message']
             for module in modules:
-                rv = c.get(f"{module['url']}/ResourceProviders")
+                # `/Resources` is only served for OpenAPI providers, typespec ones are compiled in the browser
+                rv = c.get(f"{module['url']}/ResourceProviders?type=OpenAPI")
                 assert rv.status_code == 200, rv.get_json()['message']
                 rps = rv.get_json()
                 for rp in rps:
@@ -90,7 +91,8 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
             modules = rv.get_json()
             assert rv.status_code == 200, rv.get_json()['message']
             for module in modules:
-                rv = c.get(f"{module['url']}/ResourceProviders")
+                # `/Resources` is only served for OpenAPI providers, typespec ones are compiled in the browser
+                rv = c.get(f"{module['url']}/ResourceProviders?type=OpenAPI")
                 assert rv.status_code == 200, rv.get_json()['message']
                 rps = rv.get_json()
                 for rp in rps:
@@ -111,7 +113,8 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
             modules = rv.get_json()
             assert rv.status_code == 200, rv.get_json()['message']
             for module in modules:
-                rv = c.get(f"{module['url']}/ResourceProviders")
+                # `/Resources` is only served for OpenAPI providers, typespec ones are compiled in the browser
+                rv = c.get(f"{module['url']}/ResourceProviders?type=OpenAPI")
                 assert rv.status_code == 200, rv.get_json()['message']
                 rps = rv.get_json()
                 for rp in rps:
@@ -129,7 +132,8 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
             modules = rv.get_json()
             assert rv.status_code == 200, rv.get_json()['message']
             for module in modules:
-                rv = c.get(f"{module['url']}/ResourceProviders")
+                # `/Resources` is only served for OpenAPI providers, typespec ones are compiled in the browser
+                rv = c.get(f"{module['url']}/ResourceProviders?type=OpenAPI")
                 assert rv.status_code == 200, rv.get_json()['message']
                 rps = rv.get_json()
                 for rp in rps:
@@ -147,7 +151,8 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
             modules = rv.get_json()
             assert rv.status_code == 200, rv.get_json()['message']
             for module in modules:
-                rv = c.get(f"{module['url']}/ResourceProviders")
+                # `/Resources` is only served for OpenAPI providers, typespec ones are compiled in the browser
+                rv = c.get(f"{module['url']}/ResourceProviders?type=OpenAPI")
                 assert rv.status_code == 200, rv.get_json()['message']
                 rps = rv.get_json()
                 for rp in rps:
@@ -175,7 +180,8 @@ class SwaggerSpecsApiTestCase(SwaggerSpecsTestCase):
             modules = rv.get_json()
             assert rv.status_code == 200, rv.get_json()['message']
             for module in modules:
-                rv = c.get(f"{module['url']}/ResourceProviders")
+                # `/Resources` is only served for OpenAPI providers, typespec ones are compiled in the browser
+                rv = c.get(f"{module['url']}/ResourceProviders?type=OpenAPI")
                 assert rv.status_code == 200, rv.get_json()['message']
                 rps = rv.get_json()
                 for rp in rps:

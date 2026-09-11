@@ -36,7 +36,8 @@ class AAZErrorFormatEnum:
             # code and message is required
             return None
 
-        prop_keys.difference_update({"code", "message", "target", "details", "innerError", "innererror"})  # some api use "innerError" instead of "innererror"
+        # "additionalProperties" is a literal property name used by some data-plane error models
+        prop_keys.difference_update({"code", "message", "target", "details", "innerError", "innererror", "additionalProperties"})  # some api use "innerError" instead of "innererror"
         if len(prop_keys) == 0:
             return cls.ODataV4Format
         if prop_keys == {"additionalInfo"}:
