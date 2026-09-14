@@ -230,13 +230,16 @@ def generate(spec, module, cli_path=None):
 
             rp = module_manager.get_openapi_resource_provider(r.name)
             tag = r.default_tag
-
+            if not tag:
+                raise InvalidAPIUsage(f"Cannot generate `{spec}`: resource provider `{r.name}` has no default tag.")
             resource_map = rp.get_resource_map_by_tag(tag)
             if not resource_map:
                 raise InvalidAPIUsage(f"Tag `{tag}` is not exist.")
 
             results[rp.name] = (resource_map, tag)
 
+        if not results:
+            raise InvalidAPIUsage(f"Cannot generate `{spec}`: no OpenAPI resources were selected.")
         return results
 
     def _normalize_resource_map(resource_map, tag):
@@ -311,8 +314,8 @@ def generate(spec, module, cli_path=None):
                 v = v_list[0]
                 cfg_reader = AAZSpecsManager().load_resource_cfg_reader(Config.DEFAULT_PLANE, resource_id, v)
                 if not cfg_reader:
-                    logger.error(f"Command models not exist in aaz for resource: {resource_id} version: {v}.")
-                    continue
+                    raise InvalidAPIUsage(
+                        f"Command models not exist in aaz for resource: {resource_id} version: {v}.")
 
                 for cmd_names, command in cfg_reader.iter_commands():
                     key = tuple(cmd_names)
@@ -320,6 +323,9 @@ def generate(spec, module, cli_path=None):
                         raise ValueError(f"Multi version contained for command: {''.join(cmd_names)} versions: {commands_map[key]}, {command.version}")
 
                     commands_map[key] = command.version
+
+        if not commands_map:
+            raise InvalidAPIUsage(f"Cannot generate `{spec}`: no commands were generated.")
 
         if cli_path is not None:
             assert Config.CLI_PATH is not None

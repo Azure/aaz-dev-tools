@@ -27,4 +27,10 @@ class ApiTestCase(TestCase):
 
     def setUp(self):
         os.makedirs(self.AAZ_FOLDER, exist_ok=True)
+        # the fake aaz repo is wiped for every test, seed it with an empty command tree so that
+        # loading the command tree doesn't fail on a missing readme.md
+        commands_folder = os.path.join(self.AAZ_FOLDER, 'Commands')
+        os.makedirs(commands_folder, exist_ok=True)
+        with open(os.path.join(commands_folder, 'readme.md'), 'w', encoding='utf-8') as f:
+            f.write("# Atomic Azure CLI Commands\n\n## Groups\n\n")
 

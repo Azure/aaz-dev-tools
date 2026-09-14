@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import re
-import sys
 from collections import OrderedDict
 
 import yaml
@@ -91,6 +90,8 @@ class OpenAPIResourceProvider:
     @property
     def default_tag(self):
         if self._default_tag is None:
+            if not self._readme_paths:
+                return None
             with open(self._readme_paths[0], "r", encoding="utf-8") as f:
                 content = f.read()
 
@@ -98,8 +99,8 @@ class OpenAPIResourceProvider:
                 self._default_tag = re.findall(r"tag:\s*(.+)", content)[0]
 
             except IndexError:
-                logger.error(f"Cannot find default tag in resource provider: {self.name}.", exc_info=True)
-                raise sys.exit(1)
+                logger.error(f"Cannot find default tag in resource provider: {self.name}.")
+                return None
 
         return self._default_tag
 

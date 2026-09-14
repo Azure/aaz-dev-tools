@@ -11,10 +11,7 @@ class TypeSpecHelper:
     def _iter_entry_files(folder):
         if not os.path.isdir(folder):
             raise ValueError(f"Path not exist: {folder}")
-        ts_path = os.path.join(folder, "main.tsp")
-        cfg_path = os.path.join(folder, "tspconfig.yaml")
-        if os.path.isfile(ts_path) and os.path.isfile(cfg_path):
-            yield ts_path, cfg_path
+        # os.walk yields `folder` itself first, so the entry file at the root is covered here
         for root, dirs, files in os.walk(folder):
             ts_path = os.path.join(root, "main.tsp")
             cfg_path = os.path.join(root, "tspconfig.yaml")

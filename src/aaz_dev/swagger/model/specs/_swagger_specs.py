@@ -35,6 +35,9 @@ class SwaggerSpecs:
             return None
         if os.path.isdir(os.path.join(path, 'resource-manager')) or TypeSpecHelper.find_mgmt_plane_entry_files(path):
             module = MgmtPlaneModule(plane=plane, name=name, folder_path=path)
+            if len(names) > 1 and not os.path.isdir(os.path.join(path, *names[1:])):
+                # Preserve root-level TypeSpec paths before trying the OpenAPI layout.
+                path = os.path.join(path, 'resource-manager')
             for name in names[1:]:
                 path = os.path.join(path, name)
                 if not os.path.isdir(path):
@@ -61,6 +64,9 @@ class SwaggerSpecs:
         path = os.path.join(self.spec_folder_path, name)
         if os.path.isdir(os.path.join(path, 'data-plane')) or TypeSpecHelper.find_data_plane_entry_files(path):
             module = DataPlaneModule(plane=plane, name=name, folder_path=path)
+            if len(names) > 1 and not os.path.isdir(os.path.join(path, *names[1:])):
+                # Preserve root-level TypeSpec paths before trying the OpenAPI layout.
+                path = os.path.join(path, 'data-plane')
             for name in names[1:]:
                 path = os.path.join(path, name)
                 if not os.path.isdir(path):

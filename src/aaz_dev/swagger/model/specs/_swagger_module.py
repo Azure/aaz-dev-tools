@@ -118,16 +118,21 @@ class DataPlaneModule(SwaggerModule):
             return rp
         for name in os.listdir(folder_path):
             path = os.path.join(folder_path, name)
-            if os.path.isdir(path):
-                if name.lower() in ('preview', 'stable'):
-                    continue
-                name_parts = name.split('.')
-                if len(name_parts) >= 2:
-                    readme_paths = [*_search_readme_md_paths(path, search_parent=True)]
-                    rp.append(OpenAPIResourceProvider(name, path, readme_paths, swagger_module=self))
-                elif name.lower() != 'common':
-                    sub_module = DataPlaneModule(plane=self.plane, name=name, folder_path=path, parent=self)
-                    rp.extend(sub_module.get_resource_providers())
+            if not os.path.isdir(path):
+                continue
+            if name.startswith('.') or name.lower() in ('preview', 'stable', 'common', 'examples'):
+                continue
+            # A data-plane resource provider folder is either named `Foo.Bar` (legacy) or holds the
+            # `stable`/`preview` version folders directly (unified folder structure). Anything else
+            # is a grouping folder to descend into.
+            if '.' in name or _has_version_folder(path):
+                readme_paths = [*_search_readme_md_paths(path, search_parent=True)]
+                rp.append(OpenAPIResourceProvider(name, path, readme_paths, swagger_module=self))
+            else:
+                sub_module = DataPlaneModule(plane=self.plane, name=name, folder_path=path, parent=self)
+                # only descend for openapi: typespec entry files are found by walking the whole
+                # module folder already, descending again would report every provider twice.
+                rp.extend(sub_module._get_openapi_resource_providers())
         return rp
 
     def _get_typespec_resource_providers(self):
@@ -143,6 +148,10 @@ class DataPlaneModule(SwaggerModule):
                 rp[namespace] = TypeSpecResourceProvider(
                     name=namespace, entry_files=[entry_file], swagger_module=self)
         return [*rp.values()]
+
+
+def _has_version_folder(path):
+    return any(os.path.isdir(os.path.join(path, name)) for name in ('stable', 'preview'))
 
 
 def _search_readme_md_paths(path, search_parent=False):
