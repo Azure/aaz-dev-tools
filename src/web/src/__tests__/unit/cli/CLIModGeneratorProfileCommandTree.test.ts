@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   ProfileCommandTree,
+  collectMissingVersionsInAaz,
+  decodeProfileCTCommand,
   initializeCommandTreeByModView,
   exportModViewProfile,
 } from "../../../views/cli/utils/commandTreeInitialization";
@@ -8,6 +10,51 @@ import { CLIModViewProfile } from "../../../views/cli/interfaces";
 import { CLISpecsSimpleCommandTree } from "../../../views/cli/components/CLIModuleGenerator";
 
 describe("CLIModGeneratorProfileCommandTree", () => {
+  it("should replace a removed selected version with the current aaz version", () => {
+    const command = decodeProfileCTCommand(
+      {
+        names: ["test", "show"],
+        help: { short: "Test" },
+        versions: [{ name: "new", stage: "Stable", resources: [] }],
+      },
+      true,
+      false,
+      true,
+      "old",
+    );
+
+    expect(command.selectedVersion).toBe("new");
+    expect(command.missingVersionInAaz).toBe("old");
+    expect(
+      collectMissingVersionsInAaz({
+        name: "test-profile",
+        commandGroups: {
+          test: { id: "test", names: ["test"], commands: { show: command }, loading: false, selected: true },
+        },
+      }),
+    ).toEqual(["az test show (old -> new)"]);
+  });
+
+  it("should keep a selected version that still exists in aaz", () => {
+    const command = decodeProfileCTCommand(
+      {
+        names: ["test", "show"],
+        help: { short: "Test" },
+        versions: [
+          { name: "new", stage: "Stable", resources: [] },
+          { name: "old", stage: "Stable", resources: [] },
+        ],
+      },
+      true,
+      false,
+      true,
+      "old",
+    );
+
+    expect(command.selectedVersion).toBe("old");
+    expect(command.missingVersionInAaz).toBeUndefined();
+  });
+
   describe("initializeCommandTreeByModView", () => {
     it("should initialize command tree with empty profile", () => {
       const profileName = "test-profile";
@@ -89,7 +136,7 @@ describe("CLIModGeneratorProfileCommandTree", () => {
       expect(result.commandGroups["test-group"].commands!["test-command"].registered).toBe(true);
     });
 
-    it("should throw error for missing command groups in aaz", () => {
+    it("should ignore command groups missing from aaz", () => {
       const profileName = "test-profile";
       const view: CLIModViewProfile = {
         name: "test-profile",
@@ -108,9 +155,8 @@ describe("CLIModGeneratorProfileCommandTree", () => {
         },
       };
 
-      expect(() => {
-        initializeCommandTreeByModView(profileName, view, simpleTree);
-      }).toThrow("Miss command groups in aaz: `az missing-group`");
+      expect(initializeCommandTreeByModView(profileName, view, simpleTree).commandGroups).toEqual({});
+      expect(initializeCommandTreeByModView(profileName, view, simpleTree).missingInAaz).toEqual(["az missing-group"]);
     });
   });
 

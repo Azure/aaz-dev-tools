@@ -21,6 +21,8 @@ interface ProfileCTCommand {
   names: string[];
   versions?: ProfileCTCommandVersion[];
   selectedVersion?: string;
+  // version generated in the module but missing in local aaz repo
+  missingVersionInAaz?: string;
   registered?: boolean;
   modified: boolean;
   loading: boolean;
