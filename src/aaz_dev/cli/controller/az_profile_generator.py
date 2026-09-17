@@ -11,10 +11,11 @@ from utils import exceptions
 class AzProfileGenerator:
     """Used to generate atomic layer command group"""
 
-    def __init__(self, aaz_folder, profile):
+    def __init__(self, aaz_folder, profile, by_patch=False):
         self.aaz_folder = aaz_folder
         self.profile = profile
         self.profile_folder_name = profile.profile_folder_name
+        self._by_patch = by_patch
         self._removed_folders = set()
         self._removed_files = set()
         self._modified_files = {}
@@ -90,7 +91,8 @@ class AzProfileGenerator:
         for name in del_folders:
             self._delete_folder(profile_folder_name, *command_group_folder_names, name)
 
-        files = set()
+        # in patch mode files on disk are kept, so they must stay imported by __init__.py
+        files = set(cur_files) if self._by_patch else set()
         if command_group.commands:
             for command in command_group.commands.values():
                 assert command.names[:-1] == command_group.names, f"Invalid command name: {command.names}"
@@ -171,12 +173,16 @@ class AzProfileGenerator:
         return os.path.join(self.aaz_folder, *names)
 
     def _delete_folder(self, *names):
+        if self._by_patch:
+            return
         path = self._get_path(*names)
         if os.path.exists(path):
             assert os.path.isdir(path), f'Invalid folder path {path}'
             self._removed_folders.add(path)
 
     def _delete_file(self, *names):
+        if self._by_patch:
+            return
         path = self._get_path(*names)
         if os.path.exists(path):
             assert os.path.isfile(path), f'Invalid file path {path}'

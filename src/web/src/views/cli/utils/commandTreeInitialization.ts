@@ -15,6 +15,7 @@ import {
   calculateSelected,
   type ProfileCTCommandGroup,
   type ProfileCTCommand,
+  type ProfileCTCommands,
   type ProfileCTCommandGroups,
   type ProfileCTCommandVersion,
 } from "./commandTreeUtils";
@@ -22,6 +23,8 @@ import {
 export interface ProfileCommandTree {
   name: string;
   commandGroups: ProfileCTCommandGroups;
+  // commands generated in the module but missing in local aaz repo
+  missingInAaz?: string[];
 }
 
 export const decodeProfileCTCommandVersion = (response: any): ProfileCTCommandVersion => {
@@ -50,15 +53,18 @@ export const decodeProfileCTCommand = (
   };
   if (selected) {
     let version: string | undefined;
-    if (selectedVersion !== undefined) {
+    let missingVersionInAaz: string | undefined;
+    if (selectedVersion !== undefined && versions?.some((value) => value.name === selectedVersion)) {
       version = selectedVersion;
     } else {
       version = versions ? versions[0].name : undefined;
+      missingVersionInAaz = selectedVersion;
     }
 
     return {
       ...command,
       selectedVersion: version,
+      missingVersionInAaz: missingVersionInAaz,
     };
   } else {
     return command;
@@ -80,9 +86,24 @@ const initializeCommandByModView = (
   };
 };
 
+const collectMissingInAaz = (
+  view: { commands?: CLIModViewCommands; commandGroups?: CLIModViewCommandGroups } | undefined,
+  commands: ProfileCTCommands | undefined,
+  commandGroups: ProfileCTCommandGroups | undefined,
+  missingInAaz: string[],
+) => {
+  Object.entries(view?.commands ?? {})
+    .filter(([key]) => commands?.[key] === undefined)
+    .forEach(([, value]) => missingInAaz.push("az " + value.names.join(" ")));
+  Object.entries(view?.commandGroups ?? {})
+    .filter(([key]) => commandGroups?.[key] === undefined)
+    .forEach(([, value]) => missingInAaz.push("az " + value.names.join(" ")));
+};
+
 const initializeCommandGroupByModView = (
   view: CLIModViewCommandGroup | undefined,
   simpleCommandGroup: CLISpecsSimpleCommandGroup,
+  missingInAaz: string[],
 ): ProfileCTCommandGroup => {
   const commands =
     simpleCommandGroup.commands !== undefined
@@ -98,32 +119,11 @@ const initializeCommandGroupByModView = (
       ? Object.fromEntries(
           Object.entries(simpleCommandGroup.commandGroups).map(([key, value]) => [
             key,
-            initializeCommandGroupByModView(view?.commandGroups?.[key], value),
+            initializeCommandGroupByModView(view?.commandGroups?.[key], value, missingInAaz),
           ]),
         )
       : undefined;
-  const leftCommands = Object.entries(view?.commands ?? {})
-    .filter(([key, _]) => commands?.[key] === undefined)
-    .map(([_, value]) => value.names)
-    .map((names) => "`az " + names.join(" ") + "`");
-  const leftCommandGroups = Object.entries(view?.commandGroups ?? {})
-    .filter(([key, _]) => commandGroups?.[key] === undefined)
-    .map(([_, value]) => value.names)
-    .map((names) => "`az " + names.join(" ") + "`");
-  const errors = [];
-  if (leftCommands.length > 0) {
-    errors.push(`Miss commands in aaz: ${leftCommands.join(", ")}`);
-  }
-  if (leftCommandGroups.length > 0) {
-    errors.push(`Miss command groups in aaz: ${leftCommandGroups.join(", ")}`);
-  }
-  if (errors.length > 0) {
-    throw new Error(
-      "\n" +
-        errors.join("\n") +
-        "\nSee: https://azure.github.io/aaz-dev-tools/pages/usage/cli-generator/#miss-command-models.",
-    );
-  }
+  collectMissingInAaz(view, commands, commandGroups, missingInAaz);
   const selected = calculateSelected(commands ?? {}, commandGroups ?? {});
   return {
     id: simpleCommandGroup.names.join("/"),
@@ -141,25 +141,37 @@ export const initializeCommandTreeByModView = (
   view: CLIModViewProfile | null,
   simpleTree: CLISpecsSimpleCommandTree,
 ): ProfileCommandTree => {
+  const missingInAaz: string[] = [];
   const commandGroups = Object.fromEntries(
     Object.entries(simpleTree.root.commandGroups).map(([key, value]) => [
       key,
-      initializeCommandGroupByModView(view?.commandGroups?.[key], value),
+      initializeCommandGroupByModView(view?.commandGroups?.[key], value, missingInAaz),
     ]),
   );
-  const leftCommandGroups = Object.entries(view?.commandGroups ?? {})
-    .filter(([key, _]) => commandGroups?.[key] === undefined)
-    .map(([_, value]) => value.names)
-    .map((names) => "`az " + names.join(" ") + "`");
-  if (leftCommandGroups.length > 0) {
-    throw new Error(
-      `\nMiss command groups in aaz: ${leftCommandGroups.join(", ")}\nSee: https://azure.github.io/aaz-dev-tools/pages/usage/cli-generator/#miss-command-models.`,
-    );
-  }
+  collectMissingInAaz(view ?? undefined, undefined, commandGroups, missingInAaz);
   return {
     name: profileName,
     commandGroups: commandGroups,
+    missingInAaz: missingInAaz,
   };
+};
+
+const collectMissingVersionsOfCommandGroup = (group: ProfileCTCommandGroup, missing: string[]) => {
+  Object.values(group.commands ?? {}).forEach((command) => {
+    if (command.selected && command.missingVersionInAaz !== undefined) {
+      missing.push(`az ${command.names.join(" ")} (${command.missingVersionInAaz} -> ${command.selectedVersion})`);
+    }
+  });
+  Object.values(group.commandGroups ?? {}).forEach((subGroup) =>
+    collectMissingVersionsOfCommandGroup(subGroup, missing),
+  );
+};
+
+// versions generated in the module but missing in local aaz repo, they are replaced by the latest aaz version
+export const collectMissingVersionsInAaz = (tree: ProfileCommandTree): string[] => {
+  const missing: string[] = [];
+  Object.values(tree.commandGroups).forEach((group) => collectMissingVersionsOfCommandGroup(group, missing));
+  return missing;
 };
 
 const exportModViewCommand = (command: ProfileCTCommand): CLIModViewCommand | undefined => {

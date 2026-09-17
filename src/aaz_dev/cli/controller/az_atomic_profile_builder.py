@@ -128,6 +128,8 @@ class AzAtomicProfileBuilder:
             if v.name == version_name:
                 version = v
                 break
+        if not version and not load_cfg and aaz_cmd.versions:
+            version = aaz_cmd.versions[0]
         if not version:
             raise ResourceNotFind("Version '{}' of command '{}' not exist in AAZ".format(version_name, ' '.join(names)))
 

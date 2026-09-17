@@ -6,13 +6,57 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from cli.api import _cmds
+from cli.controller.az_atomic_profile_builder import AzAtomicProfileBuilder
 from cli.controller.az_module_manager import AzModuleManager
+from cli.controller.az_profile_generator import AzProfileGenerator
 from swagger.model.specs import SwaggerSpecs, TypeSpecResourceProvider
 from utils.config import Config
 from utils.plane import PlaneEnum
 
 
 class CodegenRegressionTest(TestCase):
+    def test_patch_generation_preserves_files_missing_from_aaz(self):
+        with TemporaryDirectory() as folder:
+            group_folder = Path(folder) / "latest" / "test"
+            group_folder.mkdir(parents=True)
+            stale_file = group_folder / "_stale.py"
+            stale_file.write_text("stale\n", encoding="utf-8")
+            (group_folder / "_current.py").write_text("current\n", encoding="utf-8")
+            (group_folder / "__init__.py").write_text("", encoding="utf-8")
+            (group_folder / "__cmd_group.py").write_text("", encoding="utf-8")
+            profile = SimpleNamespace(profile_folder_name="latest", command_groups=None)
+            command_group = SimpleNamespace(
+                names=["test"],
+                command_groups=None,
+                commands={"current": SimpleNamespace(names=["test", "current"], cfg=None)},
+                wait_command=None,
+                register_info=None,
+                help=SimpleNamespace(short="Test", long=None),
+            )
+
+            generator = AzProfileGenerator(folder, profile, by_patch=True)
+            generator._generate_by_command_group("latest", command_group)
+            generator.save()
+
+            self.assertTrue(stale_file.exists())
+            self.assertIn("from ._stale import *", (group_folder / "__init__.py").read_text(encoding="utf-8"))
+
+    def test_patch_generation_accepts_removed_command_version(self):
+        with patch("cli.controller.az_atomic_profile_builder.AAZSpecsManager"):
+            builder = AzAtomicProfileBuilder("test", by_patch=True)
+        old_version = SimpleNamespace(
+            name="new", stage=None, examples=None,
+            resources=[SimpleNamespace(to_primitive=lambda: {"plane": PlaneEnum.Mgmt, "id": "/test"})],
+        )
+        builder._aaz_spec_manager = SimpleNamespace(find_command=lambda *args: SimpleNamespace(
+            versions=[old_version],
+            help=SimpleNamespace(short="Test", lines=None),
+        ))
+
+        command = builder._build_command_from_aaz("test", "show", version_name="old", load_cfg=False)
+
+        self.assertEqual(command.version, "new")
+
     def test_generate_rejects_incomplete_selections_before_updating_cli(self):
         resources = {"/test": {"v1": object()}}
         good = SimpleNamespace(name="Good", default_tag="v1", get_resource_map_by_tag=lambda _: resources)

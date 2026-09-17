@@ -67,7 +67,7 @@ The **Unregistered** commands will be used for generate code only, but will not 
 
 ### Remove commands
 
-When you unpick some commands in selection and regenerate the code, the unpicked commands will be removed.
+When you unpick some commands in selection and regenerate the code by **Generate All**, the unpicked commands will be removed. **Generate Edit Only** never deletes generated code, it only rewrites the commands you edited.
 
 ![remove_commands](../../assets/recordings/cli_generator/remove_commands.gif)
 
@@ -86,7 +86,14 @@ The sub folders of **aaz** in the module/extension represent each profiles. For 
 
 ### Miss command models
 
-When you open a module/extension, you may encounter `Miss command groups in aaz:...` error. That's because in your module/extension, some commands generated but in your local `aaz` repo the related command models don't exist. It can be resolved by two ways:
+When you open a module/extension, some commands may be generated in your module/extension while the related command models don't exist in your local `aaz` repo, either the command model itself or the version generated in the module is missing. Commands whose model is missing are not displayed in the command tree, commands whose version is missing fall back to the latest version in your local `aaz` repo. A warning listing them is displayed in the generate dialog.
+
+Generation is not blocked:
+
+- **Generate Edit Only** keeps the code of those commands untouched.
+- **Generate All** regenerates the whole `aaz` folder from your local `aaz` repo, so the code of those commands is **deleted** or **regenerated with another version**.
+
+It can be resolved by two ways:
 
 #### Sync the latest change of `aaz` repo in upstream
 

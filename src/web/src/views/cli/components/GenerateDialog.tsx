@@ -2,12 +2,18 @@ import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle } from
 import { cliApi, errorHandlerApi } from "../../../services";
 import { useAsyncOperation } from "../../../services/hooks";
 import { AsyncOperationBanner } from "../../../components";
-import { exportModViewProfile, type ProfileCommandTree } from "../utils/commandTreeInitialization";
+import {
+  collectMissingVersionsInAaz,
+  exportModViewProfile,
+  type ProfileCommandTree,
+} from "../utils/commandTreeInitialization";
 import { type CLIModViewProfiles } from "../interfaces";
 
 interface ProfileCommandTrees {
   [name: string]: ProfileCommandTree;
 }
+
+const preview = (names: string[]) => names.slice(0, 3).join(", ") + (names.length > 3 ? ", ..." : "");
 
 interface GenerateDialogProps {
   repoName: string;
@@ -63,6 +69,9 @@ const GenerateDialog = (props: GenerateDialogProps) => {
 
   const isLoading = updateAllOperation.loading || updateModifiedOperation.loading;
   const error = updateAllOperation.error || updateModifiedOperation.error;
+  const trees = Object.values(props.profileCommandTrees);
+  const missingInAaz = trees.flatMap((tree) => tree.missingInAaz ?? []);
+  const missingVersionsInAaz = trees.flatMap(collectMissingVersionsInAaz);
 
   return (
     <Dialog disableEscapeKeyDown open={props.open}>
@@ -70,6 +79,22 @@ const GenerateDialog = (props: GenerateDialogProps) => {
       <DialogContent>
         <AsyncOperationBanner operation={updateAllOperation} />
         <AsyncOperationBanner operation={updateModifiedOperation} />
+        {!isLoading && (missingInAaz.length > 0 || missingVersionsInAaz.length > 0) && (
+          <Alert variant="outlined" severity="warning" sx={{ whiteSpace: "pre-line" }}>
+            {[
+              missingInAaz.length > 0 &&
+                `${missingInAaz.length} generated command(s)/group(s) have no command model in the local aaz repo, ` +
+                  `'Generate All' deletes their code: ${preview(missingInAaz)}`,
+              missingVersionsInAaz.length > 0 &&
+                `${missingVersionsInAaz.length} generated command(s) have no model of their version in the local aaz ` +
+                  `repo, 'Generate All' regenerates them with another version: ${preview(missingVersionsInAaz)}`,
+              "'Generate Edited Only' keeps them untouched.",
+              "See: https://azure.github.io/aaz-dev-tools/pages/usage/cli-generator/#miss-command-models.",
+            ]
+              .filter(Boolean)
+              .join("\n")}
+          </Alert>
+        )}
         {error && (
           <Alert variant="filled" severity="error">
             {" "}

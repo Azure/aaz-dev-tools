@@ -74,6 +74,7 @@ const CommandItem: React.FC<CommandItemProps> = memo(({ command, onUpdateCommand
         return {
           ...oldCommand,
           selectedVersion: version,
+          missingVersionInAaz: undefined,
           modified: true,
         };
       });
