@@ -3,6 +3,11 @@
 Release History
 ===============
 
+4.7.0
+++++++
+* Unblock CLI generator when local aaz repo misses command models or versions. (#572)
+* Fix data-plane spec discovery and code generation. (#571)
+
 4.6.2
 ++++++
 * Fix invalid Python identifiers generated from generic type names containing angle brackets (e.g. ``Record<...>``).
