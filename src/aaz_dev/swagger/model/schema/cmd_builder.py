@@ -650,7 +650,11 @@ class CMDBuilder:
                 cmd_op.register_cls(cls_register_map=schema_cls_register_map)
             
             for name, cls_register in schema_cls_register_map.items():
-                if cls_register.get('implement', None):
+                if implement := cls_register.get('implement', None):
+                    # typespec operations are parsed from json, so their cls references arrive
+                    # unlinked (swagger links them while building the schema).
+                    for refer in cls_register['refers']:
+                        refer.implement = implement
                     continue
 
                 new_schema = None
