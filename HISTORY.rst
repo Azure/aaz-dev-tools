@@ -3,6 +3,10 @@
 Release History
 ===============
 
+4.7.1
+++++++
+* Fix link cls references when generating commands from TypeSpec. (#574)
+
 4.7.0
 ++++++
 * Unblock CLI generator when local aaz repo misses command models or versions. (#572)
