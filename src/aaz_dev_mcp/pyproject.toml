@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aaz-dev-mcp"
+version = "0.1.0"
+description = "Model Context Protocol server for aaz-dev-tools (Azure CLI code generation)."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "aaz-dev-tools contributors" }]
+license = { text = "MIT" }
+dependencies = [
+    # MCP Python SDK (provides FastMCP + stdio transport)
+    "mcp>=1.0",
+    # The MCP imports aaz-dev controllers directly. The parent project must
+    # already be installed in the same environment (`pip install -e .` at repo
+    # root). We do NOT declare it as a path dependency here to keep this
+    # package installable from any working directory.
+]
+
+[project.scripts]
+aaz-dev-mcp = "aaz_dev_mcp.server:main"
+
+[tool.setuptools]
+package-dir = {"aaz_dev_mcp" = "."}
+packages = [
+    "aaz_dev_mcp",
+    "aaz_dev_mcp.ci",
+    "aaz_dev_mcp.services",
+    "aaz_dev_mcp.services.command",
+    "aaz_dev_mcp.services.cli",
+    "aaz_dev_mcp.tools",
+    "aaz_dev_mcp.tools.command",
+    "aaz_dev_mcp.tools.cli",
+]
