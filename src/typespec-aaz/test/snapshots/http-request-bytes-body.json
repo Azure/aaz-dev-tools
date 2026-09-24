@@ -1,0 +1,5 @@
+{
+  "type": "binary",
+  "name": "body",
+  "required": true
+}
