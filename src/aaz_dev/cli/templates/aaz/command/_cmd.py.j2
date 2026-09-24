@@ -236,11 +236,21 @@ class {{ leaf.cls_name }}(
 
     @register_callback
     def pre_operations(self):
+        {%- if leaf.http_operations[0].content is not none and leaf.http_operations[0].content_as_binary is not none %}
+        self.ctx.file_content, self.ctx.file_handler, self.ctx.file_length = {{ leaf.http_operations[0].content.arg_key }}.to_serialized_data()
+        {%- else %}
         pass
+        {%- endif %}
 
     @register_callback
     def post_operations(self):
+        {%- if leaf.http_operations[0].content is not none and leaf.http_operations[0].content_as_binary is not none %}
+        if self.ctx.file_handler is not None:
+            self.ctx.file_handler.close()
+            self.ctx.file_handler = None
+        {%- else %}
         pass
+        {%- endif %}
 
     {%- for op in leaf.operations %}
     {%- if op.name in ("pre_instance_update", "post_instance_update", "post_instance_create")  %}
@@ -485,7 +495,7 @@ class {{ leaf.cls_name }}(
             return parameters
         {%- endif %}
 
-        {%- if op.content is not none %}
+        {%- if op.content is not none and op.content_as_binary is none %}
 
         @property
         def content(self):
@@ -561,12 +571,26 @@ class {{ leaf.cls_name }}(
             {%- endif %}
         {%- endif %}
 
+        {%- if op.content is not none and op.content_as_binary is not none %}
+
+        @property
+        def content(self):
+            return self.ctx.file_content
+        {%- endif %}
+
         {%- if op.form_content is not none %}
 
         @property
         def form_content(self):
             # TODO:
             return None
+        {%- endif %}
+
+        {%- if op.content is not none and op.content_as_binary is not none %}
+
+        @property
+        def stream_content(self):
+            return self.ctx.file_handler
         {%- endif %}
 
         {%- if op.stream_content is not none %}

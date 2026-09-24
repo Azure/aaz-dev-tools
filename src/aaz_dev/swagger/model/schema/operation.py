@@ -5,7 +5,7 @@ from schematics.models import Model
 from schematics.types import StringType, ModelType, ListType, DictType, BooleanType, PolyModelType
 
 from command.model.configuration import CMDHttpOperation, CMDHttpAction, CMDHttpRequest, CMDHttpRequestPath, \
-    CMDHttpRequestQuery, CMDHttpRequestHeader, CMDHttpRequestJsonBody, CMDRequestJson, CMDHttpOperationLongRunning
+    CMDHttpRequestQuery, CMDHttpRequestHeader, CMDHttpRequestJsonBody, CMDRequestJson, CMDRequestBinary, CMDHttpRequestBinaryBody, CMDHttpOperationLongRunning
 from swagger.utils import exceptions
 from swagger.utils.tools import swagger_resource_path_to_resource_id_template
 from .example_item import XmsExamplesField
@@ -225,6 +225,9 @@ class Operation(Model, Linkable):
             if isinstance(model, CMDRequestJson):
                 request.body = CMDHttpRequestJsonBody()
                 request.body.json = model
+            elif isinstance(model, CMDRequestBinary):
+                request.body = CMDHttpRequestBinaryBody()
+                request.body.bytes = model
             else:
                 raise NotImplementedError()
 

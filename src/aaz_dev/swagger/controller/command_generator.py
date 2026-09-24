@@ -6,7 +6,7 @@ from abc import abstractmethod, ABC
 from command.model.configuration import CMDCommandGroup, CMDCommand, CMDHttpOperation, CMDHttpRequest, \
     CMDSchemaDefault, CMDHttpResponseJsonBody, CMDArrayOutput, CMDJsonInstanceUpdateAction, \
     CMDInstanceUpdateOperation, CMDRequestJson, DEFAULT_CONFIRMATION_PROMPT, CMDClsSchemaBase, CMDHttpResponse, \
-    CMDResponseJson, CMDResource
+    CMDResponseJson, CMDResource, CMDHttpRequestBinaryBody
 from swagger.model.schema.cmd_builder import CMDBuilder
 from swagger.model.schema.fields import MutabilityEnum
 from swagger.model.schema.path_item import PathItem
@@ -468,10 +468,13 @@ class _CommandGenerator(ABC):
             delete_command.confirmation = DEFAULT_CONFIRMATION_PROMPT   # add confirmation for delete command by default
             command_group.commands.append(delete_command)
 
+        skip_update = False
         if path_item.put is not None and 'put' in methods:
             cmd_builder = CMDBuilder(path=resource.path, method='put', mutability=MutabilityEnum.Create,
                                      parameterized_host=parameterized_host)
             op = self.generate_operation(cmd_builder, path_item, instance_var)
+            if isinstance(op.http.request.body, CMDHttpRequestBinaryBody):
+                skip_update = True
             create_command = self.generate_command(path_item, resource, instance_var, cmd_builder, op)
             command_group.commands.append(create_command)
 
@@ -490,29 +493,30 @@ class _CommandGenerator(ABC):
             command_group.commands.append(head_command)
 
         # update command
-        if update_by is None:
-            update_by_patch_command = None
-            update_by_generic_command = None
-            if path_item.patch is not None and 'patch' in methods:
-                cmd_builder = CMDBuilder(path=resource.path, method='patch', mutability=MutabilityEnum.Update,
-                                         parameterized_host=parameterized_host)
-                op = self.generate_operation(cmd_builder, path_item, instance_var)
-                update_by_patch_command = self.generate_command(path_item, resource, instance_var, cmd_builder, op)
-            if path_item.get is not None and path_item.put is not None and 'get' in methods and 'put' in methods:
-                cmd_builder = CMDBuilder(path=resource.path,
-                                         parameterized_host=parameterized_host)
-                get_op = self.generate_operation(
-                    cmd_builder, path_item, instance_var, method='get', mutability=MutabilityEnum.Read)
-                put_op = self.generate_operation(
-                    cmd_builder, path_item, instance_var, method='put', mutability=MutabilityEnum.Update)
-                update_by_generic_command = self.generate_generic_update_command(path_item, resource, instance_var, cmd_builder, get_op, put_op)
-            # generic update command first, patch update command after that
-            if update_by_generic_command:
-                command_group.commands.append(update_by_generic_command)
-            elif update_by_patch_command:
-                command_group.commands.append(update_by_patch_command)
-        else:
-            if update_by == 'GenericOnly':
+        if not skip_update:
+            if update_by is None:
+                update_by_patch_command = None
+                update_by_generic_command = None
+                if path_item.patch is not None and 'patch' in methods:
+                    cmd_builder = CMDBuilder(path=resource.path, method='patch', mutability=MutabilityEnum.Update,
+                                             parameterized_host=parameterized_host)
+                    op = self.generate_operation(cmd_builder, path_item, instance_var)
+                    update_by_patch_command = self.generate_command(path_item, resource, instance_var, cmd_builder, op)
+                if path_item.get is not None and path_item.put is not None and 'get' in methods and 'put' in methods:
+                    cmd_builder = CMDBuilder(path=resource.path,
+                                             parameterized_host=parameterized_host)
+                    get_op = self.generate_operation(
+                        cmd_builder, path_item, instance_var, method='get', mutability=MutabilityEnum.Read)
+                    put_op = self.generate_operation(
+                        cmd_builder, path_item, instance_var, method='put', mutability=MutabilityEnum.Update)
+                    update_by_generic_command = self.generate_generic_update_command(path_item, resource, instance_var,
+                                                                                     cmd_builder, get_op, put_op)
+                # generic update command first, patch update command after that
+                if update_by_generic_command:
+                    command_group.commands.append(update_by_generic_command)
+                elif update_by_patch_command:
+                    command_group.commands.append(update_by_patch_command)
+            elif update_by == 'GenericOnly':
                 if path_item.get is None or path_item.put is None:
                     raise exceptions.InvalidAPIUsage(f"Invalid update_by resource: resource needs to have 'get' and 'put' operations: '{resource}'")
                 if 'get' not in methods or 'put' not in methods:
