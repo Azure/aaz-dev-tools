@@ -1,13 +1,15 @@
 import re
 
 from lxml.builder import ElementMaker
-from lxml.etree import Element, tostring
+from lxml.etree import Element, _Element, tostring
 from xml.sax.saxutils import unescape
 from xmltodict import parse
 
 from schematics.types import ListType, ModelType
+from schematics.types.base import BaseType
 from schematics.types.compound import PolyModelType
 from schematics.types.serializable import Serializable
+from typing import Any, Dict, Optional
 from ._fields import CMDPrimitiveField
 from utils.case import to_singular
 
@@ -17,7 +19,7 @@ XML_ROOT = "CodeGen"
 class XMLSerializer:
 
     @classmethod
-    def to_xml(cls, value):
+    def to_xml(cls, value: Any) -> str:
         primitive = value.to_primitive(context={"to_xml": True})
         root = build_xml(primitive)
         return unescape(
@@ -25,12 +27,12 @@ class XMLSerializer:
         )
 
     @classmethod
-    def from_xml(cls, model, xml):
+    def from_xml(cls, model: Any, xml: str) -> Any:
         primitive = parse(cls._escape(xml), attr_prefix="")
         return build_model(model, primitive[XML_ROOT])
 
     @staticmethod
-    def _escape(data):
+    def _escape(data: str) -> str:
         ret = ""
         lines = re.findall(r"<(.+)>", data)
         for line in lines:
@@ -45,7 +47,7 @@ class XMLSerializer:
         return ret
 
 
-def build_xml(primitive, parent=None):
+def build_xml(primitive: Dict[str, Any], parent: Optional[_Element]=None) -> _Element:
     if parent is None:
         parent = getattr(ElementMaker(), XML_ROOT)()
     # normalize element name
@@ -56,7 +58,7 @@ def build_xml(primitive, parent=None):
     return parent
 
 
-def primitive_to_xml(field_name, data, parent):
+def primitive_to_xml(field_name: str, data: Any, parent: _Element) -> None:
     if isinstance(data, dict):
         _parent = getattr(ElementMaker(), field_name)()
         parent.append(build_xml(data, _parent))
@@ -77,7 +79,7 @@ def primitive_to_xml(field_name, data, parent):
             parent.set(field_name, str(data))
 
 
-def build_model(model, primitive):
+def build_model(model: Any, primitive: Any) -> Any:
     if hasattr(model, "_field_list"):
         instance = model()
         for field_name, field in model._field_list:
@@ -107,7 +109,7 @@ def build_model(model, primitive):
         return cast(primitive)
 
 
-def obtain_field_value(prev, curr, data):
+def obtain_field_value(prev: BaseType, curr: Any, data: Any) -> Any:
     if isinstance(prev, ListType):
         field_value = []
         # filter long-summary and singular options
@@ -128,7 +130,7 @@ def obtain_field_value(prev, curr, data):
     return field_value
 
 
-def _unwrap(field):
+def _unwrap(field: BaseType) -> Any:
     if isinstance(field, ListType):
         return _unwrap(field.field)
     elif isinstance(field, ModelType):

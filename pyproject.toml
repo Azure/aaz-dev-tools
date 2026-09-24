@@ -1,0 +1,9 @@
+[tool.mypy]
+python_version = "3.10"
+strict = true
+# Source layout: package lives under src/
+mypy_path = "src"
+
+# Third-party libraries without stubs — ignore missing imports for now
+# rather than failing on every untyped dependency
+ignore_missing_imports = true

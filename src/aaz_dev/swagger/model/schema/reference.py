@@ -1,5 +1,6 @@
 from schematics.models import Model
 from schematics.types import StringType
+from typing import Any
 from uuid import uuid4
 
 
@@ -28,7 +29,7 @@ class Linkable:
 
 class ReferenceField(StringType):
 
-    def __init__(self, serialized_name="$ref", deserialize_from="$ref", **kwargs):
+    def __init__(self, serialized_name: str="$ref", deserialize_from: str="$ref", **kwargs: Any):
 
         super(ReferenceField, self).__init__(
             serialized_name=serialized_name,

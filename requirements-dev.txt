@@ -1,0 +1,5 @@
+# Dev dependencies — not required at runtime
+mypy>=1.10.0
+mypy-baseline>=0.6.0
+monkeytype>=23.3.0
+libcst>=1.0.0

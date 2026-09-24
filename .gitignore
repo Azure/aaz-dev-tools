@@ -139,3 +139,6 @@ src/aaz_dev/ui
 
 .env
 */.env
+
+# MonkeyType trace database
+monkeytype.sqlite3

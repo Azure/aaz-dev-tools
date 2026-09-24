@@ -35,6 +35,9 @@ from utils import exceptions
 
 import logging
 import re
+from schematics.datastructures import Context
+from schematics.util import Constant
+from typing import Any, Dict, List, Optional, Union
 
 logger = logging.getLogger('aaz')
 
@@ -155,7 +158,7 @@ class CMDSchemaBase(Model):
         return self.TYPE_VALUE
 
     @classmethod
-    def _claim_polymorphic(cls, data):
+    def _claim_polymorphic(cls, data: Any) -> bool:
         if cls.TYPE_VALUE is None:
             return False
 
@@ -275,7 +278,7 @@ class CMDSchema(CMDSchemaBase):
     secret = CMDBooleanField()
 
     @classmethod
-    def _claim_polymorphic(cls, data):
+    def _claim_polymorphic(cls, data: Any) -> bool:
         if super(CMDSchema, cls)._claim_polymorphic(data):
             if isinstance(data, dict):
                 # distinguish with CMDSchemaBase and CMDSchema
@@ -357,15 +360,15 @@ class CMDClsSchemaBase(CMDSchemaBase):
         required=True
     )
 
-    def _get_type(self):
+    def _get_type(self) -> str:
         return self._type
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.implement = None
 
     @classmethod
-    def _claim_polymorphic(cls, data):
+    def _claim_polymorphic(cls, data: Any) -> bool:
         if isinstance(data, dict):
             type_value = data.get('type', None)
             if type_value is not None and type_value.startswith("@"):
@@ -731,14 +734,14 @@ class CMDAnyTypeSchema(CMDAnyTypeSchemaBase, CMDSchema):
 
 class CMDObjectSchemaDiscriminatorField(ModelType):
 
-    def __init__(self, model_spec=None, **kwargs):
+    def __init__(self, model_spec: Optional[str]=None, **kwargs: Any) -> None:
         super(CMDObjectSchemaDiscriminatorField, self).__init__(
             model_spec=model_spec or CMDObjectSchemaDiscriminator,
             serialize_when_none=False,
             **kwargs
         )
 
-    def export(self, value, format, context=None):
+    def export(self, value: "CMDObjectSchemaDiscriminator", format: Constant, context: Optional[Context]=None) -> Any:
         if hasattr(value, 'frozen') and value.frozen:
             # frozen schema base will be ignored
             return None
@@ -862,7 +865,7 @@ class CMDObjectSchemaAdditionalProperties(Model):
 
 class CMDObjectSchemaAdditionalPropertiesField(ModelType):
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         super(CMDObjectSchemaAdditionalPropertiesField, self).__init__(
             model_spec=CMDObjectSchemaAdditionalProperties,
             serialized_name="additionalProps",
@@ -871,7 +874,7 @@ class CMDObjectSchemaAdditionalPropertiesField(ModelType):
             **kwargs
         )
 
-    def export(self, value, format, context=None):
+    def export(self, value: CMDObjectSchemaAdditionalProperties, format: Constant, context: Optional[Context]=None) -> Any:
         if value.frozen:
             return None
         return super(CMDObjectSchemaAdditionalPropertiesField, self).export(value, format, context)
@@ -1025,7 +1028,7 @@ class CMDArraySchemaBase(CMDSchemaBase):
     #  - read_only
     cls = CMDClassField()
 
-    def _get_type(self):
+    def _get_type(self) -> str:
         return f"{self.TYPE_VALUE}<{self.item.type}>"
 
     def _diff_base(self, old, level, diff):

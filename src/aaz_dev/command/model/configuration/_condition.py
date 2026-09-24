@@ -3,6 +3,7 @@ from schematics.types import PolyModelType, ListType
 from schematics.types.serializable import serializable
 
 from ._fields import CMDVariantField
+from typing import Any
 
 
 class CMDConditionOperator(Model):
@@ -13,12 +14,12 @@ class CMDConditionOperator(Model):
     def type(self):
         return self._get_type()
 
-    def _get_type(self):
+    def _get_type(self) -> str:
         assert self.TYPE_VALUE is not None
         return self.TYPE_VALUE
 
     @classmethod
-    def _claim_polymorphic(cls, data):
+    def _claim_polymorphic(cls, data: Any) -> bool:
         if cls.TYPE_VALUE is None:
             return False
 

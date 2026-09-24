@@ -1,4 +1,5 @@
 from schematics.types import StringType
+from typing import Any
 
 
 class AAZStageEnum:
@@ -10,7 +11,7 @@ class AAZStageEnum:
 class AAZStageField(StringType):
     """The stage for command group, command or argument."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(
             choices=(AAZStageEnum.Experimental, AAZStageEnum.Preview, AAZStageEnum.Stable),
             default=AAZStageEnum.Stable,
