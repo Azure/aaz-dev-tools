@@ -592,14 +592,10 @@ class CMDSpecsPartialCommandTree:
         details = {}
         for group_names in self._modified_command_groups:
             group = self.find_command_group(*group_names)
-            if group == self.root:
+            # deleted groups (e.g. renamed) are expected; save() removes their folders
+            if not group or group == self.root:
                 continue
-            if not group:
-                details[' '.join(group_names)] = {
-                    'type': 'group',
-                    'help': "Group not found."
-                }
-            elif not group.help or not group.help.short:
+            if not group.help or not group.help.short:
                 details[' '.join(group.names)] = {
                     'type': 'group',
                     'help': "Miss short summary."
@@ -607,12 +603,10 @@ class CMDSpecsPartialCommandTree:
 
         for cmd_names in self._modified_commands:
             cmd = self.find_command(*cmd_names)
+            # deleted commands (e.g. renamed) are expected; save() removes their files
             if not cmd:
-                details[' '.join(cmd_names)] = {
-                    'type': 'command',
-                    'help': "Command not found."
-                }
-            elif not cmd.help or not cmd.help.short:
+                continue
+            if not cmd.help or not cmd.help.short:
                 details[' '.join(cmd.names)] = {
                     'type': 'command',
                     'help': "Miss short summary."

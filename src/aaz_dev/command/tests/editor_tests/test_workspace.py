@@ -1,4 +1,5 @@
 from command.controller.workspace_manager import WorkspaceManager
+from command.controller.workspace_cfg_editor import WorkspaceCfgEditor
 from command.controller.cfg_reader import _SchemaIdxEnum
 from command.tests.common import CommandTestCase, workspace_name
 from utils.plane import PlaneEnum
@@ -84,6 +85,58 @@ class WorkspaceEditorTest(CommandTestCase):
         assert manager.load_cfg_editor_by_command(address_cg.commands['show'])
         assert manager.load_cfg_editor_by_command(address_cg.commands['delete'])
         assert manager.load_cfg_editor_by_command(address_cg.commands['update'])
+
+    @workspace_name("test_workspace_editor_cfg_editor_cache")
+    def test_workspace_editor_cfg_editor_cache(self, ws_name):
+        mod_names = "cdn"
+        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider="Microsoft.Cdn", source=SourceTypeEnum.OpenAPI)
+        manager.save()
+        version = '2021-06-01'
+        resource_id = swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}')
+        manager.add_new_resources_by_swagger(mod_names=mod_names, version=version, resources=[{"id": resource_id}])
+        manager.save()
+        cmd_names = ("cdn", "profile", "endpoint", "show")
+        cfg_path = WorkspaceCfgEditor.get_cfg_path(manager.folder, resource_id)
+
+        def load(readonly=False):
+            m = WorkspaceManager(ws_name)
+            m.load()
+            return m, m.load_cfg_editor_by_resource(resource_id, version, readonly=readonly)
+
+        # concurrent read only loads parse the cold cfg once and share it
+        from concurrent.futures import ThreadPoolExecutor
+        from command.controller import workspace_manager
+        workspace_manager._CFG_EDITOR_CACHE.clear()
+        with ThreadPoolExecutor(2) as pool:
+            (m, editor), (_, editor_b) = pool.map(lambda _: load(readonly=True), range(2))
+        assert editor_b is editor
+        # read only editor is not saved
+        mtime = os.stat(cfg_path).st_mtime_ns
+        m.save()
+        assert os.stat(cfg_path).st_mtime_ns == mtime
+
+        # editor to modify is taken from the cache, and edits of an unsaved request are dropped
+        m2, editor2 = load()
+        assert editor2 is editor
+        editor2.find_command(*cmd_names).confirmation = "unsaved"
+        m3, editor3 = load(readonly=True)
+        assert editor3 is not editor2 and not editor3.find_command(*cmd_names).confirmation
+
+        # saved edits are kept
+        m4, editor4 = load()
+        assert editor4 is editor3
+        editor4.update_command_confirmation(*cmd_names, confirmation="saved")
+        m4.save()
+        m5, editor5 = load(readonly=True)
+        assert editor5 is editor4 and editor5.find_command(*cmd_names).confirmation == "saved"
+
+        # file changed on disk is reloaded
+        with open(cfg_path, 'r', encoding="utf-8") as f:
+            data = json.load(f)
+        with open(cfg_path, 'w', encoding="utf-8") as f:
+            f.write(json.dumps(data, ensure_ascii=False) + " ")
+        m6, editor6 = load(readonly=True)
+        assert editor6 is not editor5 and editor6.find_command(*cmd_names).confirmation == "saved"
 
     @workspace_name("test_workspace_editor_subresource")
     def test_workspace_editor_subresource(self, ws_name):

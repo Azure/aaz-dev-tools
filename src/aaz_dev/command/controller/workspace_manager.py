@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import shutil
+import threading
 from datetime import datetime
 
 from command.model.configuration import CMDHelp, CMDResource, CMDCommandExample, CMDArg, CMDCommand, \
@@ -21,6 +22,23 @@ from .workspace_cfg_editor import WorkspaceCfgEditor, build_endpoint_selector_fo
 from .workspace_client_cfg_editor import WorkspaceClientCfgEditor
 
 logger = logging.getLogger('aaz')
+
+# Parsed cfg editors shared across requests, keyed by cfg path: {path: (file stats, editor)}.
+# Parsing a big cfg (e.g. application-gateway, 15MB) takes tens of seconds. Editors to be modified are taken out
+# of the cache on load, so a request that fails half way never leaves its partial edits in the cache; they come back
+# on save. Read only loads share the cached editor.
+# FIFO cap on entries, switch to a memory based LRU if many big workspaces are opened in one process.
+_CFG_EDITOR_CACHE = {}
+_CFG_EDITOR_CACHE_MAX_SIZE = 32
+_CFG_EDITOR_CACHE_LOCK = threading.RLock()
+
+
+def _get_cfg_editor_stats(ws_folder, cfg_editor):
+    stats = []
+    for resource in cfg_editor.resources:
+        st = os.stat(WorkspaceCfgEditor.get_cfg_path(ws_folder, resource.id))
+        stats.append((st.st_mtime_ns, st.st_size))
+    return tuple(stats)
 
 
 class WorkspaceManager:
@@ -180,6 +198,7 @@ class WorkspaceManager:
 
         remove_folders = []
         update_files = []
+        saved_cfg_editors = []
         used_resources = set()
         for resource_id, cfg_editor in self._cfg_editors.items():
             if resource_id in used_resources:
@@ -193,6 +212,8 @@ class WorkspaceManager:
                     update_files.append(
                         (WorkspaceCfgEditor.get_cfg_path(self.folder, r_id), data))
                 used_resources.add(r_id)
+            if not cfg_editor.deleted:
+                saved_cfg_editors.append(cfg_editor)
         assert set(self._cfg_editors.keys()) == used_resources
 
         if not self.ws.mod_names or not self.ws.resource_provider:
@@ -226,6 +247,9 @@ class WorkspaceManager:
             os.makedirs(os.path.dirname(file_name), exist_ok=True)
             with open(file_name, 'w', encoding="utf-8") as f:
                 f.write(data)
+
+        for cfg_editor in saved_cfg_editors:
+            self._cache_cfg_editor(cfg_editor)
 
         self._cfg_editors = {}
         self._client_cfg_editor = None
@@ -365,25 +389,64 @@ class WorkspaceManager:
                 self._reusable_leaves[tuple(
                     cmd_names)] = node.commands.pop(name)
 
-    def load_cfg_editor_by_resource(self, resource_id, version, reload=False):
+    def load_cfg_editor_by_resource(self, resource_id, version, reload=False, readonly=False):
+        """readonly: share the cached editor instead of taking it, the caller must not modify it."""
         if not reload and resource_id in self._cfg_editors:
             # load from modified dict
             cfg_editor = self._cfg_editors[resource_id]
             return None if cfg_editor.deleted else cfg_editor
         assert not self.is_in_memory
-        try:
-            cfg_editor = WorkspaceCfgEditor.load_resource(
-                self.folder, resource_id, version)
+        # one global lock, so concurrent requests wait for one parse instead of parsing the same big cfg
+        # again. Parsing is CPU bound under the GIL, per-path locks would not make it faster.
+        with _CFG_EDITOR_CACHE_LOCK:
+            cfg_editor = None if reload else self._get_cached_cfg_editor(resource_id, version, take=not readonly)
+            if not cfg_editor:
+                try:
+                    cfg_editor = WorkspaceCfgEditor.load_resource(
+                        self.folder, resource_id, version)
+                except Exception as e:
+                    logger.error(
+                        f"load workspace resource cfg failed: {e}: {self.name} {resource_id} {version}")
+                    return None
+                if readonly:
+                    self._cache_cfg_editor(cfg_editor)
+        if not readonly:
             for resource in cfg_editor.resources:
                 self._cfg_editors[resource.id] = cfg_editor
-            return cfg_editor
-        except Exception as e:
-            logger.error(
-                f"load workspace resource cfg failed: {e}: {self.name} {resource_id} {version}")
-            return None
+        return cfg_editor
 
-    def load_cfg_editor_by_command(self, cmd, reload=False):
-        return self.load_cfg_editor_by_resource(cmd.resources[0].id, cmd.resources[0].version, reload=reload)
+    def load_cfg_editor_by_command(self, cmd, reload=False, readonly=False):
+        return self.load_cfg_editor_by_resource(
+            cmd.resources[0].id, cmd.resources[0].version, reload=reload, readonly=readonly)
+
+    def _get_cached_cfg_editor(self, resource_id, version, take):
+        entry = _CFG_EDITOR_CACHE.get(WorkspaceCfgEditor.get_cfg_path(self.folder, resource_id))
+        if not entry:
+            return None
+        stats, cfg_editor = entry
+        try:
+            valid = stats == _get_cfg_editor_stats(self.folder, cfg_editor)  # not changed on disk
+        except OSError:
+            valid = False
+        if take or not valid:
+            for resource in cfg_editor.resources:
+                _CFG_EDITOR_CACHE.pop(WorkspaceCfgEditor.get_cfg_path(self.folder, resource.id), None)
+        if not valid or any(resource.version != version for resource in cfg_editor.resources):
+            return None
+        return cfg_editor
+
+    def _cache_cfg_editor(self, cfg_editor):
+        try:
+            stats = _get_cfg_editor_stats(self.folder, cfg_editor)
+        except OSError:
+            return
+        with _CFG_EDITOR_CACHE_LOCK:
+            for resource in cfg_editor.resources:
+                path = WorkspaceCfgEditor.get_cfg_path(self.folder, resource.id)
+                _CFG_EDITOR_CACHE.pop(path, None)
+                while len(_CFG_EDITOR_CACHE) >= _CFG_EDITOR_CACHE_MAX_SIZE:
+                    _CFG_EDITOR_CACHE.pop(next(iter(_CFG_EDITOR_CACHE)))
+                _CFG_EDITOR_CACHE[path] = (stats, cfg_editor)
 
     def update_command_tree_node_help(self, *node_names, help):
         node = self.find_command_tree_node(*node_names)
@@ -1096,8 +1159,7 @@ class WorkspaceManager:
                 self.aaz_specs.update_client_cfg(editor.cfg)
 
         # update configurations
-        for ws_leaf in self.iter_command_tree_leaves():
-            editor = self.load_cfg_editor_by_command(ws_leaf)
+        for editor in self._iter_leaf_cfg_editors():
             cfg = editor.cfg
             self.aaz_specs.update_resource_cfg(cfg)
 
@@ -1113,12 +1175,22 @@ class WorkspaceManager:
             self.aaz_specs.update_command_group_by_ws(ws_node)
         self.aaz_specs.save()
 
+    def _iter_leaf_cfg_editors(self):
+        """Yield the cfg editor of the command tree leaves, each editor only once.
+        Leaves of one resource share an editor, e.g. 146 application-gateway commands are in one 15MB cfg, and
+        processing that cfg once per leaf would load and parse the same big cfg from aaz for every leaf."""
+        visited = set()
+        for ws_leaf in self.iter_command_tree_leaves():
+            editor = self.load_cfg_editor_by_command(ws_leaf)
+            if id(editor) not in visited:
+                visited.add(id(editor))
+                yield editor
+
     def _merge_sub_resources_in_aaz(self):
         """Merge the commands of subresources which exported in aaz but not exist in current workspace"""
         updated_cfgs = []
         inserted_commands = set()
-        for ws_leaf in self.iter_command_tree_leaves():
-            editor = self.load_cfg_editor_by_command(ws_leaf)
+        for editor in self._iter_leaf_cfg_editors():
             existing_sub_resources = {}
             for cmd_names, command in editor.iter_commands():
                 for r in command.resources:
