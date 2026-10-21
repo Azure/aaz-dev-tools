@@ -24,9 +24,8 @@ from .workspace_client_cfg_editor import WorkspaceClientCfgEditor
 logger = logging.getLogger('aaz')
 
 # Parsed cfg editors shared across requests, keyed by cfg path: {path: (file stats, editor)}.
-# Parsing a big cfg (e.g. application-gateway, 15MB) takes tens of seconds. Editors to be modified are taken out
-# of the cache on load, so a request that fails half way never leaves its partial edits in the cache; they come back
-# on save. Read only loads share the cached editor.
+# Readonly loads share snapshots. Writers load independent editors and publish them only after a successful save.
+# Published editors must not be modified; subsequent writes load a new editor.
 # FIFO cap on entries, switch to a memory based LRU if many big workspaces are opened in one process.
 _CFG_EDITOR_CACHE = {}
 _CFG_EDITOR_CACHE_MAX_SIZE = 32
@@ -203,6 +202,9 @@ class WorkspaceManager:
         for resource_id, cfg_editor in self._cfg_editors.items():
             if resource_id in used_resources:
                 continue
+            if not cfg_editor.deleted:
+                # Argument regeneration can replace class references without linking them.
+                cfg_editor.link()
             for r_id, data in cfg_editor.iter_cfg_files_data():
                 assert r_id not in used_resources
                 if data is None:
@@ -390,16 +392,16 @@ class WorkspaceManager:
                     cmd_names)] = node.commands.pop(name)
 
     def load_cfg_editor_by_resource(self, resource_id, version, reload=False, readonly=False):
-        """readonly: share the cached editor instead of taking it, the caller must not modify it."""
+        """readonly: allow sharing a cached snapshot; the caller must not modify it."""
         if not reload and resource_id in self._cfg_editors:
             # load from modified dict
             cfg_editor = self._cfg_editors[resource_id]
             return None if cfg_editor.deleted else cfg_editor
         assert not self.is_in_memory
-        # one global lock, so concurrent requests wait for one parse instead of parsing the same big cfg
+        # one global lock, so concurrent readers wait for one parse instead of parsing the same big cfg
         # again. Parsing is CPU bound under the GIL, per-path locks would not make it faster.
         with _CFG_EDITOR_CACHE_LOCK:
-            cfg_editor = None if reload else self._get_cached_cfg_editor(resource_id, version, take=not readonly)
+            cfg_editor = self._get_cached_cfg_editor(resource_id, version) if readonly and not reload else None
             if not cfg_editor:
                 try:
                     cfg_editor = WorkspaceCfgEditor.load_resource(
@@ -419,7 +421,7 @@ class WorkspaceManager:
         return self.load_cfg_editor_by_resource(
             cmd.resources[0].id, cmd.resources[0].version, reload=reload, readonly=readonly)
 
-    def _get_cached_cfg_editor(self, resource_id, version, take):
+    def _get_cached_cfg_editor(self, resource_id, version):
         entry = _CFG_EDITOR_CACHE.get(WorkspaceCfgEditor.get_cfg_path(self.folder, resource_id))
         if not entry:
             return None
@@ -428,7 +430,7 @@ class WorkspaceManager:
             valid = stats == _get_cfg_editor_stats(self.folder, cfg_editor)  # not changed on disk
         except OSError:
             valid = False
-        if take or not valid:
+        if not valid:
             for resource in cfg_editor.resources:
                 _CFG_EDITOR_CACHE.pop(WorkspaceCfgEditor.get_cfg_path(self.folder, resource.id), None)
         if not valid or any(resource.version != version for resource in cfg_editor.resources):
