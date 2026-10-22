@@ -3,6 +3,10 @@
 Release History
 ===============
 
+4.7.2
+++++++
+* Enhance the performance of editor and generator. (#577)
+
 4.7.1
 ++++++
 * Fix link cls references when generating commands from TypeSpec. (#574)
