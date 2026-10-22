@@ -26,8 +26,11 @@ class AzAtomicProfileBuilder:
         self._mod_name = mod_name
         self._aaz_spec_manager = AAZSpecsManager()
         self._by_patch = by_patch
+        self._cfg_readers = {}
 
     def __call__(self, view_profile):
+        # cache parsed cfgs per profile only: code generation may modify the command cfgs of a profile in place
+        self._cfg_readers = {}
         profile = CLIAtomicProfile()
         profile.name = view_profile.name
         if view_profile.command_groups:
@@ -150,9 +153,15 @@ class AzAtomicProfileBuilder:
         })
 
         if load_cfg:
-            # load cfg file, which will generate the command in code
-            cfg_reader = self._aaz_spec_manager.load_resource_cfg_reader_by_command_with_version(
-                aaz_cmd, version=version)
+            # load cfg file, which will generate the command in code.
+            # Commands of one resource share a cfg file (e.g. 146 application-gateway commands in a 15MB cfg),
+            # so parse each cfg file once instead of once per command.
+            resource = version.resources[0]
+            key = (resource.plane, resource.id, resource.version)
+            if key not in self._cfg_readers:
+                self._cfg_readers[key] = self._aaz_spec_manager.load_resource_cfg_reader_by_command_with_version(
+                    aaz_cmd, version=version)
+            cfg_reader = self._cfg_readers[key]
             cmd_cfg = cfg_reader.find_command(*names)
             assert cmd_cfg is not None, f"command model miss in AAZ: '{' '.join(names)}'"
 

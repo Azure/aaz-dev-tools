@@ -305,7 +305,8 @@ def editor_workspace_examples(name, node_names, leaf_name):
     data = request.get_json()
     if 'examples' in data:
         leaf = manager.update_command_tree_leaf_examples(*leaf.names, examples=data['examples'])
-    cfg_editor = manager.load_cfg_editor_by_command(leaf)
+    # examples are stored in ws.json only, no need to modify the cfg
+    cfg_editor = manager.load_cfg_editor_by_command(leaf, readonly=True)
 
     command = cfg_editor.find_command(*leaf.names)
     result = command.to_primitive()
@@ -338,7 +339,7 @@ def editor_workspace_command(name, node_names, leaf_name):
 
     if request.method == "GET":
         # get the command configuration
-        cfg_editor = manager.load_cfg_editor_by_command(leaf)
+        cfg_editor = manager.load_cfg_editor_by_command(leaf, readonly=True)
         command = cfg_editor.find_command(*leaf.names)
         result = command.to_primitive()
     elif request.method == "PATCH":
@@ -350,10 +351,15 @@ def editor_workspace_command(name, node_names, leaf_name):
             leaf = manager.update_command_tree_leaf_stage(*leaf.names, stage=data['stage'])
         if 'examples' in data:
             leaf = manager.update_command_tree_leaf_examples(*leaf.names, examples=data['examples'])
-        cfg_editor = manager.load_cfg_editor_by_command(leaf)
-        if 'confirmation' in data:
+        # help, stage and examples are stored in ws.json only, load the cfg for modification only when needed
+        cfg_editor = manager.load_cfg_editor_by_command(leaf, readonly=True)
+        # web always sends confirmation, treat '' and None as the same
+        if 'confirmation' in data and \
+                (data['confirmation'] or None) != (cfg_editor.find_command(*leaf.names).confirmation or None):
+            cfg_editor = manager.load_cfg_editor_by_command(leaf)
             cfg_editor.update_command_confirmation(*leaf.names, confirmation=data['confirmation'])
         if 'outputs' in data:
+            cfg_editor = manager.load_cfg_editor_by_command(leaf)
             cfg_editor.update_command_outputs(*leaf.names, outputs=data['outputs'])
         command = cfg_editor.find_command(*leaf.names)
         result = command.to_primitive()

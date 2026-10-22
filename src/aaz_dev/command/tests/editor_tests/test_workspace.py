@@ -1,9 +1,11 @@
 from command.controller.workspace_manager import WorkspaceManager
+from command.controller.workspace_cfg_editor import WorkspaceCfgEditor
 from command.controller.cfg_reader import _SchemaIdxEnum
 from command.tests.common import CommandTestCase, workspace_name
 from utils.plane import PlaneEnum
 import os
 import json
+from unittest.mock import patch
 from utils import exceptions
 from swagger.utils.tools import swagger_resource_path_to_resource_id
 from swagger.utils.source import SourceTypeEnum
@@ -41,6 +43,127 @@ class WorkspaceManagerTest(CommandTestCase):
 
         with self.assertRaises(exceptions.InvalidAPIUsage):
             manager.save()
+
+
+class WorkspaceCacheTest(CommandTestCase):
+    resource_id = "/tests"
+    version = "2021-01-01"
+    cmd_names = ("test", "create")
+
+    def setUp(self):
+        super().setUp()
+        resource = {
+            "id": self.resource_id,
+            "version": self.version,
+            "swagger": "mgmt-plane/test/ResourceProviders/Microsoft.Test/Paths/L3Rlc3Rz/V/MjAyMS0wMS0wMQ==",
+        }
+        command = CMDCommand({
+            "name": "create",
+            "version": self.version,
+            "description": "Create a test resource.",
+            "resources": [resource],
+            "operations": [{
+                "operationId": "Tests_Create",
+                "http": {
+                    "path": self.resource_id,
+                    "request": {
+                        "method": "put",
+                        "body": {"json": {"schema": {
+                            "type": "object", "name": "parameters",
+                            "props": [
+                                {"type": "object", "name": "sku", "props": [
+                                    {"type": "string", "name": "name"},
+                                ]},
+                                {"type": "object", "name": "first", "cls": "Shared", "props": [
+                                    {"type": "string", "name": "value"},
+                                ]},
+                                {"type": "@Shared", "name": "second"},
+                            ],
+                        }}},
+                    },
+                    "responses": [{"statusCode": [200]}],
+                },
+            }],
+        })
+        editor = WorkspaceCfgEditor(CMDConfiguration({
+            "plane": PlaneEnum.Mgmt,
+            "resources": [resource],
+            "commandGroups": [{"name": "test", "commands": [command]}],
+        }))
+        command = editor.find_command(*self.cmd_names)
+        command.generate_args()
+        editor.reformat()
+        editor.link()
+        self.manager = WorkspaceManager.new(
+            self.__class__.__name__, plane=PlaneEnum.Mgmt, mod_names="test",
+            resource_provider="Microsoft.Test", source=SourceTypeEnum.OpenAPI,
+        )
+        self.manager._set_cfg_editor(editor)
+        self.manager.save()
+
+    def load_editor(self, readonly=False):
+        manager = WorkspaceManager(self.manager.name)
+        manager.load()
+        return manager, manager.load_cfg_editor_by_resource(
+            self.resource_id, self.version, readonly=readonly)
+
+    def test_saved_cache_relinks_class_arguments(self):
+        manager, editor = self.load_editor()
+        original_ref, _ = editor.find_arg_by_var(*self.cmd_names, arg_var="$parameters.second")
+        editor.flatten_arg(
+            *self.cmd_names, arg_var="$parameters.sku",
+            sub_args_options={"$parameters.sku.name": ["sku-name"]},
+        )
+        regenerated_ref, _ = editor.find_arg_by_var(*self.cmd_names, arg_var="$parameters.second")
+        self.assertIsNot(regenerated_ref, original_ref)
+        serialized = editor.cfg.to_primitive()
+        manager.save()
+
+        with patch.object(WorkspaceCfgEditor, 'load_resource', wraps=WorkspaceCfgEditor.load_resource) as parse:
+            _, cached = self.load_editor(readonly=True)
+            parse.assert_not_called()
+        cached_ref, _ = cached.find_arg_by_var(*self.cmd_names, arg_var="$parameters.second")
+        self.assertIsNotNone(cached_ref.implement)
+        self.assertEqual(cached.cfg.to_primitive(), serialized)
+        cached.cfg.validate()
+
+        cold = WorkspaceCfgEditor.load_resource(manager.folder, self.resource_id, self.version)
+        cold.link()
+        cold.link()
+        self.assertEqual(cold.cfg.to_primitive(), serialized)
+        cold_ref, _ = cold.find_arg_by_var(*self.cmd_names, arg_var="$parameters.second")
+        self.assertEqual(cached_ref.implement.to_primitive(), cold_ref.implement.to_primitive())
+
+        next_manager, writable = self.load_editor()
+        self.assertIsNot(writable, cached)
+        writable.flatten_arg(*self.cmd_names, arg_var="$parameters.second")
+        next_manager.save()
+        _, saved = self.load_editor(readonly=True)
+        self.assertIsNone(saved.find_arg_by_var(*self.cmd_names, arg_var="$parameters.second")[0])
+        self.assertIsNotNone(saved.find_arg_by_var(*self.cmd_names, arg_var="$parameters.second.value")[0])
+        saved.cfg.validate()
+        self.assertEqual(cached.cfg.to_primitive(), serialized)
+
+    def test_failed_save_preserves_readonly_snapshot(self):
+        _, cached = self.load_editor(readonly=True)
+        before = cached.cfg.to_primitive()
+        writer, writable = self.load_editor()
+        self.assertIsNot(writable, cached)
+        writable.update_command_confirmation(*self.cmd_names, confirmation="UNSAVED")
+
+        competing = WorkspaceManager(self.manager.name)
+        competing.load()
+        competing.save()
+        with self.assertRaisesRegex(exceptions.InvalidAPIUsage, "Workspace Changed"):
+            writer.save()
+
+        self.assertEqual(cached.cfg.to_primitive(), before)
+        with patch.object(WorkspaceCfgEditor, 'load_resource', wraps=WorkspaceCfgEditor.load_resource) as parse:
+            _, current = self.load_editor(readonly=True)
+            parse.assert_not_called()
+        self.assertEqual(current.cfg.to_primitive(), before)
+        cold = WorkspaceCfgEditor.load_resource(writer.folder, self.resource_id, self.version)
+        self.assertEqual(cold.cfg.to_primitive(), before)
 
 
 class WorkspaceEditorTest(CommandTestCase):
@@ -84,6 +207,63 @@ class WorkspaceEditorTest(CommandTestCase):
         assert manager.load_cfg_editor_by_command(address_cg.commands['show'])
         assert manager.load_cfg_editor_by_command(address_cg.commands['delete'])
         assert manager.load_cfg_editor_by_command(address_cg.commands['update'])
+
+    @workspace_name("test_workspace_editor_cfg_editor_cache")
+    def test_workspace_editor_cfg_editor_cache(self, ws_name):
+        mod_names = "cdn"
+        manager = WorkspaceManager.new(ws_name, plane=PlaneEnum.Mgmt, mod_names=mod_names, resource_provider="Microsoft.Cdn", source=SourceTypeEnum.OpenAPI)
+        manager.save()
+        version = '2021-06-01'
+        resource_id = swagger_resource_path_to_resource_id('/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}')
+        manager.add_new_resources_by_swagger(mod_names=mod_names, version=version, resources=[{"id": resource_id}])
+        manager.save()
+        cmd_names = ("cdn", "profile", "endpoint", "show")
+        cfg_path = WorkspaceCfgEditor.get_cfg_path(manager.folder, resource_id)
+
+        def load(readonly=False):
+            m = WorkspaceManager(ws_name)
+            m.load()
+            return m, m.load_cfg_editor_by_resource(resource_id, version, readonly=readonly)
+
+        # concurrent read only loads parse the cold cfg once and share it
+        from concurrent.futures import ThreadPoolExecutor
+        from command.controller import workspace_manager
+        workspace_manager._CFG_EDITOR_CACHE.clear()
+        with ThreadPoolExecutor(2) as pool:
+            (m, editor), (_, editor_b) = pool.map(lambda _: load(readonly=True), range(2))
+        assert editor_b is editor
+        # read only editor is not saved
+        mtime = os.stat(cfg_path).st_mtime_ns
+        m.save()
+        assert os.stat(cfg_path).st_mtime_ns == mtime
+
+        # writers load independently, but reuse their editor within the same manager
+        with patch.object(WorkspaceCfgEditor, 'load_resource', wraps=WorkspaceCfgEditor.load_resource) as parse:
+            m2, editor2 = load()
+            for leaf in m2.iter_command_tree_leaves():
+                assert m2.load_cfg_editor_by_command(leaf) is editor2
+            assert parse.call_count == 1
+        assert editor2 is not editor
+        editor2.find_command(*cmd_names).confirmation = "unsaved"
+        m3, editor3 = load(readonly=True)
+        assert editor3 is editor and not editor3.find_command(*cmd_names).confirmation
+
+        # saved edits are kept
+        m4, editor4 = load()
+        assert editor4 is not editor3
+        editor4.update_command_confirmation(*cmd_names, confirmation="saved")
+        m4.save()
+        m5, editor5 = load(readonly=True)
+        assert editor5 is editor4 and editor5.find_command(*cmd_names).confirmation == "saved"
+        assert not editor3.find_command(*cmd_names).confirmation
+
+        # file changed on disk is reloaded
+        with open(cfg_path, 'r', encoding="utf-8") as f:
+            data = json.load(f)
+        with open(cfg_path, 'w', encoding="utf-8") as f:
+            f.write(json.dumps(data, ensure_ascii=False) + " ")
+        m6, editor6 = load(readonly=True)
+        assert editor6 is not editor5 and editor6.find_command(*cmd_names).confirmation == "saved"
 
     @workspace_name("test_workspace_editor_subresource")
     def test_workspace_editor_subresource(self, ws_name):
