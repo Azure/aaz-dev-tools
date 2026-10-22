@@ -4,7 +4,7 @@ import logging
 import os
 import re
 
-from fuzzywuzzy import fuzz
+from thefuzz import fuzz
 
 from command.model.configuration import CMDResource
 from ._utils import map_path_2_repo
@@ -62,9 +62,11 @@ class Resource:
         if len(operation_groups) == 1:
             return operation_groups.pop()
 
+        # use the name which is closest to resource_id. resource_id is lower case, so compare
+        # case-insensitively, and break ties by length then name so the choice is deterministic.
         op_group_name = sorted(
             operation_groups,
-            key=lambda nm: fuzz.partial_ratio(self.id, nm),  # use the name which is closest to resource_id
+            key=lambda nm: (fuzz.partial_ratio(self.id, nm.lower()), len(nm), nm),
             reverse=True
         )[0]
         setattr(self, "_op_group_name", op_group_name)
