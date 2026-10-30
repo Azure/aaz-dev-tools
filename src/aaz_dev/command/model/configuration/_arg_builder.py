@@ -7,7 +7,7 @@ from ._arg import CMDArg, CMDArgBase, CMDArgumentHelp, CMDArgEnum, CMDArgDefault
 from ._format import CMDFormat
 from ._schema import CMDObjectSchema, CMDSchema, CMDSchemaBase, CMDObjectSchemaBase, CMDObjectSchemaDiscriminator, \
     CMDArraySchemaBase, CMDArraySchema, CMDObjectSchemaAdditionalProperties, CMDResourceIdSchema, \
-    CMDResourceLocationSchemaBase, CMDPasswordSchema, CMDBooleanSchemaBase
+    CMDResourceLocationSchemaBase, CMDPasswordSchema, CMDBooleanSchemaBase, CMDBinarySchema
 from ..configuration._schema import CMDIdentityObjectSchema, CMDStringSchemaBase, \
     CMDStringSchema
 
@@ -385,6 +385,8 @@ class CMDArgBuilder:
 
             if self.schema.action is not None and self.schema.name in ["userAssigned", "systemAssigned"]:
                 return [opt_name, "mi-" + opt_name]
+            if isinstance(self.schema, CMDBinarySchema):
+                return [opt_name, "body-file", "body-file-path"]
         else:
             raise NotImplementedError()
         return [opt_name, ]
