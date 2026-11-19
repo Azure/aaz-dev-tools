@@ -3,6 +3,10 @@
 Release History
 ===============
 
+4.7.3
+++++++
+* Verify PyPI release workflow.
+
 4.7.2
 ++++++
 * Enhance the performance of editor and generator. (#577)
