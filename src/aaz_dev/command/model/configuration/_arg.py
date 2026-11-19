@@ -9,6 +9,9 @@ from ._help import CMDArgumentHelp
 from utils import exceptions
 
 import copy
+from typing import TYPE_CHECKING, Any, Type, Union
+if TYPE_CHECKING:
+    from command.model.configuration._arg_builder import CMDArgBuilder
 
 
 class CMDArgEnumItem(Model):
@@ -129,12 +132,12 @@ class CMDArgBase(Model):
     def type(self):
         return self._get_type()
 
-    def _get_type(self):
+    def _get_type(self) -> str:
         assert self.TYPE_VALUE is not None
         return self.TYPE_VALUE
 
     @classmethod
-    def _claim_polymorphic(cls, data):
+    def _claim_polymorphic(cls, data: Any) -> bool:
         if cls.TYPE_VALUE is None:
             return False
 
@@ -148,7 +151,7 @@ class CMDArgBase(Model):
         return False
 
     @classmethod
-    def build_arg_base(cls, builder):
+    def build_arg_base(cls, builder: "CMDArgBuilder") -> Any:
         arg_base = cls()
         arg_base.nullable = builder.get_nullable()
         arg_base.blank = builder.get_blank()
@@ -171,7 +174,7 @@ class CMDArgBaseField(PolyModelType):
             **kwargs
         )
 
-    def find_model(self, data):
+    def find_model(self, data: Any) -> Any:
         if self.claim_function:
             kls = self.claim_function(self, data)
             if not kls:
@@ -229,7 +232,7 @@ class CMDArg(CMDArgBase):
         self.ref_schema = None
 
     @classmethod
-    def _claim_polymorphic(cls, data):
+    def _claim_polymorphic(cls, data: Any) -> bool:
         if super()._claim_polymorphic(data):
             if isinstance(data, dict):
                 # distinguish with CMDArgBase and CMDArg
@@ -239,7 +242,7 @@ class CMDArg(CMDArgBase):
         return False
 
     @classmethod
-    def build_arg(cls, builder):
+    def build_arg(cls, builder: "CMDArgBuilder") -> Any:
         arg = cls.build_arg_base(builder)
         assert isinstance(arg, CMDArg)
         arg.var = builder.get_var()
@@ -278,7 +281,7 @@ class CMDClsArgBase(CMDArgBase):
         self.implement = None
 
     @classmethod
-    def _claim_polymorphic(cls, data):
+    def _claim_polymorphic(cls, data: Any) -> bool:
         if isinstance(data, dict):
             type_value = data.get('type', None)
             if type_value is not None and type_value.startswith("@"):
@@ -356,7 +359,7 @@ class CMDStringArgBase(CMDArgBase):
     enum = ModelType(CMDArgEnum)
 
     @classmethod
-    def build_arg_base(cls, builder):
+    def build_arg_base(cls, builder: "CMDArgBuilder") -> Any:
         arg = super().build_arg_base(builder)
         assert isinstance(arg, CMDStringArgBase)
         arg.fmt = builder.get_fmt()
@@ -838,7 +841,7 @@ class CMDArrayArgBase(CMDArgBase):
     # default
     cls = CMDClassField()
 
-    def _get_type(self):
+    def _get_type(self) -> str:
         return f"{self.TYPE_VALUE}<{self.item.type}>"
 
     @classmethod

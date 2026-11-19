@@ -2,6 +2,8 @@ from schematics.types import StringType, BaseType, BooleanType
 from utils.stage import AAZStageEnum, AAZStageField
 import json
 import logging
+from schematics.datastructures import Context
+from typing import Any, Optional, Union
 
 
 logger = logging.getLogger('aaz')
@@ -12,13 +14,13 @@ class CMDBooleanField(BooleanType):
     def __init__(self, **kwargs):
         super(CMDBooleanField, self).__init__(serialize_when_none=False, default=False, **kwargs)
 
-    def to_native(self, value, context=None):
+    def to_native(self, value: bool, context: Optional[Context]=None) -> Optional[bool]:
         value = super(CMDBooleanField, self).to_native(value, context)
         if value is False:
             return None  # return None when value is false to hide field with `serialize_when_none=False`
         return value
 
-    def to_primitive(self, value, context=None):
+    def to_primitive(self, value: bool, context: Optional[Context]=None) -> Optional[bool]:
         value = super(CMDBooleanField, self).to_primitive(value, context)
         if value is False:
             return None  # return None when value is false to hide field with `serialize_when_none=False`
@@ -28,13 +30,13 @@ class CMDBooleanField(BooleanType):
 class CMDStageField(AAZStageField):
     """The stage for command group, command or argument."""
 
-    def to_native(self, value, context=None):
+    def to_native(self, value: str, context: Optional[Context]=None) -> Optional[str]:
         value = super(CMDStageField, self).to_native(value, context)
         if value == AAZStageEnum.Stable:
             return None  # return None when value is false to hide field with `serialize_when_none=False`
         return value
 
-    def to_primitive(self, value, context=None):
+    def to_primitive(self, value: str, context: Optional[Context]=None) -> Optional[str]:
         value = super(CMDStageField, self).to_primitive(value, context)
         if value == AAZStageEnum.Stable:
             return None  # return None when value is false to hide field with `serialize_when_none=False`
@@ -67,7 +69,7 @@ class CMDPrimitiveField(BaseType):
     """
 
     @staticmethod
-    def convert_from_xml(raw_data):
+    def convert_from_xml(raw_data: str) -> Any:
         try:
             return json.loads(raw_data)
         except json.JSONDecodeError as err:
@@ -82,7 +84,7 @@ class CMDPrimitiveField(BaseType):
             *args, **kwargs,
         )
 
-    def to_primitive(self, value, context=None):
+    def to_primitive(self, value: Any, context: Optional[Context]=None) -> Any:
         # TODO: when value is None, will not call to_primitive, so it will not be converted to null in json.
         data = super().to_primitive(value, context)
         if context is not None and "to_xml" in context and context.to_xml is True:

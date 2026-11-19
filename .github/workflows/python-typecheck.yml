@@ -1,0 +1,42 @@
+name: Python Type Check
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+  push:
+    branches:
+      - dev
+
+jobs:
+  typecheck:
+    name: mypy --strict (baseline)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
+
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: typecheck-${{ runner.os }}-${{ hashFiles('requirements-dev.txt') }}
+          restore-keys: typecheck-${{ runner.os }}-
+
+      - name: Install type-check dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run mypy with baseline filter
+        # Fails if any *new* violations are introduced beyond the frozen baseline.
+        # To update the baseline after fixing violations, run locally:
+        #   python -m mypy -p aaz_dev | python -m mypy_baseline sync
+        # and commit the updated mypy-baseline.txt.
+        run: python -m mypy -p aaz_dev | python -m mypy_baseline filter

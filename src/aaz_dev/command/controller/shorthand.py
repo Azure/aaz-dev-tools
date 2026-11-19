@@ -1,4 +1,6 @@
-def serialize(obj):
+from typing import Any
+
+def serialize(obj: Any) -> str:
     def dfs(obj):
         if isinstance(obj, dict):
             return "{" + ",".join(f'{k}:{dfs(v)}' for k, v in obj.items()) + "}"

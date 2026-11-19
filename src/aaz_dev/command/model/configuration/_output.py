@@ -16,7 +16,7 @@ class CMDOutput(Model):
     def type(self):
         return self._get_type()
 
-    def _get_type(self):
+    def _get_type(self) -> str:
         assert self.TYPE_VALUE is not None
         return self.TYPE_VALUE
 

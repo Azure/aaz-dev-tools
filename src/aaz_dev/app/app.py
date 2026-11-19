@@ -7,9 +7,10 @@ from flask.logging import create_logger
 from utils import exceptions
 from utils.config import Config
 from aaz_dev.app.run import run_command
+import flask.app
 
 
-def create_app():
+def create_app() -> flask.app.Flask:
     app = Flask(__name__, static_folder=Config.STATIC_FOLDER, static_url_path=Config.STATIC_URL_PATH)
     logger = create_logger(app)
 

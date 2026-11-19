@@ -17,6 +17,7 @@ from ._subresource_selector import CMDSubresourceSelector
 from ._operation import CMDHttpOperation
 from ._command import handle_duplicated_options
 from ._resource import CMDResource
+from typing import Any, Iterator, List, Tuple, Union
 
 
 logger = logging.getLogger('aaz')
@@ -79,7 +80,7 @@ class CMDClientAuth(Model):
 
 class _EndpointTemplateMixin:
     @staticmethod
-    def _iter_placeholders(template):
+    def _iter_placeholders(template: str) -> Iterator[Tuple[str, bool]]:
         endpoint = urlparse(template).netloc
         while True:
             idx = 0
@@ -103,7 +104,7 @@ class _EndpointTemplateMixin:
             yield placeholder, required
 
     @staticmethod
-    def _reformat(template):
+    def _reformat(template: str) -> str:
         parsed = urlparse(template)
         if parsed.path:
             if parsed.path == '/' and not parsed.params and not parsed.query and not parsed.fragment:
@@ -126,7 +127,7 @@ class CMDClientEndpointTemplate(Model, _EndpointTemplateMixin):
     class Options:
         serialize_when_none = False
 
-    def iter_placeholders(self):
+    def iter_placeholders(self) -> Iterator[Any]:
         return self._iter_placeholders(self.template)
 
     def reformat(self, **kwargs):
@@ -193,12 +194,12 @@ class CMDClientEndpoints(Model):
     def type(self):
         return self._get_type()
 
-    def _get_type(self):
+    def _get_type(self) -> str:
         assert self.TYPE_VALUE is not None
         return self.TYPE_VALUE
 
     @classmethod
-    def _claim_polymorphic(cls, data):
+    def _claim_polymorphic(cls, data: Any) -> bool:
         if cls.TYPE_VALUE is None:
             return False
 
@@ -285,7 +286,7 @@ class CMDClientEndpointsByTemplate(CMDClientEndpoints):
         if self.params:
             self.params = sorted(self.params, key=lambda p: p.name)
     
-    def prepare(self):
+    def prepare(self) -> None:
         params = {}
         for template in self.templates:
             for placeholder, required in template.iter_placeholders():
@@ -305,7 +306,7 @@ class CMDClientEndpointsByTemplate(CMDClientEndpoints):
                     })
         self.params = sorted(params.values(), key=lambda p: p.name) or None
 
-    def generate_args(self, ref_args):
+    def generate_args(self, ref_args: Any) -> List[Any]:
         args = []
         if self.params:
             for param in self.params:
@@ -441,7 +442,7 @@ class CMDClientConfig(Model):
         if self.arg_group:
             self.arg_group.reformat(**kwargs)
 
-    def generate_args(self, ref_args=None, ref_options=None):
+    def generate_args(self, ref_args: Any=None, ref_options: Any=None) -> None:
         if not ref_args:
             ref_args = []
             if self.arg_group:
