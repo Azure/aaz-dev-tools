@@ -90,7 +90,7 @@ jobs:
       - name: Install prerequisites
         run: |
           pip install --upgrade pip setuptools wheel virtualenv
-          npm install -g pnpm@10.30.2
+          npm install -g pnpm@11.10.0
           pnpm install
 
       - name: Set build variables
